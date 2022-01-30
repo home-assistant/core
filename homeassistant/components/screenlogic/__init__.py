@@ -170,6 +170,8 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
 class ScreenlogicEntity(CoordinatorEntity):
     """Base class for all ScreenLogic entities."""
 
+    coordinator: ScreenlogicDataUpdateCoordinator
+
     def __init__(self, coordinator, data_key, enabled=True):
         """Initialize of the entity."""
         super().__init__(coordinator)
@@ -222,6 +224,7 @@ class ScreenlogicEntity(CoordinatorEntity):
             manufacturer="Pentair",
             model=equipment_model,
             name=self.gateway_name,
+            sw_version=self.gateway.version,
         )
 
     async def _async_refresh(self):

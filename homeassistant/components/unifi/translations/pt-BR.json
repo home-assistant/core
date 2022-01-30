@@ -1,22 +1,23 @@
 {
     "config": {
         "abort": {
-            "already_configured": "O site de controle j\u00e1 est\u00e1 configurado"
+            "already_configured": "O site de controle j\u00e1 est\u00e1 configurado",
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida"
         },
         "error": {
-            "faulty_credentials": "Credenciais do usu\u00e1rio inv\u00e1lidas",
-            "service_unavailable": "Servi\u00e7o indispon\u00edvel",
+            "faulty_credentials": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "service_unavailable": "Falha ao conectar",
             "unknown_client_mac": "Nenhum cliente dispon\u00edvel nesse endere\u00e7o MAC"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
+                    "host": "Nome do host",
                     "password": "Senha",
                     "port": "Porta",
                     "site": "ID do site",
                     "username": "Usu\u00e1rio",
-                    "verify_ssl": "Controlador usando certificado apropriado"
+                    "verify_ssl": "Verifique o certificado SSL"
                 },
                 "title": "Configurar o Controlador UniFi"
             }

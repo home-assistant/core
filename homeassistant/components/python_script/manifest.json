@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/python_script",
   "requirements": ["restrictedpython==5.2"],
   "codeowners": [],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "loggers": ["RestrictedPython"]
 }

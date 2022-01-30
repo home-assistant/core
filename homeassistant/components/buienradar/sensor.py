@@ -21,7 +21,12 @@ from buienradar.constants import (
     WINDSPEED,
 )
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -29,7 +34,6 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
     DEGREE,
-    DEVICE_CLASS_TEMPERATURE,
     IRRADIATION_WATTS_PER_SQUARE_METER,
     LENGTH_KILOMETERS,
     LENGTH_MILLIMETERS,
@@ -107,31 +111,35 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="feeltemperature",
         name="Feel temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="humidity",
         name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:water-percent",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="temperature",
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="groundtemperature",
         name="Ground temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="windspeed",
         name="Wind speed",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
         icon="mdi:weather-windy",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="windforce",
@@ -155,11 +163,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Pressure",
         native_unit_of_measurement=PRESSURE_HPA,
         icon="mdi:gauge",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="visibility",
         name="Visibility",
         native_unit_of_measurement=LENGTH_KILOMETERS,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="windgust",
@@ -172,12 +182,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Precipitation",
         native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
         icon="mdi:weather-pouring",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="irradiance",
         name="Irradiance",
         native_unit_of_measurement=IRRADIATION_WATTS_PER_SQUARE_METER,
         icon="mdi:sunglasses",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="precipitation_forecast_average",
@@ -209,61 +221,61 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="temperature_1d",
         name="Temperature 1d",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="temperature_2d",
         name="Temperature 2d",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="temperature_3d",
         name="Temperature 3d",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="temperature_4d",
         name="Temperature 4d",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="temperature_5d",
         name="Temperature 5d",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="mintemp_1d",
         name="Minimum temperature 1d",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="mintemp_2d",
         name="Minimum temperature 2d",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="mintemp_3d",
         name="Minimum temperature 3d",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="mintemp_4d",
         name="Minimum temperature 4d",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="mintemp_5d",
         name="Minimum temperature 5d",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="rain_1d",
@@ -723,7 +735,7 @@ class BrSensor(SensorEntity):
             or sensor_type.endswith("_5d")
         ):
 
-            # update forcasting sensors:
+            # update forecasting sensors:
             fcday = 0
             if sensor_type.endswith("_2d"):
                 fcday = 1

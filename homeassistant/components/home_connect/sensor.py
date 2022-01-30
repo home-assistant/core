@@ -1,10 +1,12 @@
 """Provides a sensor for Home Connect."""
-
 from datetime import timedelta
 import logging
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_ENTITIES, DEVICE_CLASS_TIMESTAMP
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ENTITIES
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import ATTR_VALUE, BSH_OPERATION_STATE, DOMAIN
@@ -13,7 +15,11 @@ from .entity import HomeConnectEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Home Connect sensor."""
 
     def get_entities():
@@ -57,7 +63,7 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
         if self._key not in status:
             self._state = None
         else:
-            if self.device_class == DEVICE_CLASS_TIMESTAMP:
+            if self.device_class == SensorDeviceClass.TIMESTAMP:
                 if ATTR_VALUE not in status[self._key]:
                     self._state = None
                 elif (

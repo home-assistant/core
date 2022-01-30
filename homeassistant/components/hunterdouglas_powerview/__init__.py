@@ -53,7 +53,7 @@ from .const import (
 
 PARALLEL_UPDATES = 1
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = [Platform.COVER, Platform.SCENE, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)

@@ -11,10 +11,11 @@
     },
     {
       "type": "_http._tcp.local.",
-      "manufacturer": "nettigo"
+      "properties": {"manufacturer": "nettigo"}
     }
   ],
   "config_flow": true,
   "quality_scale": "platinum",
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["nettigo_air_monitor"]
 }

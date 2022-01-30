@@ -1,17 +1,17 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Voc\u00ea s\u00f3 pode configurar uma conta Point.",
-            "authorize_url_timeout": "Excedido tempo limite gerando a URL de autoriza\u00e7\u00e3o.",
+            "already_setup": "J\u00e1 configurado. Apenas uma configura\u00e7\u00e3o \u00e9 poss\u00edvel.",
+            "authorize_url_timeout": "Tempo limite gerando URL de autoriza\u00e7\u00e3o.",
             "external_setup": "Point configurado com \u00eaxito a partir de outro fluxo.",
-            "no_flows": "Voc\u00ea precisa configurar o Point antes de ser capaz de autenticar com ele. [Por favor, leia as instru\u00e7\u00f5es](https://www.home-assistant.io/components/point/)."
+            "no_flows": "O componente n\u00e3o est\u00e1 configurado. Por favor, siga a documenta\u00e7\u00e3o.\nVoc\u00ea precisa configurar o Point antes de ser capaz de autenticar com ele. [Por favor, leia as instru\u00e7\u00f5es](https://www.home-assistant.io/components/point/)."
         },
         "create_entry": {
-            "default": "Autenticado com sucesso com Minut para seu(s) dispositivo(s) Point"
+            "default": "Autenticado com sucesso"
         },
         "error": {
             "follow_link": "Por favor, siga o link e autentique antes de pressionar Enviar",
-            "no_token": "N\u00e3o autenticado com Minut"
+            "no_token": "Token de acesso inv\u00e1lido"
         },
         "step": {
             "auth": {
@@ -22,7 +22,7 @@
                 "data": {
                     "flow_impl": "Provedor"
                 },
-                "description": "Escolha atrav\u00e9s de qual provedor de autentica\u00e7\u00e3o voc\u00ea deseja autenticar com Point.",
+                "description": "Deseja iniciar a configura\u00e7\u00e3o?",
                 "title": "Provedor de Autentica\u00e7\u00e3o"
             }
         }

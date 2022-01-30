@@ -12,15 +12,17 @@
                 "data": {
                     "host": "Host",
                     "individual_address": "Individual address for the connection",
-                    "local_ip": "Local IP (leave empty if unsure)",
+                    "local_ip": "Local IP of Home Assistant (leave empty for automatic detection)",
                     "port": "Port",
-                    "route_back": "Route Back / NAT Mode"
+                    "route_back": "Route Back / NAT Mode",
+                    "tunneling_type": "KNX Tunneling Type"
                 },
                 "description": "Please enter the connection information of your tunneling device."
             },
             "routing": {
                 "data": {
                     "individual_address": "Individual address for the routing connection",
+                    "local_ip": "Local IP of Home Assistant (leave empty for automatic detection)",
                     "multicast_group": "The multicast group used for routing",
                     "multicast_port": "The multicast port used for routing"
                 },
@@ -46,6 +48,7 @@
                 "data": {
                     "connection_type": "KNX Connection Type",
                     "individual_address": "Default individual address",
+                    "local_ip": "Local IP of Home Assistant (use 0.0.0.0 for automatic detection)",
                     "multicast_group": "Multicast group used for routing and discovery",
                     "multicast_port": "Multicast port used for routing and discovery",
                     "rate_limit": "Maximum outgoing telegrams per second",
@@ -57,7 +60,8 @@
                     "host": "Host",
                     "local_ip": "Local IP (leave empty if unsure)",
                     "port": "Port",
-                    "route_back": "Route Back / NAT Mode"
+                    "route_back": "Route Back / NAT Mode",
+                    "tunneling_type": "KNX Tunneling Type"
                 }
             }
         }

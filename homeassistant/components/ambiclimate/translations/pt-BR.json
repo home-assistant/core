@@ -1,10 +1,11 @@
 {
     "config": {
         "abort": {
-            "access_token": "Erro desconhecido ao gerar um token de acesso."
+            "access_token": "Erro desconhecido ao gerar um token de acesso.",
+            "already_configured": "A conta j\u00e1 foi configurada"
         },
         "create_entry": {
-            "default": "Autenticado com sucesso no Ambiclimate"
+            "default": "Autenticado com sucesso"
         },
         "error": {
             "follow_link": "Por favor, siga o link e autentique-se antes de pressionar Enviar",

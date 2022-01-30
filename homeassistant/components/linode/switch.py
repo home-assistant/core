@@ -1,10 +1,15 @@
 """Support for interacting with Linode nodes."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     ATTR_CREATED,
@@ -28,10 +33,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Linode Node switch."""
-    linode = hass.data.get(DATA_LINODE)
-    nodes = config.get(CONF_NODES)
+    linode = hass.data[DATA_LINODE]
+    nodes = config[CONF_NODES]
 
     dev = []
     for node in nodes:
@@ -51,24 +61,7 @@ class LinodeSwitch(SwitchEntity):
         self._linode = li
         self._node_id = node_id
         self.data = None
-        self._state = None
-        self._attrs = {}
-        self._name = None
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if switch is on."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the Linode Node."""
-        return self._attrs
+        self._attr_extra_state_attributes = {}
 
     def turn_on(self, **kwargs):
         """Boot-up the Node."""
@@ -88,8 +81,8 @@ class LinodeSwitch(SwitchEntity):
                 if node.id == self._node_id:
                     self.data = node
         if self.data is not None:
-            self._state = self.data.status == "running"
-            self._attrs = {
+            self._attr_is_on = self.data.status == "running"
+            self._attr_extra_state_attributes = {
                 ATTR_CREATED: self.data.created,
                 ATTR_NODE_ID: self.data.id,
                 ATTR_NODE_NAME: self.data.label,
@@ -99,4 +92,4 @@ class LinodeSwitch(SwitchEntity):
                 ATTR_REGION: self.data.region.country,
                 ATTR_VCPUS: self.data.specs.vcpus,
             }
-            self._name = self.data.label
+            self._attr_name = self.data.label

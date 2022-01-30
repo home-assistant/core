@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
+        },
+        "step": {
+            "version_source": {
+                "title": "Configurar"
+            }
+        }
+    }
+}

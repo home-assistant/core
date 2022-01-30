@@ -11,10 +11,6 @@ from typing import TYPE_CHECKING, Any
 
 from pi1wire import InvalidCRCException, OneWireInterface, UnsupportResponseException
 
-from homeassistant.components.onewire.model import (
-    OWDirectDeviceDescription,
-    OWServerDeviceDescription,
-)
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -37,7 +33,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
-    CONF_NAMES,
     CONF_TYPE_OWSERVER,
     CONF_TYPE_SYSBUS,
     DEVICE_KEYS_0_3,
@@ -46,6 +41,7 @@ from .const import (
     READ_MODE_FLOAT,
     READ_MODE_INT,
 )
+from .model import OWDirectDeviceDescription, OWServerDeviceDescription
 from .onewire_entities import (
     OneWireBaseEntity,
     OneWireEntityDescription,
@@ -57,6 +53,8 @@ from .onewirehub import OneWireHub
 @dataclass
 class OneWireSensorEntityDescription(OneWireEntityDescription, SensorEntityDescription):
     """Class describing OneWire sensor entities."""
+
+    override_key: str | None = None
 
 
 SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION = OneWireSensorEntityDescription(
@@ -188,6 +186,37 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
     ),
     "28": (SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,),
+    "30": (
+        SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,
+        OneWireSensorEntityDescription(
+            key="typeX/temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            entity_registry_enabled_default=False,
+            name="Thermocouple temperature",
+            native_unit_of_measurement=TEMP_CELSIUS,
+            read_mode=READ_MODE_FLOAT,
+            override_key="typeK/temperature",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        OneWireSensorEntityDescription(
+            key="volt",
+            device_class=SensorDeviceClass.VOLTAGE,
+            entity_registry_enabled_default=False,
+            name="Voltage",
+            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        OneWireSensorEntityDescription(
+            key="vis",
+            device_class=SensorDeviceClass.VOLTAGE,
+            entity_registry_enabled_default=False,
+            name="vis",
+            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
     "3B": (SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,),
     "42": (SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,),
     "1D": tuple(
@@ -336,10 +365,6 @@ def get_entities(
         return []
 
     entities: list[SensorEntity] = []
-    device_names = {}
-    if CONF_NAMES in config and isinstance(config[CONF_NAMES], dict):
-        device_names = config[CONF_NAMES]
-
     conf_type = config[CONF_TYPE]
     # We have an owserver on a remote(or local) host/port
     if conf_type == CONF_TYPE_OWSERVER:
@@ -376,9 +401,10 @@ def get_entities(
                         description.native_unit_of_measurement = PERCENTAGE
                         description.name = f"Wetness {s_id}"
                 device_file = os.path.join(
-                    os.path.split(device.path)[0], description.key
+                    os.path.split(device.path)[0],
+                    description.override_key or description.key,
                 )
-                name = f"{device_names.get(device_id, device_id)} {description.name}"
+                name = f"{device_id} {description.name}"
                 entities.append(
                     OneWireProxySensor(
                         description=description,
@@ -401,7 +427,7 @@ def get_entities(
             device_info = device.device_info
             description = SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION
             device_file = f"/sys/bus/w1/devices/{device_id}/w1_slave"
-            name = f"{device_names.get(device_id, device_id)} {description.name}"
+            name = f"{device_id} {description.name}"
             entities.append(
                 OneWireDirectSensor(
                     description=description,

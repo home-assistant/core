@@ -113,7 +113,7 @@ def ws_info(
     connection.send_result(msg["id"], recorder_info)
 
 
-@websocket_api.require_admin
+@websocket_api.ws_require_user(only_supervisor=True)
 @websocket_api.websocket_command({vol.Required("type"): "backup/start"})
 @websocket_api.async_response
 async def ws_backup_start(
@@ -131,7 +131,7 @@ async def ws_backup_start(
     connection.send_result(msg["id"])
 
 
-@websocket_api.require_admin
+@websocket_api.ws_require_user(only_supervisor=True)
 @websocket_api.websocket_command({vol.Required("type"): "backup/end"})
 @websocket_api.async_response
 async def ws_backup_end(

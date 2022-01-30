@@ -1,4 +1,9 @@
 {
+    "device_automation": {
+        "trigger_type": {
+            "changed_states": "{entity_name} ligado ou desligado"
+        }
+    },
     "state": {
         "_": {
             "idle": "Ocioso",

@@ -2,6 +2,7 @@
 from aiohue.v2.models.button import ButtonEvent
 
 from homeassistant.components import hue
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.hue.v2.device import async_setup_devices
 from homeassistant.components.hue.v2.hue_event import async_setup_hue_events
 
@@ -25,7 +26,7 @@ async def test_hue_event(hass, mock_bridge_v2, v2_resources_test_data):
 
     # Emit button update event
     btn_event = {
-        "button": {"last_event": "short_release"},
+        "button": {"last_event": "initial_press"},
         "id": "c658d3d8-a013-4b81-8ac6-78b248537e70",
         "metadata": {"control_id": 1},
         "type": "button",
@@ -52,7 +53,7 @@ async def test_get_triggers(hass, mock_bridge_v2, v2_resources_test_data, device
         {(hue.DOMAIN, "3ff06175-29e8-44a8-8fe7-af591b0025da")}
     )
     triggers = await async_get_device_automations(
-        hass, "trigger", hue_wall_switch_device.id
+        hass, DeviceAutomationType.TRIGGER, hue_wall_switch_device.id
     )
 
     trigger_batt = {
@@ -70,12 +71,20 @@ async def test_get_triggers(hass, mock_bridge_v2, v2_resources_test_data, device
                 "platform": "device",
                 "domain": hue.DOMAIN,
                 "device_id": hue_wall_switch_device.id,
-                "unique_id": hue_wall_switch_device.id,
-                "type": event_type,
+                "unique_id": resource_id,
+                "type": event_type.value,
                 "subtype": control_id,
             }
-            for event_type in (x.value for x in ButtonEvent if x != ButtonEvent.UNKNOWN)
-            for control_id in range(1, 3)
+            for event_type in (
+                ButtonEvent.INITIAL_PRESS,
+                ButtonEvent.LONG_RELEASE,
+                ButtonEvent.REPEAT,
+                ButtonEvent.SHORT_RELEASE,
+            )
+            for control_id, resource_id in (
+                (1, "c658d3d8-a013-4b81-8ac6-78b248537e70"),
+                (2, "be1eb834-bdf5-4d26-8fba-7b1feaa83a9d"),
+            )
         ),
     ]
 

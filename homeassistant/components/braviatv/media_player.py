@@ -3,7 +3,10 @@ from __future__ import annotations
 
 from typing import Final
 
-from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -68,7 +71,7 @@ class BraviaTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     """Representation of a Bravia TV Media Player."""
 
     coordinator: BraviaTVCoordinator
-    _attr_device_class = DEVICE_CLASS_TV
+    _attr_device_class = MediaPlayerDeviceClass.TV
     _attr_supported_features = SUPPORT_BRAVIA
 
     def __init__(

@@ -5,7 +5,11 @@
         },
         "yamaha_musiccast__zone_equalizer_mode": {
             "auto": "\u0410\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0447\u043d\u043e",
+            "bypass": "\u0411\u0430\u0439\u043f\u0430\u0441",
             "manual": "\u0420\u044a\u0447\u043d\u043e"
+        },
+        "yamaha_musiccast__zone_link_control": {
+            "speed": "\u0421\u043a\u043e\u0440\u043e\u0441\u0442"
         },
         "yamaha_musiccast__zone_sleep": {
             "120 min": "120 \u043c\u0438\u043d\u0443\u0442\u0438",
@@ -27,6 +31,7 @@
         },
         "yamaha_musiccast__zone_tone_control_mode": {
             "auto": "\u0410\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0447\u043d\u043e",
+            "bypass": "\u0411\u0430\u0439\u043f\u0430\u0441",
             "manual": "\u0420\u044a\u0447\u043d\u043e"
         }
     }

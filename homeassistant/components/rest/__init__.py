@@ -23,9 +23,10 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     HTTP_DIGEST_AUTHENTICATION,
     SERVICE_RELOAD,
+    Platform,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import discovery
+from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.helpers import discovery, template
 from homeassistant.helpers.entity_component import (
     DEFAULT_SCAN_INTERVAL,
     EntityComponent,
@@ -37,11 +38,16 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import COORDINATOR, DOMAIN, PLATFORM_IDX, REST, REST_DATA, REST_IDX
 from .data import RestData
 from .schema import CONFIG_SCHEMA  # noqa: F401
-from .utils import inject_hass_in_templates_list
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["binary_sensor", "notify", "sensor", "switch"]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.NOTIFY,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+
 COORDINATOR_AWARE_PLATFORMS = [SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN]
 
 
@@ -50,7 +56,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     _async_setup_shared_data(hass)
 
-    async def reload_service_handler(service):
+    async def reload_service_handler(service: ServiceCall) -> None:
         """Remove all user-defined groups and load new ones from config."""
         if (conf := await component.async_prepare_reload()) is None:
             return
@@ -161,7 +167,8 @@ def create_rest_data_from_config(hass, config):
         resource_template.hass = hass
         resource = resource_template.async_render(parse_result=False)
 
-    inject_hass_in_templates_list(hass, [headers, params])
+    template.attach(hass, headers)
+    template.attach(hass, params)
 
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:

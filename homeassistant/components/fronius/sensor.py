@@ -31,7 +31,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -68,7 +68,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import Fronius configuration from yaml."""
     _LOGGER.warning(
@@ -148,7 +148,7 @@ INVERTER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="current_ac",
-        name="AC Current",
+        name="AC current",
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -163,7 +163,7 @@ INVERTER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="current_dc_2",
-        name="DC Current 2",
+        name="DC current 2",
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -784,15 +784,22 @@ class MeterSensor(_FroniusSensorEntity):
         self._entity_id_prefix = f"meter_{solar_net_id}"
         super().__init__(coordinator, key, solar_net_id)
         meter_data = self._device_data()
+        # S0 meters connected directly to inverters respond "n.a." as serial number
+        # `model` contains the inverter id: "S0 Meter at inverter 1"
+        if (meter_uid := meter_data["serial"]["value"]) == "n.a.":
+            meter_uid = (
+                f"{coordinator.solar_net.solar_net_device_id}:"
+                f'{meter_data["model"]["value"]}'
+            )
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, meter_data["serial"]["value"])},
+            identifiers={(DOMAIN, meter_uid)},
             manufacturer=meter_data["manufacturer"]["value"],
             model=meter_data["model"]["value"],
             name=meter_data["model"]["value"],
             via_device=(DOMAIN, coordinator.solar_net.solar_net_device_id),
         )
-        self._attr_unique_id = f'{meter_data["serial"]["value"]}-{key}'
+        self._attr_unique_id = f"{meter_uid}-{key}"
 
 
 class OhmpilotSensor(_FroniusSensorEntity):

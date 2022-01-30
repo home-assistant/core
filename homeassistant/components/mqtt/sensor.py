@@ -13,25 +13,26 @@ from homeassistant.components.sensor import (
     DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
     STATE_CLASSES_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
-    DEVICE_CLASS_DATE,
-    DEVICE_CLASS_TIMESTAMP,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from . import PLATFORMS, subscription
+from . import PLATFORMS, MqttValueTemplate, subscription
 from .. import mqtt
 from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC, DOMAIN
 from .debug_info import log_messages
@@ -110,14 +111,21 @@ DISCOVERY_SCHEMA = vol.All(
 
 
 async def async_setup_platform(
-    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
-):
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up MQTT sensors through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     await _async_setup_entity(hass, async_add_entities, config)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up MQTT sensors dynamically through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
@@ -159,19 +167,18 @@ class MqttSensor(MqttEntity, SensorEntity):
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
-        template = self._config.get(CONF_VALUE_TEMPLATE)
-        if template is not None:
-            template.hass = self.hass
-        last_reset_template = self._config.get(CONF_LAST_RESET_VALUE_TEMPLATE)
-        if last_reset_template is not None:
-            last_reset_template.hass = self.hass
+        self._template = MqttValueTemplate(
+            self._config.get(CONF_VALUE_TEMPLATE), entity=self
+        ).async_render_with_possible_json_value
+        self._last_reset_template = MqttValueTemplate(
+            self._config.get(CONF_LAST_RESET_VALUE_TEMPLATE), entity=self
+        ).async_render_with_possible_json_value
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
         topics = {}
 
         def _update_state(msg):
-            payload = msg.payload
             # auto-expire enabled?
             expire_after = self._config.get(CONF_EXPIRE_AFTER)
             if expire_after is not None and expire_after > 0:
@@ -190,39 +197,24 @@ class MqttSensor(MqttEntity, SensorEntity):
                     self.hass, self._value_is_expired, expiration_at
                 )
 
-            template = self._config.get(CONF_VALUE_TEMPLATE)
-            if template is not None:
-                variables = {"entity_id": self.entity_id}
-                payload = template.async_render_with_possible_json_value(
-                    payload,
-                    self._state,
-                    variables=variables,
-                )
+            payload = self._template(msg.payload)
 
             if payload is not None and self.device_class in (
-                DEVICE_CLASS_DATE,
-                DEVICE_CLASS_TIMESTAMP,
+                SensorDeviceClass.DATE,
+                SensorDeviceClass.TIMESTAMP,
             ):
                 if (payload := dt_util.parse_datetime(payload)) is None:
                     _LOGGER.warning(
                         "Invalid state message '%s' from '%s'", msg.payload, msg.topic
                     )
-                elif self.device_class == DEVICE_CLASS_DATE:
+                elif self.device_class == SensorDeviceClass.DATE:
                     payload = payload.date()
 
             self._state = payload
 
         def _update_last_reset(msg):
-            payload = msg.payload
+            payload = self._last_reset_template(msg.payload)
 
-            template = self._config.get(CONF_LAST_RESET_VALUE_TEMPLATE)
-            if template is not None:
-                variables = {"entity_id": self.entity_id}
-                payload = template.async_render_with_possible_json_value(
-                    payload,
-                    self._state,
-                    variables=variables,
-                )
             if not payload:
                 _LOGGER.debug("Ignoring empty last_reset message from '%s'", msg.topic)
                 return
@@ -270,6 +262,7 @@ class MqttSensor(MqttEntity, SensorEntity):
                 "topic": self._config[CONF_LAST_RESET_TOPIC],
                 "msg_callback": last_reset_message_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
 
         self._sub_state = await subscription.async_subscribe_topics(

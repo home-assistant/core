@@ -10,6 +10,7 @@ from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 
 from homeassistant.components import automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -60,7 +61,9 @@ async def test_get_conditions(hass, client, lock_schlage_be469, integration) -> 
             "device_id": device.id,
         },
     ]
-    conditions = await async_get_device_automations(hass, "condition", device.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device.id
+    )
     for condition in expected_conditions:
         assert condition in conditions
 

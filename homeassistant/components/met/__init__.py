@@ -20,7 +20,7 @@ from homeassistant.const import (
     LENGTH_METERS,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.distance import convert as convert_distance
@@ -109,7 +109,7 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator):
         if self._unsub_track_home:
             return
 
-        async def _async_update_weather_data(_event: str | None = None) -> None:
+        async def _async_update_weather_data(_event: Event | None = None) -> None:
             """Update weather data."""
             if self.weather.set_coordinates():
                 await self.async_refresh()

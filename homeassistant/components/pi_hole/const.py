@@ -9,7 +9,7 @@ from typing import Any
 from hole import Hole
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_UPDATE,
+    BinarySensorDeviceClass,
     BinarySensorEntityDescription,
 )
 from homeassistant.components.sensor import SensorEntityDescription
@@ -122,7 +122,7 @@ BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
     PiHoleBinarySensorEntityDescription(
         key="core_update_available",
         name="Core Update Available",
-        device_class=DEVICE_CLASS_UPDATE,
+        device_class=BinarySensorDeviceClass.UPDATE,
         extra_value=lambda api: {
             "current_version": api.versions["core_current"],
             "latest_version": api.versions["core_latest"],
@@ -132,7 +132,7 @@ BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
     PiHoleBinarySensorEntityDescription(
         key="web_update_available",
         name="Web Update Available",
-        device_class=DEVICE_CLASS_UPDATE,
+        device_class=BinarySensorDeviceClass.UPDATE,
         extra_value=lambda api: {
             "current_version": api.versions["web_current"],
             "latest_version": api.versions["web_latest"],
@@ -142,7 +142,7 @@ BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
     PiHoleBinarySensorEntityDescription(
         key="ftl_update_available",
         name="FTL Update Available",
-        device_class=DEVICE_CLASS_UPDATE,
+        device_class=BinarySensorDeviceClass.UPDATE,
         extra_value=lambda api: {
             "current_version": api.versions["FTL_current"],
             "latest_version": api.versions["FTL_latest"],

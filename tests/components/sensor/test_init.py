@@ -1,15 +1,12 @@
-"""The test for sensor device automation."""
+"""The test for sensor entity."""
 from datetime import date, datetime, timezone
 
 import pytest
 from pytest import approx
 
-from homeassistant.components.sensor import SensorEntityDescription
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_DATE,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -45,7 +42,7 @@ async def test_temperature_conversion(
         name="Test",
         native_value=str(native_value),
         native_unit_of_measurement=native_unit,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     )
 
     entity0 = platform.ENTITIES["0"]
@@ -84,12 +81,15 @@ async def test_deprecated_temperature_conversion(
     ) in caplog.text
 
 
-async def test_deprecated_last_reset(hass, caplog, enable_custom_integrations):
+@pytest.mark.parametrize("state_class", ("measurement", "total_increasing"))
+async def test_deprecated_last_reset(
+    hass, caplog, enable_custom_integrations, state_class
+):
     """Test warning on deprecated last reset."""
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
     platform.ENTITIES["0"] = platform.MockSensor(
-        name="Test", state_class="measurement", last_reset=dt_util.utc_from_timestamp(0)
+        name="Test", state_class=state_class, last_reset=dt_util.utc_from_timestamp(0)
     )
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
@@ -97,12 +97,14 @@ async def test_deprecated_last_reset(hass, caplog, enable_custom_integrations):
 
     assert (
         "Entity sensor.test (<class 'custom_components.test.sensor.MockSensor'>) "
-        "with state_class measurement has set last_reset. Setting last_reset for "
-        "entities with state_class other than 'total' is deprecated and will be "
-        "removed from Home Assistant Core 2021.11. Please update your configuration if "
-        "state_class is manually configured, otherwise report it to the custom "
-        "component author."
+        f"with state_class {state_class} has set last_reset. Setting last_reset for "
+        "entities with state_class other than 'total' is not supported. Please update "
+        "your configuration if state_class is manually configured, otherwise report it "
+        "to the custom component author."
     ) in caplog.text
+
+    state = hass.states.get("sensor.test")
+    assert "last_reset" not in state.attributes
 
 
 async def test_deprecated_unit_of_measurement(hass, caplog, enable_custom_integrations):
@@ -124,21 +126,23 @@ async def test_datetime_conversion(hass, caplog, enable_custom_integrations):
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
     platform.ENTITIES["0"] = platform.MockSensor(
-        name="Test", native_value=test_timestamp, device_class=DEVICE_CLASS_TIMESTAMP
+        name="Test",
+        native_value=test_timestamp,
+        device_class=SensorDeviceClass.TIMESTAMP,
     )
     platform.ENTITIES["1"] = platform.MockSensor(
-        name="Test", native_value=test_date, device_class=DEVICE_CLASS_DATE
+        name="Test", native_value=test_date, device_class=SensorDeviceClass.DATE
     )
     platform.ENTITIES["2"] = platform.MockSensor(
-        name="Test", native_value=None, device_class=DEVICE_CLASS_TIMESTAMP
+        name="Test", native_value=None, device_class=SensorDeviceClass.TIMESTAMP
     )
     platform.ENTITIES["3"] = platform.MockSensor(
-        name="Test", native_value=None, device_class=DEVICE_CLASS_DATE
+        name="Test", native_value=None, device_class=SensorDeviceClass.DATE
     )
     platform.ENTITIES["4"] = platform.MockSensor(
         name="Test",
         native_value=test_local_timestamp,
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
     )
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
@@ -163,44 +167,44 @@ async def test_datetime_conversion(hass, caplog, enable_custom_integrations):
 @pytest.mark.parametrize(
     "device_class,native_value,state_value",
     [
-        (DEVICE_CLASS_DATE, "2021-11-09", "2021-11-09"),
+        (SensorDeviceClass.DATE, "2021-11-09", "2021-11-09"),
         (
-            DEVICE_CLASS_DATE,
+            SensorDeviceClass.DATE,
             "2021-01-09T12:00:00+00:00",
             "2021-01-09",
         ),
         (
-            DEVICE_CLASS_DATE,
+            SensorDeviceClass.DATE,
             "2021-01-09T00:00:00+01:00",
             "2021-01-08",
         ),
         (
-            DEVICE_CLASS_TIMESTAMP,
+            SensorDeviceClass.TIMESTAMP,
             "2021-01-09T12:00:00+00:00",
             "2021-01-09T12:00:00+00:00",
         ),
         (
-            DEVICE_CLASS_TIMESTAMP,
+            SensorDeviceClass.TIMESTAMP,
             "2021-01-09 12:00:00+00:00",
             "2021-01-09T12:00:00+00:00",
         ),
         (
-            DEVICE_CLASS_TIMESTAMP,
+            SensorDeviceClass.TIMESTAMP,
             "2021-01-09T12:00:00+04:00",
             "2021-01-09T08:00:00+00:00",
         ),
         (
-            DEVICE_CLASS_TIMESTAMP,
+            SensorDeviceClass.TIMESTAMP,
             "2021-01-09 12:00:00+01:00",
             "2021-01-09T11:00:00+00:00",
         ),
         (
-            DEVICE_CLASS_TIMESTAMP,
+            SensorDeviceClass.TIMESTAMP,
             "2021-01-09 12:00:00",
             "2021-01-09T12:00:00",
         ),
         (
-            DEVICE_CLASS_TIMESTAMP,
+            SensorDeviceClass.TIMESTAMP,
             "2021-01-09T12:00:00",
             "2021-01-09T12:00:00",
         ),
@@ -237,7 +241,9 @@ async def test_reject_timezoneless_datetime_str(
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
     platform.ENTITIES["0"] = platform.MockSensor(
-        name="Test", native_value=test_timestamp, device_class=DEVICE_CLASS_TIMESTAMP
+        name="Test",
+        native_value=test_timestamp,
+        device_class=SensorDeviceClass.TIMESTAMP,
     )
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})

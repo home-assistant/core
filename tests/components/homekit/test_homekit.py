@@ -11,10 +11,7 @@ import pytest
 
 from homeassistant import config as hass_config
 from homeassistant.components import homekit as homekit_base, zeroconf
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY_CHARGING,
-    DEVICE_CLASS_MOTION,
-)
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.homekit import (
     MAX_DEVICES,
     STATUS_READY,
@@ -37,6 +34,7 @@ from homeassistant.components.homekit.const import (
 )
 from homeassistant.components.homekit.type_triggers import DeviceTriggerAccessory
 from homeassistant.components.homekit.util import get_persist_fullpath_for_entry_id
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -45,8 +43,6 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_PORT,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_HUMIDITY,
     EVENT_HOMEASSISTANT_STARTED,
     PERCENTAGE,
     SERVICE_RELOAD,
@@ -433,6 +429,62 @@ async def test_homekit_entity_glob_filter(hass, mock_async_zeroconf):
     assert hass.states.get("light.included_test") in filtered_states
 
 
+async def test_homekit_entity_glob_filter_with_config_entities(
+    hass, mock_async_zeroconf, entity_reg
+):
+    """Test the entity filter with configuration entities."""
+    entry = await async_init_integration(hass)
+
+    from homeassistant.helpers.entity import EntityCategory
+    from homeassistant.helpers.entity_registry import RegistryEntry
+
+    select_config_entity: RegistryEntry = entity_reg.async_get_or_create(
+        "select",
+        "any",
+        "any",
+        device_id="1234",
+        entity_category=EntityCategory.CONFIG,
+    )
+    hass.states.async_set(select_config_entity.entity_id, "off")
+
+    switch_config_entity: RegistryEntry = entity_reg.async_get_or_create(
+        "switch",
+        "any",
+        "any",
+        device_id="1234",
+        entity_category=EntityCategory.CONFIG,
+    )
+    hass.states.async_set(switch_config_entity.entity_id, "off")
+    hass.states.async_set("select.keep", "open")
+
+    hass.states.async_set("cover.excluded_test", "open")
+    hass.states.async_set("light.included_test", "on")
+
+    entity_filter = generate_filter(
+        ["select"],
+        ["switch.test", switch_config_entity.entity_id],
+        [],
+        [],
+        ["*.included_*"],
+        ["*.excluded_*"],
+    )
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE, entity_filter)
+
+    homekit.bridge = Mock()
+    homekit.bridge.accessories = {}
+
+    filtered_states = await homekit.async_configure_accessories()
+    assert (
+        hass.states.get(switch_config_entity.entity_id) in filtered_states
+    )  # explicitly included
+    assert (
+        hass.states.get(select_config_entity.entity_id) not in filtered_states
+    )  # not explicted included and its a config entity
+    assert hass.states.get("cover.excluded_test") not in filtered_states
+    assert hass.states.get("light.included_test") in filtered_states
+    assert hass.states.get("select.keep") in filtered_states
+
+
 async def test_homekit_start(hass, hk_driver, mock_async_zeroconf, device_reg):
     """Test HomeKit start method."""
     entry = await async_init_integration(hass)
@@ -683,6 +735,11 @@ async def test_homekit_unpair(hass, device_reg, mock_async_zeroconf):
 
         state = homekit.driver.state
         state.add_paired_client("client1", "any", b"1")
+        state.add_paired_client("client2", "any", b"0")
+        state.add_paired_client("client3", "any", b"1")
+        state.add_paired_client("client4", "any", b"0")
+        state.add_paired_client("client5", "any", b"0")
+
         formatted_mac = device_registry.format_mac(state.mac)
         hk_bridge_dev = device_reg.async_get_device(
             {}, {(device_registry.CONNECTION_NETWORK_MAC, formatted_mac)}
@@ -1108,6 +1165,7 @@ async def test_homekit_finds_linked_batteries(
     device_entry = device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         sw_version="0.16.0",
+        hw_version="2.34",
         model="Powerwall 2",
         manufacturer="Tesla",
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
@@ -1118,14 +1176,14 @@ async def test_homekit_finds_linked_batteries(
         "powerwall",
         "battery_charging",
         device_id=device_entry.id,
-        original_device_class=DEVICE_CLASS_BATTERY_CHARGING,
+        original_device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
     )
     battery_sensor = entity_reg.async_get_or_create(
         "sensor",
         "powerwall",
         "battery",
         device_id=device_entry.id,
-        original_device_class=DEVICE_CLASS_BATTERY,
+        original_device_class=SensorDeviceClass.BATTERY,
     )
     light = entity_reg.async_get_or_create(
         "light", "powerwall", "demo", device_id=device_entry.id
@@ -1134,10 +1192,10 @@ async def test_homekit_finds_linked_batteries(
     hass.states.async_set(
         binary_charging_sensor.entity_id,
         STATE_ON,
-        {ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY_CHARGING},
+        {ATTR_DEVICE_CLASS: BinarySensorDeviceClass.BATTERY_CHARGING},
     )
     hass.states.async_set(
-        battery_sensor.entity_id, 30, {ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY}
+        battery_sensor.entity_id, 30, {ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY}
     )
     hass.states.async_set(light.entity_id, STATE_ON)
 
@@ -1156,6 +1214,7 @@ async def test_homekit_finds_linked_batteries(
             "manufacturer": "Tesla",
             "model": "Powerwall 2",
             "sw_version": "0.16.0",
+            "hw_version": "2.34",
             "platform": "test",
             "linked_battery_charging_sensor": "binary_sensor.powerwall_battery_charging",
             "linked_battery_sensor": "sensor.powerwall_battery",
@@ -1187,14 +1246,14 @@ async def test_homekit_async_get_integration_fails(
         "invalid_integration_does_not_exist",
         "battery_charging",
         device_id=device_entry.id,
-        original_device_class=DEVICE_CLASS_BATTERY_CHARGING,
+        original_device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
     )
     battery_sensor = entity_reg.async_get_or_create(
         "sensor",
         "invalid_integration_does_not_exist",
         "battery",
         device_id=device_entry.id,
-        original_device_class=DEVICE_CLASS_BATTERY,
+        original_device_class=SensorDeviceClass.BATTERY,
     )
     light = entity_reg.async_get_or_create(
         "light", "invalid_integration_does_not_exist", "demo", device_id=device_entry.id
@@ -1203,10 +1262,10 @@ async def test_homekit_async_get_integration_fails(
     hass.states.async_set(
         binary_charging_sensor.entity_id,
         STATE_ON,
-        {ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY_CHARGING},
+        {ATTR_DEVICE_CLASS: BinarySensorDeviceClass.BATTERY_CHARGING},
     )
     hass.states.async_set(
-        battery_sensor.entity_id, 30, {ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY}
+        battery_sensor.entity_id, 30, {ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY}
     )
     hass.states.async_set(light.entity_id, STATE_ON)
 
@@ -1303,8 +1362,7 @@ async def test_homekit_uses_system_zeroconf(hass, hk_driver, mock_async_zeroconf
 
 def _write_data(path: str, data: dict) -> None:
     """Write the data."""
-    if not os.path.isdir(os.path.dirname(path)):
-        os.makedirs(os.path.dirname(path))
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     json_util.save_json(path, data)
 
 
@@ -1334,14 +1392,14 @@ async def test_homekit_ignored_missing_devices(
         "powerwall",
         "battery_charging",
         device_id=device_entry.id,
-        original_device_class=DEVICE_CLASS_BATTERY_CHARGING,
+        original_device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
     )
     entity_reg.async_get_or_create(
         "sensor",
         "powerwall",
         "battery",
         device_id=device_entry.id,
-        original_device_class=DEVICE_CLASS_BATTERY,
+        original_device_class=SensorDeviceClass.BATTERY,
     )
     light = entity_reg.async_get_or_create(
         "light", "powerwall", "demo", device_id=device_entry.id
@@ -1404,7 +1462,7 @@ async def test_homekit_finds_linked_motion_sensors(
         "camera",
         "motion_sensor",
         device_id=device_entry.id,
-        original_device_class=DEVICE_CLASS_MOTION,
+        original_device_class=BinarySensorDeviceClass.MOTION,
     )
     camera = entity_reg.async_get_or_create(
         "camera", "camera", "demo", device_id=device_entry.id
@@ -1413,7 +1471,7 @@ async def test_homekit_finds_linked_motion_sensors(
     hass.states.async_set(
         binary_motion_sensor.entity_id,
         STATE_ON,
-        {ATTR_DEVICE_CLASS: DEVICE_CLASS_MOTION},
+        {ATTR_DEVICE_CLASS: BinarySensorDeviceClass.MOTION},
     )
     hass.states.async_set(camera.entity_id, STATE_ON)
 
@@ -1466,7 +1524,7 @@ async def test_homekit_finds_linked_humidity_sensors(
         "humidifier",
         "humidity_sensor",
         device_id=device_entry.id,
-        original_device_class=DEVICE_CLASS_HUMIDITY,
+        original_device_class=SensorDeviceClass.HUMIDITY,
     )
     humidifier = entity_reg.async_get_or_create(
         "humidifier", "humidifier", "demo", device_id=device_entry.id
@@ -1476,7 +1534,7 @@ async def test_homekit_finds_linked_humidity_sensors(
         humidity_sensor.entity_id,
         "42",
         {
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
         },
     )

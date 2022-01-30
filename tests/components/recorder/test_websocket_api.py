@@ -360,9 +360,11 @@ async def test_recorder_info_migration_queue_exhausted(hass, hass_ws_client):
     assert response["result"]["thread_running"] is True
 
 
-async def test_backup_start_no_recorder(hass, hass_ws_client):
+async def test_backup_start_no_recorder(
+    hass, hass_ws_client, hass_supervisor_access_token
+):
     """Test getting backup start when recorder is not present."""
-    client = await hass_ws_client()
+    client = await hass_ws_client(hass, hass_supervisor_access_token)
 
     await client.send_json({"id": 1, "type": "backup/start"})
     response = await client.receive_json()
@@ -370,9 +372,9 @@ async def test_backup_start_no_recorder(hass, hass_ws_client):
     assert response["error"]["code"] == "unknown_command"
 
 
-async def test_backup_start_timeout(hass, hass_ws_client):
+async def test_backup_start_timeout(hass, hass_ws_client, hass_supervisor_access_token):
     """Test getting backup start when recorder is not present."""
-    client = await hass_ws_client()
+    client = await hass_ws_client(hass, hass_supervisor_access_token)
     await async_init_recorder_component(hass)
 
     # Ensure there are no queued events
@@ -388,9 +390,9 @@ async def test_backup_start_timeout(hass, hass_ws_client):
             await client.send_json({"id": 2, "type": "backup/end"})
 
 
-async def test_backup_end(hass, hass_ws_client):
+async def test_backup_end(hass, hass_ws_client, hass_supervisor_access_token):
     """Test backup start."""
-    client = await hass_ws_client()
+    client = await hass_ws_client(hass, hass_supervisor_access_token)
     await async_init_recorder_component(hass)
 
     # Ensure there are no queued events
@@ -405,9 +407,11 @@ async def test_backup_end(hass, hass_ws_client):
     assert response["success"]
 
 
-async def test_backup_end_without_start(hass, hass_ws_client):
+async def test_backup_end_without_start(
+    hass, hass_ws_client, hass_supervisor_access_token
+):
     """Test backup start."""
-    client = await hass_ws_client()
+    client = await hass_ws_client(hass, hass_supervisor_access_token)
     await async_init_recorder_component(hass)
 
     # Ensure there are no queued events

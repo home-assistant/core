@@ -33,6 +33,7 @@
                     "s2_unauthenticated_key": "Klucz nieuwierzytelniony S2",
                     "usb_path": "\u015acie\u017cka urz\u0105dzenia USB"
                 },
+                "description": "Dodatek wygeneruje klucze bezpiecze\u0144stwa, je\u015bli te pola pozostan\u0105 puste.",
                 "title": "Wprowad\u017a konfiguracj\u0119 dodatku Z-Wave JS"
             },
             "hassio_confirm": {
@@ -119,6 +120,7 @@
                     "s2_unauthenticated_key": "Klucz nieuwierzytelniony S2",
                     "usb_path": "\u015acie\u017cka urz\u0105dzenia USB"
                 },
+                "description": "Dodatek wygeneruje klucze bezpiecze\u0144stwa, je\u015bli te pola pozostan\u0105 puste.",
                 "title": "Wprowad\u017a konfiguracj\u0119 dodatku Z-Wave JS"
             },
             "install_addon": {

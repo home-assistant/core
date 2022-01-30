@@ -1,8 +1,10 @@
 """Test against characteristics captured from a eufycam."""
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.components.homekit_controller.common import (
-    Helper,
+    HUB_TEST_ACCESSORY_ID,
+    DeviceTestInfo,
+    EntityTestInfo,
+    assert_devices_and_entities_created,
     setup_accessories_from_file,
     setup_test_accessories,
 )
@@ -11,44 +13,46 @@ from tests.components.homekit_controller.common import (
 async def test_eufycam_setup(hass):
     """Test that a eufycam can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "anker_eufycam.json")
-    config_entry, pairing = await setup_test_accessories(hass, accessories)
+    await setup_test_accessories(hass, accessories)
 
-    entity_registry = er.async_get(hass)
-
-    # Check that the camera is correctly found and set up
-    camera_id = "camera.eufycam2_0000"
-    camera = entity_registry.async_get(camera_id)
-    assert camera.unique_id == "homekit-A0000A000000000D-aid:4"
-
-    camera_helper = Helper(
+    await assert_devices_and_entities_created(
         hass,
-        "camera.eufycam2_0000",
-        pairing,
-        accessories[0],
-        config_entry,
+        DeviceTestInfo(
+            unique_id=HUB_TEST_ACCESSORY_ID,
+            name="eufy HomeBase2-0AAA",
+            model="T8010",
+            manufacturer="Anker",
+            sw_version="2.1.6",
+            hw_version="2.0.0",
+            serial_number="A0000A000000000A",
+            devices=[
+                DeviceTestInfo(
+                    name="eufyCam2-0000",
+                    model="T8113",
+                    manufacturer="Anker",
+                    sw_version="1.6.7",
+                    hw_version="1.0.0",
+                    serial_number="A0000A000000000D",
+                    unique_id="00:00:00:00:00:00:aid:4",
+                    devices=[],
+                    entities=[
+                        EntityTestInfo(
+                            entity_id="camera.eufycam2_0000",
+                            friendly_name="eufyCam2-0000",
+                            unique_id="homekit-A0000A000000000D-aid:4",
+                            state="idle",
+                        ),
+                    ],
+                ),
+            ],
+            entities=[],
+        ),
     )
 
-    camera_state = await camera_helper.poll_and_get_state()
-    assert camera_state.attributes["friendly_name"] == "eufyCam2-0000"
-    assert camera_state.state == "idle"
-    assert camera_state.attributes["supported_features"] == 0
-
-    device_registry = dr.async_get(hass)
-
-    device = device_registry.async_get(camera.device_id)
-    assert device.manufacturer == "Anker"
-    assert device.name == "eufyCam2-0000"
-    assert device.model == "T8113"
-    assert device.sw_version == "1.6.7"
-
-    # These cameras are via a bridge, so via should be set
-    assert device.via_device_id is not None
-
+    # There are multiple rtsp services, we only want to create 1
+    # camera entity per accessory, not 1 camera per service.
     cameras_count = 0
     for state in hass.states.async_all():
         if state.entity_id.startswith("camera."):
             cameras_count += 1
-
-    # There are multiple rtsp services, we only want to create 1
-    # camera entity per accessory, not 1 camera per service.
     assert cameras_count == 3

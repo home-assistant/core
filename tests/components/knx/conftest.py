@@ -13,7 +13,7 @@ from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.address import GroupAddress, IndividualAddress
 from xknx.telegram.apci import APCI, GroupValueRead, GroupValueResponse, GroupValueWrite
 
-from homeassistant.components.knx import ConnectionSchema
+from homeassistant.components.knx import ConnectionSchema, KNXModule
 from homeassistant.components.knx.const import (
     CONF_KNX_AUTOMATIC,
     CONF_KNX_CONNECTION_TYPE,
@@ -40,6 +40,11 @@ class KNXTestKit:
         # telegrams to an InternalGroupAddress won't be queued here
         self._outgoing_telegrams: asyncio.Queue = asyncio.Queue()
 
+    @property
+    def knx_module(self) -> KNXModule:
+        """Get the KNX module."""
+        return self.hass.data[KNX_DOMAIN]
+
     def assert_state(self, entity_id: str, state: str, **attributes) -> None:
         """Assert the state of an entity."""
         test_state = self.hass.states.get(entity_id)
@@ -60,13 +65,13 @@ class KNXTestKit:
 
         def fish_xknx(*args, **kwargs):
             """Get the XKNX object from the constructor call."""
-            self.xknx = args[0]
+            self.xknx = kwargs["xknx"]
             # disable rate limiter for tests (before StateUpdater starts)
             self.xknx.rate_limit = 0
             return DEFAULT
 
         with patch(
-            "xknx.xknx.KNXIPInterface",
+            "xknx.xknx.knx_interface_factory",
             return_value=knx_ip_interface_mock(),
             side_effect=fish_xknx,
         ):
@@ -109,7 +114,7 @@ class KNXTestKit:
     # APCI Service tests
     ####################
 
-    async def _assert_telegram(
+    async def assert_telegram(
         self,
         group_address: str,
         payload: int | tuple[int, ...] | None,
@@ -141,19 +146,19 @@ class KNXTestKit:
 
     async def assert_read(self, group_address: str) -> None:
         """Assert outgoing GroupValueRead telegram. One by one in timely order."""
-        await self._assert_telegram(group_address, None, GroupValueRead)
+        await self.assert_telegram(group_address, None, GroupValueRead)
 
     async def assert_response(
         self, group_address: str, payload: int | tuple[int, ...]
     ) -> None:
         """Assert outgoing GroupValueResponse telegram. One by one in timely order."""
-        await self._assert_telegram(group_address, payload, GroupValueResponse)
+        await self.assert_telegram(group_address, payload, GroupValueResponse)
 
     async def assert_write(
         self, group_address: str, payload: int | tuple[int, ...]
     ) -> None:
         """Assert outgoing GroupValueWrite telegram. One by one in timely order."""
-        await self._assert_telegram(group_address, payload, GroupValueWrite)
+        await self.assert_telegram(group_address, payload, GroupValueWrite)
 
     ####################
     # Incoming telegrams

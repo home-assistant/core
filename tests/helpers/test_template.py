@@ -21,6 +21,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     VOLUME_LITERS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import device_registry as dr, entity, template
 from homeassistant.helpers.entity_platform import EntityPlatform
@@ -309,6 +310,12 @@ def test_isnumber(hass, value, expected):
     )
     assert (
         template.Template("{{ value | is_number }}", hass).async_render(
+            {"value": value}
+        )
+        == expected
+    )
+    assert (
+        template.Template("{{ value is is_number }}", hass).async_render(
             {"value": value}
         )
         == expected
@@ -834,12 +841,97 @@ def test_min(hass):
     assert template.Template("{{ min([1, 2, 3]) }}", hass).async_render() == 1
     assert template.Template("{{ min(1, 2, 3) }}", hass).async_render() == 1
 
+    with pytest.raises(TemplateError):
+        template.Template("{{ 1 | min }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ min() }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ min(1) }}", hass).async_render()
+
 
 def test_max(hass):
     """Test the max filter."""
     assert template.Template("{{ [1, 2, 3] | max }}", hass).async_render() == 3
     assert template.Template("{{ max([1, 2, 3]) }}", hass).async_render() == 3
     assert template.Template("{{ max(1, 2, 3) }}", hass).async_render() == 3
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ 1 | max }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ max() }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ max(1) }}", hass).async_render()
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    (
+        "a",
+        "b",
+        "c",
+    ),
+)
+def test_min_max_attribute(hass, attribute):
+    """Test the min and max filters with attribute."""
+    hass.states.async_set(
+        "test.object",
+        "test",
+        {
+            "objects": [
+                {
+                    "a": 1,
+                    "b": 2,
+                    "c": 3,
+                },
+                {
+                    "a": 2,
+                    "b": 1,
+                    "c": 2,
+                },
+                {
+                    "a": 3,
+                    "b": 3,
+                    "c": 1,
+                },
+            ],
+        },
+    )
+    assert (
+        template.Template(
+            "{{ (state_attr('test.object', 'objects') | min(attribute='%s'))['%s']}}"
+            % (attribute, attribute),
+            hass,
+        ).async_render()
+        == 1
+    )
+    assert (
+        template.Template(
+            "{{ (min(state_attr('test.object', 'objects'), attribute='%s'))['%s']}}"
+            % (attribute, attribute),
+            hass,
+        ).async_render()
+        == 1
+    )
+    assert (
+        template.Template(
+            "{{ (state_attr('test.object', 'objects') | max(attribute='%s'))['%s']}}"
+            % (attribute, attribute),
+            hass,
+        ).async_render()
+        == 3
+    )
+    assert (
+        template.Template(
+            "{{ (max(state_attr('test.object', 'objects'), attribute='%s'))['%s']}}"
+            % (attribute, attribute),
+            hass,
+        ).async_render()
+        == 3
+    )
 
 
 def test_ord(hass):
@@ -862,6 +954,26 @@ def test_base64_decode(hass):
             '{{ "aG9tZWFzc2lzdGFudA==" | base64_decode }}', hass
         ).async_render()
         == "homeassistant"
+    )
+
+
+def test_slugify(hass):
+    """Test the slugify filter."""
+    assert (
+        template.Template('{{ slugify("Home Assistant") }}', hass).async_render()
+        == "home_assistant"
+    )
+    assert (
+        template.Template('{{ "Home Assistant" | slugify }}', hass).async_render()
+        == "home_assistant"
+    )
+    assert (
+        template.Template('{{ slugify("Home Assistant", "-") }}', hass).async_render()
+        == "home-assistant"
+    )
+    assert (
+        template.Template('{{ "Home Assistant" | slugify("-") }}', hass).async_render()
+        == "home-assistant"
     )
 
 
@@ -3070,15 +3182,47 @@ def test_render_complex_handling_non_template_values(hass):
 def test_urlencode(hass):
     """Test the urlencode method."""
     tpl = template.Template(
-        ("{% set dict = {'foo': 'x&y', 'bar': 42} %}" "{{ dict | urlencode }}"),
+        ("{% set dict = {'foo': 'x&y', 'bar': 42} %}{{ dict | urlencode }}"),
         hass,
     )
     assert tpl.async_render() == "foo=x%26y&bar=42"
     tpl = template.Template(
-        ("{% set string = 'the quick brown fox = true' %}" "{{ string | urlencode }}"),
+        ("{% set string = 'the quick brown fox = true' %}{{ string | urlencode }}"),
         hass,
     )
     assert tpl.async_render() == "the%20quick%20brown%20fox%20%3D%20true"
+
+
+def test_iif(hass: HomeAssistant) -> None:
+    """Test the immediate if function/filter."""
+    tpl = template.Template("{{ (1 == 1) | iif }}", hass)
+    assert tpl.async_render() is True
+
+    tpl = template.Template("{{ (1 == 2) | iif }}", hass)
+    assert tpl.async_render() is False
+
+    tpl = template.Template("{{ (1 == 1) | iif('yes') }}", hass)
+    assert tpl.async_render() == "yes"
+
+    tpl = template.Template("{{ (1 == 2) | iif('yes') }}", hass)
+    assert tpl.async_render() is False
+
+    tpl = template.Template("{{ (1 == 2) | iif('yes', 'no') }}", hass)
+    assert tpl.async_render() == "no"
+
+    tpl = template.Template("{{ not_exists | default(None) | iif('yes', 'no') }}", hass)
+    assert tpl.async_render() == "no"
+
+    tpl = template.Template(
+        "{{ not_exists | default(None) | iif('yes', 'no', 'unknown') }}", hass
+    )
+    assert tpl.async_render() == "unknown"
+
+    tpl = template.Template("{{ iif(1 == 1) }}", hass)
+    assert tpl.async_render() is True
+
+    tpl = template.Template("{{ iif(1 == 2, 'yes', 'no') }}", hass)
+    assert tpl.async_render() == "no"
 
 
 async def test_cache_garbage_collection():
