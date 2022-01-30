@@ -193,6 +193,7 @@ class SonosDiscoveryManager:
 
     async def _async_stop_event_listener(self, event: Event | None = None) -> None:
         for speaker in self.data.discovered.values():
+            speaker.activity_stats.log_report()
             speaker.event_stats.log_report()
         await asyncio.gather(
             *(speaker.async_offline() for speaker in self.data.discovered.values())
