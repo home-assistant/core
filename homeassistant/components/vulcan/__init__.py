@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["calendar"]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Uonet+ Vulcan integration."""
     hass.data.setdefault(DOMAIN, {})
     try:
