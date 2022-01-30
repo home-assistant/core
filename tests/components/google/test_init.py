@@ -1,7 +1,8 @@
 """The tests for the Google Calendar component."""
 from collections.abc import Awaitable, Callable
 import datetime
-from typing import Any, Generator, TypeVar
+from pathlib import Path
+from typing import Any
 from unittest.mock import Mock, call, patch
 
 from oauth2client.client import (
@@ -17,8 +18,6 @@ import homeassistant.components.google as google
 from homeassistant.components.google import (
     DOMAIN,
     SERVICE_ADD_EVENT,
-    TOKEN_FILE,
-    YAML_DEVICES,
     GoogleCalendarService,
 )
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
@@ -26,14 +25,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .conftest import CALENDAR_ID, ApiResult
+from .conftest import CALENDAR_ID, ApiResult, YieldFixture
 
 from tests.common import async_fire_time_changed
 
 # Typing helpers
 ComponentSetup = Callable[[], Awaitable[bool]]
-T = TypeVar("T")
-YieldFixture = Generator[T, None, None]
 
 
 CODE_CHECK_INTERVAL = 1
@@ -91,9 +88,11 @@ async def mock_exchange(creds: OAuth2Credentials) -> YieldFixture[Mock]:
 
 
 @pytest.fixture
-async def token_file(hass: HomeAssistant, creds: OAuth2Credentials) -> None:
+async def token_file(
+    hass: HomeAssistant, creds: OAuth2Credentials, token_filename: Path
+) -> None:
     """Fixture to populate an existing token file."""
-    storage = Storage(hass.config.path(TOKEN_FILE))
+    storage = Storage(token_filename)
     storage.put(creds)
 
 
@@ -117,10 +116,12 @@ async def calendars_config() -> list[dict[str, Any]]:
 
 @pytest.fixture
 async def calendars_yaml(
-    hass: HomeAssistant, calendars_config: list[dict[str, Any]]
+    hass: HomeAssistant,
+    calendars_config: list[dict[str, Any]],
+    yaml_devices_filename: Path,
 ) -> None:
     """Fixture that prepares the calendars.yaml file."""
-    with open(hass.config.path(YAML_DEVICES), "w") as out:
+    with open(yaml_devices_filename, "w") as out:
         yaml.dump(calendars_config, out)
 
 
@@ -199,7 +200,6 @@ async def test_init_success(
     # Run one tick to invoke the credential exchange check
     now = utcnow()
     await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
-    assert len(mock_exchange.mock_calls) == 1
 
     mock_load_platform.assert_called_once()
 
@@ -373,11 +373,12 @@ async def test_invalid_calendar_config_format(
     calendars_config: list[dict[str, Any]],
     calendars_yaml: None,
     mock_notification: Mock,
+    yaml_devices_filename: Path,
 ) -> None:
     """Test setup when the yaml file does not contain yaml."""
 
     # Write arbitrary binary data that isn't yaml
-    with open(hass.config.path(YAML_DEVICES), "wb") as out:
+    with open(yaml_devices_filename, "wb") as out:
         out.write(bytearray(range(1, 100)))
 
     assert not await component_setup()

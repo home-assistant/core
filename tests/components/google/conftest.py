@@ -1,22 +1,22 @@
 """Test configuration and mocks for the google integration."""
 from collections.abc import Callable
-import os
-from typing import Any
+from pathlib import Path
+import shutil
+from typing import Any, Generator, TypeVar
 from unittest.mock import Mock, patch
+import uuid
 
 import pytest
 
-from homeassistant.components.google import (
-    TOKEN_FILE,
-    YAML_DEVICES,
-    GoogleCalendarService,
-)
+from homeassistant.components.google import GoogleCalendarService
 from homeassistant.core import HomeAssistant
 
 ApiResult = Callable[[dict[str, Any]], None]
+T = TypeVar("T")
+YieldFixture = Generator[T, None, None]
+
 
 CALENDAR_ID = "qwertyuiopasdfghjklzxcvbnm@import.calendar.google.com"
-
 TEST_CALENDAR = {
     "id": CALENDAR_ID,
     "etag": '"3584134138943410"',
@@ -51,13 +51,28 @@ def mock_next_event():
 
 
 @pytest.fixture(autouse=True)
-def cleanup_files(hass: HomeAssistant) -> None:
+def config_path(hass: HomeAssistant) -> Path:
     """Test cleanup, remove any token files created during the test."""
-    yield
-    if os.path.exists(hass.config.path(TOKEN_FILE)):
-        os.remove(hass.config.path(TOKEN_FILE))
-    if os.path.exists(hass.config.path(YAML_DEVICES)):
-        os.remove(hass.config.path(YAML_DEVICES))
+    path = Path(hass.config.path(str(uuid.uuid4())))
+    path.mkdir()
+    yield path
+    shutil.rmtree(path)
+
+
+@pytest.fixture(autouse=True)
+def token_filename(config_path: Path) -> YieldFixture[Path]:
+    """Test token filename."""
+    filename = config_path / "token"
+    with patch("homeassistant.components.google.TOKEN_FILE", new=filename):
+        yield filename
+
+
+@pytest.fixture(autouse=True)
+def yaml_devices_filename(config_path: Path) -> YieldFixture[Path]:
+    """Test token filename."""
+    filename = config_path / "google_calendars.yaml"
+    with patch("homeassistant.components.google.YAML_DEVICES", new=filename):
+        yield filename
 
 
 @pytest.fixture
