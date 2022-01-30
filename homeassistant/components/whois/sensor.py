@@ -80,6 +80,13 @@ def _ensure_timezone(timestamp: datetime | None) -> datetime | None:
     return timestamp
 
 
+def _fetch_attr_if_exists(domain: Domain, attr: str) -> str | None:
+    """Fetch an attribute if it exists and is truthy or return None."""
+    if hasattr(domain, attr) and (value := getattr(domain, attr)):
+        return cast(str, value)
+    return None
+
+
 SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
     WhoisSensorEntityDescription(
         key="admin",
@@ -87,9 +94,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:account-star",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: domain.admin
-        if hasattr(domain, "admin") and domain.admin
-        else None,
+        value_fn=lambda domain: _fetch_attr_if_exists(domain, "admin"),
     ),
     WhoisSensorEntityDescription(
         key="creation_date",
@@ -125,9 +130,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:account",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: domain.owner
-        if hasattr(domain, "owner") and domain.owner
-        else None,
+        value_fn=lambda domain: _fetch_attr_if_exists(domain, "owner"),
     ),
     WhoisSensorEntityDescription(
         key="registrant",
@@ -135,9 +138,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:account-edit",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: domain.registrant
-        if hasattr(domain, "registrant") and domain.registrant
-        else None,
+        value_fn=lambda domain: _fetch_attr_if_exists(domain, "registrant"),
     ),
     WhoisSensorEntityDescription(
         key="registrar",
@@ -153,9 +154,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:store",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: domain.reseller
-        if hasattr(domain, "reseller") and domain.reseller
-        else None,
+        value_fn=lambda domain: _fetch_attr_if_exists(domain, "reseller"),
     ),
 )
 
