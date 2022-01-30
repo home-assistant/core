@@ -1,4 +1,6 @@
 """Main object for getting the PECO outage counter data."""
+from typing import Dict
+
 import httpx
 
 from .const import API_URL, COUNTY_LIST
@@ -7,7 +9,7 @@ from .const import API_URL, COUNTY_LIST
 class PecoOutageApi:
     """API object for PECO outage counter."""
 
-    def __init__(self, county):
+    def __init__(self, county: str) -> None:
         """Initialize the PECO outage counter API object."""
         if county not in COUNTY_LIST:
             raise InvalidCountyError(
@@ -17,7 +19,9 @@ class PecoOutageApi:
             )
         self.county = county
 
-    async def get_outage_count(self):
+        return
+
+    async def get_outage_count(self) -> Dict[str, int]:
         """Get the outage count for the given county."""
         async with httpx.AsyncClient() as client:
             r = await client.get(API_URL)  # pylint: disable=invalid-name
@@ -34,31 +38,35 @@ class PecoOutageApi:
         except KeyError as err:
             raise BadJSONError("Bad JSON returned from PECO outage counter") from err
 
+        outage_dict: Dict[str, int] = {}
         for area in areas:
             if area["name"] == self.county:
                 customers_out = area["cust_a"]["val"]
                 percent_customers_out = area["percent_cust_a"]["val"]
                 outage_count = area["n_out"]
                 customers_served = area["cust_s"]
-                return {
+                outage_dict = {
                     "customers_out": customers_out,
                     "percent_customers_out": percent_customers_out,
                     "outage_count": outage_count,
                     "customers_served": customers_served,
                 }
+        return outage_dict
 
     @staticmethod
-    async def get_outage_totals():
+    async def get_outage_totals() -> Dict[str, int]:
         """Get the outage totals for the given county and mode."""
         async with httpx.AsyncClient() as client:
-            r = await client.get(API_URL)  # pylint: disable=invalid-name
+            r: httpx.Response = await client.get(
+                API_URL
+            )  # pylint: disable=invalid-name
 
         if r.status_code != 200:
             raise HttpError("Error getting PECO outage counter data")
 
-        data = r.json()
+        data: dict = r.json()
         try:
-            totals = data["file_data"]["totals"]
+            totals: dict = data["file_data"]["totals"]
         except KeyError as err:
             raise BadJSONError("Bad JSON returned from PECO outage counter") from err
 

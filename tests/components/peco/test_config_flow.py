@@ -2,9 +2,9 @@
 from unittest.mock import patch
 
 from pytest import raises
+from voluptuous.error import MultipleInvalid
 
 from homeassistant import config_entries
-from homeassistant.components.peco.config_flow import InvalidCounty
 from homeassistant.components.peco.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
@@ -45,7 +45,7 @@ async def test_invalid_county(hass: HomeAssistant) -> None:
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] is None
 
-    with raises(InvalidCounty):
+    with raises(MultipleInvalid):
         await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
