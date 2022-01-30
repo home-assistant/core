@@ -48,36 +48,6 @@ def valid_serial_number(serial):
         return True
 
 
-def get_accessory_information(accessory):
-    """Obtain the accessory information service of a HomeKit device."""
-    result = {}
-    for service in accessory["services"]:
-        stype = service["type"].upper()
-        if ServicesTypes.get_short(stype) != "accessory-information":
-            continue
-        for characteristic in service["characteristics"]:
-            ctype = CharacteristicsTypes.get_short(characteristic["type"])
-            if "value" in characteristic:
-                result[ctype] = characteristic["value"]
-    return result
-
-
-def get_bridge_information(accessories):
-    """Return the accessory info for the bridge."""
-    for accessory in accessories:
-        if accessory["aid"] == 1:
-            return get_accessory_information(accessory)
-    return get_accessory_information(accessories[0])
-
-
-def get_accessory_name(accessory_info):
-    """Return the name field of an accessory."""
-    for field in ("name", "model", "manufacturer"):
-        if field in accessory_info:
-            return accessory_info[field]
-    return None
-
-
 class HKDevice:
     """HomeKit device."""
 
@@ -642,13 +612,3 @@ class HKDevice:
         This id is random and will change if a device undergoes a hard reset.
         """
         return self.pairing_data["AccessoryPairingID"]
-
-    @property
-    def connection_info(self):
-        """Return accessory information for the main accessory."""
-        return get_bridge_information(self.accessories)
-
-    @property
-    def name(self):
-        """Name of the bridge accessory."""
-        return get_accessory_name(self.connection_info) or self.unique_id
