@@ -163,3 +163,35 @@ async def test_minmax_overwrite(
 
     assert entity.min_value == 5
     assert entity.max_value == 100
+
+
+async def test_added_to_hass(
+    mock_coordinator: MagicMock,
+    mock_number_description: PlenticoreNumberEntityDescription,
+    mock_setting_data: SettingsData,
+):
+    """Test if coordinator starts fetching after added to hass."""
+
+    entity = PlenticoreDataNumber(
+        mock_coordinator, "42", "scb", None, mock_number_description, mock_setting_data
+    )
+
+    await entity.async_added_to_hass()
+
+    mock_coordinator.start_fetch_data.assert_called_once_with("moduleid", "dataid")
+
+
+async def test_remove_from_hass(
+    mock_coordinator: MagicMock,
+    mock_number_description: PlenticoreNumberEntityDescription,
+    mock_setting_data: SettingsData,
+):
+    """Test if coordinator stops fetching after remove from hass."""
+
+    entity = PlenticoreDataNumber(
+        mock_coordinator, "42", "scb", None, mock_number_description, mock_setting_data
+    )
+
+    await entity.async_will_remove_from_hass()
+
+    mock_coordinator.stop_fetch_data.assert_called_once_with("moduleid", "dataid")
