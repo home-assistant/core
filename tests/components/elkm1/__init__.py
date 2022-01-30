@@ -10,11 +10,13 @@ MOCK_MAC = "aa:bb:cc:dd:ee:ff"
 ELK_DISCOVERY = ElkSystem(MOCK_MAC, MOCK_IP_ADDRESS, 2601)
 
 
-def mock_elk(invalid_auth=None, sync_complete=None):
+def mock_elk(invalid_auth=None, sync_complete=None, exception=None):
     """Mock m1lib Elk."""
 
     def handler_callbacks(type_, callback):
         nonlocal invalid_auth, sync_complete
+        if exception:
+            raise exception
         if type_ == "login":
             callback(not invalid_auth)
         elif type_ == "sync_complete" and sync_complete:

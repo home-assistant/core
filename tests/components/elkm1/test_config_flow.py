@@ -74,6 +74,45 @@ async def test_form_user_with_secure_elk_no_discovery(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_user_with_secure_elk_no_discovery_ip_already_configured(hass):
+    """Test we abort when we try to configure the same ip."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: f"elks://{MOCK_IP_ADDRESS}"},
+        unique_id="cc:cc:cc:cc:cc:cc",
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(no_device=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+    assert result["step_id"] == "manual_connection"
+
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with _patch_discovery(no_device=True), _patch_elk(elk=mocked_elk):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "protocol": "secure",
+                "address": "127.0.0.1",
+                "username": "test-username",
+                "password": "test-password",
+                "temperature_unit": "°F",
+                "prefix": "",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["reason"] == "address_already_configured"
+
+
 async def test_form_user_with_secure_elk_with_discovery(hass):
     """Test we can setup a secure elk."""
 
@@ -353,6 +392,38 @@ async def test_form_cannot_connect(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {CONF_HOST: "cannot_connect"}
+
+
+async def test_unknown_exception(hass):
+    """Test we handle an unknown exception during connecting."""
+    with _patch_discovery(no_device=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    mocked_elk = mock_elk(invalid_auth=None, sync_complete=None, exception=OSError)
+
+    with _patch_discovery(no_device=True), _patch_elk(elk=mocked_elk), patch(
+        "homeassistant.components.elkm1.config_flow.VALIDATE_TIMEOUT",
+        0,
+    ), patch(
+        "homeassistant.components.elkm1.config_flow.LOGIN_TIMEOUT",
+        0,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "protocol": "secure",
+                "address": "1.2.3.4",
+                "username": "test-username",
+                "password": "test-password",
+                "temperature_unit": "°F",
+                "prefix": "",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_form_invalid_auth(hass):
@@ -683,6 +754,27 @@ async def test_discovered_by_discovery(hass):
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_discovered_by_discovery_url_already_configured(hass):
+    """Test we abort when we discover a device that is already setup."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: f"elks://{MOCK_IP_ADDRESS}"},
+        unique_id="cc:cc:cc:cc:cc:cc",
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(), _patch_elk():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DISCOVERY},
+            data=ELK_DISCOVERY_INFO,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_discovered_by_dhcp_udp_responds(hass):
