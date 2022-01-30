@@ -36,3 +36,10 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 TIMEOUT_API = 30
+ATTR_MAX_FAN_STEPS = 49
+
+SCAN_INTERVAL = 60  # Interval for updating the coordinator
+
+COORDINATOR = "coordinator"
+COORDINATOR_LIST = "coordinator_list"
+GROUPS_LIST = "groups_list"

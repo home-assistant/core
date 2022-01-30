@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "auth_failed": "\u63a5\u6536\u61c9\u7528\u7a0b\u5f0f API \u5bc6\u9470\u5931\u6557",
+            "auth_failed": "\u63a5\u6536\u61c9\u7528\u7a0b\u5f0f API \u91d1\u9470\u5931\u6557",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
@@ -21,7 +21,8 @@
                     "path": "\u61c9\u7528\u7a0b\u5f0f\u8def\u5f91",
                     "port": "\u901a\u8a0a\u57e0\u865f",
                     "ssl": "\u4f7f\u7528 SSL",
-                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31",
+                    "verify_ssl": "\u78ba\u8a8d SSL \u8a8d\u8b49"
                 }
             }
         }

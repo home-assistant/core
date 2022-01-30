@@ -1,9 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dispositivo j\u00e1 configurado"
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
         },
         "error": {
+            "cannot_connect": "Falha ao conectar",
+            "invalid_access_token": "Token de acesso inv\u00e1lido",
             "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
             "unknown": "Erro inesperado"
         },
@@ -18,7 +20,7 @@
             "user": {
                 "data": {
                     "password": "Senha",
-                    "username": "Nome de usu\u00e1rio"
+                    "username": "Usu\u00e1rio"
                 },
                 "title": "Entrar com a conta Blink"
             }

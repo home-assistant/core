@@ -15,7 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NeatoHub
 from .const import (
     NEATO_DOMAIN,
     NEATO_LOGIN,
@@ -23,6 +22,7 @@ from .const import (
     NEATO_ROBOTS,
     SCAN_INTERVAL_MINUTES,
 )
+from .hub import NeatoHub
 
 _LOGGER = logging.getLogger(__name__)
 

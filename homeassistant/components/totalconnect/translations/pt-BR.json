@@ -1,11 +1,20 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Conta j\u00e1 configurada"
+            "already_configured": "A conta j\u00e1 foi configurada",
+            "no_locations": "Nenhum local est\u00e1 dispon\u00edvel para este usu\u00e1rio, verifique as configura\u00e7\u00f5es do TotalConnect",
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida"
+        },
+        "error": {
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida"
         },
         "step": {
+            "reauth_confirm": {
+                "title": "Reautenticar Integra\u00e7\u00e3o"
+            },
             "user": {
                 "data": {
+                    "password": "Senha",
                     "username": "Usu\u00e1rio"
                 },
                 "title": "Total Connect"

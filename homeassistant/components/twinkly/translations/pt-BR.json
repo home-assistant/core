@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "device_exists": "Dispositivo j\u00e1 est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nome do host"
+                }
+            }
+        }
+    }
+}

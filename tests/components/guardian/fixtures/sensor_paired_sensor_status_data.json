@@ -1,0 +1,13 @@
+{
+  "command": 51,
+  "status": "ok",
+  "silent": true,
+  "data": {
+    "uid": "AABBCCDDEEFF",
+    "codename": "gld1",
+    "temperature": 68,
+    "wet": false,
+    "moved": true,
+    "battery_percentage": 79
+  }
+}

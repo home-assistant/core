@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/rpi_gpio_pwm",
   "requirements": ["pwmled==1.6.7"],
   "codeowners": ["@soldag"],
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "loggers": ["adafruit_blinka", "adafruit_circuitpython_pca9685", "pwmled"]
 }

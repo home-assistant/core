@@ -130,7 +130,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if await self.hass.async_add_executor_job(
                 is_valid_config_entry,
                 self.hass,
-                _LOGGER,
                 user_input[CONF_API_KEY],
                 user_input[CONF_ORIGIN],
                 user_input[CONF_DESTINATION],

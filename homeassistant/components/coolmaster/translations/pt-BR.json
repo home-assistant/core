@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "cannot_connect": "Falha ao conectar"
+        },
         "step": {
             "user": {
                 "data": {
@@ -8,7 +11,7 @@
                     "fan_only": "Suporte apenas o modo ventilador",
                     "heat": "Suporta o modo de aquecimento",
                     "heat_cool": "Suporta o modo de aquecimento/resfriamento autom\u00e1tico",
-                    "host": "Host",
+                    "host": "Nome do host",
                     "off": "Pode ser desligado"
                 }
             }

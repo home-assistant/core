@@ -15,5 +15,6 @@
     }
   ],
   "zeroconf": ["_powerview._tcp.local."],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["aiopvapi"]
 }

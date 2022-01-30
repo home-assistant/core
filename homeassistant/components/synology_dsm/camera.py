@@ -22,7 +22,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import SynoApi, SynologyDSMBaseEntity
-from .const import COORDINATOR_CAMERAS, DOMAIN, SYNO_API, SynologyDSMEntityDescription
+from .const import (
+    CONF_SNAPSHOT_QUALITY,
+    COORDINATOR_CAMERAS,
+    DEFAULT_SNAPSHOT_QUALITY,
+    DOMAIN,
+    SYNO_API,
+    SynologyDSMEntityDescription,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,6 +84,9 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
             entity_registry_enabled_default=coordinator.data["cameras"][
                 camera_id
             ].is_enabled,
+        )
+        self.snapshot_quality = api._entry.options.get(
+            CONF_SNAPSHOT_QUALITY, DEFAULT_SNAPSHOT_QUALITY
         )
         super().__init__(api, coordinator, description)
         Camera.__init__(self)
@@ -135,7 +145,7 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
         if not self.available:
             return None
         try:
-            return self._api.surveillance_station.get_camera_image(self.entity_description.key)  # type: ignore[no-any-return]
+            return self._api.surveillance_station.get_camera_image(self.entity_description.key, self.snapshot_quality)  # type: ignore[no-any-return]
         except (
             SynologyDSMAPIErrorException,
             SynologyDSMRequestException,

@@ -429,6 +429,62 @@ async def test_homekit_entity_glob_filter(hass, mock_async_zeroconf):
     assert hass.states.get("light.included_test") in filtered_states
 
 
+async def test_homekit_entity_glob_filter_with_config_entities(
+    hass, mock_async_zeroconf, entity_reg
+):
+    """Test the entity filter with configuration entities."""
+    entry = await async_init_integration(hass)
+
+    from homeassistant.helpers.entity import EntityCategory
+    from homeassistant.helpers.entity_registry import RegistryEntry
+
+    select_config_entity: RegistryEntry = entity_reg.async_get_or_create(
+        "select",
+        "any",
+        "any",
+        device_id="1234",
+        entity_category=EntityCategory.CONFIG,
+    )
+    hass.states.async_set(select_config_entity.entity_id, "off")
+
+    switch_config_entity: RegistryEntry = entity_reg.async_get_or_create(
+        "switch",
+        "any",
+        "any",
+        device_id="1234",
+        entity_category=EntityCategory.CONFIG,
+    )
+    hass.states.async_set(switch_config_entity.entity_id, "off")
+    hass.states.async_set("select.keep", "open")
+
+    hass.states.async_set("cover.excluded_test", "open")
+    hass.states.async_set("light.included_test", "on")
+
+    entity_filter = generate_filter(
+        ["select"],
+        ["switch.test", switch_config_entity.entity_id],
+        [],
+        [],
+        ["*.included_*"],
+        ["*.excluded_*"],
+    )
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE, entity_filter)
+
+    homekit.bridge = Mock()
+    homekit.bridge.accessories = {}
+
+    filtered_states = await homekit.async_configure_accessories()
+    assert (
+        hass.states.get(switch_config_entity.entity_id) in filtered_states
+    )  # explicitly included
+    assert (
+        hass.states.get(select_config_entity.entity_id) not in filtered_states
+    )  # not explicted included and its a config entity
+    assert hass.states.get("cover.excluded_test") not in filtered_states
+    assert hass.states.get("light.included_test") in filtered_states
+    assert hass.states.get("select.keep") in filtered_states
+
+
 async def test_homekit_start(hass, hk_driver, mock_async_zeroconf, device_reg):
     """Test HomeKit start method."""
     entry = await async_init_integration(hass)
@@ -679,6 +735,11 @@ async def test_homekit_unpair(hass, device_reg, mock_async_zeroconf):
 
         state = homekit.driver.state
         state.add_paired_client("client1", "any", b"1")
+        state.add_paired_client("client2", "any", b"0")
+        state.add_paired_client("client3", "any", b"1")
+        state.add_paired_client("client4", "any", b"0")
+        state.add_paired_client("client5", "any", b"0")
+
         formatted_mac = device_registry.format_mac(state.mac)
         hk_bridge_dev = device_reg.async_get_device(
             {}, {(device_registry.CONNECTION_NETWORK_MAC, formatted_mac)}
@@ -1104,6 +1165,7 @@ async def test_homekit_finds_linked_batteries(
     device_entry = device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         sw_version="0.16.0",
+        hw_version="2.34",
         model="Powerwall 2",
         manufacturer="Tesla",
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
@@ -1152,6 +1214,7 @@ async def test_homekit_finds_linked_batteries(
             "manufacturer": "Tesla",
             "model": "Powerwall 2",
             "sw_version": "0.16.0",
+            "hw_version": "2.34",
             "platform": "test",
             "linked_battery_charging_sensor": "binary_sensor.powerwall_battery_charging",
             "linked_battery_sensor": "sensor.powerwall_battery",

@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+        }
+    }
+}

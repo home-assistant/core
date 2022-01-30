@@ -8,6 +8,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
@@ -15,7 +16,9 @@ from homeassistant.const import (
     FREQUENCY_HERTZ,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import (
     WallConnectorData,
@@ -127,7 +130,11 @@ WALL_CONNECTOR_SENSORS = [
 ]
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_devices: AddEntitiesCallback,
+) -> None:
     """Create the Wall Connector sensor devices."""
     wall_connector_data = hass.data[DOMAIN][config_entry.entry_id]
 

@@ -36,7 +36,7 @@
                     "dnsmasq": "Dnsmasq.leases failide asukoht ruuteris",
                     "interface": "Liides kust soovite statistikat (n\u00e4iteks eth0, eth1 jne.)",
                     "require_ip": "Seadmetel peab olema IP (p\u00e4\u00e4supunkti re\u017eiimi jaoks)",
-                    "track_unknown": "J\u00e4lgi tundmatuid / nimetamata seadmeid"
+                    "track_unknown": "J\u00e4lgi tundmatuid / nimetuid seadmeid"
                 },
                 "title": "AsusWRT valikud"
             }

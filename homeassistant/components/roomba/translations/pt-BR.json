@@ -1,14 +1,35 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "cannot_connect": "Falha ao conectar"
+        },
         "error": {
-            "cannot_connect": "Falha ao conectar, tente novamente"
+            "cannot_connect": "Falha ao conectar"
         },
         "step": {
+            "init": {
+                "data": {
+                    "host": "Nome do host"
+                }
+            },
+            "link_manual": {
+                "data": {
+                    "password": "Senha"
+                }
+            },
+            "manual": {
+                "data": {
+                    "host": "Nome do host"
+                }
+            },
             "user": {
                 "data": {
                     "blid": "BLID",
                     "continuous": "Cont\u00ednuo",
-                    "delay": "Atraso"
+                    "delay": "Atraso",
+                    "host": "Nome do host",
+                    "password": "Senha"
                 },
                 "description": "Atualmente, a recupera\u00e7\u00e3o do BLID e da senha \u00e9 um processo manual. Siga as etapas descritas na documenta\u00e7\u00e3o em: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
                 "title": "Conecte-se ao dispositivo"

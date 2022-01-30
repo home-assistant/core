@@ -39,7 +39,7 @@ from .const import (
     DIR_UP,
     DOMAIN,
     SERVICE_ALARM_SOUND,
-    SERVICE_ALARM_TRIGER,
+    SERVICE_ALARM_TRIGGER,
     SERVICE_DETECTION_SENSITIVITY,
     SERVICE_PTZ,
     SERVICE_WAKE_DEVICE,
@@ -198,7 +198,7 @@ async def async_setup_entry(
     )
 
     platform.async_register_entity_service(
-        SERVICE_ALARM_TRIGER,
+        SERVICE_ALARM_TRIGGER,
         {
             vol.Required(ATTR_ENABLE): cv.positive_int,
         },

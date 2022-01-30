@@ -1,7 +1,20 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "cannot_connect": "Falha ao conectar"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar"
+        },
         "step": {
             "user": {
+                "data": {
+                    "host": "Nome do host",
+                    "password": "Senha",
+                    "port": "Porta",
+                    "username": "Usu\u00e1rio"
+                },
                 "description": "Configure o seu dispositivo BSB-Lan para integrar com o Home Assistant.",
                 "title": "Conecte-se ao dispositivo BSB-Lan"
             }

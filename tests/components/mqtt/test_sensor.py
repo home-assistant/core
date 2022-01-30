@@ -29,6 +29,7 @@ from .test_common import (
     help_test_discovery_update_attr,
     help_test_discovery_update_availability,
     help_test_discovery_update_unchanged,
+    help_test_encoding_subscribable_topics,
     help_test_entity_category,
     help_test_entity_debug_info,
     help_test_entity_debug_info_max_messages,
@@ -42,6 +43,7 @@ from .test_common import (
     help_test_entity_disabled_by_default,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
+    help_test_reloadable,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -270,6 +272,7 @@ async def test_setting_sensor_last_reset_via_mqtt_message(hass, mqtt_mock, caplo
             sensor.DOMAIN: {
                 "platform": "mqtt",
                 "name": "test",
+                "state_class": "total",
                 "state_topic": "test-topic",
                 "unit_of_measurement": "fav unit",
                 "last_reset_topic": "last-reset-topic",
@@ -300,6 +303,7 @@ async def test_setting_sensor_bad_last_reset_via_mqtt_message(
             sensor.DOMAIN: {
                 "platform": "mqtt",
                 "name": "test",
+                "state_class": "total",
                 "state_topic": "test-topic",
                 "unit_of_measurement": "fav unit",
                 "last_reset_topic": "last-reset-topic",
@@ -325,6 +329,7 @@ async def test_setting_sensor_empty_last_reset_via_mqtt_message(
             sensor.DOMAIN: {
                 "platform": "mqtt",
                 "name": "test",
+                "state_class": "total",
                 "state_topic": "test-topic",
                 "unit_of_measurement": "fav unit",
                 "last_reset_topic": "last-reset-topic",
@@ -348,6 +353,7 @@ async def test_setting_sensor_last_reset_via_mqtt_json_message(hass, mqtt_mock):
             sensor.DOMAIN: {
                 "platform": "mqtt",
                 "name": "test",
+                "state_class": "total",
                 "state_topic": "test-topic",
                 "unit_of_measurement": "fav unit",
                 "last_reset_topic": "last-reset-topic",
@@ -377,6 +383,7 @@ async def test_setting_sensor_last_reset_via_mqtt_json_message_2(
                 **{
                     "platform": "mqtt",
                     "name": "test",
+                    "state_class": "total",
                     "state_topic": "test-topic",
                     "unit_of_measurement": "kWh",
                     "value_template": "{{ value_json.value | float / 60000 }}",
@@ -919,3 +926,34 @@ async def test_value_template_with_entity_id(hass, mqtt_mock):
     state = hass.states.get("sensor.test")
 
     assert state.state == "101"
+
+
+async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform."""
+    domain = sensor.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
+
+
+@pytest.mark.parametrize(
+    "topic,value,attribute,attribute_value",
+    [
+        ("state_topic", "2.21", None, "2.21"),
+        ("state_topic", "beer", None, "beer"),
+    ],
+)
+async def test_encoding_subscribable_topics(
+    hass, mqtt_mock, caplog, topic, value, attribute, attribute_value
+):
+    """Test handling of incoming encoded payload."""
+    await help_test_encoding_subscribable_topics(
+        hass,
+        mqtt_mock,
+        caplog,
+        sensor.DOMAIN,
+        DEFAULT_CONFIG[sensor.DOMAIN],
+        topic,
+        value,
+        attribute,
+        attribute_value,
+    )

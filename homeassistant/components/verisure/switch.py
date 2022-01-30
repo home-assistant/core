@@ -42,7 +42,7 @@ class VerisureSmartplug(CoordinatorEntity, SwitchEntity):
         self._attr_unique_id = serial_number
 
         self.serial_number = serial_number
-        self._change_timestamp = 0
+        self._change_timestamp: float = 0
         self._state = False
 
     @property

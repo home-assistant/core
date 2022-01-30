@@ -9,8 +9,10 @@ from __future__ import annotations
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KNOWN_DEVICES, CharacteristicEntity
 
@@ -39,10 +41,50 @@ NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
         icon="mdi:volume-high",
         entity_category=EntityCategory.CONFIG,
     ),
+    CharacteristicsTypes.Vendor.ECOBEE_HOME_TARGET_COOL: NumberEntityDescription(
+        key=CharacteristicsTypes.Vendor.ECOBEE_HOME_TARGET_COOL,
+        name="Home Cool Target",
+        icon="mdi:thermometer-minus",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    CharacteristicsTypes.Vendor.ECOBEE_HOME_TARGET_HEAT: NumberEntityDescription(
+        key=CharacteristicsTypes.Vendor.ECOBEE_HOME_TARGET_HEAT,
+        name="Home Heat Target",
+        icon="mdi:thermometer-plus",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    CharacteristicsTypes.Vendor.ECOBEE_SLEEP_TARGET_COOL: NumberEntityDescription(
+        key=CharacteristicsTypes.Vendor.ECOBEE_SLEEP_TARGET_COOL,
+        name="Sleep Cool Target",
+        icon="mdi:thermometer-minus",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    CharacteristicsTypes.Vendor.ECOBEE_SLEEP_TARGET_HEAT: NumberEntityDescription(
+        key=CharacteristicsTypes.Vendor.ECOBEE_SLEEP_TARGET_HEAT,
+        name="Sleep Heat Target",
+        icon="mdi:thermometer-plus",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    CharacteristicsTypes.Vendor.ECOBEE_AWAY_TARGET_COOL: NumberEntityDescription(
+        key=CharacteristicsTypes.Vendor.ECOBEE_AWAY_TARGET_COOL,
+        name="Away Cool Target",
+        icon="mdi:thermometer-minus",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    CharacteristicsTypes.Vendor.ECOBEE_AWAY_TARGET_HEAT: NumberEntityDescription(
+        key=CharacteristicsTypes.Vendor.ECOBEE_AWAY_TARGET_HEAT,
+        name="Away Heat Target",
+        icon="mdi:thermometer-plus",
+        entity_category=EntityCategory.CONFIG,
+    ),
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Homekit numbers."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]

@@ -5,7 +5,7 @@ import logging
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import HumidityTrait, TemperatureTrait
-from google_nest_sdm.exceptions import GoogleNestException
+from google_nest_sdm.exceptions import ApiException
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -40,7 +40,7 @@ async def async_setup_sdm_entry(
     subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
     try:
         device_manager = await subscriber.async_get_device_manager()
-    except GoogleNestException as err:
+    except ApiException as err:
         _LOGGER.warning("Failed to get devices: %s", err)
         raise PlatformNotReady from err
 
@@ -56,7 +56,7 @@ async def async_setup_sdm_entry(
 class SensorBase(SensorEntity):
     """Representation of a dynamically updated Sensor."""
 
-    _attr_shoud_poll = False
+    _attr_should_poll = False
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, device: Device) -> None:
