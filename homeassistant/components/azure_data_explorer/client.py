@@ -33,7 +33,7 @@ class AzureDataExplorerClient:
         authority_id = kwargs.get("authority_id")
         use_queued_ingestion = kwargs.get("use_free_cluster")
 
-        # Create cLient for ingesting data
+        # Create cLients for ingesting and querying data
         kcsb = KustoConnectionStringBuilder.with_aad_application_key_authentication(
             cluster_ingest_uri, client_id, client_secret, authority_id
         )
@@ -45,32 +45,15 @@ class AzureDataExplorerClient:
         else:
             self.client = ManagedStreamingIngestClient.from_dm_kcsb(kcsb)
 
-        # Create cLient for quereing data
-        kcsbq = KustoConnectionStringBuilder.with_aad_application_key_authentication(
+        kcsb = KustoConnectionStringBuilder.with_aad_application_key_authentication(
             cluster_query_uri, client_id, client_secret, authority_id
         )
 
-        self.query_client = KustoClient(kcsbq)
+        self.query_client = KustoClient(kcsb)
 
         # Suppress very verbose logging from client
         logger = logging.getLogger("azure")
         logger.setLevel(logging.WARNING)
-
-    # async def test_connection_async(self) -> True:
-    #   """Async Test connection, will throw Exception when it cannot connect."""
-    #   # kcsb = KustoConnectionStringBuilder.with_aad_application_key_authentication(cluster, client_id, client_secret, authority_id)
-    #   async with self.query_client as client:
-    #       query = query = self.table + " | take 1"
-
-    #       try:
-    #           response = await client.execute(self.database, query)
-    #       except Exception as exp:
-    #           _LOGGER.error(
-    #               "************* Error connection to ADX ******************"
-    #           )
-    #           _LOGGER.error(exp)
-    #           return Exception
-    #       return True
 
     def test_connection(self) -> None:
         """Test connection, will throw Exception when it cannot connect."""
@@ -79,9 +62,7 @@ class AzureDataExplorerClient:
 
         self.query_client.execute(self.database, query)
 
-        return None
-
-    def ingest_data(self, adx_events) -> Exception | None:
+    def ingest_data(self, adx_events) -> None:
         """Send data to Axure Data Explorer."""
 
         ingestion_properties = IngestionProperties(
@@ -93,15 +74,9 @@ class AzureDataExplorerClient:
 
         json_str = adx_events
 
-        try:
-            bytes_stream = io.StringIO(json_str)
-            stream_descriptor = StreamDescriptor(bytes_stream)
+        bytes_stream = io.StringIO(json_str)
+        stream_descriptor = StreamDescriptor(bytes_stream)
 
-            self.client.ingest_from_stream(
-                stream_descriptor, ingestion_properties=ingestion_properties
-            )
-
-        except Exception as exp:  # pylint: disable=broad-except
-            _LOGGER.error(exp)
-            return exp
-        return None
+        self.client.ingest_from_stream(
+            stream_descriptor, ingestion_properties=ingestion_properties
+        )
