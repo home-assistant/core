@@ -13,7 +13,6 @@ from . import (
     CONF_DATA,
     CONF_IMPORT_DATA,
     NAME,
-    UNIQUE_ID,
     create_mocked_tautulli,
     patch_config_flow_tautulli,
     setup_integration,
@@ -27,7 +26,22 @@ def _patch_setup():
     return patch("homeassistant.components.tautulli.async_setup_entry")
 
 
-async def test_flow_user(hass: HomeAssistant):
+async def test_flow_user_single_instance_allowed(hass: HomeAssistant) -> None:
+    """Test user step single instance allowed."""
+    entry = MockConfigEntry(domain=DOMAIN, data=CONF_DATA)
+    entry.add_to_hass(hass)
+
+    with patch_config_flow_tautulli(await create_mocked_tautulli()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=CONF_IMPORT_DATA,
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "single_instance_allowed"
+
+
+async def test_flow_user(hass: HomeAssistant) -> None:
     """Test user initiated flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
@@ -47,10 +61,9 @@ async def test_flow_user(hass: HomeAssistant):
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == NAME
     assert result2["data"] == CONF_DATA
-    assert result2["result"].unique_id == UNIQUE_ID
 
 
-async def test_flow_user_cannot_connect(hass: HomeAssistant):
+async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
     """Test user initialized flow with unreachable server."""
     with patch_config_flow_tautulli(await create_mocked_tautulli()) as tautullimock:
         tautullimock.side_effect = exceptions.PyTautulliConnectionException
@@ -62,7 +75,7 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant):
     assert result["errors"]["base"] == "cannot_connect"
 
 
-async def test_flow_user_invalid_auth(hass: HomeAssistant):
+async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
     """Test user initialized flow with invalid authentication."""
     with patch_config_flow_tautulli(await create_mocked_tautulli()) as tautullimock:
         tautullimock.side_effect = exceptions.PyTautulliAuthenticationException
@@ -74,7 +87,7 @@ async def test_flow_user_invalid_auth(hass: HomeAssistant):
     assert result["errors"]["base"] == "invalid_auth"
 
 
-async def test_flow_user_unknown_error(hass: HomeAssistant):
+async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
     """Test user initialized flow with unreachable server."""
     with patch_config_flow_tautulli(await create_mocked_tautulli()) as tautullimock:
         tautullimock.side_effect = exceptions.PyTautulliException
@@ -86,7 +99,7 @@ async def test_flow_user_unknown_error(hass: HomeAssistant):
         assert result["errors"]["base"] == "unknown"
 
 
-async def test_flow_import(hass: HomeAssistant):
+async def test_flow_import(hass: HomeAssistant) -> None:
     """Test import step."""
     with patch_config_flow_tautulli(await create_mocked_tautulli()), _patch_setup():
         result = await hass.config_entries.flow.async_init(
@@ -99,9 +112,9 @@ async def test_flow_import(hass: HomeAssistant):
         assert result["data"] == CONF_DATA
 
 
-async def test_flow_import_already_configured(hass: HomeAssistant):
-    """Test import step already configured."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=UNIQUE_ID, data=CONF_DATA)
+async def test_flow_import_single_instance_allowed(hass: HomeAssistant) -> None:
+    """Test import step single instance allowed."""
+    entry = MockConfigEntry(domain=DOMAIN, data=CONF_DATA)
     entry.add_to_hass(hass)
 
     with patch_config_flow_tautulli(await create_mocked_tautulli()):
@@ -111,10 +124,12 @@ async def test_flow_import_already_configured(hass: HomeAssistant):
             data=CONF_IMPORT_DATA,
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "already_configured"
+        assert result["reason"] == "single_instance_allowed"
 
 
-async def test_flow_reauth(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
+async def test_flow_reauth(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test reauth flow."""
     with patch("homeassistant.components.tautulli.PLATFORMS", []):
         entry = await setup_integration(hass, aioclient_mock)
@@ -149,7 +164,7 @@ async def test_flow_reauth(hass: HomeAssistant, aioclient_mock: AiohttpClientMoc
 
 async def test_flow_reauth_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-):
+) -> None:
     """Test reauth flow with invalid authentication."""
     with patch("homeassistant.components.tautulli.PLATFORMS", []):
         entry = await setup_integration(hass, aioclient_mock)

@@ -24,7 +24,6 @@ URL = "http://1.2.3.4:8181/test"
 NAME = "Tautulli"
 SSL = False
 VERIFY_SSL = True
-UNIQUE_ID = "1234567890abcdef1234567890abcdef12345678"
 
 CONF_DATA = {
     CONF_API_KEY: API_KEY,
@@ -46,14 +45,13 @@ DEFAULT_USERS = [{11111111: {"enabled": False}, 22222222: {"enabled": False}}]
 SELECTED_USERNAMES = ["user1"]
 
 
-async def create_mocked_tautulli():
+async def create_mocked_tautulli() -> AsyncMock:
     """Mock Tautulli."""
     mocked_tautulli = AsyncMock()
-    mocked_tautulli.pms_identifier = UNIQUE_ID
     return mocked_tautulli
 
 
-def patch_config_flow_tautulli(mocked_tautulli):
+def patch_config_flow_tautulli(mocked_tautulli) -> AsyncMock:
     """Mock Tautulli config flow."""
     return patch(
         "homeassistant.components.tautulli.config_flow.PyTautulli.async_get_server_info",

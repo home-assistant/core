@@ -24,7 +24,7 @@
         "unknown": "Unexpected error"
       },
       "abort": {
-        "already_configured": "Service is already configured",
+        "single_instance_allowed": "Already configured. Only a single configuration possible.",
         "reauth_successful": "Re-authentication was successful"
       }
     },

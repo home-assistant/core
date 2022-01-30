@@ -1,18 +1,17 @@
 """Config flow for Tautulli."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from pytautulli import (
     PyTautulli,
-    PyTautulliApiServerInfo,
     PyTautulliException,
     PyTautulliHostConfiguration,
     exceptions,
 )
 import voluptuous as vol
 
+from homeassistant.components.sensor import _LOGGER
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     CONF_API_KEY,
@@ -35,8 +34,6 @@ from .const import (
     DOMAIN,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tautulli."""
@@ -47,13 +44,12 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
         errors = {}
         if user_input is not None:
-            info, error = await self.validate_input(user_input)
+            error = await self.validate_input(user_input)
             if error is None:
-                if info is not None:
-                    await self.async_set_unique_id(info.pms_identifier)
-                self._abort_if_unique_id_configured(updates=user_input)
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
                     data=user_input,
@@ -87,7 +83,7 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         if user_input is not None and entry:
             _input = {**entry.data, CONF_API_KEY: user_input[CONF_API_KEY]}
-            _, error = await self.validate_input(_input)
+            error = await self.validate_input(_input)
             if error is None:
                 self.hass.config_entries.async_update_entry(entry, data=_input)
                 await self.hass.config_entries.async_reload(entry.entry_id)
@@ -101,13 +97,16 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
-        for entry in self._async_current_entries():
-            if config[CONF_HOST] in entry.data[CONF_URL]:
-                _LOGGER.warning(
-                    "Tautulli yaml config with partial key %s has been imported. Please remove it",
-                    config[CONF_API_KEY][0:4],
-                )
-                return self.async_abort(reason="already_configured")
+        if self._async_current_entries():
+            _LOGGER.warning(
+                "Tautulli config with host %s import failed. Only one instance is supported",
+                config[CONF_HOST],
+            )
+            return self.async_abort(reason="single_instance_allowed")
+        _LOGGER.warning(
+            "Tautulli yaml config with host %s has been imported. Please remove it",
+            config[CONF_HOST],
+        )
         host_configuration = PyTautulliHostConfiguration(
             config[CONF_API_KEY],
             ipaddress=config[CONF_HOST],
@@ -124,9 +123,7 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-    async def validate_input(
-        self, user_input: dict[str, Any]
-    ) -> tuple[PyTautulliApiServerInfo | None, str | None]:
+    async def validate_input(self, user_input: dict[str, Any]) -> str | None:
         """Try connecting to Tautulli."""
         try:
             api_client = PyTautulli(
@@ -137,10 +134,11 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
                 verify_ssl=user_input.get(CONF_VERIFY_SSL, True),
             )
-            return await api_client.async_get_server_info(), None
+            await api_client.async_get_server_info()
         except exceptions.PyTautulliConnectionException:
-            return None, "cannot_connect"
+            return "cannot_connect"
         except exceptions.PyTautulliAuthenticationException:
-            return None, "invalid_auth"
+            return "invalid_auth"
         except PyTautulliException:
-            return None, "unknown"
+            return "unknown"
+        return None
