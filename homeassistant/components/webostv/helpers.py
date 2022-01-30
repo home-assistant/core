@@ -6,8 +6,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from . import WebOsClientWrapper
-from .const import DATA_CONFIG_ENTRY, DOMAIN
+from . import WebOsClientWrapper, async_control_connect
+from .const import DATA_CONFIG_ENTRY, DOMAIN, LIVE_TV_APP_ID, WEBOSTV_EXCEPTIONS
 
 
 @callback
@@ -81,3 +81,29 @@ def async_get_client_wrapper_by_device_entry(
         )
 
     return wrapper
+
+
+async def async_get_sources(host: str, key: str) -> list[str]:
+    """Construct sources list."""
+    try:
+        client = await async_control_connect(host, key)
+    except WEBOSTV_EXCEPTIONS:
+        return []
+
+    sources = []
+    found_live_tv = False
+    for app in client.apps.values():
+        sources.append(app["title"])
+        if app["id"] == LIVE_TV_APP_ID:
+            found_live_tv = True
+
+    for source in client.inputs.values():
+        sources.append(source["label"])
+        if source["appId"] == LIVE_TV_APP_ID:
+            found_live_tv = True
+
+    if not found_live_tv:
+        sources.append("Live TV")
+
+    # Preserve order when filtering duplicates
+    return list(dict.fromkeys(sources))

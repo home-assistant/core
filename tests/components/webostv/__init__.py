@@ -11,26 +11,9 @@ from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 
+from .const import CLIENT_KEY, FAKE_UUID, HOST, MOCK_CLIENT_KEYS, TV_NAME
+
 from tests.common import MockConfigEntry
-
-FAKE_UUID = "some-fake-uuid"
-TV_NAME = "fake_webos"
-ENTITY_ID = f"{MP_DOMAIN}.{TV_NAME}"
-HOST = "1.2.3.4"
-CLIENT_KEY = "some-secret"
-MOCK_CLIENT_KEYS = {HOST: CLIENT_KEY}
-MOCK_JSON = '{"1.2.3.4": "some-secret"}'
-
-CHANNEL_1 = {
-    "channelNumber": "1",
-    "channelName": "Channel 1",
-    "channelId": "ch1id",
-}
-CHANNEL_2 = {
-    "channelNumber": "20",
-    "channelName": "Channel Name 2",
-    "channelId": "ch2id",
-}
 
 
 async def setup_webostv(hass, unique_id=FAKE_UUID):
