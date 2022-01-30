@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
@@ -72,8 +72,50 @@ def mock_whois() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
+def mock_whois_missing_some_attrs() -> Generator[Mock, None, None]:
+    """Return a mocked query that only sets admin."""
+
+    class LimitedWhoisMock:
+        """A limited mock of whois_query."""
+
+        def __init__(self, *args, **kwargs):
+            """Mock only attributes the library always sets being available."""
+            self.creation_date = datetime(2019, 1, 1, 0, 0, 0)
+            self.dnssec = True
+            self.expiration_date = datetime(2023, 1, 1, 0, 0, 0)
+            self.last_updated = datetime(
+                2022, 1, 1, 0, 0, 0, tzinfo=dt_util.get_time_zone("Europe/Amsterdam")
+            )
+            self.name = "home-assistant.io"
+            self.name_servers = ["ns1.example.com", "ns2.example.com"]
+            self.registrar = "My Registrar"
+            self.status = "OK"
+            self.statuses = ["OK"]
+
+    with patch(
+        "homeassistant.components.whois.whois_query", LimitedWhoisMock
+    ) as whois_mock:
+        yield whois_mock
+
+
+@pytest.fixture
 async def init_integration(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_whois: MagicMock
+) -> MockConfigEntry:
+    """Set up thewhois integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    return mock_config_entry
+
+
+@pytest.fixture
+async def init_integration_missing_some_attrs(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_whois_missing_some_attrs: MagicMock,
 ) -> MockConfigEntry:
     """Set up thewhois integration for testing."""
     mock_config_entry.add_to_hass(hass)
