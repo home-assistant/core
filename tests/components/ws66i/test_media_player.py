@@ -16,7 +16,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.ws66i.const import (
-    CONF_NOT_FIRST_RUN,
     CONF_SOURCES,
     DOMAIN,
     SERVICE_RESTORE,
@@ -59,22 +58,27 @@ class AttrDict(dict):
 class MockWs66i:
     """Mock for pyws66i object."""
 
-    def __init__(self):
+    def __init__(self, fail_open=False, fail_zone_check=None):
         """Init mock object."""
         self.zones = defaultdict(
             lambda: AttrDict(power=True, volume=0, mute=True, source=1)
         )
+        self.fail_open = fail_open
+        self.fail_zone_check = fail_zone_check
 
     def open(self):
         """Open socket. Do nothing."""
-        pass
+        if self.fail_open is True:
+            raise ConnectionError()
 
     def close(self):
         """Close socket. Do nothing."""
-        pass
 
     def zone_status(self, zone_id):
         """Get zone status."""
+        if self.fail_zone_check is not None and zone_id in self.fail_zone_check:
+            return None
+
         status = self.zones[zone_id]
         status.zone = zone_id
         return AttrDict(status)
@@ -100,18 +104,17 @@ class MockWs66i:
         self.zones[zone.zone] = AttrDict(zone)
 
 
-async def test_cannot_connect(hass):
-    """Test connection error."""
-
-    patcher = patch("homeassistant.components.ws66i.get_ws66i", return_value=MockWs66i)
-    ws66i = patcher.start()
-
-    with patch.object(ws66i, "open", side_effect=ConnectionError):
-        await async_update_entity(hass, ZONE_1_ID)
+async def test_setup_success(hass):
+    """Test connection success."""
+    with patch(
+        "homeassistant.components.ws66i.get_ws66i",
+        new=lambda *a: MockWs66i(),
+    ):
+        config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert hass.states.get(ZONE_1_ID) is None
-
-    patcher.stop()
+        assert hass.states.get(ZONE_1_ID) is not None
 
 
 async def _setup_ws66i(hass, ws66i):
@@ -138,35 +141,37 @@ async def _setup_ws66i_with_options(hass, ws66i):
         await hass.async_block_till_done()
 
 
-async def _setup_ws66i_not_first_run(hass, ws66i):
-    with patch(
-        "homeassistant.components.ws66i.get_ws66i",
-        new=lambda *a: ws66i,
-    ), patch(
-        "homeassistant.components.ws66i.config_flow.get_ws66i",
-        new=lambda *a: ws66i,
-    ):
-        data = {**MOCK_CONFIG, CONF_NOT_FIRST_RUN: True}
-        config_entry = MockConfigEntry(domain=DOMAIN, data=data)
-        config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-
 async def _call_media_player_service(hass, name, data):
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN, name, service_data=data, blocking=True
     )
 
 
-async def _call_homeassistant_service(hass, name, data):
-    await hass.services.async_call(
-        "homeassistant", name, service_data=data, blocking=True
-    )
-
-
 async def _call_ws66i_service(hass, name, data):
     await hass.services.async_call(DOMAIN, name, service_data=data, blocking=True)
+
+
+async def test_cannot_connect(hass):
+    """Test connection error."""
+    with patch(
+        "homeassistant.components.ws66i.get_ws66i",
+        new=lambda *a: MockWs66i(fail_open=True),
+    ):
+        config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert hass.states.get(ZONE_1_ID) is None
+
+
+async def test_cannot_connect_2(hass):
+    """Test connection error pt 2."""
+    # Another way to test same case as test_cannot_connect
+    ws66i = MockWs66i()
+
+    with patch.object(MockWs66i, "open", side_effect=ConnectionError):
+        await _setup_ws66i(hass, ws66i)
+        assert hass.states.get(ZONE_1_ID) is None
 
 
 async def test_service_calls_with_entity_id(hass):
@@ -500,8 +505,7 @@ async def test_first_run_with_failing_zones(hass):
     assert not entry.disabled
 
     entry = registry.async_get(ZONE_7_ID)
-    assert entry.disabled
-    assert entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entry is None
 
 
 async def test_not_first_run_with_failing_zone(hass):
@@ -509,7 +513,21 @@ async def test_not_first_run_with_failing_zone(hass):
     ws66i = MockWs66i()
 
     with patch.object(MockWs66i, "zone_status", return_value=None):
-        await _setup_ws66i_not_first_run(hass, ws66i)
+        await _setup_ws66i(hass, ws66i)
+
+    registry = er.async_get(hass)
+
+    entry = registry.async_get(ZONE_1_ID)
+    assert not entry.disabled
+
+    entry = registry.async_get(ZONE_7_ID)
+    assert entry is None
+
+
+async def test_register_all_entities(hass):
+    """Test run with all entities registered."""
+    ws66i = MockWs66i()
+    await _setup_ws66i(hass, ws66i)
 
     registry = er.async_get(hass)
 
@@ -520,12 +538,21 @@ async def test_not_first_run_with_failing_zone(hass):
     assert not entry.disabled
 
 
-async def test_not_first_run_cant_connect(hass):
-    """Test first run can't connect."""
-    ws66i = MockWs66i()
+async def test_register_entities_in_1_amp_only(hass):
+    """Test run with only zones 11-16 registered."""
+    ws66i = MockWs66i(fail_zone_check=[21])
+    await _setup_ws66i(hass, ws66i)
 
-    with patch.object(MockWs66i, "open", side_effect=ConnectionError):
-        await _setup_ws66i_not_first_run(hass, ws66i)
+    registry = er.async_get(hass)
+
+    entry = registry.async_get(ZONE_1_ID)
+    assert not entry.disabled
+
+    entry = registry.async_get(ZONE_2_ID)
+    assert not entry.disabled
+
+    entry = registry.async_get(ZONE_7_ID)
+    assert entry is None
 
 
 async def test_unload_config_entry(hass):

@@ -11,23 +11,10 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import (
-    CONF_IP_ADDRESS,
-    EVENT_HOMEASSISTANT_STOP,
-    STATE_OFF,
-    STATE_ON,
-)
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, entity_platform, service
+from homeassistant.const import CONF_IP_ADDRESS, STATE_OFF, STATE_ON
+from homeassistant.helpers import entity_platform
 
-from .const import (
-    CONF_SOURCES,
-    DOMAIN,
-    FIRST_RUN,
-    SERVICE_RESTORE,
-    SERVICE_SNAPSHOT,
-    WS66I_OBJECT,
-)
+from .const import CONF_SOURCES, DOMAIN, SERVICE_RESTORE, SERVICE_SNAPSHOT, WS66I_OBJECT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,77 +43,44 @@ def _get_sources_from_dict(data):
     return [source_id_name, source_name_id, source_names]
 
 
-@core.callback
-def _get_sources(config_entry):
-    if CONF_SOURCES in config_entry.options:
-        data = config_entry.options
-    else:
-        data = config_entry.data
-    return _get_sources_from_dict(data)
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the WS66i 6-zone amplifier platform."""
-    addr = config_entry.data[CONF_IP_ADDRESS]
-
-    # Open up a connection with the WS66i
+    ip_addr = config_entry.data[CONF_IP_ADDRESS]
     ws66i = hass.data[DOMAIN][config_entry.entry_id][WS66I_OBJECT]
-    try:
-        await hass.async_add_executor_job(ws66i.open)
-    except ConnectionError as err:
-        raise ConfigEntryNotReady from err
+    sources = _get_sources_from_dict(config_entry.options)
 
-    sources = _get_sources(config_entry)
-
-    # Build the entities that control each of the zone.
+    # Build the entities that control each of the zones.
+    # Zones 11 - 16 are the master amp
+    # Zones 21,31 - 26,36 are the daisy-chained amps
     entities = []
     for i in range(1, 4):
+
+        if i > 1:
+            # Don't add entities that aren't present
+            status = await hass.async_add_executor_job(ws66i.zone_status, (i * 10 + 1))
+            if status is None:
+                break
+
+        _LOGGER.info("Detected amp %d at ip %s", i, ip_addr)
         for j in range(1, 7):
             zone_id = (i * 10) + j
-            _LOGGER.info("Adding zone %d for address %s", zone_id, addr)
             entities.append(Ws66iZone(ws66i, sources, config_entry.entry_id, zone_id))
 
-    # only call update before add if it's the first run so we can try to detect zones
-    first_run = hass.data[DOMAIN][config_entry.entry_id][FIRST_RUN]
-    async_add_entities(entities, first_run)
+    async_add_entities(entities)
 
-    def close(event):
-        """Close the Telnet connection."""
-        ws66i.close()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close)
-
+    # Set up services
     platform = entity_platform.async_get_current_platform()
 
-    def _call_service(entities, service_call):
-        for entity in entities:
-            if service_call.service == SERVICE_SNAPSHOT:
-                entity.snapshot()
-            elif service_call.service == SERVICE_RESTORE:
-                entity.restore()
-
-    @service.verify_domain_control(hass, DOMAIN)
-    async def async_service_handle(service_call):
-        """Handle for services."""
-        entities = await platform.async_extract_from_service(service_call)
-
-        if not entities:
-            return
-
-        hass.async_add_executor_job(_call_service, entities, service_call)
-
-    hass.services.async_register(
-        DOMAIN,
+    platform.async_register_entity_service(
         SERVICE_SNAPSHOT,
-        async_service_handle,
-        schema=cv.make_entity_service_schema({}),
+        {},
+        "snapshot",
     )
 
-    hass.services.async_register(
-        DOMAIN,
+    platform.async_register_entity_service(
         SERVICE_RESTORE,
-        async_service_handle,
-        schema=cv.make_entity_service_schema({}),
+        {},
+        "restore",
     )
 
 
@@ -143,21 +97,26 @@ class Ws66iZone(MediaPlayerEntity):
         # ordered list of all source names
         self._source_names = sources[2]
         self._zone_id = zone_id
-        self._unique_id = f"{namespace}_{self._zone_id}"
-        self._name = f"Zone {self._zone_id}"
+        self._attr_unique_id = f"{namespace}_{self._zone_id}"
+        self._attr_name = f"Zone {self._zone_id}"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": "Soundavo",
+            "model": "WS66i 6-Zone Amplifier",
+        }
 
         self._snapshot = None
         self._state = None
         self._volume = None
         self._source = None
         self._mute = None
-        self._update_success = True
 
     def update(self):
         """Retrieve latest state."""
         new_state = self._ws66i.zone_status(self._zone_id)
         if not new_state:
-            self._update_success = False
+            _LOGGER.debug("Zone %d was not detected", self._zone_id)
             return
 
         # successfully retrieved zone state
@@ -173,27 +132,7 @@ class Ws66iZone(MediaPlayerEntity):
     @property
     def entity_registry_enabled_default(self):
         """Return if the entity should be enabled when first added to the entity registry."""
-        return self._zone_id < 20 or self._update_success
-
-    @property
-    def device_info(self):
-        """Return device info for this device."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Soundavo",
-            "model": "WS66i 6-Zone Amplifier",
-        }
-
-    @property
-    def unique_id(self):
-        """Return unique ID for this device."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the zone."""
-        return self._name
+        return True
 
     @property
     def state(self):

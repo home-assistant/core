@@ -54,7 +54,13 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
     ws66i = get_ws66i(data[CONF_IP_ADDRESS])
     await hass.async_add_executor_job(ws66i.open)
-    # no exception, close it
+    # no exception. run a simple test to make sure we opened correct port
+    ret_val = await hass.async_add_executor_job(ws66i.zone_status, 11)
+    if ret_val is None:
+        ws66i.close()
+        raise ConnectionError("Not a valid WS66i connection")
+
+    # no issues
     ws66i.close()
 
     sources = _sources_from_config(data)
@@ -74,9 +80,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-                return self.async_create_entry(
-                    title=user_input[CONF_IP_ADDRESS], data=info
-                )
+                return self.async_create_entry(title="WS66i Amp", data=info)
             except ConnectionError:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
@@ -113,15 +117,6 @@ class Ws66iOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize."""
         self.config_entry = config_entry
 
-    @core.callback
-    def _previous_sources(self):
-        if CONF_SOURCES in self.config_entry.options:
-            previous = self.config_entry.options[CONF_SOURCES]
-        else:
-            previous = self.config_entry.data[CONF_SOURCES]
-
-        return previous
-
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         if user_input is not None:
@@ -129,8 +124,8 @@ class Ws66iOptionsFlowHandler(config_entries.OptionsFlow):
                 title="", data={CONF_SOURCES: _sources_from_config(user_input)}
             )
 
-        previous_sources = self._previous_sources()
-
+        # Fill form with previous source names
+        previous_sources = self.config_entry.options[CONF_SOURCES]
         options = {
             _key_for_source(idx + 1, source, previous_sources): str
             for idx, source in enumerate(SOURCES)

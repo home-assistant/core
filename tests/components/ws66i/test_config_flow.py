@@ -48,7 +48,7 @@ async def test_form(hass):
         ws66i_instance.close.assert_called_once()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == CONFIG[CONF_IP_ADDRESS]
+    assert result2["title"] == "WS66i Amp"
     assert result2["data"] == {
         CONF_IP_ADDRESS: CONFIG[CONF_IP_ADDRESS],
         CONF_SOURCES: {"1": CONFIG[CONF_SOURCE_1], "4": CONFIG[CONF_SOURCE_4]},
@@ -66,6 +66,23 @@ async def test_form_cannot_connect(hass):
     with patch("homeassistant.components.ws66i.config_flow.get_ws66i") as mock_ws66i:
         ws66i_instance = mock_ws66i.return_value
         ws66i_instance.open.side_effect = ConnectionError
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], CONFIG
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_wrong_ip(hass):
+    """Test cannot connect error with bad IP."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch("homeassistant.components.ws66i.config_flow.get_ws66i") as mock_ws66i:
+        ws66i_instance = mock_ws66i.return_value
+        ws66i_instance.zone_status.return_value = None
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], CONFIG
         )
@@ -98,6 +115,7 @@ async def test_options_flow(hass):
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=conf,
+        options={CONF_SOURCES: {"4": "four"}},
     )
     config_entry.add_to_hass(hass)
 
