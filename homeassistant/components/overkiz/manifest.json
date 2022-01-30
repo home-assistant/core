@@ -23,5 +23,6 @@
     "@vlebourl",
     "@tetienne"
   ],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["boto3", "botocore", "pyhumps", "pyoverkiz", "s3transfer"]
 }

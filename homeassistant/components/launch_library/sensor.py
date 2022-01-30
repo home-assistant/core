@@ -85,7 +85,7 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
     LaunchLibrarySensorEntityDescription(
         key="launch_probability",
         icon="mdi:dice-multiple",
-        name="Launch Probability",
+        name="Launch probability",
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda nl: None if nl.probability == -1 else nl.probability,
         attributes_fn=lambda nl: None,

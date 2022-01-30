@@ -17,7 +17,7 @@
                     "host": "Host",
                     "name": "Nama"
                 },
-                "description": "Siapkan integrasi Vallox Jika Anda memiliki masalah dengan konfigurasi, buka: https://www.home-assistant.io/integrations/vallox ",
+                "description": "Siapkan integrasi Vallox Jika Anda memiliki masalah dengan konfigurasi, buka {integration_docs_url}.",
                 "title": "Vallox"
             }
         }

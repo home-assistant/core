@@ -1,7 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "O host j\u00e1 est\u00e1 configurado."
+            "already_configured": "O servi\u00e7o j\u00e1 est\u00e1 configurado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nome do host",
+                    "name": "Nome"
+                }
+            }
         }
     }
 }

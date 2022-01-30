@@ -5,5 +5,6 @@
   "requirements": ["holidays==0.12"],
   "codeowners": ["@fabaff"],
   "quality_scale": "internal",
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["convertdate", "hijri_converter", "holidays", "korean_lunar_calendar"]
 }

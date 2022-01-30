@@ -6,5 +6,6 @@
   "dependencies": ["ffmpeg"],
   "codeowners": ["@hunterjm"],
   "config_flow": true,
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "loggers": ["onvif", "wsdiscovery", "zeep"]
 }

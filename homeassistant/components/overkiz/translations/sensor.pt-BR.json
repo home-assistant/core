@@ -1,6 +1,25 @@
 {
     "state": {
+        "overkiz__battery": {
+            "low": "Baixo",
+            "normal": "Normal",
+            "verylow": "Muito baixo"
+        },
+        "overkiz__discrete_rssi_level": {
+            "good": "Bom",
+            "low": "Baixo",
+            "normal": "Normal",
+            "verylow": "Muito baixo"
+        },
         "overkiz__priority_lock_originator": {
+            "local_user": "Usu\u00e1rio local",
+            "lsc": "LSC",
+            "myself": "Eu mesmo",
+            "rain": "Chuva",
+            "security": "Seguran\u00e7a",
+            "temperature": "Temperatura",
+            "timer": "Temporizador",
+            "ups": "UPS",
             "user": "Usu\u00e1rio",
             "wind": "Vento"
         },

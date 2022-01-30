@@ -59,5 +59,6 @@
       "manufacturer": "Ubiquiti Networks",
       "modelDescription": "UniFi Dream Machine SE"
     }
-  ]
+  ],
+  "loggers": ["pyunifiprotect", "unifi_discovery"]
 }

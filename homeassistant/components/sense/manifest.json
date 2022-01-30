@@ -19,5 +19,6 @@
       "macaddress": "A4D578*"
     }
   ],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["sense_energy"]
 }

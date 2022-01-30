@@ -1,11 +1,29 @@
 {
     "options": {
         "step": {
+            "accessory": {
+                "data": {
+                    "entities": "Entidades"
+                },
+                "title": "Selecione a entidade para o acess\u00f3rio"
+            },
             "advanced": {
                 "title": "Configura\u00e7\u00e3o avan\u00e7ada"
             },
             "cameras": {
                 "title": "Selecione o codec de v\u00eddeo da c\u00e2mera."
+            },
+            "exclude": {
+                "data": {
+                    "entities": "Entidades"
+                },
+                "description": "Todas as {domains} \u201d ser\u00e3o inclu\u00eddas, exceto as entidades exclu\u00eddas e as entidades categorizadas.",
+                "title": "Selecione as entidades a serem exclu\u00eddas"
+            },
+            "include": {
+                "data": {
+                    "entities": "Entidades"
+                }
             }
         }
     }

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Enheten er allerede konfigurert"
+            "already_configured": "Enheten er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes"
@@ -16,7 +17,7 @@
                     "port": "Port",
                     "username": "Brukernavn"
                 },
-                "description": "Konfigurer din BSB-Lan-enhet for \u00e5 integrere med Home Assistant.",
+                "description": "Konfigurer BSB-Lan-enheten din for \u00e5 integreres med Home Assistant.",
                 "title": "Koble til BSB-Lan-enheten"
             }
         }

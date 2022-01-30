@@ -14,6 +14,11 @@
             "0": "Lav f\u00f8lsomhet",
             "1": "H\u00f8y f\u00f8lsomhet"
         },
+        "tuya__fan_angle": {
+            "30": "30\u00b0",
+            "60": "60\u00b0",
+            "90": "90\u00b0"
+        },
         "tuya__fingerbot_mode": {
             "click": "Trykk",
             "switch": "Bryter"

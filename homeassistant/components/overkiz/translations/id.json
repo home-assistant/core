@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Akun sudah dikonfigurasi"
+            "already_configured": "Akun sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil",
+            "reauth_wrong_account": "You can only reauthenticate this entry with the same Overkiz account and hub"
         },
         "error": {
             "cannot_connect": "Gagal terhubung",

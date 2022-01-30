@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dispositivo j\u00e1 configurado"
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Host (Opcional)",
+                    "host": "Nome do host (Opcional)",
                     "password": "Senha",
                     "port": "Porta (Opcional)",
-                    "ssl": "Utilize um certificado SSL",
+                    "ssl": "Usar um certificado SSL",
                     "username": "Usu\u00e1rio (Opcional)"
                 },
                 "description": "Host padr\u00e3o: {host}\n Porta padr\u00e3o: {port}\n Usu\u00e1rio padr\u00e3o: {username}",

@@ -10,7 +10,13 @@
             "cannot_connect": "Gagal terhubung",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
+        "flow_title": "{name} ({ipaddress})",
         "step": {
+            "pick_device": {
+                "data": {
+                    "device": "Perangkat"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host"
