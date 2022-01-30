@@ -25,8 +25,10 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -34,9 +36,9 @@ from .const import (
     DEFAULT_CONSIDER_HOME,
     DEFAULT_NAME,
     DOMAIN,
-    MODELS_V2,
-    KEY_ROUTER,
     KEY_COORDINATOR,
+    KEY_ROUTER,
+    MODELS_V2,
 )
 from .errors import CannotLoginException
 
@@ -64,7 +66,9 @@ def async_setup_netgear_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    entity_class_generator: Callable[[DataUpdateCoordinator, NetgearRouter, dict], list],
+    entity_class_generator: Callable[
+        [DataUpdateCoordinator, NetgearRouter, dict], list
+    ],
 ) -> None:
     """Set up device tracker for Netgear component."""
     router = hass.data[DOMAIN][entry.unique_id][KEY_ROUTER]
@@ -86,7 +90,9 @@ def async_setup_netgear_entry(
 
 
 @callback
-def async_add_new_entities(coordinator, router, async_add_entities, tracked, entity_class_generator):
+def async_add_new_entities(
+    coordinator, router, async_add_entities, tracked, entity_class_generator
+):
     """Add new tracker entities from the router."""
     new_tracked = []
 
@@ -247,7 +253,9 @@ class NetgearRouter:
 class NetgearDeviceEntity(CoordinatorEntity, Entity):
     """Base class for a device connected to a Netgear router."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, router: NetgearRouter, device: dict) -> None:
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, router: NetgearRouter, device: dict
+    ) -> None:
         """Initialize a Netgear device."""
         super().__init__(coordinator)
         self._router = router

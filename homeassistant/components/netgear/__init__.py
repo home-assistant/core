@@ -1,7 +1,6 @@
 """Support for Netgear routers."""
-import logging
-
 from datetime import timedelta
+import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
@@ -10,7 +9,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, PLATFORMS, KEY_ROUTER, KEY_COORDINATOR
+from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER, PLATFORMS
 from .errors import CannotLoginException
 from .router import NetgearRouter
 
@@ -65,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name=name,
+        name=router.device_name,
         update_method=async_update_data,
         update_interval=SCAN_INTERVAL,
     )
