@@ -1,16 +1,14 @@
 """The tests for the Google Calendar component."""
 from collections.abc import Awaitable, Callable
 import datetime
-from pathlib import Path
 from typing import Any
-from unittest.mock import Mock, call, patch
+from unittest.mock import Mock, call, mock_open, patch
 
 from oauth2client.client import (
     FlowExchangeError,
     OAuth2Credentials,
     OAuth2DeviceCodeError,
 )
-from oauth2client.file import Storage
 import pytest
 import yaml
 
@@ -87,13 +85,23 @@ async def mock_exchange(creds: OAuth2Credentials) -> YieldFixture[Mock]:
         yield mock
 
 
+@pytest.fixture(autouse=True)
+async def mock_token_write(hass: HomeAssistant) -> None:
+    """Fixture to avoid writing token files to disk."""
+    with patch(
+        "homeassistant.components.google.os.path.isfile", return_value=True
+    ), patch("homeassistant.components.google.Storage.put"):
+        yield
+
+
 @pytest.fixture
-async def token_file(
-    hass: HomeAssistant, creds: OAuth2Credentials, token_filename: Path
+async def mock_token_read(
+    hass: HomeAssistant,
+    creds: OAuth2Credentials,
 ) -> None:
     """Fixture to populate an existing token file."""
-    storage = Storage(token_filename)
-    storage.put(creds)
+    with patch("homeassistant.components.google.Storage.get", return_value=creds):
+        yield
 
 
 @pytest.fixture
@@ -115,14 +123,14 @@ async def calendars_config() -> list[dict[str, Any]]:
 
 
 @pytest.fixture
-async def calendars_yaml(
+async def mock_calendars_yaml(
     hass: HomeAssistant,
     calendars_config: list[dict[str, Any]],
-    yaml_devices_filename: Path,
 ) -> None:
     """Fixture that prepares the calendars.yaml file."""
-    with open(yaml_devices_filename, "w") as out:
-        yaml.dump(calendars_config, out)
+    mocked_open_function = mock_open(read_data=yaml.dump(calendars_config))
+    with patch("homeassistant.components.google.open", mocked_open_function):
+        yield
 
 
 @pytest.fixture
@@ -191,7 +199,7 @@ async def test_init_success(
     mock_exchange: Mock,
     mock_notification: Mock,
     mock_load_platform: Mock,
-    calendars_yaml: None,
+    mock_calendars_yaml: None,
     component_setup: ComponentSetup,
 ) -> None:
     """Test successful creds setup."""
@@ -272,11 +280,11 @@ async def test_exchange_error(
 
 async def test_existing_token(
     hass: HomeAssistant,
-    token_file: None,
+    mock_token_read: None,
     component_setup: ComponentSetup,
     mock_load_platform: Mock,
     google_service: GoogleCalendarService,
-    calendars_yaml: None,
+    mock_calendars_yaml: None,
     mock_notification: Mock,
 ) -> None:
     """Test setup with an existing token file."""
@@ -297,11 +305,11 @@ async def test_existing_token(
 async def test_existing_token_missing_scope(
     hass: HomeAssistant,
     token_scopes: list[str],
-    token_file: None,
+    mock_token_read: None,
     component_setup: ComponentSetup,
     mock_load_platform: Mock,
     google_service: GoogleCalendarService,
-    calendars_yaml: None,
+    mock_calendars_yaml: None,
     mock_notification: Mock,
     mock_code_flow: Mock,
     mock_exchange: Mock,
@@ -327,12 +335,12 @@ async def test_existing_token_missing_scope(
 @pytest.mark.parametrize("calendars_config", [[{"cal_id": "invalid-schema"}]])
 async def test_calendar_yaml_missing_required_fields(
     hass: HomeAssistant,
-    token_file: None,
+    mock_token_read: None,
     component_setup: ComponentSetup,
     mock_load_platform: Mock,
     google_service: GoogleCalendarService,
     calendars_config: list[dict[str, Any]],
-    calendars_yaml: None,
+    mock_calendars_yaml: None,
     mock_notification: Mock,
 ) -> None:
     """Test setup with a missing schema fields, ignores the error and continues."""
@@ -346,12 +354,12 @@ async def test_calendar_yaml_missing_required_fields(
 @pytest.mark.parametrize("calendars_config", [[{"missing-cal_id": "invalid-schema"}]])
 async def test_invalid_calendar_yaml(
     hass: HomeAssistant,
-    token_file: None,
+    mock_token_read: None,
     component_setup: ComponentSetup,
     mock_load_platform: Mock,
     google_service: GoogleCalendarService,
     calendars_config: list[dict[str, Any]],
-    calendars_yaml: None,
+    mock_calendars_yaml: None,
     mock_notification: Mock,
 ) -> None:
     """Test setup with missing entity id fields fails to setup the integration."""
@@ -364,33 +372,9 @@ async def test_invalid_calendar_yaml(
     assert hass.data[google.DATA_INDEX] == {}
 
 
-async def test_invalid_calendar_config_format(
-    hass: HomeAssistant,
-    token_file: None,
-    component_setup: ComponentSetup,
-    mock_load_platform: Mock,
-    google_service: GoogleCalendarService,
-    calendars_config: list[dict[str, Any]],
-    calendars_yaml: None,
-    mock_notification: Mock,
-    yaml_devices_filename: Path,
-) -> None:
-    """Test setup when the yaml file does not contain yaml."""
-
-    # Write arbitrary binary data that isn't yaml
-    with open(yaml_devices_filename, "wb") as out:
-        out.write(bytearray(range(1, 100)))
-
-    assert not await component_setup()
-
-    mock_load_platform.assert_not_called()
-    mock_notification.assert_not_called()
-    assert hass.data[google.DATA_INDEX] == {}
-
-
 async def test_found_calendar_from_api(
     hass: HomeAssistant,
-    token_file: None,
+    mock_token_read: None,
     component_setup: ComponentSetup,
     google_service: GoogleCalendarService,
     mock_calendars_list: ApiResult,
@@ -400,7 +384,9 @@ async def test_found_calendar_from_api(
 
     mock_calendars_list({"items": [test_calendar]})
 
-    assert await component_setup()
+    mocked_open_function = mock_open(read_data=yaml.dump([]))
+    with patch("homeassistant.components.google.open", mocked_open_function):
+        assert await component_setup()
 
     # One calendar loaded from the API
     assert len(hass.data[google.DATA_INDEX]) == 1
@@ -408,7 +394,7 @@ async def test_found_calendar_from_api(
 
 async def test_add_event(
     hass: HomeAssistant,
-    token_file: None,
+    mock_token_read: None,
     component_setup: ComponentSetup,
     google_service: GoogleCalendarService,
     mock_calendars_list: ApiResult,
@@ -417,7 +403,6 @@ async def test_add_event(
 ) -> None:
     """Test service call that adds an event."""
 
-    mock_calendars_list({"items": [test_calendar]})
     assert await component_setup()
 
     await hass.services.async_call(
@@ -470,7 +455,8 @@ async def test_add_event(
 )
 async def test_add_event_date_ranges(
     hass: HomeAssistant,
-    token_file: None,
+    mock_token_read: None,
+    calendars_config: list[dict[str, Any]],
     component_setup: ComponentSetup,
     google_service: GoogleCalendarService,
     mock_calendars_list: ApiResult,
@@ -482,7 +468,6 @@ async def test_add_event_date_ranges(
 ) -> None:
     """Test service call that adds an event with various time ranges."""
 
-    mock_calendars_list({"items": [test_calendar]})
     assert await component_setup()
 
     await hass.services.async_call(
