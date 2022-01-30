@@ -80,6 +80,13 @@ def _ensure_timezone(timestamp: datetime | None) -> datetime | None:
     return timestamp
 
 
+def _fetch_attr_if_exists(domain: Domain, attr: str) -> str | None:
+    """Fetch an attribute if it exists and is truthy or return None."""
+    if hasattr(domain, attr) and (value := getattr(domain, attr)):
+        return cast(str, value)
+    return None
+
+
 SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
     WhoisSensorEntityDescription(
         key="admin",
@@ -87,7 +94,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:account-star",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: domain.admin if domain.admin else None,
+        value_fn=lambda domain: _fetch_attr_if_exists(domain, "admin"),
     ),
     WhoisSensorEntityDescription(
         key="creation_date",
@@ -123,7 +130,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:account",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: domain.owner if domain.owner else None,
+        value_fn=lambda domain: _fetch_attr_if_exists(domain, "owner"),
     ),
     WhoisSensorEntityDescription(
         key="registrant",
@@ -131,7 +138,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:account-edit",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: domain.registrant if domain.registrant else None,
+        value_fn=lambda domain: _fetch_attr_if_exists(domain, "registrant"),
     ),
     WhoisSensorEntityDescription(
         key="registrar",
@@ -147,7 +154,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:store",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: domain.reseller if domain.reseller else None,
+        value_fn=lambda domain: _fetch_attr_if_exists(domain, "reseller"),
     ),
 )
 
@@ -190,7 +197,6 @@ async def async_setup_entry(
             )
             for description in SENSORS
         ],
-        update_before_add=True,
     )
 
 
