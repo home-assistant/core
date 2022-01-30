@@ -17,7 +17,6 @@ PLATFORMS: list[str] = ["binary_sensor"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up laundrify from a config entry."""
-    # _LOGGER.info(entry.data)
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {}
 

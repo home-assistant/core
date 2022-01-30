@@ -27,6 +27,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
     MODEL,
+    REQUEST_TIMEOUT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,7 +49,7 @@ async def async_setup_entry(
         try:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
-            async with async_timeout.timeout(10):
+            async with async_timeout.timeout(REQUEST_TIMEOUT):
                 return await laundrify_api.get_machines()
         except ApiUnauthorized as err:
             # Raising ConfigEntryAuthFailed will cancel future updates

@@ -63,7 +63,6 @@ async def mock_responses(
 ):
     """Mock responses from Efergy."""
     base_url = "https://test.laundrify.de/api"
-    # api = LaundrifyAPI(auth_code, session=async_get_clientsession(hass))
     if error:
         aioclient_mock.get(
             f"{base_url}getInstant",

@@ -49,7 +49,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 async def test_form_invalid_format(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth."""
+    """Test we handle invalid format."""
     with _patch_laundrify_exchange_code() as laundrify_mock:
         laundrify_mock.side_effect = errors.InvalidFormat
         result = await hass.config_entries.flow.async_init(
