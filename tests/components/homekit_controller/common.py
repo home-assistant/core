@@ -10,9 +10,8 @@ from typing import Any, Final
 from unittest import mock
 
 from aiohomekit.model import Accessories, Accessory
-from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
-from aiohomekit.testing import FakeController
+from aiohomekit.testing import FakeController, FakePairing
 
 from homeassistant.components import zeroconf
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -24,7 +23,8 @@ from homeassistant.components.homekit_controller.const import (
     IDENTIFIER_ACCESSORY_ID,
     IDENTIFIER_SERIAL_NUMBER,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
@@ -94,7 +94,14 @@ class DeviceTestInfo:
 class Helper:
     """Helper methods for interacting with HomeKit fakes."""
 
-    def __init__(self, hass, entity_id, pairing, accessory, config_entry):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entity_id: str,
+        pairing: FakePairing,
+        accessory: Accessory,
+        config_entry: ConfigEntry,
+    ) -> None:
         """Create a helper for a given accessory/entity."""
         self.hass = hass
         self.entity_id = entity_id
@@ -102,19 +109,43 @@ class Helper:
         self.accessory = accessory
         self.config_entry = config_entry
 
-        self.characteristics = {}
-        for service in self.accessory.services:
-            service_name = ServicesTypes.get_short(service.type)
-            for char in service.characteristics:
-                char_name = CharacteristicsTypes.get_short(char.type)
-                self.characteristics[(service_name, char_name)] = char
+    async def async_update(
+        self, service: str, characteristics: dict[str, Any]
+    ) -> State:
+        """Set the characteristics on this service."""
+        changes = []
 
-    async def update_named_service(self, service, characteristics):
-        """Update a service."""
-        self.pairing.testing.update_named_service(service, characteristics)
+        service = self.accessory.services.first(service_type=service)
+        aid = service.accessory.aid
+
+        for ctype, value in characteristics.items():
+            char = service.characteristics.first(char_types=[ctype])
+            changes.append((aid, char.iid, value))
+
+        self.pairing.testing.update_aid_iid(changes)
+
+        if not self.pairing.testing.events_enabled:
+            # If events aren't enabled, explicitly do a poll
+            # If they are enabled, then HA will pick up the changes next time
+            # we yield control
+            await time_changed(self.hass, 60)
+
         await self.hass.async_block_till_done()
 
-    async def poll_and_get_state(self):
+        state = self.hass.states.get(self.entity_id)
+        assert state is not None
+        return state
+
+    @callback
+    def async_assert_service_values(
+        self, service: str, characteristics: dict[str, Any]
+    ) -> None:
+        """Assert a service has characteristics with these values."""
+        service = self.accessory.services.first(service_type=service)
+        for ctype, value in characteristics.items():
+            assert service.value(ctype) == value
+
+    async def poll_and_get_state(self) -> State:
         """Trigger a time based poll and return the current entity state."""
         await time_changed(self.hass, 60)
 
