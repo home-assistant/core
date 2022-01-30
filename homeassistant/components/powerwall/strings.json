@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "{ip_address}",
+    "flow_title": "{name} ({ip_address})",
     "step": {
       "user": {
         "title": "Connect to the powerwall",
@@ -19,7 +19,7 @@
       },      
       "confirm_discovery": {
         "title": "[%key:component::powerwall::config::step::user::title%]",
-        "description": "Do you want to setup {gateway_din} ({ip_address})?"
+        "description": "Do you want to setup {name} ({ip_address})?"
       }
     },
     "error": {
