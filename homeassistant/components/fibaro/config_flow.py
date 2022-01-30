@@ -29,7 +29,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-def _connect_to_fibaro(data: dict[str, Any]) -> FibaroConnectResult:
+def _connect_to_fibaro(data: dict[str, Any]) -> tuple[bool, FibaroController]:
     """Validate the user input allows us to connect to fibaro."""
     controller = FibaroController(data)
     connected = controller.connect()
@@ -37,9 +37,8 @@ def _connect_to_fibaro(data: dict[str, Any]) -> FibaroConnectResult:
         _LOGGER.debug(
             "Successful connection to fibaro home center with url %s", data[CONF_URL]
         )
-        return FibaroConnectResult(connected, controller.hub_serial, controller.name)
 
-    return FibaroConnectResult(connected)
+    return connected, controller
 
 
 async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -47,16 +46,16 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    result = await hass.async_add_executor_job(_connect_to_fibaro, data)
-    if not result.connected:
+    connected, controller = await hass.async_add_executor_job(_connect_to_fibaro, data)
+    if not connected:
         raise CannotConnect
 
     _LOGGER.debug(
         "Successfully connected to fibaro home center %s with name %s",
-        result.serial_number,
-        result.name,
+        controller.hub_serial,
+        controller.name,
     )
-    return {"serial_number": result.serial_number, "name": result.name}
+    return {"serial_number": controller.hub_serial, "name": controller.name}
 
 
 class FibaroConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -97,18 +96,6 @@ class FibaroConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config: ConfigType | None) -> FlowResult:
         """Import a config entry."""
         return await self.async_step_user(import_config)
-
-
-class FibaroConnectResult:
-    """Result holder of fibaro connection result."""
-
-    def __init__(
-        self, connected: bool, serial_number: str | None = None, name: str | None = None
-    ) -> None:
-        """Initiate the connection result."""
-        self.connected = connected
-        self.serial_number = serial_number
-        self.name = name
 
 
 class CannotConnect(HomeAssistantError):

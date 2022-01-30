@@ -132,7 +132,7 @@ async def test_config_flow_user_initiated_auth_failure(hass):
         assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_config_flow_user_initiated_unknonw_failure_1(hass):
+async def test_config_flow_user_initiated_unknown_failure_1(hass):
     """Unknown failure in flow manually initialized by the user."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

@@ -279,6 +279,8 @@ tests/components/ezviz/* @RenierM26 @baqs
 homeassistant/components/faa_delays/* @ntilley905
 tests/components/faa_delays/* @ntilley905
 homeassistant/components/fastdotcom/* @rohankapoorcom
+homeassistant/components/fibaro/* @rappenze
+tests/components/fibaro/* @rappenze
 homeassistant/components/file/* @fabaff
 tests/components/file/* @fabaff
 homeassistant/components/filter/* @dgomes

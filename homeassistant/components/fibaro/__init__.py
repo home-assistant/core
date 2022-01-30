@@ -389,8 +389,7 @@ async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
 def _init_controller(data: dict[str, Any]) -> FibaroController:
     """Validate the user input allows us to connect to fibaro."""
     controller = FibaroController(data)
-    connected = controller.connect()
-    if connected:
+    if controller.connect():
         return controller
 
     raise Exception("Connection to fibaro failed")
