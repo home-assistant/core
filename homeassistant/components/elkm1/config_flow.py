@@ -89,10 +89,12 @@ async def validate_input(data: dict[str, str], mac: str | None) -> dict[str, str
     if not await async_wait_for_elk_to_sync(elk, LOGIN_TIMEOUT, VALIDATE_TIMEOUT, url):
         raise InvalidAuth
 
-    device_id = data[CONF_PREFIX]
-    if not device_id and mac:
-        device_id = _short_mac(mac)
-    device_name = f"ElkM1 {device_id}" if device_id else "ElkM1"
+    if prefix:
+        device_name = prefix
+    elif mac:
+        device_name = f"ElkM1 {_short_mac(mac)}"
+    else:
+        device_name = "ElkM1"
     return {"title": device_name, CONF_HOST: url, CONF_PREFIX: slugify(prefix)}
 
 
