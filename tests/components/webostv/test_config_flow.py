@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.components.webostv.const import CONF_SOURCES, DOMAIN
+from homeassistant.components.webostv.const import CONF_SOURCES, DOMAIN, LIVE_TV_APP_ID
 from homeassistant.config_entries import SOURCE_SSDP
 from homeassistant.const import (
     CONF_CLIENT_SECRET,
@@ -149,8 +149,30 @@ async def test_form(hass, client):
     assert result["title"] == TV_NAME
 
 
-async def test_options_flow(hass, client):
-    """Test options config flow."""
+@pytest.mark.parametrize(
+    "apps, inputs",
+    [
+        # Live TV in apps (default)
+        (None, None),
+        # Live TV in inputs
+        (
+            {},
+            {
+                "in1": {"label": "Input01", "id": "in1", "appId": "app0"},
+                "in2": {"label": "Input02", "id": "in2", "appId": "app1"},
+                "livetv": {"label": "Live TV", "id": "livetv", "appId": LIVE_TV_APP_ID},
+            },
+        ),
+        # Live TV not found
+        ({}, None),
+    ],
+)
+async def test_options_flow_live_tv_in_apps(hass, client, apps, inputs):
+    """Test options config flow Live TV found in apps."""
+    if apps is not None:
+        client.apps = apps
+    if inputs is not None:
+        client.inputs = inputs
     entry = await setup_webostv(hass)
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
@@ -161,20 +183,24 @@ async def test_options_flow(hass, client):
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_SOURCES: ["Input01", "Input02"]},
+        user_input={CONF_SOURCES: ["Live TV", "Input01", "Input02"]},
     )
     await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["data"][CONF_SOURCES] == ["Input01", "Input02"]
+    assert result2["data"][CONF_SOURCES] == ["Live TV", "Input01", "Input02"]
+
+
+async def test_options_flow_cannot_retrieve(hass, client):
+    """Test options config flow cannot retrieve sources."""
+    entry = await setup_webostv(hass)
 
     client.connect = Mock(side_effect=ConnectionRefusedError())
-    result3 = await hass.config_entries.options.async_init(entry.entry_id)
-
+    result = await hass.config_entries.options.async_init(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert result3["type"] == RESULT_TYPE_FORM
-    assert result3["errors"] == {"base": "cannot_retrieve"}
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "cannot_retrieve"}
 
 
 async def test_form_cannot_connect(hass, client):
