@@ -5,6 +5,8 @@ from abc import ABC
 from datetime import timedelta
 import logging
 
+from kostal.plenticore import SettingsData
+
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -50,6 +52,13 @@ async def async_setup_entry(
             )
             continue
 
+        setting_data = next(
+            filter(
+                lambda x: x.id == description.data_id,
+                available_settings_data[description.module_id],
+            )
+        )
+
         entities.append(
             PlenticoreDataNumber(
                 settings_data_update_coordinator,
@@ -57,6 +66,7 @@ async def async_setup_entry(
                 entry.title,
                 plenticore.device_info,
                 description,
+                setting_data,
             )
         )
 
@@ -75,6 +85,7 @@ class PlenticoreDataNumber(CoordinatorEntity, NumberEntity, ABC):
         platform_name: str,
         device_info: DeviceInfo,
         description: PlenticoreNumberEntityDescription,
+        setting_data: SettingsData,
     ) -> None:
         """Initialize the Plenticore Number entity."""
         super().__init__(coordinator)
@@ -89,6 +100,12 @@ class PlenticoreDataNumber(CoordinatorEntity, NumberEntity, ABC):
 
         self._formatter = PlenticoreDataFormatter.get_method(description.fmt_from)
         self._formatter_back = PlenticoreDataFormatter.get_method(description.fmt_to)
+
+        # overwrite from retrieved setting data
+        if setting_data.min is not None:
+            self._attr_min_value = self._formatter(setting_data.min)
+        if setting_data.max is not None:
+            self._attr_max_value = self._formatter(setting_data.max)
 
     @property
     def module_id(self) -> str:
