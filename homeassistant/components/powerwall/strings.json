@@ -9,6 +9,17 @@
           "ip_address": "[%key:common::config_flow::data::ip%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "reauth_confim": {
+        "title": "Reauthenticate the powerwall",
+        "description": "[%key:component::powerwall::config::step::user::description%]",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },      
+      "confirm_discovery": {
+        "title": "[%key:component::powerwall::config::step::user::title%]",
+        "description": "Do you want to setup {gateway_din} ({ip_address})?"
       }
     },
     "error": {
