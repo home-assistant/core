@@ -1,7 +1,7 @@
 """Sensor component for PECO outage counter."""
 from datetime import timedelta
 from types import MappingProxyType
-from typing import Any
+from typing import Any, Final
 
 import async_timeout
 
@@ -9,6 +9,7 @@ from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -18,12 +19,14 @@ from homeassistant.helpers.update_coordinator import (
 from .const import _LOGGER, DOMAIN, SCAN_INTERVAL
 from .peco_outage_api import BadJSONError, HttpError, InvalidCountyError, PecoOutageApi
 
-PARALLEL_UPDATES: int = 0
+PARALLEL_UPDATES: Final = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
-) -> bool:
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the sensor platform."""
     api: PecoOutageApi = hass.data[DOMAIN][config_entry.entry_id]
 
@@ -39,7 +42,7 @@ async def async_setup_entry(
         except BadJSONError as err:
             raise UpdateFailed from err
 
-    coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name="PECO Outage Count",
@@ -57,7 +60,7 @@ async def async_setup_entry(
         [PecoOutageCounterSensorEntity(hass, config_entry.title, county, coordinator)],
         True,
     )
-    return True
+    return
 
 
 class PecoOutageCounterSensorEntity(CoordinatorEntity, SensorEntity):
@@ -75,9 +78,9 @@ class PecoOutageCounterSensorEntity(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.hass: HomeAssistant = hass
-        self._county: str = county
-        self._name: str = name
+        self.hass = hass
+        self._county = county
+        self._name = name
 
     @property
     def name(self) -> str:

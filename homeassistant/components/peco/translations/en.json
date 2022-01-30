@@ -8,7 +8,7 @@
                 "data": {
                     "county": "County"
                 },
-                "description": "Please choose your county below. If you would like to include a sensor that has the total amount of outages in the service area, please check that below.",
+                "description": "Please choose your county below.",
                 "title": "PECO Outage Counter"
             }
         }
