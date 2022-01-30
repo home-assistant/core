@@ -348,8 +348,10 @@ class PlenticoreDataFormatter:
     def format_round_back(value: float) -> str:
         """Return a rounded integer value from a float."""
         try:
-            if value.is_integer():
+            if isinstance(value, float) and value.is_integer():
                 int_value = int(value)
+            elif isinstance(value, int):
+                int_value = value
             else:
                 int_value = round(value)
 
