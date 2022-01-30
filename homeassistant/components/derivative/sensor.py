@@ -178,7 +178,6 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
                     * Decimal(self._unit_time)
                 )
 
-                assert isinstance(new_derivative, Decimal)
             except ValueError as err:
                 _LOGGER.warning("While calculating derivative: %s", err)
             except DecimalException as err:
