@@ -9,6 +9,9 @@ PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR]
 
 CONF_CONSIDER_HOME = "consider_home"
 
+KEY_ROUTER = "router"
+KEY_COORDINATOR = "coordinator"
+
 DEFAULT_CONSIDER_HOME = timedelta(seconds=180)
 DEFAULT_NAME = "Netgear router"
 

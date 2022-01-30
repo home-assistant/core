@@ -9,6 +9,7 @@ from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .router import NetgearDeviceEntity, NetgearRouter, async_setup_netgear_entry
 
@@ -49,12 +50,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for Netgear component."""
 
-    def generate_sensor_classes(router: NetgearRouter, device: dict):
+    def generate_sensor_classes(coordinator: DataUpdateCoordinator, router: NetgearRouter, device: dict):
         sensors = ["type", "link_rate", "signal"]
         if router.method_version == 2:
             sensors.extend(["ssid", "conn_ap_mac"])
 
-        return [NetgearSensorEntity(router, device, attribute) for attribute in sensors]
+        return [NetgearSensorEntity(coordinator, router, device, attribute) for attribute in sensors]
 
     async_setup_netgear_entry(hass, entry, async_add_entities, generate_sensor_classes)
 
@@ -64,9 +65,9 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
 
     _attr_entity_registry_enabled_default = False
 
-    def __init__(self, router: NetgearRouter, device: dict, attribute: str) -> None:
+    def __init__(self, coordinator: DataUpdateCoordinator, router: NetgearRouter, device: dict, attribute: str) -> None:
         """Initialize a Netgear device."""
-        super().__init__(router, device)
+        super().__init__(coordinator, router, device)
         self._attribute = attribute
         self.entity_description = SENSOR_TYPES[self._attribute]
         self._name = f"{self.get_device_name()} {self.entity_description.name}"
@@ -85,5 +86,3 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
         self._active = self._device["active"]
         if self._device.get(self._attribute) is not None:
             self._state = self._device[self._attribute]
-
-        self.async_write_ha_state()

@@ -1,17 +1,22 @@
 """Support for Netgear routers."""
 import logging
 
+from datetime import timedelta
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS, KEY_ROUTER, KEY_COORDINATOR
 from .errors import CannotLoginException
 from .router import NetgearRouter
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(seconds=30)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -37,7 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.unique_id] = router
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
@@ -51,6 +55,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sw_version=router.firmware_version,
         configuration_url=f"http://{entry.data[CONF_HOST]}/",
     )
+
+    async def async_update_data():
+        """Fetch data from the router."""
+        await router.async_update_device_trackers()
+        return
+
+    # Create update coordinator
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=name,
+        update_method=async_update_data,
+        update_interval=SCAN_INTERVAL,
+    )
+
+    hass.data[DOMAIN][entry.unique_id] = {
+        KEY_ROUTER: router,
+        KEY_COORDINATOR: coordinator,
+    }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

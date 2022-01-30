@@ -8,6 +8,7 @@ from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DEVICE_ICONS
 from .router import NetgearDeviceEntity, NetgearRouter, async_setup_netgear_entry
@@ -20,8 +21,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for Netgear component."""
 
-    def generate_classes(router: NetgearRouter, device: dict):
-        return [NetgearScannerEntity(router, device)]
+    def generate_classes(coordinator: DataUpdateCoordinator, router: NetgearRouter, device: dict):
+        return [NetgearScannerEntity(coordinator, router, device)]
 
     async_setup_netgear_entry(hass, entry, async_add_entities, generate_classes)
 
@@ -29,9 +30,9 @@ async def async_setup_entry(
 class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
     """Representation of a device connected to a Netgear router."""
 
-    def __init__(self, router: NetgearRouter, device: dict) -> None:
+    def __init__(self, coordinator: DataUpdateCoordinator, router: NetgearRouter, device: dict) -> None:
         """Initialize a Netgear device."""
-        super().__init__(router, device)
+        super().__init__(coordinator, router, device)
         self._hostname = self.get_hostname()
         self._icon = DEVICE_ICONS.get(device["device_type"], "mdi:help-network")
 
@@ -48,8 +49,6 @@ class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
         self._device = self._router.devices[self._mac]
         self._active = self._device["active"]
         self._icon = DEVICE_ICONS.get(self._device["device_type"], "mdi:help-network")
-
-        self.async_write_ha_state()
 
     @property
     def is_connected(self):

@@ -26,6 +26,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -34,10 +35,10 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     MODELS_V2,
+    KEY_ROUTER,
+    KEY_COORDINATOR,
 )
 from .errors import CannotLoginException
-
-SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,17 +64,18 @@ def async_setup_netgear_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    entity_class_generator: Callable[[NetgearRouter, dict], list],
+    entity_class_generator: Callable[[DataUpdateCoordinator, NetgearRouter, dict], list],
 ) -> None:
     """Set up device tracker for Netgear component."""
-    router = hass.data[DOMAIN][entry.unique_id]
+    router = hass.data[DOMAIN][entry.unique_id][KEY_ROUTER]
+    coordinator = hass.data[DOMAIN][entry.unique_id][KEY_COORDINATOR]
     tracked = set()
 
     @callback
     def _async_router_updated():
         """Update the values of the router."""
         async_add_new_entities(
-            router, async_add_entities, tracked, entity_class_generator
+            coordinator, router, async_add_entities, tracked, entity_class_generator
         )
 
     entry.async_on_unload(
@@ -84,7 +86,7 @@ def async_setup_netgear_entry(
 
 
 @callback
-def async_add_new_entities(router, async_add_entities, tracked, entity_class_generator):
+def async_add_new_entities(coordinator, router, async_add_entities, tracked, entity_class_generator):
     """Add new tracker entities from the router."""
     new_tracked = []
 
@@ -92,7 +94,7 @@ def async_add_new_entities(router, async_add_entities, tracked, entity_class_gen
         if mac in tracked:
             continue
 
-        new_tracked.extend(entity_class_generator(router, device))
+        new_tracked.extend(entity_class_generator(coordinator, router, device))
         tracked.add(mac)
 
     if new_tracked:
@@ -185,12 +187,6 @@ class NetgearRouter:
             }
 
         await self.async_update_device_trackers()
-        self.entry.async_on_unload(
-            async_track_time_interval(
-                self.hass, self.async_update_device_trackers, SCAN_INTERVAL
-            )
-        )
-
         async_dispatcher_send(self.hass, self.signal_device_new)
 
     async def async_get_attached_devices(self) -> list:
@@ -228,8 +224,6 @@ class NetgearRouter:
         for device in self.devices.values():
             device["active"] = now - device["last_seen"] <= self._consider_home
 
-        async_dispatcher_send(self.hass, self.signal_device_update)
-
         if new_device:
             _LOGGER.debug("Netgear tracker: new device found")
             async_dispatcher_send(self.hass, self.signal_device_new)
@@ -238,11 +232,6 @@ class NetgearRouter:
     def signal_device_new(self) -> str:
         """Event specific per Netgear entry to signal new device."""
         return f"{DOMAIN}-{self._host}-device-new"
-
-    @property
-    def signal_device_update(self) -> str:
-        """Event specific per Netgear entry to signal updates in devices."""
-        return f"{DOMAIN}-{self._host}-device-update"
 
     @property
     def port(self) -> int:
@@ -255,11 +244,12 @@ class NetgearRouter:
         return self._api.ssl
 
 
-class NetgearDeviceEntity(Entity):
+class NetgearDeviceEntity(CoordinatorEntity, Entity):
     """Base class for a device connected to a Netgear router."""
 
-    def __init__(self, router: NetgearRouter, device: dict) -> None:
+    def __init__(self, coordinator: DataUpdateCoordinator, router: NetgearRouter, device: dict) -> None:
         """Initialize a Netgear device."""
+        super().__init__(coordinator)
         self._router = router
         self._device = device
         self._mac = device["mac"]
@@ -281,6 +271,12 @@ class NetgearDeviceEntity(Entity):
     def async_update_device(self) -> None:
         """Update the Netgear device."""
 
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.async_update_device()
+        super()._handle_coordinator_update()
+
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
@@ -299,19 +295,4 @@ class NetgearDeviceEntity(Entity):
             default_name=self._device_name,
             default_model=self._device["device_model"],
             via_device=(DOMAIN, self._router.unique_id),
-        )
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
-    async def async_added_to_hass(self):
-        """Register state update callback."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                self._router.signal_device_update,
-                self.async_update_device,
-            )
         )
