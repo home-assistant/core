@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import ANY, MagicMock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 from uuid import UUID
 
 import attr
@@ -38,7 +38,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, assert_setup_component
+from tests.common import MockConfigEntry, assert_setup_component, mock_platform
 from tests.components.media_player import common
 
 # pylint: disable=invalid-name
@@ -1530,3 +1530,79 @@ async def test_entry_setup_list_config(hass: HomeAssistant):
     assert set(config_entry.data["uuid"]) == {"bla", "blu"}
     assert set(config_entry.data["ignore_cec"]) == {"cast1", "cast2", "cast3"}
     assert set(pychromecast.IGNORE_CEC) == {"cast1", "cast2", "cast3"}
+
+
+async def test_cast_platform_play_media(hass: HomeAssistant, quick_play_mock):
+    """Test we can play media through a cast platform."""
+    entity_id = "media_player.speaker"
+
+    _can_play = True
+
+    def can_play(*args):
+        return _can_play
+
+    cast_platform_mock = Mock(
+        async_get_media_browser_root_object=AsyncMock(return_value=[]),
+        async_browse_media=AsyncMock(return_value=None),
+        async_play_media=AsyncMock(side_effect=can_play),
+    )
+    mock_platform(hass, "test.cast", cast_platform_mock)
+
+    await async_setup_component(hass, "test", {"test": {}})
+    await hass.async_block_till_done()
+
+    info = get_fake_chromecast_info()
+
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
+    _, conn_status_cb, _ = get_status_callbacks(chromecast)
+
+    connection_status = MagicMock()
+    connection_status.status = "CONNECTED"
+    conn_status_cb(connection_status)
+    await hass.async_block_till_done()
+
+    # This will play using the cast platform
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        media_player.SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            media_player.ATTR_MEDIA_CONTENT_TYPE: "audio",
+            media_player.ATTR_MEDIA_CONTENT_ID: "best.mp3",
+            media_player.ATTR_MEDIA_EXTRA: {"metadata": {"metadatatype": 3}},
+        },
+        blocking=True,
+    )
+
+    # Assert the media player attempt to play media through the cast platform
+    cast_platform_mock.async_play_media.assert_called_once_with(
+        hass, entity_id, chromecast, "audio", "best.mp3"
+    )
+
+    # Assert pychromecast is not used to play media
+    chromecast.media_controller.play_media.assert_not_called()
+    quick_play_mock.assert_not_called()
+
+    # This will not play using the cast platform
+    _can_play = False
+    cast_platform_mock.async_play_media.reset_mock()
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        media_player.SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            media_player.ATTR_MEDIA_CONTENT_TYPE: "audio",
+            media_player.ATTR_MEDIA_CONTENT_ID: "best.mp3",
+            media_player.ATTR_MEDIA_EXTRA: {"metadata": {"metadatatype": 3}},
+        },
+        blocking=True,
+    )
+
+    # Assert the media player attempt to play media through the cast platform
+    cast_platform_mock.async_play_media.assert_called_once_with(
+        hass, entity_id, chromecast, "audio", "best.mp3"
+    )
+
+    # Assert pychromecast is used to play media
+    chromecast.media_controller.play_media.assert_not_called()
+    quick_play_mock.assert_called()
