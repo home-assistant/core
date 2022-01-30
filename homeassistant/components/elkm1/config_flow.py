@@ -165,7 +165,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_in_progress")
         if not device.port:
             if discovered_device := await async_discover_device(self.hass, host):
-                self._discovered_device = discovered_device[0]
+                self._discovered_device = discovered_device
             else:
                 return self.async_abort(reason="cannot_connect")
         return await self.async_step_discovery_confirm()
