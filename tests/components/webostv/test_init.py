@@ -8,11 +8,11 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.webostv import DOMAIN
 
 from . import (
-    MOCK_JSON,
     create_memory_sqlite_engine,
     is_entity_unique_id_updated,
     setup_legacy_component,
 )
+from .const import MOCK_JSON
 
 
 async def test_missing_keys_file_abort(hass, client, caplog):

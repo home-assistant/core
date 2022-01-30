@@ -24,7 +24,8 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from . import CLIENT_KEY, FAKE_UUID, HOST, TV_NAME, setup_webostv
+from . import setup_webostv
+from .const import CLIENT_KEY, FAKE_UUID, HOST, MOCK_APPS, MOCK_INPUTS, TV_NAME
 
 MOCK_YAML_CONFIG = {
     CONF_HOST: HOST,
@@ -153,26 +154,23 @@ async def test_form(hass, client):
     "apps, inputs",
     [
         # Live TV in apps (default)
-        (None, None),
+        (MOCK_APPS, MOCK_INPUTS),
         # Live TV in inputs
         (
             {},
             {
-                "in1": {"label": "Input01", "id": "in1", "appId": "app0"},
-                "in2": {"label": "Input02", "id": "in2", "appId": "app1"},
+                **MOCK_INPUTS,
                 "livetv": {"label": "Live TV", "id": "livetv", "appId": LIVE_TV_APP_ID},
             },
         ),
         # Live TV not found
-        ({}, None),
+        ({}, MOCK_INPUTS),
     ],
 )
 async def test_options_flow_live_tv_in_apps(hass, client, apps, inputs):
     """Test options config flow Live TV found in apps."""
-    if apps is not None:
-        client.apps = apps
-    if inputs is not None:
-        client.inputs = inputs
+    client.apps = apps
+    client.inputs = inputs
     entry = await setup_webostv(hass)
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
