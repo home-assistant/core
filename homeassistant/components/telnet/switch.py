@@ -43,8 +43,8 @@ SWITCH_SCHEMA = vol.Schema(
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_COMMAND_STATE): cv.string,
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(float),
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Required(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(float),
     }
 )
 
@@ -62,27 +62,26 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Find and return switches controlled by telnet commands."""
-    devices: dict[str, Any] = config.get(CONF_SWITCHES, {})
+    devices: dict[str, Any] = config[CONF_SWITCHES]
     switches = []
 
     for object_id, device_config in devices.items():
-        value_template: Template = device_config.get(CONF_VALUE_TEMPLATE)
+        value_template: Template | None = device_config.get(CONF_VALUE_TEMPLATE)
 
         if value_template is not None:
             value_template.hass = hass
 
         switches.append(
             TelnetSwitch(
-                hass,
                 object_id,
-                device_config.get(CONF_RESOURCE),
-                device_config.get(CONF_PORT),
+                device_config[CONF_RESOURCE],
+                device_config[CONF_PORT],
                 device_config.get(CONF_NAME, object_id),
-                device_config.get(CONF_COMMAND_ON),
-                device_config.get(CONF_COMMAND_OFF),
+                device_config[CONF_COMMAND_ON],
+                device_config[CONF_COMMAND_OFF],
                 device_config.get(CONF_COMMAND_STATE),
                 value_template,
-                device_config.get(CONF_TIMEOUT),
+                device_config[CONF_TIMEOUT],
             )
         )
 
@@ -98,24 +97,22 @@ class TelnetSwitch(SwitchEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         object_id: str,
         resource: str,
         port: int,
         friendly_name: str,
         command_on: str,
         command_off: str,
-        command_state: str,
-        value_template: Template,
+        command_state: str | None,
+        value_template: Template | None,
         timeout: float,
     ) -> None:
         """Initialize the switch."""
-        self._hass = hass
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._resource = resource
         self._port = port
         self._attr_name = friendly_name
-        self._state: bool = False
+        self._attr_is_on = False
         self._command_on = command_on
         self._command_off = command_off
         self._command_state = command_state
@@ -136,33 +133,33 @@ class TelnetSwitch(SwitchEntity):
         _LOGGER.debug("telnet response: %s", response.decode("ASCII").strip())
         return response.decode("ASCII").strip()
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if device is on."""
-        return self._state
-
     def update(self) -> None:
         """Update device state."""
+        if not self._command_state:
+            return
         response = self._telnet_command(self._command_state)
-        if response:
+        if response and self._value_template:
             rendered = self._value_template.render_with_possible_json_value(response)
         else:
             _LOGGER.warning("Empty response for command: %s", self._command_state)
             return None
-        self._state = rendered == "True"
+        self._attr_is_on = rendered == "True"
+
+    @property
+    def assumed_state(self) -> bool:
+        """Return true if no state command is defined, false otherwise."""
+        return self._command_state is None
 
     def turn_on(self, **kwargs) -> None:
         """Turn the device on."""
         self._telnet_command(self._command_on)
-        if self._command_state:
-            return
-        self._state = True
-        self.schedule_update_ha_state()
+        if self.assumed_state:
+            self._attr_is_on = True
+            self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs) -> None:
         """Turn the device off."""
         self._telnet_command(self._command_off)
-        if self._command_state:
-            return
-        self._state = False
-        self.schedule_update_ha_state()
+        if self.assumed_state:
+            self._attr_is_on = False
+            self.schedule_update_ha_state()
