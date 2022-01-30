@@ -8,7 +8,7 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.elkm1.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
+from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
 
 from . import (
     ELK_DISCOVERY,
@@ -532,3 +532,41 @@ async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
     assert result["reason"] == "already_configured"
 
     assert config_entry.unique_id == MOCK_MAC
+
+
+async def test_discovered_by_discovery_and_dhcp(hass):
+    """Test we get the form with discovery and abort for dhcp source when we get both."""
+
+    with _patch_discovery(), _patch_elk():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DISCOVERY},
+            data=ELK_DISCOVERY_INFO,
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {}
+
+    with _patch_discovery(), _patch_elk():
+        result2 = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+        await hass.async_block_till_done()
+    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["reason"] == "already_in_progress"
+
+    with _patch_discovery(), _patch_elk():
+        result3 = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=dhcp.DhcpServiceInfo(
+                hostname="any",
+                ip=MOCK_IP_ADDRESS,
+                macaddress="00:00:00:00:00:00",
+            ),
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] == RESULT_TYPE_ABORT
+    assert result3["reason"] == "already_in_progress"
