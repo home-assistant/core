@@ -64,7 +64,8 @@ from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
-from . import CHANNEL_2, ENTITY_ID, TV_NAME, setup_webostv
+from . import setup_webostv
+from .const import CHANNEL_2, ENTITY_ID, TV_NAME
 
 from tests.common import async_fire_time_changed
 
