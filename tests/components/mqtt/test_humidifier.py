@@ -28,6 +28,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.setup import async_setup_component
 
@@ -157,7 +158,7 @@ async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
 
     state = hass.states.get("humidifier.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "state-topic", "StAtE_On")
@@ -220,6 +221,10 @@ async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
     state = hass.states.get("humidifier.test")
     assert state.attributes.get(humidifier.ATTR_HUMIDITY) is None
 
+    async_fire_mqtt_message(hass, "state-topic", "None")
+    state = hass.states.get("humidifier.test")
+    assert state.state == STATE_UNKNOWN
+
 
 async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock, caplog):
     """Test the controlling state via topic and JSON message."""
@@ -250,7 +255,7 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock, cap
     await hass.async_block_till_done()
 
     state = hass.states.get("humidifier.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "state-topic", '{"val":"ON"}')
@@ -301,6 +306,10 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock, cap
     assert "Ignoring empty mode from" in caplog.text
     caplog.clear()
 
+    async_fire_mqtt_message(hass, "state-topic", '{"val": null}')
+    state = hass.states.get("humidifier.test")
+    assert state.state == STATE_UNKNOWN
+
 
 async def test_controlling_state_via_topic_and_json_message_shared_topic(
     hass, mqtt_mock, caplog
@@ -333,7 +342,7 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
     await hass.async_block_till_done()
 
     state = hass.states.get("humidifier.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(
