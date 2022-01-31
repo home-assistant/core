@@ -9,7 +9,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER, PLATFORMS
+from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER, PLATFORMS, PLATFORMS_UNLOAD
 from .errors import CannotLoginException
 from .router import NetgearRouter
 
@@ -83,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, ["router"])
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS_UNLOAD)
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.unique_id)

@@ -6,6 +6,7 @@ from homeassistant.const import Platform
 DOMAIN = "netgear"
 
 PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR]
+PLATFORMS_UNLOAD = ["router"]
 
 CONF_CONSIDER_HOME = "consider_home"
 
