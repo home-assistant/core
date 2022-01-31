@@ -13,8 +13,7 @@
                     "url": "Url",
                     "username": "Brugernavn",
                     "password": "Adgangskode",
-                    "auto_setup": "Autosetup",
-                    "use_groups": "Anvend IHC grupper som områdeforslag"
+                    "auto_setup": "Autosetup"
                 }
             }
         }

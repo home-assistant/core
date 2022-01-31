@@ -20,7 +20,6 @@ CONF_ON_ID = "on_id"
 CONF_POSITION = "position"
 CONF_SENSOR = "sensor"
 CONF_SWITCH = "switch"
-CONF_USE_GROUPS = "use_groups"
 CONF_XPATH = "xpath"
 
 DOMAIN = "ihc"

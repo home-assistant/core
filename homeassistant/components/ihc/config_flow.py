@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 
 from . import get_options_value
-from .const import CONF_AUTOSETUP, CONF_INFO, CONF_USE_GROUPS, DOMAIN
+from .const import CONF_AUTOSETUP, CONF_INFO, DOMAIN
 from .util import get_controller_serial
 
 CONFIG_FLOW_VERSION = 1
@@ -22,7 +22,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_USERNAME, default=""): str,
         vol.Required(CONF_PASSWORD, default=""): str,
         vol.Optional(CONF_AUTOSETUP, default=True): bool,
-        vol.Optional(CONF_USE_GROUPS, default=True): bool,
     }
 )
 

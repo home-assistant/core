@@ -83,9 +83,7 @@ AUTO_SETUP_SCHEMA = vol.Schema(
 )
 
 
-def autosetup_ihc_products(
-    hass: HomeAssistant, ihc_controller, controller_id, use_groups: bool
-):
+def autosetup_ihc_products(hass: HomeAssistant, ihc_controller, controller_id):
     """Auto setup of IHC products from the IHC project file."""
     project_xml = ihc_controller.get_project()
     if not project_xml:
@@ -106,15 +104,13 @@ def autosetup_ihc_products(
     groups = project.findall(".//group")
     for platform in IHC_PLATFORMS:
         platform_setup = auto_setup_conf[platform]
-        discovery_info = get_discovery_info(
-            platform_setup, groups, controller_id, use_groups
-        )
+        discovery_info = get_discovery_info(platform_setup, groups, controller_id)
         if discovery_info:
             hass.data[DOMAIN][controller_id][platform] = discovery_info
     return True
 
 
-def get_discovery_info(platform_setup, groups, controller_id, use_groups: bool):
+def get_discovery_info(platform_setup, groups, controller_id):
     """Get discovery info for specified IHC platform."""
     discovery_data = {}
     for group in groups:
@@ -129,10 +125,8 @@ def get_discovery_info(platform_setup, groups, controller_id, use_groups: bool):
                         continue
                     ihc_id = int(node.attrib["id"].strip("_"), 0)
                     name = f"{groupname}_{ihc_id}"
-                    model = product.get("product_identifier") or ""
                     # make the model number look a bit nicer - strip leading _
-                    if model.startswith("_"):
-                        model = model[1::]
+                    model = product.get("product_identifier", "").lstrip("_")
                     device = {
                         "ihc_id": ihc_id,
                         "ctrl_id": controller_id,
@@ -142,10 +136,9 @@ def get_discovery_info(platform_setup, groups, controller_id, use_groups: bool):
                             "note": product.get("note") or "",
                             "position": product.get("position") or "",
                             "model": model,
+                            "group": groupname,
                         },
                         "product_cfg": product_cfg,
                     }
-                    if use_groups:
-                        device["product"]["group"] = groupname
                     discovery_data[name] = device
     return discovery_data

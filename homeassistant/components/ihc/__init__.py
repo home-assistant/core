@@ -11,14 +11,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .auto_setup import autosetup_ihc_products
-from .const import (
-    CONF_AUTOSETUP,
-    CONF_INFO,
-    CONF_USE_GROUPS,
-    DOMAIN,
-    IHC_CONTROLLER,
-    IHC_CONTROLLER_INDEX,
-)
+from .const import CONF_AUTOSETUP, CONF_INFO, DOMAIN, IHC_CONTROLLER, IHC_PLATFORMS
 from .manual_setup import manual_setup
 from .migrate import migrate_configuration
 from .service_functions import setup_service_functions
@@ -50,7 +43,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
     autosetup = entry.data[CONF_AUTOSETUP]
-    use_groups = entry.data[CONF_USE_GROUPS] if CONF_USE_GROUPS in entry.data else False
     info = get_options_value(entry, CONF_INFO, True)
     ihc_controller = IHCController(url, username, password)
     if not await hass.async_add_executor_job(ihc_controller.authenticate):
@@ -65,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
     if autosetup:
         await hass.async_add_executor_job(
-            autosetup_ihc_products, hass, ihc_controller, controller_id, use_groups
+            autosetup_ihc_products, hass, ihc_controller, controller_id
         )
     await hass.async_add_executor_job(manual_setup, hass, controller_id)
     for component in IHC_PLATFORMS:

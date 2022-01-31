@@ -38,7 +38,6 @@ async def test_form(hass: HomeAssistant) -> None:
                 "url": "http://1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
-                "use_groups": True,
                 "auto_setup": True,
             },
         )
@@ -50,7 +49,6 @@ async def test_form(hass: HomeAssistant) -> None:
         "url": "http://1.1.1.1",
         "username": "test-username",
         "password": "test-password",
-        "use_groups": True,
         "auto_setup": True,
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -81,7 +79,6 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
                 "url": "http://1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
-                "use_groups": True,
                 "auto_setup": True,
             },
         )
@@ -109,7 +106,6 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
                 "url": "http://1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
-                "use_groups": True,
                 "auto_setup": True,
             },
         )
@@ -149,7 +145,6 @@ async def test_already_setup(hass: HomeAssistant) -> None:
                 "url": "http://1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
-                "use_groups": True,
                 "auto_setup": True,
             },
         )
@@ -179,7 +174,6 @@ async def test_unknown_error(hass: HomeAssistant) -> None:
                 "url": "http://1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
-                "use_groups": True,
                 "auto_setup": True,
             },
         )
