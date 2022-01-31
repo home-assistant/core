@@ -6,7 +6,7 @@ from typing import Any
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 
-from homeassistant.components.switch import ToggleEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -54,7 +54,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, ToggleEntity):
+class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, SwitchEntity):
     """Representation a Synology Surveillance Station Home Mode toggle."""
 
     coordinator: DataUpdateCoordinator[dict[str, dict[str, bool]]]
@@ -106,16 +106,16 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, ToggleEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        return {
-            "identifiers": {
+        return DeviceInfo(
+            identifiers={
                 (
                     DOMAIN,
                     f"{self._api.information.serial}_{SynoSurveillanceStation.INFO_API_KEY}",
                 )
             },
-            "name": "Surveillance Station",
-            "manufacturer": "Synology",
-            "model": self._api.information.model,
-            "sw_version": self._version,
-            "via_device": (DOMAIN, self._api.information.serial),
-        }
+            name="Surveillance Station",
+            manufacturer="Synology",
+            model=self._api.information.model,
+            sw_version=self._version,
+            via_device=(DOMAIN, self._api.information.serial),
+        )

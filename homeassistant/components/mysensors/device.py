@@ -8,7 +8,7 @@ from typing import Any
 from mysensors import BaseAsyncGateway, Sensor
 from mysensors.sensor import ChildSensor
 
-from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -121,16 +121,20 @@ class MySensorsDevice:
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, f"{self.gateway_id}-{self.node_id}")},
-            "name": self.node_name,
-            "manufacturer": DOMAIN,
-            "sw_version": self.sketch_version,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"{self.gateway_id}-{self.node_id}")},
+            manufacturer=DOMAIN,
+            name=self.node_name,
+            sw_version=self.sketch_version,
+        )
 
     @property
     def name(self) -> str:
         """Return the name of this entity."""
+        child = self._child
+
+        if child.description:
+            return str(child.description)
         return f"{self.node_name} {self.child_id}"
 
     @property
@@ -205,7 +209,7 @@ class MySensorsDevice:
 
 
 def get_mysensors_devices(
-    hass: HomeAssistant, domain: str
+    hass: HomeAssistant, domain: Platform
 ) -> dict[DevId, MySensorsDevice]:
     """Return MySensors devices for a hass platform name."""
     if MYSENSORS_PLATFORM_DEVICES.format(domain) not in hass.data[DOMAIN]:

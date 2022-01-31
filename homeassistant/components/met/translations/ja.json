@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "no_home": "Home Assistant\u306e\u8a2d\u5b9a\u3067\u3001\u5bb6\u306e\u5ea7\u6a19\u304c\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u305b\u3093"
+        },
+        "error": {
+            "already_configured": "\u30b5\u30fc\u30d3\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "\u6a19\u9ad8(Elevation)",
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d4c\u5ea6",
+                    "name": "\u540d\u524d"
+                },
+                "description": "Meteorologisk institutt",
+                "title": "\u30ed\u30b1\u30fc\u30b7\u30e7\u30f3"
+            }
+        }
+    }
+}

@@ -33,7 +33,7 @@ set_pet_location:
         text:
     location:
       description: Pet location (Inside or Outside)
-      example: inside
+      example: Inside
       required: true
       selector:
         select:

@@ -3,6 +3,7 @@ import logging
 
 import httpx
 
+from homeassistant.helpers import template
 from homeassistant.helpers.httpx_client import get_async_client
 
 DEFAULT_TIMEOUT = 10
@@ -51,16 +52,20 @@ class RestData:
                 self._hass, verify_ssl=self._verify_ssl
             )
 
+        rendered_headers = template.render_complex(self._headers, parse_result=False)
+        rendered_params = template.render_complex(self._params)
+
         _LOGGER.debug("Updating from %s", self._resource)
         try:
             response = await self._async_client.request(
                 self._method,
                 self._resource,
-                headers=self._headers,
-                params=self._params,
+                headers=rendered_headers,
+                params=rendered_params,
                 auth=self._auth,
                 data=self._request_data,
                 timeout=self._timeout,
+                follow_redirects=True,
             )
             self.data = response.text
             self.headers = response.headers

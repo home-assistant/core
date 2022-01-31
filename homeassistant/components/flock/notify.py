@@ -1,12 +1,13 @@
 """Flock platform for notify component."""
 import asyncio
+from http import HTTPStatus
 import logging
 
 import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
-from homeassistant.const import CONF_ACCESS_TOKEN, HTTP_OK
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -40,11 +41,11 @@ class FlockNotificationService(BaseNotificationService):
         _LOGGER.debug("Attempting to call Flock at %s", self._url)
 
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 response = await self._session.post(self._url, json=payload)
                 result = await response.json()
 
-            if response.status != HTTP_OK or "error" in result:
+            if response.status != HTTPStatus.OK or "error" in result:
                 _LOGGER.error(
                     "Flock service returned HTTP status %d, response %s",
                     response.status,

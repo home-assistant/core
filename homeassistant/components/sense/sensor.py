@@ -1,20 +1,22 @@
 """Support for monitoring a Sense energy sensor."""
+
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ACTIVE_NAME,
@@ -83,13 +85,16 @@ def sense_to_mdi(sense_icon):
     return "mdi:{}".format(MDI_ICONS.get(sense_icon, "power-plug"))
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Sense sensor."""
-    data = hass.data[DOMAIN][config_entry.entry_id][SENSE_DATA]
-    sense_devices_data = hass.data[DOMAIN][config_entry.entry_id][SENSE_DEVICES_DATA]
-    trends_coordinator = hass.data[DOMAIN][config_entry.entry_id][
-        SENSE_TRENDS_COORDINATOR
-    ]
+    base_data = hass.data[DOMAIN][config_entry.entry_id]
+    data = base_data[SENSE_DATA]
+    sense_devices_data = base_data[SENSE_DEVICES_DATA]
+    trends_coordinator = base_data[SENSE_TRENDS_COORDINATOR]
 
     # Request only in case it takes longer
     # than 60s
@@ -100,7 +105,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         SENSE_DISCOVERED_DEVICES_DATA
     ]
 
-    devices = [
+    entities: list[SensorEntity] = [
         SenseEnergyDevice(sense_devices_data, device, sense_monitor_id)
         for device in sense_devices
         if device["tags"]["DeviceListAllowed"] == "true"
@@ -111,7 +116,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sensor_type = ACTIVE_SENSOR_TYPE.sensor_type
 
         unique_id = f"{sense_monitor_id}-active-{variant_id}"
-        devices.append(
+        entities.append(
             SenseActiveSensor(
                 data,
                 name,
@@ -124,7 +129,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
 
     for i in range(len(data.active_voltage)):
-        devices.append(SenseVoltageSensor(data, i, sense_monitor_id))
+        entities.append(SenseVoltageSensor(data, i, sense_monitor_id))
 
     for type_id, typ in TRENDS_SENSOR_TYPES.items():
         for variant_id, variant_name in TREND_SENSOR_VARIANTS:
@@ -132,7 +137,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             sensor_type = typ.sensor_type
 
             unique_id = f"{sense_monitor_id}-{type_id}-{variant_id}"
-            devices.append(
+            entities.append(
                 SenseTrendsSensor(
                     data,
                     name,
@@ -141,10 +146,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     variant_name,
                     trends_coordinator,
                     unique_id,
+                    sense_monitor_id,
                 )
             )
 
-    async_add_entities(devices)
+    async_add_entities(entities)
 
 
 class SenseActiveSensor(SensorEntity):
@@ -152,10 +158,10 @@ class SenseActiveSensor(SensorEntity):
 
     _attr_icon = ICON
     _attr_native_unit_of_measurement = POWER_WATT
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
     _attr_available = False
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,
@@ -205,7 +211,7 @@ class SenseVoltageSensor(SensorEntity):
     """Implementation of a Sense energy voltage sensor."""
 
     _attr_native_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_attribution = ATTRIBUTION
     _attr_icon = ICON
     _attr_should_poll = False
     _attr_available = False
@@ -245,13 +251,13 @@ class SenseVoltageSensor(SensorEntity):
         self.async_write_ha_state()
 
 
-class SenseTrendsSensor(SensorEntity):
+class SenseTrendsSensor(CoordinatorEntity, SensorEntity):
     """Implementation of a Sense energy sensor."""
 
-    _attr_device_class = DEVICE_CLASS_ENERGY
-    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_state_class = SensorStateClass.TOTAL
     _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_attribution = ATTRIBUTION
     _attr_icon = ICON
     _attr_should_poll = False
 
@@ -264,21 +270,28 @@ class SenseTrendsSensor(SensorEntity):
         variant_name,
         trends_coordinator,
         unique_id,
+        sense_monitor_id,
     ):
         """Initialize the Sense sensor."""
+        super().__init__(trends_coordinator)
         self._attr_name = f"{name} {variant_name}"
         self._attr_unique_id = unique_id
         self._data = data
         self._sensor_type = sensor_type
-        self._coordinator = trends_coordinator
         self._variant_id = variant_id
         self._had_any_update = False
-
         if variant_id in [PRODUCTION_PCT_ID, SOLAR_POWERED_ID]:
             self._attr_native_unit_of_measurement = PERCENTAGE
             self._attr_entity_registry_enabled_default = False
             self._attr_state_class = None
             self._attr_device_class = None
+        self._attr_device_info = DeviceInfo(
+            name=f"Sense {sense_monitor_id}",
+            identifiers={(DOMAIN, sense_monitor_id)},
+            model="Sense",
+            manufacturer="Sense Labs, Inc.",
+            configuration_url="https://home.sense.com",
+        )
 
     @property
     def native_value(self):
@@ -286,36 +299,19 @@ class SenseTrendsSensor(SensorEntity):
         return round(self._data.get_trend(self._sensor_type, self._variant_id), 1)
 
     @property
-    def available(self):
-        """Return if entity is available."""
-        return self._had_any_update and self._coordinator.last_update_success
-
-    @callback
-    def _async_update(self):
-        """Track if we had an update so we do not report zero data."""
-        self._had_any_update = True
-        self.async_write_ha_state()
-
-    async def async_update(self):
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self._coordinator.async_request_refresh()
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(self._coordinator.async_add_listener(self._async_update))
+    def last_reset(self):
+        """Return the time when the sensor was last reset, if any."""
+        return self._data.trend_start(self._sensor_type)
 
 
 class SenseEnergyDevice(SensorEntity):
     """Implementation of a Sense energy device."""
 
     _attr_available = False
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = POWER_WATT
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
-    _attr_device_class = DEVICE_CLASS_POWER
+    _attr_attribution = ATTRIBUTION
+    _attr_device_class = SensorDeviceClass.POWER
     _attr_should_poll = False
 
     def __init__(self, sense_devices_data, device, sense_monitor_id):

@@ -1,4 +1,6 @@
 """Support for MQTT binary sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 import functools
 import logging
@@ -10,6 +12,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
@@ -20,14 +23,16 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.event as evt
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from . import CONF_QOS, CONF_STATE_TOPIC, DOMAIN, PLATFORMS, subscription
+from . import PLATFORMS, MqttValueTemplate, subscription
 from .. import mqtt
+from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC, DOMAIN
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
@@ -44,6 +49,7 @@ DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_FORCE_UPDATE = False
 CONF_EXPIRE_AFTER = "expire_after"
+PAYLOAD_NONE = "None"
 
 PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
     {
@@ -57,21 +63,30 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA)
+
 
 async def async_setup_platform(
-    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
-):
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up MQTT binary sensor through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     await _async_setup_entity(hass, async_add_entities, config)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up MQTT binary sensor dynamically through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
-    await async_setup_entry_helper(hass, binary_sensor.DOMAIN, setup, PLATFORM_SCHEMA)
+    await async_setup_entry_helper(hass, binary_sensor.DOMAIN, setup, DISCOVERY_SCHEMA)
 
 
 async def _async_setup_entity(
@@ -83,6 +98,8 @@ async def _async_setup_entity(
 
 class MqttBinarySensor(MqttEntity, BinarySensorEntity):
     """Representation a binary sensor that is updated by MQTT."""
+
+    _entity_id_format = binary_sensor.ENTITY_ID_FORMAT
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT binary sensor."""
@@ -100,12 +117,13 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity):
     @staticmethod
     def config_schema():
         """Return the config schema."""
-        return PLATFORM_SCHEMA
+        return DISCOVERY_SCHEMA
 
     def _setup_from_config(self, config):
-        value_template = self._config.get(CONF_VALUE_TEMPLATE)
-        if value_template is not None:
-            value_template.hass = self.hass
+        self._value_template = MqttValueTemplate(
+            self._config.get(CONF_VALUE_TEMPLATE),
+            entity=self,
+        ).async_render_with_possible_json_value
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -121,7 +139,6 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity):
         @log_messages(self.hass, self.entity_id)
         def state_message_received(msg):
             """Handle a new received MQTT state message."""
-            payload = msg.payload
             # auto-expire enabled?
             expire_after = self._config.get(CONF_EXPIRE_AFTER)
 
@@ -143,29 +160,27 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity):
                     self.hass, self._value_is_expired, expiration_at
                 )
 
-            value_template = self._config.get(CONF_VALUE_TEMPLATE)
-            if value_template is not None:
-                payload = value_template.async_render_with_possible_json_value(
-                    payload, variables={"entity_id": self.entity_id}
+            payload = self._value_template(msg.payload)
+            if not payload.strip():  # No output from template, ignore
+                _LOGGER.debug(
+                    "Empty template output for entity: %s with state topic: %s. Payload: '%s', with value template '%s'",
+                    self._config[CONF_NAME],
+                    self._config[CONF_STATE_TOPIC],
+                    msg.payload,
+                    self._config.get(CONF_VALUE_TEMPLATE),
                 )
-                if not payload.strip():  # No output from template, ignore
-                    _LOGGER.debug(
-                        "Empty template output for entity: %s with state topic: %s. Payload: '%s', with value template '%s'",
-                        self._config[CONF_NAME],
-                        self._config[CONF_STATE_TOPIC],
-                        msg.payload,
-                        value_template,
-                    )
-                    return
+                return
 
             if payload == self._config[CONF_PAYLOAD_ON]:
                 self._state = True
             elif payload == self._config[CONF_PAYLOAD_OFF]:
                 self._state = False
+            elif payload == PAYLOAD_NONE:
+                self._state = None
             else:  # Payload is not for this entity
                 template_info = ""
-                if value_template is not None:
-                    template_info = f", template output: '{payload}', with value template '{str(value_template)}'"
+                if self._config.get(CONF_VALUE_TEMPLATE) is not None:
+                    template_info = f", template output: '{payload}', with value template '{str(self._config.get(CONF_VALUE_TEMPLATE))}'"
                 _LOGGER.info(
                     "No matching payload found for entity: %s with state topic: %s. Payload: '%s'%s",
                     self._config[CONF_NAME],
@@ -195,6 +210,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity):
                     "topic": self._config[CONF_STATE_TOPIC],
                     "msg_callback": state_message_received,
                     "qos": self._config[CONF_QOS],
+                    "encoding": self._config[CONF_ENCODING] or None,
                 }
             },
         )
@@ -208,7 +224,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity):
         self.async_write_ha_state()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self._state
 

@@ -1,4 +1,6 @@
 """Support for a switch using a 433MHz module via GPIO on a Raspberry Pi."""
+from __future__ import annotations
+
 import importlib
 import logging
 from threading import RLock
@@ -12,7 +14,10 @@ from homeassistant.const import (
     CONF_SWITCHES,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,14 +50,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Find and return switches controlled by a generic RF device via GPIO."""
+    _LOGGER.warning(
+        "The Raspberry Pi RF integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
     rpi_rf = importlib.import_module("rpi_rf")
 
-    gpio = config.get(CONF_GPIO)
+    gpio = config[CONF_GPIO]
     rfdevice = rpi_rf.RFDevice(gpio)
     rfdevice_lock = RLock()
-    switches = config.get(CONF_SWITCHES)
+    switches = config[CONF_SWITCHES]
 
     devices = []
     for dev_name, properties in switches.items():

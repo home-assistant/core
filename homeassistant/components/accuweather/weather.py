@@ -19,6 +19,8 @@ from homeassistant.components.weather import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utc_from_timestamp
@@ -66,12 +68,18 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
             TEMP_CELSIUS if coordinator.is_metric else TEMP_FAHRENHEIT
         )
         self._attr_attribution = ATTRIBUTION
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, coordinator.location_key)},
-            "name": NAME,
-            "manufacturer": MANUFACTURER,
-            "entry_type": "service",
-        }
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, coordinator.location_key)},
+            manufacturer=MANUFACTURER,
+            name=NAME,
+            # You don't need to provide specific details for the URL,
+            # so passing in _ characters is fine if the location key
+            # is correct
+            configuration_url="http://accuweather.com/en/"
+            f"_/_/{coordinator.location_key}/"
+            f"weather-forecast/{coordinator.location_key}/",
+        )
 
     @property
     def condition(self) -> str | None:

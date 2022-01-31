@@ -5,7 +5,7 @@
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "no_h264": "Non c'erano flussi H264 disponibili.  Controllare la configurazione del profilo sul dispositivo.",
             "no_mac": "Impossibile configurare l'ID univoco per il dispositivo ONVIF.",
-            "onvif_error": "Errore durante la configurazione del dispositivo ONVIF.  Controllare i registri per ulteriori informazioni."
+            "onvif_error": "Errore durante la configurazione del dispositivo ONVIF.  Controlla i registri per ulteriori informazioni."
         },
         "error": {
             "cannot_connect": "Impossibile connettersi"
@@ -16,7 +16,7 @@
                     "password": "Password",
                     "username": "Nome utente"
                 },
-                "title": "Configurare l'autenticazione"
+                "title": "Configura l'autenticazione"
             },
             "configure": {
                 "data": {
@@ -32,14 +32,14 @@
                 "data": {
                     "include": "Crea entit\u00e0 telecamera"
                 },
-                "description": "Creare un'entit\u00e0 telecamera per {profile} alla risoluzione {resolution}?",
-                "title": "Configurare i Profili"
+                "description": "Crea un'entit\u00e0 telecamera per {profile} alla risoluzione {resolution}?",
+                "title": "Configura i profili"
             },
             "device": {
                 "data": {
                     "host": "Seleziona il dispositivo ONVIF rilevato"
                 },
-                "title": "Selezionare il dispositivo ONVIF"
+                "title": "Seleziona il dispositivo ONVIF"
             },
             "manual_input": {
                 "data": {
@@ -47,7 +47,7 @@
                     "name": "Nome",
                     "port": "Porta"
                 },
-                "title": "Configurare il dispositivo ONVIF"
+                "title": "Configura il dispositivo ONVIF"
             },
             "user": {
                 "data": {

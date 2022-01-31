@@ -4,11 +4,10 @@ import json
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
+    ENTITY_ID_FORMAT,
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_ERROR,
-    STATE_IDLE,
-    STATE_PAUSED,
     STATE_RETURNING,
     SUPPORT_BATTERY,
     SUPPORT_CLEAN_SPOT,
@@ -22,12 +21,24 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumEntity,
 )
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    CONF_NAME,
+    STATE_IDLE,
+    STATE_PAUSED,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from .. import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, subscription
+from .. import subscription
 from ... import mqtt
+from ..const import (
+    CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
+    CONF_QOS,
+    CONF_RETAIN,
+    CONF_STATE_TOPIC,
+)
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
@@ -135,6 +146,9 @@ PLATFORM_SCHEMA_STATE = (
 )
 
 
+DISCOVERY_SCHEMA_STATE = PLATFORM_SCHEMA_STATE.extend({}, extra=vol.REMOVE_EXTRA)
+
+
 async def async_setup_entity_state(
     hass, config, async_add_entities, config_entry, discovery_data
 ):
@@ -145,6 +159,7 @@ async def async_setup_entity_state(
 class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     """Representation of a MQTT-controlled state vacuum."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_VACUUM_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
@@ -158,7 +173,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     @staticmethod
     def config_schema():
         """Return the config schema."""
-        return PLATFORM_SCHEMA_STATE
+        return DISCOVERY_SCHEMA_STATE
 
     def _setup_from_config(self, config):
         supported_feature_strings = config[CONF_SUPPORTED_FEATURES]
@@ -202,6 +217,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
                 "topic": self._config.get(CONF_STATE_TOPIC),
                 "msg_callback": state_message_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state, topics
@@ -236,36 +252,39 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         """Start the vacuum."""
         if self.supported_features & SUPPORT_START == 0:
             return None
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._command_topic,
             self._config[CONF_PAYLOAD_START],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     async def async_pause(self):
         """Pause the vacuum."""
         if self.supported_features & SUPPORT_PAUSE == 0:
             return None
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._command_topic,
             self._config[CONF_PAYLOAD_PAUSE],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     async def async_stop(self, **kwargs):
         """Stop the vacuum."""
         if self.supported_features & SUPPORT_STOP == 0:
             return None
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._command_topic,
             self._config[CONF_PAYLOAD_STOP],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     async def async_set_fan_speed(self, fan_speed, **kwargs):
@@ -274,48 +293,52 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             fan_speed not in self._fan_speed_list
         ):
             return None
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._set_fan_speed_topic,
             fan_speed,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     async def async_return_to_base(self, **kwargs):
         """Tell the vacuum to return to its dock."""
         if self.supported_features & SUPPORT_RETURN_HOME == 0:
             return None
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._command_topic,
             self._config[CONF_PAYLOAD_RETURN_TO_BASE],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     async def async_clean_spot(self, **kwargs):
         """Perform a spot clean-up."""
         if self.supported_features & SUPPORT_CLEAN_SPOT == 0:
             return None
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._command_topic,
             self._config[CONF_PAYLOAD_CLEAN_SPOT],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     async def async_locate(self, **kwargs):
         """Locate the vacuum (usually by playing a song)."""
         if self.supported_features & SUPPORT_LOCATE == 0:
             return None
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._command_topic,
             self._config[CONF_PAYLOAD_LOCATE],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     async def async_send_command(self, command, params=None, **kwargs):
@@ -328,10 +351,11 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             message = json.dumps(message)
         else:
             message = command
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._send_command_topic,
             message,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )

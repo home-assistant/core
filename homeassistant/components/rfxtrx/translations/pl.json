@@ -44,8 +44,13 @@
         }
     },
     "device_automation": {
+        "action_type": {
+            "send_command": "wy\u015blij polecenie: {subtype}",
+            "send_status": "wy\u015blij aktualizacj\u0119 statusu: {subtype}"
+        },
         "trigger_type": {
-            "command": "Otrzymane polecenie: {subtype}"
+            "command": "otrzymane polecenie {subtype}",
+            "status": "otrzymany status: {subtype}"
         }
     },
     "few": "kilka",

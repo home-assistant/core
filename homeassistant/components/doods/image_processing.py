@@ -1,4 +1,6 @@
 """Support for the DOODS service."""
+from __future__ import annotations
+
 import io
 import logging
 import os
@@ -10,16 +12,22 @@ import voluptuous as vol
 
 from homeassistant.components.image_processing import (
     CONF_CONFIDENCE,
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    CONF_SOURCE,
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
-from homeassistant.const import CONF_COVERS, CONF_TIMEOUT, CONF_URL
-from homeassistant.core import split_entity_id
+from homeassistant.const import (
+    CONF_COVERS,
+    CONF_ENTITY_ID,
+    CONF_NAME,
+    CONF_SOURCE,
+    CONF_TIMEOUT,
+    CONF_URL,
+)
+from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.pil import draw_box
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,7 +81,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Doods client."""
     url = config[CONF_URL]
     auth_key = config[CONF_AUTH_KEY]
@@ -154,8 +167,7 @@ class Doods(ImageProcessingEntity):
                     continue
 
                 # If label confidence is not specified, use global confidence
-                label_confidence = label.get(CONF_CONFIDENCE)
-                if not label_confidence:
+                if not (label_confidence := label.get(CONF_CONFIDENCE)):
                     label_confidence = confidence
                 if label_name not in dconfig or dconfig[label_name] > label_confidence:
                     dconfig[label_name] = label_confidence
@@ -187,8 +199,7 @@ class Doods(ImageProcessingEntity):
         # Handle global detection area
         self._area = [0, 0, 1, 1]
         self._covers = True
-        area_config = config.get(CONF_AREA)
-        if area_config:
+        if area_config := config.get(CONF_AREA):
             self._area = [
                 area_config[CONF_TOP],
                 area_config[CONF_LEFT],
@@ -272,8 +283,7 @@ class Doods(ImageProcessingEntity):
 
         for path in paths:
             _LOGGER.info("Saving results image to %s", path)
-            if not os.path.exists(os.path.dirname(path)):
-                os.makedirs(os.path.dirname(path), exist_ok=True)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
             img.save(path)
 
     def process_image(self, image):

@@ -1,13 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "no_server_found": "LMS sunucusu bulunamad\u0131."
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "no_server_found": "Sunucu otomatik olarak ke\u015ffedilemedi.",
             "unknown": "Beklenmeyen hata"
         },
+        "flow_title": "{host}",
         "step": {
             "edit": {
                 "data": {
@@ -15,7 +18,8 @@
                     "password": "Parola",
                     "port": "Port",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
-                }
+                },
+                "title": "Ba\u011flant\u0131 bilgilerini d\u00fczenle"
             },
             "user": {
                 "data": {

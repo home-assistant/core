@@ -22,9 +22,7 @@ def validate_selector(config: Any) -> dict:
 
     selector_type = list(config)[0]
 
-    selector_class = SELECTORS.get(selector_type)
-
-    if selector_class is None:
+    if (selector_class := SELECTORS.get(selector_type)) is None:
         raise vol.Invalid(f"Unknown selector type {selector_type} found")
 
     # Selectors can be empty

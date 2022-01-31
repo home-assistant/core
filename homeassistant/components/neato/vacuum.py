@@ -14,8 +14,6 @@ from homeassistant.components.vacuum import (
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_ERROR,
-    STATE_IDLE,
-    STATE_PAUSED,
     STATE_RETURNING,
     SUPPORT_BATTERY,
     SUPPORT_CLEAN_SPOT,
@@ -29,13 +27,12 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MODE
+from homeassistant.const import ATTR_MODE, STATE_IDLE, STATE_PAUSED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NeatoHub
 from .const import (
     ACTION,
     ALERTS,
@@ -48,6 +45,7 @@ from .const import (
     NEATO_ROBOTS,
     SCAN_INTERVAL_MINUTES,
 )
+from .hub import NeatoHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -338,15 +336,14 @@ class NeatoConnectedVacuum(StateVacuumEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Device info for neato robot."""
-        info: DeviceInfo = {
-            "identifiers": {(NEATO_DOMAIN, self._robot_serial)},
-            "name": self._name,
-        }
-        if self._robot_stats:
-            info["manufacturer"] = self._robot_stats["battery"]["vendor"]
-            info["model"] = self._robot_stats["model"]
-            info["sw_version"] = self._robot_stats["firmware"]
-        return info
+        stats = self._robot_stats
+        return DeviceInfo(
+            identifiers={(NEATO_DOMAIN, self._robot_serial)},
+            manufacturer=stats["battery"]["vendor"] if stats else None,
+            model=stats["model"] if stats else None,
+            name=self._name,
+            sw_version=stats["firmware"] if stats else None,
+        )
 
     def start(self) -> None:
         """Start cleaning or resume cleaning."""

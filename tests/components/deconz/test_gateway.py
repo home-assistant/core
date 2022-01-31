@@ -7,6 +7,7 @@ import pydeconz
 from pydeconz.websocket import STATE_RETRYING, STATE_RUNNING
 import pytest
 
+from homeassistant.components import ssdp
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
 )
@@ -23,17 +24,17 @@ from homeassistant.components.deconz.gateway import (
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN
 from homeassistant.components.ssdp import (
-    ATTR_SSDP_LOCATION,
     ATTR_UPNP_MANUFACTURER_URL,
     ATTR_UPNP_SERIAL,
     ATTR_UPNP_UDN,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -42,6 +43,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -162,10 +164,40 @@ async def test_gateway_setup(hass, aioclient_mock):
         assert forward_entry_setup.mock_calls[4][1] == (config_entry, FAN_DOMAIN)
         assert forward_entry_setup.mock_calls[5][1] == (config_entry, LIGHT_DOMAIN)
         assert forward_entry_setup.mock_calls[6][1] == (config_entry, LOCK_DOMAIN)
-        assert forward_entry_setup.mock_calls[7][1] == (config_entry, SCENE_DOMAIN)
-        assert forward_entry_setup.mock_calls[8][1] == (config_entry, SENSOR_DOMAIN)
-        assert forward_entry_setup.mock_calls[9][1] == (config_entry, SIREN_DOMAIN)
-        assert forward_entry_setup.mock_calls[10][1] == (config_entry, SWITCH_DOMAIN)
+        assert forward_entry_setup.mock_calls[7][1] == (config_entry, NUMBER_DOMAIN)
+        assert forward_entry_setup.mock_calls[8][1] == (config_entry, SCENE_DOMAIN)
+        assert forward_entry_setup.mock_calls[9][1] == (config_entry, SENSOR_DOMAIN)
+        assert forward_entry_setup.mock_calls[10][1] == (config_entry, SIREN_DOMAIN)
+        assert forward_entry_setup.mock_calls[11][1] == (config_entry, SWITCH_DOMAIN)
+
+    device_registry = dr.async_get(hass)
+    gateway_entry = device_registry.async_get_device(
+        identifiers={(DECONZ_DOMAIN, gateway.bridgeid)}
+    )
+
+    assert gateway_entry.configuration_url == f"http://{HOST}:{PORT}"
+    assert gateway_entry.entry_type is dr.DeviceEntryType.SERVICE
+
+
+async def test_gateway_device_configuration_url_when_addon(hass, aioclient_mock):
+    """Successful setup."""
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
+        return_value=True,
+    ):
+        config_entry = await setup_deconz_integration(
+            hass, aioclient_mock, source=SOURCE_HASSIO
+        )
+        gateway = get_gateway_from_config_entry(hass, config_entry)
+
+    device_registry = dr.async_get(hass)
+    gateway_entry = device_registry.async_get_device(
+        identifiers={(DECONZ_DOMAIN, gateway.bridgeid)}
+    )
+
+    assert (
+        gateway_entry.configuration_url == "homeassistant://hassio/ingress/core_deconz"
+    )
 
 
 async def test_gateway_retry(hass):
@@ -230,12 +262,16 @@ async def test_update_address(hass, aioclient_mock):
     ) as mock_setup_entry:
         await hass.config_entries.flow.async_init(
             DECONZ_DOMAIN,
-            data={
-                ATTR_SSDP_LOCATION: "http://2.3.4.5:80/",
-                ATTR_UPNP_MANUFACTURER_URL: DECONZ_MANUFACTURERURL,
-                ATTR_UPNP_SERIAL: BRIDGEID,
-                ATTR_UPNP_UDN: "uuid:456DEF",
-            },
+            data=ssdp.SsdpServiceInfo(
+                ssdp_st="mock_st",
+                ssdp_usn="mock_usn",
+                ssdp_location="http://2.3.4.5:80/",
+                upnp={
+                    ATTR_UPNP_MANUFACTURER_URL: DECONZ_MANUFACTURERURL,
+                    ATTR_UPNP_SERIAL: BRIDGEID,
+                    ATTR_UPNP_UDN: "uuid:456DEF",
+                },
+            ),
             context={"source": SOURCE_SSDP},
         )
         await hass.async_block_till_done()

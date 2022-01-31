@@ -10,6 +10,7 @@
             "os_version": "Versi Sistem Operasi",
             "python_version": "Versi Python",
             "timezone": "Zona Waktu",
+            "user": "Pengguna",
             "version": "Versi",
             "virtualenv": "Lingkungan Virtual"
         }

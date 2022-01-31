@@ -17,6 +17,11 @@
                     "ssl": "\u05e9\u05d9\u05de\u05d5\u05e9 \u05d1\u05d0\u05d9\u05e9\u05d5\u05e8 SSL",
                     "verify_ssl": "\u05d0\u05d9\u05de\u05d5\u05ea \u05d0\u05d9\u05e9\u05d5\u05e8 SSL"
                 }
+            },
+            "select_server": {
+                "data": {
+                    "server": "\u05e9\u05e8\u05ea"
+                }
             }
         }
     }

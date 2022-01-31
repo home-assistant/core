@@ -1,6 +1,5 @@
 """The tests for the generic_thermostat."""
 import datetime
-from os import path
 from unittest.mock import patch
 
 import pytest
@@ -14,8 +13,12 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
+    PRESET_ACTIVITY,
     PRESET_AWAY,
+    PRESET_COMFORT,
+    PRESET_HOME,
     PRESET_NONE,
+    PRESET_SLEEP,
 )
 from homeassistant.components.generic_thermostat import (
     DOMAIN as GENERIC_THERMOSTAT_DOMAIN,
@@ -43,6 +46,7 @@ from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
     async_mock_service,
+    get_fixture_path,
     mock_restore_cache,
 )
 from tests.components.climate import common
@@ -209,6 +213,10 @@ async def setup_comp_2(hass):
                 "heater": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
                 "away_temp": 16,
+                "sleep_temp": 17,
+                "home_temp": 19,
+                "comfort_temp": 20,
+                "activity_temp": 21,
                 "initial_hvac_mode": HVAC_MODE_HEAT,
             }
         },
@@ -288,38 +296,73 @@ async def test_set_target_temp(hass, setup_comp_2):
     assert state.attributes.get("temperature") == 30.0
 
 
-async def test_set_away_mode(hass, setup_comp_2):
+@pytest.mark.parametrize(
+    "preset,temp",
+    [
+        (PRESET_NONE, 23),
+        (PRESET_AWAY, 16),
+        (PRESET_COMFORT, 20),
+        (PRESET_HOME, 19),
+        (PRESET_SLEEP, 17),
+        (PRESET_ACTIVITY, 21),
+    ],
+)
+async def test_set_away_mode(hass, setup_comp_2, preset, temp):
     """Test the setting away mode."""
     await common.async_set_temperature(hass, 23)
-    await common.async_set_preset_mode(hass, PRESET_AWAY)
+    await common.async_set_preset_mode(hass, preset)
     state = hass.states.get(ENTITY)
-    assert state.attributes.get("temperature") == 16
+    assert state.attributes.get("temperature") == temp
 
 
-async def test_set_away_mode_and_restore_prev_temp(hass, setup_comp_2):
+@pytest.mark.parametrize(
+    "preset,temp",
+    [
+        (PRESET_NONE, 23),
+        (PRESET_AWAY, 16),
+        (PRESET_COMFORT, 20),
+        (PRESET_HOME, 19),
+        (PRESET_SLEEP, 17),
+        (PRESET_ACTIVITY, 21),
+    ],
+)
+async def test_set_away_mode_and_restore_prev_temp(hass, setup_comp_2, preset, temp):
     """Test the setting and removing away mode.
 
     Verify original temperature is restored.
     """
     await common.async_set_temperature(hass, 23)
-    await common.async_set_preset_mode(hass, PRESET_AWAY)
+    await common.async_set_preset_mode(hass, preset)
     state = hass.states.get(ENTITY)
-    assert state.attributes.get("temperature") == 16
+    assert state.attributes.get("temperature") == temp
     await common.async_set_preset_mode(hass, PRESET_NONE)
     state = hass.states.get(ENTITY)
     assert state.attributes.get("temperature") == 23
 
 
-async def test_set_away_mode_twice_and_restore_prev_temp(hass, setup_comp_2):
+@pytest.mark.parametrize(
+    "preset,temp",
+    [
+        (PRESET_NONE, 23),
+        (PRESET_AWAY, 16),
+        (PRESET_COMFORT, 20),
+        (PRESET_HOME, 19),
+        (PRESET_SLEEP, 17),
+        (PRESET_ACTIVITY, 21),
+    ],
+)
+async def test_set_away_mode_twice_and_restore_prev_temp(
+    hass, setup_comp_2, preset, temp
+):
     """Test the setting away mode twice in a row.
 
     Verify original temperature is restored.
     """
     await common.async_set_temperature(hass, 23)
-    await common.async_set_preset_mode(hass, PRESET_AWAY)
-    await common.async_set_preset_mode(hass, PRESET_AWAY)
+    await common.async_set_preset_mode(hass, preset)
+    await common.async_set_preset_mode(hass, preset)
     state = hass.states.get(ENTITY)
-    assert state.attributes.get("temperature") == 16
+    assert state.attributes.get("temperature") == temp
     await common.async_set_preset_mode(hass, PRESET_NONE)
     state = hass.states.get(ENTITY)
     assert state.attributes.get("temperature") == 23
@@ -1486,11 +1529,7 @@ async def test_reload(hass):
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("climate.test") is not None
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "generic_thermostat/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "generic_thermostat")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             GENERIC_THERMOSTAT_DOMAIN,
@@ -1503,7 +1542,3 @@ async def test_reload(hass):
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("climate.test") is None
     assert hass.states.get("climate.reload")
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))

@@ -2,15 +2,18 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AirNowDataUpdateCoordinator
@@ -35,26 +38,30 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         icon="mdi:blur",
         name=ATTR_API_AQI,
         native_unit_of_measurement="aqi",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_API_PM25,
         icon="mdi:blur",
         name=ATTR_API_PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_API_O3,
         icon="mdi:blur",
         name=ATTR_API_O3,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up AirNow sensor entities based on a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
@@ -86,7 +93,8 @@ class AirNowSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state."""
-        self._state = self.coordinator.data[self.entity_description.key]
+        self._state = self.coordinator.data.get(self.entity_description.key)
+
         return self._state
 
     @property

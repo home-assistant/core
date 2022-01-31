@@ -21,12 +21,13 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -113,7 +114,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: PLANT_SCHEMA}}, extra=vol.ALLOW_
 ENABLE_LOAD_HISTORY = False
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Plant component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -238,8 +239,7 @@ class Plant(Entity):
         result = []
         for sensor_name in self._sensormap.values():
             params = self.READINGS[sensor_name]
-            value = getattr(self, f"_{sensor_name}")
-            if value is not None:
+            if (value := getattr(self, f"_{sensor_name}")) is not None:
                 if value == STATE_UNAVAILABLE:
                     result.append(f"{sensor_name} unavailable")
                 else:
@@ -291,8 +291,7 @@ class Plant(Entity):
         )
 
         for entity_id in self._sensormap:
-            state = self.hass.states.get(entity_id)
-            if state is not None:
+            if (state := self.hass.states.get(entity_id)) is not None:
                 self.state_changed(entity_id, state)
 
     def _load_history_from_db(self):

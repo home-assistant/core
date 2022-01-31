@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30c7\u30d0\u30a4\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
+            "yxc_control_url_missing": "\u30b3\u30f3\u30c8\u30ed\u30fc\u30ebURL\u306f\u3001ssdp\u306e\u8a18\u8ff0\u306b\u3042\u308a\u307e\u305b\u3093\u3002"
+        },
+        "error": {
+            "no_musiccast_device": "\u3053\u306e\u30c7\u30d0\u30a4\u30b9\u306fMusicCast\u30c7\u30d0\u30a4\u30b9\u3067\u306f\u306a\u3044\u3088\u3046\u3067\u3059\u3002"
+        },
+        "flow_title": "MusicCast: {name}",
+        "step": {
+            "confirm": {
+                "description": "\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3092\u958b\u59cb\u3057\u307e\u3059\u304b\uff1f"
+            },
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8"
+                },
+                "description": "MusicCast\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u3066\u3001Home Assistant\u3068\u9023\u643a\u3059\u308b\u3088\u3046\u306b\u3057\u307e\u3059\u3002"
+            }
+        }
+    }
+}

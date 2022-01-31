@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import mqtt
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -124,7 +125,9 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         mqtt.DOMAIN,
-        data={"addon": "Mosquitto", "host": "mock-mosquitto", "port": "1883"},
+        data=HassioServiceInfo(
+            config={"addon": "Mosquitto", "host": "mock-mosquitto", "port": "1883"}
+        ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result
@@ -140,14 +143,16 @@ async def test_hassio_confirm(
 
     result = await hass.config_entries.flow.async_init(
         "mqtt",
-        data={
-            "addon": "Mock Addon",
-            "host": "mock-broker",
-            "port": 1883,
-            "username": "mock-user",
-            "password": "mock-pass",
-            "protocol": "3.1.1",
-        },
+        data=HassioServiceInfo(
+            config={
+                "addon": "Mock Addon",
+                "host": "mock-broker",
+                "port": 1883,
+                "username": "mock-user",
+                "password": "mock-pass",
+                "protocol": "3.1.1",
+            }
+        ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result["type"] == "form"

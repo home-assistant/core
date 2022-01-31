@@ -1,4 +1,6 @@
 """Binary Sensor for MeteoAlarm.eu."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -6,12 +8,15 @@ from meteoalertapi import Meteoalert
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_SAFETY,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +41,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the MeteoAlarm binary sensor platform."""
 
     country = config[CONF_COUNTRY]
@@ -56,44 +66,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class MeteoAlertBinarySensor(BinarySensorEntity):
     """Representation of a MeteoAlert binary sensor."""
 
+    _attr_attribution = ATTRIBUTION
+    _attr_device_class = BinarySensorDeviceClass.SAFETY
+
     def __init__(self, api, name):
         """Initialize the MeteoAlert binary sensor."""
-        self._name = name
-        self._attributes = {}
-        self._state = None
+        self._attr_name = name
         self._api = api
-
-    @property
-    def name(self):
-        """Return the name of the binary sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return the status of the binary sensor."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
-        return self._attributes
-
-    @property
-    def device_class(self):
-        """Return the device class of this binary sensor."""
-        return DEVICE_CLASS_SAFETY
 
     def update(self):
         """Update device state."""
-        self._attributes = {}
-        self._state = False
+        self._attr_extra_state_attributes = None
+        self._attr_is_on = False
 
-        alert = self._api.get_alert()
-        if alert:
+        if alert := self._api.get_alert():
             expiration_date = dt_util.parse_datetime(alert["expires"])
             now = dt_util.utcnow()
 
             if expiration_date > now:
-                self._attributes = alert
-                self._state = True
+                self._attr_extra_state_attributes = alert
+                self._attr_is_on = True

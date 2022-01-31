@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt"
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",

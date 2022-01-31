@@ -1,7 +1,6 @@
 """Support for Modbus fans."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from homeassistant.components.fan import FanEntity
@@ -16,7 +15,6 @@ from .const import CONF_FANS
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
@@ -50,7 +48,7 @@ class ModbusFan(BaseSwitch, FanEntity):
         await self.async_turn(self.command_on)
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if fan is on.
 
         This is needed due to the ongoing conversion of fan.

@@ -1,4 +1,6 @@
 """The test for the Facebook notify module."""
+from http import HTTPStatus
+
 import pytest
 import requests_mock
 
@@ -15,7 +17,7 @@ def facebook():
 async def test_send_simple_message(hass, facebook):
     """Test sending a simple message with success."""
     with requests_mock.Mocker() as mock:
-        mock.register_uri(requests_mock.POST, fb.BASE_URL, status_code=200)
+        mock.register_uri(requests_mock.POST, fb.BASE_URL, status_code=HTTPStatus.OK)
 
         message = "This is just a test"
         target = ["+15555551234"]
@@ -39,7 +41,7 @@ async def test_send_simple_message(hass, facebook):
 async def test_send_multiple_message(hass, facebook):
     """Test sending a message to multiple targets."""
     with requests_mock.Mocker() as mock:
-        mock.register_uri(requests_mock.POST, fb.BASE_URL, status_code=200)
+        mock.register_uri(requests_mock.POST, fb.BASE_URL, status_code=HTTPStatus.OK)
 
         message = "This is just a test"
         targets = ["+15555551234", "+15555551235"]
@@ -65,7 +67,7 @@ async def test_send_multiple_message(hass, facebook):
 async def test_send_message_attachment(hass, facebook):
     """Test sending a message with a remote attachment."""
     with requests_mock.Mocker() as mock:
-        mock.register_uri(requests_mock.POST, fb.BASE_URL, status_code=200)
+        mock.register_uri(requests_mock.POST, fb.BASE_URL, status_code=HTTPStatus.OK)
 
         message = "This will be thrown away."
         data = {
@@ -94,7 +96,9 @@ async def test_send_message_attachment(hass, facebook):
     async def test_send_targetless_message(hass, facebook):
         """Test sending a message without a target."""
         with requests_mock.Mocker() as mock:
-            mock.register_uri(requests_mock.POST, fb.BASE_URL, status_code=200)
+            mock.register_uri(
+                requests_mock.POST, fb.BASE_URL, status_code=HTTPStatus.OK
+            )
 
             facebook.send_message(message="going nowhere")
             assert not mock.called
@@ -105,7 +109,7 @@ async def test_send_message_attachment(hass, facebook):
             mock.register_uri(
                 requests_mock.POST,
                 fb.BASE_URL,
-                status_code=400,
+                status_code=HTTPStatus.BAD_REQUEST,
                 json={
                     "error": {
                         "message": "Invalid OAuth access token.",

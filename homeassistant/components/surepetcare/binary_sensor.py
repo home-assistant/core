@@ -8,12 +8,12 @@ from surepy.entities.pet import Pet as SurepyPet
 from surepy.enums import EntityType, Location
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_PRESENCE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SurePetcareDataCoordinator
@@ -66,7 +66,8 @@ class SurePetcareBinarySensor(SurePetcareEntity, BinarySensorEntity):
 class Hub(SurePetcareBinarySensor):
     """Sure Petcare Hub."""
 
-    _attr_device_class = DEVICE_CLASS_CONNECTIVITY
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def available(self) -> bool:
@@ -92,7 +93,7 @@ class Hub(SurePetcareBinarySensor):
 class Pet(SurePetcareBinarySensor):
     """Sure Petcare Pet."""
 
-    _attr_device_class = DEVICE_CLASS_PRESENCE
+    _attr_device_class = BinarySensorDeviceClass.PRESENCE
 
     @callback
     def _update_attr(self, surepy_entity: SurepyEntity) -> None:
@@ -115,7 +116,8 @@ class Pet(SurePetcareBinarySensor):
 class DeviceConnectivity(SurePetcareBinarySensor):
     """Sure Petcare Device."""
 
-    _attr_device_class = DEVICE_CLASS_CONNECTIVITY
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self,

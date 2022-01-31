@@ -2,18 +2,65 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any, cast
 
 from pytradfri.command import Command
+from pytradfri.device import Device
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
+from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .base_class import TradfriBaseDevice
-from .const import CONF_GATEWAY_ID, DEVICES, DOMAIN, KEY_API
+from .base_class import TradfriBaseEntity
+from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN, KEY_API
+from .coordinator import TradfriDeviceDataUpdateCoordinator
+
+
+@dataclass
+class TradfriSensorEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    value: Callable[[Device], Any | None]
+
+
+@dataclass
+class TradfriSensorEntityDescription(
+    SensorEntityDescription,
+    TradfriSensorEntityDescriptionMixin,
+):
+    """Class describing Tradfri sensor entities."""
+
+
+def _get_air_quality(device: Device) -> int | None:
+    """Fetch the air quality value."""
+    if (
+        device.air_purifier_control.air_purifiers[0].air_quality == 65535
+    ):  # The sensor returns 65535 if the fan is turned off
+        return None
+
+    return cast(int, device.air_purifier_control.air_purifiers[0].air_quality)
+
+
+SENSOR_DESCRIPTION_AQI = TradfriSensorEntityDescription(
+    device_class=SensorDeviceClass.AQI,
+    native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    key=SensorDeviceClass.AQI,
+    value=_get_air_quality,
+)
+
+SENSOR_DESCRIPTION_BATTERY = TradfriSensorEntityDescription(
+    device_class=SensorDeviceClass.BATTERY,
+    native_unit_of_measurement=PERCENTAGE,
+    key=SensorDeviceClass.BATTERY,
+    value=lambda device: cast(int, device.device_info.battery_level),
+)
 
 
 async def async_setup_entry(
@@ -23,41 +70,59 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Tradfri config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
-    tradfri_data = hass.data[DOMAIN][config_entry.entry_id]
-    api = tradfri_data[KEY_API]
-    devices = tradfri_data[DEVICES]
+    coordinator_data = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
+    api = coordinator_data[KEY_API]
 
-    sensors = (
-        dev
-        for dev in devices
-        if not dev.has_light_control
-        and not dev.has_socket_control
-        and not dev.has_blind_control
-        and not dev.has_signal_repeater_control
-    )
-    if sensors:
-        async_add_entities(TradfriSensor(sensor, api, gateway_id) for sensor in sensors)
+    entities: list[TradfriSensor] = []
+
+    for device_coordinator in coordinator_data[COORDINATOR_LIST]:
+        description = None
+        if (
+            not device_coordinator.device.has_light_control
+            and not device_coordinator.device.has_socket_control
+            and not device_coordinator.device.has_signal_repeater_control
+            and not device_coordinator.device.has_air_purifier_control
+        ):
+            description = SENSOR_DESCRIPTION_BATTERY
+        elif device_coordinator.device.has_air_purifier_control:
+            description = SENSOR_DESCRIPTION_AQI
+
+        if description:
+            entities.append(
+                TradfriSensor(
+                    device_coordinator,
+                    api,
+                    gateway_id,
+                    description=description,
+                )
+            )
+
+    async_add_entities(entities)
 
 
-class TradfriSensor(TradfriBaseDevice, SensorEntity):
+class TradfriSensor(TradfriBaseEntity, SensorEntity):
     """The platform class required by Home Assistant."""
 
-    _attr_device_class = DEVICE_CLASS_BATTERY
-    _attr_native_unit_of_measurement = PERCENTAGE
+    entity_description: TradfriSensorEntityDescription
 
     def __init__(
         self,
-        device: Command,
+        device_coordinator: TradfriDeviceDataUpdateCoordinator,
         api: Callable[[Command | list[Command]], Any],
         gateway_id: str,
+        description: TradfriSensorEntityDescription,
     ) -> None:
-        """Initialize the device."""
-        super().__init__(device, api, gateway_id)
-        self._attr_unique_id = f"{gateway_id}-{device.id}"
+        """Initialize a Tradfri sensor."""
+        super().__init__(
+            device_coordinator=device_coordinator,
+            api=api,
+            gateway_id=gateway_id,
+        )
 
-    @property
-    def native_value(self) -> int | None:
-        """Return the current state of the device."""
-        if not self._device:
-            return None
-        return cast(int, self._device.device_info.battery_level)
+        self.entity_description = description
+
+        self._refresh()  # Set initial state
+
+    def _refresh(self) -> None:
+        """Refresh the device."""
+        self._attr_native_value = self.entity_description.value(self.coordinator.data)

@@ -1,4 +1,5 @@
 """Test the kmtronic config flow."""
+from http import HTTPStatus
 from unittest.mock import Mock, patch
 
 from aiohttp import ClientConnectorError, ClientResponseError
@@ -91,7 +92,7 @@ async def test_form_invalid_auth(hass):
 
     with patch(
         "homeassistant.components.kmtronic.config_flow.KMTronicHubAPI.async_get_status",
-        side_effect=ClientResponseError(None, None, status=401),
+        side_effect=ClientResponseError(None, None, status=HTTPStatus.BAD_REQUEST),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

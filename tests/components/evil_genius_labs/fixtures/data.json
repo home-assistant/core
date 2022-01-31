@@ -1,0 +1,331 @@
+[
+  {
+    "name": "name",
+    "label": "Name",
+    "type": "Label",
+    "value": "Fibonacci256-23D4"
+  },
+  { "name": "power", "label": "Power", "type": "Boolean", "value": 1 },
+  {
+    "name": "brightness",
+    "label": "Brightness",
+    "type": "Number",
+    "value": 128,
+    "min": 1,
+    "max": 255
+  },
+  {
+    "name": "pattern",
+    "label": "Pattern",
+    "type": "Select",
+    "value": 70,
+    "options": [
+      "Pride",
+      "Pride Fibonacci",
+      "Color Waves",
+      "Color Waves Fibonacci",
+      "Pride Playground",
+      "Pride Playground Fibonacci",
+      "Color Waves Playground",
+      "Color Waves Playground Fibonacci",
+      "Wheel",
+      "Swirl Fibonacci",
+      "Fire Fibonacci",
+      "Water Fibonacci",
+      "Emitter Fibonacci",
+      "Pacifica",
+      "Pacifica Fibonacci",
+      "Angle Palette",
+      "Radius Palette",
+      "X Axis Palette",
+      "Y Axis Palette",
+      "XY Axis Palette",
+      "Angle Gradient Palette",
+      "Radius Gradient Palette",
+      "X Axis Gradient Palette",
+      "Y Axis Gradient Palette",
+      "XY Axis Gradient Palette",
+      "Fire Noise",
+      "Fire Noise 2",
+      "Lava Noise",
+      "Rainbow Noise",
+      "Rainbow Stripe Noise",
+      "Party Noise",
+      "Forest Noise",
+      "Cloud Noise",
+      "Ocean Noise",
+      "Black & White Noise",
+      "Black & Blue Noise",
+      "Analog Clock",
+      "Spiral Analog Clock 13",
+      "Spiral Analog Clock 21",
+      "Spiral Analog Clock 34",
+      "Spiral Analog Clock 55",
+      "Spiral Analog Clock 89",
+      "Spiral Analog Clock 21 & 34",
+      "Spiral Analog Clock 13, 21 & 34",
+      "Spiral Analog Clock 34, 21 & 13",
+      "Pride Playground",
+      "Color Waves Playground",
+      "Rainbow Twinkles",
+      "Snow Twinkles",
+      "Cloud Twinkles",
+      "Incandescent Twinkles",
+      "Retro C9 Twinkles",
+      "Red & White Twinkles",
+      "Blue & White Twinkles",
+      "Red, Green & White Twinkles",
+      "Fairy Light Twinkles",
+      "Snow 2 Twinkles",
+      "Holly Twinkles",
+      "Ice Twinkles",
+      "Party Twinkles",
+      "Forest Twinkles",
+      "Lava Twinkles",
+      "Fire Twinkles",
+      "Cloud 2 Twinkles",
+      "Ocean Twinkles",
+      "Rainbow",
+      "Rainbow With Glitter",
+      "Solid Rainbow",
+      "Confetti",
+      "Sinelon",
+      "Beat",
+      "Juggle",
+      "Fire",
+      "Water",
+      "Strand Test",
+      "Solid Color"
+    ]
+  },
+  {
+    "name": "palette",
+    "label": "Palette",
+    "type": "Select",
+    "value": 0,
+    "options": [
+      "Rainbow",
+      "Rainbow Stripe",
+      "Cloud",
+      "Lava",
+      "Ocean",
+      "Forest",
+      "Party",
+      "Heat"
+    ]
+  },
+  {
+    "name": "speed",
+    "label": "Speed",
+    "type": "Number",
+    "value": 30,
+    "min": 1,
+    "max": 255
+  },
+  { "name": "autoplaySection", "label": "Autoplay", "type": "Section" },
+  { "name": "autoplay", "label": "Autoplay", "type": "Boolean", "value": 0 },
+  {
+    "name": "autoplayDuration",
+    "label": "Autoplay Duration",
+    "type": "Number",
+    "value": 10,
+    "min": 0,
+    "max": 255
+  },
+  { "name": "clock", "label": "Clock", "type": "Section" },
+  { "name": "showClock", "label": "Show Clock", "type": "Boolean", "value": 0 },
+  {
+    "name": "clockBackgroundFade",
+    "label": "Background Fade",
+    "type": "Number",
+    "value": 240,
+    "min": 0,
+    "max": 255
+  },
+  { "name": "solidColorSection", "label": "Solid Color", "type": "Section" },
+  {
+    "name": "solidColor",
+    "label": "Color",
+    "type": "Color",
+    "value": "0,0,255"
+  },
+  { "name": "prideSection", "label": "Pride & ColorWaves", "type": "Section" },
+  {
+    "name": "saturationBpm",
+    "label": "Saturation BPM",
+    "type": "Number",
+    "value": 87,
+    "min": 0,
+    "max": 255
+  },
+  {
+    "name": "saturationMin",
+    "label": "Saturation Min",
+    "type": "Number",
+    "value": 220,
+    "min": 0,
+    "max": 255
+  },
+  {
+    "name": "saturationMax",
+    "label": "Saturation Max",
+    "type": "Number",
+    "value": 250,
+    "min": 0,
+    "max": 255
+  },
+  {
+    "name": "brightDepthBpm",
+    "label": "Brightness Depth BPM",
+    "type": "Number",
+    "value": 1,
+    "min": 0,
+    "max": 255
+  },
+  {
+    "name": "brightDepthMin",
+    "label": "Brightness Depth Min",
+    "type": "Number",
+    "value": 96,
+    "min": 0,
+    "max": 255
+  },
+  {
+    "name": "brightDepthMax",
+    "label": "Brightness Depth Max",
+    "type": "Number",
+    "value": 224,
+    "min": 0,
+    "max": 255
+  },
+  {
+    "name": "brightThetaIncBpm",
+    "label": "Bright Theta Inc BPM",
+    "type": "Number",
+    "value": 203,
+    "min": 0,
+    "max": 255
+  },
+  {
+    "name": "brightThetaIncMin",
+    "label": "Bright Theta Inc Min",
+    "type": "Number",
+    "value": 25,
+    "min": 0,
+    "max": 255
+  },
+  {
+    "name": "brightThetaIncMax",
+    "label": "Bright Theta Inc Max",
+    "type": "Number",
+    "value": 40,
+    "min": 0,
+    "max": 255
+  },
+  {
+    "name": "msMultiplierBpm",
+    "label": "Time Multiplier BPM",
+    "type": "Number",
+    "value": 147,
+    "min": 0,
+    "max": 255
+  },
+  {
+    "name": "msMultiplierMin",
+    "label": "Time Multiplier Min",
+    "type": "Number",
+    "value": 23,
+    "min": 0,
+    "max": 255
+  },
+  {
+    "name": "msMultiplierMax",
+    "label": "Time Multiplier Max",
+    "type": "Number",
+    "value": 60,
+    "min": 0,
+    "max": 255
+  },
+  {
+    "name": "hueIncBpm",
+    "label": "Hue Inc BPM",
+    "type": "Number",
+    "value": 113,
+    "min": 0,
+    "max": 255
+  },
+  {
+    "name": "hueIncMin",
+    "label": "Hue Inc Min",
+    "type": "Number",
+    "value": 1,
+    "min": 0,
+    "max": 255
+  },
+  {
+    "name": "hueIncMax",
+    "label": "Hue Inc Max",
+    "type": "Number",
+    "value": 12,
+    "min": 0,
+    "max": 255
+  },
+  {
+    "name": "sHueBpm",
+    "label": "S Hue BPM",
+    "type": "Number",
+    "value": 2,
+    "min": 0,
+    "max": 255
+  },
+  {
+    "name": "sHueMin",
+    "label": "S Hue Min",
+    "type": "Number",
+    "value": 5,
+    "min": 0,
+    "max": 255
+  },
+  {
+    "name": "sHueMax",
+    "label": "S Hue Max",
+    "type": "Number",
+    "value": 9,
+    "min": 0,
+    "max": 255
+  },
+  { "name": "fireSection", "label": "Fire & Water", "type": "Section" },
+  {
+    "name": "cooling",
+    "label": "Cooling",
+    "type": "Number",
+    "value": 49,
+    "min": 0,
+    "max": 255
+  },
+  {
+    "name": "sparking",
+    "label": "Sparking",
+    "type": "Number",
+    "value": 60,
+    "min": 0,
+    "max": 255
+  },
+  { "name": "twinklesSection", "label": "Twinkles", "type": "Section" },
+  {
+    "name": "twinkleSpeed",
+    "label": "Twinkle Speed",
+    "type": "Number",
+    "value": 4,
+    "min": 0,
+    "max": 8
+  },
+  {
+    "name": "twinkleDensity",
+    "label": "Twinkle Density",
+    "type": "Number",
+    "value": 5,
+    "min": 0,
+    "max": 8
+  }
+]

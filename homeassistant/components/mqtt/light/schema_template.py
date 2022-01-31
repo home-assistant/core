@@ -11,6 +11,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_WHITE_VALUE,
+    ENTITY_ID_FORMAT,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
@@ -32,8 +33,15 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.color as color_util
 
-from .. import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, subscription
+from .. import MqttValueTemplate, subscription
 from ... import mqtt
+from ..const import (
+    CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
+    CONF_QOS,
+    CONF_RETAIN,
+    CONF_STATE_TOPIC,
+)
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
@@ -83,6 +91,8 @@ PLATFORM_SCHEMA_TEMPLATE = (
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
+DISCOVERY_SCHEMA_TEMPLATE = PLATFORM_SCHEMA_TEMPLATE.extend({}, extra=vol.REMOVE_EXTRA)
+
 
 async def async_setup_entity_template(
     hass, config, async_add_entities, config_entry, discovery_data
@@ -94,6 +104,7 @@ async def async_setup_entity_template(
 class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT Template light."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
@@ -116,7 +127,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     @staticmethod
     def config_schema():
         """Return the config schema."""
-        return PLATFORM_SCHEMA_TEMPLATE
+        return DISCOVERY_SCHEMA_TEMPLATE
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
@@ -149,7 +160,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         """(Re)Subscribe to topics."""
         for tpl in self._templates.values():
             if tpl is not None:
-                tpl.hass = self.hass
+                tpl = MqttValueTemplate(tpl, entity=self)
 
         last_state = await self.async_get_last_state()
 
@@ -243,6 +254,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                         "topic": self._topics[CONF_STATE_TOPIC],
                         "msg_callback": state_received,
                         "qos": self._config[CONF_QOS],
+                        "encoding": self._config[CONF_ENCODING] or None,
                     }
                 },
             )
@@ -349,6 +361,8 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             values["red"] = rgb[0]
             values["green"] = rgb[1]
             values["blue"] = rgb[2]
+            values["hue"] = hs_color[0]
+            values["sat"] = hs_color[1]
 
             if self._optimistic:
                 self._hs = kwargs[ATTR_HS_COLOR]
@@ -371,7 +385,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         if ATTR_TRANSITION in kwargs:
             values["transition"] = kwargs[ATTR_TRANSITION]
 
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._topics[CONF_COMMAND_TOPIC],
             self._templates[CONF_COMMAND_ON_TEMPLATE].async_render(
@@ -379,6 +393,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             ),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
         if self._optimistic:
@@ -396,7 +411,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         if ATTR_TRANSITION in kwargs:
             values["transition"] = kwargs[ATTR_TRANSITION]
 
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._topics[CONF_COMMAND_TOPIC],
             self._templates[CONF_COMMAND_OFF_TEMPLATE].async_render(
@@ -404,6 +419,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             ),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
         if self._optimistic:

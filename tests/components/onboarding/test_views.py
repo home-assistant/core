@@ -1,5 +1,6 @@
 """Test the onboarding views."""
 import asyncio
+from http import HTTPStatus
 import os
 from unittest.mock import patch
 
@@ -7,7 +8,6 @@ import pytest
 
 from homeassistant.components import onboarding
 from homeassistant.components.onboarding import const, views
-from homeassistant.const import HTTP_FORBIDDEN
 from homeassistant.helpers import area_registry as ar
 from homeassistant.setup import async_setup_component
 
@@ -130,7 +130,7 @@ async def test_onboarding_user_already_done(hass, hass_storage, hass_client_no_a
         },
     )
 
-    assert resp.status == HTTP_FORBIDDEN
+    assert resp.status == HTTPStatus.FORBIDDEN
 
 
 async def test_onboarding_user(hass, hass_storage, hass_client_no_auth):
@@ -139,6 +139,7 @@ async def test_onboarding_user(hass, hass_storage, hass_client_no_auth):
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()
 
+    cur_users = len(await hass.auth.async_get_users())
     client = await hass_client_no_auth()
 
     resp = await client.post(
@@ -159,9 +160,9 @@ async def test_onboarding_user(hass, hass_storage, hass_client_no_auth):
     assert "auth_code" in data
 
     users = await hass.auth.async_get_users()
-    assert len(users) == 1
-    user = users[0]
-    assert user.name == "Test Name"
+    assert len(await hass.auth.async_get_users()) == cur_users + 1
+    user = next((user for user in users if user.name == "Test Name"), None)
+    assert user is not None
     assert len(user.credentials) == 1
     assert user.credentials[0].data["username"] == "test-user"
     assert len(hass.data["person"][1].async_items()) == 1
@@ -247,7 +248,7 @@ async def test_onboarding_user_race(hass, hass_storage, hass_client_no_auth):
 
     res1, res2 = await asyncio.gather(resp1, resp2)
 
-    assert sorted([res1.status, res2.status]) == [200, HTTP_FORBIDDEN]
+    assert sorted([res1.status, res2.status]) == [HTTPStatus.OK, HTTPStatus.FORBIDDEN]
 
 
 async def test_onboarding_integration(hass, hass_storage, hass_client, hass_admin_user):
@@ -287,8 +288,8 @@ async def test_onboarding_integration(hass, hass_storage, hass_client, hass_admi
     )
 
     # Onboarding refresh token and new refresh token
-    for user in await hass.auth.async_get_users():
-        assert len(user.refresh_tokens) == 2, user
+    user = await hass.auth.async_get_user(hass_admin_user.id)
+    assert len(user.refresh_tokens) == 2, user
 
 
 async def test_onboarding_integration_missing_credential(

@@ -17,6 +17,7 @@ from . import const as zha_const, registries as zha_regs, typing as zha_typing
 from .. import (  # noqa: F401 pylint: disable=unused-import,
     alarm_control_panel,
     binary_sensor,
+    button,
     climate,
     cover,
     device_tracker,
@@ -24,7 +25,9 @@ from .. import (  # noqa: F401 pylint: disable=unused-import,
     light,
     lock,
     number,
+    select,
     sensor,
+    siren,
     switch,
 )
 from .channels import base
@@ -65,6 +68,7 @@ class ProbeEndpoint:
         self.discover_by_device_type(channel_pool)
         self.discover_multi_entities(channel_pool)
         self.discover_by_cluster_id(channel_pool)
+        zha_regs.ZHA_ENTITIES.clean_up()
 
     @callback
     def discover_by_device_type(self, channel_pool: zha_typing.ChannelPoolType) -> None:
@@ -206,8 +210,7 @@ class ProbeEndpoint:
     def initialize(self, hass: HomeAssistant) -> None:
         """Update device overrides config."""
         zha_config = hass.data[zha_const.DATA_ZHA].get(zha_const.DATA_ZHA_CONFIG, {})
-        overrides = zha_config.get(zha_const.CONF_DEVICE_CONFIG)
-        if overrides:
+        if overrides := zha_config.get(zha_const.CONF_DEVICE_CONFIG):
             self._device_configs.update(overrides)
 
 
@@ -234,11 +237,11 @@ class GroupProbe:
             unsub()
             self._unsubs.remove(unsub)
 
+    @callback
     def _reprobe_group(self, group_id: int) -> None:
         """Reprobe a group for entities after its members change."""
         zha_gateway = self._hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
-        zha_group = zha_gateway.groups.get(group_id)
-        if zha_group is None:
+        if (zha_group := zha_gateway.groups.get(group_id)) is None:
             return
         self.discover_group_entities(zha_group)
 
