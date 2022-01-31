@@ -80,7 +80,6 @@ class FreeboxRouter:
 
     async def update_device_trackers(self) -> None:
         """Update Freebox devices."""
-        assert self._api
         new_device = False
         fbx_devices: list[dict[str, Any]] = await self._api.lan.get_hosts_list()
 
@@ -111,7 +110,6 @@ class FreeboxRouter:
 
     async def update_sensors(self) -> None:
         """Update Freebox sensors."""
-        assert self._api
         # System sensors
         syst_datas: dict[str, Any] = await self._api.system.get_config()
 
@@ -144,7 +142,6 @@ class FreeboxRouter:
 
     async def _update_disks_sensors(self) -> None:
         """Update Freebox disks."""
-        assert self._api
         # None at first request
         fbx_disks: list[dict[str, Any]] = await self._api.storage.get_disks() or []
 
@@ -153,13 +150,11 @@ class FreeboxRouter:
 
     async def reboot(self) -> None:
         """Reboot the Freebox."""
-        assert self._api
         await self._api.system.reboot()
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        assert self.mac
         return DeviceInfo(
             configuration_url=f"https://{self._host}:{self._port}/",
             connections={(CONNECTION_NETWORK_MAC, self.mac)},
@@ -192,5 +187,4 @@ class FreeboxRouter:
     @property
     def wifi(self) -> Wifi:
         """Return the wifi."""
-        assert self._api
         return self._api.wifi
