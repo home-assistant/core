@@ -1,0 +1,10 @@
+{
+    "system_health": {
+        "info": {
+            "dashboards": "\u30c0\u30c3\u30b7\u30e5 \u30dc\u30fc\u30c9",
+            "mode": "\u30e2\u30fc\u30c9",
+            "resources": "\u30ea\u30bd\u30fc\u30b9",
+            "views": "\u30d3\u30e5\u30fc"
+        }
+    }
+}

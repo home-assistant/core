@@ -4,15 +4,15 @@ from __future__ import annotations
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
-from homeassistant.components.humidifier import HumidifierEntity
+from homeassistant.components.humidifier import HumidifierDeviceClass, HumidifierEntity
 from homeassistant.components.humidifier.const import (
-    DEVICE_CLASS_DEHUMIDIFIER,
-    DEVICE_CLASS_HUMIDIFIER,
     MODE_AUTO,
     MODE_NORMAL,
     SUPPORT_MODES,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
@@ -35,7 +35,7 @@ HA_MODE_TO_HK = {
 class HomeKitHumidifier(HomeKitEntity, HumidifierEntity):
     """Representation of a HomeKit Controller Humidifier."""
 
-    _attr_device_class = DEVICE_CLASS_HUMIDIFIER
+    _attr_device_class = HumidifierDeviceClass.HUMIDIFIER
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
@@ -136,7 +136,7 @@ class HomeKitHumidifier(HomeKitEntity, HumidifierEntity):
 class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
     """Representation of a HomeKit Controller Humidifier."""
 
-    _attr_device_class = DEVICE_CLASS_DEHUMIDIFIER
+    _attr_device_class = HumidifierDeviceClass.DEHUMIDIFIER
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
@@ -241,7 +241,11 @@ class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
         return f"homekit-{serial}-{self._iid}-{self.device_class}"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Homekit humidifer."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]

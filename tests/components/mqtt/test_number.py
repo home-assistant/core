@@ -36,6 +36,7 @@ from .test_common import (
     help_test_discovery_update,
     help_test_discovery_update_attr,
     help_test_discovery_update_unchanged,
+    help_test_encoding_subscribable_topics,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -43,6 +44,8 @@ from .test_common import (
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
+    help_test_publishing_with_custom_encoding,
+    help_test_reloadable,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -209,6 +212,76 @@ async def test_run_number_service_optimistic(hass, mqtt_mock):
     assert state.state == "42.1"
 
 
+async def test_run_number_service_optimistic_with_command_template(hass, mqtt_mock):
+    """Test that set_value service works in optimistic mode and with a command_template."""
+    topic = "test/number"
+
+    fake_state = ha.State("switch.test", "3")
+
+    with patch(
+        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
+        return_value=fake_state,
+    ):
+        assert await async_setup_component(
+            hass,
+            number.DOMAIN,
+            {
+                "number": {
+                    "platform": "mqtt",
+                    "command_topic": topic,
+                    "name": "Test Number",
+                    "command_template": '{"number": {{ value }} }',
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("number.test_number")
+    assert state.state == "3"
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    # Integer
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "number.test_number", ATTR_VALUE: 30},
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with(topic, '{"number": 30 }', 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("number.test_number")
+    assert state.state == "30"
+
+    # Float with no decimal -> integer
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "number.test_number", ATTR_VALUE: 42.0},
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with(topic, '{"number": 42 }', 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("number.test_number")
+    assert state.state == "42"
+
+    # Float with decimal -> float
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "number.test_number", ATTR_VALUE: 42.1},
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        topic, '{"number": 42.1 }', 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("number.test_number")
+    assert state.state == "42.1"
+
+
 async def test_run_number_service(hass, mqtt_mock):
     """Test that set_value service works in non optimistic mode."""
     cmd_topic = "test/number/set"
@@ -239,6 +312,43 @@ async def test_run_number_service(hass, mqtt_mock):
         blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(cmd_topic, "30", 0, False)
+    state = hass.states.get("number.test_number")
+    assert state.state == "32"
+
+
+async def test_run_number_service_with_command_template(hass, mqtt_mock):
+    """Test that set_value service works in non optimistic mode and with a command_template."""
+    cmd_topic = "test/number/set"
+    state_topic = "test/number"
+
+    assert await async_setup_component(
+        hass,
+        number.DOMAIN,
+        {
+            "number": {
+                "platform": "mqtt",
+                "command_topic": cmd_topic,
+                "state_topic": state_topic,
+                "name": "Test Number",
+                "command_template": '{"number": {{ value }} }',
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, state_topic, "32")
+    state = hass.states.get("number.test_number")
+    assert state.state == "32"
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "number.test_number", ATTR_VALUE: 30},
+        blocking=True,
+    )
+    mqtt_mock.async_publish.assert_called_once_with(
+        cmd_topic, '{"number": 30 }', 0, False
+    )
     state = hass.states.get("number.test_number")
     assert state.state == "32"
 
@@ -532,4 +642,75 @@ async def test_mqtt_payload_out_of_range_error(hass, caplog, mqtt_mock):
 
     assert (
         "Invalid value for number.test_number: 115.5 (range 5.0 - 110.0)" in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "service,topic,parameters,payload,template",
+    [
+        (
+            SERVICE_SET_VALUE,
+            "command_topic",
+            {ATTR_VALUE: "45"},
+            45,
+            "command_template",
+        ),
+    ],
+)
+async def test_publishing_with_custom_encoding(
+    hass,
+    mqtt_mock,
+    caplog,
+    service,
+    topic,
+    parameters,
+    payload,
+    template,
+):
+    """Test publishing MQTT payload with different encoding."""
+    domain = NUMBER_DOMAIN
+    config = DEFAULT_CONFIG[domain]
+
+    await help_test_publishing_with_custom_encoding(
+        hass,
+        mqtt_mock,
+        caplog,
+        domain,
+        config,
+        service,
+        topic,
+        parameters,
+        payload,
+        template,
+    )
+
+
+async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform."""
+    domain = number.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
+
+
+@pytest.mark.parametrize(
+    "topic,value,attribute,attribute_value",
+    [
+        ("state_topic", "10", None, "10"),
+        ("state_topic", "60", None, "60"),
+    ],
+)
+async def test_encoding_subscribable_topics(
+    hass, mqtt_mock, caplog, topic, value, attribute, attribute_value
+):
+    """Test handling of incoming encoded payload."""
+    await help_test_encoding_subscribable_topics(
+        hass,
+        mqtt_mock,
+        caplog,
+        "number",
+        DEFAULT_CONFIG["number"],
+        topic,
+        value,
+        attribute,
+        attribute_value,
     )

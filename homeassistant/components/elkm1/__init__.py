@@ -22,8 +22,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -57,12 +58,12 @@ SYNC_TIMEOUT = 120
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
-    "alarm_control_panel",
-    "climate",
-    "light",
-    "scene",
-    "sensor",
-    "switch",
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.CLIMATE,
+    Platform.LIGHT,
+    Platform.SCENE,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 SPEAK_SERVICE_SCHEMA = vol.Schema(
@@ -319,7 +320,7 @@ async def async_wait_for_elk_to_sync(elk, timeout, conf_host):
     elk.add_handler("login", login_status)
     elk.add_handler("sync_complete", sync_complete)
     try:
-        with async_timeout.timeout(timeout):
+        async with async_timeout.timeout(timeout):
             await event.wait()
     except asyncio.TimeoutError:
         _LOGGER.error(
@@ -341,13 +342,13 @@ def _create_elk_services(hass):
             raise HomeAssistantError(f"No ElkM1 with prefix '{prefix}' found")
         return elk
 
-    def _speak_word_service(service):
+    def _speak_word_service(service: ServiceCall) -> None:
         _getelk(service).panel.speak_word(service.data["number"])
 
-    def _speak_phrase_service(service):
+    def _speak_phrase_service(service: ServiceCall) -> None:
         _getelk(service).panel.speak_phrase(service.data["number"])
 
-    def _set_time_service(service):
+    def _set_time_service(service: ServiceCall) -> None:
         _getelk(service).panel.set_time(dt_util.now())
 
     hass.services.async_register(

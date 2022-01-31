@@ -14,6 +14,15 @@
             "0": "Lav f\u00f8lsomhet",
             "1": "H\u00f8y f\u00f8lsomhet"
         },
+        "tuya__fan_angle": {
+            "30": "30\u00b0",
+            "60": "60\u00b0",
+            "90": "90\u00b0"
+        },
+        "tuya__fingerbot_mode": {
+            "click": "Trykk",
+            "switch": "Bryter"
+        },
         "tuya__ipc_work_mode": {
             "0": "Lav effekt modus",
             "1": "Kontinuerlig arbeidsmodus"
@@ -44,6 +53,38 @@
             "on": "P\u00e5",
             "power_off": "Av",
             "power_on": "P\u00e5"
+        },
+        "tuya__vacuum_cistern": {
+            "closed": "Lukket",
+            "high": "H\u00f8y",
+            "low": "Lav",
+            "middle": "Midten"
+        },
+        "tuya__vacuum_collection": {
+            "large": "Stor",
+            "middle": "Midten",
+            "small": "Liten"
+        },
+        "tuya__vacuum_mode": {
+            "bow": "Bue",
+            "chargego": "Returner til dokken",
+            "left_bow": "Bue til venstre",
+            "left_spiral": "Spiral til venstre",
+            "mop": "Mopp",
+            "part": "Del",
+            "partial_bow": "Bue Delvis",
+            "pick_zone": "Velg sone",
+            "point": "Punkt",
+            "pose": "Posere",
+            "random": "Tilfeldig",
+            "right_bow": "Bue H\u00f8yre",
+            "right_spiral": "Spiral h\u00f8yre",
+            "single": "Enkelt",
+            "smart": "Smart",
+            "spiral": "Spiral",
+            "standby": "Vent litt",
+            "wall_follow": "F\u00f8lg Wall",
+            "zone": "Sone"
         }
     }
 }

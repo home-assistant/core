@@ -13,7 +13,7 @@ from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PRODUCT, SERIAL_NUMBER, TITLE
 
@@ -74,20 +74,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
-        """Handle zerooconf discovery."""
-        if discovery_info["properties"]["MT"] in ["2600", "2601"]:
+        """Handle zeroconf discovery."""
+        if discovery_info.properties["MT"] in ["2600", "2601"]:
             return self.async_abort(reason="home_control")
 
-        await self.async_set_unique_id(discovery_info["properties"]["SN"])
+        await self.async_set_unique_id(discovery_info.properties["SN"])
         self._abort_if_unique_id_configured()
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context[CONF_HOST] = discovery_info["host"]
+        self.context[CONF_HOST] = discovery_info.host
         self.context["title_placeholders"] = {
-            PRODUCT: discovery_info["properties"]["Product"],
-            CONF_NAME: discovery_info["hostname"].split(".")[0],
+            PRODUCT: discovery_info.properties["Product"],
+            CONF_NAME: discovery_info.hostname.split(".")[0],
         }
 
         return await self.async_step_zeroconf_confirm()

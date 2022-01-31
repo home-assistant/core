@@ -11,6 +11,7 @@ from aiohttp import ClientError
 from bond_api import BPUPSubscriptions
 
 from homeassistant.const import (
+    ATTR_HW_VERSION,
     ATTR_MODEL,
     ATTR_NAME,
     ATTR_SUGGESTED_AREA,
@@ -40,6 +41,7 @@ class BondEntity(Entity):
         device: BondDevice,
         bpup_subs: BPUPSubscriptions,
         sub_device: str | None = None,
+        sub_device_id: str | None = None,
     ) -> None:
         """Initialize entity with API and device info."""
         self._hub = hub
@@ -50,7 +52,12 @@ class BondEntity(Entity):
         self._bpup_subs = bpup_subs
         self._update_lock: Lock | None = None
         self._initialized = False
-        sub_device_id: str = f"_{sub_device}" if sub_device else ""
+        if sub_device_id:
+            sub_device_id = f"_{sub_device_id}"
+        elif sub_device:
+            sub_device_id = f"_{sub_device}"
+        else:
+            sub_device_id = ""
         self._attr_unique_id = f"{hub.bond_id}_{device.device_id}{sub_device_id}"
         if sub_device:
             sub_device_name = sub_device.replace("_", " ").title()
@@ -65,9 +72,10 @@ class BondEntity(Entity):
             manufacturer=self._hub.make,
             # type ignore: tuple items should not be Optional
             identifiers={(DOMAIN, self._hub.bond_id, self._device.device_id)},  # type: ignore[arg-type]
+            configuration_url=f"http://{self._hub.host}",
         )
         if self.name is not None:
-            device_info[ATTR_NAME] = self.name
+            device_info[ATTR_NAME] = self._device.name
         if self._hub.bond_id is not None:
             device_info[ATTR_VIA_DEVICE] = (DOMAIN, self._hub.bond_id)
         if self._device.location is not None:
@@ -77,6 +85,8 @@ class BondEntity(Entity):
                 device_info[ATTR_MODEL] = self._hub.model
             if self._hub.fw_ver is not None:
                 device_info[ATTR_SW_VERSION] = self._hub.fw_ver
+            if self._hub.mcu_ver is not None:
+                device_info[ATTR_HW_VERSION] = self._hub.mcu_ver
         else:
             model_data = []
             if self._device.branding_profile:

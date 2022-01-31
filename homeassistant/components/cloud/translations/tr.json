@@ -2,7 +2,9 @@
     "system_health": {
         "info": {
             "alexa_enabled": "Alexa Etkin",
+            "can_reach_cert_server": "Sertifika Sunucusuna Ula\u015f\u0131n",
             "can_reach_cloud": "Home Assistant Cloud'a ula\u015f\u0131n",
+            "can_reach_cloud_auth": "Kimlik Do\u011frulama Sunucusuna Ula\u015f\u0131n",
             "google_enabled": "Google Etkin",
             "logged_in": "Giri\u015f Yapt\u0131",
             "relayer_connected": "Yeniden Katman ba\u011fl\u0131",

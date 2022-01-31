@@ -91,6 +91,7 @@ def _mocked_plug() -> SmartPlug:
     plug.hw_info = {"sw_ver": "1.0.0"}
     plug.turn_off = AsyncMock()
     plug.turn_on = AsyncMock()
+    plug.set_led = AsyncMock()
     plug.protocol = _mock_protocol()
     return plug
 
@@ -111,6 +112,7 @@ def _mocked_strip() -> SmartStrip:
     strip.hw_info = {"sw_ver": "1.0.0"}
     strip.turn_off = AsyncMock()
     strip.turn_on = AsyncMock()
+    strip.set_led = AsyncMock()
     strip.protocol = _mock_protocol()
     plug0 = _mocked_plug()
     plug0.alias = "Plug0"

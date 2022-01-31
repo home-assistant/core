@@ -7,9 +7,12 @@
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "Chcete nastavit {name} - {model} ( {host} )?"
+            },
             "user": {
                 "data": {
-                    "host": "Hostitel (nebo IP adresa) va\u0161eho za\u0159\u00edzen\u00ed Twinkly"
+                    "host": "Hostitel"
                 },
                 "description": "Nastavte sv\u016fj LED p\u00e1sek Twinkly",
                 "title": "Twinkly"

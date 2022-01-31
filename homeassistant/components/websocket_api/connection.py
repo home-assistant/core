@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Hashable
+from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -15,6 +16,11 @@ from . import const, messages
 
 if TYPE_CHECKING:
     from .http import WebSocketAdapter
+
+
+current_connection = ContextVar["ActiveConnection | None"](
+    "current_connection", default=None
+)
 
 
 class ActiveConnection:
@@ -36,6 +42,7 @@ class ActiveConnection:
         self.refresh_token_id = refresh_token.id
         self.subscriptions: dict[Hashable, Callable[[], Any]] = {}
         self.last_id = 0
+        current_connection.set(self)
 
     def context(self, msg: dict[str, Any]) -> Context:
         """Return a context."""

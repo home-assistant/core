@@ -8,9 +8,6 @@ import pytest
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GATE,
-    DEVICE_CLASS_SHUTTER,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
@@ -19,6 +16,7 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     SUPPORT_STOP,
+    CoverDeviceClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -106,7 +104,7 @@ async def test_init_gatecontroller(gatecontroller, hass, config):
 
     state = hass.states.get(entity_id)
     assert state.name == "gateController-position"
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_GATE
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.GATE
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
     assert supported_features & SUPPORT_OPEN
@@ -136,7 +134,7 @@ async def test_init_shutterbox(shutterbox, hass, config):
 
     state = hass.states.get(entity_id)
     assert state.name == "shutterBox-position"
-    assert entry.device_class == DEVICE_CLASS_SHUTTER
+    assert entry.original_device_class == CoverDeviceClass.SHUTTER
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
     assert supported_features & SUPPORT_OPEN
@@ -166,7 +164,7 @@ async def test_init_gatebox(gatebox, hass, config):
 
     state = hass.states.get(entity_id)
     assert state.name == "gateBox-position"
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_DOOR
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.DOOR
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
     assert supported_features & SUPPORT_OPEN

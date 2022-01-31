@@ -1,12 +1,12 @@
 """Support for Awair sensors."""
 from __future__ import annotations
 
+from python_awair.air_data import AirData
 from python_awair.devices import AwairDevice
 import voluptuous as vol
 
-from homeassistant.components.awair import AwairDataUpdateCoordinator, AwairResult
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_CONNECTIONS,
@@ -18,9 +18,10 @@ from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import AwairDataUpdateCoordinator, AwairResult
 from .const import (
     API_DUST,
     API_PM25,
@@ -43,7 +44,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Import Awair configuration from YAML."""
     LOGGER.warning(
         "Loading Awair via platform setup is deprecated; Please remove it from your configuration"
@@ -59,9 +65,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up Awair sensor entity based on a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
@@ -131,6 +137,7 @@ class AwairSensor(CoordinatorEntity, SensorEntity):
         # for users with first-gen devices that are upgrading.
         if (
             self.entity_description.key == API_PM25
+            and self._air_data
             and API_DUST in self._air_data.sensors
         ):
             unique_id_tag = "DUST"
@@ -161,8 +168,11 @@ class AwairSensor(CoordinatorEntity, SensorEntity):
         return False
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return the state, rounding off to reasonable values."""
+        if not self._air_data:
+            return None
+
         state: float
         sensor_type = self.entity_description.key
 
@@ -206,6 +216,8 @@ class AwairSensor(CoordinatorEntity, SensorEntity):
         """
         sensor_type = self.entity_description.key
         attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        if not self._air_data:
+            return attrs
         if sensor_type in self._air_data.indices:
             attrs["awair_index"] = abs(self._air_data.indices[sensor_type])
         elif sensor_type in DUST_ALIASES and API_DUST in self._air_data.indices:
@@ -233,7 +245,7 @@ class AwairSensor(CoordinatorEntity, SensorEntity):
         return info
 
     @property
-    def _air_data(self) -> AwairResult | None:
+    def _air_data(self) -> AirData | None:
         """Return the latest data for our device, or None."""
         result: AwairResult | None = self.coordinator.data.get(self._device.uuid)
         if result:

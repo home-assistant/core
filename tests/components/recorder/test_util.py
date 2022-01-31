@@ -8,6 +8,7 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.sql.elements import TextClause
 
+from homeassistant.components import recorder
 from homeassistant.components.recorder import run_information_with_session, util
 from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.models import RecorderRuns
@@ -364,20 +365,16 @@ def test_supported_pgsql(caplog, pgsql_version):
     "sqlite_version,message",
     [
         (
-            "3.32.0",
-            "Version 3.32.0 of SQLite is not supported; minimum supported version is 3.32.1.",
-        ),
-        (
-            "3.31.0",
-            "Version 3.31.0 of SQLite is not supported; minimum supported version is 3.32.1.",
+            "3.30.0",
+            "Version 3.30.0 of SQLite is not supported; minimum supported version is 3.31.0.",
         ),
         (
             "2.0.0",
-            "Version 2.0.0 of SQLite is not supported; minimum supported version is 3.32.1.",
+            "Version 2.0.0 of SQLite is not supported; minimum supported version is 3.31.0.",
         ),
         (
             "dogs",
-            "Version dogs of SQLite is not supported; minimum supported version is 3.32.1.",
+            "Version dogs of SQLite is not supported; minimum supported version is 3.31.0.",
         ),
     ],
 )
@@ -410,7 +407,7 @@ def test_warn_outdated_sqlite(caplog, sqlite_version, message):
 @pytest.mark.parametrize(
     "sqlite_version",
     [
-        ("3.32.1"),
+        ("3.31.0"),
         ("3.33.0"),
     ],
 )
@@ -560,3 +557,21 @@ def test_perodic_db_cleanups(hass_recorder):
     ][0]
     assert isinstance(text_obj, TextClause)
     assert str(text_obj) == "PRAGMA wal_checkpoint(TRUNCATE);"
+
+
+async def test_write_lock_db(hass, tmp_path):
+    """Test database write lock."""
+    from sqlalchemy.exc import OperationalError
+
+    # Use file DB, in memory DB cannot do write locks.
+    config = {recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db")}
+    await async_init_recorder_component(hass, config)
+    await hass.async_block_till_done()
+
+    instance = hass.data[DATA_INSTANCE]
+
+    with util.write_lock_db_sqlite(instance):
+        # Database should be locked now, try writing SQL command
+        with instance.engine.connect() as connection:
+            with pytest.raises(OperationalError):
+                connection.execute(text("DROP TABLE events;"))

@@ -4,31 +4,21 @@ from __future__ import annotations
 import collections
 from collections.abc import Callable
 import dataclasses
-from typing import Dict, List
 
 import attr
 from zigpy import zcl
 import zigpy.profiles.zha
 import zigpy.profiles.zll
+from zigpy.types.named import EUI64
 
-from homeassistant.components.alarm_control_panel import DOMAIN as ALARM
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
-from homeassistant.components.climate import DOMAIN as CLIMATE
-from homeassistant.components.cover import DOMAIN as COVER
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
-from homeassistant.components.fan import DOMAIN as FAN
-from homeassistant.components.light import DOMAIN as LIGHT
-from homeassistant.components.lock import DOMAIN as LOCK
-from homeassistant.components.number import DOMAIN as NUMBER
-from homeassistant.components.sensor import DOMAIN as SENSOR
-from homeassistant.components.switch import DOMAIN as SWITCH
+from homeassistant.const import Platform
 
 # importing channels updates registries
 from . import channels as zha_channels  # noqa: F401 pylint: disable=unused-import
 from .decorators import CALLABLE_T, DictRegistry, SetRegistry
 from .typing import ChannelType
 
-GROUP_ENTITY_DOMAINS = [LIGHT, SWITCH, FAN]
+GROUP_ENTITY_DOMAINS = [Platform.LIGHT, Platform.SWITCH, Platform.FAN]
 
 PHILLIPS_REMOTE_CLUSTER = 0xFC00
 SMARTTHINGS_ACCELERATION_CLUSTER = 0xFC02
@@ -63,32 +53,15 @@ REMOTE_DEVICE_TYPES = collections.defaultdict(list, REMOTE_DEVICE_TYPES)
 SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     # this works for now but if we hit conflicts we can break it out to
     # a different dict that is keyed by manufacturer
-    SMARTTHINGS_ACCELERATION_CLUSTER: BINARY_SENSOR,
-    SMARTTHINGS_HUMIDITY_CLUSTER: SENSOR,
-    VOC_LEVEL_CLUSTER: SENSOR,
-    zcl.clusters.closures.DoorLock.cluster_id: LOCK,
-    zcl.clusters.closures.WindowCovering.cluster_id: COVER,
-    zcl.clusters.general.BinaryInput.cluster_id: BINARY_SENSOR,
-    zcl.clusters.general.AnalogInput.cluster_id: SENSOR,
-    zcl.clusters.general.AnalogOutput.cluster_id: NUMBER,
-    zcl.clusters.general.MultistateInput.cluster_id: SENSOR,
-    zcl.clusters.general.OnOff.cluster_id: SWITCH,
-    zcl.clusters.general.PowerConfiguration.cluster_id: SENSOR,
-    zcl.clusters.hvac.Fan.cluster_id: FAN,
-    zcl.clusters.measurement.CarbonDioxideConcentration.cluster_id: SENSOR,
-    zcl.clusters.measurement.CarbonMonoxideConcentration.cluster_id: SENSOR,
-    zcl.clusters.measurement.FormaldehydeConcentration.cluster_id: SENSOR,
-    zcl.clusters.measurement.IlluminanceMeasurement.cluster_id: SENSOR,
-    zcl.clusters.measurement.OccupancySensing.cluster_id: BINARY_SENSOR,
-    zcl.clusters.measurement.PressureMeasurement.cluster_id: SENSOR,
-    zcl.clusters.measurement.RelativeHumidity.cluster_id: SENSOR,
-    zcl.clusters.measurement.TemperatureMeasurement.cluster_id: SENSOR,
-    zcl.clusters.security.IasZone.cluster_id: BINARY_SENSOR,
+    zcl.clusters.general.AnalogOutput.cluster_id: Platform.NUMBER,
+    zcl.clusters.general.MultistateInput.cluster_id: Platform.SENSOR,
+    zcl.clusters.general.OnOff.cluster_id: Platform.SWITCH,
+    zcl.clusters.hvac.Fan.cluster_id: Platform.FAN,
 }
 
 SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {
-    zcl.clusters.general.OnOff.cluster_id: BINARY_SENSOR,
-    zcl.clusters.security.IasAce.cluster_id: ALARM,
+    zcl.clusters.general.OnOff.cluster_id: Platform.BINARY_SENSOR,
+    zcl.clusters.security.IasAce.cluster_id: Platform.ALARM_CONTROL_PANEL,
 }
 
 BINDABLE_CLUSTERS = SetRegistry()
@@ -96,30 +69,31 @@ CHANNEL_ONLY_CLUSTERS = SetRegistry()
 
 DEVICE_CLASS = {
     zigpy.profiles.zha.PROFILE_ID: {
-        SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE: DEVICE_TRACKER,
-        zigpy.profiles.zha.DeviceType.THERMOSTAT: CLIMATE,
-        zigpy.profiles.zha.DeviceType.COLOR_DIMMABLE_LIGHT: LIGHT,
-        zigpy.profiles.zha.DeviceType.COLOR_TEMPERATURE_LIGHT: LIGHT,
-        zigpy.profiles.zha.DeviceType.DIMMABLE_BALLAST: LIGHT,
-        zigpy.profiles.zha.DeviceType.DIMMABLE_LIGHT: LIGHT,
-        zigpy.profiles.zha.DeviceType.DIMMABLE_PLUG_IN_UNIT: LIGHT,
-        zigpy.profiles.zha.DeviceType.EXTENDED_COLOR_LIGHT: LIGHT,
-        zigpy.profiles.zha.DeviceType.LEVEL_CONTROLLABLE_OUTPUT: COVER,
-        zigpy.profiles.zha.DeviceType.ON_OFF_BALLAST: SWITCH,
-        zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT: LIGHT,
-        zigpy.profiles.zha.DeviceType.ON_OFF_PLUG_IN_UNIT: SWITCH,
-        zigpy.profiles.zha.DeviceType.SHADE: COVER,
-        zigpy.profiles.zha.DeviceType.SMART_PLUG: SWITCH,
-        zigpy.profiles.zha.DeviceType.IAS_ANCILLARY_CONTROL: ALARM,
+        SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE: Platform.DEVICE_TRACKER,
+        zigpy.profiles.zha.DeviceType.THERMOSTAT: Platform.CLIMATE,
+        zigpy.profiles.zha.DeviceType.COLOR_DIMMABLE_LIGHT: Platform.LIGHT,
+        zigpy.profiles.zha.DeviceType.COLOR_TEMPERATURE_LIGHT: Platform.LIGHT,
+        zigpy.profiles.zha.DeviceType.DIMMABLE_BALLAST: Platform.LIGHT,
+        zigpy.profiles.zha.DeviceType.DIMMABLE_LIGHT: Platform.LIGHT,
+        zigpy.profiles.zha.DeviceType.DIMMABLE_PLUG_IN_UNIT: Platform.LIGHT,
+        zigpy.profiles.zha.DeviceType.EXTENDED_COLOR_LIGHT: Platform.LIGHT,
+        zigpy.profiles.zha.DeviceType.LEVEL_CONTROLLABLE_OUTPUT: Platform.COVER,
+        zigpy.profiles.zha.DeviceType.ON_OFF_BALLAST: Platform.SWITCH,
+        zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT: Platform.LIGHT,
+        zigpy.profiles.zha.DeviceType.ON_OFF_PLUG_IN_UNIT: Platform.SWITCH,
+        zigpy.profiles.zha.DeviceType.SHADE: Platform.COVER,
+        zigpy.profiles.zha.DeviceType.SMART_PLUG: Platform.SWITCH,
+        zigpy.profiles.zha.DeviceType.IAS_ANCILLARY_CONTROL: Platform.ALARM_CONTROL_PANEL,
+        zigpy.profiles.zha.DeviceType.IAS_WARNING_DEVICE: Platform.SIREN,
     },
     zigpy.profiles.zll.PROFILE_ID: {
-        zigpy.profiles.zll.DeviceType.COLOR_LIGHT: LIGHT,
-        zigpy.profiles.zll.DeviceType.COLOR_TEMPERATURE_LIGHT: LIGHT,
-        zigpy.profiles.zll.DeviceType.DIMMABLE_LIGHT: LIGHT,
-        zigpy.profiles.zll.DeviceType.DIMMABLE_PLUGIN_UNIT: LIGHT,
-        zigpy.profiles.zll.DeviceType.EXTENDED_COLOR_LIGHT: LIGHT,
-        zigpy.profiles.zll.DeviceType.ON_OFF_LIGHT: LIGHT,
-        zigpy.profiles.zll.DeviceType.ON_OFF_PLUGIN_UNIT: SWITCH,
+        zigpy.profiles.zll.DeviceType.COLOR_LIGHT: Platform.LIGHT,
+        zigpy.profiles.zll.DeviceType.COLOR_TEMPERATURE_LIGHT: Platform.LIGHT,
+        zigpy.profiles.zll.DeviceType.DIMMABLE_LIGHT: Platform.LIGHT,
+        zigpy.profiles.zll.DeviceType.DIMMABLE_PLUGIN_UNIT: Platform.LIGHT,
+        zigpy.profiles.zll.DeviceType.EXTENDED_COLOR_LIGHT: Platform.LIGHT,
+        zigpy.profiles.zll.DeviceType.ON_OFF_LIGHT: Platform.LIGHT,
+        zigpy.profiles.zll.DeviceType.ON_OFF_PLUGIN_UNIT: Platform.SWITCH,
     },
 }
 DEVICE_CLASS = collections.defaultdict(dict, DEVICE_CLASS)
@@ -143,12 +117,10 @@ def set_or_callable(value):
 class MatchRule:
     """Match a ZHA Entity to a channel name or generic id."""
 
-    channel_names: Callable | set[str] | str = attr.ib(
+    channel_names: set[str] | str = attr.ib(
         factory=frozenset, converter=set_or_callable
     )
-    generic_ids: Callable | set[str] | str = attr.ib(
-        factory=frozenset, converter=set_or_callable
-    )
+    generic_ids: set[str] | str = attr.ib(factory=frozenset, converter=set_or_callable)
     manufacturers: Callable | set[str] | str = attr.ib(
         factory=frozenset, converter=set_or_callable
     )
@@ -158,8 +130,6 @@ class MatchRule:
     aux_channels: Callable | set[str] | str = attr.ib(
         factory=frozenset, converter=set_or_callable
     )
-    # for multi entities, stop further processing on a match for a component
-    stop_on_match: bool = attr.ib(default=False)
 
     @property
     def weight(self) -> int:
@@ -245,21 +215,23 @@ class EntityClassAndChannels:
     claimed_channel: list[ChannelType]
 
 
-RegistryDictType = Dict[str, Dict[MatchRule, CALLABLE_T]]
-MultiRegistryDictType = Dict[str, Dict[MatchRule, List[CALLABLE_T]]]
-GroupRegistryDictType = Dict[str, CALLABLE_T]
-
-
 class ZHAEntityRegistry:
     """Channel to ZHA Entity mapping."""
 
     def __init__(self):
         """Initialize Registry instance."""
-        self._strict_registry: RegistryDictType = collections.defaultdict(dict)
-        self._multi_entity_registry: MultiRegistryDictType = collections.defaultdict(
-            lambda: collections.defaultdict(list)
+        self._strict_registry: dict[
+            str, dict[MatchRule, CALLABLE_T]
+        ] = collections.defaultdict(dict)
+        self._multi_entity_registry: dict[
+            str, dict[int | str | None, dict[MatchRule, list[CALLABLE_T]]]
+        ] = collections.defaultdict(
+            lambda: collections.defaultdict(lambda: collections.defaultdict(list))
         )
-        self._group_registry: GroupRegistryDictType = {}
+        self._group_registry: dict[str, CALLABLE_T] = {}
+        self.single_device_matches: dict[
+            Platform, dict[EUI64, list[str]]
+        ] = collections.defaultdict(lambda: collections.defaultdict(list))
 
     def get_entity(
         self,
@@ -283,23 +255,22 @@ class ZHAEntityRegistry:
         manufacturer: str,
         model: str,
         channels: list[ChannelType],
-        components: set | None = None,
     ) -> tuple[dict[str, list[EntityClassAndChannels]], list[ChannelType]]:
         """Match ZHA Channels to potentially multiple ZHA Entity classes."""
         result: dict[str, list[EntityClassAndChannels]] = collections.defaultdict(list)
         all_claimed: set[ChannelType] = set()
-        for component in components or self._multi_entity_registry:
-            matches = self._multi_entity_registry[component]
-            sorted_matches = sorted(matches, key=lambda x: x.weight, reverse=True)
-            for match in sorted_matches:
-                if match.strict_matched(manufacturer, model, channels):
-                    claimed = match.claim_channels(channels)
-                    for ent_class in self._multi_entity_registry[component][match]:
-                        ent_n_channels = EntityClassAndChannels(ent_class, claimed)
-                        result[component].append(ent_n_channels)
-                    all_claimed |= set(claimed)
-                    if match.stop_on_match:
-                        break
+        for component, stop_match_groups in self._multi_entity_registry.items():
+            for stop_match_grp, matches in stop_match_groups.items():
+                sorted_matches = sorted(matches, key=lambda x: x.weight, reverse=True)
+                for match in sorted_matches:
+                    if match.strict_matched(manufacturer, model, channels):
+                        claimed = match.claim_channels(channels)
+                        for ent_class in stop_match_groups[stop_match_grp][match]:
+                            ent_n_channels = EntityClassAndChannels(ent_class, claimed)
+                            result[component].append(ent_n_channels)
+                        all_claimed |= set(claimed)
+                        if stop_match_grp:
+                            break
 
         return result, list(all_claimed)
 
@@ -310,8 +281,8 @@ class ZHAEntityRegistry:
     def strict_match(
         self,
         component: str,
-        channel_names: Callable | set[str] | str = None,
-        generic_ids: Callable | set[str] | str = None,
+        channel_names: set[str] | str = None,
+        generic_ids: set[str] | str = None,
         manufacturers: Callable | set[str] | str = None,
         models: Callable | set[str] | str = None,
         aux_channels: Callable | set[str] | str = None,
@@ -335,12 +306,12 @@ class ZHAEntityRegistry:
     def multipass_match(
         self,
         component: str,
-        channel_names: Callable | set[str] | str = None,
-        generic_ids: Callable | set[str] | str = None,
+        channel_names: set[str] | str = None,
+        generic_ids: set[str] | str = None,
         manufacturers: Callable | set[str] | str = None,
         models: Callable | set[str] | str = None,
         aux_channels: Callable | set[str] | str = None,
-        stop_on_match: bool = False,
+        stop_on_match_group: int | str | None = None,
     ) -> Callable[[CALLABLE_T], CALLABLE_T]:
         """Decorate a loose match rule."""
 
@@ -350,7 +321,6 @@ class ZHAEntityRegistry:
             manufacturers,
             models,
             aux_channels,
-            stop_on_match,
         )
 
         def decorator(zha_entity: CALLABLE_T) -> CALLABLE_T:
@@ -358,7 +328,10 @@ class ZHAEntityRegistry:
 
             All non empty fields of a match rule must match.
             """
-            self._multi_entity_registry[component][rule].append(zha_entity)
+            # group the rules by channels
+            self._multi_entity_registry[component][stop_on_match_group][rule].append(
+                zha_entity
+            )
             return zha_entity
 
         return decorator
@@ -372,6 +345,21 @@ class ZHAEntityRegistry:
             return zha_ent
 
         return decorator
+
+    def prevent_entity_creation(self, platform: Platform, ieee: EUI64, key: str):
+        """Return True if the entity should not be created."""
+        platform_restrictions = self.single_device_matches[platform]
+        device_restrictions = platform_restrictions[ieee]
+        if key in device_restrictions:
+            return True
+        device_restrictions.append(key)
+        return False
+
+    def clean_up(self) -> None:
+        """Clean up post discovery."""
+        self.single_device_matches: dict[
+            Platform, dict[EUI64, list[str]]
+        ] = collections.defaultdict(lambda: collections.defaultdict(list))
 
 
 ZHA_ENTITIES = ZHAEntityRegistry()

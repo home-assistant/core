@@ -1,11 +1,21 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar"
+        },
         "step": {
             "user": {
                 "data": {
+                    "host": "Nome do host",
+                    "name": "Nome",
                     "password": "Senha",
                     "port": "Porta",
-                    "username": "Usu\u00e1rio"
+                    "ssl": "Usar um certificado SSL",
+                    "username": "Usu\u00e1rio",
+                    "verify_ssl": "Verifique o certificado SSL"
                 }
             }
         }

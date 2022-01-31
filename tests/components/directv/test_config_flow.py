@@ -1,4 +1,5 @@
 """Test the DirecTV config flow."""
+import dataclasses
 from unittest.mock import patch
 
 from aiohttp import ClientError as HTTPClientError
@@ -43,7 +44,7 @@ async def test_show_ssdp_form(
     """Test that the ssdp confirmation form is served."""
     mock_connection(aioclient_mock)
 
-    discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
     )
@@ -77,7 +78,7 @@ async def test_ssdp_cannot_connect(
     """Test we abort SSDP flow on connection error."""
     aioclient_mock.get("http://127.0.0.1:8080/info/getVersion", exc=HTTPClientError)
 
-    discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_SSDP},
@@ -94,7 +95,7 @@ async def test_ssdp_confirm_cannot_connect(
     """Test we abort SSDP flow on connection error."""
     aioclient_mock.get("http://127.0.0.1:8080/info/getVersion", exc=HTTPClientError)
 
-    discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_SSDP, CONF_HOST: HOST, CONF_NAME: HOST},
@@ -128,7 +129,7 @@ async def test_ssdp_device_exists_abort(
     """Test we abort SSDP flow if DirecTV receiver already configured."""
     await setup_integration(hass, aioclient_mock, skip_entry_setup=True)
 
-    discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_SSDP},
@@ -145,8 +146,8 @@ async def test_ssdp_with_receiver_id_device_exists_abort(
     """Test we abort SSDP flow if DirecTV receiver already configured."""
     await setup_integration(hass, aioclient_mock, skip_entry_setup=True)
 
-    discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
-    discovery_info[ATTR_UPNP_SERIAL] = UPNP_SERIAL
+    discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
+    discovery_info.upnp[ATTR_UPNP_SERIAL] = UPNP_SERIAL
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_SSDP},
@@ -180,7 +181,7 @@ async def test_ssdp_unknown_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort SSDP flow on unknown error."""
-    discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
     with patch(
         "homeassistant.components.directv.config_flow.DIRECTV.update",
         side_effect=Exception,
@@ -199,7 +200,7 @@ async def test_ssdp_confirm_unknown_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort SSDP flow on unknown error."""
-    discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
     with patch(
         "homeassistant.components.directv.config_flow.DIRECTV.update",
         side_effect=Exception,
@@ -249,7 +250,7 @@ async def test_full_ssdp_flow_implementation(
     """Test the full SSDP flow from start to finish."""
     mock_connection(aioclient_mock)
 
-    discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
     )

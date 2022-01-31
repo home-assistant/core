@@ -2,14 +2,14 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
+from collections.abc import Awaitable, Callable, Coroutine
 from functools import partial, wraps
 import inspect
 import logging
 import logging.handlers
 import queue
 import traceback
-from typing import Any, Awaitable, Callable, cast, overload
+from typing import Any, cast, overload
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant, callback, is_callback
@@ -106,7 +106,7 @@ def log_exception(format_err: Callable[..., Any], *args: Any) -> None:
 
 
 @overload
-def catch_log_exception(  # type: ignore
+def catch_log_exception(  # type: ignore[misc]
     func: Callable[..., Awaitable[Any]], format_err: Callable[..., Any], *args: Any
 ) -> Callable[..., Awaitable[None]]:
     """Overload for Callables that return an Awaitable."""

@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import LitterRobotControlEntity
+from .entity import LitterRobotConfigEntity
 from .hub import LitterRobotHub
 
 TYPE_CLEAN_CYCLE_WAIT_TIME_MINUTES = "Clean Cycle Wait Time Minutes"
@@ -23,17 +23,17 @@ async def async_setup_entry(
     """Set up Litter-Robot selects using config entry."""
     hub: LitterRobotHub = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities = [
-        LitterRobotSelect(
-            robot=robot, entity_type=TYPE_CLEAN_CYCLE_WAIT_TIME_MINUTES, hub=hub
-        )
-        for robot in hub.account.robots
-    ]
+    async_add_entities(
+        [
+            LitterRobotSelect(
+                robot=robot, entity_type=TYPE_CLEAN_CYCLE_WAIT_TIME_MINUTES, hub=hub
+            )
+            for robot in hub.account.robots
+        ]
+    )
 
-    async_add_entities(entities)
 
-
-class LitterRobotSelect(LitterRobotControlEntity, SelectEntity):
+class LitterRobotSelect(LitterRobotConfigEntity, SelectEntity):
     """Litter-Robot Select."""
 
     _attr_icon = "mdi:timer-outline"

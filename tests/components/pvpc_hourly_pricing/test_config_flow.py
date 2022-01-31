@@ -90,10 +90,9 @@ async def test_config_flow(
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test")
         check_valid_state(state, tariff=TARIFFS[1])
-        price_pbc = state.state
         assert pvpc_aioclient_mock.call_count == 2
-        assert state.attributes["period"] == "P2"
-        assert state.attributes["next_period"] == "P1"
+        assert state.attributes["period"] == "P1"
+        assert state.attributes["next_period"] == "P2"
         assert state.attributes["available_power"] == 4600
 
         # check options flow
@@ -111,10 +110,8 @@ async def test_config_flow(
         )
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test")
-        price_cym = state.state
         check_valid_state(state, tariff=TARIFFS[0])
         assert pvpc_aioclient_mock.call_count == 3
         assert state.attributes["period"] == "P2"
         assert state.attributes["next_period"] == "P1"
         assert state.attributes["available_power"] == 3000
-        assert price_cym < price_pbc

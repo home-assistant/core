@@ -2,7 +2,7 @@
   "domain": "tuya",
   "name": "Tuya",
   "documentation": "https://www.home-assistant.io/integrations/tuya",
-  "requirements": ["tuya-iot-py-sdk==0.6.3"],
+  "requirements": ["tuya-iot-py-sdk==0.6.6"],
   "dependencies": ["ffmpeg"],
   "codeowners": ["@Tuya", "@zlinoliver", "@METISU", "@frenck"],
   "config_flow": true,
@@ -19,5 +19,6 @@
     { "macaddress": "84E342*" },
     { "macaddress": "D4A651*" },
     { "macaddress": "D81F12*" }
-  ]
+  ],
+  "loggers": ["tuya_iot"]
 }

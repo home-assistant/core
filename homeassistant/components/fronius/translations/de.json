@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "invalid_host": "Ung\u00fcltiger Hostname oder IP-Adresse"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "flow_title": "{device}",
+        "step": {
+            "confirm_discovery": {
+                "description": "M\u00f6chtest du {device} zu Home Assistant hinzuf\u00fcgen?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Konfiguriere die IP-Adresse oder den lokalen Hostnamen deines Fronius-Ger\u00e4ts.",
+                "title": "Fronius SolarNet"
+            }
+        }
+    }
+}

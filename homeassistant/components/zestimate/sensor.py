@@ -1,4 +1,6 @@
 """Support for zestimate data from zillow.com."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -7,13 +9,14 @@ import voluptuous as vol
 import xmltodict
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "http://www.zillow.com/webservice/GetZestimate.htm"
-
-ATTRIBUTION = "Data provided by Zillow.com"
 
 CONF_ZPID = "zpid"
 
@@ -42,7 +45,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 SCAN_INTERVAL = timedelta(minutes=30)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Zestimate sensor."""
     name = config.get(CONF_NAME)
     properties = config[CONF_ZPID]
@@ -57,6 +65,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class ZestimateDataSensor(SensorEntity):
     """Implementation of a Zestimate sensor."""
+
+    _attr_attribution = "Data provided by Zillow.com"
 
     def __init__(self, name, params):
         """Initialize the sensor."""
@@ -91,7 +101,6 @@ class ZestimateDataSensor(SensorEntity):
         if self.data is not None:
             attributes = self.data
         attributes["address"] = self.address
-        attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
         return attributes
 
     @property

@@ -1,15 +1,22 @@
 """Support for the Nissan Leaf Carwings/Nissan Connect API."""
+from __future__ import annotations
+
 import asyncio
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
 import sys
+from typing import Any, cast
 
-from pycarwings2 import CarwingsError, Session
+from pycarwings2 import CarwingsError, Leaf, Session
+from pycarwings2.responses import (
+    CarwingsLatestBatteryStatusResponse,
+    CarwingsLatestClimateControlStatusResponse,
+)
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
-from homeassistant.core import callback
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME, Platform
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import (
@@ -18,37 +25,35 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import utcnow
 
+from .const import (
+    CONF_CHARGING_INTERVAL,
+    CONF_CLIMATE_INTERVAL,
+    CONF_FORCE_MILES,
+    CONF_INTERVAL,
+    CONF_VALID_REGIONS,
+    DATA_BATTERY,
+    DATA_CHARGING,
+    DATA_CLIMATE,
+    DATA_LEAF,
+    DATA_PLUGGED_IN,
+    DATA_RANGE_AC,
+    DATA_RANGE_AC_OFF,
+    DEFAULT_CHARGING_INTERVAL,
+    DEFAULT_CLIMATE_INTERVAL,
+    DEFAULT_INTERVAL,
+    DOMAIN,
+    INITIAL_UPDATE,
+    MAX_RESPONSE_ATTEMPTS,
+    MIN_UPDATE_INTERVAL,
+    PYCARWINGS2_SLEEP,
+    RESTRICTED_BATTERY,
+    RESTRICTED_INTERVAL,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "nissan_leaf"
-DATA_LEAF = "nissan_leaf_data"
-
-DATA_BATTERY = "battery"
-DATA_CHARGING = "charging"
-DATA_PLUGGED_IN = "plugged_in"
-DATA_CLIMATE = "climate"
-DATA_RANGE_AC = "range_ac_on"
-DATA_RANGE_AC_OFF = "range_ac_off"
-
-CONF_INTERVAL = "update_interval"
-CONF_CHARGING_INTERVAL = "update_interval_charging"
-CONF_CLIMATE_INTERVAL = "update_interval_climate"
-CONF_VALID_REGIONS = ["NNA", "NE", "NCI", "NMA", "NML"]
-CONF_FORCE_MILES = "force_miles"
-
-INITIAL_UPDATE = timedelta(seconds=15)
-MIN_UPDATE_INTERVAL = timedelta(minutes=2)
-DEFAULT_INTERVAL = timedelta(hours=1)
-DEFAULT_CHARGING_INTERVAL = timedelta(minutes=15)
-DEFAULT_CLIMATE_INTERVAL = timedelta(minutes=5)
-RESTRICTED_BATTERY = 2
-RESTRICTED_INTERVAL = timedelta(hours=12)
-
-MAX_RESPONSE_ATTEMPTS = 3
-
-PYCARWINGS2_SLEEP = 30
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -82,7 +87,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["sensor", "switch", "binary_sensor"]
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH, Platform.BINARY_SENSOR, Platform.BUTTON]
 
 SIGNAL_UPDATE_LEAF = "nissan_leaf_update"
 
@@ -94,13 +99,11 @@ UPDATE_LEAF_SCHEMA = vol.Schema({vol.Required(ATTR_VIN): cv.string})
 START_CHARGE_LEAF_SCHEMA = vol.Schema({vol.Required(ATTR_VIN): cv.string})
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Nissan Leaf integration."""
 
-    async def async_handle_update(service):
+    async def async_handle_update(service: ServiceCall) -> None:
         """Handle service to update leaf data from Nissan servers."""
-        # It would be better if this was changed to use nickname, or
-        # an entity name rather than a vin.
         vin = service.data[ATTR_VIN]
 
         if vin in hass.data[DATA_LEAF]:
@@ -109,10 +112,13 @@ def setup(hass, config):
         else:
             _LOGGER.debug("Vin %s not recognised for update", vin)
 
-    async def async_handle_start_charge(service):
+    async def async_handle_start_charge(service: ServiceCall) -> None:
         """Handle service to start charging."""
-        # It would be better if this was changed to use nickname, or
-        # an entity name rather than a vin.
+        _LOGGER.warning(
+            "The 'nissan_leaf.start_charge' service is deprecated and has been"
+            "replaced by a dedicated button entity: Please use that to start"
+            "the charge instead"
+        )
         vin = service.data[ATTR_VIN]
 
         if vin in hass.data[DATA_LEAF]:
@@ -134,14 +140,13 @@ def setup(hass, config):
         else:
             _LOGGER.debug("Vin %s not recognised for update", vin)
 
-    def setup_leaf(car_config):
+    def setup_leaf(car_config: dict[str, Any]) -> None:
         """Set up a car."""
         _LOGGER.debug("Logging into You+Nissan")
 
-        username = car_config[CONF_USERNAME]
-        password = car_config[CONF_PASSWORD]
-        region = car_config[CONF_REGION]
-        leaf = None
+        username: str = car_config[CONF_USERNAME]
+        password: str = car_config[CONF_PASSWORD]
+        region: str = car_config[CONF_REGION]
 
         try:
             # This might need to be made async (somehow) causes
@@ -153,13 +158,13 @@ def setup(hass, config):
                 "Unable to fetch car details..."
                 " do you actually have a Leaf connected to your account?"
             )
-            return False
+            return
         except CarwingsError:
             _LOGGER.error(
                 "An unknown error occurred while connecting to Nissan: %s",
                 sys.exc_info()[0],
             )
-            return False
+            return
 
         _LOGGER.warning(
             "WARNING: This may poll your Leaf too often, and drain the 12V"
@@ -195,10 +200,15 @@ def setup(hass, config):
     return True
 
 
-def _extract_start_date(battery_info):
+def _extract_start_date(
+    battery_info: CarwingsLatestBatteryStatusResponse,
+) -> datetime | None:
     """Extract the server date from the battery response."""
     try:
-        return battery_info.answer["BatteryStatusRecords"]["OperationDateAndTime"]
+        return cast(
+            datetime,
+            battery_info.answer["BatteryStatusRecords"]["OperationDateAndTime"],
+        )
     except KeyError:
         return None
 
@@ -206,28 +216,30 @@ def _extract_start_date(battery_info):
 class LeafDataStore:
     """Nissan Leaf Data Store."""
 
-    def __init__(self, hass, leaf, car_config):
+    def __init__(
+        self, hass: HomeAssistant, leaf: Leaf, car_config: dict[str, Any]
+    ) -> None:
         """Initialise the data store."""
         self.hass = hass
         self.leaf = leaf
         self.car_config = car_config
         self.force_miles = car_config[CONF_FORCE_MILES]
-        self.data = {}
-        self.data[DATA_CLIMATE] = False
-        self.data[DATA_BATTERY] = 0
-        self.data[DATA_CHARGING] = False
-        self.data[DATA_RANGE_AC] = 0
-        self.data[DATA_RANGE_AC_OFF] = 0
-        self.data[DATA_PLUGGED_IN] = False
-        self.next_update = None
-        self.last_check = None
-        self.request_in_progress = False
+        self.data: dict[str, Any] = {}
+        self.data[DATA_CLIMATE] = None
+        self.data[DATA_BATTERY] = None
+        self.data[DATA_CHARGING] = None
+        self.data[DATA_RANGE_AC] = None
+        self.data[DATA_RANGE_AC_OFF] = None
+        self.data[DATA_PLUGGED_IN] = None
+        self.next_update: datetime | None = None
+        self.last_check: datetime | None = None
+        self.request_in_progress: bool = False
         # Timestamp of last successful response from battery or climate.
-        self.last_battery_response = None
-        self.last_climate_response = None
-        self._remove_listener = None
+        self.last_battery_response: datetime | None = None
+        self.last_climate_response: datetime | None = None
+        self._remove_listener: CALLBACK_TYPE | None = None
 
-    async def async_update_data(self, now):
+    async def async_update_data(self, now: datetime) -> None:
         """Update data from nissan leaf."""
         # Prevent against a previously scheduled update and an ad-hoc update
         # started from an update from both being triggered.
@@ -241,11 +253,13 @@ class LeafDataStore:
         await self.async_refresh_data(now)
         self.next_update = self.get_next_interval()
         _LOGGER.debug("Next update=%s", self.next_update)
-        self._remove_listener = async_track_point_in_utc_time(
-            self.hass, self.async_update_data, self.next_update
-        )
 
-    def get_next_interval(self):
+        if self.next_update is not None:
+            self._remove_listener = async_track_point_in_utc_time(
+                self.hass, self.async_update_data, self.next_update
+            )
+
+    def get_next_interval(self) -> datetime:
         """Calculate when the next update should occur."""
         base_interval = self.car_config[CONF_INTERVAL]
         climate_interval = self.car_config[CONF_CLIMATE_INTERVAL]
@@ -278,7 +292,7 @@ class LeafDataStore:
 
         return utcnow() + interval
 
-    async def async_refresh_data(self, now):
+    async def async_refresh_data(self, now: datetime) -> None:
         """Refresh the leaf data and update the datastore."""
         if self.request_in_progress:
             _LOGGER.debug("Refresh currently in progress for %s", self.leaf.nickname)
@@ -333,12 +347,14 @@ class LeafDataStore:
         self.request_in_progress = False
         async_dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
 
-    async def async_get_battery(self):
+    async def async_get_battery(
+        self,
+    ) -> CarwingsLatestBatteryStatusResponse:
         """Request battery update from Nissan servers."""
         try:
             # Request battery update from the car
             _LOGGER.debug("Requesting battery update, %s", self.leaf.vin)
-            start_date = None
+            start_date: datetime | None = None
             try:
                 start_server_info = await self.hass.async_add_executor_job(
                     self.leaf.get_latest_battery_status
@@ -409,7 +425,9 @@ class LeafDataStore:
             _LOGGER.error("An error occurred parsing response from server")
             return None
 
-    async def async_get_climate(self):
+    async def async_get_climate(
+        self,
+    ) -> CarwingsLatestClimateControlStatusResponse:
         """Request climate data from Nissan servers."""
         try:
             return await self.hass.async_add_executor_job(
@@ -421,7 +439,7 @@ class LeafDataStore:
             )
             return None
 
-    async def async_set_climate(self, toggle):
+    async def async_set_climate(self, toggle: bool) -> bool:
         """Set climate control mode via Nissan servers."""
         climate_result = None
         if toggle:
@@ -454,20 +472,39 @@ class LeafDataStore:
         if climate_result is not None:
             _LOGGER.debug("Climate result: %s", climate_result.__dict__)
             async_dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
-            return climate_result.is_hvac_running == toggle
+            return bool(climate_result.is_hvac_running) == toggle
 
         _LOGGER.debug("Climate result not returned by Nissan servers")
         return False
+
+    async def async_start_charging(self) -> None:
+        """Request to start charging the car. Used by the button platform."""
+        await self.hass.async_add_executor_job(self.leaf.start_charging)
+        self.schedule_update()
+
+    def schedule_update(self) -> None:
+        """Set the next update to be triggered in a minute."""
+
+        # Remove any future updates that may be scheduled
+        if self._remove_listener:
+            self._remove_listener()
+        # Schedule update for one minute in the future - so that previously sent
+        # requests can be processed by Nissan servers or the car.
+        update_at = utcnow() + timedelta(minutes=1)
+        self.next_update = update_at
+        self._remove_listener = async_track_point_in_utc_time(
+            self.hass, self.async_update_data, update_at
+        )
 
 
 class LeafEntity(Entity):
     """Base class for Nissan Leaf entity."""
 
-    def __init__(self, car):
+    def __init__(self, car: Leaf) -> None:
         """Store LeafDataStore upon init."""
         self.car = car
 
-    def log_registration(self):
+    def log_registration(self) -> None:
         """Log registration."""
         _LOGGER.debug(
             "Registered %s integration for VIN %s",
@@ -476,7 +513,7 @@ class LeafEntity(Entity):
         )
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return default attributes for Nissan leaf entities."""
         return {
             "next_update": self.car.next_update,
@@ -486,7 +523,7 @@ class LeafEntity(Entity):
             "vin": self.car.leaf.vin,
         }
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.log_registration()
         self.async_on_remove(
@@ -496,6 +533,6 @@ class LeafEntity(Entity):
         )
 
     @callback
-    def _update_callback(self):
+    def _update_callback(self) -> None:
         """Update the state."""
         self.async_schedule_update_ha_state(True)

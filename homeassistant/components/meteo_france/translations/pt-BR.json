@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Cidade j\u00e1 configurada",
-            "unknown": "Erro desconhecido: tente novamente mais tarde"
+            "already_configured": "Localiza\u00e7\u00e3o j\u00e1 est\u00e1 configurada",
+            "unknown": "Erro inesperado"
         },
         "step": {
             "user": {

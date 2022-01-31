@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.dispatcher import (
@@ -26,7 +26,6 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -53,7 +52,7 @@ def get_api(
     """Get the Netgear API and login to it."""
     api: Netgear = Netgear(password, host, username, port, ssl)
 
-    if not api.login():
+    if not api.login_try_port():
         raise CannotLoginException
 
     return api
@@ -61,7 +60,7 @@ def get_api(
 
 @callback
 def async_setup_netgear_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
     entity_class_generator: Callable[[NetgearRouter, dict], list],
@@ -103,7 +102,7 @@ def async_add_new_entities(router, async_add_entities, tracked, entity_class_gen
 class NetgearRouter:
     """Representation of a Netgear router."""
 
-    def __init__(self, hass: HomeAssistantType, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize a Netgear router."""
         self.hass = hass
         self.entry = entry
@@ -150,6 +149,14 @@ class NetgearRouter:
             if self.model.startswith(model):
                 self.method_version = 2
 
+        if self.method_version == 2:
+            if not self._api.get_attached_devices_2():
+                _LOGGER.error(
+                    "Netgear Model '%s' in MODELS_V2 list, but failed to get attached devices using V2",
+                    self.model,
+                )
+                self.method_version = 1
+
     async def async_setup(self) -> None:
         """Set up a Netgear router."""
         await self.hass.async_add_executor_job(self._setup)
@@ -173,6 +180,8 @@ class NetgearRouter:
                 "link_rate": None,
                 "signal": None,
                 "ip": None,
+                "ssid": None,
+                "conn_ap_mac": None,
             }
 
         await self.async_update_device_trackers()
@@ -234,6 +243,16 @@ class NetgearRouter:
     def signal_device_update(self) -> str:
         """Event specific per Netgear entry to signal updates in devices."""
         return f"{DOMAIN}-{self._host}-device-update"
+
+    @property
+    def port(self) -> int:
+        """Port used by the API."""
+        return self._api.port
+
+    @property
+    def ssl(self) -> bool:
+        """SSL used by the API."""
+        return self._api.ssl
 
 
 class NetgearDeviceEntity(Entity):

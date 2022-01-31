@@ -11,10 +11,14 @@
             "user": {
                 "data": {
                     "api_key": "API Anahtar\u0131",
+                    "language": "Dil",
                     "latitude": "Enlem",
                     "longitude": "Boylam",
-                    "mode": "Mod"
-                }
+                    "mode": "Mod",
+                    "name": "Cihaz\u0131n ad\u0131"
+                },
+                "description": "OpenWeatherMap entegrasyonunu ayarlay\u0131n. API anahtar\u0131 olu\u015fturmak i\u00e7in https://openweathermap.org/appid adresine gidin.",
+                "title": "OpenWeatherMap"
             }
         }
     },
@@ -22,6 +26,7 @@
         "step": {
             "init": {
                 "data": {
+                    "language": "Dil",
                     "mode": "Mod"
                 }
             }

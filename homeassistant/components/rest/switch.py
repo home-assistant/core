@@ -1,4 +1,6 @@
 """Support for RESTful switches."""
+from __future__ import annotations
+
 import asyncio
 from http import HTTPStatus
 import logging
@@ -24,8 +26,11 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 CONF_BODY_OFF = "body_off"
@@ -46,8 +51,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_RESOURCE): cv.url,
         vol.Optional(CONF_STATE_RESOURCE): cv.url,
-        vol.Optional(CONF_HEADERS): {cv.string: cv.string},
-        vol.Optional(CONF_PARAMS): {cv.string: cv.string},
+        vol.Optional(CONF_HEADERS): {cv.string: cv.template},
+        vol.Optional(CONF_PARAMS): {cv.string: cv.template},
         vol.Optional(CONF_BODY_OFF, default=DEFAULT_BODY_OFF): cv.template,
         vol.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON): cv.template,
         vol.Optional(CONF_IS_ON_TEMPLATE): cv.template,
@@ -64,7 +69,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the RESTful switch."""
     body_off = config.get(CONF_BODY_OFF)
     body_on = config.get(CONF_BODY_ON)
@@ -75,14 +85,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     name = config.get(CONF_NAME)
     device_class = config.get(CONF_DEVICE_CLASS)
     username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
     resource = config.get(CONF_RESOURCE)
     state_resource = config.get(CONF_STATE_RESOURCE) or resource
     verify_ssl = config.get(CONF_VERIFY_SSL)
 
     auth = None
     if username:
-        auth = aiohttp.BasicAuth(username, password=password)
+        auth = aiohttp.BasicAuth(username, password=config[CONF_PASSWORD])
 
     if is_on_template is not None:
         is_on_template.hass = hass
@@ -90,6 +99,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         body_on.hass = hass
     if body_off is not None:
         body_off.hass = hass
+
+    template.attach(hass, headers)
+    template.attach(hass, params)
     timeout = config.get(CONF_TIMEOUT)
 
     try:
@@ -204,13 +216,16 @@ class RestSwitch(SwitchEntity):
         """Send a state update to the device."""
         websession = async_get_clientsession(self.hass, self._verify_ssl)
 
-        with async_timeout.timeout(self._timeout):
+        rendered_headers = template.render_complex(self._headers, parse_result=False)
+        rendered_params = template.render_complex(self._params)
+
+        async with async_timeout.timeout(self._timeout):
             req = await getattr(websession, self._method)(
                 self._resource,
                 auth=self._auth,
                 data=bytes(body, "utf-8"),
-                headers=self._headers,
-                params=self._params,
+                headers=rendered_headers,
+                params=rendered_params,
             )
             return req
 
@@ -227,12 +242,15 @@ class RestSwitch(SwitchEntity):
         """Get the latest data from REST API and update the state."""
         websession = async_get_clientsession(hass, self._verify_ssl)
 
-        with async_timeout.timeout(self._timeout):
+        rendered_headers = template.render_complex(self._headers, parse_result=False)
+        rendered_params = template.render_complex(self._params)
+
+        async with async_timeout.timeout(self._timeout):
             req = await websession.get(
                 self._state_resource,
                 auth=self._auth,
-                headers=self._headers,
-                params=self._params,
+                headers=rendered_headers,
+                params=rendered_params,
             )
             text = await req.text()
 

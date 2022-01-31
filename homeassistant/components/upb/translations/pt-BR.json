@@ -1,10 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dispositivo j\u00e1 configurado"
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
         },
         "error": {
-            "unknown": "Erro inesperado."
+            "cannot_connect": "Falha ao conectar",
+            "unknown": "Erro inesperado"
         },
         "step": {
             "user": {

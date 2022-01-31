@@ -3,31 +3,27 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 import pysma
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryNotReady
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
-    CONF_PATH,
     CONF_SCAN_INTERVAL,
-    CONF_SENSORS,
     CONF_SSL,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    CONF_CUSTOM,
-    CONF_FACTOR,
     CONF_GROUP,
-    CONF_KEY,
-    CONF_UNIT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     PLATFORMS,
@@ -39,94 +35,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def _parse_legacy_options(
-    entry: ConfigEntry, sensor_def: pysma.sensor.Sensors
-) -> list[str]:
-    """Parse legacy configuration options.
-
-    This will parse the legacy CONF_SENSORS and CONF_CUSTOM configuration options
-    to support deprecated yaml config from platform setup.
-    """
-
-    # Add sensors from the custom config
-    sensor_def.add(
-        [
-            pysma.sensor.Sensor(
-                o[CONF_KEY], n, o[CONF_UNIT], o[CONF_FACTOR], o.get(CONF_PATH)
-            )
-            for n, o in entry.data.get(CONF_CUSTOM).items()
-        ]
-    )
-
-    # Parsing of sensors configuration
-    if not (config_sensors := entry.data.get(CONF_SENSORS)):
-        return []
-
-    # Support import of legacy config that should have been removed from 0.99, but was still functional
-    # See also #25880 and #26306. Functional support was dropped in #48003
-    if isinstance(config_sensors, dict):
-        config_sensors_list = []
-
-        for name, attr in config_sensors.items():
-            config_sensors_list.append(name)
-            config_sensors_list.extend(attr)
-
-        config_sensors = config_sensors_list
-
-    # Find and replace sensors removed from pysma
-    # This only alters the config, the actual sensor migration takes place in _migrate_old_unique_ids
-    for sensor in config_sensors.copy():
-        if sensor in pysma.const.LEGACY_MAP:
-            config_sensors.remove(sensor)
-            config_sensors.append(pysma.const.LEGACY_MAP[sensor]["new_sensor"])
-
-    # Only sensors from config should be enabled
-    for sensor in sensor_def:
-        sensor.enabled = sensor.name in config_sensors
-
-    return config_sensors
-
-
-def _migrate_old_unique_ids(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    sensor_def: pysma.sensor.Sensors,
-    config_sensors: list[str],
-) -> None:
-    """Migrate legacy sensor entity_id format to new format."""
-    entity_registry = er.async_get(hass)
-
-    # Create list of all possible sensor names
-    possible_sensors = set(
-        config_sensors + [s.name for s in sensor_def] + list(pysma.const.LEGACY_MAP)
-    )
-
-    for sensor in possible_sensors:
-        if sensor in sensor_def:
-            pysma_sensor = sensor_def[sensor]
-            original_key = pysma_sensor.key
-        elif sensor in pysma.const.LEGACY_MAP:
-            # If sensor was removed from pysma we will remap it to the new sensor
-            legacy_sensor = pysma.const.LEGACY_MAP[sensor]
-            pysma_sensor = sensor_def[legacy_sensor["new_sensor"]]
-            original_key = legacy_sensor["old_key"]
-        else:
-            _LOGGER.error("%s does not exist", sensor)
-            continue
-
-        # Find entity_id using previous format of unique ID
-        entity_id = entity_registry.async_get_entity_id(
-            "sensor", "sma", f"sma-{original_key}-{sensor}"
-        )
-
-        if not entity_id:
-            continue
-
-        # Change unique_id to new format using the device serial in entry.unique_id
-        new_unique_id = f"{entry.unique_id}-{pysma_sensor.key}_{pysma_sensor.key_idx}"
-        entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -143,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         # Get updated device info
-        device_info = await sma.device_info()
+        sma_device_info = await sma.device_info()
         # Get all device sensors
         sensor_def = await sma.get_sensors()
     except (
@@ -152,10 +60,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ) as exc:
         raise ConfigEntryNotReady from exc
 
-    # Parse legacy options if initial setup was done from yaml
-    if entry.source == SOURCE_IMPORT:
-        config_sensors = _parse_legacy_options(entry, sensor_def)
-        _migrate_old_unique_ids(hass, entry, sensor_def, config_sensors)
+    if TYPE_CHECKING:
+        assert entry.unique_id
+
+    # Create DeviceInfo object from sma_device_info
+    device_info = DeviceInfo(
+        configuration_url=url,
+        identifiers={(DOMAIN, entry.unique_id)},
+        manufacturer=sma_device_info["manufacturer"],
+        model=sma_device_info["type"],
+        name=sma_device_info["name"],
+        sw_version=sma_device_info["sw_version"],
+    )
 
     # Define the coordinator
     async def async_update_data():

@@ -77,6 +77,16 @@ class HlsStreamOutput(StreamOutput):
             or self.stream_settings.min_segment_duration
         )
 
+    def discontinuity(self) -> None:
+        """Remove incomplete segment from deque."""
+        self._hass.loop.call_soon_threadsafe(self._async_discontinuity)
+
+    @callback
+    def _async_discontinuity(self) -> None:
+        """Remove incomplete segment from deque in event loop."""
+        if self._segments and not self._segments[-1].complete:
+            self._segments.pop()
+
 
 class HlsMasterPlaylistView(StreamView):
     """Stream view used only for Chromecast compatibility."""

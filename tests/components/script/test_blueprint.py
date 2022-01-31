@@ -1,8 +1,8 @@
 """Test script blueprints."""
 import asyncio
+from collections.abc import Iterator
 import contextlib
 import pathlib
-from typing import Iterator
 from unittest.mock import patch
 
 from homeassistant.components import script

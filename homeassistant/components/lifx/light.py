@@ -1,4 +1,6 @@
 """Support for LIFX lights."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 from functools import partial
@@ -35,6 +37,7 @@ from homeassistant.components.light import (
     LightEntity,
     preprocess_turn_on_alternatives,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -42,12 +45,14 @@ from homeassistant.const import (
     ATTR_SW_VERSION,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
 from . import (
@@ -119,19 +124,19 @@ LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
         ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
         vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
         vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): vol.All(
-            vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple)
+            vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte))
         ),
         vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP): vol.All(
-            vol.ExactSequence((cv.small_float, cv.small_float)), vol.Coerce(tuple)
+            vol.Coerce(tuple), vol.ExactSequence((cv.small_float, cv.small_float))
         ),
         vol.Exclusive(ATTR_HS_COLOR, COLOR_GROUP): vol.All(
+            vol.Coerce(tuple),
             vol.ExactSequence(
                 (
                     vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
                     vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
                 )
             ),
-            vol.Coerce(tuple),
         ),
         vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP): vol.All(
             vol.Coerce(int), vol.Range(min=1)
@@ -168,12 +173,21 @@ def aiolifx_effects():
     return aiolifx_effects_module
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the LIFX light platform. Obsolete."""
     _LOGGER.warning("LIFX no longer works with light platform configuration")
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up LIFX from a config entry."""
     # Priority 1: manual config
     if not (interfaces := hass.data[LIFX_DOMAIN].get(DOMAIN)):
@@ -190,8 +204,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     for interface in interfaces:
         lifx_manager.start_discovery(interface)
-
-    return True
 
 
 def lifx_features(bulb):
@@ -298,7 +310,7 @@ class LIFXManager:
     def register_effects(self):
         """Register the LIFX effects as hass service calls."""
 
-        async def service_handler(service):
+        async def service_handler(service: ServiceCall) -> None:
             """Apply a service, i.e. start an effect."""
             entities = await self.platform.async_extract_from_service(service)
             if entities:

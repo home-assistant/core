@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "reauth_unsuccessful": "Ponovna avtentikacija ni bila uspe\u0161na, odstranite integracijo in jo znova nastavite."
+        },
+        "error": {
+            "invalid_auth": "Neveljavna avtentikacija"
+        },
+        "step": {
+            "credentials": {
+                "data": {
+                    "password": "Geslo",
+                    "username": "Uporabni\u0161ko ime"
+                },
+                "description": "Prosimo, vnesite uporabni\u0161ko ime in geslo."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Geslo",
+                    "username": "Uporabni\u0161ko ime"
+                },
+                "description": "Vnesite pravilno uporabni\u0161ko ime in geslo za gostitelja: {host}"
+            }
+        }
+    }
+}
