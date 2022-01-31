@@ -5,6 +5,7 @@ import logging
 import requests
 from tesla_powerwall import (
     AccessDeniedError,
+    APIError,
     MissingAttributeError,
     Powerwall,
     PowerwallUnreachableError,
@@ -131,7 +132,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         power_wall = Powerwall(ip_address, http_session=http_session)
         runtime_data[POWERWALL_OBJECT] = power_wall
         runtime_data[POWERWALL_HTTP_SESSION] = http_session
-        power_wall.login("", password)
+        power_wall.login(password)
+
+    async def _async_login_and_retry_update_data():
+        """Retry the update after a failed login."""
+        nonlocal login_failed_count
+        # If the session expired, recreate, relogin, and try again
+        _LOGGER.debug("Retrying login and updating data")
+        try:
+            await hass.async_add_executor_job(_recreate_powerwall_login)
+            data = await _async_update_powerwall_data(hass, entry, power_wall)
+        except AccessDeniedError as err:
+            login_failed_count += 1
+            if login_failed_count == MAX_LOGIN_FAILURES:
+                raise ConfigEntryAuthFailed from err
+            raise UpdateFailed(
+                f"Login attempt {login_failed_count}/{MAX_LOGIN_FAILURES} failed, will retry: {err}"
+            ) from err
+        except APIError as err:
+            raise UpdateFailed(f"Updated failed due to {err}, will retry") from err
+        else:
+            login_failed_count = 0
+            return data
 
     async def async_update_data():
         """Fetch data from API endpoint."""
@@ -147,18 +169,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except AccessDeniedError as err:
             if password is None:
                 raise ConfigEntryAuthFailed from err
-
-            # If the session expired, recreate, relogin, and try again
-            try:
-                await hass.async_add_executor_job(_recreate_powerwall_login)
-                return await _async_update_powerwall_data(hass, entry, power_wall)
-            except AccessDeniedError as ex:
-                login_failed_count += 1
-                if login_failed_count == MAX_LOGIN_FAILURES:
-                    raise ConfigEntryAuthFailed from ex
-                raise UpdateFailed(
-                    f"Login attempt {login_failed_count}/{MAX_LOGIN_FAILURES} failed, will retry"
-                ) from ex
+            return await _async_login_and_retry_update_data()
+        except APIError as err:
+            raise UpdateFailed(f"Updated failed due to {err}, will retry") from err
         else:
             login_failed_count = 0
             return data
