@@ -255,13 +255,14 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "jsq": (
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
-            name="Temperature Celsius",
+            name="Temperature",
             icon="mdi:thermometer-lines",
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_SET_F,
             name="Temperature Fahrenheit",
             icon="mdi:thermometer-lines",
+            entity_registry_enabled_default=False,
         ),
     ),
 }

@@ -285,7 +285,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         ),
         SelectEntityDescription(
             key=DPCode.LEVEL,
-            name="Spray Level",
+            name="Spraying Level",
             device_class=TuyaDeviceClass.HUMIDIFIER_LEVEL,
             entity_category=EntityCategory.CONFIG,
         ),
