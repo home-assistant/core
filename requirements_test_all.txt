@@ -67,7 +67,7 @@ adb-shell[async]==0.4.0
 adext==0.4.2
 
 # homeassistant.components.adguard
-adguardhome==0.5.0
+adguardhome==0.5.1
 
 # homeassistant.components.advantage_air
 advantage_air==0.2.5
