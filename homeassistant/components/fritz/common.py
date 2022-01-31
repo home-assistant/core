@@ -12,10 +12,7 @@ from typing import Any, TypedDict, cast
 from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import (
     FritzActionError,
-    FritzActionFailedError,
     FritzConnectionException,
-    FritzInternalError,
-    FritzLookUpError,
     FritzSecurityError,
     FritzServiceError,
 )
@@ -46,6 +43,7 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_USERNAME,
     DOMAIN,
+    FRITZ_EXCEPTIONS,
     SERVICE_CLEANUP,
     SERVICE_REBOOT,
     SERVICE_RECONNECT,
@@ -188,9 +186,26 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
             _LOGGER.error("Unable to establish a connection with %s", self.host)
             return
 
+        _LOGGER.debug(
+            "detected services on %s %s",
+            self.host,
+            list(self.connection.services.keys()),
+        )
+
         self.fritz_hosts = FritzHosts(fc=self.connection)
         self.fritz_status = FritzStatus(fc=self.connection)
         info = self.connection.call_action("DeviceInfo:1", "GetInfo")
+
+        _LOGGER.debug(
+            "gathered device info of %s %s",
+            self.host,
+            {
+                **info,
+                "NewDeviceLog": "***omitted***",
+                "NewSerialNumber": "***omitted***",
+            },
+        )
+
         if not self._unique_id:
             self._unique_id = info["NewSerialNumber"]
 
@@ -529,13 +544,7 @@ class AvmWrapper(FritzBoxTools):
                 "Authorization Error: Please check the provided credentials and verify that you can log into the web interface",
                 exc_info=True,
             )
-        except (
-            FritzActionError,
-            FritzActionFailedError,
-            FritzInternalError,
-            FritzServiceError,
-            FritzLookUpError,
-        ):
+        except FRITZ_EXCEPTIONS:
             _LOGGER.error(
                 "Service/Action Error: cannot execute service %s with action %s",
                 service_name,
