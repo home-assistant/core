@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import functools
+from xmlrpc.client import boolean
 
 import voluptuous as vol
 
@@ -50,6 +51,8 @@ DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_OPTIMISTIC = False
 CONF_STATE_ON = "state_on"
 CONF_STATE_OFF = "state_off"
+
+PAYLOAD_NONE = "None"
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
     {
@@ -105,7 +108,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT switch."""
-        self._state = False
+        self._state = None
 
         self._state_on = None
         self._state_off = None
@@ -128,6 +131,9 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
 
         self._optimistic = config[CONF_OPTIMISTIC]
 
+        if self._optimistic:
+            self._state = False
+
         self._value_template = MqttValueTemplate(
             self._config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
@@ -144,6 +150,8 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
                 self._state = True
             elif payload == self._state_off:
                 self._state = False
+            elif payload == PAYLOAD_NONE:
+                self._state = None
 
             self.async_write_ha_state()
 
@@ -168,7 +176,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
             self._state = last_state.state == STATE_ON
 
     @property
-    def is_on(self):
+    def is_on(self) -> boolean | None:
         """Return true if device is on."""
         return self._state
 

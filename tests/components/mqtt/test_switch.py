@@ -11,6 +11,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
@@ -71,7 +72,7 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_DEVICE_CLASS) == "switch"
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
@@ -84,6 +85,11 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_OFF
+
+    async_fire_mqtt_message(hass, "state-topic", "None")
+
+    state = hass.states.get("switch.test")
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
@@ -152,7 +158,7 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "state-topic", '{"val":"beer on"}')
 
@@ -163,6 +169,11 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock):
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_OFF
+
+    async_fire_mqtt_message(hass, "state-topic", '{"val": null}')
+
+    state = hass.states.get("switch.test")
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_availability_when_connection_lost(hass, mqtt_mock):
@@ -236,7 +247,7 @@ async def test_custom_state_payload(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "state-topic", "HIGH")
