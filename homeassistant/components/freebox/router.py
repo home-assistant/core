@@ -14,7 +14,7 @@ from freebox_api.exceptions import NotOpenError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
@@ -68,8 +68,6 @@ class FreeboxRouter:
         self.sensors_temperature: dict[str, int] = {}
         self.sensors_connection: dict[str, float] = {}
         self.call_list: list[dict[str, Any]] = []
-
-        self.listeners: list[CALLBACK_TYPE] = []
 
     async def update_all(self, now: datetime | None = None) -> None:
         """Update all Freebox platforms."""
