@@ -153,7 +153,7 @@ class AugustData(AugustSubscriberMixin):
         # We don't care if this fails because we only want to wake
         # locks that are actually online anyways and they will be
         # awake when they come back online
-        await asyncio.gather(
+        for result in await asyncio.gather(
             *[
                 self.async_status_async(
                     device_id, bool(detail.bridge and detail.bridge.hyper_bridge)
@@ -162,7 +162,15 @@ class AugustData(AugustSubscriberMixin):
                 if device_id in self._locks_by_id
             ],
             return_exceptions=True,
-        )
+        ):
+            if isinstance(result, Exception) and not isinstance(
+                result, (asyncio.TimeoutError, ClientResponseError, CannotConnect)
+            ):
+                _LOGGER.warning(
+                    "Unexpected exception during initial sync: %s",
+                    result,
+                    exc_info=result,
+                )
 
     @callback
     def async_pubnub_message(self, device_id, date_time, message):
