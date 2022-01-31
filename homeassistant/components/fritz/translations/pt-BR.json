@@ -12,18 +12,23 @@
             "connection_error": "Falha ao conectar",
             "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida"
         },
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {
                     "password": "Senha",
                     "username": "Usu\u00e1rio"
-                }
+                },
+                "description": "Descoberto FRITZ!Box: {name} \n\n Configure as Ferramentas do FRITZ!Box para controlar o seu {name}",
+                "title": "Configurar as Ferramentas do FRITZ!Box"
             },
             "reauth_confirm": {
                 "data": {
                     "password": "Senha",
                     "username": "Usu\u00e1rio"
-                }
+                },
+                "description": "Atualize as credenciais do FRITZ!Box Tools para: {host} . \n\n O FRITZ!Box Tools n\u00e3o consegue iniciar sess\u00e3o no seu FRITZ!Box.",
+                "title": "Atualizando as Ferramentas do FRITZ!Box - credenciais"
             },
             "start_config": {
                 "data": {
@@ -31,7 +36,9 @@
                     "password": "Senha",
                     "port": "Porta",
                     "username": "Usu\u00e1rio"
-                }
+                },
+                "description": "Configure as Ferramentas do FRITZ!Box para controlar o seu FRITZ!Box.\n M\u00ednimo necess\u00e1rio: nome de usu\u00e1rio, senha.",
+                "title": "Configurar as Ferramentas do FRITZ!Box - obrigat\u00f3rio"
             },
             "user": {
                 "data": {
@@ -39,6 +46,17 @@
                     "password": "Senha",
                     "port": "Porta",
                     "username": "Usu\u00e1rio"
+                },
+                "description": "Configure as Ferramentas do FRITZ!Box para controlar o seu FRITZ!Box.\nM\u00ednimo necess\u00e1rio: nome de usu\u00e1rio, senha.",
+                "title": "Configurar as Ferramentas do FRITZ!Box"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Segundos para considerar um dispositivo em 'casa'"
                 }
             }
         }

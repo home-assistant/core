@@ -7,9 +7,10 @@
         "error": {
             "cannot_connect": "Falha ao conectar",
             "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "protect_version": "A vers\u00e3o m\u00ednima exigida \u00e9 v1.20.0. Atualize o UniFi Protect e tente novamente.",
             "unknown": "Erro inesperado"
         },
-        "flow_title": "{nome} ({ip_address})",
+        "flow_title": "{name} ({ip_address})",
         "step": {
             "discovery_confirm": {
                 "data": {
@@ -17,7 +18,7 @@
                     "username": "Usu\u00e1rio",
                     "verify_ssl": "Verifique o certificado SSL"
                 },
-                "description": "Deseja configurar {name} ({ip_address})?",
+                "description": "Deseja configurar {name} ({ip_address})?\nVoc\u00ea precisar\u00e1 de um usu\u00e1rio local criado no console do sistema operacional UniFi para fazer login. Usu\u00e1rios da Ubiquiti Cloud n\u00e3o funcionar\u00e3o. Para mais informa\u00e7\u00f5es: {local_user_documentation_url}",
                 "title": "Descoberta UniFi Protect"
             },
             "reauth_confirm": {
@@ -46,8 +47,12 @@
         "step": {
             "init": {
                 "data": {
-                    "disable_rtsp": "Desativar o fluxo RTSP"
-                }
+                    "all_updates": "M\u00e9tricas em tempo real (AVISO: aumenta muito o uso da CPU)",
+                    "disable_rtsp": "Desativar o fluxo RTSP",
+                    "override_connection_host": "Anular o host de conex\u00e3o"
+                },
+                "description": "A op\u00e7\u00e3o de m\u00e9tricas em tempo real s\u00f3 deve ser habilitada se voc\u00ea tiver habilitado os sensores de diagn\u00f3stico e quiser que eles sejam atualizados em tempo real. Se n\u00e3o estiver ativado, eles ser\u00e3o atualizados apenas uma vez a cada 15 minutos.",
+                "title": "Op\u00e7\u00f5es de prote\u00e7\u00e3o UniFi"
             }
         }
     }
