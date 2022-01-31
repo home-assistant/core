@@ -30,6 +30,26 @@ from tests.components.august.mocks import (
 )
 
 
+async def test_august_api_is_failing(hass):
+    """Config entry state is SETUP_RETRY when august api is failing."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=_mock_get_config()[DOMAIN],
+        title="August august",
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "yalexs.authenticator_async.AuthenticatorAsync.async_authenticate",
+        side_effect=ClientResponseError(None, None, status=500),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_august_is_offline(hass):
     """Config entry state is SETUP_RETRY when august is offline."""
 
