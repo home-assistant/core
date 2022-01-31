@@ -33,26 +33,34 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def ihc_setup(hass: HomeAssistant, config: ConfigType, conf, controller_id):
+def ihc_setup(
+    hass: HomeAssistant,
+    config: ConfigType,
+    controller_conf: ConfigType,
+    controller_id: int,
+):
     """Set up the IHC integration."""
-    url = conf[CONF_URL]
-    username = conf[CONF_USERNAME]
-    password = conf[CONF_PASSWORD]
+    url = controller_conf[CONF_URL]
+    username = controller_conf[CONF_USERNAME]
+    password = controller_conf[CONF_PASSWORD]
 
     ihc_controller = IHCController(url, username, password)
     if not ihc_controller.authenticate():
         _LOGGER.error("Unable to authenticate on IHC controller")
         return False
 
-    if conf[CONF_AUTOSETUP] and not autosetup_ihc_products(
+    if controller_conf[CONF_AUTOSETUP] and not autosetup_ihc_products(
         hass, config, ihc_controller, controller_id
     ):
         return False
     # Manual configuration
-    get_manual_configuration(hass, config, conf, controller_id)
+    get_manual_configuration(hass, config, controller_conf, controller_id)
     # Store controller configuration
     ihc_key = f"ihc{controller_id}"
-    hass.data[ihc_key] = {IHC_CONTROLLER: ihc_controller, IHC_INFO: conf[CONF_INFO]}
+    hass.data[ihc_key] = {
+        IHC_CONTROLLER: ihc_controller,
+        IHC_INFO: controller_conf[CONF_INFO],
+    }
     # We only want to register the service functions once for the first controller
     if controller_id == 0:
         setup_service_functions(hass)
