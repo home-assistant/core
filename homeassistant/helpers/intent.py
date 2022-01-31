@@ -276,4 +276,8 @@ class IntentResponse:
     @callback
     def as_dict(self) -> dict[str, dict[str, dict[str, Any]]]:
         """Return a dictionary representation of an intent response."""
-        return {"speech": self.speech, "reprompt": self.reprompt, "card": self.card}
+        return (
+            {"speech": self.speech, "reprompt": self.reprompt, "card": self.card}
+            if self.reprompt
+            else {"speech": self.speech, "card": self.card}
+        )
