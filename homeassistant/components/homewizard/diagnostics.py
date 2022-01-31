@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.components.diagnostics import async_redact_data, REDACTED
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import HWEnergyDeviceUpdateCoordinator
 
-TO_REDACT = {CONF_IP_ADDRESS, "wifi_ssid"}
+TO_REDACT = {CONF_IP_ADDRESS, "serial", "wifi_ssid"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -30,7 +30,7 @@ async def async_get_config_entry_diagnostics(
 
     return {
         "entry": {
-            "title": entry.title,
+            "title": REDACTED,
             "data": async_redact_data(entry.data, TO_REDACT),
         },
         "data": async_redact_data(meter_data, TO_REDACT),
