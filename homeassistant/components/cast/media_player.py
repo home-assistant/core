@@ -498,7 +498,10 @@ class CastDevice(MediaPlayerEntity):
         """Implement the websocket media browsing helper."""
         content_filter = None
 
-        if self._chromecast.cast_type == pychromecast.const.CAST_TYPE_AUDIO:
+        if self._chromecast.cast_type in (
+            pychromecast.const.CAST_TYPE_AUDIO,
+            pychromecast.const.CAST_TYPE_GROUP,
+        ):
 
             def audio_content_filter(item):
                 """Filter non audio content."""
