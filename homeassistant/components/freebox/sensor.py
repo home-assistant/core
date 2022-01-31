@@ -164,6 +164,7 @@ class FreeboxDiskSensor(FreeboxSensor):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
+        assert self._router.mac
         return DeviceInfo(
             identifiers={(DOMAIN, self._disk["id"])},
             model=self._disk["model"],

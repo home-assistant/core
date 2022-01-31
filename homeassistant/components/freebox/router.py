@@ -50,9 +50,6 @@ async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
 class FreeboxRouter:
     """Representation of a Freebox router."""
 
-    _api: Freepybox
-    mac: str
-
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize a Freebox router."""
         self.hass = hass
@@ -60,9 +57,10 @@ class FreeboxRouter:
         self._host = entry.data[CONF_HOST]
         self._port = entry.data[CONF_PORT]
 
-        self._api_open = False
-        self.name = None
-        self._sw_v = None
+        self._api: Freepybox | None = None
+        self.name: str | None = None
+        self.mac: str | None = None
+        self._sw_v: str | None = None
         self._attrs: dict[str, Any] = {}
 
         self.devices: dict[str, dict[str, Any]] = {}
@@ -84,8 +82,6 @@ class FreeboxRouter:
             _LOGGER.exception("Failed to connect to Freebox")
             raise ConfigEntryNotReady from err
 
-        self._api_open = True
-
         # System
         fbx_config = await self._api.system.get_config()
         self.mac = fbx_config["mac"]
@@ -105,6 +101,7 @@ class FreeboxRouter:
 
     async def update_device_trackers(self) -> None:
         """Update Freebox devices."""
+        assert self._api
         new_device = False
         fbx_devices: list[dict[str, Any]] = await self._api.lan.get_hosts_list()
 
@@ -135,6 +132,7 @@ class FreeboxRouter:
 
     async def update_sensors(self) -> None:
         """Update Freebox sensors."""
+        assert self._api
         # System sensors
         syst_datas: dict[str, Any] = await self._api.system.get_config()
 
@@ -167,6 +165,7 @@ class FreeboxRouter:
 
     async def _update_disks_sensors(self) -> None:
         """Update Freebox disks."""
+        assert self._api
         # None at first request
         fbx_disks: list[dict[str, Any]] = await self._api.storage.get_disks() or []
 
@@ -175,19 +174,22 @@ class FreeboxRouter:
 
     async def reboot(self) -> None:
         """Reboot the Freebox."""
+        assert self._api
         await self._api.system.reboot()
 
     async def close(self) -> None:
         """Close the connection."""
-        if self._api_open:
+        if self._api is not None:
             await self._api.close()
-            assert self._unsub_dispatcher
+            self._api = None
+        if self._unsub_dispatcher is not None:
             self._unsub_dispatcher()
-        self._api_open = False
+            self._unsub_dispatcher = None
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
+        assert self.mac
         return DeviceInfo(
             configuration_url=f"https://{self._host}:{self._port}/",
             connections={(CONNECTION_NETWORK_MAC, self.mac)},
@@ -220,4 +222,5 @@ class FreeboxRouter:
     @property
     def wifi(self) -> Wifi:
         """Return the wifi."""
+        assert self._api
         return self._api.wifi
