@@ -1,4 +1,6 @@
 """The FiveM sensor platform."""
+from typing import Any
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -56,8 +58,10 @@ class FiveMSensorEntity(FiveMEntity, SensorEntity):
         super().__init__(coordinator, type_name, icon, device_class, extra_attrs)
         self._attr_native_unit_of_measurement = unit
 
-    def _update_value(self):
-        self._attr_native_value = self.coordinator.data[self.type_name]
+    @property
+    def native_value(self) -> Any:
+        """Return the state of the sensor."""
+        return self.coordinator.data[self.type_name]
 
 
 class FiveMPlayersOnlineSensor(FiveMSensorEntity):

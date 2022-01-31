@@ -1,7 +1,6 @@
 """The FiveM integration."""
 from __future__ import annotations
 
-from abc import abstractmethod
 from datetime import timedelta
 import logging
 from typing import Any
@@ -12,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -161,31 +161,23 @@ class FiveMEntity(CoordinatorEntity):
         self._attr_unique_id = f"{self.coordinator.unique_id}-{type_name}".lower()
         self._attr_icon = icon
         self._attr_device_class = device_class
-        self._attr_should_poll = False
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, self.coordinator.unique_id)},
-            "manufacturer": MANUFACTURER,
-            "model": self.coordinator.server,
-            "name": self.coordinator.server_name,
-            "sw_version": self.coordinator.version,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.unique_id)},
+            manufacturer=MANUFACTURER,
+            model=self.coordinator.server,
+            name=self.coordinator.server_name,
+            sw_version=self.coordinator.version,
+        )
 
         self._update_entity()
 
     def _update_entity(self):
         """Update the entity."""
-        self._update_value()
-
         if self.extra_attrs is not None:
             extras: dict[str, Any] = {}
             for attr in self.extra_attrs:
                 extras[attr] = self.coordinator.data[attr]
             self._attr_extra_state_attributes = extras
-
-    @abstractmethod
-    def _update_value(self):
-        """Update the value of the entity."""
-        return NotImplemented
 
     @callback
     def _handle_coordinator_update(self) -> None:

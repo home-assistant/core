@@ -17,18 +17,18 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the FiveM binary sensor platform."""
-    server = hass.data[DOMAIN][entry.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities = [FiveMStatusBinarySensor(server)]
-
-    async_add_entities(entities)
+    async_add_entities([FiveMStatusBinarySensor(coordinator)])
 
 
 class FiveMSensorEntity(FiveMEntity, BinarySensorEntity):
     """Representation of a FiveM sensor base entity."""
 
-    def _update_value(self):
-        self._attr_is_on = self.coordinator.data[self.type_name]
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the sensor."""
+        return self.coordinator.data[self.type_name]
 
 
 class FiveMStatusBinarySensor(FiveMSensorEntity):
