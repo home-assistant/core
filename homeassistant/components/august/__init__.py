@@ -43,7 +43,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return await async_setup_august(hass, entry, august_gateway)
     except (RequireValidation, InvalidAuth) as err:
         raise ConfigEntryAuthFailed from err
-    except (ClientResponseError, CannotConnect, asyncio.TimeoutError) as err:
+    except asyncio.TimeoutError as err:
+        raise ConfigEntryNotReady("Timed out connecting to august api") from err
+    except (ClientResponseError, CannotConnect) as err:
         raise ConfigEntryNotReady from err
 
 

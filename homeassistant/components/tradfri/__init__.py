@@ -57,12 +57,18 @@ LISTENERS = "tradfri_listeners"
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_HOST): cv.string,
-                vol.Optional(
-                    CONF_ALLOW_TRADFRI_GROUPS, default=DEFAULT_ALLOW_TRADFRI_GROUPS
-                ): cv.boolean,
-            }
+            vol.All(
+                cv.deprecated(CONF_HOST),
+                cv.deprecated(
+                    CONF_ALLOW_TRADFRI_GROUPS,
+                ),
+                {
+                    vol.Optional(CONF_HOST): cv.string,
+                    vol.Optional(
+                        CONF_ALLOW_TRADFRI_GROUPS, default=DEFAULT_ALLOW_TRADFRI_GROUPS
+                    ): cv.boolean,
+                },
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -120,6 +126,7 @@ async def async_setup_entry(
 
     api = factory.request
     gateway = Gateway()
+    groups: list[Group] = []
 
     try:
         gateway_info = await api(gateway.get_gateway_info(), timeout=TIMEOUT_API)
@@ -127,8 +134,19 @@ async def async_setup_entry(
             gateway.get_devices(), timeout=TIMEOUT_API
         )
         devices: list[Device] = await api(devices_commands, timeout=TIMEOUT_API)
-        groups_commands: Command = await api(gateway.get_groups(), timeout=TIMEOUT_API)
-        groups: list[Group] = await api(groups_commands, timeout=TIMEOUT_API)
+
+        if entry.data[CONF_IMPORT_GROUPS]:
+            # Note: we should update this page when deprecating:
+            # https://www.home-assistant.io/integrations/tradfri/
+            _LOGGER.warning(
+                "Importing of Tradfri groups has been deprecated due to stability issues "
+                "and will be removed in Home Assistant core 2022.4"
+            )
+            # No need to load groups if the user hasn't requested it
+            groups_commands: Command = await api(
+                gateway.get_groups(), timeout=TIMEOUT_API
+            )
+            groups = await api(groups_commands, timeout=TIMEOUT_API)
 
     except PytradfriError as exc:
         await factory.shutdown()

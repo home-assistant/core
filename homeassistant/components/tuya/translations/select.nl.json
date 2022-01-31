@@ -10,9 +10,21 @@
             "1": "Uit",
             "2": "Aan"
         },
+        "tuya__curtain_mode": {
+            "morning": "Ochtend",
+            "night": "Nacht"
+        },
+        "tuya__curtain_motor_mode": {
+            "back": "Terug",
+            "forward": "Vooruit"
+        },
         "tuya__decibel_sensitivity": {
             "0": "Lage gevoeligheid",
             "1": "Hoge gevoeligheid"
+        },
+        "tuya__fan_angle": {
+            "60": "60\u00b0",
+            "90": "90\u00b0"
         },
         "tuya__fingerbot_mode": {
             "click": "Duw",
@@ -58,8 +70,20 @@
             "small": "Klein"
         },
         "tuya__vacuum_mode": {
+            "bow": "Boog",
+            "left_bow": "Boog links",
+            "left_spiral": "Spiraal links",
+            "part": "Deel",
+            "partial_bow": "Boog gedeeltelijk",
+            "pick_zone": "Kies zone",
             "point": "Punt",
             "pose": "Houding",
+            "random": "Willekeurig",
+            "right_bow": "Boog rechts",
+            "right_spiral": "Spiraal Rechts",
+            "single": "Enkel",
+            "smart": "Smart",
+            "spiral": "Spiraal",
             "wall_follow": "Volg muur",
             "zone": "Zone"
         }

@@ -27,7 +27,8 @@
                     "password": "Senha",
                     "port": "Porta",
                     "username": "Usu\u00e1rio"
-                }
+                },
+                "title": "Conecte-se ao servidor NUT"
             }
         }
     },
@@ -39,8 +40,10 @@
         "step": {
             "init": {
                 "data": {
+                    "resources": "Recursos",
                     "scan_interval": "Intervalo de escaneamento (segundos)"
-                }
+                },
+                "description": "Escolha os recursos dos sensores."
             }
         }
     }

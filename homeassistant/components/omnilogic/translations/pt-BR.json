@@ -16,5 +16,15 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ph_offset": "Deslocamento de pH (positivo ou negativo)",
+                    "polling_interval": "Intervalo de sondagem (em segundos)"
+                }
+            }
+        }
     }
 }

@@ -107,7 +107,7 @@ class Device:
     ip_address: str
     name: str
     ssid: str | None
-    wan_access: bool = True
+    wan_access: bool | None = None
 
 
 class Interface(TypedDict):
@@ -277,6 +277,14 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         )
         return bool(version), version
 
+    def _get_wan_access(self, ip_address: str) -> bool | None:
+        """Get WAN access rule for given IP address."""
+        return not self.connection.call_action(
+            "X_AVM-DE_HostFilter:1",
+            "GetWANAccessByIP",
+            NewIPv4Address=ip_address,
+        ).get("NewDisallow")
+
     async def async_scan_devices(self, now: datetime | None = None) -> None:
         """Wrap up FritzboxTools class scan."""
         await self.hass.async_add_executor_job(self.scan_devices, now)
@@ -315,7 +323,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                 connection_type="",
                 ip_address=host["ip"],
                 ssid=None,
-                wan_access=False,
+                wan_access=None,
             )
 
         mesh_intf = {}
@@ -352,12 +360,10 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                 for link in interf["node_links"]:
                     intf = mesh_intf.get(link["node_interface_1_uid"])
                     if intf is not None:
-                        if intf["op_mode"] != "AP_GUEST":
-                            dev_info.wan_access = not self.connection.call_action(
-                                "X_AVM-DE_HostFilter:1",
-                                "GetWANAccessByIP",
-                                NewIPv4Address=dev_info.ip_address,
-                            ).get("NewDisallow")
+                        if intf["op_mode"] != "AP_GUEST" and dev_info.ip_address:
+                            dev_info.wan_access = self._get_wan_access(
+                                dev_info.ip_address
+                            )
 
                         dev_info.connected_to = intf["device"]
                         dev_info.connection_type = intf["type"]
@@ -762,7 +768,7 @@ class FritzDevice:
         self._mac = mac
         self._name = name
         self._ssid: str | None = None
-        self._wan_access = False
+        self._wan_access: bool | None = False
 
     def update(self, dev_info: Device, consider_home: float) -> None:
         """Update device info."""
@@ -830,7 +836,7 @@ class FritzDevice:
         return self._ssid
 
     @property
-    def wan_access(self) -> bool:
+    def wan_access(self) -> bool | None:
         """Return device wan access."""
         return self._wan_access
 
