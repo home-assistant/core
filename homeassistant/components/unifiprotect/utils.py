@@ -2,13 +2,10 @@
 from __future__ import annotations
 
 from enum import Enum
-import logging
 import socket
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def get_nested_attr(obj: Any, attr: str) -> Any:
