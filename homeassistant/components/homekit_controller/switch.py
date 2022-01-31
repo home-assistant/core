@@ -35,14 +35,14 @@ class DeclarativeSwitchEntityDescription(SwitchEntityDescription):
 
 
 SWITCH_ENTITIES: dict[str, DeclarativeSwitchEntityDescription] = {
-    CharacteristicsTypes.Vendor.AQARA_PAIRING_MODE: DeclarativeSwitchEntityDescription(
-        key=CharacteristicsTypes.Vendor.AQARA_PAIRING_MODE,
+    CharacteristicsTypes.VENDOR_AQARA_PAIRING_MODE: DeclarativeSwitchEntityDescription(
+        key=CharacteristicsTypes.VENDOR_AQARA_PAIRING_MODE,
         name="Pairing Mode",
         icon="mdi:lock-open",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.Vendor.AQARA_E1_PAIRING_MODE: DeclarativeSwitchEntityDescription(
-        key=CharacteristicsTypes.Vendor.AQARA_E1_PAIRING_MODE,
+    CharacteristicsTypes.VENDOR_AQARA_E1_PAIRING_MODE: DeclarativeSwitchEntityDescription(
+        key=CharacteristicsTypes.VENDOR_AQARA_E1_PAIRING_MODE,
         name="Pairing Mode",
         icon="mdi:lock-open",
         entity_category=EntityCategory.CONFIG,
@@ -189,7 +189,7 @@ async def async_setup_entry(
 
     @callback
     def async_add_service(service):
-        if not (entity_class := ENTITY_TYPES.get(service.short_type)):
+        if not (entity_class := ENTITY_TYPES.get(service.type)):
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([entity_class(conn, info)], True)
