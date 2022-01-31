@@ -1,7 +1,6 @@
 """Component to embed Google Cast."""
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
 from typing import Protocol
 
@@ -67,7 +66,7 @@ class CastProtocol(Protocol):
     """Define the format of cast platforms."""
 
     async def async_get_media_browser_root_object(
-        self, content_filter: Callable[[BrowseMedia], bool]
+        self, cast_type: str
     ) -> list[BrowseMedia]:
         """Create a list of root objects for media browsing."""
 
@@ -76,7 +75,7 @@ class CastProtocol(Protocol):
         hass: HomeAssistant,
         media_content_type: str,
         media_content_id: str,
-        content_filter: Callable[[BrowseMedia], bool],
+        cast_type: str,
     ) -> BrowseMedia | None:
         """Browse media.
 

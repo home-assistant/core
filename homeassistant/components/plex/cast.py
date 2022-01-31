@@ -1,8 +1,6 @@
 """Google Cast support for the Plex component."""
 from __future__ import annotations
 
-from collections.abc import Callable
-
 from pychromecast import Chromecast
 from pychromecast.controllers.plex import PlexController
 
@@ -16,9 +14,7 @@ from .const import PLEX_URI_SCHEME
 from .services import lookup_plex_media
 
 
-async def async_get_media_browser_root_object(
-    content_filter: Callable[[BrowseMedia], bool]
-) -> list[BrowseMedia]:
+async def async_get_media_browser_root_object(cast_type: str) -> list[BrowseMedia]:
     """Create a root object for media browsing."""
     return [
         BrowseMedia(
@@ -37,7 +33,7 @@ async def async_browse_media(
     hass: HomeAssistant,
     media_content_type: str,
     media_content_id: str,
-    content_filter: Callable[[BrowseMedia], bool],
+    cast_type: str,
 ) -> BrowseMedia | None:
     """Browse media."""
     if is_plex_media_id(media_content_id):

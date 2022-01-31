@@ -462,7 +462,9 @@ class CastDevice(MediaPlayerEntity):
         # Add media browsers
         for platform in self.hass.data[CAST_DOMAIN].values():
             children.extend(
-                await platform.async_get_media_browser_root_object(content_filter)
+                await platform.async_get_media_browser_root_object(
+                    self._chromecast.cast_type
+                )
             )
 
         # Add media sources
@@ -509,7 +511,10 @@ class CastDevice(MediaPlayerEntity):
 
         for platform in self.hass.data[CAST_DOMAIN].values():
             browse_media = await platform.async_browse_media(
-                self.hass, media_content_type, media_content_id, content_filter
+                self.hass,
+                media_content_type,
+                media_content_id,
+                self._chromecast.cast_type,
             )
             if browse_media:
                 return browse_media
