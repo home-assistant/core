@@ -31,15 +31,15 @@ class HomeKitButtonEntityDescription(ButtonEntityDescription):
 
 
 BUTTON_ENTITIES: dict[str, HomeKitButtonEntityDescription] = {
-    CharacteristicsTypes.Vendor.HAA_SETUP: HomeKitButtonEntityDescription(
-        key=CharacteristicsTypes.Vendor.HAA_SETUP,
+    CharacteristicsTypes.VENDOR_HAA_SETUP: HomeKitButtonEntityDescription(
+        key=CharacteristicsTypes.VENDOR_HAA_SETUP,
         name="Setup",
         icon="mdi:cog",
         entity_category=EntityCategory.CONFIG,
         write_value="#HAA@trcmd",
     ),
-    CharacteristicsTypes.Vendor.HAA_UPDATE: HomeKitButtonEntityDescription(
-        key=CharacteristicsTypes.Vendor.HAA_UPDATE,
+    CharacteristicsTypes.VENDOR_HAA_UPDATE: HomeKitButtonEntityDescription(
+        key=CharacteristicsTypes.VENDOR_HAA_UPDATE,
         name="Update",
         device_class=ButtonDeviceClass.UPDATE,
         entity_category=EntityCategory.CONFIG,
@@ -52,16 +52,6 @@ BUTTON_ENTITIES: dict[str, HomeKitButtonEntityDescription] = {
         write_value=True,
     ),
 }
-
-
-# For legacy reasons, "built-in" characteristic types are in their short form
-# And vendor types don't have a short form
-# This means long and short forms get mixed up in this dict, and comparisons
-# don't work!
-# We call get_uuid on *every* type to normalise them to the long form
-# Eventually aiohomekit will use the long form exclusively amd this can be removed.
-for k, v in list(BUTTON_ENTITIES.items()):
-    BUTTON_ENTITIES[CharacteristicsTypes.get_uuid(k)] = BUTTON_ENTITIES.pop(k)
 
 
 async def async_setup_entry(
@@ -155,5 +145,5 @@ class HomeKitEcobeeClearHoldButton(CharacteristicEntity, ButtonEntity):
 
 
 BUTTON_ENTITY_CLASSES: dict[str, type] = {
-    CharacteristicsTypes.Vendor.ECOBEE_CLEAR_HOLD: HomeKitEcobeeClearHoldButton,
+    CharacteristicsTypes.VENDOR_ECOBEE_CLEAR_HOLD: HomeKitEcobeeClearHoldButton,
 }

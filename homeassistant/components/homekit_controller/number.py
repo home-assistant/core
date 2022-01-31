@@ -17,62 +17,62 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import KNOWN_DEVICES, CharacteristicEntity
 
 NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
-    CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: NumberEntityDescription(
-        key=CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL,
+    CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL,
         name="Spray Quantity",
         icon="mdi:water",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.Vendor.EVE_DEGREE_ELEVATION: NumberEntityDescription(
-        key=CharacteristicsTypes.Vendor.EVE_DEGREE_ELEVATION,
+    CharacteristicsTypes.VENDOR_EVE_DEGREE_ELEVATION: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_EVE_DEGREE_ELEVATION,
         name="Elevation",
         icon="mdi:elevation-rise",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.Vendor.AQARA_GATEWAY_VOLUME: NumberEntityDescription(
-        key=CharacteristicsTypes.Vendor.AQARA_GATEWAY_VOLUME,
+    CharacteristicsTypes.VENDOR_AQARA_GATEWAY_VOLUME: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_AQARA_GATEWAY_VOLUME,
         name="Volume",
         icon="mdi:volume-high",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.Vendor.AQARA_E1_GATEWAY_VOLUME: NumberEntityDescription(
-        key=CharacteristicsTypes.Vendor.AQARA_E1_GATEWAY_VOLUME,
+    CharacteristicsTypes.VENDOR_AQARA_E1_GATEWAY_VOLUME: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_AQARA_E1_GATEWAY_VOLUME,
         name="Volume",
         icon="mdi:volume-high",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.Vendor.ECOBEE_HOME_TARGET_COOL: NumberEntityDescription(
-        key=CharacteristicsTypes.Vendor.ECOBEE_HOME_TARGET_COOL,
+    CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_COOL: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_COOL,
         name="Home Cool Target",
         icon="mdi:thermometer-minus",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.Vendor.ECOBEE_HOME_TARGET_HEAT: NumberEntityDescription(
-        key=CharacteristicsTypes.Vendor.ECOBEE_HOME_TARGET_HEAT,
+    CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_HEAT: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_HEAT,
         name="Home Heat Target",
         icon="mdi:thermometer-plus",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.Vendor.ECOBEE_SLEEP_TARGET_COOL: NumberEntityDescription(
-        key=CharacteristicsTypes.Vendor.ECOBEE_SLEEP_TARGET_COOL,
+    CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_COOL: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_COOL,
         name="Sleep Cool Target",
         icon="mdi:thermometer-minus",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.Vendor.ECOBEE_SLEEP_TARGET_HEAT: NumberEntityDescription(
-        key=CharacteristicsTypes.Vendor.ECOBEE_SLEEP_TARGET_HEAT,
+    CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_HEAT: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_HEAT,
         name="Sleep Heat Target",
         icon="mdi:thermometer-plus",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.Vendor.ECOBEE_AWAY_TARGET_COOL: NumberEntityDescription(
-        key=CharacteristicsTypes.Vendor.ECOBEE_AWAY_TARGET_COOL,
+    CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_COOL: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_COOL,
         name="Away Cool Target",
         icon="mdi:thermometer-minus",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.Vendor.ECOBEE_AWAY_TARGET_HEAT: NumberEntityDescription(
-        key=CharacteristicsTypes.Vendor.ECOBEE_AWAY_TARGET_HEAT,
+    CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_HEAT: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_HEAT,
         name="Away Heat Target",
         icon="mdi:thermometer-plus",
         entity_category=EntityCategory.CONFIG,
@@ -226,5 +226,5 @@ class HomeKitEcobeeFanModeNumber(CharacteristicEntity, NumberEntity):
 
 
 NUMBER_ENTITY_CLASSES: dict[str, type] = {
-    CharacteristicsTypes.Vendor.ECOBEE_FAN_WRITE_SPEED: HomeKitEcobeeFanModeNumber,
+    CharacteristicsTypes.VENDOR_ECOBEE_FAN_WRITE_SPEED: HomeKitEcobeeFanModeNumber,
 }

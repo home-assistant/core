@@ -10,11 +10,11 @@ def create_service_with_ecobee_mode(accessory: Accessory):
     """Define a thermostat with ecobee mode characteristics."""
     service = accessory.add_service(ServicesTypes.THERMOSTAT, add_required=True)
 
-    current_mode = service.add_char(CharacteristicsTypes.Vendor.ECOBEE_CURRENT_MODE)
+    current_mode = service.add_char(CharacteristicsTypes.VENDOR_ECOBEE_CURRENT_MODE)
     current_mode.value = 0
     current_mode.perms.append("ev")
 
-    service.add_char(CharacteristicsTypes.Vendor.ECOBEE_SET_HOLD_SCHEDULE)
+    service.add_char(CharacteristicsTypes.VENDOR_ECOBEE_SET_HOLD_SCHEDULE)
 
     return service
 
@@ -35,7 +35,7 @@ async def test_read_current_mode(hass, utcnow):
     state = await ecobee_mode.async_update(
         ServicesTypes.THERMOSTAT,
         {
-            CharacteristicsTypes.Vendor.ECOBEE_CURRENT_MODE: 0,
+            CharacteristicsTypes.VENDOR_ECOBEE_CURRENT_MODE: 0,
         },
     )
     assert state.state == "home"
@@ -43,7 +43,7 @@ async def test_read_current_mode(hass, utcnow):
     state = await ecobee_mode.async_update(
         ServicesTypes.THERMOSTAT,
         {
-            CharacteristicsTypes.Vendor.ECOBEE_CURRENT_MODE: 1,
+            CharacteristicsTypes.VENDOR_ECOBEE_CURRENT_MODE: 1,
         },
     )
     assert state.state == "sleep"
@@ -51,7 +51,7 @@ async def test_read_current_mode(hass, utcnow):
     state = await ecobee_mode.async_update(
         ServicesTypes.THERMOSTAT,
         {
-            CharacteristicsTypes.Vendor.ECOBEE_CURRENT_MODE: 2,
+            CharacteristicsTypes.VENDOR_ECOBEE_CURRENT_MODE: 2,
         },
     )
     assert state.state == "away"
@@ -79,7 +79,7 @@ async def test_write_current_mode(hass, utcnow):
     )
     current_mode.async_assert_service_values(
         ServicesTypes.THERMOSTAT,
-        {CharacteristicsTypes.Vendor.ECOBEE_SET_HOLD_SCHEDULE: 0},
+        {CharacteristicsTypes.VENDOR_ECOBEE_SET_HOLD_SCHEDULE: 0},
     )
 
     await hass.services.async_call(
@@ -90,7 +90,7 @@ async def test_write_current_mode(hass, utcnow):
     )
     current_mode.async_assert_service_values(
         ServicesTypes.THERMOSTAT,
-        {CharacteristicsTypes.Vendor.ECOBEE_SET_HOLD_SCHEDULE: 1},
+        {CharacteristicsTypes.VENDOR_ECOBEE_SET_HOLD_SCHEDULE: 1},
     )
 
     await hass.services.async_call(
@@ -101,5 +101,5 @@ async def test_write_current_mode(hass, utcnow):
     )
     current_mode.async_assert_service_values(
         ServicesTypes.THERMOSTAT,
-        {CharacteristicsTypes.Vendor.ECOBEE_SET_HOLD_SCHEDULE: 2},
+        {CharacteristicsTypes.VENDOR_ECOBEE_SET_HOLD_SCHEDULE: 2},
     )

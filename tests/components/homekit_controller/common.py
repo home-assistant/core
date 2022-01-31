@@ -10,7 +10,6 @@ from typing import Any, Final
 from unittest import mock
 
 from aiohomekit.model import Accessories, Accessory
-from aiohomekit.model.services import ServicesTypes
 from aiohomekit.testing import FakeController, FakePairing
 
 from homeassistant.components import zeroconf
@@ -261,7 +260,7 @@ async def setup_test_component(hass, setup_accessory, capitalize=False, suffix=N
 
     domain = None
     for service in accessory.services:
-        service_name = ServicesTypes.get_short_uuid(service.type)
+        service_name = service.type
         if service_name in HOMEKIT_ACCESSORY_DISPATCH:
             domain = HOMEKIT_ACCESSORY_DISPATCH[service_name]
             break
