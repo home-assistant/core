@@ -1,6 +1,5 @@
 """Support for August devices."""
 import asyncio
-import contextlib
 from itertools import chain
 import logging
 
@@ -154,18 +153,16 @@ class AugustData(AugustSubscriberMixin):
         # We don't care if this fails because we only want to wake
         # locks that are actually online anyways and they will be
         # awake when they come back online
-        with contextlib.suppress(
-            (asyncio.TimeoutError, ClientResponseError, CannotConnect)
-        ):
-            await asyncio.gather(
-                *[
-                    self.async_status_async(
-                        device_id, bool(detail.bridge and detail.bridge.hyper_bridge)
-                    )
-                    for device_id, detail in self._device_detail_by_id.items()
-                    if device_id in self._locks_by_id
-                ]
-            )
+        await asyncio.gather(
+            *[
+                self.async_status_async(
+                    device_id, bool(detail.bridge and detail.bridge.hyper_bridge)
+                )
+                for device_id, detail in self._device_detail_by_id.items()
+                if device_id in self._locks_by_id
+            ],
+            return_exceptions=True,
+        )
 
     @callback
     def async_pubnub_message(self, device_id, date_time, message):
