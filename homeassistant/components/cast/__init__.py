@@ -11,6 +11,7 @@ from homeassistant.components.media_player import BrowseMedia
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
@@ -101,11 +102,11 @@ async def _register_cast_platform(
 ):
     """Register a cast platform."""
     if (
-        not getattr(platform, "async_get_media_browser_root_object")
-        or not getattr(platform, "async_browse_media")
-        or not getattr(platform, "async_play_media")
+        not hasattr(platform, "async_get_media_browser_root_object")
+        or not hasattr(platform, "async_browse_media")
+        or not hasattr(platform, "async_play_media")
     ):
-        return
+        raise HomeAssistantError(f"Invalid cast platform {platform}")
     hass.data[DOMAIN][integration_domain] = platform
 
 

@@ -1532,7 +1532,24 @@ async def test_entry_setup_list_config(hass: HomeAssistant):
     assert set(pychromecast.IGNORE_CEC) == {"cast1", "cast2", "cast3"}
 
 
-async def test_cast_platform_play_media(hass: HomeAssistant, quick_play_mock):
+async def test_invalid_cast_platform(hass: HomeAssistant, caplog):
+    """Test we can play media through a cast platform."""
+    cast_platform_mock = Mock()
+    del cast_platform_mock.async_get_media_browser_root_object
+    del cast_platform_mock.async_browse_media
+    del cast_platform_mock.async_play_media
+    mock_platform(hass, "test.cast", cast_platform_mock)
+
+    await async_setup_component(hass, "test", {"test": {}})
+    await hass.async_block_till_done()
+
+    info = get_fake_chromecast_info()
+    await async_setup_media_player_cast(hass, info)
+
+    assert "Invalid cast platform <Mock id" in caplog.text
+
+
+async def test_cast_platform_play_media(hass: HomeAssistant, quick_play_mock, caplog):
     """Test we can play media through a cast platform."""
     entity_id = "media_player.speaker"
 
@@ -1554,6 +1571,7 @@ async def test_cast_platform_play_media(hass: HomeAssistant, quick_play_mock):
     info = get_fake_chromecast_info()
 
     chromecast, _ = await async_setup_media_player_cast(hass, info)
+    assert "Invalid cast platform <Mock id" not in caplog.text
     _, conn_status_cb, _ = get_status_callbacks(chromecast)
 
     connection_status = MagicMock()
