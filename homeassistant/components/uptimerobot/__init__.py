@@ -1,4 +1,4 @@
-"""The Uptime Robot integration."""
+"""The UptimeRobot integration."""
 from __future__ import annotations
 
 from pyuptimerobot import (
@@ -24,7 +24,7 @@ from .const import API_ATTR_OK, COORDINATOR_UPDATE_INTERVAL, DOMAIN, LOGGER, PLA
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Uptime Robot from a config entry."""
+    """Set up UptimeRobot from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     uptime_robot_api = UptimeRobot(
         entry.data[CONF_API_KEY], async_get_clientsession(hass)
@@ -55,7 +55,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator):
-    """Data update coordinator for Uptime Robot."""
+    """Data update coordinator for UptimeRobot."""
+
+    data: list[UptimeRobotMonitor]
 
     def __init__(
         self,
@@ -69,17 +71,16 @@ class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             LOGGER,
             name=DOMAIN,
-            update_method=self._async_update_data,
             update_interval=COORDINATOR_UPDATE_INTERVAL,
         )
         self._config_entry_id = config_entry_id
         self._device_registry = dev_reg
-        self._api = api
+        self.api = api
 
     async def _async_update_data(self) -> list[UptimeRobotMonitor] | None:
         """Update data."""
         try:
-            response = await self._api.async_get_monitors()
+            response = await self.api.async_get_monitors()
         except UptimeRobotAuthenticationException as exception:
             raise ConfigEntryAuthFailed(exception) from exception
         except UptimeRobotException as exception:

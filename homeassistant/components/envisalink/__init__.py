@@ -10,12 +10,14 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_TIMEOUT,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +39,9 @@ CONF_ZONENAME = "name"
 CONF_ZONES = "zones"
 CONF_ZONETYPE = "type"
 
+PANEL_TYPE_HONEYWELL = "HONEYWELL"
+PANEL_TYPE_DSC = "DSC"
+
 DEFAULT_PORT = 4025
 DEFAULT_EVL_VERSION = 3
 DEFAULT_KEEPALIVE = 60
@@ -48,6 +53,7 @@ DEFAULT_TIMEOUT = 10
 SIGNAL_ZONE_UPDATE = "envisalink.zones_updated"
 SIGNAL_PARTITION_UPDATE = "envisalink.partition_updated"
 SIGNAL_KEYPAD_UPDATE = "envisalink.keypad_updated"
+SIGNAL_ZONE_BYPASS_UPDATE = "envisalink.zone_bypass_updated"
 
 ZONE_SCHEMA = vol.Schema(
     {
@@ -64,7 +70,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_HOST): cv.string,
                 vol.Required(CONF_PANEL_TYPE): vol.All(
-                    cv.string, vol.In(["HONEYWELL", "DSC"])
+                    cv.string, vol.In([PANEL_TYPE_HONEYWELL, PANEL_TYPE_DSC])
                 ),
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASS): cv.string,
@@ -101,9 +107,9 @@ SERVICE_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up for Envisalink devices."""
-    conf = config.get(DOMAIN)
+    conf = config[DOMAIN]
 
     host = conf.get(CONF_HOST)
     port = conf.get(CONF_EVL_PORT)
@@ -118,7 +124,7 @@ async def async_setup(hass, config):
     zones = conf.get(CONF_ZONES)
     partitions = conf.get(CONF_PARTITIONS)
     connection_timeout = conf.get(CONF_TIMEOUT)
-    sync_connect = asyncio.Future()
+    sync_connect: asyncio.Future[bool] = asyncio.Future()
 
     controller = EnvisalinkAlarmPanel(
         host,
@@ -135,14 +141,14 @@ async def async_setup(hass, config):
     hass.data[DATA_EVL] = controller
 
     @callback
-    def login_fail_callback(data):
+    def async_login_fail_callback(data):
         """Handle when the evl rejects our login."""
         _LOGGER.error("The Envisalink rejected your credentials")
         if not sync_connect.done():
             sync_connect.set_result(False)
 
     @callback
-    def connection_fail_callback(data):
+    def async_connection_fail_callback(data):
         """Network failure callback."""
         _LOGGER.error("Could not establish a connection with the Envisalink- retrying")
         if not sync_connect.done():
@@ -150,7 +156,7 @@ async def async_setup(hass, config):
             sync_connect.set_result(True)
 
     @callback
-    def connection_success_callback(data):
+    def async_connection_success_callback(data):
         """Handle a successful connection."""
         _LOGGER.info("Established a connection with the Envisalink")
         if not sync_connect.done():
@@ -158,22 +164,28 @@ async def async_setup(hass, config):
             sync_connect.set_result(True)
 
     @callback
-    def zones_updated_callback(data):
+    def async_zones_updated_callback(data):
         """Handle zone timer updates."""
         _LOGGER.debug("Envisalink sent a zone update event. Updating zones")
         async_dispatcher_send(hass, SIGNAL_ZONE_UPDATE, data)
 
     @callback
-    def alarm_data_updated_callback(data):
+    def async_alarm_data_updated_callback(data):
         """Handle non-alarm based info updates."""
         _LOGGER.debug("Envisalink sent new alarm info. Updating alarms")
         async_dispatcher_send(hass, SIGNAL_KEYPAD_UPDATE, data)
 
     @callback
-    def partition_updated_callback(data):
+    def async_partition_updated_callback(data):
         """Handle partition changes thrown by evl (including alarms)."""
         _LOGGER.debug("The envisalink sent a partition update event")
         async_dispatcher_send(hass, SIGNAL_PARTITION_UPDATE, data)
+
+    @callback
+    def async_zone_bypass_update(data):
+        """Handle zone bypass status updates."""
+        _LOGGER.debug("Envisalink sent a zone bypass update event. Updating zones")
+        async_dispatcher_send(hass, SIGNAL_ZONE_BYPASS_UPDATE, data)
 
     @callback
     def stop_envisalink(event):
@@ -181,25 +193,25 @@ async def async_setup(hass, config):
         _LOGGER.info("Shutting down Envisalink")
         controller.stop()
 
-    async def handle_custom_function(call):
+    async def handle_custom_function(call: ServiceCall) -> None:
         """Handle custom/PGM service."""
         custom_function = call.data.get(ATTR_CUSTOM_FUNCTION)
         partition = call.data.get(ATTR_PARTITION)
         controller.command_output(code, partition, custom_function)
 
-    controller.callback_zone_timer_dump = zones_updated_callback
-    controller.callback_zone_state_change = zones_updated_callback
-    controller.callback_partition_state_change = partition_updated_callback
-    controller.callback_keypad_update = alarm_data_updated_callback
-    controller.callback_login_failure = login_fail_callback
-    controller.callback_login_timeout = connection_fail_callback
-    controller.callback_login_success = connection_success_callback
+    controller.callback_zone_timer_dump = async_zones_updated_callback
+    controller.callback_zone_state_change = async_zones_updated_callback
+    controller.callback_partition_state_change = async_partition_updated_callback
+    controller.callback_keypad_update = async_alarm_data_updated_callback
+    controller.callback_login_failure = async_login_fail_callback
+    controller.callback_login_timeout = async_connection_fail_callback
+    controller.callback_login_success = async_connection_success_callback
+    controller.callback_zone_bypass_update = async_zone_bypass_update
 
     _LOGGER.info("Start envisalink")
     controller.start()
 
-    result = await sync_connect
-    if not result:
+    if not await sync_connect:
         return False
 
     # Load sub-components for Envisalink
@@ -207,7 +219,7 @@ async def async_setup(hass, config):
         hass.async_create_task(
             async_load_platform(
                 hass,
-                "alarm_control_panel",
+                Platform.ALARM_CONTROL_PANEL,
                 "envisalink",
                 {CONF_PARTITIONS: partitions, CONF_CODE: code, CONF_PANIC: panic_type},
                 config,
@@ -216,7 +228,7 @@ async def async_setup(hass, config):
         hass.async_create_task(
             async_load_platform(
                 hass,
-                "sensor",
+                Platform.SENSOR,
                 "envisalink",
                 {CONF_PARTITIONS: partitions, CONF_CODE: code},
                 config,
@@ -225,9 +237,16 @@ async def async_setup(hass, config):
     if zones:
         hass.async_create_task(
             async_load_platform(
-                hass, "binary_sensor", "envisalink", {CONF_ZONES: zones}, config
+                hass, Platform.BINARY_SENSOR, "envisalink", {CONF_ZONES: zones}, config
             )
         )
+        # Only DSC panels support getting zone bypass status
+        if panel_type == PANEL_TYPE_DSC:
+            hass.async_create_task(
+                async_load_platform(
+                    hass, "switch", "envisalink", {CONF_ZONES: zones}, config
+                )
+            )
 
     hass.services.async_register(
         DOMAIN, SERVICE_CUSTOM_FUNCTION, handle_custom_function, schema=SERVICE_SCHEMA

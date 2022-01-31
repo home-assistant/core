@@ -1,14 +1,13 @@
 """Plugwise Sensor component for Home Assistant."""
-
 import logging
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
     PERCENTAGE,
@@ -17,7 +16,8 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     COOL_ICON,
@@ -28,6 +28,7 @@ from .const import (
     IDLE_ICON,
     SENSOR_MAP_DEVICE_CLASS,
     SENSOR_MAP_MODEL,
+    SENSOR_MAP_STATE_CLASS,
     SENSOR_MAP_UOM,
     UNIT_LUMEN,
 )
@@ -38,21 +39,29 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_TEMPERATURE = [
     "Temperature",
     TEMP_CELSIUS,
-    DEVICE_CLASS_TEMPERATURE,
+    SensorDeviceClass.TEMPERATURE,
+    SensorStateClass.MEASUREMENT,
 ]
 ATTR_BATTERY_LEVEL = [
     "Charge",
     PERCENTAGE,
-    DEVICE_CLASS_BATTERY,
+    SensorDeviceClass.BATTERY,
+    SensorStateClass.MEASUREMENT,
 ]
 ATTR_ILLUMINANCE = [
     "Illuminance",
     UNIT_LUMEN,
-    DEVICE_CLASS_ILLUMINANCE,
+    SensorDeviceClass.ILLUMINANCE,
+    SensorStateClass.MEASUREMENT,
 ]
-ATTR_PRESSURE = ["Pressure", PRESSURE_BAR, DEVICE_CLASS_PRESSURE]
+ATTR_PRESSURE = [
+    "Pressure",
+    PRESSURE_BAR,
+    SensorDeviceClass.PRESSURE,
+    SensorStateClass.MEASUREMENT,
+]
 
-TEMP_SENSOR_MAP = {
+TEMP_SENSOR_MAP: dict[str, list] = {
     "setpoint": ATTR_TEMPERATURE,
     "temperature": ATTR_TEMPERATURE,
     "intended_boiler_temperature": ATTR_TEMPERATURE,
@@ -62,98 +71,144 @@ TEMP_SENSOR_MAP = {
     "return_temperature": ATTR_TEMPERATURE,
 }
 
-ENERGY_SENSOR_MAP = {
-    "electricity_consumed": ["Current Consumed Power", POWER_WATT, DEVICE_CLASS_POWER],
-    "electricity_produced": ["Current Produced Power", POWER_WATT, DEVICE_CLASS_POWER],
+ENERGY_SENSOR_MAP: dict[str, list] = {
+    "electricity_consumed": [
+        "Current Consumed Power",
+        POWER_WATT,
+        SensorDeviceClass.POWER,
+        SensorStateClass.MEASUREMENT,
+    ],
+    "electricity_produced": [
+        "Current Produced Power",
+        POWER_WATT,
+        SensorDeviceClass.POWER,
+        SensorStateClass.MEASUREMENT,
+    ],
     "electricity_consumed_interval": [
         "Consumed Power Interval",
         ENERGY_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        SensorDeviceClass.ENERGY,
+        SensorStateClass.TOTAL,
     ],
     "electricity_consumed_peak_interval": [
         "Consumed Power Interval",
         ENERGY_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        SensorDeviceClass.ENERGY,
+        SensorStateClass.TOTAL,
     ],
     "electricity_consumed_off_peak_interval": [
         "Consumed Power Interval (off peak)",
         ENERGY_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        SensorDeviceClass.ENERGY,
+        SensorStateClass.TOTAL,
     ],
     "electricity_produced_interval": [
         "Produced Power Interval",
         ENERGY_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        SensorDeviceClass.ENERGY,
+        SensorStateClass.TOTAL,
     ],
     "electricity_produced_peak_interval": [
         "Produced Power Interval",
         ENERGY_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        SensorDeviceClass.ENERGY,
+        SensorStateClass.TOTAL,
     ],
     "electricity_produced_off_peak_interval": [
         "Produced Power Interval (off peak)",
         ENERGY_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        SensorDeviceClass.ENERGY,
+        SensorStateClass.TOTAL,
     ],
     "electricity_consumed_off_peak_point": [
         "Current Consumed Power (off peak)",
         POWER_WATT,
-        DEVICE_CLASS_POWER,
+        SensorDeviceClass.POWER,
+        SensorStateClass.MEASUREMENT,
     ],
     "electricity_consumed_peak_point": [
         "Current Consumed Power",
         POWER_WATT,
-        DEVICE_CLASS_POWER,
+        SensorDeviceClass.POWER,
+        SensorStateClass.MEASUREMENT,
     ],
     "electricity_consumed_off_peak_cumulative": [
         "Cumulative Consumed Power (off peak)",
         ENERGY_KILO_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        SensorDeviceClass.ENERGY,
+        SensorStateClass.TOTAL_INCREASING,
     ],
     "electricity_consumed_peak_cumulative": [
         "Cumulative Consumed Power",
         ENERGY_KILO_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        SensorDeviceClass.ENERGY,
+        SensorStateClass.TOTAL_INCREASING,
     ],
     "electricity_produced_off_peak_point": [
         "Current Produced Power (off peak)",
         POWER_WATT,
-        DEVICE_CLASS_POWER,
+        SensorDeviceClass.POWER,
+        SensorStateClass.MEASUREMENT,
     ],
     "electricity_produced_peak_point": [
         "Current Produced Power",
         POWER_WATT,
-        DEVICE_CLASS_POWER,
+        SensorDeviceClass.POWER,
+        SensorStateClass.MEASUREMENT,
     ],
     "electricity_produced_off_peak_cumulative": [
         "Cumulative Produced Power (off peak)",
         ENERGY_KILO_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        SensorDeviceClass.ENERGY,
+        SensorStateClass.TOTAL_INCREASING,
     ],
     "electricity_produced_peak_cumulative": [
         "Cumulative Produced Power",
         ENERGY_KILO_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        SensorDeviceClass.ENERGY,
+        SensorStateClass.TOTAL_INCREASING,
     ],
     "gas_consumed_interval": [
         "Current Consumed Gas Interval",
         VOLUME_CUBIC_METERS,
-        None,
+        SensorDeviceClass.GAS,
+        SensorStateClass.TOTAL,
     ],
-    "gas_consumed_cumulative": ["Cumulative Consumed Gas", VOLUME_CUBIC_METERS, None],
-    "net_electricity_point": ["Current net Power", POWER_WATT, DEVICE_CLASS_POWER],
+    "gas_consumed_cumulative": [
+        "Consumed Gas",
+        VOLUME_CUBIC_METERS,
+        SensorDeviceClass.GAS,
+        SensorStateClass.TOTAL_INCREASING,
+    ],
+    "net_electricity_point": [
+        "Current net Power",
+        POWER_WATT,
+        SensorDeviceClass.POWER,
+        SensorStateClass.MEASUREMENT,
+    ],
     "net_electricity_cumulative": [
         "Cumulative net Power",
         ENERGY_KILO_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        SensorDeviceClass.ENERGY,
+        SensorStateClass.TOTAL,
     ],
 }
 
-MISC_SENSOR_MAP = {
+MISC_SENSOR_MAP: dict[str, list] = {
     "battery": ATTR_BATTERY_LEVEL,
     "illuminance": ATTR_ILLUMINANCE,
-    "modulation_level": ["Heater Modulation Level", PERCENTAGE, None],
-    "valve_position": ["Valve Position", PERCENTAGE, None],
+    "modulation_level": [
+        "Heater Modulation Level",
+        PERCENTAGE,
+        None,
+        SensorStateClass.MEASUREMENT,
+    ],
+    "valve_position": [
+        "Valve Position",
+        PERCENTAGE,
+        None,
+        SensorStateClass.MEASUREMENT,
+    ],
     "water_pressure": ATTR_PRESSURE,
 }
 
@@ -170,12 +225,16 @@ CUSTOM_ICONS = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Smile sensors from a config entry."""
     api = hass.data[DOMAIN][config_entry.entry_id]["api"]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
 
-    entities = []
+    entities: list[SmileSensor] = []
     all_devices = api.get_all_devices()
     single_thermostat = api.single_master_thermostat()
     for dev_id, device_properties in all_devices.items():
@@ -248,6 +307,7 @@ class SmileSensor(SmileGateway, SensorEntity):
         self._dev_class = None
         self._icon = None
         self._state = None
+        self._state_class = None
         self._unit_of_measurement = None
 
         if dev_id == self._api.heater_id:
@@ -281,6 +341,11 @@ class SmileSensor(SmileGateway, SensorEntity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
+    @property
+    def state_class(self):
+        """Return the state_class of this entity."""
+        return self._state_class
+
 
 class PwThermostatSensor(SmileSensor):
     """Thermostat (or generic) sensor devices."""
@@ -293,13 +358,12 @@ class PwThermostatSensor(SmileSensor):
         self._model = sensor_type[SENSOR_MAP_MODEL]
         self._unit_of_measurement = sensor_type[SENSOR_MAP_UOM]
         self._dev_class = sensor_type[SENSOR_MAP_DEVICE_CLASS]
+        self._state_class = sensor_type[SENSOR_MAP_STATE_CLASS]
 
     @callback
     def _async_process_data(self):
         """Update the entity."""
-        data = self._api.get_device_data(self._dev_id)
-
-        if not data:
+        if not (data := self._api.get_device_data(self._dev_id)):
             _LOGGER.error("Received no data for device %s", self._entity_name)
             self.async_write_ha_state()
             return
@@ -324,9 +388,7 @@ class PwAuxDeviceSensor(SmileSensor):
     @callback
     def _async_process_data(self):
         """Update the entity."""
-        data = self._api.get_device_data(self._dev_id)
-
-        if not data:
+        if not (data := self._api.get_device_data(self._dev_id)):
             _LOGGER.error("Received no data for device %s", self._entity_name)
             self.async_write_ha_state()
             return
@@ -362,6 +424,7 @@ class PwPowerSensor(SmileSensor):
 
         self._unit_of_measurement = sensor_type[SENSOR_MAP_UOM]
         self._dev_class = sensor_type[SENSOR_MAP_DEVICE_CLASS]
+        self._state_class = sensor_type[SENSOR_MAP_STATE_CLASS]
 
         if dev_id == self._api.gateway_id:
             self._model = "P1 DSMR"
@@ -369,9 +432,7 @@ class PwPowerSensor(SmileSensor):
     @callback
     def _async_process_data(self):
         """Update the entity."""
-        data = self._api.get_device_data(self._dev_id)
-
-        if not data:
+        if not (data := self._api.get_device_data(self._dev_id)):
             _LOGGER.error("Received no data for device %s", self._entity_name)
             self.async_write_ha_state()
             return

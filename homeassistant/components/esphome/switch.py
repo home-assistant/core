@@ -36,17 +36,12 @@ class EsphomeSwitch(EsphomeEntity[SwitchInfo, SwitchState], SwitchEntity):
     """A switch implementation for ESPHome."""
 
     @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return self._static_info.icon
-
-    @property
     def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._static_info.assumed_state
 
     @esphome_state_property
-    def is_on(self) -> bool | None:  # type: ignore[override]
+    def is_on(self) -> bool | None:
         """Return true if the switch is on."""
         return self._state.state
 

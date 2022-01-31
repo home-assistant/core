@@ -8,15 +8,15 @@ from typing import Any
 from pybotvac.exceptions import NeatoRobotException
 from pybotvac.robot import Robot
 
-from homeassistant.components.neato import NeatoHub
-from homeassistant.components.sensor import DEVICE_CLASS_BATTERY, SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import NEATO_DOMAIN, NEATO_LOGIN, NEATO_ROBOTS, SCAN_INTERVAL_MINUTES
+from .hub import NeatoHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,7 +81,12 @@ class NeatoSensor(SensorEntity):
     @property
     def device_class(self) -> str:
         """Return the device class."""
-        return DEVICE_CLASS_BATTERY
+        return SensorDeviceClass.BATTERY
+
+    @property
+    def entity_category(self) -> EntityCategory:
+        """Device entity category."""
+        return EntityCategory.DIAGNOSTIC
 
     @property
     def available(self) -> bool:
@@ -103,4 +108,4 @@ class NeatoSensor(SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Device info for neato robot."""
-        return {"identifiers": {(NEATO_DOMAIN, self._robot_serial)}}
+        return DeviceInfo(identifiers={(NEATO_DOMAIN, self._robot_serial)})

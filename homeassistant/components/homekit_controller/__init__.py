@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import Any
 
 import aiohomekit
@@ -14,14 +15,19 @@ from aiohomekit.model.characteristics import (
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import normalize_hkid
-from .connection import HKDevice
-from .const import CONTROLLER, DOMAIN, ENTITY_MAP, KNOWN_DEVICES, TRIGGERS
+from .connection import HKDevice, valid_serial_number
+from .const import CONTROLLER, ENTITY_MAP, KNOWN_DEVICES, TRIGGERS
 from .storage import EntityMapStorage
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def escape_characteristic_name(char_name):
@@ -34,7 +40,7 @@ class HomeKitEntity(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, accessory, devinfo):
+    def __init__(self, accessory: HKDevice, devinfo):
         """Initialise a generic HomeKit device."""
         self._accessory = accessory
         self._aid = devinfo["aid"]
@@ -131,8 +137,12 @@ class HomeKitEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Return the ID of this device."""
-        serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
-        return f"homekit-{serial}-{self._iid}"
+        info = self.accessory_info
+        serial = info.value(CharacteristicsTypes.SERIAL_NUMBER)
+        if valid_serial_number(serial):
+            return f"homekit-{serial}-{self._iid}"
+        # Some accessories do not have a serial number
+        return f"homekit-{self._accessory.unique_id}-{self._aid}-{self._iid}"
 
     @property
     def name(self) -> str:
@@ -145,26 +155,9 @@ class HomeKitEntity(Entity):
         return self._accessory.available and self.service.available
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        info = self.accessory_info
-        accessory_serial = info.value(CharacteristicsTypes.SERIAL_NUMBER)
-
-        device_info = {
-            "identifiers": {(DOMAIN, "serial-number", accessory_serial)},
-            "name": info.value(CharacteristicsTypes.NAME),
-            "manufacturer": info.value(CharacteristicsTypes.MANUFACTURER, ""),
-            "model": info.value(CharacteristicsTypes.MODEL, ""),
-            "sw_version": info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
-        }
-
-        # Some devices only have a single accessory - we don't add a
-        # via_device otherwise it would be self referential.
-        bridge_serial = self._accessory.connection_info["serial-number"]
-        if accessory_serial != bridge_serial:
-            device_info["via_device"] = (DOMAIN, "serial-number", bridge_serial)
-
-        return device_info
+        return self._accessory.device_info_for_accessory(self.accessory)
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
@@ -201,7 +194,7 @@ class CharacteristicEntity(HomeKitEntity):
         return f"homekit-{serial}-aid:{self._aid}-sid:{self._char.service.iid}-cid:{self._char.iid}"
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a HomeKit connection on a config entry."""
     conn = HKDevice(hass, entry, entry.data)
     hass.data[KNOWN_DEVICES][conn.unique_id] = conn
@@ -219,7 +212,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up for Homekit devices."""
     map_storage = hass.data[ENTITY_MAP] = EntityMapStorage(hass)
     await map_storage.async_initialize()
@@ -244,7 +237,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Disconnect from HomeKit devices before unloading entry."""
     hkid = entry.data["AccessoryPairingID"]
 
@@ -255,7 +248,24 @@ async def async_unload_entry(hass, entry):
     return True
 
 
-async def async_remove_entry(hass, entry):
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Cleanup caches before removing config entry."""
     hkid = entry.data["AccessoryPairingID"]
+
+    # Remove cached type data from .storage/homekit_controller-entity-map
     hass.data[ENTITY_MAP].async_delete_map(hkid)
+
+    # Remove the pairing on the device, making the device discoverable again.
+    # Don't reuse any objects in hass.data as they are already unloaded
+    async_zeroconf_instance = await zeroconf.async_get_async_instance(hass)
+    controller = aiohomekit.Controller(async_zeroconf_instance=async_zeroconf_instance)
+    controller.load_pairing(hkid, dict(entry.data))
+    try:
+        await controller.remove_pairing(hkid)
+    except aiohomekit.AccessoryDisconnectedError:
+        _LOGGER.warning(
+            "Accessory %s was removed from HomeAssistant but was not reachable "
+            "to properly unpair. It may need resetting before you can use it with "
+            "HomeKit again",
+            entry.title,
+        )

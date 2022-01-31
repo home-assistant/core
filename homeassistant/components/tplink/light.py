@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
-from kasa import SmartDevice
+from kasa import SmartBulb
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -26,6 +26,7 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
 
+from . import legacy_device_id
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity, async_refresh_after
@@ -40,7 +41,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches."""
     coordinator: TPLinkDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    device = coordinator.device
+    device = cast(SmartBulb, coordinator.device)
     if device.is_bulb or device.is_light_strip or device.is_dimmer:
         async_add_entities([TPLinkSmartBulb(device, coordinator)])
 
@@ -49,16 +50,24 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     """Representation of a TPLink Smart Bulb."""
 
     coordinator: TPLinkDataUpdateCoordinator
+    device: SmartBulb
 
     def __init__(
         self,
-        device: SmartDevice,
+        device: SmartBulb,
         coordinator: TPLinkDataUpdateCoordinator,
     ) -> None:
         """Initialize the switch."""
         super().__init__(device, coordinator)
         # For backwards compat with pyHS100
-        self._attr_unique_id = self.device.mac.replace(":", "").upper()
+        if self.device.is_dimmer:
+            # Dimmers used to use the switch format since
+            # pyHS100 treated them as SmartPlug but the old code
+            # created them as lights
+            # https://github.com/home-assistant/core/blob/2021.9.7/homeassistant/components/tplink/common.py#L86
+            self._attr_unique_id = legacy_device_id(device)
+        else:
+            self._attr_unique_id = self.device.mac.replace(":", "").upper()
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:

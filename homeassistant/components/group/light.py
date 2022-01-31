@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from collections import Counter
 import itertools
-from typing import Any, Set, cast
+import logging
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -33,6 +34,7 @@ from homeassistant.components.light import (
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
+    LightEntity,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -40,14 +42,16 @@ from homeassistant.const import (
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import CoreState, Event, HomeAssistant, State
+from homeassistant.core import Event, HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import GroupEntity
 from .util import find_state_attributes, mean_tuple, reduce_attribute
@@ -66,12 +70,14 @@ SUPPORT_GROUP_LIGHT = (
     SUPPORT_EFFECT | SUPPORT_FLASH | SUPPORT_TRANSITION | SUPPORT_WHITE_VALUE
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, Any] | None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Initialize light.group platform."""
     async_add_entities(
@@ -101,7 +107,7 @@ FORWARDED_ATTRIBUTES = frozenset(
 )
 
 
-class LightGroup(GroupEntity, light.LightEntity):
+class LightGroup(GroupEntity, LightEntity):
     """Representation of a light group."""
 
     _attr_available = False
@@ -123,20 +129,17 @@ class LightGroup(GroupEntity, light.LightEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
 
-        async def async_state_changed_listener(event: Event) -> None:
+        @callback
+        def async_state_changed_listener(event: Event) -> None:
             """Handle child updates."""
             self.async_set_context(event.context)
-            await self.async_defer_or_update_ha_state()
+            self.async_defer_or_update_ha_state()
 
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass, self._entity_ids, async_state_changed_listener
             )
         )
-
-        if self.hass.state == CoreState.running:
-            await self.async_update()
-            return
 
         await super().async_added_to_hass()
 
@@ -152,9 +155,11 @@ class LightGroup(GroupEntity, light.LightEntity):
         }
         data[ATTR_ENTITY_ID] = self._entity_ids
 
+        _LOGGER.debug("Forwarded turn_on command: %s", data)
+
         await self.hass.services.async_call(
             light.DOMAIN,
-            light.SERVICE_TURN_ON,
+            SERVICE_TURN_ON,
             data,
             blocking=True,
             context=self._context,
@@ -169,13 +174,14 @@ class LightGroup(GroupEntity, light.LightEntity):
 
         await self.hass.services.async_call(
             light.DOMAIN,
-            light.SERVICE_TURN_OFF,
+            SERVICE_TURN_OFF,
             data,
             blocking=True,
             context=self._context,
         )
 
-    async def async_update(self) -> None:
+    @callback
+    def async_update_group_state(self) -> None:
         """Query all members and determine the light group state."""
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
         states: list[State] = list(filter(None, all_states))
@@ -246,7 +252,7 @@ class LightGroup(GroupEntity, light.LightEntity):
         if all_supported_color_modes:
             # Merge all color modes.
             self._attr_supported_color_modes = cast(
-                Set[str], set().union(*all_supported_color_modes)
+                set[str], set().union(*all_supported_color_modes)
             )
 
         self._attr_supported_features = 0

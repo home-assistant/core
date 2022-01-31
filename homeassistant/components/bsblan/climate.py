@@ -20,16 +20,9 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_TEMPERATURE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_TARGET_TEMPERATURE, DATA_BSBLAN_CLIENT, DOMAIN
@@ -98,12 +91,12 @@ class BSBLanClimate(ClimateEntity):
         self._store_hvac_mode = None
         self.bsblan = bsblan
         self._attr_name = self._attr_unique_id = info.device_identification
-        self._attr_device_info = {
-            ATTR_IDENTIFIERS: {(DOMAIN, info.device_identification)},
-            ATTR_NAME: "BSBLan Device",
-            ATTR_MANUFACTURER: "BSBLan",
-            ATTR_MODEL: info.controller_variant,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, info.device_identification)},
+            manufacturer="BSBLan",
+            model=info.controller_variant,
+            name="BSBLan Device",
+        )
 
     async def async_set_preset_mode(self, preset_mode):
         """Set preset mode."""

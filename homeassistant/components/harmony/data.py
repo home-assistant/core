@@ -1,12 +1,16 @@
 """Harmony data object which contains the Harmony Client."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Iterable
 import logging
 
 from aioharmony.const import ClientCallbackType, SendCommandDevice
 import aioharmony.exceptions as aioexc
 from aioharmony.harmonyapi import HarmonyAPI as HarmonyClient
+
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import ACTIVITY_POWER_OFF
 from .subscriber import HarmonySubscriberMixin
@@ -79,20 +83,21 @@ class HarmonyData(HarmonySubscriberMixin):
         """Return the current activity tuple."""
         return self._client.current_activity
 
-    def device_info(self, domain: str):
+    def device_info(self, domain: str) -> DeviceInfo:
         """Return hub device info."""
         model = "Harmony Hub"
         if "ethernetStatus" in self._client.hub_config.info:
             model = "Harmony Hub Pro 2400"
-        return {
-            "identifiers": {(domain, self.unique_id)},
-            "manufacturer": "Logitech",
-            "sw_version": self._client.hub_config.info.get(
+        return DeviceInfo(
+            identifiers={(domain, self.unique_id)},
+            manufacturer="Logitech",
+            model=model,
+            name=self.name,
+            sw_version=self._client.hub_config.info.get(
                 "hubSwVersion", self._client.fw_version
             ),
-            "name": self.name,
-            "model": model,
-        }
+            configuration_url="https://www.logitech.com/en-us/my-account",
+        )
 
     async def connect(self) -> bool:
         """Connect to the Harmony Hub."""
@@ -109,16 +114,24 @@ class HarmonyData(HarmonySubscriberMixin):
             ip_address=self._address, callbacks=ClientCallbackType(**callbacks)
         )
 
+        connected = False
         try:
-            if not await self._client.connect():
-                _LOGGER.warning("%s: Unable to connect to HUB", self._name)
-                await self._client.close()
-                return False
-        except aioexc.TimeOut:
-            _LOGGER.warning("%s: Connection timed-out", self._name)
-            return False
-
-        return True
+            connected = await self._client.connect()
+        except (asyncio.TimeoutError, aioexc.TimeOut) as err:
+            await self._client.close()
+            raise ConfigEntryNotReady(
+                f"{self._name}: Connection timed-out to {self._address}:8088"
+            ) from err
+        except (ValueError, AttributeError) as err:
+            await self._client.close()
+            raise ConfigEntryNotReady(
+                f"{self._name}: Error {err} while connected HUB at: {self._address}:8088"
+            ) from err
+        if not connected:
+            await self._client.close()
+            raise ConfigEntryNotReady(
+                f"{self._name}: Unable to connect to HUB at: {self._address}:8088"
+            )
 
     async def shutdown(self):
         """Close connection on shutdown."""

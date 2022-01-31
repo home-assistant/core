@@ -1,10 +1,5 @@
 """The tests for the Vultr sensor platform."""
-import json
-import unittest
-from unittest.mock import patch
-
 import pytest
-import requests_mock
 import voluptuous as vol
 
 from homeassistant.components import vultr as base_vultr
@@ -16,152 +11,124 @@ from homeassistant.const import (
     CONF_PLATFORM,
     DATA_GIGABYTES,
 )
+from homeassistant.core import HomeAssistant
 
-from tests.common import get_test_home_assistant, load_fixture
-from tests.components.vultr.test_init import VALID_CONFIG
+CONFIGS = [
+    {
+        CONF_NAME: vultr.DEFAULT_NAME,
+        CONF_SUBSCRIPTION: "576965",
+        CONF_MONITORED_CONDITIONS: vultr.SENSOR_KEYS,
+    },
+    {
+        CONF_NAME: "Server {}",
+        CONF_SUBSCRIPTION: "123456",
+        CONF_MONITORED_CONDITIONS: vultr.SENSOR_KEYS,
+    },
+    {
+        CONF_NAME: "VPS Charges",
+        CONF_SUBSCRIPTION: "555555",
+        CONF_MONITORED_CONDITIONS: ["pending_charges"],
+    },
+]
 
 
-class TestVultrSensorSetup(unittest.TestCase):
-    """Test the Vultr platform."""
+@pytest.mark.usefixtures("valid_config")
+def test_sensor(hass: HomeAssistant):
+    """Test the Vultr sensor class and methods."""
+    hass_devices = []
 
-    DEVICES = []
-
-    def add_entities(self, devices, action):
+    def add_entities(devices, action):
         """Mock add devices."""
         for device in devices:
-            device.hass = self.hass
-            self.DEVICES.append(device)
+            device.hass = hass
+            hass_devices.append(device)
 
-    def setUp(self):
-        """Initialize values for this testcase class."""
-        self.hass = get_test_home_assistant()
-        self.configs = [
-            {
-                CONF_NAME: vultr.DEFAULT_NAME,
-                CONF_SUBSCRIPTION: "576965",
-                CONF_MONITORED_CONDITIONS: vultr.SENSOR_KEYS,
-            },
-            {
-                CONF_NAME: "Server {}",
-                CONF_SUBSCRIPTION: "123456",
-                CONF_MONITORED_CONDITIONS: vultr.SENSOR_KEYS,
-            },
-            {
-                CONF_NAME: "VPS Charges",
-                CONF_SUBSCRIPTION: "555555",
-                CONF_MONITORED_CONDITIONS: ["pending_charges"],
-            },
-        ]
-        self.addCleanup(self.hass.stop)
+    for config in CONFIGS:
+        vultr.setup_platform(hass, config, add_entities, None)
 
-    @requests_mock.Mocker()
-    def test_sensor(self, mock):
-        """Test the Vultr sensor class and methods."""
-        mock.get(
-            "https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567",
-            text=load_fixture("vultr_account_info.json"),
-        )
+    assert len(hass_devices) == 5
 
-        with patch(
-            "vultr.Vultr.server_list",
-            return_value=json.loads(load_fixture("vultr_server_list.json")),
-        ):
-            # Setup hub
-            base_vultr.setup(self.hass, VALID_CONFIG)
+    tested = 0
 
-        for config in self.configs:
-            setup = vultr.setup_platform(self.hass, config, self.add_entities, None)
+    for device in hass_devices:
 
-            assert setup is None
+        # Test pre update
+        if device.subscription == "576965":
+            assert vultr.DEFAULT_NAME == device.name
 
-        assert len(self.DEVICES) == 5
+        device.update()
 
-        tested = 0
-
-        for device in self.DEVICES:
-
-            # Test pre update
+        if device.unit_of_measurement == DATA_GIGABYTES:  # Test Bandwidth Used
             if device.subscription == "576965":
-                assert vultr.DEFAULT_NAME == device.name
+                assert device.name == "Vultr my new server Current Bandwidth Used"
+                assert device.icon == "mdi:chart-histogram"
+                assert device.state == 131.51
+                assert device.icon == "mdi:chart-histogram"
+                tested += 1
 
-            device.update()
+            elif device.subscription == "123456":
+                assert device.name == "Server Current Bandwidth Used"
+                assert device.state == 957.46
+                tested += 1
 
-            if device.unit_of_measurement == DATA_GIGABYTES:  # Test Bandwidth Used
-                if device.subscription == "576965":
-                    assert device.name == "Vultr my new server Current Bandwidth Used"
-                    assert device.icon == "mdi:chart-histogram"
-                    assert device.state == 131.51
-                    assert device.icon == "mdi:chart-histogram"
-                    tested += 1
+        elif device.unit_of_measurement == "US$":  # Test Pending Charges
 
-                elif device.subscription == "123456":
-                    assert device.name == "Server Current Bandwidth Used"
-                    assert device.state == 957.46
-                    tested += 1
+            if device.subscription == "576965":  # Default 'Vultr {} {}'
+                assert device.name == "Vultr my new server Pending Charges"
+                assert device.icon == "mdi:currency-usd"
+                assert device.state == 46.67
+                assert device.icon == "mdi:currency-usd"
+                tested += 1
 
-            elif device.unit_of_measurement == "US$":  # Test Pending Charges
+            elif device.subscription == "123456":  # Custom name with 1 {}
+                assert device.name == "Server Pending Charges"
+                assert device.state == "not a number"
+                tested += 1
 
-                if device.subscription == "576965":  # Default 'Vultr {} {}'
-                    assert device.name == "Vultr my new server Pending Charges"
-                    assert device.icon == "mdi:currency-usd"
-                    assert device.state == 46.67
-                    assert device.icon == "mdi:currency-usd"
-                    tested += 1
+            elif device.subscription == "555555":  # No {} in name
+                assert device.name == "VPS Charges"
+                assert device.state == 5.45
+                tested += 1
 
-                elif device.subscription == "123456":  # Custom name with 1 {}
-                    assert device.name == "Server Pending Charges"
-                    assert device.state == "not a number"
-                    tested += 1
+    assert tested == 5
 
-                elif device.subscription == "555555":  # No {} in name
-                    assert device.name == "VPS Charges"
-                    assert device.state == 5.45
-                    tested += 1
 
-        assert tested == 5
-
-    def test_invalid_sensor_config(self):
-        """Test config type failures."""
-        with pytest.raises(vol.Invalid):  # No subscription
-            vultr.PLATFORM_SCHEMA(
-                {
-                    CONF_PLATFORM: base_vultr.DOMAIN,
-                    CONF_MONITORED_CONDITIONS: vultr.SENSOR_KEYS,
-                }
-            )
-        with pytest.raises(vol.Invalid):  # Bad monitored_conditions
-            vultr.PLATFORM_SCHEMA(
-                {
-                    CONF_PLATFORM: base_vultr.DOMAIN,
-                    CONF_SUBSCRIPTION: "123456",
-                    CONF_MONITORED_CONDITIONS: ["non-existent-condition"],
-                }
-            )
-
-    @requests_mock.Mocker()
-    def test_invalid_sensors(self, mock):
-        """Test the VultrSensor fails."""
-        mock.get(
-            "https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567",
-            text=load_fixture("vultr_account_info.json"),
+def test_invalid_sensor_config():
+    """Test config type failures."""
+    with pytest.raises(vol.Invalid):  # No subscription
+        vultr.PLATFORM_SCHEMA(
+            {
+                CONF_PLATFORM: base_vultr.DOMAIN,
+                CONF_MONITORED_CONDITIONS: vultr.SENSOR_KEYS,
+            }
+        )
+    with pytest.raises(vol.Invalid):  # Bad monitored_conditions
+        vultr.PLATFORM_SCHEMA(
+            {
+                CONF_PLATFORM: base_vultr.DOMAIN,
+                CONF_SUBSCRIPTION: "123456",
+                CONF_MONITORED_CONDITIONS: ["non-existent-condition"],
+            }
         )
 
-        with patch(
-            "vultr.Vultr.server_list",
-            return_value=json.loads(load_fixture("vultr_server_list.json")),
-        ):
-            # Setup hub
-            base_vultr.setup(self.hass, VALID_CONFIG)
 
-        bad_conf = {
-            CONF_NAME: "Vultr {} {}",
-            CONF_SUBSCRIPTION: "",
-            CONF_MONITORED_CONDITIONS: vultr.SENSOR_KEYS,
-        }  # No subs at all
+@pytest.mark.usefixtures("valid_config")
+def test_invalid_sensors(hass: HomeAssistant):
+    """Test the VultrSensor fails."""
+    hass_devices = []
 
-        no_sub_setup = vultr.setup_platform(
-            self.hass, bad_conf, self.add_entities, None
-        )
+    def add_entities(devices, action):
+        """Mock add devices."""
+        for device in devices:
+            device.hass = hass
+            hass_devices.append(device)
 
-        assert no_sub_setup is None
-        assert len(self.DEVICES) == 0
+    bad_conf = {
+        CONF_NAME: "Vultr {} {}",
+        CONF_SUBSCRIPTION: "",
+        CONF_MONITORED_CONDITIONS: vultr.SENSOR_KEYS,
+    }  # No subs at all
+
+    vultr.setup_platform(hass, bad_conf, add_entities, None)
+
+    assert len(hass_devices) == 0

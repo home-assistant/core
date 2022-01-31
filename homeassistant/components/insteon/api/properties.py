@@ -295,8 +295,7 @@ async def websocket_get_properties(
     msg: dict,
 ) -> None:
     """Add the default All-Link Database records for an Insteon device."""
-    device = devices[msg[DEVICE_ADDRESS]]
-    if not device:
+    if not (device := devices[msg[DEVICE_ADDRESS]]):
         notify_device_not_found(connection, msg, INSTEON_DEVICE_NOT_FOUND)
         return
 
@@ -321,8 +320,7 @@ async def websocket_change_properties_record(
     msg: dict,
 ) -> None:
     """Add the default All-Link Database records for an Insteon device."""
-    device = devices[msg[DEVICE_ADDRESS]]
-    if not device:
+    if not (device := devices[msg[DEVICE_ADDRESS]]):
         notify_device_not_found(connection, msg, INSTEON_DEVICE_NOT_FOUND)
         return
 
@@ -344,8 +342,7 @@ async def websocket_write_properties(
     msg: dict,
 ) -> None:
     """Add the default All-Link Database records for an Insteon device."""
-    device = devices[msg[DEVICE_ADDRESS]]
-    if not device:
+    if not (device := devices[msg[DEVICE_ADDRESS]]):
         notify_device_not_found(connection, msg, INSTEON_DEVICE_NOT_FOUND)
         return
 
@@ -376,8 +373,7 @@ async def websocket_load_properties(
     msg: dict,
 ) -> None:
     """Add the default All-Link Database records for an Insteon device."""
-    device = devices[msg[DEVICE_ADDRESS]]
-    if not device:
+    if not (device := devices[msg[DEVICE_ADDRESS]]):
         notify_device_not_found(connection, msg, INSTEON_DEVICE_NOT_FOUND)
         return
 
@@ -408,8 +404,7 @@ async def websocket_reset_properties(
     msg: dict,
 ) -> None:
     """Add the default All-Link Database records for an Insteon device."""
-    device = devices[msg[DEVICE_ADDRESS]]
-    if not device:
+    if not (device := devices[msg[DEVICE_ADDRESS]]):
         notify_device_not_found(connection, msg, INSTEON_DEVICE_NOT_FOUND)
         return
 

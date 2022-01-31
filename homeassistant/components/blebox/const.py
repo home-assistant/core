@@ -1,21 +1,20 @@
 """Constants for the BleBox devices integration."""
 
-from homeassistant.components.cover import (
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GATE,
-    DEVICE_CLASS_SHUTTER,
+from homeassistant.components.cover import CoverDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.switch import SwitchDeviceClass
+from homeassistant.const import (
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    TEMP_CELSIUS,
 )
-from homeassistant.components.switch import DEVICE_CLASS_SWITCH
-from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 
 DOMAIN = "blebox"
 PRODUCT = "product"
 
-DEFAULT_SETUP_TIMEOUT = 3
+DEFAULT_SETUP_TIMEOUT = 10
 
 # translation strings
 ADDRESS_ALREADY_CONFIGURED = "address_already_configured"
@@ -24,11 +23,11 @@ UNSUPPORTED_VERSION = "unsupported_version"
 UNKNOWN = "unknown"
 
 BLEBOX_TO_HASS_DEVICE_CLASSES = {
-    "shutter": DEVICE_CLASS_SHUTTER,
-    "gatebox": DEVICE_CLASS_DOOR,
-    "gate": DEVICE_CLASS_GATE,
-    "relay": DEVICE_CLASS_SWITCH,
-    "temperature": DEVICE_CLASS_TEMPERATURE,
+    "shutter": CoverDeviceClass.SHUTTER,
+    "gatebox": CoverDeviceClass.DOOR,
+    "gate": CoverDeviceClass.GATE,
+    "relay": SwitchDeviceClass.SWITCH,
+    "temperature": SensorDeviceClass.TEMPERATURE,
 }
 
 BLEBOX_TO_HASS_COVER_STATES = {

@@ -174,6 +174,7 @@ class Thermostat(HomeAccessory):
         self.char_target_heat_cool.override_properties(
             valid_values=self.hc_hass_to_homekit
         )
+        self.char_target_heat_cool.allow_invalid_client_values = True
         # Current and target temperature characteristics
 
         self.char_current_temp = serv_thermostat.configure_char(
@@ -252,7 +253,6 @@ class Thermostat(HomeAccessory):
 
         hvac_mode = state.state
         homekit_hvac_mode = HC_HASS_TO_HOMEKIT[hvac_mode]
-
         # Homekit will reset the mode when VIEWING the temp
         # Ignore it if its the same mode
         if (
@@ -282,7 +282,7 @@ class Thermostat(HomeAccessory):
                             target_hc,
                             hc_fallback,
                         )
-                        target_hc = hc_fallback
+                        self.char_target_heat_cool.value = target_hc = hc_fallback
                         break
 
             params[ATTR_HVAC_MODE] = self.hc_homekit_to_hass[target_hc]
@@ -462,8 +462,7 @@ class Thermostat(HomeAccessory):
                 )
 
         # Set current operation mode for supported thermostats
-        hvac_action = new_state.attributes.get(ATTR_HVAC_ACTION)
-        if hvac_action:
+        if hvac_action := new_state.attributes.get(ATTR_HVAC_ACTION):
             homekit_hvac_action = HC_HASS_TO_HOMEKIT_ACTION[hvac_action]
             self.char_current_heat_cool.set_value(homekit_hvac_action)
 
@@ -575,8 +574,7 @@ class WaterHeater(HomeAccessory):
     def set_heat_cool(self, value):
         """Change operation mode to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set heat-cool to %d", self.entity_id, value)
-        hass_value = HC_HOMEKIT_TO_HASS[value]
-        if hass_value != HVAC_MODE_HEAT:
+        if HC_HOMEKIT_TO_HASS[value] != HVAC_MODE_HEAT:
             self.char_target_heat_cool.set_value(1)  # Heat
 
     def set_target_temperature(self, value):
@@ -609,21 +607,18 @@ class WaterHeater(HomeAccessory):
             self.char_display_units.set_value(unit)
 
         # Update target operation mode
-        operation_mode = new_state.state
-        if operation_mode:
+        if new_state.state:
             self.char_target_heat_cool.set_value(1)  # Heat
 
 
 def _get_temperature_range_from_state(state, unit, default_min, default_max):
     """Calculate the temperature range from a state."""
-    min_temp = state.attributes.get(ATTR_MIN_TEMP)
-    if min_temp:
+    if min_temp := state.attributes.get(ATTR_MIN_TEMP):
         min_temp = round(temperature_to_homekit(min_temp, unit) * 2) / 2
     else:
         min_temp = default_min
 
-    max_temp = state.attributes.get(ATTR_MAX_TEMP)
-    if max_temp:
+    if max_temp := state.attributes.get(ATTR_MAX_TEMP):
         max_temp = round(temperature_to_homekit(max_temp, unit) * 2) / 2
     else:
         max_temp = default_max

@@ -16,13 +16,13 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN
 from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_ENDPOINT,
     ATTR_PROPERTY,
     ATTR_PROPERTY_KEY,
     ATTR_VALUE,
+    DOMAIN,
     VALUE_SCHEMA,
 )
 from .device_automation_helpers import (
@@ -148,12 +148,9 @@ async def async_get_conditions(
 
 @callback
 def async_condition_from_config(
-    config: ConfigType, config_validation: bool
+    hass: HomeAssistant, config: ConfigType
 ) -> condition.ConditionCheckerType:
     """Create a function to test a device condition."""
-    if config_validation:
-        config = CONDITION_SCHEMA(config)
-
     condition_type = config[CONF_TYPE]
     device_id = config[CONF_DEVICE_ID]
 

@@ -24,7 +24,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
-    SERVICE_SET_COVER_POSITION,
     SUPPORT_SET_POSITION,
 )
 from homeassistant.components.fan import (
@@ -58,6 +57,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
+    SERVICE_SET_COVER_POSITION,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_SET,
@@ -80,7 +80,7 @@ STATE_COLORMODE = "colormode"
 STATE_HUE = "hue"
 STATE_SATURATION = "sat"
 STATE_COLOR_TEMP = "ct"
-STATE_TRANSITON = "tt"
+STATE_TRANSITION = "tt"
 STATE_XY = "xy"
 
 # Hue API states, defined separately in case they change
@@ -294,9 +294,7 @@ class HueOneLightStateView(HomeAssistantView):
             )
             return self.json_message("Entity not found", HTTPStatus.NOT_FOUND)
 
-        entity = hass.states.get(hass_entity_id)
-
-        if entity is None:
+        if (entity := hass.states.get(hass_entity_id)) is None:
             _LOGGER.error("Entity not found: %s", hass_entity_id)
             return self.json_message("Entity not found", HTTPStatus.NOT_FOUND)
 
@@ -333,9 +331,7 @@ class HueOneLightChangeView(HomeAssistantView):
             _LOGGER.error("Unknown entity number: %s", entity_number)
             return self.json_message("Entity not found", HTTPStatus.NOT_FOUND)
 
-        entity = hass.states.get(entity_id)
-
-        if entity is None:
+        if (entity := hass.states.get(entity_id)) is None:
             _LOGGER.error("Entity not found: %s", entity_id)
             return self.json_message("Entity not found", HTTPStatus.NOT_FOUND)
 
@@ -362,7 +358,7 @@ class HueOneLightChangeView(HomeAssistantView):
             STATE_SATURATION: None,
             STATE_COLOR_TEMP: None,
             STATE_XY: None,
-            STATE_TRANSITON: None,
+            STATE_TRANSITION: None,
         }
 
         if HUE_API_STATE_ON in request_json:
@@ -378,7 +374,7 @@ class HueOneLightChangeView(HomeAssistantView):
             (HUE_API_STATE_HUE, STATE_HUE),
             (HUE_API_STATE_SAT, STATE_SATURATION),
             (HUE_API_STATE_CT, STATE_COLOR_TEMP),
-            (HUE_API_STATE_TRANSITION, STATE_TRANSITON),
+            (HUE_API_STATE_TRANSITION, STATE_TRANSITION),
         ):
             if key in request_json:
                 try:
@@ -473,9 +469,9 @@ class HueOneLightChangeView(HomeAssistantView):
 
                 if (
                     entity_features & SUPPORT_TRANSITION
-                    and parsed[STATE_TRANSITON] is not None
+                    and parsed[STATE_TRANSITION] is not None
                 ):
-                    data[ATTR_TRANSITION] = parsed[STATE_TRANSITON] / 10
+                    data[ATTR_TRANSITION] = parsed[STATE_TRANSITION] / 10
 
         # If the requested entity is a script, add some variables
         elif entity.domain == script.DOMAIN:
@@ -544,8 +540,7 @@ class HueOneLightChangeView(HomeAssistantView):
         ):
             domain = entity.domain
             # Convert 0-100 to a fan speed
-            brightness = parsed[STATE_BRIGHTNESS]
-            if brightness == 0:
+            if (brightness := parsed[STATE_BRIGHTNESS]) == 0:
                 data[ATTR_SPEED] = SPEED_OFF
             elif 0 < brightness <= 33.3:
                 data[ATTR_SPEED] = SPEED_LOW
@@ -595,7 +590,7 @@ class HueOneLightChangeView(HomeAssistantView):
             (STATE_SATURATION, HUE_API_STATE_SAT),
             (STATE_COLOR_TEMP, HUE_API_STATE_CT),
             (STATE_XY, HUE_API_STATE_XY),
-            (STATE_TRANSITON, HUE_API_STATE_TRANSITION),
+            (STATE_TRANSITION, HUE_API_STATE_TRANSITION),
         ):
             if parsed[key] is not None:
                 json_response.append(

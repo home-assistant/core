@@ -4,10 +4,15 @@ import asyncio
 import async_timeout
 from pydeconz import DeconzSession, errors, group, light, sensor
 
+from homeassistant.config_entries import SOURCE_HASSIO
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import (
+    aiohttp_client,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -20,6 +25,7 @@ from .const import (
     DEFAULT_ALLOW_DECONZ_GROUPS,
     DEFAULT_ALLOW_NEW_DEVICES,
     DOMAIN as DECONZ_DOMAIN,
+    HASSIO_CONFIGURATION_URL,
     LOGGER,
     PLATFORMS,
 )
@@ -109,7 +115,7 @@ class DeconzGateway:
         """Handle signals of gateway connection status."""
         self.available = available
         self.ignore_state_updates = False
-        async_dispatcher_send(self.hass, self.signal_reachable, True)
+        async_dispatcher_send(self.hass, self.signal_reachable)
 
     @callback
     def async_add_device_callback(
@@ -136,7 +142,7 @@ class DeconzGateway:
 
     async def async_update_device_registry(self) -> None:
         """Update device registry."""
-        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+        device_registry = dr.async_get(self.hass)
 
         # Host device
         device_registry.async_get_or_create(
@@ -145,8 +151,13 @@ class DeconzGateway:
         )
 
         # Gateway service
+        configuration_url = f"http://{self.host}:{self.config_entry.data[CONF_PORT]}"
+        if self.config_entry.source == SOURCE_HASSIO:
+            configuration_url = HASSIO_CONFIGURATION_URL
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
+            configuration_url=configuration_url,
+            entry_type=dr.DeviceEntryType.SERVICE,
             identifiers={(DECONZ_DOMAIN, self.api.config.bridge_id)},
             manufacturer="Dresden Elektronik",
             model=self.api.config.model_id,
@@ -218,7 +229,7 @@ class DeconzGateway:
         else:
             deconz_ids += [group.deconz_id for group in self.api.groups.values()]
 
-        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
+        entity_registry = er.async_get(self.hass)
 
         for entity_id, deconz_id in self.deconz_ids.items():
             if deconz_id in deconz_ids and entity_registry.async_is_registered(
@@ -266,7 +277,7 @@ async def get_gateway(
         connection_status=async_connection_status_callback,
     )
     try:
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             await deconz.refresh_state()
         return deconz
 

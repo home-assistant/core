@@ -10,5 +10,6 @@ ATTR_SMHI_THUNDER_PROBABILITY: Final = "thunder_probability"
 DOMAIN = "smhi"
 
 HOME_LOCATION_NAME = "Home"
+DEFAULT_NAME = "Weather"
 
 ENTITY_ID_SENSOR_FORMAT = WEATHER_DOMAIN + ".smhi_{}"

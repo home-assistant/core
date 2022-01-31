@@ -11,6 +11,7 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PIN,
     STATE_ALARM_ARMED_AWAY,
@@ -21,6 +22,8 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_CODE_ARM_REQUIRED,
@@ -46,7 +49,11 @@ STATES_TO_SUPPORTED_FEATURES = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Risco alarm control panel."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
     options = {**DEFAULT_OPTIONS, **config_entry.options}
@@ -164,8 +171,7 @@ class RiscoAlarm(AlarmControlPanelEntity, RiscoEntity):
             _LOGGER.warning("Wrong code entered for %s", mode)
             return
 
-        risco_state = self._ha_to_risco[mode]
-        if not risco_state:
+        if not (risco_state := self._ha_to_risco[mode]):
             _LOGGER.warning("No mapping for mode %s", mode)
             return
 

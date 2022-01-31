@@ -73,8 +73,7 @@ class WebSocketHandler:
         # Exceptions if Socket disconnected or cancelled by connection handler
         with suppress(RuntimeError, ConnectionResetError, *CANCELLATION_ERRORS):
             while not self.wsock.closed:
-                message = await self._to_write.get()
-                if message is None:
+                if (message := await self._to_write.get()) is None:
                     break
 
                 self._logger.debug("Sending %s", message)
@@ -177,7 +176,7 @@ class WebSocketHandler:
 
             # Auth Phase
             try:
-                with async_timeout.timeout(10):
+                async with async_timeout.timeout(10):
                     msg = await wsock.receive()
             except asyncio.TimeoutError as err:
                 disconnect_warn = "Did not receive auth message within 10 seconds"

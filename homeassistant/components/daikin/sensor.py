@@ -6,18 +6,23 @@ from dataclasses import dataclass
 
 from pydaikin.daikin_base import Appliance
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     PERCENTAGE,
     POWER_KILO_WATT,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as DAIKIN_DOMAIN, DaikinApi
 from .const import (
@@ -28,6 +33,7 @@ from .const import (
     ATTR_INSIDE_TEMPERATURE,
     ATTR_OUTSIDE_TEMPERATURE,
     ATTR_TARGET_HUMIDITY,
+    ATTR_TOTAL_ENERGY_TODAY,
     ATTR_TOTAL_POWER,
 )
 
@@ -48,35 +54,39 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     DaikinSensorEntityDescription(
         key=ATTR_INSIDE_TEMPERATURE,
         name="Inside Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
         value_func=lambda device: device.inside_temperature,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_OUTSIDE_TEMPERATURE,
         name="Outside Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
         value_func=lambda device: device.outside_temperature,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_HUMIDITY,
         name="Humidity",
-        device_class=DEVICE_CLASS_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_func=lambda device: device.humidity,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_TARGET_HUMIDITY,
         name="Target Humidity",
-        device_class=DEVICE_CLASS_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_func=lambda device: device.humidity,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_TOTAL_POWER,
-        name="Total Power Consumption",
-        device_class=DEVICE_CLASS_POWER,
+        name="Estimated Power Consumption",
+        device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=POWER_KILO_WATT,
         value_func=lambda device: round(device.current_total_power_consumption, 2),
     ),
@@ -84,7 +94,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         key=ATTR_COOL_ENERGY,
         name="Cool Energy Consumption",
         icon="mdi:snowflake",
-        device_class=DEVICE_CLASS_ENERGY,
+        device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_func=lambda device: round(device.last_hour_cool_energy_consumption, 2),
     ),
@@ -92,7 +102,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         key=ATTR_HEAT_ENERGY,
         name="Heat Energy Consumption",
         icon="mdi:fire",
-        device_class=DEVICE_CLASS_ENERGY,
+        device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_func=lambda device: round(device.last_hour_heat_energy_consumption, 2),
     ),
@@ -103,10 +113,23 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         native_unit_of_measurement=FREQUENCY_HERTZ,
         value_func=lambda device: device.compressor_frequency,
     ),
+    DaikinSensorEntityDescription(
+        key=ATTR_TOTAL_ENERGY_TODAY,
+        name="Today's Total Energy Consumption",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_func=lambda device: round(device.today_total_energy_consumption, 2),
+    ),
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Old way of setting up the Daikin sensors.
 
     Can only be called when a user accidentally mentions the platform in their
@@ -114,7 +137,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Daikin climate based on config_entry."""
     daikin_api = hass.data[DAIKIN_DOMAIN].get(entry.entry_id)
     sensors = [ATTR_INSIDE_TEMPERATURE]
@@ -124,6 +149,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         sensors.append(ATTR_TOTAL_POWER)
         sensors.append(ATTR_COOL_ENERGY)
         sensors.append(ATTR_HEAT_ENERGY)
+        sensors.append(ATTR_TOTAL_ENERGY_TODAY)
     if daikin_api.device.support_humidity:
         sensors.append(ATTR_HUMIDITY)
         sensors.append(ATTR_TARGET_HUMIDITY)

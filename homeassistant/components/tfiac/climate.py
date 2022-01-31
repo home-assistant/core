@@ -1,4 +1,6 @@
 """Climate platform that offers a climate device for the TFIAC protocol."""
+from __future__ import annotations
+
 from concurrent import futures
 from datetime import timedelta
 import logging
@@ -27,7 +29,10 @@ from homeassistant.components.climate.const import (
     SWING_VERTICAL,
 )
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, TEMP_FAHRENHEIT
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -62,7 +67,12 @@ SWING_MODE = "swing_mode"
 ON_MODE = "is_on"
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_devices: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the TFIAC climate device."""
     tfiac_client = Tfiac(config[CONF_HOST])
     try:
@@ -171,8 +181,7 @@ class TfiacClimate(ClimateEntity):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        if temp is not None:
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             await self._client.set_state(TARGET_TEMP, temp)
 
     async def async_set_hvac_mode(self, hvac_mode):

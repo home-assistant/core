@@ -10,7 +10,13 @@ from sqlalchemy.orm.session import Session
 from homeassistant.components import recorder
 from homeassistant.components.recorder import PurgeTask
 from homeassistant.components.recorder.const import MAX_ROWS_TO_PURGE
-from homeassistant.components.recorder.models import Events, RecorderRuns, States
+from homeassistant.components.recorder.models import (
+    Events,
+    RecorderRuns,
+    States,
+    StatisticsRuns,
+    StatisticsShortTerm,
+)
 from homeassistant.components.recorder.purge import purge_old_data
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import EVENT_STATE_CHANGED
@@ -227,6 +233,30 @@ async def test_purge_old_recorder_runs(
         assert recorder_runs.count() == 1
 
 
+async def test_purge_old_statistics_runs(
+    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
+):
+    """Test deleting old statistics runs keeps the latest run."""
+    instance = await async_setup_recorder_instance(hass)
+
+    await _add_test_statistics_runs(hass, instance)
+
+    # make sure we start with 7 statistics runs
+    with session_scope(hass=hass) as session:
+        statistics_runs = session.query(StatisticsRuns)
+        assert statistics_runs.count() == 7
+
+        purge_before = dt_util.utcnow()
+
+        # run purge_old_data()
+        finished = purge_old_data(instance, purge_before, repack=False)
+        assert not finished
+
+        finished = purge_old_data(instance, purge_before, repack=False)
+        assert finished
+        assert statistics_runs.count() == 1
+
+
 async def test_purge_method(
     hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
@@ -238,7 +268,9 @@ async def test_purge_method(
     service_data = {"keep_days": 4}
     await _add_test_events(hass, instance)
     await _add_test_states(hass, instance)
+    await _add_test_statistics(hass, instance)
     await _add_test_recorder_runs(hass, instance)
+    await _add_test_statistics_runs(hass, instance)
     await hass.async_block_till_done()
     await async_wait_recording_done(hass, instance)
 
@@ -250,9 +282,16 @@ async def test_purge_method(
         events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
         assert events.count() == 6
 
+        statistics = session.query(StatisticsShortTerm)
+        assert statistics.count() == 6
+
         recorder_runs = session.query(RecorderRuns)
         assert recorder_runs.count() == 7
         runs_before_purge = recorder_runs.all()
+
+        statistics_runs = session.query(StatisticsRuns)
+        assert statistics_runs.count() == 7
+        statistic_runs_before_purge = statistics_runs.all()
 
         await hass.async_block_till_done()
         await async_wait_purge_done(hass, instance)
@@ -264,9 +303,10 @@ async def test_purge_method(
         # Small wait for recorder thread
         await async_wait_purge_done(hass, instance)
 
-        # only purged old events
+        # only purged old states, events and statistics
         assert states.count() == 4
         assert events.count() == 4
+        assert statistics.count() == 4
 
         # run purge method - correct service data
         await hass.services.async_call("recorder", "purge", service_data=service_data)
@@ -275,17 +315,22 @@ async def test_purge_method(
         # Small wait for recorder thread
         await async_wait_purge_done(hass, instance)
 
-        # we should only have 2 states left after purging
+        # we should only have 2 states, events and statistics left after purging
         assert states.count() == 2
-
-        # now we should only have 2 events left
         assert events.count() == 2
+        assert statistics.count() == 2
 
         # now we should only have 3 recorder runs left
         runs = recorder_runs.all()
         assert runs[0] == runs_before_purge[0]
         assert runs[1] == runs_before_purge[5]
         assert runs[2] == runs_before_purge[6]
+
+        # now we should only have 3 statistics runs left
+        runs = statistics_runs.all()
+        assert runs[0] == statistic_runs_before_purge[0]
+        assert runs[1] == statistic_runs_before_purge[5]
+        assert runs[2] == statistic_runs_before_purge[6]
 
         assert "EVENT_TEST_PURGE" not in (event.event_type for event in events.all())
 
@@ -952,6 +997,35 @@ async def _add_test_events(hass: HomeAssistant, instance: recorder.Recorder):
             )
 
 
+async def _add_test_statistics(hass: HomeAssistant, instance: recorder.Recorder):
+    """Add multiple statistics to the db for testing."""
+    utcnow = dt_util.utcnow()
+    five_days_ago = utcnow - timedelta(days=5)
+    eleven_days_ago = utcnow - timedelta(days=11)
+
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass, instance)
+
+    with recorder.session_scope(hass=hass) as session:
+        for event_id in range(6):
+            if event_id < 2:
+                timestamp = eleven_days_ago
+                state = "-11"
+            elif event_id < 4:
+                timestamp = five_days_ago
+                state = "-5"
+            else:
+                timestamp = utcnow
+                state = "0"
+
+            session.add(
+                StatisticsShortTerm(
+                    start=timestamp,
+                    state=state,
+                )
+            )
+
+
 async def _add_test_recorder_runs(hass: HomeAssistant, instance: recorder.Recorder):
     """Add a few recorder_runs for testing."""
     utcnow = dt_util.utcnow()
@@ -975,6 +1049,31 @@ async def _add_test_recorder_runs(hass: HomeAssistant, instance: recorder.Record
                     start=timestamp,
                     created=dt_util.utcnow(),
                     end=timestamp + timedelta(days=1),
+                )
+            )
+
+
+async def _add_test_statistics_runs(hass: HomeAssistant, instance: recorder.Recorder):
+    """Add a few recorder_runs for testing."""
+    utcnow = dt_util.utcnow()
+    five_days_ago = utcnow - timedelta(days=5)
+    eleven_days_ago = utcnow - timedelta(days=11)
+
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass, instance)
+
+    with recorder.session_scope(hass=hass) as session:
+        for rec_id in range(6):
+            if rec_id < 2:
+                timestamp = eleven_days_ago
+            elif rec_id < 4:
+                timestamp = five_days_ago
+            else:
+                timestamp = utcnow
+
+            session.add(
+                StatisticsRuns(
+                    start=timestamp,
                 )
             )
 

@@ -5,9 +5,9 @@ import logging
 from flipr_api import FliprAPIRestClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=60)
 
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -76,7 +76,7 @@ class FliprDataUpdateCoordinator(DataUpdateCoordinator):
 class FliprEntity(CoordinatorEntity):
     """Implements a common class elements representing the Flipr component."""
 
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, description: EntityDescription
@@ -88,10 +88,10 @@ class FliprEntity(CoordinatorEntity):
             flipr_id = coordinator.config_entry.data[CONF_FLIPR_ID]
             self._attr_unique_id = f"{flipr_id}-{description.key}"
 
-            self._attr_device_info = {
-                "identifiers": {(DOMAIN, flipr_id)},
-                "name": NAME,
-                "manufacturer": MANUFACTURER,
-            }
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, flipr_id)},
+                manufacturer=MANUFACTURER,
+                name=NAME,
+            )
 
             self._attr_name = f"Flipr {flipr_id} {description.name}"

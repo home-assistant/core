@@ -3,8 +3,9 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "logger"
 
@@ -49,7 +50,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the logger component."""
     hass.data[DOMAIN] = {}
     logging.setLoggerClass(_get_logger_class(hass.data[DOMAIN]))
@@ -78,7 +79,7 @@ async def async_setup(hass, config):
             _add_log_filter(logger, value)
 
     @callback
-    def async_service_handler(service):
+    def async_service_handler(service: ServiceCall) -> None:
         """Handle logger services."""
         if service.service == SERVICE_SET_DEFAULT_LEVEL:
             set_default_log_level(service.data.get(ATTR_LEVEL))
