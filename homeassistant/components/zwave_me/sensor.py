@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ZWaveMeEntity
+from . import ZWaveMeController, ZWaveMeEntity
 from .const import DOMAIN
 
 SENSORS_MAP: dict[str, SensorEntityDescription] = {
@@ -87,8 +87,8 @@ async def async_setup_entry(
 
     @callback
     def add_new_device(new_device: ZWaveMeData) -> None:
-        controller = hass.data[DOMAIN][config_entry.entry_id]
-        description = get_description(new_device)
+        controller: ZWaveMeController = hass.data[DOMAIN][config_entry.entry_id]
+        description = SENSORS_MAP.get(new_device.probeType, SENSORS_MAP["generic"])
         sensor = ZWaveMeSensor(controller, new_device, description)
 
         async_add_entities(
@@ -96,12 +96,6 @@ async def async_setup_entry(
                 sensor,
             ]
         )
-
-    @callback
-    def get_description(new_device: ZWaveMeData) -> SensorEntityDescription:
-        if new_device.probeType in SENSORS_MAP:
-            return SENSORS_MAP.get(new_device.probeType)
-        return SENSORS_MAP["generic"]
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
@@ -113,9 +107,14 @@ async def async_setup_entry(
 class ZWaveMeSensor(ZWaveMeEntity, SensorEntity):
     """Representation of a ZWaveMe sensor."""
 
-    def __init__(self, controller, device, description) -> None:
+    def __init__(
+        self,
+        controller: ZWaveMeController,
+        device: ZWaveMeData,
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize the device."""
-        super().__init__(self, controller=controller, device=device)
+        super().__init__(controller=controller, device=device)
         self.entity_description = description
 
     @property
