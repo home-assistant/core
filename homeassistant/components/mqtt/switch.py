@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import functools
-from xmlrpc.client import boolean
 
 import voluptuous as vol
 
@@ -176,7 +175,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
             self._state = last_state.state == STATE_ON
 
     @property
-    def is_on(self) -> boolean | None:
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._state
 
