@@ -78,7 +78,7 @@ repos:
       - id: python-typing-update
         stages: [manual]
         args:
-          - --py38-plus
+          - --py39-plus
           - --force
           - --keep-updates
         files: ^(homeassistant|tests|script)/.+\.py$
