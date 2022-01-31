@@ -150,6 +150,7 @@ PLATFORMS = [
     Platform.SELECT,
     Platform.SCENE,
     Platform.SENSOR,
+    Platform.SIREN,
     Platform.SWITCH,
     Platform.VACUUM,
 ]

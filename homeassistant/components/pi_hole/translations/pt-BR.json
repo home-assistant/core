@@ -20,6 +20,7 @@
                     "name": "Nome",
                     "port": "Porta",
                     "ssl": "Usar um certificado SSL",
+                    "statistics_only": "Somente estat\u00edsticas",
                     "verify_ssl": "Verifique o certificado SSL"
                 }
             }

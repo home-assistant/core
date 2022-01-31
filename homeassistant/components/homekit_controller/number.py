@@ -91,10 +91,17 @@ async def async_setup_entry(
 
     @callback
     def async_add_characteristic(char: Characteristic):
-        if not (description := NUMBER_ENTITIES.get(char.type)):
-            return False
+        entities = []
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
-        async_add_entities([HomeKitNumber(conn, info, char, description)], True)
+
+        if description := NUMBER_ENTITIES.get(char.type):
+            entities.append(HomeKitNumber(conn, info, char, description))
+        elif entity_type := NUMBER_ENTITY_CLASSES.get(char.type):
+            entities.append(entity_type(conn, info, char))
+        else:
+            return False
+
+        async_add_entities(entities, True)
         return True
 
     conn.add_char_factory(async_add_characteristic)
@@ -152,3 +159,72 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
                 self._char.type: value,
             }
         )
+
+
+class HomeKitEcobeeFanModeNumber(CharacteristicEntity, NumberEntity):
+    """Representation of a Number control for Ecobee Fan Mode request."""
+
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity is tracking."""
+        return [self._char.type]
+
+    @property
+    def name(self) -> str:
+        """Return the name of the device if any."""
+        prefix = ""
+        if name := super().name:
+            prefix = name
+        return f"{prefix} Fan Mode"
+
+    @property
+    def min_value(self) -> float:
+        """Return the minimum value."""
+        return self._char.minValue
+
+    @property
+    def max_value(self) -> float:
+        """Return the maximum value."""
+        return self._char.maxValue
+
+    @property
+    def step(self) -> float:
+        """Return the increment/decrement step."""
+        return self._char.minStep
+
+    @property
+    def value(self) -> float:
+        """Return the current characteristic value."""
+        return self._char.value
+
+    async def async_set_value(self, value: float):
+        """Set the characteristic to this value."""
+
+        # Sending the fan mode request sometimes ends up getting ignored by ecobee
+        # and this might be because it the older value instead of newer, and ecobee
+        # thinks there is nothing to do.
+        # So in order to make sure that the request is executed by ecobee, we need
+        # to send a different value before sending the target value.
+        # Fan mode value is a value from 0 to 100. We send a value off by 1 first.
+
+        if value > self.min_value:
+            other_value = value - 1
+        else:
+            other_value = self.min_value + 1
+
+        if value != other_value:
+            await self.async_put_characteristics(
+                {
+                    self._char.type: other_value,
+                }
+            )
+
+        await self.async_put_characteristics(
+            {
+                self._char.type: value,
+            }
+        )
+
+
+NUMBER_ENTITY_CLASSES: dict[str, type] = {
+    CharacteristicsTypes.Vendor.ECOBEE_FAN_WRITE_SPEED: HomeKitEcobeeFanModeNumber,
+}
