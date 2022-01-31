@@ -759,6 +759,111 @@ async def test_supported_features(
     assert state.attributes.get("supported_features") == supported_features
 
 
+async def test_entity_browse_media(hass: HomeAssistant, hass_ws_client):
+    """Test we can browse media."""
+    await async_setup_component(hass, "media_source", {"media_source": {}})
+
+    info = get_fake_chromecast_info()
+
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
+    _, conn_status_cb, _ = get_status_callbacks(chromecast)
+
+    connection_status = MagicMock()
+    connection_status.status = "CONNECTED"
+    conn_status_cb(connection_status)
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.speaker",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    expected_child_1 = {
+        "title": "Epic Sax Guy 10 Hours.mp4",
+        "media_class": "video",
+        "media_content_type": "video/mp4",
+        "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+        "can_play": True,
+        "can_expand": False,
+        "children_media_class": None,
+        "thumbnail": None,
+    }
+    assert expected_child_1 in response["result"]["children"]
+
+    expected_child_2 = {
+        "title": "test.mp3",
+        "media_class": "music",
+        "media_content_type": "audio/mpeg",
+        "media_content_id": "media-source://media_source/local/test.mp3",
+        "can_play": True,
+        "can_expand": False,
+        "children_media_class": None,
+        "thumbnail": None,
+    }
+    assert expected_child_2 in response["result"]["children"]
+
+
+@pytest.mark.parametrize(
+    "cast_type",
+    [pychromecast.const.CAST_TYPE_AUDIO, pychromecast.const.CAST_TYPE_GROUP],
+)
+async def test_entity_browse_media_audio_only(
+    hass: HomeAssistant, hass_ws_client, cast_type
+):
+    """Test we can browse media."""
+    await async_setup_component(hass, "media_source", {"media_source": {}})
+
+    info = get_fake_chromecast_info()
+
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
+    chromecast.cast_type = cast_type
+    _, conn_status_cb, _ = get_status_callbacks(chromecast)
+
+    connection_status = MagicMock()
+    connection_status.status = "CONNECTED"
+    conn_status_cb(connection_status)
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.speaker",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    expected_child_1 = {
+        "title": "Epic Sax Guy 10 Hours.mp4",
+        "media_class": "video",
+        "media_content_type": "video/mp4",
+        "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+        "can_play": True,
+        "can_expand": False,
+        "children_media_class": None,
+        "thumbnail": None,
+    }
+    assert expected_child_1 not in response["result"]["children"]
+
+    expected_child_2 = {
+        "title": "test.mp3",
+        "media_class": "music",
+        "media_content_type": "audio/mpeg",
+        "media_content_id": "media-source://media_source/local/test.mp3",
+        "can_play": True,
+        "can_expand": False,
+        "children_media_class": None,
+        "thumbnail": None,
+    }
+    assert expected_child_2 in response["result"]["children"]
+
+
 async def test_entity_play_media(hass: HomeAssistant, quick_play_mock):
     """Test playing media."""
     entity_id = "media_player.speaker"
