@@ -97,7 +97,7 @@ async def async_attach_trigger(
         nodes.update(
             {
                 async_get_node_from_device_id(hass, device_id)
-                for device_id in config.get(ATTR_DEVICE_ID, [])
+                for device_id in config[ATTR_DEVICE_ID]
             }
         )
     if ATTR_ENTITY_ID in config:
