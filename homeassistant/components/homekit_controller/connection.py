@@ -11,6 +11,7 @@ from aiohomekit.exceptions import (
 from aiohomekit.model import Accessories, Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
+from aiohomekit.uuid import normalize_uuid
 
 from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.core import callback
@@ -495,7 +496,7 @@ class HKDevice:
         for accessory in self.accessories:
             for service in accessory["services"]:
                 try:
-                    stype = ServicesTypes.get_short_uuid(service["type"].upper())
+                    stype = normalize_uuid(service["type"])
                 except KeyError:
                     stype = service["type"].upper()
 

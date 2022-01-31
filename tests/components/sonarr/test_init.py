@@ -1,60 +1,79 @@
 """Tests for the Sonsrr integration."""
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
+
+from sonarr import SonarrAccessRestricted, SonarrError
 
 from homeassistant.components.sonarr.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
 
-from tests.components.sonarr import setup_integration
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.common import MockConfigEntry
 
 
 async def test_config_entry_not_ready(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_sonarr: MagicMock,
 ) -> None:
     """Test the configuration entry not ready."""
-    entry = await setup_integration(hass, aioclient_mock, connection_error=True)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    mock_sonarr.update.side_effect = SonarrError
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_config_entry_reauth(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_sonarr: MagicMock,
 ) -> None:
     """Test the configuration entry needing to be re-authenticated."""
-    with patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
-        entry = await setup_integration(hass, aioclient_mock, invalid_auth=True)
+    mock_sonarr.update.side_effect = SonarrAccessRestricted
 
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    with patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
     mock_flow_init.assert_called_once_with(
         DOMAIN,
         context={
             CONF_SOURCE: SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-            "title_placeholders": {"name": entry.title},
+            "entry_id": mock_config_entry.entry_id,
+            "unique_id": mock_config_entry.unique_id,
+            "title_placeholders": {"name": mock_config_entry.title},
         },
-        data=entry.data,
+        data=mock_config_entry.data,
     )
 
 
 async def test_unload_config_entry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_sonarr: MagicMock,
 ) -> None:
     """Test the configuration entry unloading."""
+    mock_config_entry.add_to_hass(hass)
+
     with patch(
         "homeassistant.components.sonarr.sensor.async_setup_entry",
         return_value=True,
     ):
-        entry = await setup_integration(hass, aioclient_mock)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert hass.data[DOMAIN]
-    assert entry.entry_id in hass.data[DOMAIN]
-    assert entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.entry_id in hass.data[DOMAIN]
 
-    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.entry_id not in hass.data[DOMAIN]
-    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.entry_id not in hass.data[DOMAIN]

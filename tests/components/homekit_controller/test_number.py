@@ -10,7 +10,7 @@ def create_switch_with_spray_level(accessory):
     service = accessory.add_service(ServicesTypes.OUTLET)
 
     spray_level = service.add_char(
-        CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL
+        CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL
     )
 
     spray_level.perms.append("ev")
@@ -31,7 +31,7 @@ def create_switch_with_ecobee_fan_mode(accessory):
     service = accessory.add_service(ServicesTypes.OUTLET)
 
     ecobee_fan_mode = service.add_char(
-        CharacteristicsTypes.Vendor.ECOBEE_FAN_WRITE_SPEED
+        CharacteristicsTypes.VENDOR_ECOBEE_FAN_WRITE_SPEED
     )
 
     ecobee_fan_mode.value = 0
@@ -67,7 +67,7 @@ async def test_read_number(hass, utcnow):
 
     state = await spray_level.async_update(
         ServicesTypes.OUTLET,
-        {CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: 5},
+        {CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: 5},
     )
     assert state.state == "5"
 
@@ -93,7 +93,7 @@ async def test_write_number(hass, utcnow):
     )
     spray_level.async_assert_service_values(
         ServicesTypes.OUTLET,
-        {CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: 5},
+        {CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: 5},
     )
 
     await hass.services.async_call(
@@ -104,7 +104,7 @@ async def test_write_number(hass, utcnow):
     )
     spray_level.async_assert_service_values(
         ServicesTypes.OUTLET,
-        {CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: 3},
+        {CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: 3},
     )
 
 
@@ -129,7 +129,7 @@ async def test_write_ecobee_fan_mode_number(hass, utcnow):
     )
     fan_mode.async_assert_service_values(
         ServicesTypes.OUTLET,
-        {CharacteristicsTypes.Vendor.ECOBEE_FAN_WRITE_SPEED: 1},
+        {CharacteristicsTypes.VENDOR_ECOBEE_FAN_WRITE_SPEED: 1},
     )
 
     await hass.services.async_call(
@@ -140,7 +140,7 @@ async def test_write_ecobee_fan_mode_number(hass, utcnow):
     )
     fan_mode.async_assert_service_values(
         ServicesTypes.OUTLET,
-        {CharacteristicsTypes.Vendor.ECOBEE_FAN_WRITE_SPEED: 2},
+        {CharacteristicsTypes.VENDOR_ECOBEE_FAN_WRITE_SPEED: 2},
     )
 
     await hass.services.async_call(
@@ -151,7 +151,7 @@ async def test_write_ecobee_fan_mode_number(hass, utcnow):
     )
     fan_mode.async_assert_service_values(
         ServicesTypes.OUTLET,
-        {CharacteristicsTypes.Vendor.ECOBEE_FAN_WRITE_SPEED: 99},
+        {CharacteristicsTypes.VENDOR_ECOBEE_FAN_WRITE_SPEED: 99},
     )
 
     await hass.services.async_call(
@@ -162,7 +162,7 @@ async def test_write_ecobee_fan_mode_number(hass, utcnow):
     )
     fan_mode.async_assert_service_values(
         ServicesTypes.OUTLET,
-        {CharacteristicsTypes.Vendor.ECOBEE_FAN_WRITE_SPEED: 100},
+        {CharacteristicsTypes.VENDOR_ECOBEE_FAN_WRITE_SPEED: 100},
     )
 
     await hass.services.async_call(
@@ -173,5 +173,5 @@ async def test_write_ecobee_fan_mode_number(hass, utcnow):
     )
     fan_mode.async_assert_service_values(
         ServicesTypes.OUTLET,
-        {CharacteristicsTypes.Vendor.ECOBEE_FAN_WRITE_SPEED: 0},
+        {CharacteristicsTypes.VENDOR_ECOBEE_FAN_WRITE_SPEED: 0},
     )

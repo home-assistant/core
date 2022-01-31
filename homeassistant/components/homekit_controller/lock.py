@@ -38,7 +38,7 @@ async def async_setup_entry(
 
     @callback
     def async_add_service(service):
-        if service.short_type != ServicesTypes.LOCK_MECHANISM:
+        if service.type != ServicesTypes.LOCK_MECHANISM:
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([HomeKitLock(conn, info)], True)
