@@ -162,7 +162,9 @@ async def component_setup(
 @pytest.fixture
 async def google_service() -> YieldFixture[GoogleCalendarService]:
     """Fixture to capture service calls."""
-    with patch("homeassistant.components.google.GoogleCalendarService") as mock:
+    with patch("homeassistant.components.google.GoogleCalendarService") as mock, patch(
+        "homeassistant.components.google.calendar.GoogleCalendarService", mock
+    ):
         yield mock
 
 
@@ -204,6 +206,7 @@ async def test_init_success(
     await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
 
     state = hass.states.get("calendar.backyard_light")
+    assert state
     assert state.name == "Backyard Light"
     assert state.state == STATE_OFF
 
@@ -289,6 +292,7 @@ async def test_existing_token(
     assert await component_setup()
 
     state = hass.states.get("calendar.backyard_light")
+    assert state
     assert state.name == "Backyard Light"
     assert state.state == STATE_OFF
 
@@ -318,6 +322,7 @@ async def test_existing_token_missing_scope(
     assert len(mock_exchange.mock_calls) == 1
 
     state = hass.states.get("calendar.backyard_light")
+    assert state
     assert state.name == "Backyard Light"
     assert state.state == STATE_OFF
 
