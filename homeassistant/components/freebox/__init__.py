@@ -6,7 +6,7 @@ from freebox_api.exceptions import HttpRequestError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
@@ -59,7 +59,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     router = FreeboxRouter(hass, entry, api, freebox_config)
     await router.update_all()
-    unsub_dispatcher = async_track_time_interval(hass, router.update_all, SCAN_INTERVAL)
+    entry.async_on_unload(
+        async_track_time_interval(hass, router.update_all, SCAN_INTERVAL)
+    )
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.unique_id] = router
@@ -73,16 +75,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.services.async_register(DOMAIN, SERVICE_REBOOT, async_reboot)
 
-    async def async_close_connection(event):
-        """Close Freebox connection on HA Stop."""
-        await api.close()
-        unsub_dispatcher()
-        hass.services.async_remove(DOMAIN, SERVICE_REBOOT)
-
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_connection)
-    )
-
     return True
 
 
@@ -90,6 +82,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.unique_id)
+        router: FreeboxRouter = hass.data[DOMAIN].pop(entry.unique_id)
+        await router._api.close()  # pylint: disable=[protected-access]
+        hass.services.async_remove(DOMAIN, SERVICE_REBOOT)
 
     return unload_ok
