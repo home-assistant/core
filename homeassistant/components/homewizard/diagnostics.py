@@ -29,9 +29,6 @@ async def async_get_config_entry_diagnostics(
     }
 
     return {
-        "entry": {
-            "title": REDACTED,
-            "data": async_redact_data(entry.data, TO_REDACT),
-        },
+        "entry": async_redact_data(entry.data, TO_REDACT),
         "data": async_redact_data(meter_data, TO_REDACT),
     }
