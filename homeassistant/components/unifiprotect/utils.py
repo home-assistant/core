@@ -2,10 +2,13 @@
 from __future__ import annotations
 
 from enum import Enum
+import logging
 import socket
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def get_nested_attr(obj: Any, attr: str) -> Any:
@@ -38,12 +41,14 @@ def _async_short_mac(mac: str) -> str:
 
 async def _async_resolve(hass: HomeAssistant, host: str) -> str | None:
     """Resolve a hostname to an ip."""
+    _LOGGER.warning("async_resolve: %s %s", host, hass.loop.getaddrinfo)
     try:
         res = await hass.loop.getaddrinfo(
             host, None, type=socket.SOCK_STREAM, proto=socket.IPPROTO_TCP
         )
     except OSError:
         return None
+    _LOGGER.warning("async_resolve: %s", res)
 
     for family, _, _, _, raw in res:
         if family == socket.AF_INET:
