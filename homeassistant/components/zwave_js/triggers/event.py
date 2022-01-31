@@ -25,7 +25,7 @@ from homeassistant.components.zwave_js.helpers import (
     async_get_node_from_device_id,
     async_get_node_from_entity_id,
     get_device_id,
-    get_home_and_node_id_from_device_id,
+    get_home_and_node_id_from_device_entry,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PLATFORM
@@ -148,11 +148,9 @@ async def async_attach_trigger(
         if device:
             device_name = device.name_by_user or device.name
             payload[ATTR_DEVICE_ID] = device.id
-            payload[ATTR_NODE_ID] = next(
-                get_home_and_node_id_from_device_id(identifier)
-                for identifier in device.identifiers
-                if identifier[0] == DOMAIN
-            )[1]
+            home_and_node_id = get_home_and_node_id_from_device_entry(device)
+            assert home_and_node_id
+            payload[ATTR_NODE_ID] = home_and_node_id[1]
             payload["description"] = f"{primary_desc} on {device_name}"
         else:
             payload["description"] = primary_desc
