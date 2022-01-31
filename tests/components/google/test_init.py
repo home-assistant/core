@@ -12,13 +12,12 @@ from oauth2client.client import (
 import pytest
 import yaml
 
-import homeassistant.components.google as google
 from homeassistant.components.google import (
     DOMAIN,
     SERVICE_ADD_EVENT,
     GoogleCalendarService,
 )
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -29,7 +28,7 @@ from tests.common import async_fire_time_changed
 
 # Typing helpers
 ComponentSetup = Callable[[], Awaitable[bool]]
-
+HassApi = Callable[[], Awaitable[dict[str, Any]]]
 
 CODE_CHECK_INTERVAL = 1
 CODE_CHECK_ALARM_TIMEDELTA = datetime.timedelta(seconds=CODE_CHECK_INTERVAL * 2)
@@ -134,13 +133,6 @@ async def mock_calendars_yaml(
 
 
 @pytest.fixture
-async def mock_load_platform() -> YieldFixture[Mock]:
-    """Fixture that counts when calendars are loaded, to exercise success case."""
-    with patch("homeassistant.components.google.discovery.load_platform") as mock:
-        yield mock
-
-
-@pytest.fixture
 async def mock_notification() -> YieldFixture[Mock]:
     """Fixture for capturing persistent notifications."""
     with patch("homeassistant.components.persistent_notification.create") as mock:
@@ -183,13 +175,16 @@ async def fire_alarm(hass, point_in_time):
 
 @pytest.mark.parametrize("config", [{}])
 async def test_setup_config_empty(
-    hass: HomeAssistant, component_setup: ComponentSetup, mock_notification: Mock
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    mock_notification: Mock,
 ):
     """Test setup component with an empty configuruation."""
     assert await component_setup()
-    assert hass.data[google.DATA_INDEX] == {}
 
     mock_notification.assert_not_called()
+
+    assert not hass.states.get("calendar.backyard_light")
 
 
 async def test_init_success(
@@ -198,7 +193,6 @@ async def test_init_success(
     mock_code_flow: Mock,
     mock_exchange: Mock,
     mock_notification: Mock,
-    mock_load_platform: Mock,
     mock_calendars_yaml: None,
     component_setup: ComponentSetup,
 ) -> None:
@@ -209,10 +203,9 @@ async def test_init_success(
     now = utcnow()
     await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
 
-    mock_load_platform.assert_called_once()
-
-    # One calendar configured
-    assert len(hass.data[google.DATA_INDEX]) == 1
+    state = hass.states.get("calendar.backyard_light")
+    assert state.name == "Backyard Light"
+    assert state.state == STATE_OFF
 
     mock_notification.assert_called()
     assert "We are all setup now" in mock_notification.call_args[0][1]
@@ -232,6 +225,8 @@ async def test_code_error(
     ):
         assert await component_setup()
 
+    assert not hass.states.get("calendar.backyard_light")
+
     mock_notification.assert_called()
     assert "Error: Test Failure" in mock_notification.call_args[0][1]
 
@@ -249,6 +244,8 @@ async def test_expired_after_exchange(
 
     now = utcnow()
     await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
+
+    assert not hass.states.get("calendar.backyard_light")
 
     mock_notification.assert_called()
     assert (
@@ -274,6 +271,8 @@ async def test_exchange_error(
         now = utcnow()
         await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
 
+    assert not hass.states.get("calendar.backyard_light")
+
     mock_notification.assert_called()
     assert "In order to authorize Home-Assistant" in mock_notification.call_args[0][1]
 
@@ -282,7 +281,6 @@ async def test_existing_token(
     hass: HomeAssistant,
     mock_token_read: None,
     component_setup: ComponentSetup,
-    mock_load_platform: Mock,
     google_service: GoogleCalendarService,
     mock_calendars_yaml: None,
     mock_notification: Mock,
@@ -290,12 +288,10 @@ async def test_existing_token(
     """Test setup with an existing token file."""
     assert await component_setup()
 
-    mock_load_platform.assert_called_once()
+    state = hass.states.get("calendar.backyard_light")
+    assert state.name == "Backyard Light"
+    assert state.state == STATE_OFF
 
-    # One calendar configured
-    assert len(hass.data[google.DATA_INDEX]) == 1
-
-    # No notifications on success
     mock_notification.assert_not_called()
 
 
@@ -307,7 +303,6 @@ async def test_existing_token_missing_scope(
     token_scopes: list[str],
     mock_token_read: None,
     component_setup: ComponentSetup,
-    mock_load_platform: Mock,
     google_service: GoogleCalendarService,
     mock_calendars_yaml: None,
     mock_notification: Mock,
@@ -322,10 +317,9 @@ async def test_existing_token_missing_scope(
     await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
     assert len(mock_exchange.mock_calls) == 1
 
-    mock_load_platform.assert_called_once()
-
-    # One calendar configured
-    assert len(hass.data[google.DATA_INDEX]) == 1
+    state = hass.states.get("calendar.backyard_light")
+    assert state.name == "Backyard Light"
+    assert state.state == STATE_OFF
 
     # No notifications on success
     mock_notification.assert_called()
@@ -337,7 +331,6 @@ async def test_calendar_yaml_missing_required_fields(
     hass: HomeAssistant,
     mock_token_read: None,
     component_setup: ComponentSetup,
-    mock_load_platform: Mock,
     google_service: GoogleCalendarService,
     calendars_config: list[dict[str, Any]],
     mock_calendars_yaml: None,
@@ -346,9 +339,9 @@ async def test_calendar_yaml_missing_required_fields(
     """Test setup with a missing schema fields, ignores the error and continues."""
     assert await component_setup()
 
-    mock_load_platform.assert_not_called()
+    assert not hass.states.get("calendar.backyard_light")
+
     mock_notification.assert_not_called()
-    assert hass.data[google.DATA_INDEX] == {}
 
 
 @pytest.mark.parametrize("calendars_config", [[{"missing-cal_id": "invalid-schema"}]])
@@ -356,7 +349,6 @@ async def test_invalid_calendar_yaml(
     hass: HomeAssistant,
     mock_token_read: None,
     component_setup: ComponentSetup,
-    mock_load_platform: Mock,
     google_service: GoogleCalendarService,
     calendars_config: list[dict[str, Any]],
     mock_calendars_yaml: None,
@@ -367,9 +359,9 @@ async def test_invalid_calendar_yaml(
     # Integration fails to setup
     assert not await component_setup()
 
-    mock_load_platform.assert_not_called()
+    assert not hass.states.get("calendar.backyard_light")
+
     mock_notification.assert_not_called()
-    assert hass.data[google.DATA_INDEX] == {}
 
 
 async def test_found_calendar_from_api(
@@ -388,8 +380,10 @@ async def test_found_calendar_from_api(
     with patch("homeassistant.components.google.open", mocked_open_function):
         assert await component_setup()
 
-    # One calendar loaded from the API
-    assert len(hass.data[google.DATA_INDEX]) == 1
+    state = hass.states.get("calendar.we_are_we_are_a_test_calendar")
+    assert state
+    assert state.name == "We are, we are, a... Test Calendar"
+    assert state.state == STATE_OFF
 
 
 async def test_add_event(
