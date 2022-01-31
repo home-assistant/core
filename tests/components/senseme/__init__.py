@@ -10,33 +10,40 @@ from homeassistant.components.senseme import config_flow
 MOCK_NAME = "Haiku Fan"
 MOCK_UUID = "77a6b7b3-925d-4695-a415-76d76dca4444"
 MOCK_ADDRESS = "127.0.0.1"
+MOCK_MAC = "20:F8:5E:92:5A:75"
 
-device = MagicMock(auto_spec=SensemeDevice)
-device.async_update = AsyncMock()
-device.model = "Haiku Fan"
-device.fan_speed_max = 7
-device.mac = "aa:bb:cc:dd:ee:ff"
-device.fan_dir = "REV"
-device.room_name = "Main"
-device.room_type = "Main"
-device.fw_version = "1"
-device.fan_autocomfort = "on"
-device.fan_smartmode = "on"
-device.fan_whoosh_mode = "on"
-device.name = MOCK_NAME
-device.uuid = MOCK_UUID
-device.address = MOCK_ADDRESS
-device.get_device_info = {
-    "name": MOCK_NAME,
-    "uuid": MOCK_UUID,
-    "mac": "20:F8:5E:92:5A:75",
-    "address": MOCK_ADDRESS,
-    "base_model": "FAN,HAIKU,HSERIES",
-    "has_light": False,
-    "has_sensor": True,
-    "is_fan": True,
-    "is_light": False,
-}
+
+def _mock_device():
+    device = MagicMock(auto_spec=SensemeDevice)
+    device.async_update = AsyncMock()
+    device.model = "Haiku Fan"
+    device.fan_speed_max = 7
+    device.mac = "aa:bb:cc:dd:ee:ff"
+    device.fan_dir = "REV"
+    device.has_light = True
+    device.is_light = False
+    device.light_brightness = 50
+    device.room_name = "Main"
+    device.room_type = "Main"
+    device.fw_version = "1"
+    device.fan_autocomfort = "COOLING"
+    device.fan_smartmode = "OFF"
+    device.fan_whoosh_mode = "on"
+    device.name = MOCK_NAME
+    device.uuid = MOCK_UUID
+    device.address = MOCK_ADDRESS
+    device.get_device_info = {
+        "name": MOCK_NAME,
+        "uuid": MOCK_UUID,
+        "mac": MOCK_ADDRESS,
+        "address": MOCK_ADDRESS,
+        "base_model": "FAN,HAIKU,HSERIES",
+        "has_light": False,
+        "has_sensor": True,
+        "is_fan": True,
+        "is_light": False,
+    }
+    return device
 
 
 device_alternate_ip = MagicMock(auto_spec=SensemeDevice)
@@ -94,9 +101,14 @@ device2.get_device_info = {
     "is_light": False,
 }
 
-MOCK_DEVICE = device
+device_no_uuid = MagicMock(auto_spec=SensemeDevice)
+device_no_uuid.uuid = None
+
+
+MOCK_DEVICE = _mock_device()
 MOCK_DEVICE_ALTERNATE_IP = device_alternate_ip
 MOCK_DEVICE2 = device2
+MOCK_DEVICE_NO_UUID = device_no_uuid
 
 
 def _patch_discovery(device=None, no_device=None):
@@ -115,3 +127,17 @@ def _patch_discovery(device=None, no_device=None):
             yield
 
     return _patcher()
+
+
+def _patch_device(device=None, no_device=False):
+    async def _device_mocker(*args, **kwargs):
+        if no_device:
+            return False, None
+        if device:
+            return True, device
+        return True, _mock_device()
+
+    return patch(
+        "homeassistant.components.senseme.async_get_device_by_device_info",
+        new=_device_mocker,
+    )

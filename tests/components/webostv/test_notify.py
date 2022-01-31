@@ -9,7 +9,8 @@ from homeassistant.components.webostv import DOMAIN
 from homeassistant.const import CONF_ICON, CONF_SERVICE_DATA
 from homeassistant.setup import async_setup_component
 
-from . import TV_NAME, setup_webostv
+from . import setup_webostv
+from .const import TV_NAME
 
 ICON_PATH = "/some/path"
 MESSAGE = "one, two, testing, testing"
@@ -17,7 +18,7 @@ MESSAGE = "one, two, testing, testing"
 
 async def test_notify(hass, client):
     """Test sending a message."""
-    await setup_webostv(hass, "fake-uuid")
+    await setup_webostv(hass)
     assert hass.services.has_service(NOTIFY_DOMAIN, TV_NAME)
 
     await hass.services.async_call(
@@ -38,7 +39,7 @@ async def test_notify(hass, client):
 
 async def test_notify_not_connected(hass, client, monkeypatch):
     """Test sending a message when client is not connected."""
-    await setup_webostv(hass, "fake-uuid")
+    await setup_webostv(hass)
     assert hass.services.has_service(NOTIFY_DOMAIN, TV_NAME)
 
     monkeypatch.setattr(client, "is_connected", Mock(return_value=False))
@@ -60,7 +61,7 @@ async def test_notify_not_connected(hass, client, monkeypatch):
 
 async def test_icon_not_found(hass, caplog, client, monkeypatch):
     """Test notify icon not found error."""
-    await setup_webostv(hass, "fake-uuid")
+    await setup_webostv(hass)
     assert hass.services.has_service(NOTIFY_DOMAIN, TV_NAME)
 
     monkeypatch.setattr(client, "send_message", Mock(side_effect=FileNotFoundError))
@@ -90,7 +91,7 @@ async def test_icon_not_found(hass, caplog, client, monkeypatch):
 )
 async def test_connection_errors(hass, caplog, client, monkeypatch, side_effect, error):
     """Test connection errors scenarios."""
-    await setup_webostv(hass, "fake-uuid")
+    await setup_webostv(hass)
     assert hass.services.has_service("notify", TV_NAME)
 
     monkeypatch.setattr(client, "is_connected", Mock(return_value=False))

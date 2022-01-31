@@ -17,7 +17,7 @@ from . import (
     BMWConnectedDriveAccount,
     BMWConnectedDriveBaseEntity,
 )
-from .const import CONF_ACCOUNT, DATA_ENTRIES
+from .const import ATTR_DIRECTION, CONF_ACCOUNT, DATA_ENTRIES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,7 +80,9 @@ class BMWDeviceTracker(BMWConnectedDriveBaseEntity, TrackerEntity):
     def update(self) -> None:
         """Update state of the device tracker."""
         _LOGGER.debug("Updating device tracker of %s", self._vehicle.name)
-        self._attr_extra_state_attributes = self._attrs
+        state_attrs = self._attrs
+        state_attrs[ATTR_DIRECTION] = self._vehicle.status.gps_heading
+        self._attr_extra_state_attributes = state_attrs
         self._location = (
             self._vehicle.status.gps_position
             if self._vehicle.is_vehicle_tracking_enabled

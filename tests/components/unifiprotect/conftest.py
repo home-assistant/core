@@ -11,10 +11,17 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from pyunifiprotect.data import Camera, Light, WSSubscriptionMessage
+from pyunifiprotect.data import (
+    NVR,
+    Camera,
+    Doorlock,
+    Light,
+    Liveview,
+    Sensor,
+    Viewer,
+    WSSubscriptionMessage,
+)
 from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
-from pyunifiprotect.data.devices import Sensor, Viewer
-from pyunifiprotect.data.nvr import NVR, Liveview
 
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.const import Platform
@@ -41,6 +48,7 @@ class MockBootstrap:
     viewers: dict[str, Any]
     liveviews: dict[str, Any]
     events: dict[str, Any]
+    doorlocks: dict[str, Any]
 
     def reset_objects(self) -> None:
         """Reset all devices on bootstrap for tests."""
@@ -50,6 +58,7 @@ class MockBootstrap:
         self.viewers = {}
         self.liveviews = {}
         self.events = {}
+        self.doorlocks = {}
 
     def process_ws_packet(self, msg: WSSubscriptionMessage) -> None:
         """Fake process method for tests."""
@@ -117,6 +126,7 @@ def mock_bootstrap_fixture(mock_nvr: NVR):
         viewers={},
         liveviews={},
         events={},
+        doorlocks={},
     )
 
 
@@ -164,7 +174,7 @@ def mock_entry(
 
 @pytest.fixture
 def mock_liveview():
-    """Mock UniFi Protect Camera device."""
+    """Mock UniFi Protect Liveview."""
 
     data = json.loads(load_fixture("sample_liveview.json", integration=DOMAIN))
     return Liveview.from_unifi_dict(**data)
@@ -180,7 +190,7 @@ def mock_camera():
 
 @pytest.fixture
 def mock_light():
-    """Mock UniFi Protect Camera device."""
+    """Mock UniFi Protect Light device."""
 
     data = json.loads(load_fixture("sample_light.json", integration=DOMAIN))
     return Light.from_unifi_dict(**data)
@@ -200,6 +210,14 @@ def mock_sensor():
 
     data = json.loads(load_fixture("sample_sensor.json", integration=DOMAIN))
     return Sensor.from_unifi_dict(**data)
+
+
+@pytest.fixture
+def mock_doorlock():
+    """Mock UniFi Protect Doorlock device."""
+
+    data = json.loads(load_fixture("sample_doorlock.json", integration=DOMAIN))
+    return Doorlock.from_unifi_dict(**data)
 
 
 @pytest.fixture

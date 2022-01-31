@@ -13,6 +13,7 @@ from aioesphomeapi import (
     APIConnectionError,
     APIIntEnum,
     APIVersion,
+    BadNameAPIError,
     DeviceInfo as EsphomeDeviceInfo,
     EntityCategory as EsphomeEntityCategory,
     EntityInfo,
@@ -108,7 +109,9 @@ class DomainData:
         return ret
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
     """Set up the esphome component."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
@@ -266,6 +269,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             assert cli.api_version is not None
             entry_data.api_version = cli.api_version
             entry_data.available = True
+            if entry_data.device_info.name:
+                cli.expected_name = entry_data.device_info.name
+                reconnect_logic.name = entry_data.device_info.name
             device_id = _async_setup_device_registry(
                 hass, entry, entry_data.device_info
             )
@@ -296,6 +302,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Start reauth flow if appropriate connect error type."""
         if isinstance(err, (RequiresEncryptionAPIError, InvalidEncryptionKeyAPIError)):
             entry.async_start_reauth(hass)
+        if isinstance(err, BadNameAPIError):
+            _LOGGER.warning(
+                "Name of device %s changed to %s, potentially due to IP reassignment",
+                cli.expected_name,
+                err.received_name,
+            )
 
     reconnect_logic = ReconnectLogic(
         client=cli,
@@ -311,6 +323,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         infos, services = await entry_data.async_load_from_store()
         await entry_data.async_update_static_infos(hass, entry, infos)
         await _setup_services(hass, entry_data, services)
+
+        if entry_data.device_info is not None and entry_data.device_info.name:
+            cli.expected_name = entry_data.device_info.name
+            reconnect_logic.name = entry_data.device_info.name
 
         await reconnect_logic.start()
         entry_data.cleanup_callbacks.append(reconnect_logic.stop_callback)

@@ -35,9 +35,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, TYPE_TO_PLATFORM
+from .coordinator import LookinDataUpdateCoordinator
 from .entity import LookinCoordinatorEntity
 from .models import LookinData
 
@@ -115,7 +115,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
         uuid: str,
         device: Climate,
         lookin_data: LookinData,
-        coordinator: DataUpdateCoordinator,
+        coordinator: LookinDataUpdateCoordinator,
     ) -> None:
         """Init the ConditionerEntity."""
         super().__init__(coordinator, uuid, device, lookin_data)

@@ -32,7 +32,7 @@
     "options": {
         "error": {
             "cannot_retrieve": "Kaynak listesi al\u0131namad\u0131. Cihaz\u0131n a\u00e7\u0131k oldu\u011fundan emin olun",
-            "script_not_found": "Komut dosyas\u0131 bulunamad\u0131"
+            "script_not_found": "Senaryo bulunamad\u0131"
         },
         "step": {
             "init": {

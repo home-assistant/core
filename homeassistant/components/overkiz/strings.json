@@ -19,7 +19,9 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reauth_wrong_account": "You can only reauthenticate this entry with the same Overkiz account and hub"
     }
   }
 }

@@ -1,4 +1,5 @@
 """Configuration for Sonos tests."""
+from copy import copy
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
@@ -36,6 +37,7 @@ class SonosMockEvent:
 
         Assumes value has a format of <str>:<int>.
         """
+        self.variables = copy(self.variables)
         base, count = self.variables[var_name].split(":")
         newcount = int(count) + 1
         self.variables[var_name] = ":".join([base, str(newcount)])

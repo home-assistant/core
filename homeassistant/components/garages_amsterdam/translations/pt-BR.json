@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "cannot_connect": "Falha ao conectar",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "garage_name": "Nome da garagem"
+                },
+                "title": "Escolha uma garagem para monitorar"
+            }
+        }
+    },
+    "title": "Garages Amsterdam"
+}

@@ -31,8 +31,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
-from .base import EnumTypeData, IntegerTypeData, TuyaEntity
-from .const import DOMAIN, LOGGER, TUYA_DISCOVERY_NEW, DPCode
+from .base import IntegerTypeData, TuyaEntity
+from .const import DOMAIN, LOGGER, TUYA_DISCOVERY_NEW, DPCode, DPType
 
 TUYA_HVAC_TO_HA = {
     "auto": HVAC_MODE_HEAT_COOL,
@@ -114,18 +114,14 @@ async def async_setup_entry(
 class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     """Tuya Climate Device."""
 
-    _current_humidity_dpcode: DPCode | None = None
-    _current_humidity_type: IntegerTypeData | None = None
-    _current_temperature_dpcode: DPCode | None = None
-    _current_temperature_type: IntegerTypeData | None = None
+    _current_humidity: IntegerTypeData | None = None
+    _current_temperature: IntegerTypeData | None = None
     _hvac_to_tuya: dict[str, str]
-    _set_humidity_dpcode: DPCode | None = None
-    _set_humidity_type: IntegerTypeData | None = None
-    _set_temperature_dpcode: DPCode | None = None
-    _set_temperature_type: IntegerTypeData | None = None
+    _set_humidity: IntegerTypeData | None = None
+    _set_temperature: IntegerTypeData | None = None
     entity_description: TuyaClimateEntityDescription
 
-    def __init__(  # noqa: C901
+    def __init__(
         self,
         device: TuyaDevice,
         device_manager: TuyaDeviceManager,
@@ -140,160 +136,117 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
         # If both temperature values for celsius and fahrenheit are present,
         # use whatever the device is set to, with a fallback to celsius.
+        prefered_temperature_unit = None
         if all(
             dpcode in device.status
             for dpcode in (DPCode.TEMP_CURRENT, DPCode.TEMP_CURRENT_F)
         ) or all(
             dpcode in device.status for dpcode in (DPCode.TEMP_SET, DPCode.TEMP_SET_F)
         ):
-            self._attr_temperature_unit = TEMP_CELSIUS
+            prefered_temperature_unit = TEMP_CELSIUS
             if any(
                 "f" in device.status[dpcode].lower()
                 for dpcode in (DPCode.C_F, DPCode.TEMP_UNIT_CONVERT)
                 if isinstance(device.status.get(dpcode), str)
             ):
-                self._attr_temperature_unit = TEMP_FAHRENHEIT
+                prefered_temperature_unit = TEMP_FAHRENHEIT
 
-        # If any DPCode handling celsius is present, use celsius.
-        elif any(
-            dpcode in device.status for dpcode in (DPCode.TEMP_CURRENT, DPCode.TEMP_SET)
-        ):
-            self._attr_temperature_unit = TEMP_CELSIUS
+        # Default to Celsius
+        self._attr_temperature_unit = TEMP_CELSIUS
 
-        # If any DPCode handling fahrenheit is present, use celsius.
-        elif any(
-            dpcode in device.status
-            for dpcode in (DPCode.TEMP_CURRENT_F, DPCode.TEMP_SET_F)
+        # Figure out current temperature, use preferred unit or what is available
+        celsius_type = self.find_dpcode(DPCode.TEMP_CURRENT, dptype=DPType.INTEGER)
+        farhenheit_type = self.find_dpcode(DPCode.TEMP_CURRENT_F, dptype=DPType.INTEGER)
+        if farhenheit_type and (
+            prefered_temperature_unit == TEMP_FAHRENHEIT
+            or (prefered_temperature_unit == TEMP_CELSIUS and not celsius_type)
         ):
             self._attr_temperature_unit = TEMP_FAHRENHEIT
+            self._current_temperature = farhenheit_type
+        elif celsius_type:
+            self._attr_temperature_unit = TEMP_CELSIUS
+            self._current_temperature = celsius_type
 
-        # Determine dpcode to use for setting temperature
-        if all(
-            dpcode in device.status for dpcode in (DPCode.TEMP_SET, DPCode.TEMP_SET_F)
+        # Figure out setting temperature, use preferred unit or what is available
+        celsius_type = self.find_dpcode(
+            DPCode.TEMP_SET, dptype=DPType.INTEGER, prefer_function=True
+        )
+        farhenheit_type = self.find_dpcode(
+            DPCode.TEMP_SET_F, dptype=DPType.INTEGER, prefer_function=True
+        )
+        if farhenheit_type and (
+            prefered_temperature_unit == TEMP_FAHRENHEIT
+            or (prefered_temperature_unit == TEMP_CELSIUS and not celsius_type)
         ):
-            self._set_temperature_dpcode = DPCode.TEMP_SET
-            if self._attr_temperature_unit == TEMP_FAHRENHEIT:
-                self._set_temperature_dpcode = DPCode.TEMP_SET_F
-        elif DPCode.TEMP_SET in device.status:
-            self._set_temperature_dpcode = DPCode.TEMP_SET
-        elif DPCode.TEMP_SET_F in device.status:
-            self._set_temperature_dpcode = DPCode.TEMP_SET_F
+            self._set_temperature = farhenheit_type
+        elif celsius_type:
+            self._set_temperature = celsius_type
 
         # Get integer type data for the dpcode to set temperature, use
         # it to define min, max & step temperatures
-        if (
-            self._set_temperature_dpcode
-            and self._set_temperature_dpcode in device.function
-        ):
-            type_data = IntegerTypeData.from_json(
-                device.function[self._set_temperature_dpcode].values
-            )
+        if self._set_temperature:
             self._attr_supported_features |= SUPPORT_TARGET_TEMPERATURE
-            self._set_temperature_type = type_data
-            self._attr_max_temp = type_data.max_scaled
-            self._attr_min_temp = type_data.min_scaled
-            self._attr_target_temperature_step = type_data.step_scaled
-
-        # Determine dpcode to use for getting the current temperature
-        if all(
-            dpcode in device.status
-            for dpcode in (DPCode.TEMP_CURRENT, DPCode.TEMP_CURRENT_F)
-        ):
-            self._current_temperature_dpcode = DPCode.TEMP_CURRENT
-            if self._attr_temperature_unit == TEMP_FAHRENHEIT:
-                self._current_temperature_dpcode = DPCode.TEMP_CURRENT_F
-        elif DPCode.TEMP_CURRENT in device.status:
-            self._current_temperature_dpcode = DPCode.TEMP_CURRENT
-        elif DPCode.TEMP_CURRENT_F in device.status:
-            self._current_temperature_dpcode = DPCode.TEMP_CURRENT_F
-
-        # If we have a current temperature dpcode, get the integer type data
-        if (
-            self._current_temperature_dpcode
-            and self._current_temperature_dpcode in device.status_range
-        ):
-            self._current_temperature_type = IntegerTypeData.from_json(
-                device.status_range[self._current_temperature_dpcode].values
-            )
+            self._attr_max_temp = self._set_temperature.max_scaled
+            self._attr_min_temp = self._set_temperature.min_scaled
+            self._attr_target_temperature_step = self._set_temperature.step_scaled
 
         # Determine HVAC modes
         self._attr_hvac_modes = []
         self._hvac_to_tuya = {}
-        if DPCode.MODE in device.function:
-            data_type = EnumTypeData.from_json(device.function[DPCode.MODE].values)
+        if enum_type := self.find_dpcode(
+            DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
+        ):
             self._attr_hvac_modes = [HVAC_MODE_OFF]
             for tuya_mode, ha_mode in TUYA_HVAC_TO_HA.items():
-                if tuya_mode in data_type.range:
+                if tuya_mode in enum_type.range:
                     self._hvac_to_tuya[ha_mode] = tuya_mode
                     self._attr_hvac_modes.append(ha_mode)
-        elif DPCode.SWITCH in device.function:
+        elif self.find_dpcode(DPCode.SWITCH, prefer_function=True):
             self._attr_hvac_modes = [
                 HVAC_MODE_OFF,
                 description.switch_only_hvac_mode,
             ]
 
         # Determine dpcode to use for setting the humidity
-        if DPCode.HUMIDITY_SET in device.function:
+        if int_type := self.find_dpcode(
+            DPCode.HUMIDITY_SET, dptype=DPType.INTEGER, prefer_function=True
+        ):
             self._attr_supported_features |= SUPPORT_TARGET_HUMIDITY
-            self._set_humidity_dpcode = DPCode.HUMIDITY_SET
-            type_data = IntegerTypeData.from_json(
-                device.function[DPCode.HUMIDITY_SET].values
-            )
-            self._set_humidity_type = type_data
-            self._attr_min_humidity = int(type_data.min_scaled)
-            self._attr_max_humidity = int(type_data.max_scaled)
+            self._set_humidity = int_type
+            self._attr_min_humidity = int(int_type.min_scaled)
+            self._attr_max_humidity = int(int_type.max_scaled)
 
         # Determine dpcode to use for getting the current humidity
-        if (
-            DPCode.HUMIDITY_CURRENT in device.status
-            and DPCode.HUMIDITY_CURRENT in device.status_range
-        ):
-            self._current_humidity_dpcode = DPCode.HUMIDITY_CURRENT
-            self._current_humidity_type = IntegerTypeData.from_json(
-                device.status_range[DPCode.HUMIDITY_CURRENT].values
-            )
-
-        # Determine dpcode to use for getting the current humidity
-        if (
-            DPCode.HUMIDITY_CURRENT in device.status
-            and DPCode.HUMIDITY_CURRENT in device.status_range
-        ):
-            self._current_humidity_dpcode = DPCode.HUMIDITY_CURRENT
-            self._current_humidity_type = IntegerTypeData.from_json(
-                device.status_range[DPCode.HUMIDITY_CURRENT].values
-            )
+        self._current_humidity = self.find_dpcode(
+            DPCode.HUMIDITY_CURRENT, dptype=DPType.INTEGER
+        )
 
         # Determine fan modes
-        if (
-            DPCode.FAN_SPEED_ENUM in device.status
-            and DPCode.FAN_SPEED_ENUM in device.function
+        if enum_type := self.find_dpcode(
+            DPCode.FAN_SPEED_ENUM, dptype=DPType.ENUM, prefer_function=True
         ):
             self._attr_supported_features |= SUPPORT_FAN_MODE
-            self._attr_fan_modes = EnumTypeData.from_json(
-                device.status_range[DPCode.FAN_SPEED_ENUM].values
-            ).range
+            self._attr_fan_modes = enum_type.range
 
         # Determine swing modes
-        if any(
-            dpcode in device.function
-            for dpcode in (
+        if self.find_dpcode(
+            (
                 DPCode.SHAKE,
                 DPCode.SWING,
                 DPCode.SWITCH_HORIZONTAL,
                 DPCode.SWITCH_VERTICAL,
-            )
+            ),
+            prefer_function=True,
         ):
             self._attr_supported_features |= SUPPORT_SWING_MODE
             self._attr_swing_modes = [SWING_OFF]
-            if any(
-                dpcode in device.function for dpcode in (DPCode.SHAKE, DPCode.SWING)
-            ):
+            if self.find_dpcode((DPCode.SHAKE, DPCode.SWING), prefer_function=True):
                 self._attr_swing_modes.append(SWING_ON)
 
-            if DPCode.SWITCH_HORIZONTAL in device.function:
+            if self.find_dpcode(DPCode.SWITCH_HORIZONTAL, prefer_function=True):
                 self._attr_swing_modes.append(SWING_HORIZONTAL)
 
-            if DPCode.SWITCH_VERTICAL in device.function:
+            if self.find_dpcode(DPCode.SWITCH_VERTICAL, prefer_function=True):
                 self._attr_swing_modes.append(SWING_VERTICAL)
 
     async def async_added_to_hass(self) -> None:
@@ -301,9 +254,10 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         await super().async_added_to_hass()
 
         # Log unknown modes
-        if DPCode.MODE in self.device.function:
-            data_type = EnumTypeData.from_json(self.device.function[DPCode.MODE].values)
-            for tuya_mode in data_type.range:
+        if enum_type := self.find_dpcode(
+            DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
+        ):
+            for tuya_mode in enum_type.range:
                 if tuya_mode not in TUYA_HVAC_TO_HA:
                     LOGGER.warning(
                         "Unknown HVAC mode '%s' for device %s; assuming it as off",
@@ -326,7 +280,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     def set_humidity(self, humidity: float) -> None:
         """Set new target humidity."""
-        if self._set_humidity_dpcode is None or self._set_humidity_type is None:
+        if self._set_humidity is None:
             raise RuntimeError(
                 "Cannot set humidity, device doesn't provide methods to set it"
             )
@@ -334,8 +288,8 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         self._send_command(
             [
                 {
-                    "code": self._set_humidity_dpcode,
-                    "value": self._set_humidity_type.scale_value_back(humidity),
+                    "code": self._set_humidity.dpcode,
+                    "value": self._set_humidity.scale_value_back(humidity),
                 }
             ]
         )
@@ -367,7 +321,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if self._set_temperature_dpcode is None or self._set_temperature_type is None:
+        if self._set_temperature is None:
             raise RuntimeError(
                 "Cannot set target temperature, device doesn't provide methods to set it"
             )
@@ -375,11 +329,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         self._send_command(
             [
                 {
-                    "code": self._set_temperature_dpcode,
+                    "code": self._set_temperature.dpcode,
                     "value": round(
-                        self._set_temperature_type.scale_value_back(
-                            kwargs["temperature"]
-                        )
+                        self._set_temperature.scale_value_back(kwargs["temperature"])
                     ),
                 }
             ]
@@ -388,53 +340,50 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if (
-            self._current_temperature_dpcode is None
-            or self._current_temperature_type is None
-        ):
+        if self._current_temperature is None:
             return None
 
-        temperature = self.device.status.get(self._current_temperature_dpcode)
+        temperature = self.device.status.get(self._current_temperature.dpcode)
         if temperature is None:
             return None
 
-        return self._current_temperature_type.scale_value(temperature)
+        return self._current_temperature.scale_value(temperature)
 
     @property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
-        if self._current_humidity_dpcode is None or self._current_humidity_type is None:
+        if self._current_humidity is None:
             return None
 
-        humidity = self.device.status.get(self._current_humidity_dpcode)
+        humidity = self.device.status.get(self._current_humidity.dpcode)
         if humidity is None:
             return None
 
-        return round(self._current_humidity_type.scale_value(humidity))
+        return round(self._current_humidity.scale_value(humidity))
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature currently set to be reached."""
-        if self._set_temperature_dpcode is None or self._set_temperature_type is None:
+        if self._set_temperature is None:
             return None
 
-        temperature = self.device.status.get(self._set_temperature_dpcode)
+        temperature = self.device.status.get(self._set_temperature.dpcode)
         if temperature is None:
             return None
 
-        return self._set_temperature_type.scale_value(temperature)
+        return self._set_temperature.scale_value(temperature)
 
     @property
     def target_humidity(self) -> int | None:
         """Return the humidity currently set to be reached."""
-        if self._set_humidity_dpcode is None or self._set_humidity_type is None:
+        if self._set_humidity is None:
             return None
 
-        humidity = self.device.status.get(self._set_humidity_dpcode)
+        humidity = self.device.status.get(self._set_humidity.dpcode)
         if humidity is None:
             return None
 
-        return round(self._set_humidity_type.scale_value(humidity))
+        return round(self._set_humidity.scale_value(humidity))
 
     @property
     def hvac_mode(self) -> str:

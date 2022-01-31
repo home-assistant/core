@@ -467,6 +467,8 @@ tests/components/iqvia/* @bachya
 homeassistant/components/irish_rail_transport/* @ttroy50
 homeassistant/components/islamic_prayer_times/* @engrbm87
 tests/components/islamic_prayer_times/* @engrbm87
+homeassistant/components/iss/* @DurgNomis-drol
+tests/components/iss/* @DurgNomis-drol
 homeassistant/components/isy994/* @bdraco @shbatm
 tests/components/isy994/* @bdraco @shbatm
 homeassistant/components/izone/* @Swamp-Ig
@@ -867,6 +869,7 @@ homeassistant/components/solaredge_local/* @drobtravels @scheric
 homeassistant/components/solarlog/* @Ernst79
 tests/components/solarlog/* @Ernst79
 homeassistant/components/solax/* @squishykid
+tests/components/solax/* @squishykid
 homeassistant/components/soma/* @ratsept @sebfortier2288
 tests/components/soma/* @ratsept @sebfortier2288
 homeassistant/components/somfy/* @tetienne
@@ -998,16 +1001,16 @@ homeassistant/components/updater/* @home-assistant/core
 tests/components/updater/* @home-assistant/core
 homeassistant/components/upnp/* @StevenLooman @ehendrix23
 tests/components/upnp/* @StevenLooman @ehendrix23
-homeassistant/components/uptimerobot/* @ludeeus
-tests/components/uptimerobot/* @ludeeus
+homeassistant/components/uptimerobot/* @ludeeus @chemelli74
+tests/components/uptimerobot/* @ludeeus @chemelli74
 homeassistant/components/usb/* @bdraco
 tests/components/usb/* @bdraco
 homeassistant/components/usgs_earthquakes_feed/* @exxamalte
 tests/components/usgs_earthquakes_feed/* @exxamalte
 homeassistant/components/utility_meter/* @dgomes
 tests/components/utility_meter/* @dgomes
-homeassistant/components/vallox/* @andre-richter @slovdahl
-tests/components/vallox/* @andre-richter @slovdahl
+homeassistant/components/vallox/* @andre-richter @slovdahl @viiru-
+tests/components/vallox/* @andre-richter @slovdahl @viiru-
 homeassistant/components/velbus/* @Cereal2nd @brefra
 tests/components/velbus/* @Cereal2nd @brefra
 homeassistant/components/velux/* @Julius2342

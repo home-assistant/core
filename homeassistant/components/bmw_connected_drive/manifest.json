@@ -5,5 +5,6 @@
   "requirements": ["bimmer_connected==0.8.10"],
   "codeowners": ["@gerard33", "@rikroe"],
   "config_flow": true,
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["bimmer_connected"]
 }

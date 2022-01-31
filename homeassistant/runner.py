@@ -15,8 +15,8 @@ from .util.executor import InterruptibleThreadPoolExecutor
 from .util.thread import deadlock_safe_shutdown
 
 #
-# Python 3.8 has significantly less workers by default
-# than Python 3.7.  In order to be consistent between
+# Some Python versions may have different number of workers by default
+# than others.  In order to be consistent between
 # supported versions, we need to set max_workers.
 #
 # In most cases the workers are not I/O bound, as they
@@ -121,9 +121,7 @@ def run(runtime_config: RuntimeConfig) -> int:
         try:
             _cancel_all_tasks_with_timeout(loop, TASK_CANCELATION_TIMEOUT)
             loop.run_until_complete(loop.shutdown_asyncgens())
-            # Once cpython 3.8 is no longer supported we can use the
-            # the built-in loop.shutdown_default_executor
-            loop.run_until_complete(_shutdown_default_executor(loop))
+            loop.run_until_complete(loop.shutdown_default_executor())
         finally:
             asyncio.set_event_loop(None)
             loop.close()
@@ -159,22 +157,3 @@ def _cancel_all_tasks_with_timeout(
                     "task": task,
                 }
             )
-
-
-async def _shutdown_default_executor(loop: asyncio.AbstractEventLoop) -> None:
-    """Backport of cpython 3.9 schedule the shutdown of the default executor."""
-    future = loop.create_future()
-
-    def _do_shutdown() -> None:
-        try:
-            loop._default_executor.shutdown(wait=True)  # type: ignore  # pylint: disable=protected-access
-            loop.call_soon_threadsafe(future.set_result, None)
-        except Exception as ex:  # pylint: disable=broad-except
-            loop.call_soon_threadsafe(future.set_exception, ex)
-
-    thread = threading.Thread(target=_do_shutdown)
-    thread.start()
-    try:
-        await future
-    finally:
-        thread.join()

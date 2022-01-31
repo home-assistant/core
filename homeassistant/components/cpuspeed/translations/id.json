@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "alread_configured": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+            "alread_configured": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan.",
+            "already_configured": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan.",
+            "not_compatible": "Tidak dapat mendapatkan informasi CPU, integrasi ini tidak kompatibel dengan sistem Anda"
         },
         "step": {
             "user": {

@@ -64,8 +64,8 @@ class FluxButton(FluxBaseEntity, ButtonEntity):
         self.entity_description = description
         super().__init__(device, entry)
         self._attr_name = f"{entry.data[CONF_NAME]} {description.name}"
-        if entry.unique_id:
-            self._attr_unique_id = f"{entry.unique_id}_{description.key}"
+        base_unique_id = entry.unique_id or entry.entry_id
+        self._attr_unique_id = f"{base_unique_id}_{description.key}"
 
     async def async_press(self) -> None:
         """Send out a command."""
