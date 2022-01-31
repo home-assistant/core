@@ -69,6 +69,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=SCAN_INTERVAL,
     )
 
+    await coordinator.async_config_entry_first_refresh()
+
     hass.data[DOMAIN][entry.unique_id] = {
         KEY_ROUTER: router,
         KEY_COORDINATOR: coordinator,

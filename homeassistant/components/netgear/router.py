@@ -192,9 +192,6 @@ class NetgearRouter:
                 "conn_ap_mac": None,
             }
 
-        await self.async_update_device_trackers()
-        async_dispatcher_send(self.hass, self.signal_device_new)
-
     async def async_get_attached_devices(self) -> list:
         """Get the devices connected to the router."""
         if self.method_version == 1:
