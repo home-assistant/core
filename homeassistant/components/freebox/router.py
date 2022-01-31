@@ -52,11 +52,10 @@ class FreeboxRouter:
     ) -> None:
         """Initialize a Freebox router."""
         self.hass = hass
-        self._entry = entry
         self._host = entry.data[CONF_HOST]
         self._port = entry.data[CONF_PORT]
 
-        self._api: Freepybox = api
+        self._api: Freepybox | None = api
         self.name: str = freebox_config["model_info"]["pretty_name"]
         self.mac: str = freebox_config["mac"]
         self._sw_v: str = freebox_config["firmware_version"]
@@ -68,7 +67,6 @@ class FreeboxRouter:
         self.sensors_connection: dict[str, float] = {}
         self.call_list: list[dict[str, Any]] = []
 
-        self._unsub_dispatcher: CALLBACK_TYPE | None = None
         self.listeners: list[CALLBACK_TYPE] = []
 
     async def update_all(self, now: datetime | None = None) -> None:
@@ -78,6 +76,7 @@ class FreeboxRouter:
 
     async def update_device_trackers(self) -> None:
         """Update Freebox devices."""
+        assert self._api
         new_device = False
         fbx_devices: list[dict[str, Any]] = await self._api.lan.get_hosts_list()
 
@@ -108,6 +107,7 @@ class FreeboxRouter:
 
     async def update_sensors(self) -> None:
         """Update Freebox sensors."""
+        assert self._api
         # System sensors
         syst_datas: dict[str, Any] = await self._api.system.get_config()
 
@@ -140,6 +140,7 @@ class FreeboxRouter:
 
     async def _update_disks_sensors(self) -> None:
         """Update Freebox disks."""
+        assert self._api
         # None at first request
         fbx_disks: list[dict[str, Any]] = await self._api.storage.get_disks() or []
 
@@ -148,7 +149,14 @@ class FreeboxRouter:
 
     async def reboot(self) -> None:
         """Reboot the Freebox."""
+        assert self._api
         await self._api.system.reboot()
+
+    async def close(self) -> None:
+        """Close the connection."""
+        if self._api is not None:
+            await self._api.close()
+            self._api = None
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -185,4 +193,5 @@ class FreeboxRouter:
     @property
     def wifi(self) -> Wifi:
         """Return the wifi."""
+        assert self._api
         return self._api.wifi
