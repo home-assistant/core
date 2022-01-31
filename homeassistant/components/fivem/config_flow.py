@@ -28,13 +28,15 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str | None:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
 
     fivem = FiveM(data[CONF_HOST], data[CONF_PORT])
     info = await fivem.get_info_raw()
 
-    return info.get("vars")["gamename"]
+    gamename = info.get("vars")["gamename"]
+    if gamename is None or gamename != "gta5":
+        raise InvalidGamenameError
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -54,12 +56,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            gamename = await validate_input(self.hass, user_input)
-
-            if gamename is None or gamename != "gta5":
-                raise FiveMServerOfflineError
+            await validate_input(self.hass, user_input)
         except FiveMServerOfflineError:
             errors["base"] = "cannot_connect"
+        except InvalidGamenameError:
+            errors["base"] = "invalid_gamename"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
@@ -69,3 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+
+class InvalidGamenameError(Exception):
+    """Handle errors in the gamename from the api."""

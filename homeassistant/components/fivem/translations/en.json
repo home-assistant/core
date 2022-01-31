@@ -4,13 +4,14 @@
             "already_configured": "FiveM server is already configured"
         },
         "error": {
-            "cannot_connect": "Failed to connect. Please check the host and port and try again. Also ensure that you are running the latest FiveM server."
+            "cannot_connect": "Failed to connect. Please check the host and port and try again. Also ensure that you are running the latest FiveM server.",
+            "invalid_gamename": "The api of the game you are trying to connect to is not a FiveM game."
         },
         "step": {
             "user": {
                 "data": {
-                    "name": "Name",
                     "host": "Host",
+                    "name": "Name",
                     "port": "Port"
                 }
             }
