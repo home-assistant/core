@@ -11,9 +11,11 @@ ZWAVE_PLATFORMS = [
     "toggleButton",
     "doorlock",
     "sensorMultilevel",
+    "sensorBinary",
 ]
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.LOCK,
     Platform.NUMBER,
