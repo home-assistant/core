@@ -104,7 +104,7 @@ async def async_attach_trigger(
         nodes.update(
             {
                 async_get_node_from_entity_id(hass, entity_id)
-                for entity_id in config.get(ATTR_ENTITY_ID, [])
+                for entity_id in config[ATTR_ENTITY_ID]
             }
         )
 
