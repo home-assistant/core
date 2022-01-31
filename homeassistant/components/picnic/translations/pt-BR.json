@@ -11,10 +11,12 @@
         "step": {
             "user": {
                 "data": {
+                    "country_code": "C\u00f3digo do pa\u00eds",
                     "password": "Senha",
                     "username": "Usu\u00e1rio"
                 }
             }
         }
-    }
+    },
+    "title": "Picnic"
 }

@@ -19,7 +19,8 @@
             "user": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "description": "Als u de host leeg laat, zal discovery worden gebruikt om apparaten te vinden."
             }
         }
     }
