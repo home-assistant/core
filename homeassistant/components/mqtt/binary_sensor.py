@@ -49,6 +49,7 @@ DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_FORCE_UPDATE = False
 CONF_EXPIRE_AFTER = "expire_after"
+PAYLOAD_NONE = "None"
 
 PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
     {
@@ -174,6 +175,8 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity):
                 self._state = True
             elif payload == self._config[CONF_PAYLOAD_OFF]:
                 self._state = False
+            elif payload == PAYLOAD_NONE:
+                self._state = None
             else:  # Payload is not for this entity
                 template_info = ""
                 if self._config.get(CONF_VALUE_TEMPLATE) is not None:
@@ -221,7 +224,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity):
         self.async_write_ha_state()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self._state
 
