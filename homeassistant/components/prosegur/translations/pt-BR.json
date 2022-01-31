@@ -12,12 +12,14 @@
         "step": {
             "reauth_confirm": {
                 "data": {
+                    "description": "Re-autentique com a conta Prosegur.",
                     "password": "Senha",
                     "username": "Usu\u00e1rio"
                 }
             },
             "user": {
                 "data": {
+                    "country": "Pa\u00eds",
                     "password": "Senha",
                     "username": "Usu\u00e1rio"
                 }

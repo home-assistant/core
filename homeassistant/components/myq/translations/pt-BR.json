@@ -13,13 +13,16 @@
             "reauth_confirm": {
                 "data": {
                     "password": "Senha"
-                }
+                },
+                "description": "A senha para {username} n\u00e3o \u00e9 mais v\u00e1lida.",
+                "title": "Reautentique sua conta MyQ"
             },
             "user": {
                 "data": {
                     "password": "Senha",
                     "username": "Usu\u00e1rio"
-                }
+                },
+                "title": "Conecte-se ao Gateway MyQ"
             }
         }
     }

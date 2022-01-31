@@ -10,6 +10,14 @@
             "1": "Spento",
             "2": "Acceso"
         },
+        "tuya__curtain_mode": {
+            "morning": "Mattina",
+            "night": "Notte"
+        },
+        "tuya__curtain_motor_mode": {
+            "back": "Indietro",
+            "forward": "Avanti"
+        },
         "tuya__decibel_sensitivity": {
             "0": "Bassa sensibilit\u00e0",
             "1": "Alta sensibilit\u00e0"
