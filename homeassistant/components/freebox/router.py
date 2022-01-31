@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import datetime, timedelta
+from datetime import datetime
 import os
 from pathlib import Path
 from typing import Any
@@ -26,8 +26,6 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
-
-SCAN_INTERVAL = timedelta(seconds=30)
 
 
 async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
