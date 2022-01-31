@@ -41,10 +41,7 @@ async def async_setup_entry(
             SMAsensor(
                 coordinator,
                 config_entry.unique_id,
-                SENSOR_ENTITIES.get(
-                    sensor.name,
-                    SensorEntityDescription(key=sensor.name, name=sensor.name),
-                ),
+                SENSOR_ENTITIES.get(sensor.name),
                 device_info,
                 sensor,
             )
@@ -60,13 +57,17 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         self,
         coordinator: DataUpdateCoordinator,
         config_entry_unique_id: str,
-        description: SensorEntityDescription,
+        description: SensorEntityDescription | None,
         device_info: DeviceInfo,
         pysma_sensor: pysma.sensor.Sensor,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.entity_description = description
+        if description is not None:
+            self.entity_description = description
+        else:
+            self._attr_name = pysma_sensor.name
+
         self._sensor = pysma_sensor
 
         self._attr_device_info = device_info
