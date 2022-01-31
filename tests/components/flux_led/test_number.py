@@ -41,7 +41,7 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-async def test_number_unique_id(hass: HomeAssistant) -> None:
+async def test_effects_speed_unique_id(hass: HomeAssistant) -> None:
     """Test a number unique id."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -57,6 +57,23 @@ async def test_number_unique_id(hass: HomeAssistant) -> None:
     entity_id = "number.bulb_rgbcw_ddeeff_effect_speed"
     entity_registry = er.async_get(hass)
     assert entity_registry.async_get(entity_id).unique_id == MAC_ADDRESS
+
+
+async def test_effects_speed_unique_id_no_discovery(hass: HomeAssistant) -> None:
+    """Test a number unique id."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    with _patch_discovery(no_device=True), _patch_wifibulb(device=bulb):
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "number.bulb_rgbcw_ddeeff_effect_speed"
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(entity_id).unique_id == config_entry.entry_id
 
 
 async def test_rgb_light_effect_speed(hass: HomeAssistant) -> None:
