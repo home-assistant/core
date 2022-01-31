@@ -43,7 +43,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return await async_setup_august(hass, entry, august_gateway)
     except (RequireValidation, InvalidAuth) as err:
         raise ConfigEntryAuthFailed from err
-    except (ClientResponseError, CannotConnect, asyncio.TimeoutError) as err:
+    except asyncio.TimeoutError as err:
+        raise ConfigEntryNotReady("Timed out connecting to august api") from err
+    except (ClientResponseError, CannotConnect) as err:
         raise ConfigEntryNotReady from err
 
 
@@ -141,15 +143,34 @@ class AugustData(AugustSubscriberMixin):
         self._pubnub_unsub = async_create_pubnub(user_data["UserID"], pubnub)
 
         if self._locks_by_id:
-            tasks = []
-            for lock_id in self._locks_by_id:
-                detail = self._device_detail_by_id[lock_id]
-                tasks.append(
-                    self.async_status_async(
-                        lock_id, bool(detail.bridge and detail.bridge.hyper_bridge)
-                    )
+            # Do not prevent setup as the sync can timeout
+            # but it is not a fatal error as the lock
+            # will recover automatically when it comes back online.
+            asyncio.create_task(self._async_initial_sync())
+
+    async def _async_initial_sync(self):
+        """Attempt to request an initial sync."""
+        # We don't care if this fails because we only want to wake
+        # locks that are actually online anyways and they will be
+        # awake when they come back online
+        for result in await asyncio.gather(
+            *[
+                self.async_status_async(
+                    device_id, bool(detail.bridge and detail.bridge.hyper_bridge)
                 )
-            await asyncio.gather(*tasks)
+                for device_id, detail in self._device_detail_by_id.items()
+                if device_id in self._locks_by_id
+            ],
+            return_exceptions=True,
+        ):
+            if isinstance(result, Exception) and not isinstance(
+                result, (asyncio.TimeoutError, ClientResponseError, CannotConnect)
+            ):
+                _LOGGER.warning(
+                    "Unexpected exception during initial sync: %s",
+                    result,
+                    exc_info=result,
+                )
 
     @callback
     def async_pubnub_message(self, device_id, date_time, message):
