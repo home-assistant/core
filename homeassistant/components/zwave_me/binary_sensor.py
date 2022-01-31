@@ -33,7 +33,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the sensor platform."""
+    """Set up the binary sensor platform."""
 
     @callback
     def add_new_device(new_device: ZWaveMeData) -> None:
