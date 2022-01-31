@@ -1,9 +1,7 @@
 """Platform for switch integration."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any
 
 from boschshcpy import (
     SHCCamera360,
@@ -22,6 +20,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -35,7 +34,6 @@ class SHCSwitchRequiredKeysMixin:
 
     on_key: str
     on_value: StateType
-    has_consumption: bool
     should_poll: bool
 
 
@@ -53,7 +51,6 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         device_class=SwitchDeviceClass.OUTLET,
         on_key="state",
         on_value=SHCSmartPlug.PowerSwitchService.State.ON,
-        has_consumption=True,
         should_poll=False,
     ),
     "smartplugcompact": SHCSwitchEntityDescription(
@@ -61,7 +58,6 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         device_class=SwitchDeviceClass.OUTLET,
         on_key="state",
         on_value=SHCSmartPlugCompact.PowerSwitchService.State.ON,
-        has_consumption=True,
         should_poll=False,
     ),
     "lightswitch": SHCSwitchEntityDescription(
@@ -69,7 +65,6 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         device_class=SwitchDeviceClass.SWITCH,
         on_key="state",
         on_value=SHCLightSwitch.PowerSwitchService.State.ON,
-        has_consumption=True,
         should_poll=False,
     ),
     "cameraeyes": SHCSwitchEntityDescription(
@@ -77,7 +72,6 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         device_class=SwitchDeviceClass.SWITCH,
         on_key="cameralight",
         on_value=SHCCameraEyes.CameraLightService.State.ON,
-        has_consumption=False,
         should_poll=True,
     ),
     "camera360": SHCSwitchEntityDescription(
@@ -85,7 +79,6 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         device_class=SwitchDeviceClass.SWITCH,
         on_key="privacymode",
         on_value=SHCCamera360.PrivacyModeService.State.DISABLED,
-        has_consumption=False,
         should_poll=True,
     ),
 }
@@ -97,7 +90,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SHC switch platform."""
-    entities = []
+    entities: list[SwitchEntity] = []
     session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
 
     for switch in session.device_helper.smart_plugs:
@@ -108,6 +101,13 @@ async def async_setup_entry(
                 parent_id=session.information.unique_id,
                 entry_id=config_entry.entry_id,
                 description=SWITCH_TYPES["smartplug"],
+            )
+        )
+        entities.append(
+            SHCRoutingSwitch(
+                device=switch,
+                parent_id=session.information.unique_id,
+                entry_id=config_entry.entry_id,
             )
         )
 
@@ -183,20 +183,6 @@ class SHCSwitch(SHCEntity, SwitchEntity):
             == self.entity_description.on_value
         )
 
-    @property
-    def today_energy_kwh(self) -> float | None:
-        """Return the total energy usage in kWh."""
-        if self.entity_description.has_consumption:
-            return self._device.energyconsumption / 1000.0
-        return None
-
-    @property
-    def current_power_w(self) -> float | None:
-        """Return the current power usage in W."""
-        if self.entity_description.has_consumption:
-            return self._device.powerconsumption
-        return None
-
     def turn_on(self, **kwargs) -> None:
         """Turn the switch on."""
         setattr(self._device, self.entity_description.on_key, True)
@@ -218,15 +204,31 @@ class SHCSwitch(SHCEntity, SwitchEntity):
         """Trigger an update of the device."""
         self._device.update()
 
+
+class SHCRoutingSwitch(SHCEntity, SwitchEntity):
+    """Representation of a SHC routing switch."""
+
+    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
+        """Initialize an SHC communication quality reporting sensor."""
+        super().__init__(device, parent_id, entry_id)
+        self._attr_name = f"{device.name} Routing"
+        self._attr_unique_id = f"{device.serial}_routing"
+        self._attr_entity_category = EntityCategory.CONFIG
+        self._attr_icon = "mdi:wifi"
+
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return the state attributes."""
-        if self.entity_description.key == "smartplug":
-            return {
-                "routing": self._device.routing.name,
-            }
-        if self.entity_description.key == "smartplugcompact":
-            return {
-                "communication_quality": self._device.communicationquality.name,
-            }
-        return None
+    def is_on(self) -> bool:
+        """Return the state of the switch."""
+        return self._device.routing.name == "ENABLED"
+
+    def turn_on(self, **kwargs) -> None:
+        """Turn the switch on."""
+        self._device.routing = True
+
+    def turn_off(self, **kwargs) -> None:
+        """Turn the switch off."""
+        self._device.routing = False
+
+    def toggle(self, **kwargs) -> None:
+        """Toggle the switch."""
+        self._device.routing = not self.is_on
