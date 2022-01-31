@@ -12,10 +12,7 @@ from typing import Any, TypedDict, cast
 from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import (
     FritzActionError,
-    FritzActionFailedError,
     FritzConnectionException,
-    FritzInternalError,
-    FritzLookUpError,
     FritzSecurityError,
     FritzServiceError,
 )
@@ -46,6 +43,7 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_USERNAME,
     DOMAIN,
+    FRITZ_EXCEPTIONS,
     SERVICE_CLEANUP,
     SERVICE_REBOOT,
     SERVICE_RECONNECT,
@@ -540,13 +538,7 @@ class AvmWrapper(FritzBoxTools):
                 "Authorization Error: Please check the provided credentials and verify that you can log into the web interface",
                 exc_info=True,
             )
-        except (
-            FritzActionError,
-            FritzActionFailedError,
-            FritzInternalError,
-            FritzServiceError,
-            FritzLookUpError,
-        ):
+        except FRITZ_EXCEPTIONS:
             _LOGGER.error(
                 "Service/Action Error: cannot execute service %s with action %s",
                 service_name,
