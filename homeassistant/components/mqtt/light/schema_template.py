@@ -67,6 +67,8 @@ CONF_MIN_MIREDS = "min_mireds"
 CONF_RED_TEMPLATE = "red_template"
 CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 
+PAYLOAD_NONE = "None"
+
 PLATFORM_SCHEMA_TEMPLATE = (
     mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         {
@@ -109,7 +111,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize a MQTT Template light."""
-        self._state = False
+        self._state = None
 
         self._topics = None
         self._templates = None
@@ -155,6 +157,8 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             or self._topics[CONF_STATE_TOPIC] is None
             or self._templates[CONF_STATE_TEMPLATE] is None
         )
+        if self._optimistic:
+            self._state = False
 
     async def _subscribe_topics(self):  # noqa: C901
         """(Re)Subscribe to topics."""
@@ -175,6 +179,8 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                 self._state = True
             elif state == STATE_OFF:
                 self._state = False
+            elif state == PAYLOAD_NONE:
+                self._state = None
             else:
                 _LOGGER.warning("Invalid state value received")
 
