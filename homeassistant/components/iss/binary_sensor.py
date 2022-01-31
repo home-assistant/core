@@ -72,7 +72,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
 
-    name = entry.data.get(CONF_NAME, DEFAULT_NAME)
+    name = entry.title
     show_on_map = entry.options.get(CONF_SHOW_ON_MAP, False)
 
     try:

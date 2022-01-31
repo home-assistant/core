@@ -23,7 +23,7 @@ async def test_import(hass: HomeAssistant):
             DOMAIN, context={"source": SOURCE_IMPORT}, data=imported_config
         )
         assert result.get("type") == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result.get("result").data == {CONF_NAME: DEFAULT_NAME}
+        assert result.get("result").title == DEFAULT_NAME
         assert result.get("result").options == {CONF_SHOW_ON_MAP: False}
 
 
