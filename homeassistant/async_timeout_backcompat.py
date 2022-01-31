@@ -17,7 +17,7 @@ def timeout(
         loop = asyncio.get_running_loop()
     else:
         report(
-            "called async_timeout.timeout with loop keyword argument. The loop keyword argument is deprecated and calls will fail after Home Assistant 2022.2",
+            "called async_timeout.timeout with loop keyword argument. The loop keyword argument is deprecated and calls will fail after Home Assistant 2022.3",
             error_if_core=False,
         )
     if delay is not None:
@@ -30,7 +30,7 @@ def timeout(
 def current_task(loop: asyncio.AbstractEventLoop) -> asyncio.Task[Any] | None:
     """Backwards compatible current_task."""
     report(
-        "called async_timeout.current_task. The current_task call is deprecated and calls will fail after Home Assistant 2022.2; use asyncio.current_task instead",
+        "called async_timeout.current_task. The current_task call is deprecated and calls will fail after Home Assistant 2022.3; use asyncio.current_task instead",
         error_if_core=False,
     )
     return asyncio.current_task()
