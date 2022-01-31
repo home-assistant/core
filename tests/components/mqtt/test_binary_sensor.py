@@ -269,6 +269,10 @@ async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
     state = hass.states.get("binary_sensor.test")
     assert state.state == STATE_OFF
 
+    async_fire_mqtt_message(hass, "test-topic", "None")
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_UNKNOWN
+
 
 async def test_invalid_sensor_value_via_mqtt_message(hass, mqtt_mock, caplog):
     """Test the setting of the value via MQTT."""
