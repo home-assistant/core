@@ -41,8 +41,8 @@ async def async_setup_entry(
             SMAsensor(
                 coordinator,
                 config_entry.unique_id,
-                next(
-                    (e for e in SENSOR_ENTITIES if e.key == sensor.name),
+                SENSOR_ENTITIES.get(
+                    sensor.name,
                     SensorEntityDescription(key=sensor.name, name=sensor.name),
                 ),
                 device_info,
