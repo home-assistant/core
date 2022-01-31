@@ -274,6 +274,40 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Humidifier
+    # https://developer.tuya.com/en/docs/iot/categoryjsq?id=Kaiuz1smr440b
+    "jsq": (
+        SelectEntityDescription(
+            key=DPCode.SPRAY_MODE,
+            name="Spray Mode",
+            device_class=TuyaDeviceClass.HUMIDIFIER_SPRAY_MODE,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.LEVEL,
+            name="Spray Level",
+            device_class=TuyaDeviceClass.HUMIDIFIER_LEVEL,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.MOODLIGHTING,
+            name="Moodlighting",
+            device_class=TuyaDeviceClass.HUMIDIFIER_MOODLIGHTING,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN,
+            name="Countdown",
+            device_class=TuyaDeviceClass.COUNTDOWN,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN_SET,
+            name="Countdown",
+            device_class=TuyaDeviceClass.COUNTDOWN_SET,
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)

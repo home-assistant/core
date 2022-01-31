@@ -250,6 +250,20 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             icon="mdi:thermometer-lines",
         ),
     ),
+    # Humidifier
+    # https://developer.tuya.com/en/docs/iot/categoryjsq?id=Kaiuz1smr440b
+    "jsq": (
+        NumberEntityDescription(
+            key=DPCode.TEMP_SET,
+            name="Temperature Celsius",
+            icon="mdi:thermometer-lines",
+        ),
+        NumberEntityDescription(
+            key=DPCode.TEMP_SET_F,
+            name="Temperature Fahrenheit",
+            icon="mdi:thermometer-lines",
+        ),
+    ),
 }
 
 
