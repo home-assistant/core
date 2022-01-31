@@ -128,7 +128,9 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
         state_off = config.get(CONF_STATE_OFF)
         self._state_off = state_off if state_off else config[CONF_PAYLOAD_OFF]
 
-        self._optimistic = config[CONF_OPTIMISTIC]
+        self._optimistic = (
+            config[CONF_OPTIMISTIC] or config.get(CONF_STATE_TOPIC) is None
+        )
 
         if self._optimistic:
             self._state = False

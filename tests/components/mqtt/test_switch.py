@@ -138,6 +138,26 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     assert state.state == STATE_OFF
 
 
+async def test_sending_inital_state_and_optimistic(hass, mqtt_mock):
+    """Test the initial state in optimistic mode."""
+    assert await async_setup_component(
+        hass,
+        switch.DOMAIN,
+        {
+            switch.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+
 async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock):
     """Test the controlling state via topic and JSON message."""
     assert await async_setup_component(
