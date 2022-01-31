@@ -282,12 +282,14 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             name="Fan Speed",
             device_class=TuyaDeviceClass.DEHUMIDIFIER_FAN_SPEED,
             entity_category=EntityCategory.CONFIG,
+            icon="mdi:timer-cog-outline",
         ),
         SelectEntityDescription(
             key=DPCode.COUNTDOWN_SET,
             name="Countdown",
             device_class=TuyaDeviceClass.COUNTDOWN_SET,
             entity_category=EntityCategory.CONFIG,
+            icon="mdi:timer-cog-outline",
         ),
     ),
 }
