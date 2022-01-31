@@ -1,24 +1,21 @@
 """Represent the Freebox router and its devices and sensors."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime, timedelta
-import logging
 import os
 from pathlib import Path
 from typing import Any
 
 from freebox_api import Freepybox
 from freebox_api.api.wifi import Wifi
-from freebox_api.exceptions import HttpRequestError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import slugify
 
 from .const import (
@@ -29,8 +26,6 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -50,17 +45,23 @@ async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
 class FreeboxRouter:
     """Representation of a Freebox router."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        api: Freepybox,
+        freebox_config: Mapping[str, Any],
+    ) -> None:
         """Initialize a Freebox router."""
         self.hass = hass
         self._entry = entry
         self._host = entry.data[CONF_HOST]
         self._port = entry.data[CONF_PORT]
 
-        self._api: Freepybox | None = None
-        self.name: str | None = None
-        self.mac: str | None = None
-        self._sw_v: str | None = None
+        self._api: Freepybox = api
+        self.name: str = freebox_config["model_info"]["pretty_name"]
+        self.mac: str = freebox_config["mac"]
+        self._sw_v: str = freebox_config["firmware_version"]
         self._attrs: dict[str, Any] = {}
 
         self.devices: dict[str, dict[str, Any]] = {}
@@ -71,28 +72,6 @@ class FreeboxRouter:
 
         self._unsub_dispatcher: CALLBACK_TYPE | None = None
         self.listeners: list[CALLBACK_TYPE] = []
-
-    async def setup(self) -> None:
-        """Set up a Freebox router."""
-        self._api = await get_api(self.hass, self._host)
-
-        try:
-            await self._api.open(self._host, self._port)
-        except HttpRequestError as err:
-            _LOGGER.exception("Failed to connect to Freebox")
-            raise ConfigEntryNotReady from err
-
-        # System
-        fbx_config = await self._api.system.get_config()
-        self.mac = fbx_config["mac"]
-        self.name = fbx_config["model_info"]["pretty_name"]
-        self._sw_v = fbx_config["firmware_version"]
-
-        # Devices & sensors
-        await self.update_all()
-        self._unsub_dispatcher = async_track_time_interval(
-            self.hass, self.update_all, SCAN_INTERVAL
-        )
 
     async def update_all(self, now: datetime | None = None) -> None:
         """Update all Freebox platforms."""
@@ -176,15 +155,6 @@ class FreeboxRouter:
         """Reboot the Freebox."""
         assert self._api
         await self._api.system.reboot()
-
-    async def close(self) -> None:
-        """Close the connection."""
-        if self._api is not None:
-            await self._api.close()
-            self._api = None
-        if self._unsub_dispatcher is not None:
-            self._unsub_dispatcher()
-            self._unsub_dispatcher = None
 
     @property
     def device_info(self) -> DeviceInfo:
