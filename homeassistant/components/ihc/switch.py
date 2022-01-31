@@ -21,7 +21,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Load IHC switches based on a config entry."""
     controller_id = config_entry.unique_id
     data = hass.data[DOMAIN][controller_id]
