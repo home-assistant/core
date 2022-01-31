@@ -107,7 +107,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_PORT: DEFAULT_PORT,
         }
         await self._async_set_unique_id(
-            async_get_pin_from_uid(discovery_info.macaddress.upper())
+            async_get_pin_from_uid(discovery_info.macaddress.replace(":", "").upper())
         )
         return await self._async_handle_discovery()
 
