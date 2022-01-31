@@ -3,10 +3,6 @@
         "abort": {
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
-        "step": {
-            "user": {
-                "description": "Do you want to configure the Launch Library?"
-            }
-        }
+        "step": {}
     }
 }
