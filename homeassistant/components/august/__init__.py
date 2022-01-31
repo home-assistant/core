@@ -1,5 +1,6 @@
 """Support for August devices."""
 import asyncio
+import contextlib
 from itertools import chain
 import logging
 
@@ -143,14 +144,19 @@ class AugustData(AugustSubscriberMixin):
         self._pubnub_unsub = async_create_pubnub(user_data["UserID"], pubnub)
 
         if self._locks_by_id:
-            # Do not block startup as the sync can timeout
+            # Do not prevent setup as the sync can timeout
             # but it is not a fatal error as the lock
             # will recover automatically when it comes back online.
             asyncio.create_task(self._async_initial_sync())
 
     async def _async_initial_sync(self):
         """Attempt to request an initial sync."""
-        try:
+        # We don't care if this fails because we only want to wake
+        # locks that are actually online anyways and they will be
+        # awake when they come back online
+        with contextlib.suppress(
+            (asyncio.TimeoutError, ClientResponseError, CannotConnect)
+        ):
             await asyncio.gather(
                 *[
                     self.async_status_async(
@@ -159,11 +165,6 @@ class AugustData(AugustSubscriberMixin):
                     for device_id, detail in self._device_detail_by_id.items()
                     if device_id in self._locks_by_id
                 ]
-            )
-        except (asyncio.TimeoutError, ClientResponseError, CannotConnect) as ex:
-            _LOGGER.warning(
-                "Initial sync was not successful, one more more locks may be offline: %s",
-                ex,
             )
 
     @callback
