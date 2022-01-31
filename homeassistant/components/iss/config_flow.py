@@ -37,7 +37,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self.async_create_entry(
                 title=user_input.get(CONF_NAME, DEFAULT_NAME),
-                data=user_input,
+                data={},
                 options={CONF_SHOW_ON_MAP: user_input.get(CONF_SHOW_ON_MAP, False)},
             )
 
