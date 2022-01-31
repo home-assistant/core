@@ -15,7 +15,7 @@ from .connection import HKDevice
 from .const import KNOWN_DEVICES
 
 REDACTED_CHARACTERISTICS = [
-    CharacteristicsTypes.get_uuid(CharacteristicsTypes.SERIAL_NUMBER),
+    CharacteristicsTypes.SERIAL_NUMBER,
 ]
 
 REDACTED_CONFIG_ENTRY_KEYS = [
@@ -112,12 +112,7 @@ def _async_get_diagnostics(
     for accessory in accessories:
         for service in accessory.get("services", []):
             for char in service.get("characteristics", []):
-                try:
-                    normalized = CharacteristicsTypes.get_uuid(char["type"])
-                except KeyError:
-                    normalized = char["type"]
-
-                if normalized in REDACTED_CHARACTERISTICS:
+                if char["type"] in REDACTED_CHARACTERISTICS:
                     char["value"] = REDACTED
 
     if device:

@@ -51,7 +51,7 @@ async def async_setup_entry(
 
     @callback
     def async_add_service(service):
-        if service.short_type != ServicesTypes.SECURITY_SYSTEM:
+        if service.type != ServicesTypes.SECURITY_SYSTEM:
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([HomeKitAlarmControlPanelEntity(conn, info)], True)
