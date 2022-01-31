@@ -460,7 +460,7 @@ class CastDevice(MediaPlayerEntity):
         """Generate root node."""
         children = []
         # Add media browsers
-        for _, platform in self.hass.data[CAST_DOMAIN].items():
+        for platform in self.hass.data[CAST_DOMAIN].values():
             children.extend(
                 await platform.async_get_media_browser_root_object(content_filter)
             )
@@ -507,7 +507,7 @@ class CastDevice(MediaPlayerEntity):
         if media_content_id is None:
             return await self._async_root_payload(content_filter)
 
-        for _, platform in self.hass.data[CAST_DOMAIN].items():
+        for platform in self.hass.data[CAST_DOMAIN].values():
             browse_media = await platform.async_browse_media(
                 self.hass, media_content_type, media_content_id, content_filter
             )
@@ -577,7 +577,7 @@ class CastDevice(MediaPlayerEntity):
             return
 
         # Try the cast platforms
-        for _, platform in self.hass.data[CAST_DOMAIN].items():
+        for platform in self.hass.data[CAST_DOMAIN].values():
             result = await platform.async_play_media(
                 self.hass, self.entity_id, self._chromecast, media_type, media_id
             )
