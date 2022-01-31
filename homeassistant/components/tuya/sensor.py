@@ -756,7 +756,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PM25,
-            name="Temperature Fahrenheit",
+            name="Particulate Matter 2.5 µm",
             device_class=SensorDeviceClass.PM25,
             state_class=SensorStateClass.MEASUREMENT,
         ),
