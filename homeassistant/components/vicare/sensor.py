@@ -61,10 +61,10 @@ SENSOR_GAS_CONSUMPTION_TODAY = "gas_consumption_heating_today"
 SENSOR_GAS_CONSUMPTION_THIS_WEEK = "gas_consumption_heating_this_week"
 SENSOR_GAS_CONSUMPTION_THIS_MONTH = "gas_consumption_heating_this_month"
 SENSOR_GAS_CONSUMPTION_THIS_YEAR = "gas_consumption_heating_this_year"
-SENSOR_POWER_CONSUMPTION_TODAY = "power_consumption_heating_today"
-SENSOR_POWER_CONSUMPTION_THIS_WEEK = "power_consumption_heating_this_week"
-SENSOR_POWER_CONSUMPTION_THIS_MONTH = "power_consumption_heating_this_month"
-SENSOR_POWER_CONSUMPTION_THIS_YEAR = "power_consumption_heating_this_year"
+SENSOR_POWER_CONSUMPTION_TODAY = "power_consumption_today"
+SENSOR_POWER_CONSUMPTION_THIS_WEEK = "power_consumption_this_week"
+SENSOR_POWER_CONSUMPTION_THIS_MONTH = "power_consumption_this_month"
+SENSOR_POWER_CONSUMPTION_THIS_YEAR = "power_consumption_this_year"
 
 # heatpump sensors
 SENSOR_COMPRESSOR_STARTS = "compressor_starts"
@@ -273,6 +273,42 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_getter=lambda api: api.getSolarPowerProductionThisYear(),
         unit_getter=lambda api: api.getSolarPowerProductionUnit(),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_POWER_CONSUMPTION_TODAY,
+        name="Power consumption today",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_getter=lambda api: api.getPowerConsumptionToday(),
+        unit_getter=lambda api: api.getPowerConsumptionUnit(),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_POWER_CONSUMPTION_THIS_WEEK,
+        name="Power consumption this week",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_getter=lambda api: api.getPowerConsumptionThisWeek(),
+        unit_getter=lambda api: api.getPowerConsumptionUnit(),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_POWER_CONSUMPTION_THIS_MONTH,
+        name="Power consumption this month",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_getter=lambda api: api.getPowerConsumptionThisMonth(),
+        unit_getter=lambda api: api.getPowerConsumptionUnit(),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_POWER_CONSUMPTION_THIS_YEAR,
+        name="Power consumption this year",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_getter=lambda api: api.getPowerConsumptionThisYear(),
+        unit_getter=lambda api: api.getPowerConsumptionUnit(),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
