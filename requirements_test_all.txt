@@ -1423,7 +1423,7 @@ surepy==0.7.2
 systembridge==2.2.3
 
 # homeassistant.components.tailscale
-tailscale==0.1.6
+tailscale==0.2.0
 
 # homeassistant.components.tellduslive
 tellduslive==0.10.11
