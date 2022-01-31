@@ -143,15 +143,28 @@ class AugustData(AugustSubscriberMixin):
         self._pubnub_unsub = async_create_pubnub(user_data["UserID"], pubnub)
 
         if self._locks_by_id:
-            tasks = []
-            for lock_id in self._locks_by_id:
-                detail = self._device_detail_by_id[lock_id]
-                tasks.append(
+            # Do not block startup as the sync can timeout
+            # but it is not a fatal error as the lock
+            # will recover automatically when it comes back online.
+            asyncio.create_task(self._async_initial_sync())
+
+    async def _async_initial_sync(self):
+        """Attempt to request an initial sync."""
+        try:
+            await asyncio.gather(
+                *[
                     self.async_status_async(
-                        lock_id, bool(detail.bridge and detail.bridge.hyper_bridge)
+                        device_id, bool(detail.bridge and detail.bridge.hyper_bridge)
                     )
-                )
-            await asyncio.gather(*tasks)
+                    for device_id, detail in self._device_detail_by_id.items()
+                    if device_id in self._locks_by_id
+                ]
+            )
+        except (asyncio.TimeoutError, ClientResponseError, CannotConnect) as ex:
+            _LOGGER.warning(
+                "Initial sync was not successful, one more more locks may be offline: %s",
+                ex,
+            )
 
     @callback
     def async_pubnub_message(self, device_id, date_time, message):
