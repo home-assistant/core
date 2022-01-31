@@ -206,8 +206,12 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         def state_message_received(msg):
             """Handle state MQTT message."""
             payload = json.loads(msg.payload)
-            if STATE in payload and payload[STATE] in POSSIBLE_STATES:
-                self._state = POSSIBLE_STATES[payload[STATE]]
+            if STATE in payload and (
+                payload[STATE] in POSSIBLE_STATES or payload[STATE] is None
+            ):
+                self._state = (
+                    POSSIBLE_STATES[payload[STATE]] if payload[STATE] else None
+                )
                 del payload[STATE]
             self._state_attrs.update(payload)
             self.async_write_ha_state()
