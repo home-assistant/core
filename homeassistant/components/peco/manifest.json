@@ -6,5 +6,8 @@
   "codeowners": [
     "@IceBotYT"
   ],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "requirements": [
+    "peco==0.0.7"
+  ]
 }

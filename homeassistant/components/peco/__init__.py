@@ -1,12 +1,13 @@
 """The PECO Outage Counter integration."""
 from __future__ import annotations
 
+import peco
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .peco_outage_api import PecoOutageApi
 
 PLATFORMS: list[str] = [Platform.SENSOR]
 
@@ -15,7 +16,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up PECO Outage Counter from a config entry."""
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = PecoOutageApi(entry.data["county"])
+    hass.data[DOMAIN][entry.entry_id] = peco
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
