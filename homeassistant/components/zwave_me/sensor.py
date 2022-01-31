@@ -69,10 +69,8 @@ SENSORS_MAP: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "generic": SensorEntityDescription(
-        key="temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
+        key="generic",
         native_unit_of_measurement=TEMP_CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 DEVICE_NAME = "sensorMultilevel"
