@@ -14,7 +14,10 @@ import pytest
 from homeassistant.components import media_player, tts
 from homeassistant.components.cast import media_player as cast
 from homeassistant.components.cast.media_player import ChromecastInfo
+from homeassistant.components.media_player import BrowseMedia
 from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_APP,
+    MEDIA_CLASS_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -1624,3 +1627,95 @@ async def test_cast_platform_play_media(hass: HomeAssistant, quick_play_mock, ca
     # Assert pychromecast is used to play media
     chromecast.media_controller.play_media.assert_not_called()
     quick_play_mock.assert_called()
+
+
+async def test_cast_platform_browse_media(hass: HomeAssistant, hass_ws_client):
+    """Test we can play media through a cast platform."""
+    cast_platform_mock = Mock(
+        async_get_media_browser_root_object=AsyncMock(
+            return_value=[
+                BrowseMedia(
+                    title="Spotify",
+                    media_class=MEDIA_CLASS_APP,
+                    media_content_id="",
+                    media_content_type="spotify",
+                    thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
+                    can_play=False,
+                    can_expand=True,
+                )
+            ]
+        ),
+        async_browse_media=AsyncMock(
+            return_value=BrowseMedia(
+                title="Spotify Favourites",
+                media_class=MEDIA_CLASS_PLAYLIST,
+                media_content_id="",
+                media_content_type="spotify",
+                can_play=True,
+                can_expand=False,
+            )
+        ),
+        async_play_media=AsyncMock(return_value=False),
+    )
+    mock_platform(hass, "test.cast", cast_platform_mock)
+
+    await async_setup_component(hass, "test", {"test": {}})
+    await async_setup_component(hass, "media_source", {"media_source": {}})
+    await hass.async_block_till_done()
+
+    info = get_fake_chromecast_info()
+
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
+    _, conn_status_cb, _ = get_status_callbacks(chromecast)
+
+    connection_status = MagicMock()
+    connection_status.status = "CONNECTED"
+    conn_status_cb(connection_status)
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.speaker",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    expected_child = {
+        "title": "Spotify",
+        "media_class": "app",
+        "media_content_type": "spotify",
+        "media_content_id": "",
+        "can_play": False,
+        "can_expand": True,
+        "children_media_class": None,
+        "thumbnail": "https://brands.home-assistant.io/_/spotify/logo.png",
+    }
+    assert expected_child in response["result"]["children"]
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.speaker",
+            "media_content_id": "",
+            "media_content_type": "spotify",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    expected_response = {
+        "title": "Spotify Favourites",
+        "media_class": "playlist",
+        "media_content_type": "spotify",
+        "media_content_id": "",
+        "can_play": True,
+        "can_expand": False,
+        "children_media_class": None,
+        "thumbnail": None,
+        "children": [],
+    }
+    assert response["result"] == expected_response
