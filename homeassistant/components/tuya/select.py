@@ -274,6 +274,22 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Dehumidifier
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ts0b8lz
+    "cs": (
+        SelectEntityDescription(
+            key=DPCode.FAN_SPEED_ENUM,
+            name="Fan Speed",
+            device_class=TuyaDeviceClass.DEHUMIDIFIER_FAN_SPEED,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN_SET,
+            name="Countdown",
+            device_class=TuyaDeviceClass.COUNTDOWN_SET,
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)

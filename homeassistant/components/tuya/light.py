@@ -285,6 +285,9 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_temp=DPCode.TEMP_VALUE,
         ),
     ),
+    # Dehumidifier
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ts0b8lz
+    "cs": (TuyaLightEntityDescription(key=DPCode.LIGHT, name="Light"),),
 }
 
 # Socket (duplicate of `kg`)

@@ -91,7 +91,9 @@ class TuyaDeviceClass(StrEnum):
     CURTAIN_MOTOR_MODE = "tuya__curtain_motor_mode"
     BASIC_ANTI_FLICKR = "tuya__basic_anti_flickr"
     BASIC_NIGHTVISION = "tuya__basic_nightvision"
+    COUNTDOWN_SET = "tuya__countdown_set"
     DECIBEL_SENSITIVITY = "tuya__decibel_sensitivity"
+    DEHUMIDIFIER_FAN_SPEED = "tuya__dehumidifier_fan_speed"
     FAN_ANGLE = "tuya__fan_angle"
     FINGERBOT_MODE = "tuya__fingerbot_mode"
     IPC_WORK_MODE = "tuya__ipc_work_mode"
@@ -201,6 +203,7 @@ class DPCode(StrEnum):
     CUR_VOLTAGE = "cur_voltage"  # Actual voltage
     DECIBEL_SENSITIVITY = "decibel_sensitivity"
     DECIBEL_SWITCH = "decibel_switch"
+    DEFROST = "defrost"
     DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
     DO_NOT_DISTURB = "do_not_disturb"
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
@@ -230,8 +233,10 @@ class DPCode(StrEnum):
     GAS_SENSOR_STATE = "gas_sensor_state"
     GAS_SENSOR_STATUS = "gas_sensor_status"
     GAS_SENSOR_VALUE = "gas_sensor_value"
+    HEAT = "heat"
     HUMIDIFIER = "humidifier"  # Humidification
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity
+    HUMIDITY_INDOOR = "humidity_indoor"  # Indoor humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
     IPC_WORK_MODE = "ipc_work_mode"
@@ -269,6 +274,7 @@ class DPCode(StrEnum):
     PIR = "pir"  # Motion sensor
     PM1 = "pm1"
     PM10 = "pm10"
+    PM25 = "pm25"
     PM25_STATE = "pm25_state"
     PM25_VALUE = "pm25_value"
     POWDER_SET = "powder_set"  # Powder
@@ -296,6 +302,7 @@ class DPCode(StrEnum):
     SHOCK_STATE = "shock_state"  # Vibration status
     SIREN_SWITCH = "siren_switch"
     SITUATION_SET = "situation_set"
+    SLEEP = "sleep"  # Sleep function
     SLOW_FEED = "slow_feed"
     SMOKE_SENSOR_STATE = "smoke_sensor_state"
     SMOKE_SENSOR_STATUS = "smoke_sensor_status"
@@ -341,6 +348,7 @@ class DPCode(StrEnum):
     TEMP_CONTROLLER = "temp_controller"
     TEMP_CURRENT = "temp_current"  # Current temperature in °C
     TEMP_CURRENT_F = "temp_current_f"  # Current temperature in °F
+    TEMP_INDOR = "temp_indoor"  # Indoor temperature
     TEMP_SET = "temp_set"  # Set the temperature in °C
     TEMP_SET_F = "temp_set_f"  # Set the temperature in °F
     TEMP_UNIT_CONVERT = "temp_unit_convert"  # Temperature unit switching
