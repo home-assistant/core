@@ -206,12 +206,28 @@ class AugustData(AugustSubscriberMixin):
         await self._async_refresh_device_detail_by_ids(self._subscriptions.keys())
 
     async def _async_refresh_device_detail_by_ids(self, device_ids_list):
-        await asyncio.gather(
-            *(
-                self._async_refresh_device_detail_by_id(device_id)
-                for device_id in device_ids_list
-            )
-        )
+        """Refresh each device in sequence.
+
+        This used to be a gather but it was less reliable with august's
+        recent api changes.
+
+        The august api has been timing out for some devices so
+        we want the ones that it isn't timing out for to keep working.
+        """
+        for device_id in device_ids_list:
+            try:
+                await self._async_refresh_device_detail_by_id(device_id)
+            except asyncio.TimeoutError:
+                _LOGGER.warning(
+                    "Timed out calling august api during refresh of device: %s",
+                    device_id,
+                )
+            except (ClientResponseError, CannotConnect) as err:
+                _LOGGER.warning(
+                    "Error from august api during refresh of device: %s",
+                    device_id,
+                    exc_info=err,
+                )
 
     async def _async_refresh_device_detail_by_id(self, device_id):
         if device_id in self._locks_by_id:
