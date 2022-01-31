@@ -1,4 +1,5 @@
 """Helpers used for Met Office integration."""
+from __future__ import annotations
 
 import logging
 
@@ -15,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def fetch_site(
     connection: datapoint.Manager, latitude: float, longitude: float
-) -> Site:
+) -> Site | None:
     """Fetch site information from Datapoint API."""
     try:
         return connection.get_nearest_forecast_site(
