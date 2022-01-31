@@ -1,6 +1,7 @@
 """UniFi Protect Integration utils."""
 from __future__ import annotations
 
+import contextlib
 from enum import Enum
 import socket
 from typing import Any
@@ -38,14 +39,15 @@ def _async_short_mac(mac: str) -> str:
 
 async def _async_resolve(hass: HomeAssistant, host: str) -> str | None:
     """Resolve a hostname to an ip."""
-    try:
-        res = await hass.loop.getaddrinfo(
-            host, None, type=socket.SOCK_STREAM, proto=socket.IPPROTO_TCP
+    with contextlib.suppress(OSError):
+        return next(
+            iter(
+                raw[0]
+                for family, _, _, _, raw in await hass.loop.getaddrinfo(
+                    host, None, type=socket.SOCK_STREAM, proto=socket.IPPROTO_TCP
+                )
+                if family == socket.AF_INET
+            ),
+            None,
         )
-    except OSError:
-        return None
-
-    for family, _, _, _, raw in res:
-        if family == socket.AF_INET:
-            return raw[0]
     return None
