@@ -2,6 +2,14 @@
 
 from typing import Literal
 
+from fritzconnection.core.exceptions import (
+    FritzActionError,
+    FritzActionFailedError,
+    FritzInternalError,
+    FritzLookUpError,
+    FritzServiceError,
+)
+
 from homeassistant.backports.enum import StrEnum
 from homeassistant.const import Platform
 
@@ -47,3 +55,11 @@ SWITCH_TYPE_PORTFORWARD = "PortForward"
 SWITCH_TYPE_WIFINETWORK = "WiFiNetwork"
 
 UPTIME_DEVIATION = 5
+
+FRITZ_EXCEPTIONS = (
+    FritzActionError,
+    FritzActionFailedError,
+    FritzInternalError,
+    FritzServiceError,
+    FritzLookUpError,
+)
