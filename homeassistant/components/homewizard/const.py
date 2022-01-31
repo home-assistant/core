@@ -19,6 +19,7 @@ CONF_PRODUCT_NAME = "product_name"
 CONF_PRODUCT_TYPE = "product_type"
 CONF_DEVICE = "device"
 CONF_DATA = "data"
+CONF_API_ENABLED = "api_enabled"
 
 UPDATE_INTERVAL = timedelta(seconds=5)
 

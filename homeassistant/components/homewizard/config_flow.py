@@ -14,7 +14,13 @@ from homeassistant.components import persistent_notification, zeroconf
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 
-from .const import CONF_PRODUCT_NAME, CONF_PRODUCT_TYPE, CONF_SERIAL, DOMAIN
+from .const import (
+    CONF_API_ENABLED,
+    CONF_PRODUCT_NAME,
+    CONF_PRODUCT_TYPE,
+    CONF_SERIAL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,9 +114,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if (discovery_info.properties["path"]) != "/api/v1":
             return self.async_abort(reason="unsupported_api_version")
 
-        if (discovery_info.properties["api_enabled"]) != "1":
-            return self.async_abort(reason="api_not_enabled")
-
         # Sets unique ID and aborts if it is already exists
         await self._async_set_and_check_unique_id(
             {
@@ -120,17 +123,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-        # Check connection and fetch
-        device_info: dict[str, Any] = await self._async_try_connect_and_fetch(
-            discovery_info.host
-        )
-
         # Pass parameters
         self.config = {
+            CONF_API_ENABLED: discovery_info.properties["api_enabled"],
             CONF_IP_ADDRESS: discovery_info.host,
-            CONF_PRODUCT_TYPE: device_info[CONF_PRODUCT_TYPE],
-            CONF_PRODUCT_NAME: device_info[CONF_PRODUCT_NAME],
-            CONF_SERIAL: device_info[CONF_SERIAL],
+            CONF_PRODUCT_TYPE: discovery_info.properties["product_type"],
+            CONF_PRODUCT_NAME: discovery_info.properties["product_name"],
+            CONF_SERIAL: discovery_info.properties["serial"],
         }
         return await self.async_step_discovery_confirm()
 
@@ -139,6 +138,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Confirm discovery."""
         if user_input is not None:
+            if (self.config[CONF_API_ENABLED]) != "1":
+                raise AbortFlow(reason="api_not_enabled")
+
+            # Check connection
+            await self._async_try_connect_and_fetch(str(self.config[CONF_IP_ADDRESS]))
+
             return self.async_create_entry(
                 title=f"{self.config[CONF_PRODUCT_NAME]} ({self.config[CONF_SERIAL]})",
                 data={
