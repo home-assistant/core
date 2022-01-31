@@ -602,7 +602,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
 
     other_ip_dict = UNIFI_DISCOVERY_DICT.copy()
     other_ip_dict["source_ip"] = "127.0.0.1"
-    other_ip_dict["direct_connect_domain"] = "y.ui.direct"
+    other_ip_dict["direct_connect_domain"] = "nomatchsameip.ui.direct"
 
     with _patch_discovery(), patch.object(
         hass.loop,
