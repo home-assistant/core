@@ -11,7 +11,7 @@ from homeassistant.const import ATTR_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import EsphomeEntity, platform_async_setup_entry
+from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 
 
 async def async_setup_entry(
@@ -49,22 +49,22 @@ class EsphomeLock(EsphomeEntity[LockInfo, LockEntityState], LockEntity):
             return self._static_info.code_format
         return None
 
-    @property
+    @esphome_state_property
     def is_locked(self) -> bool | None:
         """Return true if the lock is locked."""
         return self._state.state == LockState.LOCKED
 
-    @property
+    @esphome_state_property
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
         return self._state.state == LockState.LOCKING
 
-    @property
+    @esphome_state_property
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
         return self._state.state == LockState.UNLOCKING
 
-    @property
+    @esphome_state_property
     def is_jammed(self) -> bool | None:
         """Return true if the lock is jammed (incomplete locking)."""
         return self._state.state == LockState.JAMMED
