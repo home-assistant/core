@@ -93,7 +93,7 @@
     "tuya__curtain_motor_mode": {
         "forward": "Forward",
         "back": "Back"
-      },
+    },
     "tuya__countdown": {
         "cancel": "[%key:component::tuya::platform::select::state::tuya__countdown_set::cancel%]",
         "1": "[%key:component::tuya::platform::select::state::tuya__countdown_set::1h%]",
