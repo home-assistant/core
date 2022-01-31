@@ -70,7 +70,6 @@ SENSORS_MAP: dict[str, SensorEntityDescription] = {
     ),
     "generic": SensorEntityDescription(
         key="generic",
-        native_unit_of_measurement=TEMP_CELSIUS,
     ),
 }
 DEVICE_NAME = "sensorMultilevel"
