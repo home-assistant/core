@@ -847,6 +847,8 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
                     self._area_name,
                 )
                 self._attr_native_value = None
+
+            self._attr_available = False
             return
 
         if values := [x for x in data.values() if x is not None]:
