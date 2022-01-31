@@ -85,7 +85,6 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle discovery."""
-        _LOGGER.warning("discovery:%s", discovery_info)
         self._discovered_device = discovery_info
         mac = _async_unifi_mac_from_hass(discovery_info["hw_addr"])
         await self.async_set_unique_id(mac)
@@ -112,13 +111,6 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         self.hass.config_entries.async_reload(entry.entry_id)
                     )
                 return self.async_abort(reason="already_configured")
-            _LOGGER.warning(
-                "source_ip: %s, entry_host: %s, direct_connect_domain: %s, resolved: %s",
-                source_ip,
-                entry_host,
-                direct_connect_domain,
-                await _async_resolve(self.hass, entry_host),
-            )
             if entry_host in (direct_connect_domain, source_ip) or (
                 entry_has_direct_connect
                 and (ip := await _async_resolve(self.hass, entry_host))

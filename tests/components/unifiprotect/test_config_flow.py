@@ -589,7 +589,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         data={
-            "host": "127.0.0.1",
+            "host": "y.ui.direct",
             "username": "test-username",
             "password": "test-password",
             "id": "UnifiProtect",
@@ -601,7 +601,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
     mock_config.add_to_hass(hass)
 
     other_ip_dict = UNIFI_DISCOVERY_DICT.copy()
-    other_ip_dict["source_ip"] = "127.0.0.2"
+    other_ip_dict["source_ip"] = "127.0.0.1"
     other_ip_dict["direct_connect_domain"] = "y.ui.direct"
 
     with _patch_discovery(), patch.object(
