@@ -28,16 +28,18 @@ MIGRATE_OPTIONS_KEYS = {CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE}
 
 @callback
 def _async_migrate_data_to_options(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
+    hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
-    if not MIGRATE_OPTIONS_KEYS.intersection(entry.data):
+    if not MIGRATE_OPTIONS_KEYS.intersection(config_entry.data):
         return
     hass.config_entries.async_update_entry(
-        entry,
-        data={k: v for k, v in entry.data.items() if k not in MIGRATE_OPTIONS_KEYS},
+        config_entry,
+        data={
+            k: v for k, v in config_entry.data.items() if k not in MIGRATE_OPTIONS_KEYS
+        },
         options={
-            **entry.options,
-            **{k: entry.data.get(k) for k in MIGRATE_OPTIONS_KEYS},
+            **config_entry.options,
+            **{k: config_entry.data.get(k) for k in MIGRATE_OPTIONS_KEYS},
         },
     )
 
