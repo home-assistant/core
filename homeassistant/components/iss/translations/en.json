@@ -4,12 +4,14 @@
             "latitude_longitude_not_defined": "Latitude and longitude are not defined in Home Assistant.",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
+        "step": {}
+    },
+    "options": {
         "step": {
-            "user": {
+            "init": {
                 "data": {
-                    "show_on_map": "Show on map?"
-                },
-                "description": "Do you want to configure the International Space Station?"
+                    "show_on_map": "Show on map"
+                }
             }
         }
     }
