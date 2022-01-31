@@ -35,7 +35,7 @@ class EcobeeModeSelect(CharacteristicEntity, SelectEntity):
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
         return [
-            CharacteristicsTypes.Vendor.ECOBEE_CURRENT_MODE,
+            CharacteristicsTypes.VENDOR_ECOBEE_CURRENT_MODE,
         ]
 
     @property
@@ -47,7 +47,7 @@ class EcobeeModeSelect(CharacteristicEntity, SelectEntity):
         """Set the current mode."""
         option_int = _ECOBEE_MODE_TO_NUMBERS[option]
         await self.async_put_characteristics(
-            {CharacteristicsTypes.Vendor.ECOBEE_SET_HOLD_SCHEDULE: option_int}
+            {CharacteristicsTypes.VENDOR_ECOBEE_SET_HOLD_SCHEDULE: option_int}
         )
 
 
@@ -62,7 +62,7 @@ async def async_setup_entry(
 
     @callback
     def async_add_characteristic(char: Characteristic):
-        if char.type == CharacteristicsTypes.Vendor.ECOBEE_CURRENT_MODE:
+        if char.type == CharacteristicsTypes.VENDOR_ECOBEE_CURRENT_MODE:
             info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
             async_add_entities([EcobeeModeSelect(conn, info, char)])
             return True

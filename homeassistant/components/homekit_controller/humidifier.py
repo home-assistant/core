@@ -252,7 +252,7 @@ async def async_setup_entry(
 
     @callback
     def async_add_service(service):
-        if service.short_type != ServicesTypes.HUMIDIFIER_DEHUMIDIFIER:
+        if service.type != ServicesTypes.HUMIDIFIER_DEHUMIDIFIER:
             return False
 
         info = {"aid": service.accessory.aid, "iid": service.iid}

@@ -54,7 +54,7 @@ async def async_setup_entry(
 
     @callback
     def async_add_service(service):
-        if service.short_type != ServicesTypes.TELEVISION:
+        if service.type != ServicesTypes.TELEVISION:
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([HomeKitTelevision(conn, info)], True)

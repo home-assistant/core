@@ -247,7 +247,7 @@ def create_switch_with_sensor(accessory):
     service = accessory.add_service(ServicesTypes.OUTLET)
 
     realtime_energy = service.add_char(
-        CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY
+        CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY
     )
     realtime_energy.value = 0
     realtime_energy.format = "float"
@@ -275,7 +275,7 @@ async def test_switch_with_sensor(hass, utcnow):
     state = await energy_helper.async_update(
         ServicesTypes.OUTLET,
         {
-            CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY: 1,
+            CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY: 1,
         },
     )
     assert state.state == "1"
@@ -283,7 +283,7 @@ async def test_switch_with_sensor(hass, utcnow):
     state = await energy_helper.async_update(
         ServicesTypes.OUTLET,
         {
-            CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY: 50,
+            CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY: 50,
         },
     )
     assert state.state == "50"
@@ -295,7 +295,7 @@ async def test_sensor_unavailable(hass, utcnow):
 
     # Find the energy sensor and mark it as offline
     outlet = helper.accessory.services.first(service_type=ServicesTypes.OUTLET)
-    realtime_energy = outlet[CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY]
+    realtime_energy = outlet[CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY]
     realtime_energy.status = HapStatusCode.UNABLE_TO_COMMUNICATE
 
     # Helper will be for the primary entity, which is the outlet. Make a helper for the sensor.
