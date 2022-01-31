@@ -161,7 +161,7 @@ class MqttSiren(MqttEntity, SirenEntity):
 
         self.target = None
 
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
+        super().__init__(hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema():
