@@ -12,9 +12,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ZWaveMeEntity
-from .const import DOMAIN
+from .const import DOMAIN, ZWaveMePlatform
 
-DEVICE_NAME = "doorlock"
+DEVICE_NAME = ZWaveMePlatform.LOCK
 
 
 async def async_setup_entry(

@@ -11,9 +11,10 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, PLATFORMS, ZWAVE_PLATFORMS
+from .const import DOMAIN, PLATFORMS, ZWaveMePlatform
 
 _LOGGER = logging.getLogger(__name__)
+ZWAVE_ME_PLATFORMS = [platform.value for platform in ZWaveMePlatform]
 
 
 async def async_setup_entry(hass, entry):
@@ -50,7 +51,7 @@ class ZWaveMeController:
             on_new_device=self.add_device,
             token=self.config.data[CONF_TOKEN],
             url=self.config.data[CONF_URL],
-            platforms=ZWAVE_PLATFORMS,
+            platforms=ZWAVE_ME_PLATFORMS,
         )
         self.platforms_inited = False
 
@@ -61,7 +62,7 @@ class ZWaveMeController:
 
     def add_device(self, device: ZWaveMeData) -> None:
         """Send signal to create device."""
-        if device.deviceType in ZWAVE_PLATFORMS and self.platforms_inited:
+        if device.deviceType in ZWAVE_ME_PLATFORMS and self.platforms_inited:
             if device.id in self.device_ids:
                 dispatcher_send(self._hass, f"ZWAVE_ME_INFO_{device.id}", device)
             else:

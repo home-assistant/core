@@ -11,10 +11,10 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import ZWaveMeEntity
-from .const import DOMAIN
+from .const import DOMAIN, ZWaveMePlatform
 
 _LOGGER = logging.getLogger(__name__)
-DEVICE_NAME = "switchBinary"
+DEVICE_NAME = ZWaveMePlatform.SWITCH
 
 SWITCH_MAP: dict[str, SwitchEntityDescription] = {
     "generic": SwitchEntityDescription(

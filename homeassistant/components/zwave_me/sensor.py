@@ -23,7 +23,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ZWaveMeController, ZWaveMeEntity
-from .const import DOMAIN
+from .const import DOMAIN, ZWaveMePlatform
 
 SENSORS_MAP: dict[str, SensorEntityDescription] = {
     "meterElectric_watt": SensorEntityDescription(
@@ -72,7 +72,7 @@ SENSORS_MAP: dict[str, SensorEntityDescription] = {
         key="generic",
     ),
 }
-DEVICE_NAME = "sensorMultilevel"
+DEVICE_NAME = ZWaveMePlatform.SENSOR
 
 
 async def async_setup_entry(
