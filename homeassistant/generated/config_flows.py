@@ -339,6 +339,7 @@ FLOWS = [
     "twinkly",
     "unifi",
     "unifiprotect",
+    "unmanic",
     "upb",
     "upcloud",
     "upnp",

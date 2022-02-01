@@ -1464,6 +1464,9 @@ uEagle==0.0.2
 # homeassistant.components.unifiprotect
 unifi-discovery==1.1.2
 
+# homeassistant.components.unmanic
+unmanic-api==0.0.5
+
 # homeassistant.components.upb
 upb_lib==0.4.12
 

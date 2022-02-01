@@ -1233,6 +1233,10 @@ omit =
     homeassistant/components/twitter/notify.py
     homeassistant/components/ubus/device_tracker.py
     homeassistant/components/ue_smart_radio/media_player.py
+    homeassistant/components/unmanic/__init__.py
+    homeassistant/components/unmanic/const.py
+    homeassistant/components/unmanic/entity.py
+    homeassistant/components/unmanic/sensor.py
     homeassistant/components/unifiled/*
     homeassistant/components/upb/__init__.py
     homeassistant/components/upb/const.py

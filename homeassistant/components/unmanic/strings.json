@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "timeout": "Request timeout period (in seconds)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  }
+}

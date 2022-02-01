@@ -1,0 +1,9 @@
+{
+  "domain": "unmanic",
+  "name": "Unmanic",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/unmanic",
+  "requirements": ["unmanic-api==0.0.5"],
+  "codeowners": ["@JeffResc"],
+  "iot_class": "local_polling"
+}
