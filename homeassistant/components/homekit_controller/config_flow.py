@@ -280,9 +280,13 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if self.controller is None:
                 await self._async_setup_controller()
 
+            # mypy can't see that self._async_setup_controller() always sets self.controller or throws
+            assert self.controller
+
             pairing = self.controller.load_pairing(
                 existing.data["AccessoryPairingID"], dict(existing.data)
             )
+
             try:
                 await pairing.list_accessories_and_characteristics()
             except AuthenticationError:
