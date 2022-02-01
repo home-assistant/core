@@ -76,7 +76,7 @@ async def async_setup_entry(
 
 
 class IntellifireBinarySensor(IntellifireEntity, BinarySensorEntity):
-    """Class definition."""
+    """Extends IntellifireEntity with Binary Sensor specific logic."""
 
     entity_description: IntellifireBinarySensorEntityDescription
 
