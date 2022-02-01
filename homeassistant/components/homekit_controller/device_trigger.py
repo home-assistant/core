@@ -76,7 +76,7 @@ class TriggerSource:
 
     async def async_attach_trigger(
         self,
-        config: TRIGGER_SCHEMA,
+        config: ConfigType,
         action: AutomationActionType,
         automation_info: AutomationTriggerInfo,
     ) -> CALLBACK_TYPE:
