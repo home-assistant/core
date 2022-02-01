@@ -266,7 +266,7 @@ def check_correct_scopes(hass, token_file, config):
     creds = Storage(hass.config.path(TOKEN_FILE)).get()
     if not creds or not creds.scopes:
         return False
-    target_scope = config.get(CONF_CALENDAR_ACCESS).scope
+    target_scope = config[CONF_CALENDAR_ACCESS].scope
     return target_scope in creds.scopes
 
 
