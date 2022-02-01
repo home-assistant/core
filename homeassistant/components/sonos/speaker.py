@@ -582,7 +582,7 @@ class SonosSpeaker:
         if not self.available:
             return
         _LOGGER.debug(
-            "%s has gone away (%s), marking unavailable", self.zone_name, reason
+            "%s has vanished (%s), marking unavailable", self.zone_name, reason
         )
         await self.async_offline()
 
@@ -702,7 +702,13 @@ class SonosSpeaker:
         if xml := event.variables.get("zone_group_state"):
             zgs = ET.fromstring(xml)
             for vanished_device in zgs.find("VanishedDevices"):
-                if (reason := vanished_device.get("Reason")) == "UNKNOWN":
+                if (reason := vanished_device.get("Reason")) != "sleeping":
+                    _LOGGER.debug(
+                        "Ignoring %s marked %s as vanished with reason: %s",
+                        self.zone_name,
+                        vanished_device.get("ZoneName"),
+                        reason,
+                    )
                     continue
                 uid = vanished_device.get("UUID")
                 async_dispatcher_send(
