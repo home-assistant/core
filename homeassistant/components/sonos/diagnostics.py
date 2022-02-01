@@ -91,9 +91,13 @@ async def async_generate_media_info(
         payload[attrib] = getattr(speaker.media, attrib)
 
     def poll_current_track_info():
-        return speaker.soco.avTransport.GetPositionInfo(
-            [("InstanceID", 0), ("Channel", "Master")]
-        )
+        try:
+            return speaker.soco.avTransport.GetPositionInfo(
+                [("InstanceID", 0), ("Channel", "Master")],
+                timeout=3,
+            )
+        except OSError:
+            return "Error retrieving"
 
     payload["current_track_poll"] = await hass.async_add_executor_job(
         poll_current_track_info
