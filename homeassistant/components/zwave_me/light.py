@@ -12,7 +12,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ZWaveMeController, ZWaveMeEntity
-from .const import DOMAIN
+from .const import DOMAIN, ZWaveMePlatform
 
 
 async def async_setup_entry(
@@ -35,10 +35,10 @@ async def async_setup_entry(
         )
 
     async_dispatcher_connect(
-        hass, "ZWAVE_ME_NEW_" + "switchRGBW".upper(), add_new_device
+        hass, "ZWAVE_ME_NEW_" + ZWaveMePlatform.RGB_LIGHT.upper(), add_new_device
     )
     async_dispatcher_connect(
-        hass, "ZWAVE_ME_NEW_" + "switchRGB".upper(), add_new_device
+        hass, "ZWAVE_ME_NEW_" + ZWaveMePlatform.RGBW_LIGHT.upper(), add_new_device
     )
 
 
@@ -51,7 +51,7 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
         device: ZWaveMeData,
     ) -> None:
         """Initialize the device."""
-        super().__init__(self, controller=controller, device=device)
+        super().__init__(self, controller, device=device)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -62,7 +62,7 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
         color = kwargs.get(ATTR_RGB_COLOR)
 
         if color is None:
-            color = [122, 122, 122]
+            color = (122, 122, 122)
         cmd = "exact?red={}&green={}&blue={}".format(*color)
         self.controller.zwave_api.send_command(self.device.id, cmd)
 
@@ -80,8 +80,7 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
     def rgb_color(self) -> tuple[int, int, int]:
         """Return the rgb color value [int, int, int]."""
         rgb = self.device.color
-        values = (rgb["r"], rgb["g"], rgb["b"])  # ensure order
-        return values
+        return rgb["r"], rgb["g"], rgb["b"]
 
     @property
     def supported_color_modes(self) -> set:

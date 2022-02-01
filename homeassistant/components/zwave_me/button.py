@@ -6,9 +6,9 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import ZWaveMeEntity
-from .const import DOMAIN
+from .const import DOMAIN, ZWaveMePlatform
 
-DEVICE_NAME = "toggleButton"
+DEVICE_NAME = ZWaveMePlatform.BUTTON
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
