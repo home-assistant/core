@@ -17,7 +17,7 @@ class ZWaveMePlatform(StrEnum):
     SWITCH = "binarySwitch"
     SENSOR = "sensorMultilevel"
     RGBW_LIGHT = "switchRGBW"
-    RGB_LIGHT = ("switchRGB",)
+    RGB_LIGHT = "switchRGB"
 
 
 PLATFORMS = [
