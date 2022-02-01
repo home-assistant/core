@@ -4,7 +4,7 @@ from __future__ import annotations
 import copy
 from datetime import datetime, timedelta
 import logging
-from typing import Any, cast
+from typing import Any
 
 from googleapiclient import discovery as google_discovery
 from httplib2 import ServerNotFoundError
@@ -189,7 +189,7 @@ class GoogleCalendarData:
         params: dict[str, Any],
         page_token: str | None,
         event_list: list[dict[str, Any]],
-    ) -> str:
+    ) -> str | None:
         """Get a page of events in a specific time frame."""
         params["pageToken"] = page_token
         result = await hass.async_add_executor_job(events.list(**params).execute)
@@ -201,7 +201,7 @@ class GoogleCalendarData:
                     event_list.append(item)
             else:
                 event_list.append(item)
-        return cast(str, result.get("nextPageToken"))
+        return result.get("nextPageToken")
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self) -> None:
