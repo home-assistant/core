@@ -96,8 +96,8 @@ async def async_generate_media_info(
                 [("InstanceID", 0), ("Channel", "Master")],
                 timeout=3,
             )
-        except OSError:
-            return "Error retrieving"
+        except OSError as ex:
+            return f"Error retrieving: {ex}"
 
     payload["current_track_poll"] = await hass.async_add_executor_job(
         poll_current_track_info
