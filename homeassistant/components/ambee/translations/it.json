@@ -11,7 +11,7 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "Chiave API",
-                    "description": "Riautenticati con il tuo account Ambee."
+                    "description": "Autenticati nuovamente con il tuo account Ambee."
                 }
             },
             "user": {

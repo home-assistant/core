@@ -10,7 +10,9 @@ from homeassistant.components.humidifier.const import (
     MODE_NORMAL,
     SUPPORT_MODES,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
@@ -239,14 +241,18 @@ class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
         return f"homekit-{serial}-{self._iid}-{self.device_class}"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Homekit humidifer."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
     def async_add_service(service):
-        if service.short_type != ServicesTypes.HUMIDIFIER_DEHUMIDIFIER:
+        if service.type != ServicesTypes.HUMIDIFIER_DEHUMIDIFIER:
             return False
 
         info = {"aid": service.accessory.aid, "iid": service.iid}

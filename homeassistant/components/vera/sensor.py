@@ -6,16 +6,18 @@ from typing import cast
 
 import pyvera as veraApi
 
-from homeassistant.components.sensor import (
-    DOMAIN as PLATFORM_DOMAIN,
-    ENTITY_ID_FORMAT,
-    SensorEntity,
-)
+from homeassistant.components.sensor import ENTITY_ID_FORMAT, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    LIGHT_LUX,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import convert
+from homeassistant.helpers.typing import StateType
 
 from . import VeraDevice
 from .common import ControllerData, get_controller_data
@@ -33,7 +35,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             VeraSensor(device, controller_data)
-            for device in controller_data.devices.get(PLATFORM_DOMAIN)
+            for device in controller_data.devices[Platform.SENSOR]
         ],
         True,
     )
@@ -46,14 +48,14 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
         self, vera_device: veraApi.VeraSensor, controller_data: ControllerData
     ) -> None:
         """Initialize the sensor."""
-        self.current_value = None
-        self._temperature_units = None
+        self.current_value: StateType = None
+        self._temperature_units: str | None = None
         self.last_changed_time = None
         VeraDevice.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> StateType:
         """Return the name of the sensor."""
         return self.current_value
 
@@ -71,6 +73,7 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
             return PERCENTAGE
         if self.vera_device.category == veraApi.CATEGORY_POWER_METER:
             return "watts"
+        return None
 
     def update(self) -> None:
         """Update the state."""
@@ -101,8 +104,7 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
                 self.current_value = value
             self.last_changed_time = time
         elif self.vera_device.category == veraApi.CATEGORY_POWER_METER:
-            power = convert(self.vera_device.power, float, 0)
-            self.current_value = int(round(power, 0))
+            self.current_value = self.vera_device.power
         elif self.vera_device.is_trippable:
             tripped = self.vera_device.is_tripped
             self.current_value = "Tripped" if tripped else "Not Tripped"

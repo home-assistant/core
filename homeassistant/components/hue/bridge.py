@@ -3,13 +3,12 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from http import HTTPStatus
 import logging
 from typing import Any
 
 from aiohttp import client_exceptions
 from aiohue import HueBridgeV1, HueBridgeV2, LinkButtonNotPressed, Unauthorized
-from aiohue.errors import AiohueException
+from aiohue.errors import AiohueException, BridgeBusy
 import async_timeout
 
 from homeassistant import core
@@ -44,20 +43,18 @@ class HueBridge:
         self.config_entry = config_entry
         self.hass = hass
         self.authorized = False
-        self.parallel_updates_semaphore = asyncio.Semaphore(
-            3 if self.api_version == 1 else 10
-        )
         # Jobs to be executed when API is reset.
         self.reset_jobs: list[core.CALLBACK_TYPE] = []
         self.sensor_manager: SensorManager | None = None
         self.logger = logging.getLogger(__name__)
         # store actual api connection to bridge as api
         app_key: str = self.config_entry.data[CONF_API_KEY]
-        websession = aiohttp_client.async_get_clientsession(hass)
         if self.api_version == 1:
-            self.api = HueBridgeV1(self.host, app_key, websession)
+            self.api = HueBridgeV1(
+                self.host, app_key, aiohttp_client.async_get_clientsession(hass)
+            )
         else:
-            self.api = HueBridgeV2(self.host, app_key, websession)
+            self.api = HueBridgeV2(self.host, app_key)
         # store (this) bridge object in hass data
         hass.data.setdefault(DOMAIN, {})[self.config_entry.entry_id] = self
 
@@ -89,6 +86,7 @@ class HueBridge:
             client_exceptions.ClientOSError,
             client_exceptions.ServerDisconnectedError,
             client_exceptions.ContentTypeError,
+            BridgeBusy,
         ) as err:
             raise ConfigEntryNotReady(
                 f"Error connecting to the Hue bridge at {self.host}"
@@ -121,50 +119,19 @@ class HueBridge:
     async def async_request_call(
         self, task: Callable, *args, allowed_errors: list[str] | None = None, **kwargs
     ) -> Any:
-        """Limit parallel requests to Hue hub.
-
-        The Hue hub can only handle a certain amount of parallel requests, total.
-        Although we limit our parallel requests, we still will run into issues because
-        other products are hitting up Hue.
-
-        ClientOSError means hub closed the socket on us.
-        ContentResponseError means hub raised an error.
-        Since we don't make bad requests, this is on them.
-        """
-        max_tries = 5
-        async with self.parallel_updates_semaphore:
-            for tries in range(max_tries):
-                try:
-                    return await task(*args, **kwargs)
-                except AiohueException as err:
-                    # The new V2 api is a bit more fanatic with throwing errors
-                    # some of which we accept in certain conditions
-                    # handle that here. Note that these errors are strings and do not have
-                    # an identifier or something.
-                    if allowed_errors is not None and str(err) in allowed_errors:
-                        # log only
-                        self.logger.debug(
-                            "Ignored error/warning from Hue API: %s", str(err)
-                        )
-                        return None
-                    raise err
-                except (
-                    client_exceptions.ClientOSError,
-                    client_exceptions.ClientResponseError,
-                    client_exceptions.ServerDisconnectedError,
-                ) as err:
-                    if tries == max_tries:
-                        self.logger.error("Request failed %s times, giving up", tries)
-                        raise
-
-                    # We only retry if it's a server error. So raise on all 4XX errors.
-                    if (
-                        isinstance(err, client_exceptions.ClientResponseError)
-                        and err.status < HTTPStatus.INTERNAL_SERVER_ERROR
-                    ):
-                        raise
-
-                    await asyncio.sleep(HUB_BUSY_SLEEP * tries)
+        """Send request to the Hue bridge, optionally omitting error(s)."""
+        try:
+            return await task(*args, **kwargs)
+        except AiohueException as err:
+            # The (new) Hue api can be a bit fanatic with throwing errors
+            # some of which we accept in certain conditions
+            # handle that here. Note that these errors are strings and do not have
+            # an identifier or something.
+            if allowed_errors is not None and str(err) in allowed_errors:
+                # log only
+                self.logger.debug("Ignored error/warning from Hue API: %s", str(err))
+                return None
+            raise err
 
     async def async_reset(self) -> bool:
         """Reset this bridge to default state.

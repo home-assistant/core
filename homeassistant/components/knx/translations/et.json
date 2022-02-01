@@ -12,15 +12,17 @@
                 "data": {
                     "host": "Host",
                     "individual_address": "\u00dchenduse individuaalne aadress",
-                    "local_ip": "Kohalik IP (j\u00e4ta t\u00fchjaks, kui ei ole kindel)",
+                    "local_ip": "Home Assistanti kohalik IP (automaatseks tuvastuseks j\u00e4ta t\u00fchjaks)",
                     "port": "Port",
-                    "route_back": "Marsruudi tagasitee / NAT-re\u017eiim"
+                    "route_back": "Marsruudi tagasitee / NAT-re\u017eiim",
+                    "tunneling_type": "KNX tunneli t\u00fc\u00fcp"
                 },
                 "description": "Sisesta tunneldamisseadme \u00fchenduse teave."
             },
             "routing": {
                 "data": {
                     "individual_address": "Marsruutimis\u00fchenduse individuaalne aadress",
+                    "local_ip": "Home Assistanti kohalik IP (automaatseks tuvastuseks j\u00e4ta t\u00fchjaks)",
                     "multicast_group": "Marsruutimiseks kasutatav multisaater\u00fchm",
                     "multicast_port": "Marsruutimiseks kasutatav multisaateport"
                 },
@@ -46,6 +48,7 @@
                 "data": {
                     "connection_type": "KNX \u00fchenduse t\u00fc\u00fcp",
                     "individual_address": "Vaikimisi individuaalne aadress",
+                    "local_ip": "Home Assistanti kohalik IP (sisesta 0.0.0.0 automaatseks tuvastuseks)",
                     "multicast_group": "Marsruutimiseks ja avastamiseks kasutatav multisaategrupp",
                     "multicast_port": "Marsruutimiseks ja avastamiseks kasutatav multisaateport",
                     "rate_limit": "Maksimaalne v\u00e4ljaminevate teavituste arv sekundis",
@@ -57,7 +60,8 @@
                     "host": "Host",
                     "local_ip": "Kohalik IP (j\u00e4ta t\u00fchjaks, kui ei ole kindel)",
                     "port": "Port",
-                    "route_back": "Marsruudi tagasitee / NAT-re\u017eiim"
+                    "route_back": "Marsruudi tagasitee / NAT-re\u017eiim",
+                    "tunneling_type": "KNX tunneli t\u00fc\u00fcp"
                 }
             }
         }

@@ -1,9 +1,13 @@
 """Support for a demo mailbox."""
+from __future__ import annotations
+
 from hashlib import sha1
 import logging
 import os
 
 from homeassistant.components.mailbox import CONTENT_TYPE_MPEG, Mailbox, StreamError
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
@@ -11,7 +15,11 @@ _LOGGER = logging.getLogger(__name__)
 MAILBOX_NAME = "DemoMailbox"
 
 
-async def async_get_handler(hass, config, discovery_info=None):
+async def async_get_handler(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> Mailbox:
     """Set up the Demo mailbox."""
     return DemoMailbox(hass, MAILBOX_NAME)
 

@@ -90,7 +90,9 @@ async def enable_all_entities(hass, config_entry_id, time_till_next_update):
     registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(registry, config_entry_id)
     for entry in [
-        entry for entry in entities if entry.disabled_by == er.DISABLED_INTEGRATION
+        entry
+        for entry in entities
+        if entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     ]:
         registry.async_update_entity(entry.entity_id, **{"disabled_by": None})
     await hass.async_block_till_done()

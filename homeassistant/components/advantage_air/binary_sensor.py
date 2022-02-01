@@ -1,10 +1,14 @@
 """Binary Sensor platform for Advantage Air integration."""
+from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
 from .entity import AdvantageAirEntity
@@ -12,12 +16,16 @@ from .entity import AdvantageAirEntity
 PARALLEL_UPDATES = 0
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up AdvantageAir motion platform."""
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
-    entities = []
+    entities: list[BinarySensorEntity] = []
     for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
         entities.append(AdvantageAirZoneFilter(instance, ac_key))
         for zone_key, zone in ac_device["zones"].items():

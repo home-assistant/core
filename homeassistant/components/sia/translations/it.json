@@ -14,7 +14,7 @@
                 "data": {
                     "account": "ID account",
                     "additional_account": "Account aggiuntivi",
-                    "encryption_key": "Chiave di crittografia",
+                    "encryption_key": "Chiave di cifratura",
                     "ping_interval": "Intervallo ping (min)",
                     "zones": "Numero di zone per l'account"
                 },
@@ -24,13 +24,13 @@
                 "data": {
                     "account": "ID account",
                     "additional_account": "Account aggiuntivi",
-                    "encryption_key": "Chiave di crittografia",
+                    "encryption_key": "Chiave di cifratura",
                     "ping_interval": "Intervallo ping (min)",
                     "port": "Porta",
                     "protocol": "Protocollo",
                     "zones": "Numero di zone per l'account"
                 },
-                "title": "Creare una connessione per i sistemi di allarme basati su SIA."
+                "title": "Crea una connessione per i sistemi di allarme basati su SIA."
             }
         }
     },

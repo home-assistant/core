@@ -10,15 +10,15 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS,
-    CONF_NAME,
-    DEVICE_CLASS_TIMESTAMP,
-)
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 from homeassistant.util.dt import get_time_zone, now
 
@@ -69,7 +69,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Create the Rova data service and sensors."""
 
     zip_code = config[CONF_ZIP_CODE]
@@ -110,7 +115,7 @@ class RovaSensor(SensorEntity):
         self.data_service = data_service
 
         self._attr_name = f"{platform_name}_{description.name}"
-        self._attr_device_class = DEVICE_CLASS_TIMESTAMP
+        self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def update(self):
         """Get the latest data from the sensor and update the state."""

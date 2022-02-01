@@ -20,6 +20,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_STOP,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_IDLE,
     STATE_OK,
@@ -27,7 +28,8 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_PROBLEM,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
@@ -41,14 +43,18 @@ HK_TO_HA_STATE = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Homekit television."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
     def async_add_service(service):
-        if service.short_type != ServicesTypes.TELEVISION:
+        if service.type != ServicesTypes.TELEVISION:
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([HomeKitTelevision(conn, info)], True)

@@ -1,5 +1,4 @@
 """Support for Axis camera streaming."""
-
 from urllib.parse import urlencode
 
 from homeassistant.components.camera import SUPPORT_STREAM
@@ -9,6 +8,7 @@ from homeassistant.components.mjpeg.camera import (
     MjpegCamera,
     filter_urllib3_logging,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,
@@ -16,13 +16,19 @@ from homeassistant.const import (
     CONF_USERNAME,
     HTTP_DIGEST_AUTHENTICATION,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .axis_base import AxisEntityBase
 from .const import DEFAULT_STREAM_PROFILE, DEFAULT_VIDEO_SOURCE, DOMAIN as AXIS_DOMAIN
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Axis camera video stream."""
     filter_urllib3_logging()
 

@@ -1,14 +1,14 @@
 """TOLO Sauna (non-binary, general) sensors."""
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DEVICE_CLASS_TEMPERATURE,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-    PERCENTAGE,
-    TEMP_CELSIUS,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ToloSaunaCoordinatorEntity, ToloSaunaUpdateCoordinator
@@ -33,10 +33,10 @@ async def async_setup_entry(
 class ToloWaterLevelSensor(ToloSaunaCoordinatorEntity, SensorEntity):
     """Sensor for tank water level."""
 
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_name = "Water Level"
     _attr_icon = "mdi:waves-arrow-up"
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(
@@ -56,10 +56,10 @@ class ToloWaterLevelSensor(ToloSaunaCoordinatorEntity, SensorEntity):
 class ToloTankTemperatureSensor(ToloSaunaCoordinatorEntity, SensorEntity):
     """Sensor for tank temperature."""
 
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_name = "Tank Temperature"
-    _attr_device_class = DEVICE_CLASS_TEMPERATURE
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = TEMP_CELSIUS
 
     def __init__(

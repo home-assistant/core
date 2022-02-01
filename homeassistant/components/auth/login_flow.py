@@ -75,6 +75,7 @@ import voluptuous_serialize
 
 from homeassistant import data_entry_flow
 from homeassistant.auth.models import Credentials
+from homeassistant.components import onboarding
 from homeassistant.components.http.auth import async_user_not_allowed_do_auth
 from homeassistant.components.http.ban import (
     log_invalid_auth,
@@ -105,7 +106,7 @@ class AuthProvidersView(HomeAssistantView):
     async def get(self, request):
         """Get available auth providers."""
         hass = request.app["hass"]
-        if not hass.components.onboarding.async_is_user_onboarded():
+        if not onboarding.async_is_user_onboarded(hass):
             return self.json_message(
                 message="Onboarding not finished",
                 status_code=HTTPStatus.BAD_REQUEST,

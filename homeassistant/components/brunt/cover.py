@@ -100,8 +100,8 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
 
         self._remove_update_listener = None
 
-        self._attr_name = self._thing.NAME
-        self._attr_device_class = CoverDeviceClass.SHADE
+        self._attr_name = self._thing.name
+        self._attr_device_class = CoverDeviceClass.BLIND
         self._attr_supported_features = COVER_FEATURES
         self._attr_attribution = ATTRIBUTION
         self._attr_device_info = DeviceInfo(
@@ -109,8 +109,8 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
             name=self._attr_name,
             via_device=(DOMAIN, self._entry_id),
             manufacturer="Brunt",
-            sw_version=self._thing.FW_VERSION,
-            model=self._thing.MODEL,
+            sw_version=self._thing.fw_version,
+            model=self._thing.model,
         )
 
     async def async_added_to_hass(self) -> None:
@@ -127,8 +127,7 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        pos = self.coordinator.data[self.unique_id].currentPosition
-        return int(pos) if pos is not None else None
+        return self.coordinator.data[self.unique_id].current_position
 
     @property
     def request_cover_position(self) -> int | None:
@@ -139,8 +138,7 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
         to Brunt, at times there is a diff of 1 to current
         None is unknown, 0 is closed, 100 is fully open.
         """
-        pos = self.coordinator.data[self.unique_id].requestPosition
-        return int(pos) if pos is not None else None
+        return self.coordinator.data[self.unique_id].request_position
 
     @property
     def move_state(self) -> int | None:
@@ -149,8 +147,7 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
 
         None is unknown, 0 when stopped, 1 when opening, 2 when closing
         """
-        mov = self.coordinator.data[self.unique_id].moveState
-        return int(mov) if mov is not None else None
+        return self.coordinator.data[self.unique_id].move_state
 
     @property
     def is_opening(self) -> bool:
@@ -190,11 +187,11 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
         """Set the cover to the new position and wait for the update to be reflected."""
         try:
             await self._bapi.async_change_request_position(
-                position, thingUri=self._thing.thingUri
+                position, thing_uri=self._thing.thing_uri
             )
         except ClientResponseError as exc:
             raise HomeAssistantError(
-                f"Unable to reposition {self._thing.NAME}"
+                f"Unable to reposition {self._thing.name}"
             ) from exc
         self.coordinator.update_interval = FAST_INTERVAL
         await self.coordinator.async_request_refresh()
@@ -204,7 +201,7 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
         """Update the update interval after each refresh."""
         if (
             self.request_cover_position
-            == self._bapi.last_requested_positions[self._thing.thingUri]
+            == self._bapi.last_requested_positions[self._thing.thing_uri]
             and self.move_state == 0
         ):
             self.coordinator.update_interval = REGULAR_INTERVAL

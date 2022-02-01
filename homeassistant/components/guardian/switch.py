@@ -9,11 +9,12 @@ from aioguardian.errors import GuardianError
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import ValveControllerEntity
-from .const import API_VALVE_STATUS, DATA_CLIENT, DATA_COORDINATOR, DOMAIN, LOGGER
+from .const import API_VALVE_STATUS, DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 
 ATTR_AVG_CURRENT = "average_current"
 ATTR_INST_CURRENT = "instantaneous_current"
@@ -97,8 +98,7 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
             async with self._client:
                 await self._client.valve.close()
         except GuardianError as err:
-            LOGGER.error("Error while closing the valve: %s", err)
-            return
+            raise HomeAssistantError(f"Error while closing the valve: {err}") from err
 
         self._attr_is_on = False
         self.async_write_ha_state()
@@ -109,8 +109,7 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
             async with self._client:
                 await self._client.valve.open()
         except GuardianError as err:
-            LOGGER.error("Error while opening the valve: %s", err)
-            return
+            raise HomeAssistantError(f"Error while opening the valve: {err}") from err
 
         self._attr_is_on = True
         self.async_write_ha_state()

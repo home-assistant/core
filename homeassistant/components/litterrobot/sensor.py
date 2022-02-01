@@ -5,9 +5,9 @@ from datetime import datetime
 
 from pylitterbot.robot import Robot
 
-from homeassistant.components.sensor import SensorEntity, StateType
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, StateType
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP, PERCENTAGE
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -70,7 +70,7 @@ class LitterRobotSleepTimeSensor(LitterRobotPropertySensor):
     @property
     def device_class(self) -> str:
         """Return the device class, if any."""
-        return DEVICE_CLASS_TIMESTAMP
+        return SensorDeviceClass.TIMESTAMP
 
 
 ROBOT_SENSORS: list[tuple[type[LitterRobotPropertySensor], str, str]] = [

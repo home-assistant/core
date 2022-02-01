@@ -284,7 +284,6 @@ class Zone(entity.Entity):
         """Initialize the zone."""
         self._config = config
         self.editable = True
-        self._attrs: dict | None = None
         self._generate_attrs()
 
     @classmethod
@@ -316,11 +315,6 @@ class Zone(entity.Entity):
         return self._config.get(CONF_ICON)
 
     @property
-    def extra_state_attributes(self) -> dict | None:
-        """Return the state attributes of the zone."""
-        return self._attrs
-
-    @property
     def should_poll(self) -> bool:
         """Zone does not poll."""
         return False
@@ -336,7 +330,7 @@ class Zone(entity.Entity):
     @callback
     def _generate_attrs(self) -> None:
         """Generate new attrs based on config."""
-        self._attrs = {
+        self._attr_extra_state_attributes = {
             ATTR_LATITUDE: self._config[CONF_LATITUDE],
             ATTR_LONGITUDE: self._config[CONF_LONGITUDE],
             ATTR_RADIUS: self._config[CONF_RADIUS],

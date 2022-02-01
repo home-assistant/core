@@ -1,10 +1,12 @@
 """Support to interface with Sonos players."""
 from __future__ import annotations
 
+from asyncio import run_coroutine_threadsafe
 import datetime
+import json
 import logging
 from typing import Any
-import urllib.parse
+from urllib.parse import quote
 
 from soco import alarms
 from soco.core import (
@@ -13,8 +15,11 @@ from soco.core import (
     PLAY_MODE_BY_MEANING,
     PLAY_MODES,
 )
+from soco.data_structures import DidlFavorite
 import voluptuous as vol
 
+from homeassistant.components import media_source, spotify
+from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
@@ -28,6 +33,7 @@ from homeassistant.components.media_player.const import (
     REPEAT_MODE_ONE,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_GROUPING,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -41,17 +47,18 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
-from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.plex.const import PLEX_URI_SCHEME
-from homeassistant.components.plex.services import play_on_sonos
+from homeassistant.components.plex.services import lookup_plex_media
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TIME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.network import is_internal_request
+from homeassistant.helpers.network import get_url
 
+from . import media_browser
 from .const import (
     DATA_SONOS,
     DOMAIN as SONOS_DOMAIN,
@@ -65,7 +72,6 @@ from .const import (
 )
 from .entity import SonosEntity
 from .helpers import soco_error
-from .media_browser import build_item_response, get_media, library_payload
 from .speaker import SonosMedia, SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,6 +79,7 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_SONOS = (
     SUPPORT_BROWSE_MEDIA
     | SUPPORT_CLEAR_PLAYLIST
+    | SUPPORT_GROUPING
     | SUPPORT_NEXT_TRACK
     | SUPPORT_PAUSE
     | SUPPORT_PLAY
@@ -132,6 +139,7 @@ async def async_setup_entry(
     @callback
     def async_create_entities(speaker: SonosSpeaker) -> None:
         """Handle device discovery and create entities."""
+        _LOGGER.debug("Creating media_player on %s", speaker.zone_name)
         async_add_entities([SonosMediaPlayerEntity(speaker)])
 
     @service.verify_domain_control(hass, SONOS_DOMAIN)
@@ -415,22 +423,37 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         soco = self.coordinator.soco
         if source == SOURCE_LINEIN:
             soco.switch_to_line_in()
-        elif source == SOURCE_TV:
+            return
+
+        if source == SOURCE_TV:
             soco.switch_to_tv()
+            return
+
+        self._play_favorite_by_name(source)
+
+    def _play_favorite_by_name(self, name: str) -> None:
+        """Play a favorite by name."""
+        fav = [fav for fav in self.speaker.favorites if fav.title == name]
+
+        if len(fav) != 1:
+            return
+
+        src = fav.pop()
+        self._play_favorite(src)
+
+    def _play_favorite(self, favorite: DidlFavorite) -> None:
+        """Play a favorite."""
+        uri = favorite.reference.get_uri()
+        soco = self.coordinator.soco
+        if soco.music_source_from_uri(uri) in [
+            MUSIC_SRC_RADIO,
+            MUSIC_SRC_LINE_IN,
+        ]:
+            soco.play_uri(uri, title=favorite.title)
         else:
-            fav = [fav for fav in self.speaker.favorites if fav.title == source]
-            if len(fav) == 1:
-                src = fav.pop()
-                uri = src.reference.get_uri()
-                if soco.music_source_from_uri(uri) in [
-                    MUSIC_SRC_RADIO,
-                    MUSIC_SRC_LINE_IN,
-                ]:
-                    soco.play_uri(uri, title=source)
-                else:
-                    soco.clear_queue()
-                    soco.add_to_queue(src.reference)
-                    soco.play_from_queue(0)
+            soco.clear_queue()
+            soco.add_to_queue(favorite.reference)
+            soco.play_from_queue(0)
 
     @property  # type: ignore[misc]
     def source_list(self) -> list[str]:
@@ -489,18 +512,50 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         If media_id is a Plex payload, attempt Plex->Sonos playback.
 
-        If media_id is a Sonos or Tidal share link, attempt playback
-        using the respective service.
+        If media_id is an Apple Music, Deezer, Sonos, or Tidal share link,
+        attempt playback using the respective service.
 
         If media_type is "playlist", media_id should be a Sonos
         Playlist name.  Otherwise, media_id should be a URI.
 
         If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
         """
+        if spotify.is_spotify_media_type(media_type):
+            media_type = spotify.resolve_spotify_media_type(media_type)
+
+        if media_source.is_media_source_id(media_id):
+            media_type = MEDIA_TYPE_MUSIC
+            media_id = (
+                run_coroutine_threadsafe(
+                    media_source.async_resolve_media(self.hass, media_id),
+                    self.hass.loop,
+                )
+                .result()
+                .url
+            )
+
+        if media_type == "favorite_item_id":
+            favorite = self.speaker.favorites.lookup_by_item_id(media_id)
+            if favorite is None:
+                raise ValueError(f"Missing favorite for media_id: {media_id}")
+            self._play_favorite(favorite)
+            return
+
         soco = self.coordinator.soco
         if media_id and media_id.startswith(PLEX_URI_SCHEME):
+            plex_plugin = self.speaker.plex_plugin
             media_id = media_id[len(PLEX_URI_SCHEME) :]
-            play_on_sonos(self.hass, media_type, media_id, self.name)  # type: ignore[no-untyped-call]
+            payload = json.loads(media_id)
+            if isinstance(payload, dict):
+                shuffle = payload.pop("shuffle", False)
+            else:
+                shuffle = False
+            media = lookup_plex_media(self.hass, media_type, json.dumps(payload))
+            if not kwargs.get(ATTR_MEDIA_ENQUEUE):
+                soco.clear_queue()
+            if shuffle:
+                self.set_shuffle(True)
+            plex_plugin.play_now(media)
             return
 
         share_link = self.speaker.share_link
@@ -512,13 +567,26 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 share_link.add_share_link_to_queue(media_id)
                 soco.play_from_queue(0)
         elif media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK):
+            # If media ID is a relative URL, we serve it from HA.
+            # Create a signed path.
+            if media_id[0] == "/":
+                media_id = async_sign_path(
+                    self.hass,
+                    quote(media_id),
+                    datetime.timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
+                )
+
+                # prepend external URL
+                hass_url = get_url(self.hass, prefer_external=True)
+                media_id = f"{hass_url}{media_id}"
+
             if kwargs.get(ATTR_MEDIA_ENQUEUE):
                 soco.add_uri_to_queue(media_id)
             else:
                 soco.play_uri(media_id)
         elif media_type == MEDIA_TYPE_PLAYLIST:
             if media_id.startswith("S:"):
-                item = get_media(self.media.library, media_id, media_type)  # type: ignore[no-untyped-call]
+                item = media_browser.get_media(self.media.library, media_id, media_type)  # type: ignore[no-untyped-call]
                 soco.play_uri(item.get_uri())
                 return
             try:
@@ -531,7 +599,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 soco.add_to_queue(playlist)
                 soco.play_from_queue(0)
         elif media_type in PLAYABLE_MEDIA_TYPES:
-            item = get_media(self.media.library, media_id, media_type)  # type: ignore[no-untyped-call]
+            item = media_browser.get_media(self.media.library, media_id, media_type)  # type: ignore[no-untyped-call]
 
             if not item:
                 _LOGGER.error('Could not find "%s" in the library', media_id)
@@ -602,17 +670,17 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
     async def async_get_browse_image(
         self,
-        media_content_type: str | None,
-        media_content_id: str | None,
+        media_content_type: str,
+        media_content_id: str,
         media_image_id: str | None = None,
-    ) -> tuple[None | str, None | str]:
+    ) -> tuple[bytes | None, str | None]:
         """Fetch media browser image to serve via proxy."""
         if (
             media_content_type in [MEDIA_TYPE_ALBUM, MEDIA_TYPE_ARTIST]
             and media_content_id
         ):
             item = await self.hass.async_add_executor_job(
-                get_media,
+                media_browser.get_media,
                 self.media.library,
                 media_content_id,
                 MEDIA_TYPES_TO_SONOS[media_content_type],
@@ -627,41 +695,26 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self, media_content_type: str | None = None, media_content_id: str | None = None
     ) -> Any:
         """Implement the websocket media browsing helper."""
-        is_internal = is_internal_request(self.hass)
-
-        def _get_thumbnail_url(
-            media_content_type: str,
-            media_content_id: str,
-            media_image_id: str | None = None,
-        ) -> str | None:
-            if is_internal:
-                item = get_media(  # type: ignore[no-untyped-call]
-                    self.media.library,
-                    media_content_id,
-                    media_content_type,
-                )
-                return getattr(item, "album_art_uri", None)  # type: ignore[no-any-return]
-
-            return self.get_browse_image_url(
-                media_content_type,
-                urllib.parse.quote_plus(media_content_id),
-                media_image_id,
-            )
-
-        if media_content_type in [None, "library"]:
-            return await self.hass.async_add_executor_job(
-                library_payload, self.media.library, _get_thumbnail_url
-            )
-
-        payload = {
-            "search_type": media_content_type,
-            "idstring": media_content_id,
-        }
-        response = await self.hass.async_add_executor_job(
-            build_item_response, self.media.library, payload, _get_thumbnail_url
+        return await media_browser.async_browse_media(
+            self.hass,
+            self.speaker,
+            self.media,
+            self.get_browse_image_url,
+            media_content_id,
+            media_content_type,
         )
-        if response is None:
-            raise BrowseError(
-                f"Media not found: {media_content_type} / {media_content_id}"
-            )
-        return response
+
+    def join_players(self, group_members):
+        """Join `group_members` as a player group with the current player."""
+        speakers = []
+        for entity_id in group_members:
+            if speaker := self.hass.data[DATA_SONOS].entity_id_mappings.get(entity_id):
+                speakers.append(speaker)
+            else:
+                raise HomeAssistantError(f"Not a known Sonos entity_id: {entity_id}")
+
+        self.speaker.join(speakers)
+
+    def unjoin_player(self):
+        """Remove this player from any group."""
+        self.speaker.unjoin()
