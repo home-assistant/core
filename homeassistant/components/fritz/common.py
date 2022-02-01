@@ -372,13 +372,14 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
 
                 dev_info: Device = hosts[dev_mac]
 
+                if dev_info.ip_address:
+                    dev_info.wan_access = self._get_wan_access(dev_info.ip_address)
+
                 for link in interf["node_links"]:
                     intf = mesh_intf.get(link["node_interface_1_uid"])
                     if intf is not None:
-                        if intf["op_mode"] != "AP_GUEST" and dev_info.ip_address:
-                            dev_info.wan_access = self._get_wan_access(
-                                dev_info.ip_address
-                            )
+                        if intf["op_mode"] == "AP_GUEST":
+                            dev_info.wan_access = None
 
                         dev_info.connected_to = intf["device"]
                         dev_info.connection_type = intf["type"]
