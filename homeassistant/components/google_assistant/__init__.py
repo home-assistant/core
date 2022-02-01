@@ -73,7 +73,9 @@ GOOGLE_ASSISTANT_SCHEMA = vol.All(
             ): cv.ensure_list,
             vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ENTITY_SCHEMA},
             # str on purpose, makes sure it is configured correctly.
-            vol.Optional(CONF_SECURE_DEVICES_PIN): vol.Any(str, [str]),
+            vol.Optional(CONF_SECURE_DEVICES_PIN): vol.All(
+                cv.ensure_list(str), [cv.string]
+            ),
             vol.Optional(CONF_REPORT_STATE, default=False): cv.boolean,
             vol.Optional(CONF_SERVICE_ACCOUNT): GOOGLE_SERVICE_ACCOUNT,
             # deprecated configuration options
