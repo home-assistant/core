@@ -7,7 +7,7 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_DISCRETE,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
-    CONF_VIRTUAL_COUNT,
+    CONF_SLAVE_COUNT,
 )
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -211,7 +211,7 @@ ENTITY_ID2 = f"{ENTITY_ID}_1"
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_SCAN_INTERVAL: 0,
-                    CONF_VIRTUAL_COUNT: 1,
+                    CONF_SLAVE_COUNT: 1,
                 }
             ]
         },
@@ -234,13 +234,13 @@ TEST_NAME = "test_sensor"
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
-                    CONF_VIRTUAL_COUNT: 3,
+                    CONF_SLAVE_COUNT: 3,
                 }
             ]
         },
     ],
 )
-async def test_config_virtual_binary_sensor(hass, mock_modbus):
+async def test_config_slave_binary_sensor(hass, mock_modbus):
     """Run config test for binary sensor."""
     assert SENSOR_DOMAIN in hass.config.components
     for addon in ["", "_1", "_2", "_3"]:
@@ -256,7 +256,7 @@ async def test_config_virtual_binary_sensor(hass, mock_modbus):
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
-                    CONF_VIRTUAL_COUNT: 8,
+                    CONF_SLAVE_COUNT: 8,
                 }
             ]
         },
@@ -309,7 +309,7 @@ async def test_config_virtual_binary_sensor(hass, mock_modbus):
         ),
     ],
 )
-async def test_virtual_binary_sensor(hass, expected, slaves, mock_do_cycle):
+async def test_slave_binary_sensor(hass, expected, slaves, mock_do_cycle):
     """Run test for given config."""
     assert hass.states.get(ENTITY_ID).state == expected
     for i in range(8):

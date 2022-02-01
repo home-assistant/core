@@ -18,7 +18,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_hub
 from .base_platform import BasePlatform
-from .const import CONF_VIRTUAL_COUNT
+from .const import CONF_SLAVE_COUNT
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
@@ -35,14 +35,12 @@ async def async_setup_platform(
     if discovery_info is None:  # pragma: no cover
         return
 
-    sensors: list[ModbusBinarySensor | VirtualSensor] = []
+    sensors: list[ModbusBinarySensor | SlaveSensor] = []
     hub = get_hub(hass, discovery_info[CONF_NAME])
     for entry in discovery_info[CONF_BINARY_SENSORS]:
-        virtuals = [
-            VirtualSensor(i, entry) for i in range(1, entry[CONF_VIRTUAL_COUNT] + 1)
-        ]
-        sensors.append(ModbusBinarySensor(hub, entry, virtuals))
-        sensors.extend(virtuals)
+        slaves = [SlaveSensor(i, entry) for i in range(1, entry[CONF_SLAVE_COUNT] + 1)]
+        sensors.append(ModbusBinarySensor(hub, entry, slaves))
+        sensors.extend(slaves)
     async_add_entities(sensors)
 
 
@@ -50,11 +48,11 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
     """Modbus binary sensor."""
 
     def __init__(
-        self, hub: ModbusHub, entry: dict[str, Any], virtuals: list[VirtualSensor]
+        self, hub: ModbusHub, entry: dict[str, Any], slaves: list[SlaveSensor]
     ) -> None:
         """Initialize the Modbus binary sensor."""
-        self._count = len(virtuals) + 1
-        self._virtuals = virtuals
+        self._count = len(slaves) + 1
+        self._slaves = slaves
         super().__init__(hub, entry)
 
     async def async_added_to_hass(self) -> None:
@@ -89,12 +87,12 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
 
         self.schedule_update_ha_state()
         self.async_write_ha_state()
-        for entry in self._virtuals:
+        for entry in self._slaves:
             entry.set_from_master(result_bits, self._attr_available)
 
 
-class VirtualSensor(RestoreEntity, BinarySensorEntity):
-    """Modbus virtual binary sensor."""
+class SlaveSensor(RestoreEntity, BinarySensorEntity):
+    """Modbus slave binary sensor."""
 
     def __init__(self, inx: int, entry: dict[str, Any]) -> None:
         """Initialize the Modbus binary sensor."""

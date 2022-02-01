@@ -57,7 +57,7 @@ CONF_VERIFY = "verify"
 CONF_VERIFY_REGISTER = "verify_register"
 CONF_VERIFY_STATE = "verify_state"
 CONF_WRITE_TYPE = "write_type"
-CONF_VIRTUAL_COUNT = "virtual_count"
+CONF_SLAVE_COUNT = "slave_count"
 
 RTUOVERTCP = "rtuovertcp"
 SERIAL = "serial"
