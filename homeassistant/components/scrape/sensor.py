@@ -33,6 +33,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,22 +74,23 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Web scrape sensor."""
-    name = config.get(CONF_NAME)
-    resource = config.get(CONF_RESOURCE)
-    method = "GET"
-    payload = None
-    headers = config.get(CONF_HEADERS)
-    verify_ssl = config.get(CONF_VERIFY_SSL)
-    select = config.get(CONF_SELECT)
-    attr = config.get(CONF_ATTR)
-    index = config.get(CONF_INDEX)
-    unit = config.get(CONF_UNIT_OF_MEASUREMENT)
-    device_class = config.get(CONF_DEVICE_CLASS)
-    state_class = config.get(CONF_STATE_CLASS)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
+    name: str = config[CONF_NAME]
+    resource: str = config[CONF_RESOURCE]
+    method: str = "GET"
+    payload: str | None = None
+    headers: str | None = config.get(CONF_HEADERS)
+    verify_ssl: bool = config[CONF_VERIFY_SSL]
+    select: str | None = config.get(CONF_SELECT)
+    attr: str | None = config.get(CONF_ATTR)
+    index: int = config[CONF_INDEX]
+    unit: str | None = config.get(CONF_UNIT_OF_MEASUREMENT)
+    device_class: str | None = config.get(CONF_DEVICE_CLASS)
+    state_class: str | None = config.get(CONF_STATE_CLASS)
+    username: str | None = config.get(CONF_USERNAME)
+    password: str | None = config.get(CONF_PASSWORD)
+    value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
 
-    if (value_template := config.get(CONF_VALUE_TEMPLATE)) is not None:
+    if value_template is not None:
         value_template.hass = hass
 
     auth: httpx.DigestAuth | tuple[str, str] | None
@@ -128,19 +130,19 @@ class ScrapeSensor(SensorEntity):
 
     def __init__(
         self,
-        rest,
-        name,
-        select,
-        attr,
-        index,
-        value_template,
-        unit,
-        device_class,
-        state_class,
-    ):
+        rest: RestData,
+        name: str,
+        select: str | None,
+        attr: str | None,
+        index: str | None,
+        value_template: Template | None,
+        unit: str | None,
+        device_class: str | None,
+        state_class: str | None,
+    ) -> None:
         """Initialize a web scrape sensor."""
         self.rest = rest
-        self._state = None
+        self._attr_native_value = None
         self._select = select
         self._attr = attr
         self._index = index
@@ -150,12 +152,7 @@ class ScrapeSensor(SensorEntity):
         self._attr_device_class = device_class
         self._attr_state_class = state_class
 
-    @property
-    def native_value(self):
-        """Return the state of the device."""
-        return self._state
-
-    def _extract_value(self):
+    def _extract_value(self) -> str:
         """Parse the html extraction in the executor."""
         raw_data = BeautifulSoup(self.rest.data, "html.parser")
         _LOGGER.debug(raw_data)
@@ -180,16 +177,16 @@ class ScrapeSensor(SensorEntity):
         _LOGGER.debug(value)
         return value
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from the source and updates the state."""
         await self.rest.async_update()
         await self._async_update_from_rest_data()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Ensure the data from the initial update is reflected in the state."""
         await self._async_update_from_rest_data()
 
-    async def _async_update_from_rest_data(self):
+    async def _async_update_from_rest_data(self) -> None:
         """Update state from the rest data."""
         if self.rest.data is None:
             _LOGGER.error("Unable to retrieve data for %s", self.name)
@@ -202,8 +199,8 @@ class ScrapeSensor(SensorEntity):
             return
 
         if self._value_template is not None:
-            self._state = self._value_template.async_render_with_possible_json_value(
-                value, None
+            self._attr_native_value = (
+                self._value_template.async_render_with_possible_json_value(value, None)
             )
         else:
-            self._state = value
+            self._attr_native_value = value
