@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ZWaveMeController, ZWaveMeEntity
+from . import ZWaveMeEntity
 from .const import DOMAIN, ZWaveMePlatform
 
 
@@ -44,14 +44,6 @@ async def async_setup_entry(
 
 class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
     """Representation of a ZWaveMe light."""
-
-    def __init__(
-        self,
-        controller: ZWaveMeController,
-        device: ZWaveMeData,
-    ) -> None:
-        """Initialize the device."""
-        super().__init__(controller, device)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device on."""
