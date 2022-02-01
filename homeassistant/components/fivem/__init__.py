@@ -1,6 +1,8 @@
 """The FiveM integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any
@@ -139,15 +141,23 @@ class FiveMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         raise UpdateFailed
 
 
+@dataclass
+class FiveMEntityDescription(EntityDescription):
+    """Describes FiveM entity."""
+
+    extra_attrs: list[str] | None = None
+
+
 class FiveMEntity(CoordinatorEntity):
     """Representation of a FiveM base entity."""
 
     coordinator: FiveMDataUpdateCoordinator
+    entity_description: FiveMEntityDescription
 
     def __init__(
         self,
         coordinator: FiveMDataUpdateCoordinator,
-        description: EntityDescription,
+        description: FiveMEntityDescription,
     ) -> None:
         """Initialize base entity."""
         super().__init__(coordinator)
@@ -162,3 +172,14 @@ class FiveMEntity(CoordinatorEntity):
             name=self.coordinator.server_name,
             sw_version=self.coordinator.version,
         )
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return the extra attributes of the sensor."""
+        if self.entity_description.extra_attrs is None:
+            return None
+
+        return {
+            attr: self.coordinator.data[attr]
+            for attr in self.entity_description.extra_attrs
+        }

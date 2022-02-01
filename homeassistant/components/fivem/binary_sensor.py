@@ -8,11 +8,18 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FiveMEntity
+from . import FiveMEntity, FiveMEntityDescription
 from .const import DOMAIN, ICON_STATUS, NAME_STATUS
 
-BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
-    BinarySensorEntityDescription(
+
+class FiveMBinarySensorEntityDescription(
+    BinarySensorEntityDescription, FiveMEntityDescription
+):
+    """Describes FiveM binary sensor entity."""
+
+
+BINARY_SENSORS: tuple[FiveMBinarySensorEntityDescription, ...] = (
+    FiveMBinarySensorEntityDescription(
         key=NAME_STATUS,
         name=NAME_STATUS,
         icon=ICON_STATUS,
@@ -37,7 +44,7 @@ async def async_setup_entry(
 class FiveMSensorEntity(FiveMEntity, BinarySensorEntity):
     """Representation of a FiveM sensor base entity."""
 
-    entity_description: BinarySensorEntityDescription
+    entity_description: FiveMBinarySensorEntityDescription
 
     @property
     def is_on(self) -> bool:

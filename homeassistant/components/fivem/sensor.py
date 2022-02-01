@@ -1,7 +1,4 @@
 """The FiveM sensor platform."""
-from __future__ import annotations
-
-from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -10,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FiveMEntity
+from . import FiveMEntity, FiveMEntityDescription
 from .const import (
     ATTR_PLAYERS_LIST,
     ATTR_RESOURCES_LIST,
@@ -28,10 +25,8 @@ from .const import (
 
 
 @dataclass
-class FiveMSensorEntityDescription(SensorEntityDescription):
+class FiveMSensorEntityDescription(SensorEntityDescription, FiveMEntityDescription):
     """Describes FiveM sensor entity."""
-
-    extra_attrs: list[str] | None = None
 
 
 SENSORS: tuple[FiveMSensorEntityDescription, ...] = (
@@ -81,14 +76,3 @@ class FiveMSensorEntity(FiveMEntity, SensorEntity):
     def native_value(self) -> Any:
         """Return the state of the sensor."""
         return self.coordinator.data[self.entity_description.key]
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return the extra attributes of the sensor."""
-        if self.entity_description.extra_attrs is None:
-            return None
-
-        return {
-            attr: self.coordinator.data[attr]
-            for attr in self.entity_description.extra_attrs
-        }
