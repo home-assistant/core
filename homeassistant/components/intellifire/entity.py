@@ -1,8 +1,6 @@
 """Platform for shared base classes for sensors."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
