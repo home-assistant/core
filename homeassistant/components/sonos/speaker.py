@@ -702,11 +702,13 @@ class SonosSpeaker:
         if xml := event.variables.get("zone_group_state"):
             zgs = ET.fromstring(xml)
             for vanished_device in zgs.find("VanishedDevices"):
+                if (reason := vanished_device.get("Reason")) == "UNKNOWN":
+                    continue
                 uid = vanished_device.get("UUID")
                 async_dispatcher_send(
                     self.hass,
                     f"{SONOS_VANISHED}-{uid}",
-                    vanished_device.get("Reason"),
+                    reason,
                 )
 
         if "zone_player_uui_ds_in_group" not in event.variables:
