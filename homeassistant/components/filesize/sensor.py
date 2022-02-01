@@ -18,6 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import slugify
 
 from . import DOMAIN, PLATFORMS
 
@@ -43,10 +44,15 @@ def setup_platform(
     setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     sensors = []
+    pathlist = []
     for path in config[CONF_FILE_PATHS]:
+        if path in pathlist:
+            continue
+        pathlist.append(path)
         if not hass.config.is_allowed_path(path):
             _LOGGER.error("Filepath %s is not valid or allowed", path)
             continue
+
         sensors.append(Filesize(path))
 
     if sensors:
@@ -64,15 +70,16 @@ class Filesize(SensorEntity):
         self._path = path  # Need to check its a valid path
         self._size: int | None = None
         self._last_updated: str | None = None
-        self._attr_name = path.split("/")[-1]
-        self._attr_unique_id = path
+        self._attr_name = slugify(path.split("/")[-1]).strip().capitalize()
+        self._attr_unique_id = path.strip().casefold()
 
     def update(self) -> None:
         """Update the sensor."""
         statinfo = os.stat(self._path)
         self._size = statinfo.st_size
-        last_updated = datetime.datetime.fromtimestamp(statinfo.st_mtime)
-        self._last_updated = last_updated.isoformat()
+        self._last_updated = datetime.datetime.fromtimestamp(
+            statinfo.st_mtime
+        ).isoformat()
 
     @property
     def native_value(self) -> float | None:
