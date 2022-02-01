@@ -47,6 +47,7 @@ class CloudClient(Interface):
         self._google_config: google_config.CloudGoogleConfig | None = None
         self._alexa_config_init_lock = asyncio.Lock()
         self._google_config_init_lock = asyncio.Lock()
+        self._listeners = []
 
     @property
     def base_path(self) -> Path:
@@ -255,3 +256,14 @@ class CloudClient(Interface):
     async def async_cloudhooks_update(self, data: dict[str, dict[str, str]]) -> None:
         """Update local list of cloudhooks."""
         await self._prefs.async_update(cloudhooks=data)
+
+    @callback
+    def async_listen_connection_change(self, listener):
+        """Listen for connection state changes."""
+        self._listeners.append(listener)
+
+    @callback
+    def async_notify_connection_change(self, state):
+        """Notify listeners about connections state changes."""
+        for listener in self._listeners:
+            listener(state)

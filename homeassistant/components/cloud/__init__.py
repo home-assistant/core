@@ -256,11 +256,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             Platform.TTS, DOMAIN, {}, config
         )
 
-        hass.bus.async_fire(EVENT_CLOUD_CONNECTED)
+        client.async_notify_connection_change(EVENT_CLOUD_CONNECTED)
 
     async def _on_disconnect():
         """Handle cloud disconnect."""
-        hass.bus.async_fire(EVENT_CLOUD_DISCONNECTED)
+        client.async_notify_connection_change(EVENT_CLOUD_DISCONNECTED)
 
     async def _on_initialized():
         """Update preferences."""
