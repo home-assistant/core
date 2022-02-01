@@ -51,7 +51,7 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
         device: ZWaveMeData,
     ) -> None:
         """Initialize the device."""
-        super().__init__(self, device=device, controller=controller)
+        super().__init__(controller, device)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device on."""
