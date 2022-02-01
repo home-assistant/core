@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections import Counter, deque
 from copy import copy
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import partial
 import logging
 from numbers import Number
@@ -19,6 +19,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASSES as SENSOR_DEVICE_CLASSES,
     DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -346,6 +347,9 @@ class SensorFilter(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
+        if self._device_class == SensorDeviceClass.TIMESTAMP:
+            return datetime.fromisoformat(self._state)
+
         return self._state
 
     @property

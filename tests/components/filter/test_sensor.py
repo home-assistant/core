@@ -318,6 +318,37 @@ async def test_invalid_state(hass):
         assert state.state == STATE_UNAVAILABLE
 
 
+async def test_timestamp_state(hass):
+    """Test if filter state is a datetime."""
+    config = {
+        "sensor": {
+            "platform": "filter",
+            "name": "test",
+            "entity_id": "sensor.test_monitored",
+            "filters": [
+                {"filter": "time_throttle", "window_size": "00:02"},
+            ],
+        }
+    }
+
+    await async_init_recorder_component(hass)
+
+    with assert_setup_component(1, "sensor"):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
+
+        hass.states.async_set(
+            "sensor.test_monitored",
+            "2022-02-01T23:04:05+00:00",
+            {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.test")
+        assert state.state == "2022-02-01T23:04:05+00:00"
+        assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
+
+
 async def test_outlier(values):
     """Test if outlier filter works."""
     filt = OutlierFilter(window_size=3, precision=2, entity=None, radius=4.0)
