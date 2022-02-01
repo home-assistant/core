@@ -9,19 +9,21 @@ DOMAIN = "zwave_me"
 class ZWaveMePlatform(StrEnum):
     """Included ZWaveMe platforms."""
 
+    BINARY_SENSOR = "sensorBinary"
+    BUTTON = "toggleButton"
+    CLIMATE = "thermostat"
+    LOCK = "doorlock"
     NUMBER = "switchMultilevel"
     SWITCH = "binarySwitch"
-    BUTTON = "toggleButton"
-    LOCK = "doorlock"
     SENSOR = "sensorMultilevel"
-    BINARY_SENSOR = "sensorBinary"
     RGBW_LIGHT = "switchRGBW"
-    RGB_LIGHT = "switchRGB"
+    RGB_LIGHT = ("switchRGB",)
 
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
