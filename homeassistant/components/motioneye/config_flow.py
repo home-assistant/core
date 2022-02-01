@@ -225,7 +225,11 @@ class MotionEyeOptionsFlow(OptionsFlow):
             # the template input won't be a valid URL until after it's rendered
             stream_kwargs = {}
             if CONF_STREAM_URL_TEMPLATE in self._config_entry.options:
-                stream_kwargs['default'] = self._config_entry.options[CONF_STREAM_URL_TEMPLATE]
+                stream_kwargs["description"] = {
+                    "suggested_value": self._config_entry.options[
+                        CONF_STREAM_URL_TEMPLATE
+                    ]
+                }
 
             schema[vol.Optional(CONF_STREAM_URL_TEMPLATE, **stream_kwargs)] = str
 
