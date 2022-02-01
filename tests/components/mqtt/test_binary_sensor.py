@@ -893,9 +893,9 @@ async def test_cleanup_triggers(hass, mqtt_mock, caplog, tmp_path):
     await help_test_reload_with_config(hass, caplog, tmp_path, domain, config)
     assert "Clean up expire after trigger for binary_sensor.test" in caplog.text
 
-    state = hass.states.get("sensor.test")
+    state = hass.states.get("binary_sensor.test")
     assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "test-topic", "OFF")
-    state = hass.states.get("sensor.test")
+    state = hass.states.get("binary_sensor.test")
     assert state.state == "off"
