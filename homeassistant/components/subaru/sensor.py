@@ -14,7 +14,6 @@ from homeassistant.const import (
     PERCENTAGE,
     PRESSURE_HPA,
     TEMP_CELSIUS,
-    TIME_MINUTES,
     VOLUME_GALLONS,
     VOLUME_LITERS,
 )
@@ -133,8 +132,8 @@ EV_SENSORS = [
     {
         SENSOR_TYPE: "EV Time to Full Charge",
         SENSOR_CLASS: SensorDeviceClass.TIMESTAMP,
-        SENSOR_FIELD: sc.EV_TIME_TO_FULLY_CHARGED,
-        SENSOR_UNITS: TIME_MINUTES,
+        SENSOR_FIELD: sc.EV_TIME_TO_FULLY_CHARGED_UTC,
+        SENSOR_UNITS: None,
     },
 ]
 
@@ -269,16 +268,22 @@ class SubaruSensor(SubaruEntity, SensorEntity):
         last_update_success = super().available
         if last_update_success and self.vin not in self.coordinator.data:
             return False
+        if self.state is None:
+            return False
         return last_update_success
 
     def get_current_value(self):
         """Get raw value from the coordinator."""
-        value = self.coordinator.data[self.vin][VEHICLE_STATUS].get(self.data_field)
-        if value in sc.BAD_SENSOR_VALUES:
-            value = None
-        if isinstance(value, str):
-            if "." in value:
-                value = float(value)
-            else:
-                value = int(value)
-        return value
+        if isinstance(self.coordinator.data, dict):
+            value = self.coordinator.data.get(self.vin)[VEHICLE_STATUS].get(
+                self.data_field
+            )
+            if value in sc.BAD_SENSOR_VALUES:
+                value = None
+            if isinstance(value, str):
+                if "." in value:
+                    value = float(value)
+                elif value.isdigit():
+                    value = int(value)
+            return value
+        return None
