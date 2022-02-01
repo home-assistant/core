@@ -9,6 +9,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 
@@ -34,16 +35,17 @@ class HoneywellOutdoorTemperatureSensor(SensorEntity):
         """Initialize the outdoor temperature sensor."""
         self._device = device
         self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_device_class = DEVICE_CLASS_TEMPERATURE
         self._attr_unique_id = f"{device.deviceid}_outdoor_{DEVICE_CLASS_TEMPERATURE}"
         self._attr_name = f"{device.name} outdoor {DEVICE_CLASS_TEMPERATURE}"
-        self._attr_device_class = DEVICE_CLASS_TEMPERATURE
         self._attr_native_unit_of_measurement = (
             TEMP_CELSIUS if self._device.temperature_unit == "C" else TEMP_FAHRENHEIT
         )
 
-    def update(self):
-        """Get the latest state from the service."""
-        self._attr_native_value = self._device.outdoor_temperature
+    @property
+    def native_value(self) -> StateType:
+        """Return the state."""
+        return self._device.outdoor_temperature
 
 
 class HoneywellOutdoorHumiditySensor(SensorEntity):
@@ -53,11 +55,12 @@ class HoneywellOutdoorHumiditySensor(SensorEntity):
         """Initialize the outdoor humidity sensor."""
         self._device = device
         self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_device_class = DEVICE_CLASS_HUMIDITY
         self._attr_unique_id = f"{device.deviceid}_outdoor_{DEVICE_CLASS_HUMIDITY}"
         self._attr_name = f"{device.name} outdoor {DEVICE_CLASS_HUMIDITY}"
-        self._attr_device_class = DEVICE_CLASS_HUMIDITY
         self._attr_native_unit_of_measurement = PERCENTAGE
 
-    def update(self):
-        """Get the latest state from the service."""
-        self._attr_native_value = self._device.outdoor_humidity
+    @property
+    def native_value(self) -> StateType:
+        """Return the state."""
+        return self._device.outdoor_humidity
