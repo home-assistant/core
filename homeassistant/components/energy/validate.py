@@ -21,19 +21,22 @@ from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from . import data
 from .const import DOMAIN
 
-ENERGY_USAGE_DEVICE_CLASSES = (sensor.DEVICE_CLASS_ENERGY,)
+ENERGY_USAGE_DEVICE_CLASSES = (sensor.SensorDeviceClass.ENERGY,)
 ENERGY_USAGE_UNITS = {
-    sensor.DEVICE_CLASS_ENERGY: (ENERGY_KILO_WATT_HOUR, ENERGY_WATT_HOUR)
+    sensor.SensorDeviceClass.ENERGY: (ENERGY_KILO_WATT_HOUR, ENERGY_WATT_HOUR)
 }
 ENERGY_PRICE_UNITS = tuple(
     f"/{unit}" for units in ENERGY_USAGE_UNITS.values() for unit in units
 )
 ENERGY_UNIT_ERROR = "entity_unexpected_unit_energy"
 ENERGY_PRICE_UNIT_ERROR = "entity_unexpected_unit_energy_price"
-GAS_USAGE_DEVICE_CLASSES = (sensor.DEVICE_CLASS_ENERGY, sensor.DEVICE_CLASS_GAS)
+GAS_USAGE_DEVICE_CLASSES = (
+    sensor.SensorDeviceClass.ENERGY,
+    sensor.SensorDeviceClass.GAS,
+)
 GAS_USAGE_UNITS = {
-    sensor.DEVICE_CLASS_ENERGY: (ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR),
-    sensor.DEVICE_CLASS_GAS: (VOLUME_CUBIC_METERS, VOLUME_CUBIC_FEET),
+    sensor.SensorDeviceClass.ENERGY: (ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR),
+    sensor.SensorDeviceClass.GAS: (VOLUME_CUBIC_METERS, VOLUME_CUBIC_FEET),
 }
 GAS_PRICE_UNITS = tuple(
     f"/{unit}" for units in GAS_USAGE_UNITS.values() for unit in units
@@ -141,9 +144,9 @@ def _async_validate_usage_stat(
     state_class = state.attributes.get(sensor.ATTR_STATE_CLASS)
 
     allowed_state_classes = [
-        sensor.STATE_CLASS_MEASUREMENT,
-        sensor.STATE_CLASS_TOTAL,
-        sensor.STATE_CLASS_TOTAL_INCREASING,
+        sensor.SensorStateClass.MEASUREMENT,
+        sensor.SensorStateClass.TOTAL,
+        sensor.SensorStateClass.TOTAL_INCREASING,
     ]
     if state_class not in allowed_state_classes:
         result.append(
@@ -155,7 +158,7 @@ def _async_validate_usage_stat(
         )
 
     if (
-        state_class == sensor.STATE_CLASS_MEASUREMENT
+        state_class == sensor.SensorStateClass.MEASUREMENT
         and sensor.ATTR_LAST_RESET not in state.attributes
     ):
         result.append(
@@ -221,9 +224,9 @@ def _async_validate_cost_stat(
     state_class = state.attributes.get("state_class")
 
     supported_state_classes = [
-        sensor.STATE_CLASS_MEASUREMENT,
-        sensor.STATE_CLASS_TOTAL,
-        sensor.STATE_CLASS_TOTAL_INCREASING,
+        sensor.SensorStateClass.MEASUREMENT,
+        sensor.SensorStateClass.TOTAL,
+        sensor.SensorStateClass.TOTAL_INCREASING,
     ]
     if state_class not in supported_state_classes:
         result.append(
@@ -231,7 +234,7 @@ def _async_validate_cost_stat(
         )
 
     if (
-        state_class == sensor.STATE_CLASS_MEASUREMENT
+        state_class == sensor.SensorStateClass.MEASUREMENT
         and sensor.ATTR_LAST_RESET not in state.attributes
     ):
         result.append(

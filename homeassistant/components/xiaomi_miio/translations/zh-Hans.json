@@ -4,7 +4,8 @@
             "already_configured": "\u8bbe\u5907\u5df2\u7ecf\u914d\u7f6e\u8fc7\u4e86",
             "already_in_progress": "\u6b64\u5c0f\u7c73\u8bbe\u5907\u7684\u914d\u7f6e\u6d41\u7a0b\u5df2\u5728\u8fdb\u884c\u4e2d\u3002",
             "incomplete_info": "\u8bbe\u5907\u4fe1\u606f\u4e0d\u5b8c\u6574\uff0c\u672a\u63d0\u4f9b IP \u6216 token\u3002",
-            "not_xiaomi_miio": "Xiaomi Miio \u6682\u672a\u9002\u914d\u8be5\u8bbe\u5907\u3002"
+            "not_xiaomi_miio": "Xiaomi Miio \u6682\u672a\u9002\u914d\u8be5\u8bbe\u5907\u3002",
+            "reauth_successful": "\u91cd\u65b0\u8ba4\u8bc1\u6210\u529f"
         },
         "error": {
             "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
@@ -60,7 +61,8 @@
                 "description": "\u60a8\u9700\u8981\u83b7\u53d6\u4e00\u4e2a 32 \u4f4d\u7684 API Token\uff0c\u8bf7\u53c2\u8003 https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token \u4e2d\u63d0\u5230\u7684\u65b9\u6cd5\u83b7\u53d6\u8be5\u4fe1\u606f\u3002\u8bf7\u6ce8\u610f\uff0c\u8be5 API Token \u4e0d\u540c\u4e8e \"Xiaomi Aqara\" \u96c6\u6210\u6240\u4f7f\u7528\u7684\u5bc6\u94a5\u3002"
             },
             "reauth_confirm": {
-                "description": "\u5c0f\u7c73 Miio \u96c6\u6210\u9700\u8981\u91cd\u65b0\u9a8c\u8bc1\u60a8\u7684\u5e10\u6237\uff0c\u4ee5\u4fbf\u66f4\u65b0 token \u6216\u6dfb\u52a0\u4e22\u5931\u7684\u4e91\u7aef\u51ed\u636e\u3002"
+                "description": "\u5c0f\u7c73 Miio \u96c6\u6210\u9700\u8981\u91cd\u65b0\u9a8c\u8bc1\u60a8\u7684\u5e10\u6237\uff0c\u4ee5\u4fbf\u66f4\u65b0 token \u6216\u6dfb\u52a0\u4e22\u5931\u7684\u4e91\u7aef\u51ed\u636e\u3002",
+                "title": "\u4f7f\u96c6\u6210\u91cd\u65b0\u8fdb\u884c\u8eab\u4efd\u8ba4\u8bc1"
             },
             "select": {
                 "data": {

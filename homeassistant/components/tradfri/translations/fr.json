@@ -5,6 +5,7 @@
             "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours"
         },
         "error": {
+            "cannot_authenticate": "Impossible de s'authentifier, Gateway est-il associ\u00e9 \u00e0 un autre serveur comme par exemple Homekit\u00a0?",
             "cannot_connect": "\u00c9chec de connexion",
             "invalid_key": "\u00c9chec de l'enregistrement avec la cl\u00e9 fournie. Si cela se reproduit, essayez de red\u00e9marrer la passerelle.",
             "timeout": "D\u00e9lai d'attente de la validation du code expir\u00e9"

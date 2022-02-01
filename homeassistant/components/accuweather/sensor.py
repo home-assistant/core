@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, DEVICE_CLASS_TEMPERATURE
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -107,7 +107,7 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state."""
         if self.forecast_day is not None:
-            if self.entity_description.device_class == DEVICE_CLASS_TEMPERATURE:
+            if self.entity_description.device_class == SensorDeviceClass.TEMPERATURE:
                 return cast(float, self._sensor_data["Value"])
             if self.entity_description.key == "UVIndex":
                 return cast(int, self._sensor_data["Value"])
@@ -117,7 +117,7 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
             return round(self._sensor_data[self._unit_system]["Value"])
         if self.entity_description.key == "PressureTendency":
             return cast(str, self._sensor_data["LocalizedText"].lower())
-        if self.entity_description.device_class == DEVICE_CLASS_TEMPERATURE:
+        if self.entity_description.device_class == SensorDeviceClass.TEMPERATURE:
             return cast(float, self._sensor_data[self._unit_system]["Value"])
         if self.entity_description.key == "Precipitation":
             return cast(float, self._sensor_data[self._unit_system]["Value"])

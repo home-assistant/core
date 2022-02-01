@@ -8,10 +8,12 @@ from soco.exceptions import SoCoException, SoCoSlaveException, SoCoUPnPException
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TIME, ENTITY_CATEGORY_CONFIG, Platform
+from homeassistant.const import ATTR_TIME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DATA_SONOS,
@@ -81,10 +83,17 @@ FEATURE_ICONS = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Sonos from a config entry."""
 
     async def _async_create_alarms(speaker: SonosSpeaker, alarm_ids: list[str]) -> None:
+        async_migrate_alarm_unique_ids(
+            hass, config_entry, speaker.household_id, alarm_ids
+        )
         entities = []
         created_alarms = (
             hass.data[DATA_SONOS].alarms[speaker.household_id].created_alarm_ids
@@ -97,7 +106,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entities.append(SonosAlarmEntity(alarm_id, speaker))
         async_add_entities(entities)
 
-    def available_soco_attributes(speaker: SonosSpeaker) -> list[tuple[str, bool]]:
+    def available_soco_attributes(speaker: SonosSpeaker) -> list[str]:
         features = []
         for feature_type in ALL_FEATURES:
             try:
@@ -145,7 +154,7 @@ class SonosSwitchEntity(SonosEntity, SwitchEntity):
             f"sonos_{speaker.zone_name}_{FRIENDLY_NAMES[feature_type]}"
         )
         self.needs_coordinator = feature_type in COORDINATOR_FEATURES
-        self._attr_entity_category = ENTITY_CATEGORY_CONFIG
+        self._attr_entity_category = EntityCategory.CONFIG
         self._attr_name = f"{speaker.zone_name} {FRIENDLY_NAMES[feature_type]}"
         self._attr_unique_id = f"{speaker.soco.uid}-{feature_type}"
         self._attr_icon = FEATURE_ICONS.get(feature_type)
@@ -199,13 +208,13 @@ class SonosSwitchEntity(SonosEntity, SwitchEntity):
 class SonosAlarmEntity(SonosEntity, SwitchEntity):
     """Representation of a Sonos Alarm entity."""
 
-    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:alarm"
 
     def __init__(self, alarm_id: str, speaker: SonosSpeaker) -> None:
         """Initialize the switch."""
         super().__init__(speaker)
-        self._attr_unique_id = f"{SONOS_DOMAIN}-{alarm_id}"
+        self._attr_unique_id = f"alarm-{speaker.household_id}:{alarm_id}"
         self.alarm_id = alarm_id
         self.household_id = speaker.household_id
         self.entity_id = ENTITY_ID_FORMAT.format(f"sonos_alarm_{self.alarm_id}")
@@ -349,6 +358,43 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             await self.hass.async_add_executor_job(self.alarm.save)
         except (OSError, SoCoException, SoCoUPnPException) as exc:
             _LOGGER.error("Could not update %s: %s", self.entity_id, exc)
+
+
+@callback
+def async_migrate_alarm_unique_ids(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    household_id: str,
+    alarm_ids: list[str],
+) -> None:
+    """Migrate alarm switch unique_ids in the entity registry to the new format."""
+    entity_registry = er.async_get(hass)
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+
+    alarm_entries = [
+        (entry.unique_id, entry)
+        for entry in registry_entries
+        if entry.domain == Platform.SWITCH and entry.original_icon == "mdi:alarm"
+    ]
+
+    for old_unique_id, alarm_entry in alarm_entries:
+        if ":" in old_unique_id:
+            continue
+
+        entry_alarm_id = old_unique_id.split("-")[-1]
+        if entry_alarm_id in alarm_ids:
+            new_unique_id = f"alarm-{household_id}:{entry_alarm_id}"
+            _LOGGER.debug(
+                "Migrating unique_id for %s from %s to %s",
+                alarm_entry.entity_id,
+                old_unique_id,
+                new_unique_id,
+            )
+            entity_registry.async_update_entity(
+                alarm_entry.entity_id, new_unique_id=new_unique_id
+            )
 
 
 @callback

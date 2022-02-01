@@ -56,7 +56,8 @@
       "init": {
         "data": {
           "scan_interval": "Minutes between scans",
-          "timeout": "Timeout (seconds)"
+          "timeout": "Timeout (seconds)",
+          "snap_profile_type": "Quality level of camera snapshots (0:high 1:medium 2:low)"
         }
       }
     }

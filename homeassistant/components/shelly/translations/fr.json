@@ -37,7 +37,10 @@
             "button4": "Quatri\u00e8me bouton"
         },
         "trigger_type": {
+            "btn_down": "{sous-type} bouton en bas",
+            "btn_up": "{sous-type} bouton haut",
             "double": "{subtype} double-cliqu\u00e9",
+            "double_push": "{subtype} double pression",
             "long": "{subtype} long cliqu\u00e9",
             "long_push": "{subtype} appui long",
             "long_single": "{subtype} clic long et simple clic",

@@ -1,17 +1,13 @@
 """Support for Toon van Eneco devices."""
-
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STARTED,
+    Platform,
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -25,12 +21,12 @@ from .const import CONF_AGREEMENT_ID, CONF_MIGRATE, DEFAULT_SCAN_INTERVAL, DOMAI
 from .coordinator import ToonDataUpdateCoordinator
 from .oauth2 import register_oauth2_implementations
 
-PLATFORMS = {
-    BINARY_SENSOR_DOMAIN,
-    CLIMATE_DOMAIN,
-    SENSOR_DOMAIN,
-    SWITCH_DOMAIN,
-}
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 # Validation of the user's configuration
 CONFIG_SCHEMA = vol.Schema(

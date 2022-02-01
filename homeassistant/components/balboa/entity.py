@@ -19,7 +19,7 @@ class BalboaEntity(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, hass, entry, client, devtype, num=None):
+    def __init__(self, entry, client, devtype, num=None):
         """Initialize the spa entity."""
         self._client = client
         self._device_name = self._client.get_model_name()

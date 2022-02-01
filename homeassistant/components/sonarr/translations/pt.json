@@ -16,7 +16,7 @@
             },
             "user": {
                 "data": {
-                    "api_key": "API Key",
+                    "api_key": "Chave da API",
                     "host": "Servidor",
                     "port": "Porta",
                     "ssl": "Utiliza um certificado SSL",

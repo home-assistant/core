@@ -4,9 +4,14 @@ import aiohttp
 from spotipy import Spotify, SpotifyException
 import voluptuous as vol
 
-from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
+from homeassistant.components.media_player import BrowseError
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_CREDENTIALS, CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import (
+    ATTR_CREDENTIALS,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
@@ -22,8 +27,10 @@ from .const import (
     DATA_SPOTIFY_ME,
     DATA_SPOTIFY_SESSION,
     DOMAIN,
+    MEDIA_PLAYER_PREFIX,
     SPOTIFY_SCOPES,
 )
+from .media_player import async_browse_media_internal
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -37,7 +44,34 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = [MEDIA_PLAYER_DOMAIN]
+PLATFORMS = [Platform.MEDIA_PLAYER]
+
+
+def is_spotify_media_type(media_content_type):
+    """Return whether the media_content_type is a valid Spotify media_id."""
+    return media_content_type.startswith(MEDIA_PLAYER_PREFIX)
+
+
+def resolve_spotify_media_type(media_content_type):
+    """Return actual spotify media_content_type."""
+    return media_content_type[len(MEDIA_PLAYER_PREFIX) :]
+
+
+async def async_browse_media(
+    hass, media_content_type, media_content_id, *, can_play_artist=True
+):
+    """Browse Spotify media."""
+    if not (info := next(iter(hass.data[DOMAIN].values()), None)):
+        raise BrowseError("No Spotify accounts available")
+    return await async_browse_media_internal(
+        hass,
+        info[DATA_SPOTIFY_CLIENT],
+        info[DATA_SPOTIFY_SESSION],
+        info[DATA_SPOTIFY_ME],
+        media_content_type,
+        media_content_id,
+        can_play_artist=can_play_artist,
+    )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

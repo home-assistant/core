@@ -6,10 +6,9 @@ from dataclasses import dataclass
 from aioswitcher.device import DeviceCategory
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_POWER,
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ELECTRIC_CURRENT_AMPERE, POWER_WATT
@@ -40,14 +39,14 @@ POWER_SENSORS = {
     "power_consumption": AttributeDescription(
         name="Power Consumption",
         unit=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "electric_current": AttributeDescription(
         name="Electric Current",
         unit=ELECTRIC_CURRENT_AMPERE,
-        device_class=DEVICE_CLASS_CURRENT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 

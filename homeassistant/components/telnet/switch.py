@@ -1,4 +1,6 @@
 """Support for switch controlled using a telnet connection."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 import telnetlib
@@ -21,7 +23,10 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_VALUE_TEMPLATE,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +53,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 SCAN_INTERVAL = timedelta(seconds=10)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Find and return switches controlled by telnet commands."""
     devices = config.get(CONF_SWITCHES, {})
     switches = []

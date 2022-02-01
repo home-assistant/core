@@ -7,16 +7,14 @@ from typing import Any
 
 from aioazuredevops.builds import DevOpsBuild
 
-from homeassistant.components.azure_devops import (
-    AzureDevOpsDeviceEntity,
-    AzureDevOpsEntityDescription,
-)
-from homeassistant.components.azure_devops.const import CONF_ORG, DOMAIN
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+
+from . import AzureDevOpsDeviceEntity, AzureDevOpsEntityDescription
+from .const import CONF_ORG, DOMAIN
 
 
 @dataclass

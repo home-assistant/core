@@ -58,12 +58,12 @@ async def async_setup_legacy(hass: HomeAssistant, config: ConfigType) -> None:
             notify_service = None
             try:
                 if hasattr(platform, "async_get_service"):
-                    notify_service = await platform.async_get_service(  # type: ignore
+                    notify_service = await platform.async_get_service(
                         hass, p_config, discovery_info
                     )
                 elif hasattr(platform, "get_service"):
                     notify_service = await hass.async_add_executor_job(
-                        platform.get_service, hass, p_config, discovery_info  # type: ignore
+                        platform.get_service, hass, p_config, discovery_info
                     )
                 else:
                     raise HomeAssistantError("Invalid notify platform.")
@@ -102,6 +102,7 @@ async def async_setup_legacy(hass: HomeAssistant, config: ConfigType) -> None:
     setup_tasks = [
         asyncio.create_task(async_setup_platform(integration_name, p_config))
         for integration_name, p_config in config_per_platform(config, DOMAIN)
+        if integration_name is not None
     ]
 
     if setup_tasks:

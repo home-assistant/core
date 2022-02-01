@@ -1,9 +1,11 @@
 """Netgear component constants."""
 from datetime import timedelta
 
+from homeassistant.const import Platform
+
 DOMAIN = "netgear"
 
-PLATFORMS = ["device_tracker", "sensor"]
+PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR]
 
 CONF_CONSIDER_HOME = "consider_home"
 
@@ -30,6 +32,10 @@ MODELS_PORT_80 = [
     "SXS",
 ]
 PORT_80 = 80
+MODELS_PORT_5555 = [
+    "R7000",
+]
+PORT_5555 = 5555
 # update method V2 models
 MODELS_V2 = [
     "Orbi",

@@ -18,7 +18,7 @@
             "unable_to_pair": "Impossible d'appairer, veuillez r\u00e9essayer.",
             "unknown_error": "L'appareil a signal\u00e9 une erreur inconnue. L'appairage a \u00e9chou\u00e9."
         },
-        "flow_title": "{name} via le protocole accessoire HomeKit",
+        "flow_title": "{name}",
         "step": {
             "busy_error": {
                 "description": "Annulez l'association sur tous les contr\u00f4leurs ou essayez de red\u00e9marrer l'appareil, puis continuez \u00e0 reprendre l'association.",

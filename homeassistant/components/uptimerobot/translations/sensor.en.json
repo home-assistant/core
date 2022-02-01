@@ -1,0 +1,11 @@
+{
+    "state": {
+        "uptimerobot__monitor_status": {
+            "down": "Down",
+            "not_checked_yet": "Not checked yet",
+            "pause": "Pause",
+            "seems_down": "Seems down",
+            "up": "Up"
+        }
+    }
+}

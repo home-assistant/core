@@ -1,0 +1,52 @@
+{
+    "state": {
+        "yamaha_musiccast__dimmer": {
+            "auto": "Automatikus"
+        },
+        "yamaha_musiccast__zone_equalizer_mode": {
+            "auto": "Automatikus",
+            "bypass": "Kihagy\u00e1s",
+            "manual": "Manu\u00e1lis"
+        },
+        "yamaha_musiccast__zone_link_audio_delay": {
+            "audio_sync": "Audi\u00f3 szinkroniz\u00e1l\u00e1s",
+            "audio_sync_off": "Audi\u00f3 szinkroniz\u00e1l\u00e1s kikapcsolva",
+            "audio_sync_on": "Audi\u00f3 szinkroniz\u00e1l\u00e1s bekapcsolva",
+            "balanced": "Kiegyens\u00falyozott",
+            "lip_sync": "K\u00e9p-hang k\u00e9sleltet\u00e9s"
+        },
+        "yamaha_musiccast__zone_link_audio_quality": {
+            "compressed": "T\u00f6m\u00f6r\u00edtve",
+            "uncompressed": "T\u00f6m\u00f6r\u00edtetlen"
+        },
+        "yamaha_musiccast__zone_link_control": {
+            "speed": "Sebess\u00e9g",
+            "stability": "Stabilit\u00e1s",
+            "standard": "Standard"
+        },
+        "yamaha_musiccast__zone_sleep": {
+            "120 min": "120 perc",
+            "30 min": "30 perc",
+            "60 min": "60 perc",
+            "90 min": "90 perc",
+            "off": "Ki"
+        },
+        "yamaha_musiccast__zone_surr_decoder_type": {
+            "auto": "Automatikus",
+            "dolby_pl": "Dolby ProLogic",
+            "dolby_pl2x_game": "Dolby ProLogic 2x J\u00e1t\u00e9k",
+            "dolby_pl2x_movie": "Dolby ProLogic 2x Film",
+            "dolby_pl2x_music": "Dolby ProLogic 2x Zene",
+            "dolby_surround": "Dolby Surround",
+            "dts_neo6_cinema": "DTS Neo:6 Mozi",
+            "dts_neo6_music": "DTS Neo:6 Zene",
+            "dts_neural_x": "DTS Neural:X",
+            "toggle": "Kapcsol\u00e1s"
+        },
+        "yamaha_musiccast__zone_tone_control_mode": {
+            "auto": "Automatikus",
+            "bypass": "Kihagy\u00e1s",
+            "manual": "Manu\u00e1lis"
+        }
+    }
+}

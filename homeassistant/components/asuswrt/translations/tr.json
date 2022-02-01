@@ -14,7 +14,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Ana bilgisayar",
+                    "host": "Sunucu",
                     "mode": "Mod",
                     "name": "Ad",
                     "password": "Parola",
@@ -36,7 +36,7 @@
                     "dnsmasq": "dnsmasq.leases dosyalar\u0131n\u0131n y\u00f6nlendiricisindeki konum",
                     "interface": "\u0130statistik almak istedi\u011finiz aray\u00fcz (\u00f6rn. eth0,eth1 vb.)",
                     "require_ip": "Cihazlar\u0131n IP'si olmal\u0131d\u0131r (eri\u015fim noktas\u0131 modu i\u00e7in)",
-                    "track_unknown": "Bilinmeyen / ads\u0131z cihazlar\u0131 takip edin"
+                    "track_unknown": "Bilinmeyen / ads\u0131z cihazlar\u0131 izleyin"
                 },
                 "title": "AsusWRT Se\u00e7enekleri"
             }

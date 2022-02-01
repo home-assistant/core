@@ -1,5 +1,10 @@
 """Support for Fibaro switches."""
+from __future__ import annotations
+
 from homeassistant.components.switch import DOMAIN, SwitchEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import convert
 
 from . import FIBARO_DEVICES, FibaroDevice
@@ -13,7 +18,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Fibaro switches."""
     if discovery_info is None:
         return

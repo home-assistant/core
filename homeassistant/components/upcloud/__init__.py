@@ -4,13 +4,11 @@ from __future__ import annotations
 import dataclasses
 from datetime import timedelta
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import requests.exceptions
 import upcloud_api
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -19,6 +17,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_PROBLEM,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -48,7 +47,7 @@ DATA_UPCLOUD = "data_upcloud"
 
 DEFAULT_COMPONENT_NAME = "UpCloud {}"
 
-CONFIG_ENTRY_DOMAINS = {BINARY_SENSOR_DOMAIN, SWITCH_DOMAIN}
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SWITCH]
 
 SIGNAL_UPDATE_UPCLOUD = "upcloud_update"
 
@@ -56,7 +55,7 @@ STATE_MAP = {"error": STATE_PROBLEM, "started": STATE_ON, "stopped": STATE_OFF}
 
 
 class UpCloudDataUpdateCoordinator(
-    DataUpdateCoordinator[Dict[str, upcloud_api.Server]]
+    DataUpdateCoordinator[dict[str, upcloud_api.Server]]
 ):
     """UpCloud data update coordinator."""
 
@@ -157,7 +156,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DATA_UPCLOUD].coordinators[entry.data[CONF_USERNAME]] = coordinator
 
     # Forward entry setup
-    hass.config_entries.async_setup_platforms(entry, CONFIG_ENTRY_DOMAINS)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -165,7 +164,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload the config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, CONFIG_ENTRY_DOMAINS
+        config_entry, PLATFORMS
     )
 
     hass.data[DATA_UPCLOUD].coordinators.pop(config_entry.data[CONF_USERNAME])

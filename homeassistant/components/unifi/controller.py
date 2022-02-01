@@ -26,16 +26,13 @@ from aiounifi.events import (
 from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
 import async_timeout
 
-from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.unifi.switch import BLOCK_SWITCH, POE_SWITCH
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    Platform,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -72,10 +69,11 @@ from .const import (
     UNIFI_WIRELESS_CLIENTS,
 )
 from .errors import AuthenticationRequired, CannotConnect
+from .switch import BLOCK_SWITCH, POE_SWITCH
 
 RETRY_TIMER = 15
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
-PLATFORMS = [TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
+PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR, Platform.SWITCH]
 
 CLIENT_CONNECTED = (
     WIRED_CLIENT_CONNECTED,
@@ -248,11 +246,7 @@ class UniFiController:
                 )
 
             elif DATA_DPI_GROUP in data:
-                for key in data[DATA_DPI_GROUP]:
-                    if self.api.dpi_groups[key].dpiapp_ids:
-                        async_dispatcher_send(self.hass, self.signal_update)
-                    else:
-                        async_dispatcher_send(self.hass, self.signal_remove, {key})
+                async_dispatcher_send(self.hass, self.signal_update)
 
             elif DATA_DPI_GROUP_REMOVED in data:
                 async_dispatcher_send(
@@ -337,9 +331,9 @@ class UniFiController:
         for entry in async_entries_for_config_entry(
             entity_registry, self.config_entry.entry_id
         ):
-            if entry.domain == TRACKER_DOMAIN:
+            if entry.domain == Platform.DEVICE_TRACKER:
                 mac = entry.unique_id.split("-", 1)[0]
-            elif entry.domain == SWITCH_DOMAIN and (
+            elif entry.domain == Platform.SWITCH and (
                 entry.unique_id.startswith(BLOCK_SWITCH)
                 or entry.unique_id.startswith(POE_SWITCH)
             ):
@@ -391,11 +385,16 @@ class UniFiController:
         """Check for any devices scheduled to be marked disconnected."""
         now = dt_util.utcnow()
 
+        unique_ids_to_remove = []
         for unique_id, heartbeat_expire_time in self._heartbeat_time.items():
             if now > heartbeat_expire_time:
                 async_dispatcher_send(
                     self.hass, f"{self.signal_heartbeat_missed}_{unique_id}"
                 )
+                unique_ids_to_remove.append(unique_id)
+
+        for unique_id in unique_ids_to_remove:
+            del self._heartbeat_time[unique_id]
 
     @staticmethod
     async def async_config_entry_updated(hass, config_entry) -> None:
@@ -506,6 +505,7 @@ async def get_controller(
         aiounifi.BadGateway,
         aiounifi.ServiceUnavailable,
         aiounifi.RequestError,
+        aiounifi.ResponseError,
     ) as err:
         LOGGER.error("Error connecting to the UniFi Network at %s: %s", host, err)
         raise CannotConnect from err
