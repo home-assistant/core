@@ -160,6 +160,14 @@ class MqttSensor(MqttEntity, SensorEntity):
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove exprire triggers."""
+        # Clean up expire triggers
+        if self._expiration_trigger:
+            _LOGGER.debug("Clean up expire after trigger for %s", self.entity_id)
+            self._expiration_trigger()
+            self._expiration_trigger = None
+
     @staticmethod
     def config_schema():
         """Return the config schema."""
