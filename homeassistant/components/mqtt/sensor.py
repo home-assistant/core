@@ -167,6 +167,8 @@ class MqttSensor(MqttEntity, SensorEntity):
             _LOGGER.debug("Clean up expire after trigger for %s", self.entity_id)
             self._expiration_trigger()
             self._expiration_trigger = None
+            self._expired = False
+        await MqttEntity.async_will_remove_from_hass(self)
 
     @staticmethod
     def config_schema():
