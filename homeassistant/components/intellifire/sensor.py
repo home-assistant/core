@@ -24,13 +24,6 @@ from .const import DOMAIN
 from .entity import IntellifireEntity
 
 
-def _time_remaining_to_timestamp(data: IntellifirePollData) -> datetime | None:
-    """Define a sensor that takes into account timezone."""
-    if not (seconds_offset := data.timeremaining_s):
-        return None
-    return utcnow() + timedelta(seconds=seconds_offset)
-
-
 @dataclass
 class IntellifireSensorRequiredKeysMixin:
     """Mixin for required keys."""
@@ -44,6 +37,13 @@ class IntellifireSensorEntityDescription(
     IntellifireSensorRequiredKeysMixin,
 ):
     """Describes a sensor entity."""
+
+
+def _time_remaining_to_timestamp(data: IntellifirePollData) -> datetime | None:
+    """Define a sensor that takes into account timezone."""
+    if not (seconds_offset := data.timeremaining_s):
+        return None
+    return utcnow() + timedelta(seconds=seconds_offset)
 
 
 INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
@@ -88,17 +88,6 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
 )
 
 
-class IntellifireSensor(IntellifireEntity, SensorEntity):
-    """Extends IntellifireEntity with Sensor specific logic."""
-
-    entity_description: IntellifireSensorEntityDescription
-
-    @property
-    def native_value(self) -> int | str | datetime | None:
-        """Return the state."""
-        return self.entity_description.value_fn(self.coordinator.api.data)
-
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -109,3 +98,14 @@ async def async_setup_entry(
         IntellifireSensor(coordinator=coordinator, description=description)
         for description in INTELLIFIRE_SENSORS
     )
+
+
+class IntellifireSensor(IntellifireEntity, SensorEntity):
+    """Extends IntellifireEntity with Sensor specific logic."""
+
+    entity_description: IntellifireSensorEntityDescription
+
+    @property
+    def native_value(self) -> int | str | datetime | None:
+        """Return the state."""
+        return self.entity_description.value_fn(self.coordinator.api.data)
