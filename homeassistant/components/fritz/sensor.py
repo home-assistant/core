@@ -277,10 +277,14 @@ async def async_setup_entry(
     _LOGGER.debug("Setting up FRITZ!Box sensors")
     avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
 
-    dsl: bool = False
-    dslinterface = await avm_wrapper.async_get_wan_dsl_interface_config()
-    if dslinterface:
-        dsl = dslinterface["NewEnable"]
+    link_properties = await avm_wrapper.async_get_wan_link_properties()
+    dsl: bool = link_properties.get("NewWANAccessType") == "DSL"
+
+    _LOGGER.debug(
+        "WANAccessType of FritzBox %s is '%s'",
+        avm_wrapper.host,
+        link_properties.get("NewWANAccessType"),
+    )
 
     entities = [
         FritzBoxSensor(avm_wrapper, entry.title, description)
