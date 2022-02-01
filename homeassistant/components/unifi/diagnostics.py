@@ -7,14 +7,14 @@ from typing import Any
 
 from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import CONF_CONTROLLER, DOMAIN as UNIFI_DOMAIN
 
 TO_REDACT = {CONF_CONTROLLER, CONF_PASSWORD}
-REDACT_CONFIG = {CONF_CONTROLLER, CONF_PASSWORD, CONF_USERNAME}
+REDACT_CONFIG = {CONF_CONTROLLER, CONF_HOST, CONF_PASSWORD, CONF_USERNAME}
 REDACT_CLIENTS = {"bssid", "essid"}
 REDACT_DEVICES = {
     "anon_id",
