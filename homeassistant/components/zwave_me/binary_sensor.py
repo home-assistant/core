@@ -14,7 +14,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ZWaveMeController, ZWaveMeEntity
-from .const import DOMAIN
+from .const import DOMAIN, ZWaveMePlatform
 
 BINARY_SENSORS_MAP: dict[str, BinarySensorEntityDescription] = {
     "generic": BinarySensorEntityDescription(
@@ -25,7 +25,7 @@ BINARY_SENSORS_MAP: dict[str, BinarySensorEntityDescription] = {
         device_class=DEVICE_CLASS_MOTION,
     ),
 }
-DEVICE_NAME = "sensorBinary"
+DEVICE_NAME = ZWaveMePlatform.BINARY_SENSOR
 
 
 async def async_setup_entry(
