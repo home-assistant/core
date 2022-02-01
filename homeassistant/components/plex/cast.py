@@ -14,7 +14,9 @@ from .const import PLEX_URI_SCHEME
 from .services import lookup_plex_media
 
 
-async def async_get_media_browser_root_object(cast_type: str) -> list[BrowseMedia]:
+async def async_get_media_browser_root_object(
+    hass: HomeAssistant, cast_type: str
+) -> list[BrowseMedia]:
     """Create a root object for media browsing."""
     return [
         BrowseMedia(

@@ -67,7 +67,7 @@ class CastProtocol(Protocol):
     """Define the format of cast platforms."""
 
     async def async_get_media_browser_root_object(
-        self, cast_type: str
+        self, hass: HomeAssistant, cast_type: str
     ) -> list[BrowseMedia]:
         """Create a list of root objects for media browsing."""
 
