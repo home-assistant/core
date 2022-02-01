@@ -122,7 +122,7 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
         super().__init__(conn, info, char)
 
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         """Return the name of the device if any."""
         if prefix := super().name:
             return f"{prefix} {self.entity_description.name}"
