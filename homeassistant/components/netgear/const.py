@@ -11,7 +11,6 @@ KEY_ROUTER = "router"
 KEY_COORDINATOR = "coordinator"
 
 PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR]
-PLATFORMS_UNLOAD = [KEY_ROUTER]
 
 DEFAULT_CONSIDER_HOME = timedelta(seconds=180)
 DEFAULT_NAME = "Netgear router"
