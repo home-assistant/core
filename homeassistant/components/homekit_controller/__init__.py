@@ -48,7 +48,7 @@ class HomeKitEntity(Entity):
         self._features = 0
         self.setup()
 
-        self._signals = []
+        self._signals: list[Any] = []
 
         super().__init__()
 
@@ -145,7 +145,7 @@ class HomeKitEntity(Entity):
         return f"homekit-{self._accessory.unique_id}-{self._aid}-{self._iid}"
 
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         """Return the name of the device if any."""
         return self.accessory_info.value(CharacteristicsTypes.NAME)
 

@@ -35,7 +35,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.here_travel_time.*",
     "homeassistant.components.home_plus_control.*",
     "homeassistant.components.homekit.*",
-    "homeassistant.components.homekit_controller.*",
     "homeassistant.components.honeywell.*",
     "homeassistant.components.icloud.*",
     "homeassistant.components.influxdb.*",
