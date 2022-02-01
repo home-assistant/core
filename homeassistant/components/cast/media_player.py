@@ -463,7 +463,7 @@ class CastDevice(MediaPlayerEntity):
         for platform in self.hass.data[CAST_DOMAIN].values():
             children.extend(
                 await platform.async_get_media_browser_root_object(
-                    self._chromecast.cast_type
+                    self.hass, self._chromecast.cast_type
                 )
             )
 
