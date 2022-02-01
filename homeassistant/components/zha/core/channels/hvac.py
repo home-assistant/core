@@ -300,7 +300,7 @@ class ThermostatChannel(ZigbeeChannel):
     @staticmethod
     def check_result(res: list) -> bool:
         """Normalize the result."""
-        if not isinstance(res, list):
+        if isinstance(res, Exception):
             return False
 
         return all(record.status == Status.SUCCESS for record in res[0])

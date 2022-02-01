@@ -8,7 +8,7 @@ import logging
 from typing import Any
 
 import zigpy.exceptions
-from zigpy.zcl.foundation import Status
+from zigpy.zcl.foundation import ConfigureReportingResponseRecord, Status
 
 from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import callback
@@ -260,7 +260,7 @@ class ZigbeeChannel(LogMixin):
         self, attrs: dict[int | str, tuple], res: list | tuple
     ) -> None:
         """Parse configure reporting result."""
-        if not isinstance(res, list):
+        if isinstance(res, (Exception, ConfigureReportingResponseRecord)):
             # assume default response
             self.debug(
                 "attr reporting for '%s' on '%s': %s",

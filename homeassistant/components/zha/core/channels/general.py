@@ -103,7 +103,7 @@ class AnalogOutput(ZigbeeChannel):
         except zigpy.exceptions.ZigbeeException as ex:
             self.error("Could not set value: %s", ex)
             return False
-        if isinstance(res, list) and all(
+        if not isinstance(res, Exception) and all(
             record.status == Status.SUCCESS for record in res[0]
         ):
             return True
