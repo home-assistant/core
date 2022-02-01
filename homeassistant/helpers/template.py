@@ -34,7 +34,9 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_UNIT_OF_MEASUREMENT,
+    ENTITY_MATCH_NONE,
     LENGTH_METERS,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import (
@@ -1518,6 +1520,20 @@ def strptime(string, fmt, default=_SENTINEL):
         return default
 
 
+def default_na(value, default):
+    """Filter not assigned."""
+    if not value:
+        return default
+
+    if isinstance(value, jinja2.Undefined):
+        return default
+
+    if value in [STATE_UNKNOWN, STATE_UNAVAILABLE, ENTITY_MATCH_NONE]:
+        return default
+
+    return value
+
+
 def fail_when_undefined(value):
     """Filter to force a failure when the value is undefined."""
     if isinstance(value, jinja2.Undefined):
@@ -1888,6 +1904,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["to_json"] = to_json
         self.filters["from_json"] = from_json
         self.filters["is_defined"] = fail_when_undefined
+        self.filters["default_na"] = default_na
         self.filters["average"] = average
         self.filters["random"] = random_every_time
         self.filters["base64_encode"] = base64_encode
@@ -1929,6 +1946,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["relative_time"] = relative_time
         self.globals["timedelta"] = timedelta
         self.globals["strptime"] = strptime
+        self.globals["default_na"] = default_na
         self.globals["urlencode"] = urlencode
         self.globals["average"] = average
         self.globals["max"] = min_max_from_filter(self.filters["max"], "max")
