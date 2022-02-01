@@ -97,7 +97,7 @@ class HomeKitEntity(Entity):
         return await self._accessory.put_characteristics(payload)
 
     def setup(self) -> None:
-        """Configure an entity baed on its HomeKit characteristics metadata."""
+        """Configure an entity based on its HomeKit characteristics metadata."""
         self.pollable_characteristics: list[tuple[int, int]] = []
         self.watchable_characteristics: list[tuple[int, int]] = []
 
