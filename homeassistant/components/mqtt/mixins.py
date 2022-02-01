@@ -487,10 +487,8 @@ class MqttDiscoveryUpdate(Entity):
                 payload,
             )
             old_payload = self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
-            entity_info = debug_info.update_entity_discovery_data(
-                self.hass, payload, self.entity_id
-            )
-            if not payload and entity_info is not None:
+            debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
+            if not payload:
                 # Empty payload: Remove component
                 _LOGGER.info("Removing component: %s", self.entity_id)
                 self._cleanup_discovery_on_remove()
@@ -525,6 +523,11 @@ class MqttDiscoveryUpdate(Entity):
     async def async_removed_from_registry(self) -> None:
         """Clear retained discovery topic in broker."""
         if not self._removed_from_hass:
+            # Stop subscribing to discovery updates to not trigger when we clear the
+            # discovery topic
+            self._cleanup_discovery_on_remove()
+
+            # Clear the discovery topic so the entity is not rediscovered after a restart
             discovery_topic = self._discovery_data[ATTR_DISCOVERY_TOPIC]
             publish(self.hass, discovery_topic, "", retain=True)
 
