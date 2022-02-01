@@ -58,8 +58,8 @@ class ZWaveMeClimate(ZWaveMeEntity, ClimateEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
-        self.hass.data[DOMAIN].zwave_api.send_command(
-            self.device.id, "exact?level=" + str(temperature)
+        self.controller.zwave_api.send_command(
+            self.device.id, f"exact?level={temperature}"
         )
 
     @property
