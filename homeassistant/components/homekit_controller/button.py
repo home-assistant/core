@@ -19,8 +19,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 
 from . import KNOWN_DEVICES, CharacteristicEntity
+from .connection import HKDevice
 
 
 @dataclass
@@ -64,7 +66,7 @@ async def async_setup_entry(
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_characteristic(char: Characteristic):
+    def async_add_characteristic(char: Characteristic) -> bool:
         entities = []
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
 
@@ -88,16 +90,16 @@ class HomeKitButton(CharacteristicEntity, ButtonEntity):
 
     def __init__(
         self,
-        conn,
-        info,
-        char,
+        conn: HKDevice,
+        info: ConfigType,
+        char: Characteristic,
         description: HomeKitButtonEntityDescription,
-    ):
+    ) -> None:
         """Initialise a HomeKit button control."""
         self.entity_description = description
         super().__init__(conn, info, char)
 
-    def get_characteristic_types(self):
+    def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [self._char.type]
 
@@ -112,13 +114,13 @@ class HomeKitButton(CharacteristicEntity, ButtonEntity):
         """Press the button."""
         key = self.entity_description.key
         val = self.entity_description.write_value
-        return await self.async_put_characteristics({key: val})
+        await self.async_put_characteristics({key: val})
 
 
 class HomeKitEcobeeClearHoldButton(CharacteristicEntity, ButtonEntity):
     """Representation of a Button control for Ecobee clear hold request."""
 
-    def get_characteristic_types(self):
+    def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return []
 

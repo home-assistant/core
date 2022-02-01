@@ -1,6 +1,9 @@
 """Config flow to configure homekit_controller."""
+from __future__ import annotations
+
 import logging
 import re
+from typing import Any
 
 import aiohomekit
 from aiohomekit.exceptions import AuthenticationError
@@ -55,20 +58,21 @@ INSECURE_CODES = {
 }
 
 
-def normalize_hkid(hkid):
+def normalize_hkid(hkid: str) -> str:
     """Normalize a hkid so that it is safe to compare with other normalized hkids."""
     return hkid.lower()
 
 
 @callback
-def find_existing_host(hass, serial):
+def find_existing_host(hass, serial: str) -> config_entries.ConfigEntry | None:
     """Return a set of the configured hosts."""
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.data.get("AccessoryPairingID") == serial:
             return entry
+    return None
 
 
-def ensure_pin_format(pin, allow_insecure_setup_codes=None):
+def ensure_pin_format(pin: str, allow_insecure_setup_codes: Any = None) -> str:
     """
     Ensure a pin code is correctly formatted.
 

@@ -1,6 +1,10 @@
 """Helpers for HomeKit data stored in HA storage."""
 
-from homeassistant.core import callback
+from __future__ import annotations
+
+from typing import Any, TypedDict, cast
+
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
@@ -8,6 +12,19 @@ from .const import DOMAIN
 ENTITY_MAP_STORAGE_KEY = f"{DOMAIN}-entity-map"
 ENTITY_MAP_STORAGE_VERSION = 1
 ENTITY_MAP_SAVE_DELAY = 10
+
+
+class Pairing(TypedDict):
+    """A versioned map of entity metadata as presented by aiohomekit."""
+
+    config_num: int
+    accessories: list[Any]
+
+
+class StorageLayout(TypedDict):
+    """Cached pairing metadata needed by aiohomekit."""
+
+    pairings: dict[str, Pairing]
 
 
 class EntityMapStorage:
@@ -26,34 +43,36 @@ class EntityMapStorage:
     very slow for these devices.
     """
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Create a new entity map store."""
         self.hass = hass
         self.store = Store(hass, ENTITY_MAP_STORAGE_VERSION, ENTITY_MAP_STORAGE_KEY)
-        self.storage_data = {}
+        self.storage_data: dict[str, Pairing] = {}
 
-    async def async_initialize(self):
+    async def async_initialize(self) -> None:
         """Get the pairing cache data."""
-        if not (raw_storage := await self.store.async_load()):
+        if not (raw_storage := cast(StorageLayout, await self.store.async_load())):
             # There is no cached data about HomeKit devices yet
             return
 
         self.storage_data = raw_storage.get("pairings", {})
 
-    def get_map(self, homekit_id):
+    def get_map(self, homekit_id) -> Pairing | None:
         """Get a pairing cache item."""
         return self.storage_data.get(homekit_id)
 
     @callback
-    def async_create_or_update_map(self, homekit_id, config_num, accessories):
+    def async_create_or_update_map(
+        self, homekit_id: str, config_num: int, accessories: list[Any]
+    ) -> Pairing:
         """Create a new pairing cache."""
-        data = {"config_num": config_num, "accessories": accessories}
+        data = Pairing(config_num=config_num, accessories=accessories)
         self.storage_data[homekit_id] = data
         self._async_schedule_save()
         return data
 
     @callback
-    def async_delete_map(self, homekit_id):
+    def async_delete_map(self, homekit_id: str) -> None:
         """Delete pairing cache."""
         if homekit_id not in self.storage_data:
             return
@@ -62,11 +81,11 @@ class EntityMapStorage:
         self._async_schedule_save()
 
     @callback
-    def _async_schedule_save(self):
+    def _async_schedule_save(self) -> None:
         """Schedule saving the entity map cache."""
         self.store.async_delay_save(self._data_to_save, ENTITY_MAP_SAVE_DELAY)
 
     @callback
-    def _data_to_save(self):
+    def _data_to_save(self) -> dict[str, Any]:
         """Return data of entity map to store in a file."""
         return {"pairings": self.storage_data}

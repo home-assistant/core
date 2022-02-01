@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
-from aiohomekit.model.services import ServicesTypes
+from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -28,8 +28,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 
 from . import KNOWN_DEVICES, CharacteristicEntity, HomeKitEntity
+from .connection import HKDevice
 
 CO2_ICON = "mdi:molecule-co2"
 
@@ -203,17 +205,17 @@ class HomeKitHumiditySensor(HomeKitEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.HUMIDITY
     _attr_native_unit_of_measurement = PERCENTAGE
 
-    def get_characteristic_types(self):
+    def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT]
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return f"{super().name} Humidity"
 
     @property
-    def native_value(self):
+    def native_value(self) -> float:
         """Return the current humidity."""
         return self.service.value(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT)
 
@@ -224,17 +226,17 @@ class HomeKitTemperatureSensor(HomeKitEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = TEMP_CELSIUS
 
-    def get_characteristic_types(self):
+    def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [CharacteristicsTypes.TEMPERATURE_CURRENT]
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return f"{super().name} Temperature"
 
     @property
-    def native_value(self):
+    def native_value(self) -> float:
         """Return the current temperature in Celsius."""
         return self.service.value(CharacteristicsTypes.TEMPERATURE_CURRENT)
 
@@ -245,17 +247,17 @@ class HomeKitLightSensor(HomeKitEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.ILLUMINANCE
     _attr_native_unit_of_measurement = LIGHT_LUX
 
-    def get_characteristic_types(self):
+    def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [CharacteristicsTypes.LIGHT_LEVEL_CURRENT]
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return f"{super().name} Light Level"
 
     @property
-    def native_value(self):
+    def native_value(self) -> int:
         """Return the current light level in lux."""
         return self.service.value(CharacteristicsTypes.LIGHT_LEVEL_CURRENT)
 
@@ -266,17 +268,17 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity, SensorEntity):
     _attr_icon = CO2_ICON
     _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
 
-    def get_characteristic_types(self):
+    def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [CharacteristicsTypes.CARBON_DIOXIDE_LEVEL]
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return f"{super().name} CO2"
 
     @property
-    def native_value(self):
+    def native_value(self) -> int:
         """Return the current CO2 level in ppm."""
         return self.service.value(CharacteristicsTypes.CARBON_DIOXIDE_LEVEL)
 
@@ -287,7 +289,7 @@ class HomeKitBatterySensor(HomeKitEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
 
-    def get_characteristic_types(self):
+    def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [
             CharacteristicsTypes.BATTERY_LEVEL,
@@ -296,12 +298,12 @@ class HomeKitBatterySensor(HomeKitEntity, SensorEntity):
         ]
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return f"{super().name} Battery"
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the sensor icon."""
         if not self.available or self.state is None:
             return "mdi:battery-unknown"
@@ -323,12 +325,12 @@ class HomeKitBatterySensor(HomeKitEntity, SensorEntity):
         return icon
 
     @property
-    def is_low_battery(self):
+    def is_low_battery(self) -> bool:
         """Return true if battery level is low."""
         return self.service.value(CharacteristicsTypes.STATUS_LO_BATT) == 1
 
     @property
-    def is_charging(self):
+    def is_charging(self) -> bool:
         """Return true if currently charing."""
         # 0 = not charging
         # 1 = charging
@@ -336,7 +338,7 @@ class HomeKitBatterySensor(HomeKitEntity, SensorEntity):
         return self.service.value(CharacteristicsTypes.CHARGING_STATE) == 1
 
     @property
-    def native_value(self):
+    def native_value(self) -> int:
         """Return the current battery level percentage."""
         return self.service.value(CharacteristicsTypes.BATTERY_LEVEL)
 
@@ -356,16 +358,16 @@ class SimpleSensor(CharacteristicEntity, SensorEntity):
 
     def __init__(
         self,
-        conn,
-        info,
-        char,
+        conn: HKDevice,
+        info: ConfigType,
+        char: Characteristic,
         description: HomeKitSensorEntityDescription,
-    ):
+    ) -> None:
         """Initialise a secondary HomeKit characteristic sensor."""
         self.entity_description = description
         super().__init__(conn, info, char)
 
-    def get_characteristic_types(self):
+    def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [self._char.type]
 
@@ -375,7 +377,7 @@ class SimpleSensor(CharacteristicEntity, SensorEntity):
         return f"{super().name} {self.entity_description.name}"
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | int | float:
         """Return the current sensor value."""
         return self._char.value
 
@@ -399,7 +401,7 @@ async def async_setup_entry(
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_service(service):
+    def async_add_service(service: Service) -> bool:
         if not (entity_class := ENTITY_TYPES.get(service.type)):
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
@@ -409,7 +411,7 @@ async def async_setup_entry(
     conn.add_listener(async_add_service)
 
     @callback
-    def async_add_characteristic(char: Characteristic):
+    def async_add_characteristic(char: Characteristic) -> bool:
         if not (description := SIMPLE_SENSOR.get(char.type)):
             return False
         if description.probe and not description.probe(char):
