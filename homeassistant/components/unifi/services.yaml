@@ -13,3 +13,23 @@ reconnect_client:
 remove_clients:
   name: Remove clients from the UniFi Network
   description: Clean up clients that has only been associated with the controller for a short period of time.
+
+block_client:
+  name: Block unifi client
+  description: Try to block a client from UniFi Network
+  fields:
+    mac:
+      name: MACAddress
+      description: Block this mac address from network
+      required: true
+      example: 52:54:fa:ab:cc:32
+      
+unblock_client:
+  name: Unblock unifi client
+  description: Try to unblock a client from UniFi Network
+  fields:
+    mac:
+      name: MACAddress
+      description: Unblock this mac address from network
+      required: true
+      example: 52:54:fa:ab:cc:32
