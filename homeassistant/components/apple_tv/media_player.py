@@ -171,9 +171,6 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
     @callback
     def async_device_disconnected(self):
         """Handle when connection was lost to device."""
-        self.atv.push_updater.stop()
-        self.atv.push_updater.listener = None
-        self.atv.power.listener = None
         self._attr_supported_features = SUPPORT_APPLE_TV
 
     @property
