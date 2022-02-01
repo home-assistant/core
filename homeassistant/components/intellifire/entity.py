@@ -9,7 +9,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import IntellifireDataUpdateCoordinator
 
 
-@dataclass
 class IntellifireEntity(CoordinatorEntity):
     """Define a generic class for Intellifire entities."""
 
