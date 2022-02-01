@@ -143,7 +143,7 @@ async def test_on_connect(hass, mock_cloud_fixture):
         nonlocal cloud_states
         cloud_states.append(cloud_state)
 
-    cl.client.async_listen_connection_change(handle_state)
+    cloud.async_listen_connection_change(hass, handle_state)
 
     assert "async_setup" in str(cl.iot._on_connect[-1])
     await cl.iot._on_connect[-1]()
@@ -163,6 +163,7 @@ async def test_on_connect(hass, mock_cloud_fixture):
     assert len(cl.iot._on_disconnect) == 2
     assert "async_setup" in str(cl.iot._on_disconnect[-1])
     await cl.iot._on_disconnect[-1]()
+    await hass.async_block_till_done()
 
     assert len(cloud_states) == 2
     assert cloud_states[-1] == cloud.CloudConnectionState.CLOUD_DISCONNECTED
