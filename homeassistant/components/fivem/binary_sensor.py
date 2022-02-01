@@ -2,13 +2,23 @@
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FiveMDataUpdateCoordinator, FiveMEntity
+from . import FiveMEntity
 from .const import DOMAIN, ICON_STATUS, NAME_STATUS
+
+BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
+        key=NAME_STATUS,
+        name=NAME_STATUS,
+        icon=ICON_STATUS,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -19,23 +29,17 @@ async def async_setup_entry(
     """Set up the FiveM binary sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities([FiveMStatusBinarySensor(coordinator)])
+    async_add_entities(
+        [FiveMSensorEntity(coordinator, description) for description in BINARY_SENSORS]
+    )
 
 
 class FiveMSensorEntity(FiveMEntity, BinarySensorEntity):
     """Representation of a FiveM sensor base entity."""
 
+    entity_description: BinarySensorEntityDescription
+
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        return self.coordinator.data[self.type_name]
-
-
-class FiveMStatusBinarySensor(FiveMSensorEntity):
-    """Representation of a FiveM status binary sensor."""
-
-    def __init__(self, coordinator: FiveMDataUpdateCoordinator) -> None:
-        """Initialize status binary sensor."""
-        super().__init__(
-            coordinator, NAME_STATUS, ICON_STATUS, BinarySensorDeviceClass.CONNECTIVITY
-        )
+        return self.coordinator.data[self.entity_description.key]

@@ -9,9 +9,9 @@ from fivem import FiveM, FiveMServerOfflineError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -147,20 +147,14 @@ class FiveMEntity(CoordinatorEntity):
     def __init__(
         self,
         coordinator: FiveMDataUpdateCoordinator,
-        type_name: str,
-        icon: str,
-        device_class: str = None,
-        extra_attrs: list[str] = None,
+        description: EntityDescription,
     ) -> None:
         """Initialize base entity."""
         super().__init__(coordinator)
-        self.type_name = type_name
-        self.extra_attrs = extra_attrs
+        self.entity_description = description
 
-        self._attr_name = f"{self.coordinator.server_name} {type_name}"
-        self._attr_unique_id = f"{self.coordinator.unique_id}-{type_name}".lower()
-        self._attr_icon = icon
-        self._attr_device_class = device_class
+        self._attr_name = f"{self.coordinator.server_name} {description.name}"
+        self._attr_unique_id = f"{self.coordinator.unique_id}-{description.key}".lower()
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.unique_id)},
             manufacturer=MANUFACTURER,
@@ -168,19 +162,3 @@ class FiveMEntity(CoordinatorEntity):
             name=self.coordinator.server_name,
             sw_version=self.coordinator.version,
         )
-
-        self._update_entity()
-
-    def _update_entity(self):
-        """Update the entity."""
-        if self.extra_attrs is not None:
-            extras: dict[str, Any] = {}
-            for attr in self.extra_attrs:
-                extras[attr] = self.coordinator.data[attr]
-            self._attr_extra_state_attributes = extras
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Triggers update of properties after receiving update from coordinator."""
-        self._update_entity()
-        self.async_write_ha_state()

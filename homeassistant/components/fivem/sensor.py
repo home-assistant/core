@@ -1,12 +1,16 @@
 """The FiveM sensor platform."""
+from __future__ import annotations
+
+from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FiveMDataUpdateCoordinator, FiveMEntity
+from . import FiveMEntity
 from .const import (
     ATTR_PLAYERS_LIST,
     ATTR_RESOURCES_LIST,
@@ -23,6 +27,37 @@ from .const import (
 )
 
 
+@dataclass
+class FiveMSensorEntityDescription(SensorEntityDescription):
+    """Describes FiveM sensor entity."""
+
+    extra_attrs: list[str] | None = None
+
+
+SENSORS: tuple[FiveMSensorEntityDescription, ...] = (
+    FiveMSensorEntityDescription(
+        key=NAME_PLAYERS_MAX,
+        name=NAME_PLAYERS_MAX,
+        icon=ICON_PLAYERS_MAX,
+        native_unit_of_measurement=UNIT_PLAYERS_MAX,
+    ),
+    FiveMSensorEntityDescription(
+        key=NAME_PLAYERS_ONLINE,
+        name=NAME_PLAYERS_ONLINE,
+        icon=ICON_PLAYERS_ONLINE,
+        native_unit_of_measurement=UNIT_PLAYERS_ONLINE,
+        extra_attrs=[ATTR_PLAYERS_LIST],
+    ),
+    FiveMSensorEntityDescription(
+        key=NAME_RESOURCES,
+        name=NAME_RESOURCES,
+        icon=ICON_RESOURCES,
+        native_unit_of_measurement=UNIT_RESOURCES,
+        extra_attrs=[ATTR_RESOURCES_LIST],
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -31,72 +66,29 @@ async def async_setup_entry(
     """Set up the FiveM sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    # Create entities list.
-    entities = [
-        FiveMPlayersOnlineSensor(coordinator),
-        FiveMPlayersMaxSensor(coordinator),
-        FiveMResourcesSensor(coordinator),
-    ]
-
     # Add sensor entities.
-    async_add_entities(entities)
+    async_add_entities(
+        [FiveMSensorEntity(coordinator, description) for description in SENSORS]
+    )
 
 
 class FiveMSensorEntity(FiveMEntity, SensorEntity):
     """Representation of a FiveM sensor base entity."""
 
-    def __init__(
-        self,
-        coordinator: FiveMDataUpdateCoordinator,
-        type_name: str,
-        icon: str,
-        unit: str,
-        device_class: str = None,
-        extra_attrs: list[str] = None,
-    ) -> None:
-        """Initialize sensor base entity."""
-        super().__init__(coordinator, type_name, icon, device_class, extra_attrs)
-        self._attr_native_unit_of_measurement = unit
+    entity_description: FiveMSensorEntityDescription
 
     @property
     def native_value(self) -> Any:
         """Return the state of the sensor."""
-        return self.coordinator.data[self.type_name]
+        return self.coordinator.data[self.entity_description.key]
 
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return the extra attributes of the sensor."""
+        if self.entity_description.extra_attrs is None:
+            return None
 
-class FiveMPlayersOnlineSensor(FiveMSensorEntity):
-    """Representation of a FiveM online players sensor."""
-
-    def __init__(self, coordinator: FiveMDataUpdateCoordinator) -> None:
-        """Initialize online players sensor."""
-        super().__init__(
-            coordinator,
-            NAME_PLAYERS_ONLINE,
-            ICON_PLAYERS_ONLINE,
-            UNIT_PLAYERS_ONLINE,
-            extra_attrs=[ATTR_PLAYERS_LIST],
-        )
-
-
-class FiveMPlayersMaxSensor(FiveMSensorEntity):
-    """Representation of a FiveM maximum number of players sensor."""
-
-    def __init__(self, coordinator: FiveMDataUpdateCoordinator) -> None:
-        """Initialize maximum number of players sensor."""
-        super().__init__(
-            coordinator, NAME_PLAYERS_MAX, ICON_PLAYERS_MAX, UNIT_PLAYERS_MAX
-        )
-
-
-class FiveMResourcesSensor(FiveMSensorEntity):
-    """Representation of a FiveM resources sensor."""
-
-    def __init__(self, coordinator: FiveMDataUpdateCoordinator) -> None:
-        """Initialize resources sensor."""
-        super().__init__(
-            coordinator,
-            NAME_RESOURCES,
-            ICON_RESOURCES,
-            UNIT_RESOURCES,
-            extra_attrs=[ATTR_RESOURCES_LIST],
-        )
+        return {
+            attr: self.coordinator.data[attr]
+            for attr in self.entity_description.extra_attrs
+        }
