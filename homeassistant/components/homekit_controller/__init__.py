@@ -48,8 +48,6 @@ class HomeKitEntity(Entity):
         self._features = 0
         self.setup()
 
-        self._signals: list[Any] = []
-
         super().__init__()
 
     @property
@@ -71,7 +69,7 @@ class HomeKitEntity(Entity):
 
     async def async_added_to_hass(self):
         """Entity added to hass."""
-        self._signals.append(
+        self.async_on_remove(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
                 self._accessory.signal_state_updated, self.async_write_ha_state
             )
@@ -84,10 +82,6 @@ class HomeKitEntity(Entity):
         """Prepare to be removed from hass."""
         self._accessory.remove_pollable_characteristics(self._aid)
         self._accessory.remove_watchable_characteristics(self._aid)
-
-        for signal_remove in self._signals:
-            signal_remove()
-        self._signals.clear()
 
     async def async_put_characteristics(self, characteristics: dict[str, Any]):
         """
