@@ -2,6 +2,7 @@
 import json
 from unittest.mock import patch
 
+from androidtv.constants import CUSTOM_TURN_OFF, CUSTOM_TURN_ON
 import pytest
 
 from homeassistant import data_entry_flow
@@ -10,6 +11,7 @@ from homeassistant.components.androidtv.config_flow import (
     CONF_APP_DELETE,
     CONF_APP_ID,
     CONF_APP_NAME,
+    CONF_CMD_VALUE,
     CONF_RULE_DELETE,
     CONF_RULE_ID,
     CONF_RULE_VALUES,
@@ -20,12 +22,12 @@ from homeassistant.components.androidtv.const import (
     CONF_ADB_SERVER_PORT,
     CONF_ADBKEY,
     CONF_APPS,
+    CONF_CUSTOM_COMMANDS,
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_GET_SOURCES,
     CONF_SCREENCAP,
     CONF_STATE_DETECTION_RULES,
     CONF_TURN_OFF_COMMAND,
-    CONF_TURN_ON_COMMAND,
     DEFAULT_ADB_SERVER_PORT,
     DEFAULT_PORT,
     DEVICE_ANDROIDTV,
@@ -310,6 +312,7 @@ async def test_options_flow(hass):
         unique_id=ETH_MAC,
         options={
             CONF_APPS: {"app1": "App1"},
+            CONF_CUSTOM_COMMANDS: {CUSTOM_TURN_ON: "turn_on"},
             CONF_STATE_DETECTION_RULES: {"com.plexapp.android": VALID_DETECT_RULE},
         },
     )
@@ -380,6 +383,46 @@ async def test_options_flow(hass):
             user_input={
                 CONF_APP_NAME: "Appl1",
                 CONF_APP_DELETE: True,
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        # test custom commands forms
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_CUSTOM_COMMANDS: CUSTOM_TURN_OFF,
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "commands"
+
+        # test insert command
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_CMD_VALUE: "turn off",
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        # test custom commands forms for delete
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_CUSTOM_COMMANDS: CUSTOM_TURN_ON,
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "commands"
+
+        # test delete command
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_CMD_VALUE: "",
             },
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -474,8 +517,6 @@ async def test_options_flow(hass):
                 CONF_GET_SOURCES: True,
                 CONF_EXCLUDE_UNNAMED_APPS: True,
                 CONF_SCREENCAP: True,
-                CONF_TURN_OFF_COMMAND: "off",
-                CONF_TURN_ON_COMMAND: "on",
             },
         )
 
@@ -485,8 +526,10 @@ async def test_options_flow(hass):
         assert apps_options.get("app1") is None
         assert apps_options["app2"] == "Appl2"
 
+        cmd_options = config_entry.options[CONF_CUSTOM_COMMANDS]
+        assert cmd_options[CUSTOM_TURN_OFF] == "turn off"
+        assert cmd_options.get(CUSTOM_TURN_ON) is None
+
         assert config_entry.options[CONF_GET_SOURCES] is True
         assert config_entry.options[CONF_EXCLUDE_UNNAMED_APPS] is True
         assert config_entry.options[CONF_SCREENCAP] is True
-        assert config_entry.options[CONF_TURN_OFF_COMMAND] == "off"
-        assert config_entry.options[CONF_TURN_ON_COMMAND] == "on"

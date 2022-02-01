@@ -4,6 +4,7 @@ import logging
 import os
 
 from androidtv import state_detection_rules_validator
+from androidtv.constants import CUSTOMIZABLE_COMMANDS
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -17,12 +18,11 @@ from .const import (
     CONF_ADB_SERVER_PORT,
     CONF_ADBKEY,
     CONF_APPS,
+    CONF_CUSTOM_COMMANDS,
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_GET_SOURCES,
     CONF_SCREENCAP,
     CONF_STATE_DETECTION_RULES,
-    CONF_TURN_OFF_COMMAND,
-    CONF_TURN_ON_COMMAND,
     DEFAULT_ADB_SERVER_PORT,
     DEFAULT_DEVICE_CLASS,
     DEFAULT_EXCLUDE_UNNAMED_APPS,
@@ -39,6 +39,8 @@ APPS_NEW_ID = "NewApp"
 CONF_APP_DELETE = "app_delete"
 CONF_APP_ID = "app_id"
 CONF_APP_NAME = "app_name"
+
+CONF_CMD_VALUE = "cmd_value"
 
 RULES_NEW_ID = "NewRule"
 CONF_RULE_DELETE = "rule_delete"
@@ -170,10 +172,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
 
         apps = config_entry.options.get(CONF_APPS, {})
+        cust_commands = config_entry.options.get(CONF_CUSTOM_COMMANDS, {})
         det_rules = config_entry.options.get(CONF_STATE_DETECTION_RULES, {})
         self._apps = apps.copy()
+        self._cust_commands = cust_commands.copy()
         self._state_det_rules = det_rules.copy()
         self._conf_app_id = None
+        self._conf_cmd_id = None
         self._conf_rule_id = None
 
     @callback
@@ -182,10 +187,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         new_data = {
             k: v
             for k, v in data.items()
-            if k not in [CONF_APPS, CONF_STATE_DETECTION_RULES]
+            if k not in [CONF_APPS, CONF_CUSTOM_COMMANDS, CONF_STATE_DETECTION_RULES]
         }
         if self._apps:
             new_data[CONF_APPS] = self._apps
+        if self._cust_commands:
+            new_data[CONF_CUSTOM_COMMANDS] = self._cust_commands
         if self._state_det_rules:
             new_data[CONF_STATE_DETECTION_RULES] = self._state_det_rules
 
@@ -196,6 +203,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             if sel_app := user_input.get(CONF_APPS):
                 return await self.async_step_apps(None, sel_app)
+            if sel_cmd := user_input.get(CONF_CUSTOM_COMMANDS):
+                self._conf_cmd_id = sel_cmd
+                return await self.async_step_commands()
             if sel_rule := user_input.get(CONF_STATE_DETECTION_RULES):
                 return await self.async_step_rules(None, sel_rule)
             return self._save_config(user_input)
@@ -228,18 +238,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_SCREENCAP,
                     default=options.get(CONF_SCREENCAP, DEFAULT_SCREENCAP),
                 ): bool,
-                vol.Optional(
-                    CONF_TURN_OFF_COMMAND,
-                    description={
-                        "suggested_value": options.get(CONF_TURN_OFF_COMMAND, "")
-                    },
-                ): str,
-                vol.Optional(
-                    CONF_TURN_ON_COMMAND,
-                    description={
-                        "suggested_value": options.get(CONF_TURN_ON_COMMAND, "")
-                    },
-                ): str,
+                vol.Optional(CONF_CUSTOM_COMMANDS): vol.In(CUSTOMIZABLE_COMMANDS),
                 vol.Optional(CONF_STATE_DETECTION_RULES): vol.In(rules),
             }
         )
@@ -282,6 +281,35 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             description_placeholders={
                 "app_id": f"`{app_id}`" if app_id != APPS_NEW_ID else "",
             },
+        )
+
+    async def async_step_commands(self, user_input=None):
+        """Handle options flow for custom comands."""
+        if user_input is None:
+            return self._async_commands_form(self._conf_cmd_id)
+
+        cmd_value = user_input.get(CONF_CMD_VALUE)
+        if not cmd_value:
+            self._cust_commands.pop(self._conf_cmd_id, None)
+        else:
+            self._cust_commands[self._conf_cmd_id] = cmd_value
+
+        return await self.async_step_init()
+
+    @callback
+    def _async_commands_form(self, cmd_id):
+        """Return configuration form for custom commands."""
+        data_schema = {
+            vol.Optional(
+                CONF_CMD_VALUE,
+                description={"suggested_value": self._cust_commands.get(cmd_id, "")},
+            ): str,
+        }
+
+        return self.async_show_form(
+            step_id="commands",
+            data_schema=vol.Schema(data_schema),
+            description_placeholders={"cmd_id": cmd_id},
         )
 
     async def async_step_rules(self, user_input=None, rule_id=None):

@@ -14,7 +14,7 @@ from adb_shell.exceptions import (
     InvalidResponseError,
     TcpTimeoutException,
 )
-from androidtv.constants import APPS, KEYS
+from androidtv.constants import APPS, CUSTOMIZABLE_COMMANDS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
 from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
@@ -51,6 +51,7 @@ from .const import (
     ANDROID_DEV,
     ANDROID_DEV_OPT,
     CONF_APPS,
+    CONF_CUSTOM_COMMANDS,
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_GET_SOURCES,
     CONF_SCREENCAP,
@@ -244,8 +245,6 @@ class ADBDevice(MediaPlayerEntity):
         self._get_sources = DEFAULT_GET_SOURCES
         self._exclude_unnamed_apps = DEFAULT_EXCLUDE_UNNAMED_APPS
         self._screencap = DEFAULT_SCREENCAP
-        self.turn_on_command = None
-        self.turn_off_command = None
 
         # ADB exceptions to catch
         if not aftv.adb_server_ip:
@@ -295,8 +294,11 @@ class ADBDevice(MediaPlayerEntity):
             CONF_EXCLUDE_UNNAMED_APPS, DEFAULT_EXCLUDE_UNNAMED_APPS
         )
         self._screencap = options.get(CONF_SCREENCAP, DEFAULT_SCREENCAP)
-        self.turn_off_command = options.get(CONF_TURN_OFF_COMMAND)
-        self.turn_on_command = options.get(CONF_TURN_ON_COMMAND)
+
+        # Setup customizable commands
+        cust_commands = options.get(CONF_CUSTOM_COMMANDS, {})
+        for cmd in CUSTOMIZABLE_COMMANDS:
+            self.aftv.customize_command(cmd, cust_commands.get(cmd))
 
     async def async_added_to_hass(self):
         """Set config parameter when add to hass."""
@@ -354,18 +356,12 @@ class ADBDevice(MediaPlayerEntity):
     @adb_decorator()
     async def async_turn_on(self):
         """Turn on the device."""
-        if self.turn_on_command:
-            await self.aftv.adb_shell(self.turn_on_command)
-        else:
-            await self.aftv.turn_on()
+        await self.aftv.turn_on()
 
     @adb_decorator()
     async def async_turn_off(self):
         """Turn off the device."""
-        if self.turn_off_command:
-            await self.aftv.adb_shell(self.turn_off_command)
-        else:
-            await self.aftv.turn_off()
+        await self.aftv.turn_off()
 
     @adb_decorator()
     async def async_media_previous_track(self):

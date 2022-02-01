@@ -15,8 +15,6 @@ from homeassistant.components.androidtv.const import (
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_SCREENCAP,
     CONF_STATE_DETECTION_RULES,
-    CONF_TURN_OFF_COMMAND,
-    CONF_TURN_ON_COMMAND,
     DEFAULT_ADB_SERVER_PORT,
     DEFAULT_PORT,
     DEVICE_ANDROIDTV,
@@ -1009,13 +1007,6 @@ async def test_services_firetv(hass):
     """Test media player services for a Fire TV device."""
     patch_key, entity_id, config_entry = _setup(CONFIG_FIRETV_DEFAULT)
     config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        config_entry,
-        options={
-            CONF_TURN_OFF_COMMAND: "test off",
-            CONF_TURN_ON_COMMAND: "test on",
-        },
-    )
 
     with patchers.patch_connect(True)[patch_key]:
         with patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
@@ -1024,8 +1015,8 @@ async def test_services_firetv(hass):
 
         with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
             await _test_service(hass, entity_id, SERVICE_MEDIA_STOP, "back")
-            await _test_service(hass, entity_id, SERVICE_TURN_OFF, "adb_shell")
-            await _test_service(hass, entity_id, SERVICE_TURN_ON, "adb_shell")
+            await _test_service(hass, entity_id, SERVICE_TURN_OFF, "turn_off")
+            await _test_service(hass, entity_id, SERVICE_TURN_ON, "turn_on")
 
 
 async def test_volume_mute(hass):

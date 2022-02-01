@@ -3,6 +3,7 @@ import os
 
 from adb_shell.auth.keygen import keygen
 from androidtv.adb_manager.adb_manager_sync import ADBPythonSync
+from androidtv.constants import CUSTOM_TURN_OFF, CUSTOM_TURN_ON
 from androidtv.setup_async import setup as async_androidtv_setup
 
 from homeassistant.config_entries import ConfigEntry
@@ -25,7 +26,10 @@ from .const import (
     CONF_ADB_SERVER_IP,
     CONF_ADB_SERVER_PORT,
     CONF_ADBKEY,
+    CONF_CUSTOM_COMMANDS,
     CONF_STATE_DETECTION_RULES,
+    CONF_TURN_OFF_COMMAND,
+    CONF_TURN_ON_COMMAND,
     DEFAULT_ADB_SERVER_PORT,
     DEVICE_ANDROIDTV,
     DEVICE_FIRETV,
@@ -109,8 +113,34 @@ async def async_connect_androidtv(
     return aftv, None
 
 
+def _migrate_options_key(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Migrate old option keys to new ones."""
+
+    custom_commands = {}
+    for old_key, new_key in {
+        CONF_TURN_OFF_COMMAND: CUSTOM_TURN_OFF,
+        CONF_TURN_ON_COMMAND: CUSTOM_TURN_ON,
+    }.items():
+        if old_key in entry.options:
+            custom_commands[new_key] = entry.options[old_key]
+
+    if not custom_commands:
+        return
+
+    new_options = {
+        k: v
+        for k, v in entry.options.items()
+        if k not in [CONF_TURN_OFF_COMMAND, CONF_TURN_ON_COMMAND]
+    }
+    new_options[CONF_CUSTOM_COMMANDS] = custom_commands
+    hass.config_entries.async_update_entry(entry, options=new_options)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Android TV platform."""
+
+    # migrate the old options key
+    _migrate_options_key(hass, entry)
 
     state_det_rules = entry.options.get(CONF_STATE_DETECTION_RULES)
     aftv, error_message = await async_connect_androidtv(

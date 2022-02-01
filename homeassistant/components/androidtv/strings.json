@@ -32,9 +32,8 @@
           "get_sources": "Retrieve the running apps as the list of sources",
           "exclude_unnamed_apps": "Exclude apps with unknown name from the sources list",
           "screencap": "Use screen capture for album art",
-          "state_detection_rules": "Configure state detection rules",
-          "turn_off_command": "ADB shell turn off command (leave empty for default)",
-          "turn_on_command": "ADB shell turn on command (leave empty for default)"
+          "custom_commands": "Configure ADB shell custom commands",
+          "state_detection_rules": "Configure state detection rules"
         }
       },
       "apps": {
@@ -44,6 +43,13 @@
           "app_name": "Application Name",
           "app_id": "Application ID",
           "app_delete": "Check to delete this application"
+        }
+      },
+      "commands": {
+        "title": "Configure Android TV customizable commands",
+        "description": "Configure command: {cmd_id}",
+        "data": {
+          "cmd_value": "Custom command (leave empty for default)"
         }
       },
       "rules": {

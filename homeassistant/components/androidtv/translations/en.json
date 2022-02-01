@@ -40,15 +40,21 @@
                 "description": "Configure application id {app_id}",
                 "title": "Configure Android TV Apps"
             },
+            "commands": {
+                "data": {
+                    "cmd_value": "Custom command (leave empty for default)"
+                },
+                "description": "Configure command: {cmd_id}",
+                "title": "Configure Android TV customizable commands"
+            },
             "init": {
                 "data": {
                     "apps": "Configure applications list",
+                    "custom_commands": "Configure ADB shell custom commands",
                     "exclude_unnamed_apps": "Exclude apps with unknown name from the sources list",
                     "get_sources": "Retrieve the running apps as the list of sources",
                     "screencap": "Use screen capture for album art",
-                    "state_detection_rules": "Configure state detection rules",
-                    "turn_off_command": "ADB shell turn off command (leave empty for default)",
-                    "turn_on_command": "ADB shell turn on command (leave empty for default)"
+                    "state_detection_rules": "Configure state detection rules"
                 },
                 "title": "Android TV Options"
             },
