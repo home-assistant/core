@@ -263,7 +263,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 def check_correct_scopes(hass, token_file, config):
     """Check for the correct scopes in file."""
-    creds = Storage(hass.config.path(TOKEN_FILE)).get()
+    creds = Storage(token_file).get()
     if not creds or not creds.scopes:
         return False
     target_scope = config[CONF_CALENDAR_ACCESS].scope
