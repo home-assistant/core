@@ -2,7 +2,7 @@
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import ATTR_DEVICE_ID, CONF_MAC
 from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -11,17 +11,20 @@ from .const import DOMAIN as UNIFI_DOMAIN
 
 SERVICE_RECONNECT_CLIENT = "reconnect_client"
 SERVICE_REMOVE_CLIENTS = "remove_clients"
+SERVICE_BLOCK_CLIENT = "block_client"
+SERVICE_UNBLOCK_CLIENT = "unblock_client"
 
 SERVICE_RECONNECT_CLIENT_SCHEMA = vol.All(
     vol.Schema({vol.Required(ATTR_DEVICE_ID): str})
 )
 
-SUPPORTED_SERVICES = (SERVICE_RECONNECT_CLIENT, SERVICE_REMOVE_CLIENTS)
+SUPPORTED_SERVICES = (SERVICE_RECONNECT_CLIENT, SERVICE_REMOVE_CLIENTS, SERVICE_BLOCK_CLIENT, SERVICE_UNBLOCK_CLIENT)
 
 SERVICE_TO_SCHEMA = {
     SERVICE_RECONNECT_CLIENT: SERVICE_RECONNECT_CLIENT_SCHEMA,
 }
 
+MAC_ADDRESS_SCHEMA = vol.Schema(vol.validators.Match(r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$'))
 
 @callback
 def async_setup_services(hass) -> None:
@@ -30,6 +33,8 @@ def async_setup_services(hass) -> None:
     services = {
         SERVICE_RECONNECT_CLIENT: async_reconnect_client,
         SERVICE_REMOVE_CLIENTS: async_remove_clients,
+        SERVICE_BLOCK_CLIENT: async_block_client,
+        SERVICE_UNBLOCK_CLIENT: async_unblock_client,
     }
 
     async def async_call_unifi_service(service_call: ServiceCall) -> None:
@@ -110,3 +115,37 @@ async def async_remove_clients(hass, data) -> None:
 
         if clients_to_remove:
             await controller.api.clients.remove_clients(macs=clients_to_remove)
+
+async def async_block_client(hass, data) -> None:
+    """Block a client based on its mac address."""
+    mac = ""    
+    if MAC_ADDRESS_SCHEMA(data[CONF_MAC]): mac = data[CONF_MAC]
+    if mac == "" or mac is None:
+        return
+    mac = (mac.replace('-',':')).lower()
+
+    for controller in hass.data[UNIFI_DOMAIN].values():
+        if (
+            not controller.available
+            or (client := controller.api.clients.get(mac)) is None
+        ):
+            continue
+    
+    await controller.api.clients.block(mac)
+    
+async def async_unblock_client(hass, data) -> None:
+    """Unblock a client based on its mac address."""
+    mac = ""    
+    if MAC_ADDRESS_SCHEMA(data[CONF_MAC]): mac = data[CONF_MAC]
+    if mac == "" or mac is None:
+        return
+    mac = (mac.replace('-',':')).lower()
+
+    for controller in hass.data[UNIFI_DOMAIN].values():
+        if (
+            not controller.available
+            or (client := controller.api.clients.get(mac)) is None
+        ):
+            continue
+
+    await controller.api.clients.unblock(mac)
