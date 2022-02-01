@@ -23,12 +23,14 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
@@ -140,7 +142,7 @@ async def _async_setup_entity(
     async_add_entities([MqttSensor(hass, config, config_entry, discovery_data)])
 
 
-class MqttSensor(MqttEntity, SensorEntity):
+class MqttSensor(MqttEntity, SensorEntity, RestoreEntity):
     """Representation of a sensor that can be updated using MQTT."""
 
     _entity_id_format = ENTITY_ID_FORMAT
@@ -278,6 +280,20 @@ class MqttSensor(MqttEntity, SensorEntity):
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state, topics
         )
+        if (
+            (expire_after := self._config.get(CONF_EXPIRE_AFTER)) is not None
+            and expire_after > 0
+            and (last_state := await self.async_get_last_state()) is not None
+            and last_state != STATE_UNAVAILABLE
+        ):
+            self._expired = False
+            self._state = last_state.state
+            expiration_at = dt_util.utcnow() + timedelta(seconds=expire_after)
+            self._expiration_trigger = async_track_point_in_utc_time(
+                self.hass, self._value_is_expired, expiration_at
+            )
+            _LOGGER.debug("State recovered after reload for %s", self.entity_id)
+            self.async_write_ha_state()
 
     @callback
     def _value_is_expired(self, *_):

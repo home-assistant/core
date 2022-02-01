@@ -487,8 +487,10 @@ class MqttDiscoveryUpdate(Entity):
                 payload,
             )
             old_payload = self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
-            debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
-            if not payload:
+            entity_info = debug_info.update_entity_discovery_data(
+                self.hass, payload, self.entity_id
+            )
+            if not payload and entity_info is not None:
                 # Empty payload: Remove component
                 _LOGGER.info("Removing component: %s", self.entity_id)
                 self._cleanup_discovery_on_remove()

@@ -87,8 +87,10 @@ def add_entity_discovery_data(hass, discovery_data, entity_id):
 
 def update_entity_discovery_data(hass, discovery_payload, entity_id):
     """Update discovery data."""
-    entity_info = hass.data[DATA_MQTT_DEBUG_INFO]["entities"][entity_id]
-    entity_info["discovery_data"][ATTR_DISCOVERY_PAYLOAD] = discovery_payload
+    entity_info = hass.data[DATA_MQTT_DEBUG_INFO]["entities"].get(entity_id)
+    if entity_info is not None:
+        entity_info["discovery_data"][ATTR_DISCOVERY_PAYLOAD] = discovery_payload
+    return entity_info
 
 
 def remove_entity_data(hass, entity_id):

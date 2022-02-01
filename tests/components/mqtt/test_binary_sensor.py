@@ -875,8 +875,8 @@ async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
     await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
 
 
-async def test_cleanup_triggers(hass, mqtt_mock, caplog, tmp_path):
-    """Test cleanup old triggers at reloading."""
+async def test_cleanup_triggers_and_restoring_state(hass, mqtt_mock, caplog, tmp_path):
+    """Test cleanup old triggers at reloading and restoring the state."""
     domain = binary_sensor.DOMAIN
     config = copy.deepcopy(DEFAULT_CONFIG[domain])
     config["expire_after"] = 10
@@ -892,9 +892,10 @@ async def test_cleanup_triggers(hass, mqtt_mock, caplog, tmp_path):
 
     await help_test_reload_with_config(hass, caplog, tmp_path, domain, config)
     assert "Clean up expire after trigger for binary_sensor.test" in caplog.text
+    assert "State recovered after reload for binary_sensor.test" in caplog.text
 
     state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == "on"
 
     async_fire_mqtt_message(hass, "test-topic", "OFF")
     state = hass.states.get("binary_sensor.test")

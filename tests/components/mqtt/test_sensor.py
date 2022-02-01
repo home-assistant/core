@@ -953,9 +953,10 @@ async def test_cleanup_triggers(hass, mqtt_mock, caplog, tmp_path):
 
     await help_test_reload_with_config(hass, caplog, tmp_path, domain, config)
     assert "Clean up expire after trigger for sensor.test" in caplog.text
+    assert "State recovered after reload for sensor.test" in caplog.text
 
     state = hass.states.get("sensor.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == "100"
 
     async_fire_mqtt_message(hass, "test-topic", "101")
     state = hass.states.get("sensor.test")
