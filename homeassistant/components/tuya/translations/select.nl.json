@@ -23,6 +23,7 @@
             "1": "Hoge gevoeligheid"
         },
         "tuya__fan_angle": {
+            "30": "30\u00b0",
             "60": "60\u00b0",
             "90": "90\u00b0"
         },
@@ -62,17 +63,22 @@
             "power_on": "Aan"
         },
         "tuya__vacuum_cistern": {
+            "closed": "Gesloten",
+            "high": "Hoog",
             "low": "Laag",
             "middle": "Midden"
         },
         "tuya__vacuum_collection": {
+            "large": "Groot",
             "middle": "Midden",
             "small": "Klein"
         },
         "tuya__vacuum_mode": {
             "bow": "Boog",
+            "chargego": "Keer terug naar dock",
             "left_bow": "Boog links",
             "left_spiral": "Spiraal links",
+            "mop": "Dweil",
             "part": "Deel",
             "partial_bow": "Boog gedeeltelijk",
             "pick_zone": "Kies zone",
@@ -84,6 +90,7 @@
             "single": "Enkel",
             "smart": "Smart",
             "spiral": "Spiraal",
+            "standby": "Stand-by",
             "wall_follow": "Volg muur",
             "zone": "Zone"
         }

@@ -12,7 +12,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Hostnaam (of IP-adres van uw Twinkly apparaat"
+                    "host": "Host"
                 },
                 "description": "Uw Twinkly LED-string instellen",
                 "title": "Twinkly"
