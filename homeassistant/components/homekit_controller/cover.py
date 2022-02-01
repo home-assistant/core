@@ -80,7 +80,7 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverEntity):
         return SUPPORT_OPEN | SUPPORT_CLOSE
 
     @property
-    def _state(self) -> str | None:
+    def _state(self) -> str:
         """Return the current state of the garage door."""
         value = self.service.value(CharacteristicsTypes.DOOR_STATE_CURRENT)
         return CURRENT_GARAGE_STATE_MAP[value]
@@ -163,7 +163,7 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
         return features
 
     @property
-    def current_cover_position(self) -> int | None:
+    def current_cover_position(self) -> int:
         """Return the current position of cover."""
         return self.service.value(CharacteristicsTypes.POSITION_CURRENT)
 
@@ -201,7 +201,7 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
         )
 
     @property
-    def current_cover_tilt_position(self) -> int | None:
+    def current_cover_tilt_position(self) -> int:
         """Return current position of cover tilt."""
         tilt_position = self.service.value(CharacteristicsTypes.VERTICAL_TILT_CURRENT)
         if not tilt_position:

@@ -61,7 +61,7 @@ class HomeKitSwitch(HomeKitEntity, SwitchEntity):
         return [CharacteristicsTypes.ON, CharacteristicsTypes.OUTLET_IN_USE]
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self.service.value(CharacteristicsTypes.ON)
 

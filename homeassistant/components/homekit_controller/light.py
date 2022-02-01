@@ -61,12 +61,12 @@ class HomeKitLight(HomeKitEntity, LightEntity):
         return self.service.value(CharacteristicsTypes.ON)
 
     @property
-    def brightness(self) -> int | None:
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return self.service.value(CharacteristicsTypes.BRIGHTNESS) * 255 / 100
 
     @property
-    def hs_color(self) -> tuple[float, float] | None:
+    def hs_color(self) -> tuple[float, float]:
         """Return the color property."""
         return (
             self.service.value(CharacteristicsTypes.HUE),
@@ -74,7 +74,7 @@ class HomeKitLight(HomeKitEntity, LightEntity):
         )
 
     @property
-    def color_temp(self) -> int | None:
+    def color_temp(self) -> int:
         """Return the color temperature."""
         return self.service.value(CharacteristicsTypes.COLOR_TEMPERATURE)
 

@@ -28,7 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.helpers.typing import ConfigType
 
 from . import KNOWN_DEVICES, CharacteristicEntity, HomeKitEntity
 from .connection import HKDevice
@@ -215,7 +215,7 @@ class HomeKitHumiditySensor(HomeKitEntity, SensorEntity):
         return f"{super().name} Humidity"
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> float:
         """Return the current humidity."""
         return self.service.value(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT)
 
@@ -236,7 +236,7 @@ class HomeKitTemperatureSensor(HomeKitEntity, SensorEntity):
         return f"{super().name} Temperature"
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> float:
         """Return the current temperature in Celsius."""
         return self.service.value(CharacteristicsTypes.TEMPERATURE_CURRENT)
 
@@ -257,7 +257,7 @@ class HomeKitLightSensor(HomeKitEntity, SensorEntity):
         return f"{super().name} Light Level"
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> int:
         """Return the current light level in lux."""
         return self.service.value(CharacteristicsTypes.LIGHT_LEVEL_CURRENT)
 
@@ -278,7 +278,7 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity, SensorEntity):
         return f"{super().name} CO2"
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> int:
         """Return the current CO2 level in ppm."""
         return self.service.value(CharacteristicsTypes.CARBON_DIOXIDE_LEVEL)
 
@@ -338,7 +338,7 @@ class HomeKitBatterySensor(HomeKitEntity, SensorEntity):
         return self.service.value(CharacteristicsTypes.CHARGING_STATE) == 1
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> int:
         """Return the current battery level percentage."""
         return self.service.value(CharacteristicsTypes.BATTERY_LEVEL)
 
@@ -377,7 +377,7 @@ class SimpleSensor(CharacteristicEntity, SensorEntity):
         return f"{super().name} {self.entity_description.name}"
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> str | int | float:
         """Return the current sensor value."""
         return self._char.value
 

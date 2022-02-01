@@ -166,7 +166,7 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         )
 
     @property
-    def current_temperature(self) -> float | None:
+    def current_temperature(self) -> float:
         """Return the current temperature."""
         return self.service.value(CharacteristicsTypes.TEMPERATURE_CURRENT)
 
@@ -281,7 +281,7 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         return modes
 
     @property
-    def swing_mode(self) -> str | None:
+    def swing_mode(self) -> str:
         """Return the swing setting.
 
         Requires SUPPORT_SWING_MODE.
@@ -290,7 +290,7 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         return SWING_MODE_HOMEKIT_TO_HASS[value]
 
     @property
-    def swing_modes(self) -> list[str] | None:
+    def swing_modes(self) -> list[str]:
         """Return the list of available swing modes.
 
         Requires SUPPORT_SWING_MODE.
@@ -483,12 +483,12 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
         return super().max_temp
 
     @property
-    def current_humidity(self) -> int | None:
+    def current_humidity(self) -> int:
         """Return the current humidity."""
         return self.service.value(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT)
 
     @property
-    def target_humidity(self) -> int | None:
+    def target_humidity(self) -> int:
         """Return the humidity we try to reach."""
         return self.service.value(CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET)
 

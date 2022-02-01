@@ -51,7 +51,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         return self.service.value(self.on_characteristic) == 1
 
     @property
-    def percentage(self) -> int | None:
+    def percentage(self) -> int:
         """Return the current speed percentage."""
         if not self.is_on:
             return 0
@@ -59,13 +59,13 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         return self.service.value(CharacteristicsTypes.ROTATION_SPEED)
 
     @property
-    def current_direction(self) -> str | None:
+    def current_direction(self) -> str:
         """Return the current direction of the fan."""
         direction = self.service.value(CharacteristicsTypes.ROTATION_DIRECTION)
         return HK_DIRECTION_TO_HA[direction]
 
     @property
-    def oscillating(self) -> bool | None:
+    def oscillating(self) -> bool:
         """Return whether or not the fan is currently oscillating."""
         oscillating = self.service.value(CharacteristicsTypes.SWING_MODE)
         return oscillating == 1

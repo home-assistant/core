@@ -25,7 +25,7 @@ class HomeKitMotionSensor(HomeKitEntity, BinarySensorEntity):
         return [CharacteristicsTypes.MOTION_DETECTED]
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Has motion been detected."""
         return self.service.value(CharacteristicsTypes.MOTION_DETECTED) is True
 
@@ -40,7 +40,7 @@ class HomeKitContactSensor(HomeKitEntity, BinarySensorEntity):
         return [CharacteristicsTypes.CONTACT_STATE]
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on/open."""
         return self.service.value(CharacteristicsTypes.CONTACT_STATE) == 1
 
@@ -55,7 +55,7 @@ class HomeKitSmokeSensor(HomeKitEntity, BinarySensorEntity):
         return [CharacteristicsTypes.SMOKE_DETECTED]
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if smoke is currently detected."""
         return self.service.value(CharacteristicsTypes.SMOKE_DETECTED) == 1
 
@@ -70,7 +70,7 @@ class HomeKitCarbonMonoxideSensor(HomeKitEntity, BinarySensorEntity):
         return [CharacteristicsTypes.CARBON_MONOXIDE_DETECTED]
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if CO is currently detected."""
         return self.service.value(CharacteristicsTypes.CARBON_MONOXIDE_DETECTED) == 1
 
@@ -85,7 +85,7 @@ class HomeKitOccupancySensor(HomeKitEntity, BinarySensorEntity):
         return [CharacteristicsTypes.OCCUPANCY_DETECTED]
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if occupancy is currently detected."""
         return self.service.value(CharacteristicsTypes.OCCUPANCY_DETECTED) == 1
 
@@ -100,7 +100,7 @@ class HomeKitLeakSensor(HomeKitEntity, BinarySensorEntity):
         return [CharacteristicsTypes.LEAK_DETECTED]
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if a leak is detected from the binary sensor."""
         return self.service.value(CharacteristicsTypes.LEAK_DETECTED) == 1
 
