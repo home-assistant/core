@@ -11,7 +11,6 @@ from aiohomekit.exceptions import (
 from aiohomekit.model import Accessories, Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
-from aiohomekit.uuid import normalize_uuid
 
 from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.core import callback
@@ -493,21 +492,16 @@ class HKDevice:
     async def async_load_platforms(self):
         """Load any platforms needed by this HomeKit device."""
         tasks = []
-        for accessory in self.accessories:
-            for service in accessory["services"]:
-                try:
-                    stype = normalize_uuid(service["type"])
-                except KeyError:
-                    stype = service["type"].upper()
-
-                if stype in HOMEKIT_ACCESSORY_DISPATCH:
-                    platform = HOMEKIT_ACCESSORY_DISPATCH[stype]
+        for accessory in self.entity_map.accessories:
+            for service in accessory.services:
+                if service.type in HOMEKIT_ACCESSORY_DISPATCH:
+                    platform = HOMEKIT_ACCESSORY_DISPATCH[service.type]
                     if platform not in self.platforms:
                         tasks.append(self.async_load_platform(platform))
 
-                for char in service["characteristics"]:
-                    if char["type"].upper() in CHARACTERISTIC_PLATFORMS:
-                        platform = CHARACTERISTIC_PLATFORMS[char["type"].upper()]
+                for char in service.characteristics:
+                    if char.type in CHARACTERISTIC_PLATFORMS:
+                        platform = CHARACTERISTIC_PLATFORMS[char.type]
                         if platform not in self.platforms:
                             tasks.append(self.async_load_platform(platform))
 
