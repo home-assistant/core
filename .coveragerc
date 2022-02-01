@@ -407,7 +407,6 @@ omit =
     homeassistant/components/goodwe/number.py
     homeassistant/components/goodwe/select.py
     homeassistant/components/goodwe/sensor.py
-    homeassistant/components/google/__init__.py
     homeassistant/components/google_cloud/tts.py
     homeassistant/components/google_maps/device_tracker.py
     homeassistant/components/google_pubsub/__init__.py
@@ -464,6 +463,7 @@ omit =
     homeassistant/components/homematic/*
     homeassistant/components/home_plus_control/api.py
     homeassistant/components/home_plus_control/switch.py
+    homeassistant/components/homewizard/diagnostics.py
     homeassistant/components/homeworks/*
     homeassistant/components/honeywell/__init__.py
     homeassistant/components/honeywell/climate.py

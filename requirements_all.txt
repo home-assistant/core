@@ -191,7 +191,7 @@ aiohomekit==0.7.0
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==3.0.11
+aiohue==4.0.1
 
 # homeassistant.components.homewizard
 aiohwenergy==0.8.0

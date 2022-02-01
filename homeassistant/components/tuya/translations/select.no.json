@@ -10,6 +10,14 @@
             "1": "Av",
             "2": "P\u00e5"
         },
+        "tuya__curtain_mode": {
+            "morning": "Morgen",
+            "night": "Natt"
+        },
+        "tuya__curtain_motor_mode": {
+            "back": "Tilbake",
+            "forward": "Framover"
+        },
         "tuya__decibel_sensitivity": {
             "0": "Lav f\u00f8lsomhet",
             "1": "H\u00f8y f\u00f8lsomhet"

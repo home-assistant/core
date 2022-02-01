@@ -21,7 +21,8 @@
             "service": {
                 "data": {
                     "services": "Services"
-                }
+                },
+                "title": "Selecteer Services"
             },
             "user": {
                 "data": {

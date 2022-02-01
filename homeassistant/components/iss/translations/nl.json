@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "latitude_longitude_not_defined": "Breedte- en lengtegraad zijn niet gedefinieerd in Home Assistant.",
             "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
         },
         "step": {
