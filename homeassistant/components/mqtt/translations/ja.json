@@ -22,7 +22,7 @@
                 "data": {
                     "discovery": "\u691c\u51fa\u3092\u6709\u52b9\u306b\u3059\u308b"
                 },
-                "description": "\u30a2\u30c9\u30aa\u30f3 {addon} \u304c\u3001\u63d0\u4f9b\u3059\u308bMQTT broker\u306b\u63a5\u7d9a\u3059\u308b\u3088\u3046\u306bHome Assistant\u3092\u8a2d\u5b9a\u3057\u307e\u3059\u304b\uff1f",
+                "description": "\u30a2\u30c9\u30aa\u30f3: {addon} \u306b\u3088\u3063\u3066\u63d0\u4f9b\u3055\u308c\u308b\u3001MQTT broker\u306b\u63a5\u7d9a\u3059\u308b\u3088\u3046\u306bHome Assistant\u306e\u8a2d\u5b9a\u3092\u3057\u307e\u3059\u304b\uff1f",
                 "title": "Home Assistant\u30a2\u30c9\u30aa\u30f3\u3092\u4ecb\u3057\u305fMQTT Broker"
             }
         }
@@ -41,9 +41,11 @@
         "trigger_type": {
             "button_double_press": "\"{subtype}\" \u30c0\u30d6\u30eb\u30af\u30ea\u30c3\u30af",
             "button_long_press": "\"{subtype}\" \u304c\u3001\u7d99\u7d9a\u7684\u306b\u62bc\u3055\u308c\u305f",
+            "button_long_release": "\"{subtype}\" \u306f\u9577\u62bc\u3057\u5f8c\u306b\u30ea\u30ea\u30fc\u30b9\u3055\u308c\u307e\u3057\u305f",
             "button_quadruple_press": "\"{subtype}\" 4\u56de(quadruple)\u30af\u30ea\u30c3\u30af",
             "button_quintuple_press": "\"{subtype}\" 5\u56de(quintuple)\u30af\u30ea\u30c3\u30af",
             "button_short_press": "\"{subtype}\" \u304c\u3001\u62bc\u3055\u308c\u307e\u3057\u305f",
+            "button_short_release": "\"{subtype}\" \u30ea\u30ea\u30fc\u30b9",
             "button_triple_press": "\"{subtype}\" 3\u56de\u30af\u30ea\u30c3\u30af"
         }
     },

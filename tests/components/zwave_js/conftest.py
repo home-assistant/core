@@ -919,6 +919,14 @@ def fortrezz_ssa1_siren_fixture(client, fortrezz_ssa1_siren_state):
     return node
 
 
+@pytest.fixture(name="fortrezz_ssa3_siren")
+def fortrezz_ssa3_siren_fixture(client, fortrezz_ssa3_siren_state):
+    """Mock a fortrezz ssa3 siren node."""
+    node = Node(client, copy.deepcopy(fortrezz_ssa3_siren_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="firmware_file")
 def firmware_file_fixture():
     """Return mock firmware file stream."""

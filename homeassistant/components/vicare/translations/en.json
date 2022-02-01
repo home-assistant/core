@@ -11,15 +11,15 @@
         "step": {
             "user": {
                 "data": {
-                    "name": "Name",
-                    "scan_interval": "Scan Interval (seconds)",
                     "client_id": "API Key",
                     "heating_type": "Heating type",
+                    "name": "Name",
                     "password": "Password",
+                    "scan_interval": "Scan Interval (seconds)",
                     "username": "Email"
                 },
-                "title": "{name}",
-                "description": "Set up ViCare integration. To generate API key go to https://developer.viessmann.com"
+                "description": "Set up ViCare integration. To generate API key go to https://developer.viessmann.com",
+                "title": "{name}"
             }
         }
     }

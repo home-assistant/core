@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import cast
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 from tuya_iot.device import TuyaDeviceStatusRange
@@ -29,11 +28,12 @@ from homeassistant.helpers.typing import StateType
 from . import HomeAssistantTuyaData
 from .base import ElectricityTypeData, EnumTypeData, IntegerTypeData, TuyaEntity
 from .const import (
-    DEVICE_CLASS_TUYA_STATUS,
     DEVICE_CLASS_UNITS,
     DOMAIN,
     TUYA_DISCOVERY_NEW,
     DPCode,
+    DPType,
+    TuyaDeviceClass,
     UnitOfMeasurement,
 )
 
@@ -100,7 +100,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.STATUS,
             name="Status",
-            device_class=DEVICE_CLASS_TUYA_STATUS,
+            device_class=TuyaDeviceClass.STATUS,
         ),
     ),
     # CO2 Detector
@@ -136,6 +136,16 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
         *BATTERY_SENSORS,
+    ),
+    # Smart Pet Feeder
+    # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
+    "cwwsq": (
+        TuyaSensorEntityDescription(
+            key=DPCode.FEED_REPORT,
+            name="Last Amount",
+            icon="mdi:counter",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
     ),
     # Air Quality Monitor
     # No specification on Tuya portal
@@ -579,6 +589,88 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             subkey="voltage",
         ),
     ),
+    # Circuit Breaker
+    # https://developer.tuya.com/en/docs/iot/dlq?id=Kb0kidk9enyh8
+    "dlq": (
+        TuyaSensorEntityDescription(
+            key=DPCode.TOTAL_FORWARD_ENERGY,
+            name="Total Energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PHASE_A,
+            name="Phase A Current",
+            device_class=SensorDeviceClass.CURRENT,
+            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            state_class=SensorStateClass.MEASUREMENT,
+            subkey="electriccurrent",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PHASE_A,
+            name="Phase A Power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=POWER_KILO_WATT,
+            subkey="power",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PHASE_A,
+            name="Phase A Voltage",
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            subkey="voltage",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PHASE_B,
+            name="Phase B Current",
+            device_class=SensorDeviceClass.CURRENT,
+            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            state_class=SensorStateClass.MEASUREMENT,
+            subkey="electriccurrent",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PHASE_B,
+            name="Phase B Power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=POWER_KILO_WATT,
+            subkey="power",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PHASE_B,
+            name="Phase B Voltage",
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            subkey="voltage",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PHASE_C,
+            name="Phase C Current",
+            device_class=SensorDeviceClass.CURRENT,
+            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            state_class=SensorStateClass.MEASUREMENT,
+            subkey="electriccurrent",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PHASE_C,
+            name="Phase C Power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=POWER_KILO_WATT,
+            subkey="power",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PHASE_C,
+            name="Phase C Voltage",
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            subkey="voltage",
+        ),
+    ),
     # Robot Vacuum
     # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
     "sd": (
@@ -662,10 +754,7 @@ async def async_setup_entry(
             device = hass_data.device_manager.device_map[device_id]
             if descriptions := SENSORS.get(device.category):
                 for description in descriptions:
-                    if (
-                        description.key in device.function
-                        or description.key in device.status
-                    ):
+                    if description.key in device.status:
                         entities.append(
                             TuyaSensorEntity(
                                 device, hass_data.device_manager, description
@@ -687,6 +776,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
     entity_description: TuyaSensorEntityDescription
 
     _status_range: TuyaDeviceStatusRange | None = None
+    _type: DPType | None = None
     _type_data: IntegerTypeData | EnumTypeData | None = None
     _uom: UnitOfMeasurement | None = None
 
@@ -703,19 +793,18 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             f"{super().unique_id}{description.key}{description.subkey or ''}"
         )
 
-        if status_range := device.status_range.get(description.key):
-            self._status_range = cast(TuyaDeviceStatusRange, status_range)
-
-            # Extract type data from integer status range,
-            # and determine unit of measurement
-            if self._status_range.type == "Integer":
-                self._type_data = IntegerTypeData.from_json(self._status_range.values)
-                if description.native_unit_of_measurement is None:
-                    self._attr_native_unit_of_measurement = self._type_data.unit
-
-            # Extract type data from enum status range
-            elif self._status_range.type == "Enum":
-                self._type_data = EnumTypeData.from_json(self._status_range.values)
+        if int_type := self.find_dpcode(description.key, dptype=DPType.INTEGER):
+            self._type_data = int_type
+            self._type = DPType.INTEGER
+            if description.native_unit_of_measurement is None:
+                self._attr_native_unit_of_measurement = int_type.unit
+        elif enum_type := self.find_dpcode(
+            description.key, dptype=DPType.ENUM, prefer_function=True
+        ):
+            self._type_data = enum_type
+            self._type = DPType.ENUM
+        else:
+            self._type = self.get_dptype(DPCode(description.key))
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
@@ -752,12 +841,13 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        # Unknown or unsupported data type
-        if self._status_range is None or self._status_range.type not in (
-            "Integer",
-            "String",
-            "Enum",
-            "Json",
+        # Only continue if data type is known
+        if self._type not in (
+            DPType.INTEGER,
+            DPType.STRING,
+            DPType.ENUM,
+            DPType.JSON,
+            DPType.RAW,
         ):
             return None
 
@@ -781,10 +871,16 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             return None
 
         # Get subkey value from Json string.
-        if self._status_range.type == "Json":
+        if self._type is DPType.JSON:
             if self.entity_description.subkey is None:
                 return None
             values = ElectricityTypeData.from_json(value)
+            return getattr(values, self.entity_description.subkey)
+
+        if self._type is DPType.RAW:
+            if self.entity_description.subkey is None:
+                return None
+            values = ElectricityTypeData.from_raw(value)
             return getattr(values, self.entity_description.subkey)
 
         # Valid string or enum value

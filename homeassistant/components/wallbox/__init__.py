@@ -4,26 +4,40 @@ from __future__ import annotations
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import requests
 from wallbox import Wallbox
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
-from .const import CONF_DATA_KEY, CONF_MAX_CHARGING_CURRENT_KEY, CONF_STATION, DOMAIN
+from ...helpers.entity import DeviceInfo
+from .const import (
+    CONF_CURRENT_VERSION_KEY,
+    CONF_DATA_KEY,
+    CONF_MAX_CHARGING_CURRENT_KEY,
+    CONF_NAME_KEY,
+    CONF_PART_NUMBER_KEY,
+    CONF_SERIAL_NUMBER_KEY,
+    CONF_SOFTWARE_KEY,
+    CONF_STATION,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor", "number"]
+PLATFORMS = [Platform.SENSOR, Platform.NUMBER]
 UPDATE_INTERVAL = 30
 
 
-class WallboxCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
+class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Wallbox Coordinator class."""
 
     def __init__(self, station: str, wallbox: Wallbox, hass: HomeAssistant) -> None:
@@ -132,3 +146,24 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class WallboxEntity(CoordinatorEntity):
+    """Defines a base Wallbox entity."""
+
+    coordinator: WallboxCoordinator
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information about this Wallbox device."""
+        return DeviceInfo(
+            identifiers={
+                (DOMAIN, self.coordinator.data[CONF_DATA_KEY][CONF_SERIAL_NUMBER_KEY])
+            },
+            name=f"Wallbox - {self.coordinator.data[CONF_NAME_KEY]}",
+            manufacturer="Wallbox",
+            model=self.coordinator.data[CONF_DATA_KEY][CONF_PART_NUMBER_KEY],
+            sw_version=self.coordinator.data[CONF_DATA_KEY][CONF_SOFTWARE_KEY][
+                CONF_CURRENT_VERSION_KEY
+            ],
+        )

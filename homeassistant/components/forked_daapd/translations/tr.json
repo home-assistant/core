@@ -16,7 +16,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Ana bilgisayar",
+                    "host": "Sunucu",
                     "name": "Kolay Ad\u0131",
                     "password": "API parolas\u0131 (parola yoksa bo\u015f b\u0131rak\u0131n)",
                     "port": "API Port"

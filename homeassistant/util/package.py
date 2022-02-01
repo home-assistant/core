@@ -50,7 +50,9 @@ def is_installed(package: str) -> bool:
         # was aborted while in progress see
         # https://github.com/home-assistant/core/issues/47699
         if installed_version is None:
-            _LOGGER.error("Installed version for %s resolved to None", req.project_name)  # type: ignore
+            _LOGGER.error(
+                "Installed version for %s resolved to None", req.project_name
+            )  # type: ignore
             return False
         return installed_version in req
     except PackageNotFoundError:
@@ -100,17 +102,15 @@ def install_package(
         args += ["--constraint", constraints]
     if find_links is not None:
         args += ["--find-links", find_links, "--prefer-binary"]
-
     # AIS dom don't install in deps dir <config>/deps
     # if target:
     #     assert not is_virtual_env()
     #     # This only works if not running in venv
     #     args += ["--user"]
     #     env["PYTHONUSERBASE"] = os.path.abspath(target)
-    #     if sys.platform != "win32":
-    #         # Workaround for incompatible prefix setting
-    #         # See http://stackoverflow.com/a/4495175
-    #         args += ["--prefix="]
+    #     # Workaround for incompatible prefix setting
+    #     # See http://stackoverflow.com/a/4495175
+    #     args += ["--prefix="]
     # _LOGGER.debug("Running pip command: args=%s", args)
     with Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env) as process:
         _, stderr = process.communicate()

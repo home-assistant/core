@@ -5,30 +5,24 @@ from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_HEAT,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_PROBLEM,
-    DEVICE_CLASS_SAFETY,
-    DEVICE_CLASS_SMOKE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .devolo_device import DevoloDeviceEntity
 
 DEVICE_CLASS_MAPPING = {
-    "Water alarm": DEVICE_CLASS_MOISTURE,
-    "Home Security": DEVICE_CLASS_MOTION,
-    "Smoke Alarm": DEVICE_CLASS_SMOKE,
-    "Heat Alarm": DEVICE_CLASS_HEAT,
-    "door": DEVICE_CLASS_DOOR,
-    "overload": DEVICE_CLASS_SAFETY,
+    "Water alarm": BinarySensorDeviceClass.MOISTURE,
+    "Home Security": BinarySensorDeviceClass.MOTION,
+    "Smoke Alarm": BinarySensorDeviceClass.SMOKE,
+    "Heat Alarm": BinarySensorDeviceClass.HEAT,
+    "door": BinarySensorDeviceClass.DOOR,
+    "overload": BinarySensorDeviceClass.SAFETY,
 }
 
 
@@ -62,7 +56,7 @@ async def async_setup_entry(
                                 key=index,
                             )
                         )
-    async_add_entities(entities, False)
+    async_add_entities(entities)
 
 
 class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
@@ -95,12 +89,12 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
 
         self._value = self._binary_sensor_property.state
 
-        if self._attr_device_class == DEVICE_CLASS_SAFETY:
-            self._attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+        if self._attr_device_class == BinarySensorDeviceClass.SAFETY:
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
         if element_uid.startswith("devolo.WarningBinaryFI:"):
-            self._attr_device_class = DEVICE_CLASS_PROBLEM
-            self._attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+            self._attr_device_class = BinarySensorDeviceClass.PROBLEM
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
             self._attr_entity_registry_enabled_default = False
 
     @property

@@ -1,4 +1,6 @@
 """Support for Fibaro lights."""
+from __future__ import annotations
+
 import asyncio
 from functools import partial
 
@@ -13,6 +15,9 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import CONF_WHITE_VALUE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
 from . import CONF_COLOR, CONF_DIMMING, CONF_RESET_COLOR, FIBARO_DEVICES, FibaroDevice
@@ -43,7 +48,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Perform the setup for Fibaro controller devices."""
     if discovery_info is None:
         return
@@ -153,10 +163,7 @@ class FibaroLight(FibaroDevice, LightEntity):
             self._color = kwargs.get(ATTR_HS_COLOR, self._color)
             rgb = color_util.color_hs_to_RGB(*self._color)
             self.call_set_color(
-                round(rgb[0]),
-                round(rgb[1]),
-                round(rgb[2]),
-                round(self._white),
+                round(rgb[0]), round(rgb[1]), round(rgb[2]), round(self._white)
             )
 
             if self.state == "off":

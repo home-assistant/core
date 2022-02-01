@@ -18,6 +18,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import State
 
@@ -141,7 +142,7 @@ async def test_all_binary_sensor(hass, expected, mock_do_cycle):
         (
             [0x00],
             True,
-            STATE_OFF,
+            STATE_UNKNOWN,
             STATE_UNAVAILABLE,
         ),
     ],

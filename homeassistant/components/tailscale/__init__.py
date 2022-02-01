@@ -3,9 +3,8 @@ from __future__ import annotations
 
 from tailscale import Device as TailscaleDevice
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
@@ -17,7 +16,7 @@ from homeassistant.helpers.update_coordinator import (
 from .const import DOMAIN
 from .coordinator import TailscaleDataUpdateCoordinator
 
-PLATFORMS = (BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN)
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -53,7 +52,8 @@ class TailscaleEntity(CoordinatorEntity):
         super().__init__(coordinator=coordinator)
         self.entity_description = description
         self.device_id = device.device_id
-        self._attr_name = f"{device.hostname} {description.name}"
+        self.friendly_name = device.name.split(".")[0]
+        self._attr_name = f"{self.friendly_name} {description.name}"
         self._attr_unique_id = f"{device.device_id}_{description.key}"
 
     @property
@@ -71,6 +71,6 @@ class TailscaleEntity(CoordinatorEntity):
             identifiers={(DOMAIN, device.device_id)},
             manufacturer="Tailscale Inc.",
             model=device.os,
-            name=device.hostname,
+            name=self.friendly_name,
             sw_version=device.client_version,
         )

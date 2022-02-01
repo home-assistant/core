@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Final
 
 import voluptuous as vol
 
@@ -31,7 +31,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -48,11 +48,11 @@ if TYPE_CHECKING:
         FroniusStorageUpdateCoordinator,
     )
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
-ELECTRIC_CHARGE_AMPERE_HOURS = "Ah"
-ENERGY_VOLT_AMPERE_REACTIVE_HOUR = "varh"
-POWER_VOLT_AMPERE_REACTIVE = "var"
+ELECTRIC_CHARGE_AMPERE_HOURS: Final = "Ah"
+ENERGY_VOLT_AMPERE_REACTIVE_HOUR: Final = "varh"
+POWER_VOLT_AMPERE_REACTIVE: Final = "var"
 
 PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
@@ -68,7 +68,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import Fronius configuration from yaml."""
     _LOGGER.warning(
@@ -148,7 +148,7 @@ INVERTER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="current_ac",
-        name="AC Current",
+        name="AC current",
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -163,7 +163,7 @@ INVERTER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="current_dc_2",
-        name="DC Current 2",
+        name="DC current 2",
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,

@@ -1,8 +1,8 @@
 """Common test tools."""
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
-from typing import Awaitable, Callable, cast
+from collections.abc import AsyncGenerator, Awaitable, Callable
+from typing import cast
 from unittest.mock import patch
 
 import pytest

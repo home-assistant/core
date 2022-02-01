@@ -6,6 +6,7 @@ import serial.tools.list_ports
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.rfxtrx import DOMAIN, config_flow
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -367,7 +368,7 @@ async def test_options_add_device(hass):
 
     state = hass.states.get("binary_sensor.ac_213c7f2_48")
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "AC 213c7f2:48"
 
 
@@ -456,7 +457,7 @@ async def test_options_add_remove_device(hass):
 
     state = hass.states.get("binary_sensor.ac_213c7f2_48")
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "AC 213c7f2:48"
 
     device_registry = dr.async_get(hass)
@@ -900,7 +901,7 @@ async def test_options_add_and_configure_device(hass):
 
     state = hass.states.get("binary_sensor.pt2262_22670e")
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "PT2262 22670e"
 
     device_registry = dr.async_get(hass)

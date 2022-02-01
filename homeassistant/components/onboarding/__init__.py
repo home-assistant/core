@@ -1,6 +1,9 @@
 """Support to help onboard new users."""
-from homeassistant.core import callback
+from typing import TYPE_CHECKING
+
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from . import views
@@ -36,7 +39,7 @@ class OnboadingStorage(Store):
 
 @bind_hass
 @callback
-def async_is_onboarded(hass):
+def async_is_onboarded(hass: HomeAssistant) -> bool:
     """Return if Home Assistant has been onboarded."""
     data = hass.data.get(DOMAIN)
     return data is None or data is True
@@ -44,12 +47,12 @@ def async_is_onboarded(hass):
 
 @bind_hass
 @callback
-def async_is_user_onboarded(hass):
+def async_is_user_onboarded(hass: HomeAssistant) -> bool:
     """Return if a user has been created as part of onboarding."""
     return async_is_onboarded(hass) or STEP_USER in hass.data[DOMAIN]["done"]
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the onboarding component."""
     store = OnboadingStorage(hass, STORAGE_VERSION, STORAGE_KEY, private=True)
     if (data := await store.async_load()) is None:
@@ -61,6 +64,8 @@ async def async_setup(hass, config):
     # ais no auto done analytics step
     if STEP_ANALYTICS not in data["done"]:
         data["done"].append(STEP_ANALYTICS)
+    if TYPE_CHECKING:
+        assert isinstance(data, dict)
 
     if STEP_USER not in data["done"]:
         # Users can already have created an owner account via the command line

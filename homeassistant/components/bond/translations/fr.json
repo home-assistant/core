@@ -9,7 +9,7 @@
             "old_firmware": "Ancien micrologiciel non pris en charge sur l'appareil Bond - veuillez mettre \u00e0 niveau avant de continuer",
             "unknown": "Erreur inattendue"
         },
-        "flow_title": "Lien : {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "confirm": {
                 "data": {

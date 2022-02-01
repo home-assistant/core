@@ -9,8 +9,7 @@ import getmac
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
-from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -19,8 +18,10 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -50,7 +51,7 @@ def ensure_unique_hosts(value: dict[Any, Any]) -> dict[Any, Any]:
     return value
 
 
-PLATFORMS = [MP_DOMAIN]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 CONFIG_SCHEMA = vol.Schema(
     {

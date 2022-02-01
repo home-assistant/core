@@ -13,6 +13,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 import homeassistant.core as ha
 import homeassistant.util.dt as dt_util
@@ -53,7 +54,7 @@ async def test_default_setup(hass, monkeypatch):
     # test default state of sensor loaded from config
     config_sensor = hass.states.get("binary_sensor.test")
     assert config_sensor
-    assert config_sensor.state == STATE_OFF
+    assert config_sensor.state == STATE_UNKNOWN
     assert config_sensor.attributes["device_class"] == "door"
 
     # test on event for config sensor
@@ -95,7 +96,7 @@ async def test_entity_availability(hass, monkeypatch):
     )
 
     # Entities are available by default
-    assert hass.states.get("binary_sensor.test").state == STATE_OFF
+    assert hass.states.get("binary_sensor.test").state == STATE_UNKNOWN
 
     # Mock a disconnect of the Rflink device
     disconnect_callback()
@@ -113,7 +114,7 @@ async def test_entity_availability(hass, monkeypatch):
     await hass.async_block_till_done()
 
     # Entities should be available again
-    assert hass.states.get("binary_sensor.test").state == STATE_OFF
+    assert hass.states.get("binary_sensor.test").state == STATE_UNKNOWN
 
 
 async def test_off_delay(hass, legacy_patchable_time, monkeypatch):

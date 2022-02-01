@@ -1,4 +1,6 @@
 """Support for IntesisHome and airconwithme Smart AC Controllers."""
+from __future__ import annotations
+
 import logging
 from random import randrange
 from typing import NamedTuple
@@ -34,10 +36,13 @@ from homeassistant.const import (
     CONF_USERNAME,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,7 +103,12 @@ MAP_STATE_ICONS = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Create the IntesisHome climate devices."""
     ih_user = config[CONF_USERNAME]
     ih_pass = config[CONF_PASSWORD]
