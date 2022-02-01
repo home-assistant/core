@@ -53,10 +53,13 @@ class EditAutomationConfigView(EditIdBasedConfigView):
         """Set value."""
         updated_value = {CONF_ID: config_key}
 
-        for key in ("id", "alias", "description", "trigger", "condition", "action"):
+        # Iterate through some keys that we want to have ordered in the output
+        for key in ("alias", "description", "trigger", "condition", "action"):
             if key in new_value:
                 updated_value[key] = new_value[key]
 
+        # We cover all current fields above, but just in case we start
+        # supporting more fields in the future.
         updated_value.update(new_value)
 
         updated = False
