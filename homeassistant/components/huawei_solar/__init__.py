@@ -30,6 +30,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Huawei Solar from a config entry."""
 
     try:
+        # Multiple inverters can be connected to each other via a daisy chain,
+        # via an internal modbus-network (ie. not the same modbus network that we are
+        # using to talk to the inverter).
+        #
+        # Each inverter receives it's own 'slave id' in that case.
+        # The inverter that we use as 'gateway' will then forward the request to
+        # the proper inverter.
+
+        #               ┌─────────────┐
+        #               │  EXTERNAL   │
+        #               │ APPLICATION │
+        #               └──────┬──────┘
+        #                      │
+        #                 ┌────┴────┐
+        #                 │PRIMARY  │
+        #                 │INVERTER │
+        #                 └────┬────┘
+        #       ┌──────────────┼───────────────┐
+        #       │              │               │
+        #  ┌────┴────┐     ┌───┴─────┐    ┌────┴────┐
+        #  │ SLAVE X │     │ SLAVE Y │    │SLAVE ...│
+        #  └─────────┘     └─────────┘    └─────────┘
+
         primary_bridge = await HuaweiSolarBridge.create(
             host=entry.data[CONF_HOST],
             port=entry.data[CONF_PORT],

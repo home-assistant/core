@@ -1,4 +1,4 @@
-"""Test the Fronius config flow."""
+"""Test the Huawei Solar config flow."""
 from unittest.mock import Mock, patch
 
 from huawei_solar import (
@@ -23,7 +23,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant) -> None:
-    """Test manual device add with default pin."""
+    """Test the 'happy path' setup flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -59,7 +59,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 async def test_form_connection_error(hass: HomeAssistant) -> None:
-    """Test manual device add with default pin."""
+    """Test config flow where we receive a connection exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -81,7 +81,7 @@ async def test_form_connection_error(hass: HomeAssistant) -> None:
 
 
 async def test_form_read_error(hass: HomeAssistant) -> None:
-    """Test manual device add with default pin."""
+    """Test config flow where we receive a read exception (eg. connection was established, but further reading failed)."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -103,7 +103,7 @@ async def test_form_read_error(hass: HomeAssistant) -> None:
 
 
 async def test_form_unknown_error(hass: HomeAssistant) -> None:
-    """Test manual device add with default pin."""
+    """Test config flow where we receive an unexpected exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -125,7 +125,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
 
 
 async def test_form_invalid_slave_ids(hass: HomeAssistant) -> None:
-    """Test manual device add with default pin."""
+    """Test config flow where we receive an invalid slave-id."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -142,7 +142,7 @@ async def test_form_invalid_slave_ids(hass: HomeAssistant) -> None:
 
 
 async def test_form_invalid_extra_slave(hass: HomeAssistant) -> None:
-    """Test manual device add with default pin."""
+    """Test config flow where one of the slaves does not respond to queries."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -179,7 +179,7 @@ async def test_form_invalid_extra_slave(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "slave_cannot_connect"}
 
 
-async def test_form_already_configured(hass, aioclient_mock):
+async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test if a inverter has already been configured."""
     MockConfigEntry(
         domain=DOMAIN,
