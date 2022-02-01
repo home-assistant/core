@@ -101,9 +101,9 @@ class FiveMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def initialize(self) -> None:
         """Initialize the FiveM server."""
         info = await self._fivem.get_info_raw()
-        self.server = info.get("server")
-        self.version = info.get("version")
-        self.gamename = info.get("vars")["gamename"]
+        self.server = info["server"]
+        self.version = info["version"]
+        self.gamename = info["vars"]["gamename"]
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Get server data from 3rd party library and update properties."""
