@@ -35,10 +35,10 @@ async def async_setup_entry(
         )
 
     async_dispatcher_connect(
-        hass, "ZWAVE_ME_NEW_" + ZWaveMePlatform.RGB_LIGHT.upper(), add_new_device
+        hass, f"ZWAVE_ME_NEW_{ZWaveMePlatform.RGB_LIGHT.upper()}", add_new_device
     )
     async_dispatcher_connect(
-        hass, "ZWAVE_ME_NEW_" + ZWaveMePlatform.RGBW_LIGHT.upper(), add_new_device
+        hass, f"ZWAVE_ME_NEW_{ZWaveMePlatform.RGBW_LIGHT.upper()}", add_new_device
     )
 
 
