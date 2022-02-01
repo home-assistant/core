@@ -86,8 +86,7 @@ AUTO_SETUP_SCHEMA = vol.Schema(
 
 def autosetup_ihc_products(hass: HomeAssistant, config, ihc_controller, controller_id):
     """Auto setup of IHC products from the IHC project file."""
-    project_xml = ihc_controller.get_project()
-    if not project_xml:
+    if not (project_xml := ihc_controller.get_project()):
         _LOGGER.error("Unable to read project from IHC controller")
         return False
     project = ElementTree.fromstring(project_xml)
