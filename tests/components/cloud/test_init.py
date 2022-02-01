@@ -158,14 +158,14 @@ async def test_on_connect(hass, mock_cloud_fixture):
     assert len(mock_load.mock_calls) == 0
 
     assert len(cloud_states) == 1
-    assert cloud_states[-1] == cloud.EVENT_CLOUD_CONNECTED
+    assert cloud_states[-1] == cloud.CloudConnectionState.CLOUD_CONNECTED
 
     assert len(cl.iot._on_disconnect) == 2
     assert "async_setup" in str(cl.iot._on_disconnect[-1])
     await cl.iot._on_disconnect[-1]()
 
     assert len(cloud_states) == 2
-    assert cloud_states[-1] == cloud.EVENT_CLOUD_DISCONNECTED
+    assert cloud_states[-1] == cloud.CloudConnectionState.CLOUD_DISCONNECTED
 
 
 async def test_remote_ui_url(hass, mock_cloud_fixture):

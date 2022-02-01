@@ -1,6 +1,6 @@
 """Component to integrate the Home Assistant cloud."""
 import asyncio
-from typing import Final
+from enum import Enum
 
 from hass_nabucasa import Cloud
 import voluptuous as vol
@@ -47,9 +47,6 @@ from .const import (
     MODE_PROD,
 )
 from .prefs import CloudPreferences
-
-EVENT_CLOUD_CONNECTED: Final = "cloud_connected"
-EVENT_CLOUD_DISCONNECTED: Final = "cloud_disconnected"
 
 DEFAULT_MODE = MODE_PROD
 
@@ -192,6 +189,13 @@ def is_cloudhook_request(request):
     return isinstance(request, MockRequest)
 
 
+class CloudConnectionState(Enum):
+    """Cloud connection state."""
+
+    CLOUD_CONNECTED = "cloud_connected"
+    CLOUD_DISCONNECTED = "cloud_disconnected"
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the Home Assistant cloud."""
     # Process configs
@@ -256,11 +260,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             Platform.TTS, DOMAIN, {}, config
         )
 
-        client.async_notify_connection_change(EVENT_CLOUD_CONNECTED)
+        client.async_notify_connection_change(CloudConnectionState.CLOUD_CONNECTED)
 
     async def _on_disconnect():
         """Handle cloud disconnect."""
-        client.async_notify_connection_change(EVENT_CLOUD_DISCONNECTED)
+        client.async_notify_connection_change(CloudConnectionState.CLOUD_DISCONNECTED)
 
     async def _on_initialized():
         """Update preferences."""
