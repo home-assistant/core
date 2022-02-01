@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from http import HTTPStatus
 
+from aiohttp import web
 import aiohttp.web_exceptions
 import voluptuous as vol
 
@@ -130,9 +131,9 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
         try:
             return await super().post(request)
         except DependencyError as exc:
-            return self.json_message(
-                f"Failed dependencies {exc.failed_dependencies}",
-                status_code=HTTPStatus.BAD_REQUEST,
+            return web.Response(
+                text=f"Failed dependencies {', '.join(exc.failed_dependencies)}",
+                status=HTTPStatus.BAD_REQUEST,
             )
 
     def _prepare_result_json(self, result):
