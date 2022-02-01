@@ -137,13 +137,13 @@ async def test_on_connect(hass, mock_cloud_fixture):
 
     assert len(hass.states.async_entity_ids("binary_sensor")) == 0
 
-    events = []
+    cloud_states = []
 
-    def handle_event(event):
-        nonlocal events
-        events.append(event)
+    def handle_state(cloud_state):
+        nonlocal cloud_states
+        cloud_states.append(cloud_state)
 
-    cl.client.async_listen_connection_change(handle_event)
+    cl.client.async_listen_connection_change(handle_state)
 
     assert "async_setup" in str(cl.iot._on_connect[-1])
     await cl.iot._on_connect[-1]()
@@ -157,15 +157,15 @@ async def test_on_connect(hass, mock_cloud_fixture):
 
     assert len(mock_load.mock_calls) == 0
 
-    assert len(events) == 1
-    assert events[-1] == cloud.EVENT_CLOUD_CONNECTED
+    assert len(cloud_states) == 1
+    assert cloud_states[-1] == cloud.EVENT_CLOUD_CONNECTED
 
     assert len(cl.iot._on_disconnect) == 2
     assert "async_setup" in str(cl.iot._on_disconnect[-1])
     await cl.iot._on_disconnect[-1]()
 
-    assert len(events) == 2
-    assert events[-1] == cloud.EVENT_CLOUD_DISCONNECTED
+    assert len(cloud_states) == 2
+    assert cloud_states[-1] == cloud.EVENT_CLOUD_DISCONNECTED
 
 
 async def test_remote_ui_url(hass, mock_cloud_fixture):
