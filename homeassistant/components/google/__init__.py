@@ -194,6 +194,7 @@ def do_authentication(hass, hass_config, config):
 
     def step2_exchange(now):
         """Keep trying to validate the user_code until it expires."""
+        _LOGGER.debug("Attempting to validate user code")
 
         # For some reason, oauth.step1_get_device_and_user_codes() returns a datetime
         # object without tzinfo. For the comparison below to work, it needs one.
@@ -208,6 +209,7 @@ def do_authentication(hass, hass_config, config):
                 notification_id=NOTIFICATION_ID,
             )
             listener()
+            return
 
         try:
             credentials = oauth.step2_exchange(device_flow_info=dev_flow)
@@ -247,9 +249,11 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     token_file = hass.config.path(TOKEN_FILE)
     if not os.path.isfile(token_file):
+        _LOGGER.debug("Token file does not exist, authenticating for first time")
         do_authentication(hass, config, conf)
     else:
-        if not check_correct_scopes(token_file, conf):
+        if not check_correct_scopes(hass, token_file, conf):
+            _LOGGER.debug("Existing scopes are not sufficient, re-authenticating")
             do_authentication(hass, config, conf)
         else:
             do_setup(hass, config, conf)
@@ -257,17 +261,13 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def check_correct_scopes(token_file, config):
+def check_correct_scopes(hass, token_file, config):
     """Check for the correct scopes in file."""
-    with open(token_file, encoding="utf8") as tokenfile:
-        contents = tokenfile.read()
-
-        # Check for quoted scope as our scopes can be subsets of other scopes
-        target_scope = f'"{config.get(CONF_CALENDAR_ACCESS).scope}"'
-        if target_scope not in contents:
-            _LOGGER.warning("Please re-authenticate with Google")
-            return False
-    return True
+    creds = Storage(token_file).get()
+    if not creds or not creds.scopes:
+        return False
+    target_scope = config[CONF_CALENDAR_ACCESS].scope
+    return target_scope in creds.scopes
 
 
 def setup_services(
@@ -364,6 +364,7 @@ def setup_services(
 
 def do_setup(hass, hass_config, config):
     """Run the setup after we have everything configured."""
+    _LOGGER.debug("Setting up integration")
     # Load calendars the user has configured
     hass.data[DATA_INDEX] = load_config(hass.config.path(YAML_DEVICES))
 
