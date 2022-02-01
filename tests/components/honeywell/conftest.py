@@ -40,6 +40,8 @@ def device():
     mock_device.name = "device1"
     mock_device.current_temperature = 20
     mock_device.mac_address = "macaddress1"
+    mock_device.outdoor_temperature = None
+    mock_device.outdoor_humidity = None
     return mock_device
 
 
@@ -75,6 +77,8 @@ def another_device():
     mock_device.name = "device2"
     mock_device.current_temperature = 20
     mock_device.mac_address = "macaddress1"
+    mock_device.outdoor_temperature = None
+    mock_device.outdoor_humidity = None
     return mock_device
 
 
