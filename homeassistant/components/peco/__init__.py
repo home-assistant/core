@@ -1,6 +1,7 @@
 """The PECO Outage Counter integration."""
 from __future__ import annotations
 
+import aiohttp
 import peco
 
 from homeassistant.config_entries import ConfigEntry
@@ -16,7 +17,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up PECO Outage Counter from a config entry."""
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = peco
+    hass.data[DOMAIN][entry.entry_id] = {
+        "api": peco,
+        "websession": aiohttp.ClientSession(),
+    }
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True

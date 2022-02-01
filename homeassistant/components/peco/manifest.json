@@ -8,6 +8,6 @@
   ],
   "iot_class": "cloud_polling",
   "requirements": [
-    "peco==0.0.7"
+    "peco==0.0.14"
   ]
 }

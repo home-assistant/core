@@ -28,14 +28,18 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    api = hass.data[DOMAIN][config_entry.entry_id]
+    api = hass.data[DOMAIN][config_entry.entry_id]["api"]
+    websession = hass.data[DOMAIN][config_entry.entry_id]["websession"]
     conf: MappingProxyType[str, Any] = config_entry.data
 
     async def async_update_data():
         """Fetch data from API."""
         try:
             async with async_timeout.timeout(10):
-                return await api.get_outage_count(conf["county"])
+                if conf["county"] == "TOTAL":
+                    return await api.get_outage_totals(websession)
+                else:
+                    return await api.get_outage_count(conf["county"], websession)
         except InvalidCountyError as err:
             raise ConfigEntryAuthFailed from err
         except HttpError as err:
