@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from bs4 import BeautifulSoup
 import httpx
@@ -93,14 +94,13 @@ async def async_setup_platform(
     if value_template is not None:
         value_template.hass = hass
 
-    auth: httpx.DigestAuth | tuple[str, str] | None
+    auth: httpx.DigestAuth | tuple[str, str] | None = None
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
             auth = httpx.DigestAuth(username, password)
         else:
             auth = (username, password)
-    else:
-        auth = None
+
     rest = RestData(hass, method, resource, auth, headers, None, payload, verify_ssl)
     await rest.async_update()
 
@@ -152,7 +152,7 @@ class ScrapeSensor(SensorEntity):
         self._attr_device_class = device_class
         self._attr_state_class = state_class
 
-    def _extract_value(self) -> str:
+    def _extract_value(self) -> Any:
         """Parse the html extraction in the executor."""
         raw_data = BeautifulSoup(self.rest.data, "html.parser")
         _LOGGER.debug(raw_data)
@@ -192,11 +192,7 @@ class ScrapeSensor(SensorEntity):
             _LOGGER.error("Unable to retrieve data for %s", self.name)
             return
 
-        try:
-            value = await self.hass.async_add_executor_job(self._extract_value)
-        except IndexError:
-            _LOGGER.error("Unable to extract data from HTML for %s", self.name)
-            return
+        value = await self.hass.async_add_executor_job(self._extract_value)
 
         if self._value_template is not None:
             self._attr_native_value = (
