@@ -36,9 +36,9 @@ class ISYEntity(Entity):
     def __init__(self, node: Node) -> None:
         """Initialize the insteon device."""
         self._node = node
-        self._attrs = {}
-        self._change_handler = None
-        self._control_handler = None
+        self._attrs: dict[str, Any] = {}
+        self._change_handler: EventListener | None = None
+        self._control_handler: EventListener | None = None
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node change events."""
