@@ -95,6 +95,9 @@ class NetgearRouter:
         )
 
         self._info = self._api.get_info()
+        if self._info is None:
+            return False
+
         self.device_name = self._info.get("DeviceName", DEFAULT_NAME)
         self.model = self._info.get("ModelName")
         self.firmware_version = self._info.get("Firmwareversion")
@@ -111,9 +114,12 @@ class NetgearRouter:
                 )
                 self.method_version = 1
 
-    async def async_setup(self) -> None:
+        return True
+
+    async def async_setup(self) -> bool:
         """Set up a Netgear router."""
-        await self.hass.async_add_executor_job(self._setup)
+        if not await self.hass.async_add_executor_job(self._setup):
+            return False
 
         # set already known devices to away instead of unavailable
         device_registry = dr.async_get(self.hass)
@@ -137,6 +143,8 @@ class NetgearRouter:
                 "ssid": None,
                 "conn_ap_mac": None,
             }
+
+        return True
 
     async def async_get_attached_devices(self) -> list:
         """Get the devices connected to the router."""

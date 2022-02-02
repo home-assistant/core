@@ -28,7 +28,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Netgear component."""
     router = NetgearRouter(hass, entry)
     try:
-        await router.async_setup()
+        if not await router.async_setup():
+            raise ConfigEntryNotReady
     except CannotLoginException as ex:
         raise ConfigEntryNotReady from ex
 
