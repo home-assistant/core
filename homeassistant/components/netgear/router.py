@@ -197,7 +197,7 @@ class NetgearRouter:
         return self._api.ssl
 
 
-class NetgearDeviceEntity(CoordinatorEntity, Entity):
+class NetgearBaseEntity(CoordinatorEntity, Entity):
     """Base class for a device connected to a Netgear router."""
 
     def __init__(
@@ -210,7 +210,6 @@ class NetgearDeviceEntity(CoordinatorEntity, Entity):
         self._mac = device["mac"]
         self._name = self.get_device_name()
         self._device_name = self._name
-        self._unique_id = self._mac
         self._active = device["active"]
 
     def get_device_name(self):
@@ -233,14 +232,25 @@ class NetgearDeviceEntity(CoordinatorEntity, Entity):
         super()._handle_coordinator_update()
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
     def name(self) -> str:
         """Return the name."""
         return self._name
+
+
+class NetgearDeviceEntity(NetgearBaseEntity):
+    """Base class for a device connected to a Netgear router."""
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, router: NetgearRouter, device: dict
+    ) -> None:
+        """Initialize a Netgear device."""
+        super().__init__(coordinator, router, device)
+        self._unique_id = self._mac
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def device_info(self) -> DeviceInfo:
