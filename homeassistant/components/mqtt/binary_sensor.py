@@ -125,7 +125,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity):
             entity=self,
         ).async_render_with_possible_json_value
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
         @callback
@@ -202,7 +202,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity):
 
             self.async_write_ha_state()
 
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
             self._sub_state,
             {
@@ -214,6 +214,10 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity):
                 }
             },
         )
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @callback
     def _value_is_expired(self, *_):

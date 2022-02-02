@@ -123,7 +123,7 @@ class MqttLock(MqttEntity, LockEntity):
             entity=self,
         ).async_render_with_possible_json_value
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
         @callback
@@ -142,7 +142,7 @@ class MqttLock(MqttEntity, LockEntity):
             # Force into optimistic mode.
             self._optimistic = True
         else:
-            self._sub_state = await subscription.async_subscribe_topics(
+            self._sub_state = subscription.async_prepare_subscribe_topics(
                 self.hass,
                 self._sub_state,
                 {
@@ -154,6 +154,10 @@ class MqttLock(MqttEntity, LockEntity):
                     }
                 },
             )
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
     def is_locked(self):
