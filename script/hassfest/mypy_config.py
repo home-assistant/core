@@ -353,6 +353,19 @@ STRICT_SETTINGS_CORE: Final[list[str]] = [
 ]
 
 
+def _strict_module_in_ignore_list(
+    module: str, ignored_modules_set: set[str]
+) -> str | None:
+    if module in ignored_modules_set:
+        return module
+    if module.endswith("*"):
+        module = module[:-1]
+        for ignored_module in ignored_modules_set:
+            if ignored_module.startswith(module):
+                return ignored_module
+    return None
+
+
 def generate_and_validate(config: Config) -> str:
     """Validate and generate mypy config."""
 
@@ -385,9 +398,10 @@ def generate_and_validate(config: Config) -> str:
             config.add_error(
                 "mypy_config", f"Only components should be added: {module}"
             )
-        if module in ignored_modules_set:
+        if ignored_module := _strict_module_in_ignore_list(module, ignored_modules_set):
             config.add_error(
-                "mypy_config", f"Module '{module}' is in ignored list in mypy_config.py"
+                "mypy_config",
+                f"Module '{ignored_module}' is in ignored list in mypy_config.py",
             )
 
     # Validate that all modules exist.
