@@ -78,7 +78,7 @@ class PlexSensor(SensorEntity):
         self._attr_name = NAME_FORMAT.format(plex_server.friendly_name)
         self._attr_should_poll = False
         self._attr_unique_id = f"sensor-{plex_server.machine_identifier}"
-        self._attr_native_unit_of_measurement = "Watching"
+        self._attr_native_unit_of_measurement = "Playing"
 
         self._server = plex_server
         self.async_refresh_sensor = Debouncer(
