@@ -1,11 +1,13 @@
 """KMtronic Switch integration."""
+import urllib.parse
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_REVERSE, DATA_COORDINATOR, DATA_HUB, DOMAIN
+from .const import CONF_REVERSE, DATA_COORDINATOR, DATA_HUB, DOMAIN, MANUFACTURER
 
 
 async def async_setup_entry(
@@ -51,6 +53,19 @@ class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
         if self._reverse:
             return not self._relay.is_energised
         return self._relay.is_energised
+
+    @property
+    def device_info(self):
+        """Return device information."""
+        hub_host = self.hass.data[DOMAIN][self._config_entry_id][DATA_HUB].host
+        hostname = urllib.parse.urlsplit(hub_host).hostname
+
+        return {
+            "identifiers": {("hub", hub_host)},
+            "name": f"Controller {hostname}",
+            "manufacturer": MANUFACTURER,
+            "configuration_url": hub_host,
+        }
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the switch on."""
