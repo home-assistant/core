@@ -39,7 +39,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.icloud.*",
     "homeassistant.components.influxdb.*",
     "homeassistant.components.input_datetime.*",
-    "homeassistant.components.isy994.*",
     "homeassistant.components.izone.*",
     "homeassistant.components.konnected.*",
     "homeassistant.components.kostal_plenticore.*",
