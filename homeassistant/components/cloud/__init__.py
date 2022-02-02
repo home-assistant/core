@@ -2,7 +2,6 @@
 import asyncio
 from collections.abc import Callable
 from enum import Enum
-from typing import Any
 
 from hass_nabucasa import Cloud
 import voluptuous as vol
