@@ -524,6 +524,11 @@ class MqttDiscoveryUpdate(Entity):
     async def async_removed_from_registry(self) -> None:
         """Clear retained discovery topic in broker."""
         if not self._removed_from_hass:
+            # Stop subscribing to discovery updates to not trigger when we clear the
+            # discovery topic
+            self._cleanup_discovery_on_remove()
+
+            # Clear the discovery topic so the entity is not rediscovered after a restart
             discovery_topic = self._discovery_data[ATTR_DISCOVERY_TOPIC]
             publish(self.hass, discovery_topic, "", retain=True)
 
