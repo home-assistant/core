@@ -1,5 +1,8 @@
 """Support for Homekit climate devices."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from aiohomekit.model.characteristics import (
     ActivationStateValues,
@@ -10,7 +13,7 @@ from aiohomekit.model.characteristics import (
     SwingModeValues,
     TargetHeaterCoolerStateValues,
 )
-from aiohomekit.model.services import ServicesTypes
+from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.utils import clamp_enum_to_char
 
 from homeassistant.components.climate import ClimateEntity
@@ -94,7 +97,7 @@ async def async_setup_entry(
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_service(service):
+    def async_add_service(service: Service) -> bool:
         if not (entity_class := ENTITY_TYPES.get(service.type)):
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
@@ -107,7 +110,7 @@ async def async_setup_entry(
 class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
     """Representation of a Homekit climate device."""
 
-    def get_characteristic_types(self):
+    def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [
             CharacteristicsTypes.ACTIVE,
@@ -119,7 +122,7 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
             CharacteristicsTypes.TEMPERATURE_CURRENT,
         ]
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         state = self.service.value(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)
@@ -140,7 +143,7 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
                 hvac_mode,
             )
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target operation mode."""
         if hvac_mode == HVAC_MODE_OFF:
             await self.async_put_characteristics(
@@ -163,12 +166,12 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         )
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float:
         """Return the current temperature."""
         return self.service.value(CharacteristicsTypes.TEMPERATURE_CURRENT)
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         state = self.service.value(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)
         if state == TargetHeaterCoolerStateValues.COOL:
@@ -182,7 +185,7 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         return None
 
     @property
-    def target_temperature_step(self):
+    def target_temperature_step(self) -> float | None:
         """Return the supported step of target temperature."""
         state = self.service.value(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)
         if state == TargetHeaterCoolerStateValues.COOL and self.service.has(
@@ -200,7 +203,7 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         return None
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum target temp."""
         state = self.service.value(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)
         if state == TargetHeaterCoolerStateValues.COOL and self.service.has(
@@ -218,7 +221,7 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         return super().min_temp
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum target temp."""
         state = self.service.value(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)
         if state == TargetHeaterCoolerStateValues.COOL and self.service.has(
@@ -236,7 +239,7 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         return super().max_temp
 
     @property
-    def hvac_action(self):
+    def hvac_action(self) -> str | None:
         """Return the current running hvac operation."""
         # This characteristic describes the current mode of a device,
         # e.g. a thermostat is "heating" a room to 75 degrees Fahrenheit.
@@ -250,7 +253,7 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         return CURRENT_HEATER_COOLER_STATE_HOMEKIT_TO_HASS.get(value)
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
         # This characteristic describes the target mode
         # E.g. should the device start heating a room if the temperature
@@ -262,10 +265,10 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         ):
             return HVAC_MODE_OFF
         value = self.service.value(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)
-        return TARGET_HEATER_COOLER_STATE_HOMEKIT_TO_HASS.get(value)
+        return TARGET_HEATER_COOLER_STATE_HOMEKIT_TO_HASS[value]
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> list[str]:
         """Return the list of available hvac operation modes."""
         valid_values = clamp_enum_to_char(
             TargetHeaterCoolerStateValues,
@@ -278,7 +281,7 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         return modes
 
     @property
-    def swing_mode(self):
+    def swing_mode(self) -> str:
         """Return the swing setting.
 
         Requires SUPPORT_SWING_MODE.
@@ -287,7 +290,7 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         return SWING_MODE_HOMEKIT_TO_HASS[value]
 
     @property
-    def swing_modes(self):
+    def swing_modes(self) -> list[str]:
         """Return the list of available swing modes.
 
         Requires SUPPORT_SWING_MODE.
@@ -305,7 +308,7 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         )
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Return the list of supported features."""
         features = 0
 
@@ -321,7 +324,7 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         return features
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         return TEMP_CELSIUS
 
@@ -329,7 +332,7 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
 class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
     """Representation of a Homekit climate device."""
 
-    def get_characteristic_types(self):
+    def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [
             CharacteristicsTypes.HEATING_COOLING_CURRENT,
@@ -342,12 +345,12 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
             CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET,
         ]
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         chars = {}
 
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
-        mode = MODE_HOMEKIT_TO_HASS.get(value)
+        mode = MODE_HOMEKIT_TO_HASS[value]
 
         if kwargs.get(ATTR_HVAC_MODE, mode) != mode:
             mode = kwargs[ATTR_HVAC_MODE]
@@ -359,8 +362,11 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
         heat_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
         cool_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
 
-        if (mode == HVAC_MODE_HEAT_COOL) and (
-            SUPPORT_TARGET_TEMPERATURE_RANGE & self.supported_features
+        if (
+            (mode == HVAC_MODE_HEAT_COOL)
+            and (SUPPORT_TARGET_TEMPERATURE_RANGE & self.supported_features)
+            and heat_temp
+            and cool_temp
         ):
             if temp is None:
                 temp = (cool_temp + heat_temp) / 2
@@ -376,13 +382,13 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
 
         await self.async_put_characteristics(chars)
 
-    async def async_set_humidity(self, humidity):
+    async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         await self.async_put_characteristics(
             {CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET: humidity}
         )
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target operation mode."""
         await self.async_put_characteristics(
             {
@@ -393,12 +399,12 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
         )
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.service.value(CharacteristicsTypes.TEMPERATURE_CURRENT)
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
         if (MODE_HOMEKIT_TO_HASS.get(value) in {HVAC_MODE_HEAT, HVAC_MODE_COOL}) or (
@@ -409,7 +415,7 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
         return None
 
     @property
-    def target_temperature_high(self):
+    def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
         if (MODE_HOMEKIT_TO_HASS.get(value) in {HVAC_MODE_HEAT_COOL}) and (
@@ -421,7 +427,7 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
         return None
 
     @property
-    def target_temperature_low(self):
+    def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
         if (MODE_HOMEKIT_TO_HASS.get(value) in {HVAC_MODE_HEAT_COOL}) and (
@@ -433,7 +439,7 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
         return None
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum target temp."""
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
         if (MODE_HOMEKIT_TO_HASS.get(value) in {HVAC_MODE_HEAT_COOL}) and (
@@ -455,7 +461,7 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
         return super().min_temp
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum target temp."""
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
         if (MODE_HOMEKIT_TO_HASS.get(value) in {HVAC_MODE_HEAT_COOL}) and (
@@ -477,17 +483,17 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
         return super().max_temp
 
     @property
-    def current_humidity(self):
+    def current_humidity(self) -> int:
         """Return the current humidity."""
         return self.service.value(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT)
 
     @property
-    def target_humidity(self):
+    def target_humidity(self) -> int:
         """Return the humidity we try to reach."""
         return self.service.value(CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET)
 
     @property
-    def min_humidity(self):
+    def min_humidity(self) -> int:
         """Return the minimum humidity."""
         min_humidity = self.service[
             CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET
@@ -497,7 +503,7 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
         return super().min_humidity
 
     @property
-    def max_humidity(self):
+    def max_humidity(self) -> int:
         """Return the maximum humidity."""
         max_humidity = self.service[
             CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET
@@ -507,7 +513,7 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
         return super().max_humidity
 
     @property
-    def hvac_action(self):
+    def hvac_action(self) -> str | None:
         """Return the current running hvac operation."""
         # This characteristic describes the current mode of a device,
         # e.g. a thermostat is "heating" a room to 75 degrees Fahrenheit.
@@ -516,17 +522,17 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
         return CURRENT_MODE_HOMEKIT_TO_HASS.get(value)
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
         # This characteristic describes the target mode
         # E.g. should the device start heating a room if the temperature
         # falls below the target temperature.
         # Can be 0 - 3 (Off, Heat, Cool, Auto)
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
-        return MODE_HOMEKIT_TO_HASS.get(value)
+        return MODE_HOMEKIT_TO_HASS[value]
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> list[str]:
         """Return the list of available hvac operation modes."""
         valid_values = clamp_enum_to_char(
             HeatingCoolingTargetValues,
@@ -535,7 +541,7 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
         return [MODE_HOMEKIT_TO_HASS[mode] for mode in valid_values]
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Return the list of supported features."""
         features = 0
 
@@ -553,7 +559,7 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
         return features
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         return TEMP_CELSIUS
 
