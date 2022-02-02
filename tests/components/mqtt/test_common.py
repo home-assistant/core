@@ -1222,7 +1222,7 @@ async def help_test_entity_debug_info_message(
         "topic": topic,
         "messages": [
             {
-                "payload": payload,
+                "payload": str(payload),
                 "qos": 0,
                 "retain": False,
                 "time": start_dt,
