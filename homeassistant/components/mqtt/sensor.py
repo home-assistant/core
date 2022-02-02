@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -169,11 +170,16 @@ class MqttSensor(MqttEntity, SensorEntity, RestoreEntity):
             (expire_after := self._config.get(CONF_EXPIRE_AFTER)) is not None
             and expire_after > 0
             and (last_state := await self.async_get_last_state()) is not None
-            and last_state != STATE_UNAVAILABLE
+            and last_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
         ):
+            expiration_at = last_state.last_changed + timedelta(seconds=expire_after)
+            if expiration_at < (dt_util.utcnow() + timedelta(seconds=5)):
+                # Skip reactivating the sensor
+                _LOGGER.debug("Skip state recovery after reload for %s", self.entity_id)
+                return
             self._expired = False
             self._state = last_state.state
-            expiration_at = dt_util.utcnow() + timedelta(seconds=expire_after)
+
             self._expiration_trigger = async_track_point_in_utc_time(
                 self.hass, self._value_is_expired, expiration_at
             )

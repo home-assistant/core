@@ -878,25 +878,46 @@ async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
 async def test_cleanup_triggers_and_restoring_state(hass, mqtt_mock, caplog, tmp_path):
     """Test cleanup old triggers at reloading and restoring the state."""
     domain = binary_sensor.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG[domain])
-    config["expire_after"] = 10
+    config1 = copy.deepcopy(DEFAULT_CONFIG[domain])
+    config1["name"] = "test1"
+    config1["expire_after"] = 30
+    config1["state_topic"] = "test-topic1"
+    config2 = copy.deepcopy(DEFAULT_CONFIG[domain])
+    config2["name"] = "test2"
+    config2["expire_after"] = 3
+    config2["state_topic"] = "test-topic2"
     assert await async_setup_component(
         hass,
         binary_sensor.DOMAIN,
-        {binary_sensor.DOMAIN: config},
+        {binary_sensor.DOMAIN: [config1, config2]},
     )
     await hass.async_block_till_done()
-    async_fire_mqtt_message(hass, "test-topic", "ON")
-    state = hass.states.get("binary_sensor.test")
+    async_fire_mqtt_message(hass, "test-topic1", "ON")
+    state = hass.states.get("binary_sensor.test1")
     assert state.state == "on"
 
-    await help_test_reload_with_config(hass, caplog, tmp_path, domain, config)
-    assert "Clean up expire after trigger for binary_sensor.test" in caplog.text
-    assert "State recovered after reload for binary_sensor.test" in caplog.text
-
-    state = hass.states.get("binary_sensor.test")
+    async_fire_mqtt_message(hass, "test-topic2", "ON")
+    state = hass.states.get("binary_sensor.test2")
     assert state.state == "on"
 
-    async_fire_mqtt_message(hass, "test-topic", "OFF")
-    state = hass.states.get("binary_sensor.test")
+    await help_test_reload_with_config(
+        hass, caplog, tmp_path, domain, [config1, config2]
+    )
+    assert "Clean up expire after trigger for binary_sensor.test1" in caplog.text
+    assert "Clean up expire after trigger for binary_sensor.test2" in caplog.text
+    assert "State recovered after reload for binary_sensor.test1" in caplog.text
+    assert "Skip state recovery after reload for binary_sensor.test2" in caplog.text
+
+    state = hass.states.get("binary_sensor.test1")
+    assert state.state == "on"
+
+    state = hass.states.get("binary_sensor.test2")
+    assert state.state == STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, "test-topic1", "OFF")
+    state = hass.states.get("binary_sensor.test1")
+    assert state.state == "off"
+
+    async_fire_mqtt_message(hass, "test-topic2", "OFF")
+    state = hass.states.get("binary_sensor.test2")
     assert state.state == "off"

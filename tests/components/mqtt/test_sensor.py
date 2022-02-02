@@ -939,28 +939,49 @@ async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
 async def test_cleanup_triggers(hass, mqtt_mock, caplog, tmp_path):
     """Test cleanup old triggers at reloading."""
     domain = sensor.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG[domain])
-    config["expire_after"] = 10
+    config1 = copy.deepcopy(DEFAULT_CONFIG[domain])
+    config1["name"] = "test1"
+    config1["expire_after"] = 30
+    config1["state_topic"] = "test-topic1"
+    config2 = copy.deepcopy(DEFAULT_CONFIG[domain])
+    config2["name"] = "test2"
+    config2["expire_after"] = 3
+    config2["state_topic"] = "test-topic2"
     assert await async_setup_component(
         hass,
         sensor.DOMAIN,
-        {sensor.DOMAIN: config},
+        {sensor.DOMAIN: [config1, config2]},
     )
     await hass.async_block_till_done()
-    async_fire_mqtt_message(hass, "test-topic", "100")
-    state = hass.states.get("sensor.test")
+    async_fire_mqtt_message(hass, "test-topic1", "100")
+    state = hass.states.get("sensor.test1")
     assert state.state == "100"
 
-    await help_test_reload_with_config(hass, caplog, tmp_path, domain, config)
-    assert "Clean up expire after trigger for sensor.test" in caplog.text
-    assert "State recovered after reload for sensor.test" in caplog.text
+    async_fire_mqtt_message(hass, "test-topic2", "200")
+    state = hass.states.get("sensor.test2")
+    assert state.state == "200"
 
-    state = hass.states.get("sensor.test")
+    await help_test_reload_with_config(
+        hass, caplog, tmp_path, domain, [config1, config2]
+    )
+    assert "Clean up expire after trigger for sensor.test1" in caplog.text
+    assert "Clean up expire after trigger for sensor.test2" in caplog.text
+    assert "State recovered after reload for sensor.test1" in caplog.text
+    assert "Skip state recovery after reload for sensor.test2" in caplog.text
+
+    state = hass.states.get("sensor.test1")
     assert state.state == "100"
 
-    async_fire_mqtt_message(hass, "test-topic", "101")
-    state = hass.states.get("sensor.test")
+    state = hass.states.get("sensor.test2")
+    assert state.state == STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, "test-topic1", "101")
+    state = hass.states.get("sensor.test1")
     assert state.state == "101"
+
+    async_fire_mqtt_message(hass, "test-topic2", "201")
+    state = hass.states.get("sensor.test2")
+    assert state.state == "201"
 
 
 @pytest.mark.parametrize(
