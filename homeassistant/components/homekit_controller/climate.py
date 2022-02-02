@@ -16,7 +16,11 @@ from aiohomekit.model.characteristics import (
 from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.utils import clamp_enum_to_char
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import (
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
+    ClimateEntity,
+)
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
@@ -185,22 +189,24 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         return None
 
     @property
-    def target_temperature_step(self) -> float | None:
+    def target_temperature_step(self) -> float:
         """Return the supported step of target temperature."""
         state = self.service.value(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)
         if state == TargetHeaterCoolerStateValues.COOL and self.service.has(
             CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
         ):
-            return self.service[
-                CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
-            ].minStep
+            return (
+                self.service[CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD].minStep
+                or 1.0
+            )
         if state == TargetHeaterCoolerStateValues.HEAT and self.service.has(
             CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD
         ):
-            return self.service[
-                CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD
-            ].minStep
-        return None
+            return (
+                self.service[CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD].minStep
+                or 1.0
+            )
+        return 1.0
 
     @property
     def min_temp(self) -> float:
@@ -209,15 +215,21 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         if state == TargetHeaterCoolerStateValues.COOL and self.service.has(
             CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
         ):
-            return self.service[
-                CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
-            ].minValue
+            return (
+                self.service[
+                    CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
+                ].minValue
+                or DEFAULT_MIN_TEMP
+            )
         if state == TargetHeaterCoolerStateValues.HEAT and self.service.has(
             CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD
         ):
-            return self.service[
-                CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD
-            ].minValue
+            return (
+                self.service[
+                    CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD
+                ].minValue
+                or DEFAULT_MIN_TEMP
+            )
         return super().min_temp
 
     @property
@@ -227,15 +239,21 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         if state == TargetHeaterCoolerStateValues.COOL and self.service.has(
             CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
         ):
-            return self.service[
-                CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
-            ].maxValue
+            return (
+                self.service[
+                    CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
+                ].maxValue
+                or DEFAULT_MAX_TEMP
+            )
         if state == TargetHeaterCoolerStateValues.HEAT and self.service.has(
             CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD
         ):
-            return self.service[
-                CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD
-            ].maxValue
+            return (
+                self.service[
+                    CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD
+                ].maxValue
+                or DEFAULT_MAX_TEMP
+            )
         return super().max_temp
 
     @property
@@ -347,7 +365,7 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
-        chars = {}
+        chars: dict[str, Any] = {}
 
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
         mode = MODE_HOMEKIT_TO_HASS[value]
@@ -499,7 +517,7 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
             CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET
         ].minValue
         if min_humidity is not None:
-            return min_humidity
+            return int(min_humidity)
         return super().min_humidity
 
     @property
@@ -509,7 +527,7 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
             CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET
         ].maxValue
         if max_humidity is not None:
-            return max_humidity
+            return int(max_humidity)
         return super().max_humidity
 
     @property
