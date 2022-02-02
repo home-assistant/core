@@ -60,5 +60,5 @@ set_guest_wifi_password:
       required: false
       selector:
         number:
-          min: 1
+          min: 8
           max: 63
