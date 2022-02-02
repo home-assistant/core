@@ -197,6 +197,10 @@ DHCP = [
         "macaddress": "1C53F9*"
     },
     {
+        "domain": "netatmo",
+        "macaddress": "70EE50*"
+    },
+    {
         "domain": "nexia",
         "hostname": "xl857-*",
         "macaddress": "000231*"
