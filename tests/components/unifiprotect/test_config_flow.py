@@ -723,3 +723,24 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_discovery_can_be_ignored(hass: HomeAssistant, mock_nvr: NVR) -> None:
+    """Test a discovery can be ignored."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        unique_id=DEVICE_MAC_ADDRESS.upper().replace(":", ""),
+        source=config_entries.SOURCE_IGNORE,
+    )
+    mock_config.add_to_hass(hass)
+    with _patch_discovery():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DISCOVERY},
+            data=UNIFI_DISCOVERY_DICT,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
