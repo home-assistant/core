@@ -820,17 +820,6 @@ class SimpliSafeEntity(CoordinatorEntity):
         ):
             return
 
-        if event.event_type in (EVENT_CONNECTION_LOST, EVENT_POWER_OUTAGE):
-            self._online = False
-        elif event.event_type in (EVENT_CONNECTION_RESTORED, EVENT_POWER_RESTORED):
-            self._online = True
-
-        # It's uncertain whether SimpliSafe events will still propagate down the
-        # websocket when the base station is offline. Just in case, we guard against
-        # further action until connection is restored:
-        if not self._online:
-            return
-
         sensor_type: str | None
         if event.sensor_type:
             sensor_type = event.sensor_type.name
@@ -845,6 +834,19 @@ class SimpliSafeEntity(CoordinatorEntity):
                 ATTR_LAST_EVENT_TIMESTAMP: event.timestamp,
             }
         )
+
+        # It's unknown whether these events reach the base station (since the connection
+        # is lost); we include this for completeness and coverage:
+        if event.event_type in (EVENT_CONNECTION_LOST, EVENT_POWER_OUTAGE):
+            self._online = False
+            return
+
+        # If the base station comes back online, set entities to available, but don't
+        # instruct the entities to update their state (since there won't be anything new
+        # until the next websocket event or REST API update:
+        if event.event_type in (EVENT_CONNECTION_RESTORED, EVENT_POWER_RESTORED):
+            self._online = True
+            return
 
         self.async_update_from_websocket_event(event)
         self.async_write_ha_state()
