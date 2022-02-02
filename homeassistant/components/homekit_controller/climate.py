@@ -363,7 +363,7 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
             CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET,
         ]
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         chars: dict[str, Any] = {}
 
