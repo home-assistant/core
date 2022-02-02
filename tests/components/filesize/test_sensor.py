@@ -52,7 +52,7 @@ async def test_valid_path(hass: HomeAssistant) -> None:
     assert state.attributes.get("bytes") == 4
 
 
-async def test_reload(hass: HomeAssistant, tmpdir: str):
+async def test_reload(hass: HomeAssistant, tmpdir: str) -> None:
     """Verify we can reload filesize sensors."""
     testfile = f"{tmpdir}/file"
     await hass.async_add_executor_job(create_file, testfile)
