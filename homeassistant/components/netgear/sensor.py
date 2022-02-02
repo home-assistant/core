@@ -11,7 +11,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, KEY_COORDINATOR, KEY_NEW_DEVICE_LISTENERS, KEY_ROUTER
+from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER
 from .router import NetgearDeviceEntity, NetgearRouter
 
 SENSOR_TYPES = {
@@ -81,10 +81,7 @@ async def async_setup_entry(
         if new_entities:
             async_add_entities(new_entities, update_before_add=True)
 
-    remove_new_device_listener = coordinator.async_add_listener(new_device_callback)
-    hass.data[DOMAIN][entry.unique_id][KEY_NEW_DEVICE_LISTENERS].append(
-        remove_new_device_listener
-    )
+    entry.async_on_unload(coordinator.async_add_listener(new_device_callback))
 
     coordinator.data = True
     new_device_callback()
