@@ -13,6 +13,9 @@ assume_state:
       name: State
       description: State to set.
       required: true
-      example: "idle"
+      example: "on"
       selector:
-        text:
+        select:
+          options:
+            - "on"
+            - "off"
