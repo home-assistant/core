@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
+from homeassistant import block_async_io
 from homeassistant.util import async_ as hasync
 
 
@@ -185,6 +186,34 @@ def test_protect_loop_sync():
         hasync.protect_loop(func)(1, test=2)
     mock_check_loop.assert_called_once_with(func, strict=True)
     func.assert_called_once_with(1, test=2)
+
+
+async def test_protect_loop_debugger_sleep(caplog):
+    """Test time.sleep injected by the debugger is not reported."""
+    block_async_io.enable()
+
+    with patch(
+        "homeassistant.util.async_.extract_stack",
+        return_value=[
+            Mock(
+                filename="/home/paulus/homeassistant/.venv/blah/pydevd.py",
+                lineno="23",
+                line="do_something()",
+            ),
+            Mock(
+                filename="/home/paulus/homeassistant/util/async.py",
+                lineno="123",
+                line="protected_loop_func",
+            ),
+            Mock(
+                filename="/home/paulus/homeassistant/util/async.py",
+                lineno="123",
+                line="check_loop()",
+            ),
+        ],
+    ):
+        time.sleep(0)
+    assert "Detected blocking call inside the event loop" not in caplog.text
 
 
 async def test_gather_with_concurrency():
