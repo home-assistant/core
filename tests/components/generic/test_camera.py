@@ -10,8 +10,10 @@ import respx
 
 from homeassistant import config as hass_config
 from homeassistant.components.generic import DOMAIN
+from homeassistant.components.generic.camera import GenericCamera
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import SERVICE_RELOAD
+import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_setup_component
 
 from tests.common import AsyncMock, Mock, get_fixture_path
@@ -515,3 +517,22 @@ async def test_no_still_image_url(hass, hass_client):
         mock_stream.async_get_image.assert_called_once()
         assert resp.status == HTTPStatus.OK
         assert await resp.read() == b"stream_keyframe_image"
+
+
+def test_frame_interval_property(hass):
+    """Test that the frame interval is calculated and returned correctly."""
+    cam = GenericCamera(
+        hass,
+        {
+            "name": "config_test",
+            "platform": "generic",
+            "still_image_url": cv.template("http://example.com"),
+            "username": "user",
+            "password": "pass",
+            "framerate": 5,
+            "limit_refetch_to_url_change": True,
+            "content_type": "image/jpeg",
+            "verify_ssl": True,
+        },
+    )
+    assert cam.frame_interval == pytest.approx(0.2)
