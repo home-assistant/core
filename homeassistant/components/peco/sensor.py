@@ -4,12 +4,11 @@ from types import MappingProxyType
 from typing import Any, Final
 
 import async_timeout
-from peco import BadJSONError, HttpError, InvalidCountyError
+from peco import BadJSONError, HttpError
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -17,7 +16,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import _LOGGER, DOMAIN, SCAN_INTERVAL
+from .const import _LOGGER, DOMAIN, SCAN_INTERVAL, SENSOR_LIST
 
 PARALLEL_UPDATES: Final = 0
 
@@ -34,18 +33,26 @@ async def async_setup_entry(
 
     async def async_update_data():
         """Fetch data from API."""
-        try:
-            async with async_timeout.timeout(10):
-                if conf["county"] == "TOTAL":
-                    return await api.get_outage_totals(websession)
-                else:
-                    return await api.get_outage_count(conf["county"], websession)
-        except InvalidCountyError as err:
-            raise ConfigEntryAuthFailed from err
-        except HttpError as err:
-            raise UpdateFailed from err
-        except BadJSONError as err:
-            raise UpdateFailed from err
+        async with async_timeout.timeout(10):
+            if conf["county"] == "TOTAL":
+                try:
+                    data = await api.get_outage_totals(websession)
+                except HttpError as err:
+                    raise UpdateFailed(f"Error fetching data: {err}") from err
+                except BadJSONError as err:
+                    raise UpdateFailed(f"Error parsing data: {err}") from err
+                if data["percent_customers_out"] < 5:
+                    data["percent_customers_out"] = "Less than 5%"
+                return data
+            try:
+                data = await api.get_outage_count(conf["county"], websession)
+            except HttpError as err:
+                raise UpdateFailed from err
+            except BadJSONError as err:
+                raise UpdateFailed from err
+            if data["percent_customers_out"] < 5:
+                data["percent_customers_out"] = "Less than 5%"
+            return data
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -57,17 +64,24 @@ async def async_setup_entry(
 
     await coordinator.async_config_entry_first_refresh()
 
-    _LOGGER.info("Setting up sensor platform")
     county = conf["county"]
-    _LOGGER.info("County: %s", county)
+
+    county_name = county.lower()[0].upper() + county.lower()[1:]
+
+    sensors = []
+    for sensor in SENSOR_LIST:
+        sensor_name = getattr(sensor, "name", "This should never happen").format(
+            county_name
+        )
+        sensors.append(PecoSensor(hass, sensor_name, county, coordinator, sensor.key))
     async_add_entities(
-        [PecoOutageCounterSensorEntity(hass, config_entry.title, county, coordinator)],
+        sensors,
         True,
     )
     return
 
 
-class PecoOutageCounterSensorEntity(CoordinatorEntity, SensorEntity):
+class PecoSensor(CoordinatorEntity, SensorEntity):
     """PECO outage counter sensor."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -79,39 +93,17 @@ class PecoOutageCounterSensorEntity(CoordinatorEntity, SensorEntity):
         name: str,
         county: str,
         coordinator: DataUpdateCoordinator,
+        key: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.hass = hass
         self._county = county
-        self._name = name
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
+        self._attr_name = name
+        self._attr_unique_id = f"{self._county}_{key}"
+        self._key = key
 
     @property
     def native_value(self) -> int:
         """Return the value of the sensor."""
-        return self.coordinator.data["customers_out"]
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        if self.coordinator.data["percent_customers_out"] < 5:
-            percent_customers_out = "Less than 5%"
-        else:
-            percent_customers_out = (
-                str(self.coordinator.data["percent_customers_out"]) + "%"
-            )
-        return {
-            "percent_customers_out": percent_customers_out,
-            "outage_count": self.coordinator.data["outage_count"],
-            "customers_served": self.coordinator.data["customers_served"],
-        }
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._county
+        return self.coordinator.data[self._key]

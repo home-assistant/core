@@ -818,8 +818,6 @@ omit =
     homeassistant/components/ozw/services.py
     homeassistant/components/panasonic_bluray/media_player.py
     homeassistant/components/panasonic_viera/media_player.py
-    homeassistant/components/peco/__init__.py
-    homeassistant/components/peco/sensor.py
     homeassistant/components/pandora/media_player.py
     homeassistant/components/pcal9535a/*
     homeassistant/components/pencom/switch.py
