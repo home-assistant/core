@@ -18,7 +18,7 @@
                     "host": "Host",
                     "name": "Nome Hub"
                 },
-                "title": "Configurare Logitech Harmony Hub"
+                "title": "Configura Logitech Harmony Hub"
             }
         }
     },
@@ -29,7 +29,7 @@
                     "activity": "L'attivit\u00e0 predefinita da eseguire quando nessuna \u00e8 specificata.",
                     "delay_secs": "Il ritardo tra l'invio dei comandi."
                 },
-                "description": "Regolare le opzioni di Harmony Hub"
+                "description": "Regola le opzioni di Harmony Hub"
             }
         }
     }

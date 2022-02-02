@@ -7,6 +7,7 @@ documentation as possible to keep it understandable.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from contextlib import suppress
 import functools as ft
 import importlib
@@ -15,7 +16,7 @@ import logging
 import pathlib
 import sys
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Callable, Dict, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypedDict, TypeVar, cast
 
 from awesomeversion import (
     AwesomeVersion,
@@ -23,18 +24,16 @@ from awesomeversion import (
     AwesomeVersionStrategy,
 )
 
-from homeassistant.generated.dhcp import DHCP
-from homeassistant.generated.mqtt import MQTT
-from homeassistant.generated.ssdp import SSDP
-from homeassistant.generated.usb import USB
-from homeassistant.generated.zeroconf import HOMEKIT, ZEROCONF
-from homeassistant.util.async_ import gather_with_concurrency
+from .generated.dhcp import DHCP
+from .generated.mqtt import MQTT
+from .generated.ssdp import SSDP
+from .generated.usb import USB
+from .generated.zeroconf import HOMEKIT, ZEROCONF
+from .util.async_ import gather_with_concurrency
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
-
-# mypy: disallow-any-generics
+    from .core import HomeAssistant
 
 CALLABLE_T = TypeVar(  # pylint: disable=invalid-name
     "CALLABLE_T", bound=Callable[..., Any]
@@ -57,6 +56,8 @@ CUSTOM_WARNING = (
 _UNDEF = object()  # Internal; not helpers.typing.UNDEFINED due to circular dependency
 
 MAX_LOAD_CONCURRENTLY = 4
+
+MOVED_ZEROCONF_PROPS = ("macaddress", "model", "manufacturer")
 
 
 class Manifest(TypedDict, total=False):
@@ -157,15 +158,15 @@ async def async_get_custom_components(
 
     if isinstance(reg_or_evt, asyncio.Event):
         await reg_or_evt.wait()
-        return cast(Dict[str, "Integration"], hass.data.get(DATA_CUSTOM_COMPONENTS))
+        return cast(dict[str, "Integration"], hass.data.get(DATA_CUSTOM_COMPONENTS))
 
-    return cast(Dict[str, "Integration"], reg_or_evt)
+    return cast(dict[str, "Integration"], reg_or_evt)
 
 
 async def async_get_config_flows(hass: HomeAssistant) -> set[str]:
     """Return cached list of config flows."""
     # pylint: disable=import-outside-toplevel
-    from homeassistant.generated.config_flows import FLOWS
+    from .generated.config_flows import FLOWS
 
     flows: set[str] = set()
     flows.update(FLOWS)
@@ -182,21 +183,42 @@ async def async_get_config_flows(hass: HomeAssistant) -> set[str]:
     return flows
 
 
-async def async_get_zeroconf(hass: HomeAssistant) -> dict[str, list[dict[str, str]]]:
+def async_process_zeroconf_match_dict(entry: dict[str, Any]) -> dict[str, Any]:
+    """Handle backwards compat with zeroconf matchers."""
+    entry_without_type: dict[str, Any] = entry.copy()
+    del entry_without_type["type"]
+    # These properties keys used to be at the top level, we relocate
+    # them for backwards compat
+    for moved_prop in MOVED_ZEROCONF_PROPS:
+        if value := entry_without_type.pop(moved_prop, None):
+            _LOGGER.warning(
+                'Matching the zeroconf property "%s" at top-level is deprecated and should be moved into a properties dict; Check the developer documentation',
+                moved_prop,
+            )
+            if "properties" not in entry_without_type:
+                prop_dict: dict[str, str] = {}
+                entry_without_type["properties"] = prop_dict
+            else:
+                prop_dict = entry_without_type["properties"]
+            prop_dict[moved_prop] = value.lower()
+    return entry_without_type
+
+
+async def async_get_zeroconf(
+    hass: HomeAssistant,
+) -> dict[str, list[dict[str, str | dict[str, str]]]]:
     """Return cached list of zeroconf types."""
-    zeroconf: dict[str, list[dict[str, str]]] = ZEROCONF.copy()
+    zeroconf: dict[str, list[dict[str, str | dict[str, str]]]] = ZEROCONF.copy()  # type: ignore[assignment]
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
         if not integration.zeroconf:
             continue
         for entry in integration.zeroconf:
-            data = {"domain": integration.domain}
+            data: dict[str, str | dict[str, str]] = {"domain": integration.domain}
             if isinstance(entry, dict):
                 typ = entry["type"]
-                entry_without_type = entry.copy()
-                del entry_without_type["type"]
-                data.update(entry_without_type)
+                data.update(async_process_zeroconf_match_dict(entry))
             else:
                 typ = entry
 
@@ -295,7 +317,7 @@ class Integration:
         cls, hass: HomeAssistant, root_module: ModuleType, domain: str
     ) -> Integration | None:
         """Resolve an integration from a root module."""
-        for base in root_module.__path__:  # type: ignore
+        for base in root_module.__path__:
             manifest_path = pathlib.Path(base) / domain / "manifest.json"
 
             if not manifest_path.is_file():
@@ -517,18 +539,44 @@ class Integration:
 
     def get_component(self) -> ModuleType:
         """Return the component."""
-        cache = self.hass.data.setdefault(DATA_COMPONENTS, {})
-        if self.domain not in cache:
+        cache: dict[str, ModuleType] = self.hass.data.setdefault(DATA_COMPONENTS, {})
+        if self.domain in cache:
+            return cache[self.domain]
+
+        try:
             cache[self.domain] = importlib.import_module(self.pkg_path)
-        return cache[self.domain]  # type: ignore
+        except ImportError:
+            raise
+        except Exception as err:
+            _LOGGER.exception(
+                "Unexpected exception importing component %s", self.pkg_path
+            )
+            raise ImportError(f"Exception importing {self.pkg_path}") from err
+
+        return cache[self.domain]
 
     def get_platform(self, platform_name: str) -> ModuleType:
         """Return a platform for an integration."""
-        cache = self.hass.data.setdefault(DATA_COMPONENTS, {})
+        cache: dict[str, ModuleType] = self.hass.data.setdefault(DATA_COMPONENTS, {})
         full_name = f"{self.domain}.{platform_name}"
-        if full_name not in cache:
+        if full_name in cache:
+            return cache[full_name]
+
+        try:
             cache[full_name] = self._import_platform(platform_name)
-        return cache[full_name]  # type: ignore
+        except ImportError:
+            raise
+        except Exception as err:
+            _LOGGER.exception(
+                "Unexpected exception importing platform %s.%s",
+                self.pkg_path,
+                platform_name,
+            )
+            raise ImportError(
+                f"Exception importing {self.pkg_path}.{platform_name}"
+            ) from err
+
+        return cache[full_name]
 
     def _import_platform(self, platform_name: str) -> ModuleType:
         """Import the platform."""
@@ -584,7 +632,7 @@ async def _async_get_integration(hass: HomeAssistant, domain: str) -> Integratio
     if integration := (await async_get_custom_components(hass)).get(domain):
         return integration
 
-    from homeassistant import components  # pylint: disable=import-outside-toplevel
+    from . import components  # pylint: disable=import-outside-toplevel
 
     if integration := await hass.async_add_executor_job(
         Integration.resolve_from_root, hass, components, domain

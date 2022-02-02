@@ -3,26 +3,20 @@ from __future__ import annotations
 
 from typing import cast
 
+from goalzero import Yeti
+
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
-    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     POWER_WATT,
     SIGNAL_STRENGTH_DECIBELS,
@@ -31,70 +25,71 @@ from homeassistant.const import (
     TIME_SECONDS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import Yeti, YetiEntity
+from . import YetiEntity
 from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="wattsIn",
         name="Watts In",
-        device_class=DEVICE_CLASS_POWER,
+        device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=POWER_WATT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="ampsIn",
         name="Amps In",
-        device_class=DEVICE_CLASS_CURRENT,
+        device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="wattsOut",
         name="Watts Out",
-        device_class=DEVICE_CLASS_POWER,
+        device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=POWER_WATT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="ampsOut",
         name="Amps Out",
-        device_class=DEVICE_CLASS_CURRENT,
+        device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="whOut",
         name="WH Out",
-        device_class=DEVICE_CLASS_ENERGY,
+        device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="whStored",
         name="WH Stored",
-        device_class=DEVICE_CLASS_ENERGY,
+        device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="volts",
         name="Volts",
-        device_class=DEVICE_CLASS_VOLTAGE,
+        device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="socPercent",
         name="State of Charge Percent",
-        device_class=DEVICE_CLASS_BATTERY,
+        device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
@@ -106,36 +101,36 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="temperature",
         name="Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="wifiStrength",
         name="Wifi Strength",
-        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         entity_registry_enabled_default=False,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="timestamp",
         name="Total Run Time",
         native_unit_of_measurement=TIME_SECONDS,
         entity_registry_enabled_default=False,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="ssid",
         name="Wi-Fi SSID",
         entity_registry_enabled_default=False,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="ipAddr",
         name="IP Address",
         entity_registry_enabled_default=False,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 

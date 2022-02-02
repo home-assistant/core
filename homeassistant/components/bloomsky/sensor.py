@@ -1,11 +1,16 @@
 """Support the sensor of a BloomSky weather station."""
+from __future__ import annotations
+
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     CONF_MONITORED_CONDITIONS,
-    DEVICE_CLASS_TEMPERATURE,
     ELECTRIC_POTENTIAL_MILLIVOLT,
     PERCENTAGE,
     PRESSURE_INHG,
@@ -13,7 +18,10 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
 
@@ -47,7 +55,7 @@ SENSOR_UNITS_METRIC = {
 
 # Device class
 SENSOR_DEVICE_CLASS = {
-    "Temperature": DEVICE_CLASS_TEMPERATURE,
+    "Temperature": SensorDeviceClass.TEMPERATURE,
 }
 
 # Which sensors to format numerically
@@ -62,7 +70,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the available BloomSky weather sensors."""
     # Default needed in case of discovery
     if discovery_info is not None:

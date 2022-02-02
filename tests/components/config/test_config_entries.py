@@ -79,7 +79,7 @@ async def test_get_entries(hass, client):
             domain="comp3",
             title="Test 3",
             source="bla3",
-            disabled_by=core_ce.DISABLED_USER,
+            disabled_by=core_ce.ConfigEntryDisabler.USER,
         ).add_to_hass(hass)
 
         resp = await client.get("/api/config/config_entries/entry")
@@ -121,7 +121,7 @@ async def test_get_entries(hass, client):
                 "supports_unload": False,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
-                "disabled_by": core_ce.DISABLED_USER,
+                "disabled_by": core_ce.ConfigEntryDisabler.USER,
                 "reason": None,
             },
         ]
@@ -250,6 +250,35 @@ async def test_initialize_flow(hass, client):
         "errors": {"username": "Should be unique."},
         "last_step": None,
     }
+
+
+async def test_initialize_flow_unmet_dependency(hass, client):
+    """Test unmet dependencies are listed."""
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    config_schema = vol.Schema({"comp_conf": {"hello": str}}, required=True)
+    mock_integration(
+        hass, MockModule(domain="dependency_1", config_schema=config_schema)
+    )
+    # The test2 config flow should  fail because dependency_1 can't be automatically setup
+    mock_integration(
+        hass,
+        MockModule(domain="test2", partial_manifest={"dependencies": ["dependency_1"]}),
+    )
+
+    class TestFlow(core_ce.ConfigFlow):
+        async def async_step_user(self, user_input=None):
+            pass
+
+    with patch.dict(HANDLERS, {"test2": TestFlow}):
+        resp = await client.post(
+            "/api/config/config_entries/flow",
+            json={"handler": "test2", "show_advanced_options": True},
+        )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    data = await resp.text()
+    assert data == "Failed dependencies dependency_1"
 
 
 async def test_initialize_flow_unauth(hass, client, hass_admin_user):
@@ -877,14 +906,14 @@ async def test_disable_entry(hass, hass_ws_client):
             "id": 5,
             "type": "config_entries/disable",
             "entry_id": entry.entry_id,
-            "disabled_by": core_ce.DISABLED_USER,
+            "disabled_by": core_ce.ConfigEntryDisabler.USER,
         }
     )
     response = await ws_client.receive_json()
 
     assert response["success"]
     assert response["result"] == {"require_restart": True}
-    assert entry.disabled_by == core_ce.DISABLED_USER
+    assert entry.disabled_by is core_ce.ConfigEntryDisabler.USER
     assert entry.state is core_ce.ConfigEntryState.FAILED_UNLOAD
 
     # Enable
@@ -930,7 +959,7 @@ async def test_disable_entry_nonexisting(hass, hass_ws_client):
             "id": 5,
             "type": "config_entries/disable",
             "entry_id": "non_existing",
-            "disabled_by": core_ce.DISABLED_USER,
+            "disabled_by": core_ce.ConfigEntryDisabler.USER,
         }
     )
     response = await ws_client.receive_json()

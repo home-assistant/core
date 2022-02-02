@@ -5,12 +5,13 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from functools import partial
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 from pyiqvia import Client
 from pyiqvia.errors import IQVIAError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
@@ -37,7 +38,7 @@ from .const import (
 DEFAULT_ATTRIBUTION = "Data provided by IQVIA™"
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -64,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except IQVIAError as err:
             raise UpdateFailed from err
 
-        return cast(Dict[str, Any], data)
+        return cast(dict[str, Any], data)
 
     coordinators = {}
     init_data_update_tasks = []

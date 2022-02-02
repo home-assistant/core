@@ -2,6 +2,7 @@
 from aiohue.v2.models.button import ButtonEvent
 
 from homeassistant.components import hue
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.hue.v2.device import async_setup_devices
 from homeassistant.components.hue.v2.hue_event import async_setup_hue_events
 
@@ -52,7 +53,7 @@ async def test_get_triggers(hass, mock_bridge_v2, v2_resources_test_data, device
         {(hue.DOMAIN, "3ff06175-29e8-44a8-8fe7-af591b0025da")}
     )
     triggers = await async_get_device_automations(
-        hass, "trigger", hue_wall_switch_device.id
+        hass, DeviceAutomationType.TRIGGER, hue_wall_switch_device.id
     )
 
     trigger_batt = {

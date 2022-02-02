@@ -41,7 +41,7 @@ def fire_coroutine_threadsafe(coro: Coroutine, loop: AbstractEventLoop) -> None:
 
 def run_callback_threadsafe(
     loop: AbstractEventLoop, callback: Callable[..., T], *args: Any
-) -> concurrent.futures.Future[T]:  # pylint: disable=unsubscriptable-object
+) -> concurrent.futures.Future[T]:
     """Submit a callback object to a given event loop.
 
     Return a concurrent.futures.Future to access the result.
@@ -88,8 +88,8 @@ def run_callback_threadsafe(
     return future
 
 
-def check_loop() -> None:
-    """Warn if called inside the event loop."""
+def check_loop(func: Callable, strict: bool = True) -> None:
+    """Warn if called inside the event loop. Raise if `strict` is True."""
     try:
         get_running_loop()
         in_loop = True
@@ -101,7 +101,18 @@ def check_loop() -> None:
 
     found_frame = None
 
-    for frame in reversed(extract_stack()):
+    stack = extract_stack()
+
+    if (
+        func.__name__ == "sleep"
+        and len(stack) >= 3
+        and stack[-3].filename.endswith("pydevd.py")
+    ):
+        # Don't report `time.sleep` injected by the debugger (pydevd.py)
+        # stack[-1] is us, stack[-2] is protected_loop_func, stack[-3] is the offender
+        return
+
+    for frame in reversed(stack):
         for path in ("custom_components/", "homeassistant/components/"):
             try:
                 index = frame.filename.index(path)
@@ -116,7 +127,8 @@ def check_loop() -> None:
     # Did not source from integration? Hard error.
     if found_frame is None:
         raise RuntimeError(
-            "Detected I/O inside the event loop. This is causing stability issues. Please report issue"
+            "Detected blocking call inside the event loop. "
+            "This is causing stability issues. Please report issue"
         )
 
     start = index + len(path)
@@ -130,25 +142,28 @@ def check_loop() -> None:
         extra = ""
 
     _LOGGER.warning(
-        "Detected I/O inside the event loop. This is causing stability issues. Please report issue%s for %s doing I/O at %s, line %s: %s",
+        "Detected blocking call inside the event loop. This is causing stability issues. "
+        "Please report issue%s for %s doing blocking calls at %s, line %s: %s",
         extra,
         integration,
         found_frame.filename[index:],
         found_frame.lineno,
         found_frame.line.strip(),
     )
-    raise RuntimeError(
-        f"I/O must be done in the executor; Use `await hass.async_add_executor_job()` "
-        f"at {found_frame.filename[index:]}, line {found_frame.lineno}: {found_frame.line.strip()}"
-    )
+    if strict:
+        raise RuntimeError(
+            "Blocking calls must be done in the executor or a separate thread; "
+            "Use `await hass.async_add_executor_job()` "
+            f"at {found_frame.filename[index:]}, line {found_frame.lineno}: {found_frame.line.strip()}"
+        )
 
 
-def protect_loop(func: Callable) -> Callable:
+def protect_loop(func: Callable, strict: bool = True) -> Callable:
     """Protect function from running in event loop."""
 
     @functools.wraps(func)
     def protected_loop_func(*args, **kwargs):  # type: ignore
-        check_loop()
+        check_loop(func, strict=strict)
         return func(*args, **kwargs)
 
     return protected_loop_func

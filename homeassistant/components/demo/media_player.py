@@ -1,4 +1,6 @@
 """Demo implementation of the media player."""
+from __future__ import annotations
+
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
@@ -24,11 +26,20 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the media player demo platform."""
     async_add_entities(
         [
@@ -48,7 +59,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Demo config entry."""
     await async_setup_platform(hass, {}, async_add_entities)
 

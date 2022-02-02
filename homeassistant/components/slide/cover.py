@@ -1,23 +1,25 @@
 """Support for Slide slides."""
+from __future__ import annotations
 
 import logging
 
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    DEVICE_CLASS_CURTAIN,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPENING,
-    CoverEntity,
-)
-from homeassistant.const import ATTR_ID
+from homeassistant.components.cover import ATTR_POSITION, CoverDeviceClass, CoverEntity
+from homeassistant.const import ATTR_ID, STATE_CLOSED, STATE_CLOSING, STATE_OPENING
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import API, DEFAULT_OFFSET, DOMAIN, SLIDES
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up cover(s) for Slide platform."""
 
     if discovery_info is None:
@@ -35,29 +37,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class SlideCover(CoverEntity):
     """Representation of a Slide cover."""
 
+    _attr_assumed_state = True
+    _attr_device_class = CoverDeviceClass.CURTAIN
+
     def __init__(self, api, slide):
         """Initialize the cover."""
         self._api = api
         self._slide = slide
         self._id = slide["id"]
-        self._unique_id = slide["mac"]
-        self._name = slide["name"]
+        self._attr_extra_state_attributes = {ATTR_ID: self._id}
+        self._attr_unique_id = slide["mac"]
+        self._attr_name = slide["name"]
         self._invert = slide["invert"]
-
-    @property
-    def unique_id(self):
-        """Return the device unique id."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the device name."""
-        return self._name
-
-    @property
-    def extra_state_attributes(self):
-        """Return device specific state attributes."""
-        return {ATTR_ID: self._id}
 
     @property
     def is_opening(self):
@@ -80,16 +71,6 @@ class SlideCover(CoverEntity):
     def available(self):
         """Return False if state is not available."""
         return self._slide["online"]
-
-    @property
-    def assumed_state(self):
-        """Let HA know the integration is assumed state."""
-        return True
-
-    @property
-    def device_class(self):
-        """Return the device class of the cover."""
-        return DEVICE_CLASS_CURTAIN
 
     @property
     def current_cover_position(self):

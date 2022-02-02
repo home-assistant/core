@@ -18,8 +18,10 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PORT,
     CONF_URL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -107,7 +109,7 @@ SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.All(
 )
 
 
-PLATFORMS = ["binary_sensor", "sensor", "switch"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 
 @callback
@@ -202,7 +204,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 async with client:
                     await func(call, client)
             except GuardianError as err:
-                LOGGER.error("Error while executing %s: %s", func.__name__, err)
+                raise HomeAssistantError(
+                    f"Error while executing {func.__name__}: {err}"
+                ) from err
 
         return wrapper
 

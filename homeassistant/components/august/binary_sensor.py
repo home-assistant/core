@@ -17,19 +17,18 @@ from yalexs.doorbell import DoorbellDetail
 from yalexs.lock import LockDoorStatus
 from yalexs.util import update_lock_detail_from_activity
 
-from homeassistant.components.august import AugustData
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OCCUPANCY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
+from . import AugustData
 from .const import ACTIVITY_UPDATE_INTERVAL, DATA_AUGUST, DOMAIN
 from .entity import AugustEntityMixin
 
@@ -126,14 +125,14 @@ SENSOR_TYPES_DOORBELL: tuple[AugustBinarySensorEntityDescription, ...] = (
     AugustBinarySensorEntityDescription(
         key="doorbell_ding",
         name="Ding",
-        device_class=DEVICE_CLASS_OCCUPANCY,
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
         value_fn=_retrieve_ding_state,
         is_time_based=True,
     ),
     AugustBinarySensorEntityDescription(
         key="doorbell_motion",
         name="Motion",
-        device_class=DEVICE_CLASS_MOTION,
+        device_class=BinarySensorDeviceClass.MOTION,
         value_fn=_retrieve_motion_state,
         is_time_based=True,
     ),
@@ -147,18 +146,22 @@ SENSOR_TYPES_DOORBELL: tuple[AugustBinarySensorEntityDescription, ...] = (
     AugustBinarySensorEntityDescription(
         key="doorbell_online",
         name="Online",
-        device_class=DEVICE_CLASS_CONNECTIVITY,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_online_state,
         is_time_based=False,
     ),
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the August binary sensors."""
-    data = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
-    entities = []
+    data: AugustData = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
+    entities: list[BinarySensorEntity] = []
 
     for door in data.locks:
         detail = data.get_device_detail(door.device_id)
@@ -187,7 +190,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
     """Representation of an August Door binary sensor."""
 
-    _attr_device_class = DEVICE_CLASS_DOOR
+    _attr_device_class = BinarySensorDeviceClass.DOOR
 
     def __init__(self, data, device, description: BinarySensorEntityDescription):
         """Initialize the sensor."""

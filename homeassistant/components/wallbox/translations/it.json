@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "Impossibile connettersi",
             "invalid_auth": "Autenticazione non valida",
-            "reauth_invalid": "Riautenticazione non riuscita; Il numero di serie non corrisponde all'originale",
+            "reauth_invalid": "Nuova autenticazione non riuscita; Il numero di serie non corrisponde all'originale",
             "unknown": "Errore imprevisto"
         },
         "step": {

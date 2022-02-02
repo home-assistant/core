@@ -14,7 +14,8 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CURRENCY_EURO, ENERGY_KILO_WATT_HOUR
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.typing import StateType

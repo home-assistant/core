@@ -1,17 +1,22 @@
 """Support for Google Actions Smart Home Control."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 from http import HTTPStatus
 import logging
+from typing import Any
 from uuid import uuid4
 
 from aiohttp import ClientError, ClientResponseError
 from aiohttp.web import Request, Response
 import jwt
 
-# Typing imports
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, ENTITY_CATEGORIES
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
+
+# Typing imports
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
@@ -52,7 +57,9 @@ def _get_homegraph_jwt(time, iss, key):
     return jwt.encode(jwt_raw, key, algorithm="RS256")
 
 
-async def _get_homegraph_token(hass, jwt_signed):
+async def _get_homegraph_token(
+    hass: HomeAssistant, jwt_signed: str
+) -> dict[str, Any] | list[str, Any] | Any:
     headers = {
         "Authorization": f"Bearer {jwt_signed}",
         "Content-Type": "application/x-www-form-urlencoded",
@@ -77,6 +84,12 @@ class GoogleConfig(AbstractConfig):
         self._config = config
         self._access_token = None
         self._access_token_renew = None
+
+    async def async_initialize(self):
+        """Perform async initialization of config."""
+        await super().async_initialize()
+
+        self.async_enable_local_sdk()
 
     @property
     def enabled(self):
@@ -113,7 +126,7 @@ class GoogleConfig(AbstractConfig):
         entity_registry = er.async_get(self.hass)
         registry_entry = entity_registry.async_get(state.entity_id)
         if registry_entry:
-            auxiliary_entity = registry_entry.entity_category in ENTITY_CATEGORIES
+            auxiliary_entity = registry_entry.entity_category is not None
         else:
             auxiliary_entity = False
 

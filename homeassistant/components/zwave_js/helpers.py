@@ -80,13 +80,26 @@ def get_device_id_ext(client: ZwaveClient, node: ZwaveNode) -> tuple[str, str] |
 
 
 @callback
-def get_home_and_node_id_from_device_id(device_id: tuple[str, ...]) -> list[str]:
+def get_home_and_node_id_from_device_entry(
+    device_entry: dr.DeviceEntry,
+) -> tuple[str, int] | None:
     """
     Get home ID and node ID for Z-Wave device registry entry.
 
-    Returns [home_id, node_id]
+    Returns (home_id, node_id) or None if not found.
     """
-    return device_id[1].split("-")
+    device_id = next(
+        (
+            identifier[1]
+            for identifier in device_entry.identifiers
+            if identifier[0] == DOMAIN
+        ),
+        None,
+    )
+    if device_id is None:
+        return None
+    id_ = device_id.split("-")
+    return (id_[0], int(id_[1]))
 
 
 @callback
@@ -128,16 +141,9 @@ def async_get_node_from_device_id(
 
     # Get node ID from device identifier, perform some validation, and then get the
     # node
-    identifier = next(
-        (
-            get_home_and_node_id_from_device_id(identifier)
-            for identifier in device_entry.identifiers
-            if identifier[0] == DOMAIN
-        ),
-        None,
-    )
+    identifiers = get_home_and_node_id_from_device_entry(device_entry)
 
-    node_id = int(identifier[1]) if identifier is not None else None
+    node_id = identifiers[1] if identifiers else None
 
     if node_id is None or node_id not in client.driver.controller.nodes:
         raise ValueError(f"Node for device {device_id} can't be found")

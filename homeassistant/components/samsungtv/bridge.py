@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 import contextlib
 from typing import Any
 
+from requests.exceptions import Timeout as RequestsTimeout
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
 from samsungtvws import SamsungTVWS
@@ -321,7 +322,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
     def device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""
         if remote := self._get_remote(avoid_open=True):
-            with contextlib.suppress(HttpApiError):
+            with contextlib.suppress(HttpApiError, RequestsTimeout):
                 device_info: dict[str, Any] = remote.rest_device_info()
                 return device_info
 

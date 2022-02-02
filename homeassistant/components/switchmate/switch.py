@@ -1,4 +1,6 @@
 """Support for Switchmate."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 # pylint: disable=import-error
@@ -7,7 +9,10 @@ import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_MAC, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_FLIP_ON_OFF = "flip_on_off"
 DEFAULT_NAME = "Switchmate"
@@ -23,7 +28,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Perform the setup for Switchmate devices."""
     name = config.get(CONF_NAME)
     mac_addr = config[CONF_MAC]

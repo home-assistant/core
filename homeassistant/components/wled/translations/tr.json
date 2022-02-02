@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
-            "cannot_connect": "Ba\u011flanma hatas\u0131"
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "cct_unsupported": "Bu WLED cihaz\u0131, bu entegrasyon taraf\u0131ndan desteklenmeyen CCT kanallar\u0131n\u0131 kullan\u0131r."
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131"
@@ -11,7 +12,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Ana bilgisayar"
+                    "host": "Sunucu"
                 },
                 "description": "WLED'inizi Home Assistant ile t\u00fcmle\u015ftirmek i\u00e7in ayarlay\u0131n."
             },
