@@ -145,7 +145,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
     update_interval = entry.options.get(CONF_SCAN_INTERVAL)
