@@ -4,12 +4,12 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER, PLATFORMS
+from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER, KEY_STOP_COORDINATOR, PLATFORMS
 from .errors import CannotLoginException
 from .router import NetgearRouter
 
@@ -68,11 +68,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=SCAN_INTERVAL,
     )
 
+    # ensure the coordinator keeps updating to discover new devices
+    @callback
+    def dummy_coordinator_callback() -> None:
+        """Dummy coordiantor callback to ensure discovery of new devices."""
+
+    remove_dummy_update = coordinator.async_add_listener(dummy_coordinator_callback)
+
     await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.unique_id] = {
         KEY_ROUTER: router,
         KEY_COORDINATOR: coordinator,
+        KEY_STOP_COORDINATOR: remove_dummy_update,
     }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -83,6 +91,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    # stop the coordinator
+    remove_dummy_update = hass.data[DOMAIN][entry.unique_id][KEY_STOP_COORDINATOR]
+    remove_dummy_update()
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.unique_id)
