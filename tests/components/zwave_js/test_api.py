@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 from zwave_js_server.const import (
+    InclusionState,
     InclusionStrategy,
     LogLevel,
     Protocols,
@@ -76,14 +77,16 @@ async def test_network_status(hass, integration, hass_ws_client):
     entry = integration
     ws_client = await hass_ws_client(hass)
 
-    await ws_client.send_json(
-        {ID: 2, TYPE: "zwave_js/network_status", ENTRY_ID: entry.entry_id}
-    )
-    msg = await ws_client.receive_json()
-    result = msg["result"]
+    with patch("zwave_js_server.model.controller.Controller.async_get_state"):
+        await ws_client.send_json(
+            {ID: 2, TYPE: "zwave_js/network_status", ENTRY_ID: entry.entry_id}
+        )
+        msg = await ws_client.receive_json()
+        result = msg["result"]
 
     assert result["client"]["ws_server_url"] == "ws://test:3000/zjs"
     assert result["client"]["server_version"] == "1.0.0"
+    assert result["controller"]["inclusion_state"] == InclusionState.IDLE
 
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)

@@ -364,6 +364,7 @@ async def websocket_network_status(
 ) -> None:
     """Get the status of the Z-Wave JS network."""
     controller = client.driver.controller
+    await controller.async_get_state()
     data = {
         "client": {
             "ws_server_url": client.ws_server_url,
@@ -390,6 +391,7 @@ async def websocket_network_status(
             "suc_node_id": controller.suc_node_id,
             "supports_timers": controller.supports_timers,
             "is_heal_network_active": controller.is_heal_network_active,
+            "inclusion_state": controller.inclusion_state,
             "nodes": list(client.driver.controller.nodes),
         },
     }
