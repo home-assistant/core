@@ -14,7 +14,7 @@ class ZWaveMePlatform(StrEnum):
     CLIMATE = "thermostat"
     LOCK = "doorlock"
     NUMBER = "switchMultilevel"
-    SWITCH = "binarySwitch"
+    SWITCH = "switchBinary"
     SENSOR = "sensorMultilevel"
     RGBW_LIGHT = "switchRGBW"
     RGB_LIGHT = "switchRGB"
