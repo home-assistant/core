@@ -15,6 +15,9 @@
   "codeowners": [
     "@cgtobi"
   ],
+  "dhcp": [{
+    "macaddress": "70EE50*"
+  }],
   "config_flow": true,
   "homekit": {
     "models": [
