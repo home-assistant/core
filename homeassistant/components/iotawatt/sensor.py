@@ -8,6 +8,7 @@ import logging
 from iotawattpy.sensor import Sensor
 
 from homeassistant.components.sensor import (
+    ATTR_LAST_RESET,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -219,6 +220,9 @@ class IotaWattSensor(update_coordinator.CoordinatorEntity, SensorEntity):
         attrs = {"type": data.getType()}
         if attrs["type"] == "Input":
             attrs["channel"] = data.getChannel()
+        if (begin := data.getBegin()) and (last_reset := dt.parse_datetime(begin)):
+            attrs[ATTR_LAST_RESET] = last_reset.isoformat()
+
         return attrs
 
     @property

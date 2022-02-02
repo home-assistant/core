@@ -975,6 +975,7 @@ omit =
     homeassistant/components/senseme/switch.py
     homeassistant/components/sensibo/__init__.py
     homeassistant/components/sensibo/climate.py
+    homeassistant/components/sensibo/coordinator.py
     homeassistant/components/serial/sensor.py
     homeassistant/components/serial_pm/sensor.py
     homeassistant/components/sesame/lock.py

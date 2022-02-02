@@ -36,6 +36,7 @@ from .test_common import (
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
+    help_test_reload_with_config,
     help_test_reloadable,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
@@ -44,7 +45,11 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import async_fire_mqtt_message, async_fire_time_changed
+from tests.common import (
+    assert_setup_component,
+    async_fire_mqtt_message,
+    async_fire_time_changed,
+)
 
 DEFAULT_CONFIG = {
     binary_sensor.DOMAIN: {
@@ -872,3 +877,87 @@ async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
     domain = binary_sensor.DOMAIN
     config = DEFAULT_CONFIG[domain]
     await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
+
+
+async def test_cleanup_triggers_and_restoring_state(
+    hass, mqtt_mock, caplog, tmp_path, freezer
+):
+    """Test cleanup old triggers at reloading and restoring the state."""
+    domain = binary_sensor.DOMAIN
+    config1 = copy.deepcopy(DEFAULT_CONFIG[domain])
+    config1["name"] = "test1"
+    config1["expire_after"] = 30
+    config1["state_topic"] = "test-topic1"
+    config2 = copy.deepcopy(DEFAULT_CONFIG[domain])
+    config2["name"] = "test2"
+    config2["expire_after"] = 5
+    config2["state_topic"] = "test-topic2"
+
+    freezer.move_to("2022-02-02 12:01:00+01:00")
+
+    assert await async_setup_component(
+        hass,
+        binary_sensor.DOMAIN,
+        {binary_sensor.DOMAIN: [config1, config2]},
+    )
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, "test-topic1", "ON")
+    state = hass.states.get("binary_sensor.test1")
+    assert state.state == "on"
+
+    async_fire_mqtt_message(hass, "test-topic2", "ON")
+    state = hass.states.get("binary_sensor.test2")
+    assert state.state == "on"
+
+    freezer.move_to("2022-02-02 12:01:10+01:00")
+
+    await help_test_reload_with_config(
+        hass, caplog, tmp_path, domain, [config1, config2]
+    )
+    assert "Clean up expire after trigger for binary_sensor.test1" in caplog.text
+    assert "Clean up expire after trigger for binary_sensor.test2" not in caplog.text
+    assert (
+        "State recovered after reload for binary_sensor.test1, remaining time before expiring"
+        in caplog.text
+    )
+    assert "State recovered after reload for binary_sensor.test2" not in caplog.text
+
+    state = hass.states.get("binary_sensor.test1")
+    assert state.state == "on"
+
+    state = hass.states.get("binary_sensor.test2")
+    assert state.state == STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, "test-topic1", "OFF")
+    state = hass.states.get("binary_sensor.test1")
+    assert state.state == "off"
+
+    async_fire_mqtt_message(hass, "test-topic2", "OFF")
+    state = hass.states.get("binary_sensor.test2")
+    assert state.state == "off"
+
+
+async def test_skip_restoring_state_with_over_due_expire_trigger(
+    hass, mqtt_mock, caplog, freezer
+):
+    """Test restoring a state with over due expire timer."""
+
+    freezer.move_to("2022-02-02 12:02:00+01:00")
+    domain = binary_sensor.DOMAIN
+    config3 = copy.deepcopy(DEFAULT_CONFIG[domain])
+    config3["name"] = "test3"
+    config3["expire_after"] = 10
+    config3["state_topic"] = "test-topic3"
+    fake_state = ha.State(
+        "binary_sensor.test3",
+        "on",
+        {},
+        last_changed=datetime.fromisoformat("2022-02-02 12:01:35+01:00"),
+    )
+    with patch(
+        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
+        return_value=fake_state,
+    ), assert_setup_component(1, domain):
+        assert await async_setup_component(hass, domain, {domain: config3})
+        await hass.async_block_till_done()
+    assert "Skip state recovery after reload for binary_sensor.test3" in caplog.text
