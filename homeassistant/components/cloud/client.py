@@ -47,7 +47,6 @@ class CloudClient(Interface):
         self._google_config: google_config.CloudGoogleConfig | None = None
         self._alexa_config_init_lock = asyncio.Lock()
         self._google_config_init_lock = asyncio.Lock()
-        self._listeners = []
 
     @property
     def base_path(self) -> Path:
