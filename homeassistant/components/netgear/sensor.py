@@ -86,6 +86,7 @@ async def async_setup_entry(
         remove_new_device_listener
     )
 
+    coordinator.data = True
     new_device_callback()
 
 
