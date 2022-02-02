@@ -37,6 +37,14 @@ MOCK_UPTIMEROBOT_MONITOR = {
     "type": 1,
     "url": "http://example.com",
 }
+MOCK_UPTIMEROBOT_MONITOR_PAUSED = {
+    "id": 1234,
+    "friendly_name": "Test monitor",
+    "status": 0,
+    "type": 1,
+    "url": "http://example.com",
+}
+
 
 MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA = {
     "domain": DOMAIN,
@@ -50,6 +58,7 @@ STATE_UP = "up"
 
 UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY = "binary_sensor.test_monitor"
 UPTIMEROBOT_SENSOR_TEST_ENTITY = "sensor.test_monitor"
+UPTIMEROBOT_SWITCH_TEST_ENTITY = "switch.test_monitor_pause"
 
 
 class MockApiResponseKey(str, Enum):
