@@ -51,7 +51,7 @@ class IotawattUpdater(DataUpdateCoordinator):
                 httpx_client.get_async_client(self.hass),
                 self.entry.data.get(CONF_USERNAME),
                 self.entry.data.get(CONF_PASSWORD),
-                "d",
+                integratedInterval="d",
             )
             try:
                 is_authenticated = await api.connect()
