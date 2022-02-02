@@ -39,6 +39,20 @@ async def test_invalid_path(hass: HomeAssistant) -> None:
     assert len(hass.states.async_entity_ids("sensor")) == 0
 
 
+async def test_cannot_access_file(hass: HomeAssistant) -> None:
+    """Test that an invalid path is caught."""
+    config = {"sensor": {"platform": "filesize", CONF_FILE_PATHS: [TEST_FILE]}}
+
+    with patch(
+        "homeassistant.components.filesize.sensor.pathlib",
+        side_effect=OSError("Can not access"),
+    ):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids("sensor")) == 0
+
+
 async def test_valid_path(hass: HomeAssistant) -> None:
     """Test for a valid path."""
     create_file(TEST_FILE)

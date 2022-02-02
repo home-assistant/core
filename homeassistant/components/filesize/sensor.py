@@ -4,6 +4,7 @@ from __future__ import annotations
 import datetime
 import logging
 import os
+import pathlib
 from typing import Any
 
 import voluptuous as vol
@@ -46,14 +47,21 @@ def setup_platform(
     sensors = []
     pathlist = []
     for path in config[CONF_FILE_PATHS]:
-        if path in pathlist:
+        try:
+            fullpath = str(pathlib.Path(path).absolute())
+        except OSError as error:
+            _LOGGER.error("Can not access file %s, error %s", path, error)
             continue
-        pathlist.append(path)
+
+        if fullpath in pathlist:
+            continue
+        pathlist.append(fullpath)
+
         if not hass.config.is_allowed_path(path):
             _LOGGER.error("Filepath %s is not valid or allowed", path)
             continue
 
-        sensors.append(Filesize(path))
+        sensors.append(Filesize(fullpath))
 
     if sensors:
         add_entities(sensors, True)
@@ -71,7 +79,7 @@ class Filesize(SensorEntity):
         self._size: int | None = None
         self._last_updated: str | None = None
         self._attr_name = slugify(path.split("/")[-1]).strip().capitalize()
-        self._attr_unique_id = path.strip().casefold()
+        self._attr_unique_id = path
 
     def update(self) -> None:
         """Update the sensor."""
