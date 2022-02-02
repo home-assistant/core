@@ -1,7 +1,7 @@
 """Support for Todoist task management (https://todoist.com)."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import logging
 
 from todoist.api import TodoistAPI
@@ -55,6 +55,7 @@ from .const import (
     SUMMARY,
     TASKS,
 )
+from .types import DueDate
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -219,7 +220,7 @@ def setup_platform(
                 due_date = datetime(due.year, due.month, due.day)
             # Format it in the manner Todoist expects
             due_date = dt.as_utc(due_date)
-            date_format = "%Y-%m-%dT%H:%M%S"
+            date_format = "%Y-%m-%dT%H:%M:%S"
             _due["date"] = datetime.strftime(due_date, date_format)
 
         if _due:
@@ -258,15 +259,15 @@ def setup_platform(
     )
 
 
-def _parse_due_date(data: dict, gmt_string) -> datetime | None:
-    """Parse the due date dict into a datetime object."""
-    # Add time information to date only strings.
-    if len(data["date"]) == 10:
-        return datetime.fromisoformat(data["date"]).replace(tzinfo=dt.UTC)
+def _parse_due_date(data: DueDate, timezone_offset: int) -> datetime | None:
+    """Parse the due date dict into a datetime object in UTC.
+
+    This function will always return a timezone aware datetime if it can be parsed.
+    """
     if not (nowtime := dt.parse_datetime(data["date"])):
         return None
     if nowtime.tzinfo is None:
-        data["date"] += gmt_string
+        nowtime = nowtime.replace(tzinfo=timezone(timedelta(hours=timezone_offset)))
     return dt.as_utc(nowtime)
 
 
@@ -441,7 +442,7 @@ class TodoistProjectData:
         task[START] = dt.utcnow()
         if data[DUE] is not None:
             task[END] = _parse_due_date(
-                data[DUE], self._api.state["user"]["tz_info"]["gmt_string"]
+                data[DUE], self._api.state["user"]["tz_info"]["hours"]
             )
 
             if self._due_date_days is not None and (
@@ -564,8 +565,9 @@ class TodoistProjectData:
         for task in project_task_data:
             if task["due"] is None:
                 continue
+            # @NOTE: _parse_due_date always returns the date in UTC time.
             due_date = _parse_due_date(
-                task["due"], self._api.state["user"]["tz_info"]["gmt_string"]
+                task["due"], self._api.state["user"]["tz_info"]["hours"]
             )
             if not due_date:
                 continue
