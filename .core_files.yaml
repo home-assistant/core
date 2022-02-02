@@ -101,6 +101,7 @@ components: &components
 # Testing related files that affect the whole test/linting suite
 tests: &tests
   - codecov.yaml
+  - pylint/*
   - requirements_test_pre_commit.txt
   - requirements_test.txt
   - tests/auth/**
