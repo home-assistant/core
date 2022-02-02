@@ -1525,6 +1525,25 @@ async def help_test_publishing_with_custom_encoding(
     mqtt_mock.async_publish.reset_mock()
 
 
+async def help_test_reload_with_config(hass, caplog, tmp_path, domain, config):
+    """Test reloading with supplied config."""
+    new_yaml_config_file = tmp_path / "configuration.yaml"
+    new_yaml_config = yaml.dump({domain: config})
+    new_yaml_config_file.write_text(new_yaml_config)
+    assert new_yaml_config_file.read_text() == new_yaml_config
+
+    with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
+        await hass.services.async_call(
+            "mqtt",
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert "<Event event_mqtt_reloaded[L]>" in caplog.text
+
+
 async def help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config):
     """Test reloading an MQTT platform."""
     # Create and test an old config of 2 entities based on the config supplied
@@ -1549,21 +1568,10 @@ async def help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config
     new_config_2["name"] = "test_new_2"
     new_config_3 = copy.deepcopy(config)
     new_config_3["name"] = "test_new_3"
-    new_yaml_config_file = tmp_path / "configuration.yaml"
-    new_yaml_config = yaml.dump({domain: [new_config_1, new_config_2, new_config_3]})
-    new_yaml_config_file.write_text(new_yaml_config)
-    assert new_yaml_config_file.read_text() == new_yaml_config
 
-    with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
-        await hass.services.async_call(
-            "mqtt",
-            SERVICE_RELOAD,
-            {},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-
-    assert "<Event event_mqtt_reloaded[L]>" in caplog.text
+    await help_test_reload_with_config(
+        hass, caplog, tmp_path, domain, [new_config_1, new_config_2, new_config_3]
+    )
 
     assert len(hass.states.async_all(domain)) == 3
 
