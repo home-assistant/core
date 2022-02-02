@@ -39,11 +39,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         try:
             await self.client.login()
-            return None
         except AuthenticationException:
             return {"base": "invalid_auth"}
         except ClientError:
             return {"base": "cannot_connect"}
+        return None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
