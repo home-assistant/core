@@ -110,10 +110,12 @@ class DnsIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_HOSTNAME: hostname,
                         CONF_NAME: name,
-                        CONF_RESOLVER: resolver,
-                        CONF_RESOLVER_IPV6: resolver_ipv6,
                         CONF_IPV4: validate[CONF_IPV4],
                         CONF_IPV6: validate[CONF_IPV6],
+                    },
+                    options={
+                        CONF_RESOLVER: resolver,
+                        CONF_RESOLVER_IPV6: resolver_ipv6,
                     },
                 )
 
