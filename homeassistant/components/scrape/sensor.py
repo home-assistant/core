@@ -12,7 +12,7 @@ from homeassistant.components.rest.data import RestData
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
     SensorEntity,
 )
@@ -46,7 +46,7 @@ CONF_INDEX = "index"
 DEFAULT_NAME = "Web scrape"
 DEFAULT_VERIFY_SSL = True
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_RESOURCE): cv.string,
         vol.Required(CONF_SELECT): cv.string,
@@ -134,7 +134,7 @@ class ScrapeSensor(SensorEntity):
         name: str,
         select: str | None,
         attr: str | None,
-        index: str | None,
+        index: int,
         value_template: Template | None,
         unit: str | None,
         device_class: str | None,

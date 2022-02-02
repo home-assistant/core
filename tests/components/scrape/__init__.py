@@ -1,8 +1,7 @@
 """Tests for scrape component."""
 from __future__ import annotations
-from typing import Any
 
-import httpx
+from typing import Any
 
 
 def return_config(
