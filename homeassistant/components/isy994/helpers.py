@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 from pyisy.constants import (
     ISY_VALUE_UNKNOWN,
@@ -53,7 +54,9 @@ from .const import (
     UOM_DOUBLE_TEMP,
     UOM_ISYV4_DEGREES,
 )
-from .entity import ISYEntity
+
+if TYPE_CHECKING:
+    from .entity import ISYEntity
 
 BINARY_SENSOR_UOMS = ["2", "78"]
 BINARY_SENSOR_ISY_STATES = ["on", "off"]
