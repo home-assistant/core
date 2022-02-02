@@ -188,7 +188,6 @@ class MqttSensor(MqttEntity, SensorEntity, RestoreEntity):
                 self.entity_id,
                 expiration_at - time_now,
             )
-            self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove exprire triggers."""
