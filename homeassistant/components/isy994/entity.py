@@ -9,6 +9,7 @@ from pyisy.constants import (
     PROTO_ZWAVE,
 )
 from pyisy.helpers import NodeProperty
+from pyisy.nodes import Node
 
 from homeassistant.const import (
     ATTR_IDENTIFIERS,
@@ -32,7 +33,7 @@ class ISYEntity(Entity):
 
     _name: str = None
 
-    def __init__(self, node) -> None:
+    def __init__(self, node: Node) -> None:
         """Initialize the insteon device."""
         self._node = node
         self._attrs = {}
