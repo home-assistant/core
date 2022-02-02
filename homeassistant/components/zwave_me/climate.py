@@ -5,8 +5,6 @@ from zwave_me_ws import ZWaveMeData
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     SUPPORT_TARGET_TEMPERATURE,
 )
@@ -15,7 +13,6 @@ from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
 from . import ZWaveMeEntity
 from .const import DOMAIN, ZWaveMePlatform
 
