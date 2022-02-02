@@ -71,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # ensure the coordinator keeps updating to discover new devices
     @callback
     def dummy_coordinator_callback() -> None:
-        """Dummy coordiantor callback to ensure discovery of new devices."""
+        """Callback ensuring discovery of new devices."""
 
     remove_dummy_update = coordinator.async_add_listener(dummy_coordinator_callback)
 
