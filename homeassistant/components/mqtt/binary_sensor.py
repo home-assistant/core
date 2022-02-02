@@ -118,7 +118,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     async def async_added_to_hass(self) -> None:
-        """Recover active entities with exire trigger."""
+        """Restore state for entities with expire_after set."""
         await super().async_added_to_hass()
         if (
             (expire_after := self._config.get(CONF_EXPIRE_AFTER)) is not None
