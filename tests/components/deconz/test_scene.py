@@ -58,8 +58,9 @@ async def test_scenes(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[1][2] == {}
 
     await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 0
+    assert len(hass.states.async_all()) == 1  # Due to restore entity
 
 
 async def test_only_new_scenes_are_created(hass, aioclient_mock):
