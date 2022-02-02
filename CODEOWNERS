@@ -803,6 +803,7 @@ homeassistant/components/scene/* @home-assistant/core
 tests/components/scene/* @home-assistant/core
 homeassistant/components/schluter/* @prairieapps
 homeassistant/components/scrape/* @fabaff
+tests/components/scrape/* @fabaff
 homeassistant/components/screenlogic/* @dieselrabbit @bdraco
 tests/components/screenlogic/* @dieselrabbit @bdraco
 homeassistant/components/script/* @home-assistant/core
@@ -975,6 +976,7 @@ tests/components/trace/* @home-assistant/core
 homeassistant/components/tractive/* @Danielhiversen @zhulik @bieniu
 tests/components/tractive/* @Danielhiversen @zhulik @bieniu
 homeassistant/components/trafikverket_train/* @endor-force @gjohansson-ST
+tests/components/trafikverket_train/* @endor-force @gjohansson-ST
 homeassistant/components/trafikverket_weatherstation/* @endor-force @gjohansson-ST
 tests/components/trafikverket_weatherstation/* @endor-force @gjohansson-ST
 homeassistant/components/transmission/* @engrbm87 @JPHutchins
