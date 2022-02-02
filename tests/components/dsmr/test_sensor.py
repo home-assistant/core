@@ -12,10 +12,8 @@ from itertools import chain, repeat
 from unittest.mock import DEFAULT, MagicMock
 
 from homeassistant import config_entries
-from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -28,47 +26,8 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, patch
-
-
-async def test_setup_platform(hass, dsmr_connection_fixture):
-    """Test setup of platform."""
-    async_add_entities = MagicMock()
-
-    entry_data = {
-        "platform": DOMAIN,
-        "port": "/dev/ttyUSB0",
-        "dsmr_version": "2.2",
-        "precision": 4,
-        "reconnect_interval": 30,
-    }
-
-    serial_data = {"serial_id": "1234", "serial_id_gas": "5678"}
-
-    with patch(
-        "homeassistant.components.dsmr.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.dsmr.config_flow._validate_dsmr_connection",
-        return_value=serial_data,
-    ):
-        assert await async_setup_component(
-            hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: entry_data}
-        )
-        await hass.async_block_till_done()
-
-    assert not async_add_entities.called
-
-    # Check config entry
-    conf_entries = hass.config_entries.async_entries(DOMAIN)
-
-    assert len(conf_entries) == 1
-
-    entry = conf_entries[0]
-
-    assert entry.state == config_entries.ConfigEntryState.LOADED
-    assert entry.data == {**entry_data, **serial_data}
 
 
 async def test_default_setup(hass, dsmr_connection_fixture):
@@ -350,9 +309,9 @@ async def test_luxembourg_meter(hass, dsmr_connection_fixture):
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
+        ELECTRICITY_EXPORTED_TOTAL,
+        ELECTRICITY_IMPORTED_TOTAL,
         HOURLY_GAS_METER_READING,
-        LUXEMBOURG_ELECTRICITY_DELIVERED_TARIFF_GLOBAL,
-        LUXEMBOURG_ELECTRICITY_USED_TARIFF_GLOBAL,
     )
     from dsmr_parser.objects import CosemObject, MBusObject
 
@@ -375,10 +334,10 @@ async def test_luxembourg_meter(hass, dsmr_connection_fixture):
                 {"value": Decimal(745.695), "unit": "m3"},
             ]
         ),
-        LUXEMBOURG_ELECTRICITY_USED_TARIFF_GLOBAL: CosemObject(
+        ELECTRICITY_IMPORTED_TOTAL: CosemObject(
             [{"value": Decimal(123.456), "unit": ENERGY_KILO_WATT_HOUR}]
         ),
-        LUXEMBOURG_ELECTRICITY_DELIVERED_TARIFF_GLOBAL: CosemObject(
+        ELECTRICITY_EXPORTED_TOTAL: CosemObject(
             [{"value": Decimal(654.321), "unit": ENERGY_KILO_WATT_HOUR}]
         ),
     }
@@ -551,8 +510,8 @@ async def test_swedish_meter(hass, dsmr_connection_fixture):
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
-        SWEDEN_ELECTRICITY_DELIVERED_TARIFF_GLOBAL,
-        SWEDEN_ELECTRICITY_USED_TARIFF_GLOBAL,
+        ELECTRICITY_EXPORTED_TOTAL,
+        ELECTRICITY_IMPORTED_TOTAL,
     )
     from dsmr_parser.objects import CosemObject
 
@@ -569,10 +528,10 @@ async def test_swedish_meter(hass, dsmr_connection_fixture):
     }
 
     telegram = {
-        SWEDEN_ELECTRICITY_USED_TARIFF_GLOBAL: CosemObject(
+        ELECTRICITY_IMPORTED_TOTAL: CosemObject(
             [{"value": Decimal(123.456), "unit": ENERGY_KILO_WATT_HOUR}]
         ),
-        SWEDEN_ELECTRICITY_DELIVERED_TARIFF_GLOBAL: CosemObject(
+        ELECTRICITY_EXPORTED_TOTAL: CosemObject(
             [{"value": Decimal(654.321), "unit": ENERGY_KILO_WATT_HOUR}]
         ),
     }
@@ -608,6 +567,80 @@ async def test_swedish_meter(hass, dsmr_connection_fixture):
 
     power_tariff = hass.states.get("sensor.energy_production_total")
     assert power_tariff.state == "654.321"
+    assert (
+        power_tariff.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
+    assert (
+        power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    )
+
+
+async def test_easymeter(hass, dsmr_connection_fixture):
+    """Test if Q3D meter is correctly parsed."""
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
+
+    from dsmr_parser.obis_references import (
+        ELECTRICITY_EXPORTED_TOTAL,
+        ELECTRICITY_IMPORTED_TOTAL,
+    )
+    from dsmr_parser.objects import CosemObject
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "Q3D",
+        "precision": 4,
+        "reconnect_interval": 30,
+        "serial_id": None,
+        "serial_id_gas": None,
+    }
+    entry_options = {
+        "time_between_update": 0,
+    }
+
+    telegram = {
+        ELECTRICITY_IMPORTED_TOTAL: CosemObject(
+            [{"value": Decimal(54184.6316), "unit": ENERGY_KILO_WATT_HOUR}]
+        ),
+        ELECTRICITY_EXPORTED_TOTAL: CosemObject(
+            [{"value": Decimal(19981.1069), "unit": ENERGY_KILO_WATT_HOUR}]
+        ),
+    }
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr",
+        unique_id="/dev/ttyUSB0",
+        data=entry_data,
+        options=entry_options,
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+
+    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
+    telegram_callback(telegram)
+
+    # after receiving telegram entities need to have the chance to update
+    await asyncio.sleep(0)
+
+    power_tariff = hass.states.get("sensor.energy_consumption_total")
+    assert power_tariff.state == "54184.6316"
+    assert power_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
+    assert power_tariff.attributes.get(ATTR_ICON) is None
+    assert (
+        power_tariff.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
+    assert (
+        power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    )
+
+    power_tariff = hass.states.get("sensor.energy_production_total")
+    assert power_tariff.state == "19981.1069"
     assert (
         power_tariff.attributes.get(ATTR_STATE_CLASS)
         == SensorStateClass.TOTAL_INCREASING

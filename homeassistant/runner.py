@@ -8,13 +8,11 @@ import threading
 import traceback
 from typing import Any
 
-from homeassistant import bootstrap
-from homeassistant.core import callback
-from homeassistant.helpers.frame import warn_use
-from homeassistant.util.executor import InterruptibleThreadPoolExecutor
-from homeassistant.util.thread import deadlock_safe_shutdown
-
-# mypy: disallow-any-generics
+from . import bootstrap
+from .core import callback
+from .helpers.frame import warn_use
+from .util.executor import InterruptibleThreadPoolExecutor
+from .util.thread import deadlock_safe_shutdown
 
 #
 # Python 3.8 has significantly less workers by default

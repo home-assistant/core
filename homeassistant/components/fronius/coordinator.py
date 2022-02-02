@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any, Dict, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from pyfronius import BadStatusError, FroniusError
 
@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 
 
 class FroniusCoordinatorBase(
-    ABC, DataUpdateCoordinator[Dict[SolarNetId, Dict[str, Any]]]
+    ABC, DataUpdateCoordinator[dict[SolarNetId, dict[str, Any]]]
 ):
     """Query Fronius endpoint and keep track of seen conditions."""
 
@@ -100,6 +100,8 @@ class FroniusCoordinatorBase(
                 for key in self.unregistered_keys[solar_net_id].intersection(
                     device_data
                 ):
+                    if device_data[key]["value"] is None:
+                        continue
                     new_entities.append(entity_constructor(self, key, solar_net_id))
                     self.unregistered_keys[solar_net_id].remove(key)
             if new_entities:

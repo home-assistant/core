@@ -38,6 +38,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -65,7 +66,7 @@ from .const import (
     TYPE_MOTIONEYE_MJPEG_CAMERA,
 )
 
-PLATFORMS = ["camera"]
+PLATFORMS = [Platform.CAMERA]
 
 SCHEMA_TEXT_OVERLAY = vol.In(
     [

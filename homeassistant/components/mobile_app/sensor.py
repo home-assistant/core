@@ -1,18 +1,18 @@
 """Sensor platform for mobile_app."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_WEBHOOK_ID,
-    DEVICE_CLASS_DATE,
-    DEVICE_CLASS_TIMESTAMP,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -34,7 +34,11 @@ from .const import (
 from .entity import MobileAppEntity, unique_id
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up mobile app sensor from a config entry."""
     entities = []
 
@@ -95,12 +99,12 @@ class MobileAppSensor(MobileAppEntity, SensorEntity):
         if (
             self.device_class
             in (
-                DEVICE_CLASS_DATE,
-                DEVICE_CLASS_TIMESTAMP,
+                SensorDeviceClass.DATE,
+                SensorDeviceClass.TIMESTAMP,
             )
             and (timestamp := dt_util.parse_datetime(state)) is not None
         ):
-            if self.device_class == DEVICE_CLASS_DATE:
+            if self.device_class == SensorDeviceClass.DATE:
                 return timestamp.date()
             return timestamp
 

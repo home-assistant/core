@@ -8,7 +8,7 @@
         "error": {
             "invalid_auth": "Autenticazione non valida",
             "send_verification_code": "Impossibile inviare il codice di verifica",
-            "validate_verification_code": "Impossibile verificare il codice di verifica, riprovare"
+            "validate_verification_code": "Impossibile verificare il codice di verifica, riprova"
         },
         "step": {
             "reauth": {
@@ -16,19 +16,19 @@
                     "password": "Password"
                 },
                 "description": "La password inserita in precedenza per {username} non funziona pi\u00f9. Aggiorna la tua password per continuare a utilizzare questa integrazione.",
-                "title": "Autenticare nuovamente l'integrazione"
+                "title": "Autentica nuovamente l'integrazione"
             },
             "trusted_device": {
                 "data": {
                     "trusted_device": "Dispositivo attendibile"
                 },
-                "description": "Selezionare il dispositivo attendibile",
+                "description": "Seleziona il dispositivo attendibile",
                 "title": "Dispositivo attendibile iCloud"
             },
             "user": {
                 "data": {
                     "password": "Password",
-                    "username": "E-mail",
+                    "username": "Email",
                     "with_family": "Con la famiglia"
                 },
                 "description": "Inserisci le tue credenziali",

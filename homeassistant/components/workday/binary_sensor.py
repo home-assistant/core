@@ -1,4 +1,6 @@
 """Sensor to indicate whether the current day is a workday."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 from typing import Any
@@ -8,7 +10,10 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_NAME, WEEKDAYS
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,16 +66,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS): vol.All(
             cv.ensure_list, [vol.In(ALLOWED_DAYS)]
         ),
-        vol.Optional(CONF_ADD_HOLIDAYS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_REMOVE_HOLIDAYS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_ADD_HOLIDAYS, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
+        vol.Optional(CONF_REMOVE_HOLIDAYS, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
     }
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Workday sensor."""
-    add_holidays = config.get(CONF_ADD_HOLIDAYS)
-    remove_holidays = config.get(CONF_REMOVE_HOLIDAYS)
+    add_holidays = config[CONF_ADD_HOLIDAYS]
+    remove_holidays = config[CONF_REMOVE_HOLIDAYS]
     country = config[CONF_COUNTRY]
     days_offset = config[CONF_OFFSET]
     excludes = config[CONF_EXCLUDES]

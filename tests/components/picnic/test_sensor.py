@@ -1,7 +1,6 @@
 """The tests for the Picnic sensor platform."""
 import copy
 from datetime import timedelta
-from typing import Dict
 import unittest
 from unittest.mock import patch
 
@@ -11,10 +10,10 @@ import requests
 from homeassistant import config_entries
 from homeassistant.components.picnic import const
 from homeassistant.components.picnic.const import CONF_COUNTRY_CODE, SENSOR_TYPES
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CURRENCY_EURO,
-    DEVICE_CLASS_TIMESTAMP,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -215,44 +214,49 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         self._assert_sensor(
             "sensor.picnic_selected_slot_start",
             "2021-03-03T13:45:00+00:00",
-            cls=DEVICE_CLASS_TIMESTAMP,
+            cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_selected_slot_end",
             "2021-03-03T14:45:00+00:00",
-            cls=DEVICE_CLASS_TIMESTAMP,
+            cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_selected_slot_max_order_time",
             "2021-03-02T21:00:00+00:00",
-            cls=DEVICE_CLASS_TIMESTAMP,
+            cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor("sensor.picnic_selected_slot_min_order_value", "35.0")
         self._assert_sensor(
             "sensor.picnic_last_order_slot_start",
             "2021-02-26T19:15:00+00:00",
-            cls=DEVICE_CLASS_TIMESTAMP,
+            cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_last_order_slot_end",
             "2021-02-26T20:15:00+00:00",
-            cls=DEVICE_CLASS_TIMESTAMP,
+            cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor("sensor.picnic_last_order_status", "COMPLETED")
         self._assert_sensor(
             "sensor.picnic_last_order_eta_start",
             "2021-02-26T19:54:00+00:00",
-            cls=DEVICE_CLASS_TIMESTAMP,
+            cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_last_order_eta_end",
             "2021-02-26T20:14:00+00:00",
-            cls=DEVICE_CLASS_TIMESTAMP,
+            cls=SensorDeviceClass.TIMESTAMP,
+        )
+        self._assert_sensor(
+            "sensor.picnic_last_order_max_order_time",
+            "2021-02-25T21:00:00+00:00",
+            cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_last_order_delivery_time",
             "2021-02-26T19:54:05+00:00",
-            cls=DEVICE_CLASS_TIMESTAMP,
+            cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_last_order_total_price", "41.33", unit=CURRENCY_EURO
@@ -319,7 +323,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         await self._setup_platform(use_default_responses=True)
 
         # Set non-datetime strings as eta
-        eta_dates: Dict[str, str] = {
+        eta_dates: dict[str, str] = {
             "start": "wrong-time",
             "end": "other-malformed-datetime",
         }
@@ -385,6 +389,9 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         )
         self._assert_sensor("sensor.picnic_last_order_eta_start", STATE_UNAVAILABLE)
         self._assert_sensor("sensor.picnic_last_order_eta_end", STATE_UNAVAILABLE)
+        self._assert_sensor(
+            "sensor.picnic_last_order_max_order_time", STATE_UNAVAILABLE
+        )
         self._assert_sensor("sensor.picnic_last_order_delivery_time", STATE_UNAVAILABLE)
 
     async def test_sensors_malformed_delivery_data(self):
@@ -400,6 +407,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         assert self._coordinator.last_update_success is True
         self._assert_sensor("sensor.picnic_last_order_eta_start", STATE_UNKNOWN)
         self._assert_sensor("sensor.picnic_last_order_eta_end", STATE_UNKNOWN)
+        self._assert_sensor("sensor.picnic_last_order_max_order_time", STATE_UNKNOWN)
         self._assert_sensor("sensor.picnic_last_order_delivery_time", STATE_UNKNOWN)
 
     async def test_sensors_malformed_response(self):

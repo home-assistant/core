@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import asyncio
 import logging
+from typing import Any
 
 from aiohttp import StreamReader, web
 from aiohttp.hdrs import istr
@@ -185,7 +186,7 @@ class SpeechToTextView(HomeAssistantView):
             return None
 
         # Convert Header data
-        args = {}
+        args: dict[str, Any] = {}
         for value in data:
             value = value.strip()
             args[value.partition("=")[0]] = value.partition("=")[2]

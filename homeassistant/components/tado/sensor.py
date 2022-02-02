@@ -1,16 +1,16 @@
 """Support for Tado sensors for each zone."""
 import logging
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-    TEMP_CELSIUS,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONDITIONS_MAP,
@@ -57,13 +57,13 @@ def format_condition(condition: str) -> str:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the Tado sensor platform."""
 
     tado = hass.data[DOMAIN][entry.entry_id][DATA]
     zones = tado.zones
-    entities = []
+    entities: list[SensorEntity] = []
 
     # Create home sensors
     entities.extend([TadoHomeSensor(tado, variable) for variable in HOME_SENSORS])
@@ -150,14 +150,14 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
     def device_class(self):
         """Return the device class."""
         if self.home_variable == "outdoor temperature":
-            return DEVICE_CLASS_TEMPERATURE
+            return SensorDeviceClass.TEMPERATURE
         return None
 
     @property
     def state_class(self):
         """Return the state class."""
         if self.home_variable in ["outdoor temperature", "solar percentage"]:
-            return STATE_CLASS_MEASUREMENT
+            return SensorStateClass.MEASUREMENT
         return None
 
     @callback
@@ -261,16 +261,16 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
     def device_class(self):
         """Return the device class."""
         if self.zone_variable == "humidity":
-            return DEVICE_CLASS_HUMIDITY
+            return SensorDeviceClass.HUMIDITY
         if self.zone_variable == "temperature":
-            return DEVICE_CLASS_TEMPERATURE
+            return SensorDeviceClass.TEMPERATURE
         return None
 
     @property
     def state_class(self):
         """Return the state class."""
         if self.zone_variable in ["ac", "heating", "humidity", "temperature"]:
-            return STATE_CLASS_MEASUREMENT
+            return SensorStateClass.MEASUREMENT
         return None
 
     @callback

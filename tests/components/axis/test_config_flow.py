@@ -319,6 +319,10 @@ async def test_discovery_flow(hass, source: str, discovery_info: dict):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == SOURCE_USER
 
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0].get("context", {}).get("configuration_url") == "http://1.2.3.4:80"
+
     with respx.mock:
         mock_default_vapix_requests(respx)
         result = await hass.config_entries.flow.async_configure(

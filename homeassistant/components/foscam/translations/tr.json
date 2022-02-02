@@ -12,7 +12,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Ana bilgisayar",
+                    "host": "Sunucu",
                     "password": "Parola",
                     "port": "Port",
                     "rtsp_port": "RTSP port",

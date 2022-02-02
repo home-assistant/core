@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "server_in_maintenance": "serveren er nede for vedlikehold",
+            "too_many_requests": "For mange foresp\u00f8rsler. Pr\u00f8v igjen senere",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "hub": "Hub",
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "description": "Overkiz-plattformen brukes av forskjellige leverand\u00f8rer som Somfy (Connexoon / TaHoma), Hitachi (Hi Kumo), Rexel (Energeasy Connect) og Atlantic (Cozytouch). Skriv inn applikasjonslegitimasjonen din og velg hub."
+            }
+        }
+    }
+}

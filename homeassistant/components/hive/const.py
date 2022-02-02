@@ -1,4 +1,6 @@
 """Constants for Hive."""
+from homeassistant.const import Platform
+
 ATTR_MODE = "mode"
 ATTR_TIME_PERIOD = "time_period"
 ATTR_ONOFF = "on_off"
@@ -7,22 +9,22 @@ CONFIG_ENTRY_VERSION = 1
 DEFAULT_NAME = "Hive"
 DOMAIN = "hive"
 PLATFORMS = [
-    "alarm_control_panel",
-    "binary_sensor",
-    "climate",
-    "light",
-    "sensor",
-    "switch",
-    "water_heater",
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.WATER_HEATER,
 ]
 PLATFORM_LOOKUP = {
-    "alarm_control_panel": "alarm_control_panel",
-    "binary_sensor": "binary_sensor",
-    "climate": "climate",
-    "light": "light",
-    "sensor": "sensor",
-    "switch": "switch",
-    "water_heater": "water_heater",
+    Platform.ALARM_CONTROL_PANEL: "alarm_control_panel",
+    Platform.BINARY_SENSOR: "binary_sensor",
+    Platform.CLIMATE: "climate",
+    Platform.LIGHT: "light",
+    Platform.SENSOR: "sensor",
+    Platform.SWITCH: "switch",
+    Platform.WATER_HEATER: "water_heater",
 }
 SERVICE_BOOST_HOT_WATER = "boost_hot_water"
 SERVICE_BOOST_HEATING_ON = "boost_heating_on"

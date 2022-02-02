@@ -4,12 +4,12 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Callable
 from contextlib import suppress
+from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 import time
-from typing import Any, cast
+from typing import Any, NamedTuple, cast
 
-import attr
 from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
 from huawei_lte_api.Client import Client
 from huawei_lte_api.Connection import Connection
@@ -22,15 +22,10 @@ from requests.exceptions import Timeout
 from url_normalize import url_normalize
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.device_tracker.const import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
-)
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    ATTR_HW_VERSION,
     ATTR_MODEL,
     ATTR_SW_VERSION,
     CONF_MAC,
@@ -40,6 +35,7 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -123,34 +119,36 @@ CONFIG_SCHEMA = vol.Schema(
 
 SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_URL): cv.url})
 
-CONFIG_ENTRY_PLATFORMS = (
-    BINARY_SENSOR_DOMAIN,
-    DEVICE_TRACKER_DOMAIN,
-    SENSOR_DOMAIN,
-    SWITCH_DOMAIN,
-)
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.DEVICE_TRACKER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
-@attr.s
+@dataclass
 class Router:
     """Class for router state."""
 
-    hass: HomeAssistant = attr.ib()
-    config_entry: ConfigEntry = attr.ib()
-    connection: Connection = attr.ib()
-    url: str = attr.ib()
+    hass: HomeAssistant
+    config_entry: ConfigEntry
+    connection: Connection
+    url: str
 
-    data: dict[str, Any] = attr.ib(init=False, factory=dict)
-    subscriptions: dict[str, set[str]] = attr.ib(
+    data: dict[str, Any] = field(default_factory=dict, init=False)
+    subscriptions: dict[str, set[str]] = field(
+        default_factory=lambda: defaultdict(
+            set, ((x, {"initial_scan"}) for x in ALL_KEYS)
+        ),
         init=False,
-        factory=lambda: defaultdict(set, ((x, {"initial_scan"}) for x in ALL_KEYS)),
     )
-    inflight_gets: set[str] = attr.ib(init=False, factory=set)
-    client: Client
-    suspended = attr.ib(init=False, default=False)
-    notify_last_attempt: float = attr.ib(init=False, default=-1)
+    inflight_gets: set[str] = field(default_factory=set, init=False)
+    client: Client = field(init=False)
+    suspended: bool = field(default=False, init=False)
+    notify_last_attempt: float = field(default=-1, init=False)
 
-    def __attrs_post_init__(self) -> None:
+    def __post_init__(self) -> None:
         """Set up internal state on init."""
         self.client = Client(self.connection)
 
@@ -298,14 +296,13 @@ class Router:
         self.logout()
 
 
-@attr.s
-class HuaweiLteData:
+class HuaweiLteData(NamedTuple):
     """Shared state."""
 
-    hass_config: ConfigType = attr.ib()
+    hass_config: ConfigType
     # Our YAML config, keyed by router URL
-    config: dict[str, dict[str, Any]] = attr.ib()
-    routers: dict[str, Router] = attr.ib(init=False, factory=dict)
+    config: dict[str, dict[str, Any]]
+    routers: dict[str, Router]
 
 
 async def async_setup_entry(  # noqa: C901
@@ -437,8 +434,10 @@ async def async_setup_entry(  # noqa: C901
             name=router.device_name,
             manufacturer="Huawei",
         )
+        hw_version = None
         sw_version = None
         if router_info:
+            hw_version = router_info.get("HardwareVersion")
             sw_version = router_info.get("SoftwareVersion")
             if router_info.get("DeviceName"):
                 device_info[ATTR_MODEL] = router_info["DeviceName"]
@@ -446,6 +445,8 @@ async def async_setup_entry(  # noqa: C901
             sw_version = router.data[KEY_DEVICE_BASIC_INFORMATION].get(
                 "SoftwareVersion"
             )
+        if hw_version:
+            device_info[ATTR_HW_VERSION] = hw_version
         if sw_version:
             device_info[ATTR_SW_VERSION] = sw_version
         device_registry = dr.async_get(hass)
@@ -455,12 +456,12 @@ async def async_setup_entry(  # noqa: C901
         )
 
     # Forward config entry setup to platforms
-    hass.config_entries.async_setup_platforms(entry, CONFIG_ENTRY_PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     # Notify doesn't support config entry setup yet, load with discovery for now
     await discovery.async_load_platform(
         hass,
-        NOTIFY_DOMAIN,
+        Platform.NOTIFY,
         DOMAIN,
         {
             ATTR_UNIQUE_ID: entry.unique_id,
@@ -495,9 +496,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     """Unload config entry."""
 
     # Forward config entry unload to platforms
-    await hass.config_entries.async_unload_platforms(
-        config_entry, CONFIG_ENTRY_PLATFORMS
-    )
+    await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
     # Forget about the router and invoke its cleanup
     router = hass.data[DOMAIN].routers.pop(config_entry.unique_id)
@@ -516,7 +515,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Arrange our YAML config to dict with normalized URLs as keys
     domain_config: dict[str, dict[str, Any]] = {}
     if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = HuaweiLteData(hass_config=config, config=domain_config)
+        hass.data[DOMAIN] = HuaweiLteData(
+            hass_config=config, config=domain_config, routers={}
+        )
     for router_config in config.get(DOMAIN, []):
         domain_config[url_normalize(router_config.pop(CONF_URL))] = router_config
 
@@ -614,14 +615,14 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     return True
 
 
-@attr.s
+@dataclass
 class HuaweiLteBaseEntity(Entity):
     """Huawei LTE entity base class."""
 
-    router: Router = attr.ib()
+    router: Router
 
-    _available: bool = attr.ib(init=False, default=True)
-    _unsub_handlers: list[Callable] = attr.ib(init=False, factory=list)
+    _available: bool = field(default=True, init=False)
+    _unsub_handlers: list[Callable] = field(default_factory=list, init=False)
 
     @property
     def _entity_name(self) -> str:
@@ -652,14 +653,6 @@ class HuaweiLteBaseEntity(Entity):
         """Huawei LTE entities report their state without polling."""
         return False
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Get info for matching with parent router."""
-        return DeviceInfo(
-            connections=self.router.device_connections,
-            identifiers=self.router.device_identifiers,
-        )
-
     async def async_update(self) -> None:
         """Update state."""
         raise NotImplementedError
@@ -680,3 +673,15 @@ class HuaweiLteBaseEntity(Entity):
         for unsub in self._unsub_handlers:
             unsub()
         self._unsub_handlers.clear()
+
+
+class HuaweiLteBaseEntityWithDevice(HuaweiLteBaseEntity):
+    """Base entity with device info."""
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Get info for matching with parent router."""
+        return DeviceInfo(
+            connections=self.router.device_connections,
+            identifiers=self.router.device_identifiers,
+        )

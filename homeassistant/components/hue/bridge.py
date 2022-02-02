@@ -13,7 +13,7 @@ import async_timeout
 
 from homeassistant import core
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_HOST
+from homeassistant.const import CONF_API_KEY, CONF_HOST, Platform
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
@@ -25,8 +25,14 @@ from .v2.hue_event import async_setup_hue_events
 # How long should we sleep if the hub is busy
 HUB_BUSY_SLEEP = 0.5
 
-PLATFORMS_v1 = ["light", "binary_sensor", "sensor"]
-PLATFORMS_v2 = ["light", "binary_sensor", "sensor", "scene", "switch"]
+PLATFORMS_v1 = [Platform.BINARY_SENSOR, Platform.LIGHT, Platform.SENSOR]
+PLATFORMS_v2 = [
+    Platform.BINARY_SENSOR,
+    Platform.LIGHT,
+    Platform.SCENE,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 class HueBridge:
@@ -43,11 +49,12 @@ class HueBridge:
         self.logger = logging.getLogger(__name__)
         # store actual api connection to bridge as api
         app_key: str = self.config_entry.data[CONF_API_KEY]
-        websession = aiohttp_client.async_get_clientsession(hass)
         if self.api_version == 1:
-            self.api = HueBridgeV1(self.host, app_key, websession)
+            self.api = HueBridgeV1(
+                self.host, app_key, aiohttp_client.async_get_clientsession(hass)
+            )
         else:
-            self.api = HueBridgeV2(self.host, app_key, websession)
+            self.api = HueBridgeV2(self.host, app_key)
         # store (this) bridge object in hass data
         hass.data.setdefault(DOMAIN, {})[self.config_entry.entry_id] = self
 

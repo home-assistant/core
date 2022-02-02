@@ -77,15 +77,26 @@ async def test_reconnect_client(hass, aioclient_mock):
     assert aioclient_mock.call_count == 1
 
 
+async def test_reconnect_non_existant_device(hass, aioclient_mock):
+    """Verify no call is made if device does not exist."""
+    await setup_unifi_integration(hass, aioclient_mock)
+
+    aioclient_mock.clear_requests()
+
+    await hass.services.async_call(
+        UNIFI_DOMAIN,
+        SERVICE_RECONNECT_CLIENT,
+        service_data={ATTR_DEVICE_ID: "device_entry.id"},
+        blocking=True,
+    )
+    assert aioclient_mock.call_count == 0
+
+
 async def test_reconnect_device_without_mac(hass, aioclient_mock):
     """Verify no call is made if device does not have a known mac."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     aioclient_mock.clear_requests()
-    aioclient_mock.post(
-        f"https://{controller.host}:1234/api/s/{controller.site}/cmd/stamgr",
-    )
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
     device_entry = device_registry.async_get_or_create(
@@ -139,12 +150,8 @@ async def test_reconnect_client_controller_unavailable(hass, aioclient_mock):
 async def test_reconnect_client_unknown_mac(hass, aioclient_mock):
     """Verify no call is made if trying to reconnect a mac unknown to controller."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     aioclient_mock.clear_requests()
-    aioclient_mock.post(
-        f"https://{controller.host}:1234/api/s/{controller.site}/cmd/stamgr",
-    )
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
     device_entry = device_registry.async_get_or_create(
@@ -172,12 +179,8 @@ async def test_reconnect_wired_client(hass, aioclient_mock):
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, clients_response=clients
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     aioclient_mock.clear_requests()
-    aioclient_mock.post(
-        f"https://{controller.host}:1234/api/s/{controller.site}/cmd/stamgr",
-    )
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
     device_entry = device_registry.async_get_or_create(
@@ -197,6 +200,9 @@ async def test_reconnect_wired_client(hass, aioclient_mock):
 async def test_remove_clients(hass, aioclient_mock):
     """Verify removing different variations of clients work."""
     clients = [
+        {
+            "mac": "00:00:00:00:00:00",
+        },
         {
             "first_seen": 100,
             "last_seen": 500,
@@ -239,7 +245,7 @@ async def test_remove_clients(hass, aioclient_mock):
     await hass.services.async_call(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
     assert aioclient_mock.mock_calls[0][2] == {
         "cmd": "forget-sta",
-        "macs": ["00:00:00:00:00:01"],
+        "macs": ["00:00:00:00:00:00", "00:00:00:00:00:01"],
     }
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
@@ -261,9 +267,6 @@ async def test_remove_clients_controller_unavailable(hass, aioclient_mock):
     controller.available = False
 
     aioclient_mock.clear_requests()
-    aioclient_mock.post(
-        f"https://{controller.host}:1234/api/s/{controller.site}/cmd/stamgr",
-    )
 
     await hass.services.async_call(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
     assert aioclient_mock.call_count == 0
@@ -278,15 +281,9 @@ async def test_remove_clients_no_call_on_empty_list(hass, aioclient_mock):
             "mac": "00:00:00:00:00:01",
         }
     ]
-    config_entry = await setup_unifi_integration(
-        hass, aioclient_mock, clients_all_response=clients
-    )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    await setup_unifi_integration(hass, aioclient_mock, clients_all_response=clients)
 
     aioclient_mock.clear_requests()
-    aioclient_mock.post(
-        f"https://{controller.host}:1234/api/s/{controller.site}/cmd/stamgr",
-    )
 
     await hass.services.async_call(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
     assert aioclient_mock.call_count == 0

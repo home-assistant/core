@@ -5,6 +5,7 @@
             "reauth_successful": "Herauthenticatie was succesvol"
         },
         "error": {
+            "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie"
         },
         "step": {
@@ -22,6 +23,18 @@
                     "name": "Naam",
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "De code komt niet overeen met het vereiste aantal cijfers"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Standaardcode voor sloten, gebruikt als er geen is opgegeven"
                 }
             }
         }

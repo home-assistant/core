@@ -14,7 +14,7 @@
         "flow_title": "Bosch SHC: {name}",
         "step": {
             "confirm_discovery": {
-                "description": "LED\u304c\u70b9\u6ec5\u3057\u59cb\u3081\u308b\u307e\u3067\u3001Bosch Smart Home Controller\u306e\u5168\u9762\u306b\u3042\u308b\u30dc\u30bf\u30f3\u3092\u62bc\u3057\u3066\u304f\u3060\u3055\u3044\u3002\nHome Assistant\u3067\u3001{model} @ {host} \u3092\u8a2d\u5b9a\u3059\u308b\u6e96\u5099\u306f\u3067\u304d\u307e\u3057\u305f\u304b\uff1f"
+                "description": "LED\u304c\u70b9\u6ec5\u3057\u59cb\u3081\u308b\u307e\u3067\u3001Bosch Smart Home Controller\u306e\u524d\u9762\u306b\u3042\u308b\u30dc\u30bf\u30f3\u3092\u62bc\u3057\u3066\u304f\u3060\u3055\u3044\u3002\nHome Assistant\u3067\u3001{model} @ {host} \u3092\u8a2d\u5b9a\u3059\u308b\u6e96\u5099\u306f\u3067\u304d\u307e\u3057\u305f\u304b\uff1f"
             },
             "credentials": {
                 "data": {

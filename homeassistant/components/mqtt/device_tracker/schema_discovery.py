@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from .. import subscription
+from .. import MqttValueTemplate, subscription
 from ... import mqtt
 from ..const import CONF_QOS, CONF_STATE_TOPIC
 from ..debug_info import log_messages
@@ -73,9 +73,9 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
-        value_template = self._config.get(CONF_VALUE_TEMPLATE)
-        if value_template is not None:
-            value_template.hass = self.hass
+        self._value_template = MqttValueTemplate(
+            self._config.get(CONF_VALUE_TEMPLATE), entity=self
+        ).async_render_with_possible_json_value
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -84,10 +84,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
         @log_messages(self.hass, self.entity_id)
         def message_received(msg):
             """Handle new MQTT messages."""
-            payload = msg.payload
-            value_template = self._config.get(CONF_VALUE_TEMPLATE)
-            if value_template is not None:
-                payload = value_template.async_render_with_possible_json_value(payload)
+            payload = self._value_template(msg.payload)
             if payload == self._config[CONF_PAYLOAD_HOME]:
                 self._location_name = STATE_HOME
             elif payload == self._config[CONF_PAYLOAD_NOT_HOME]:

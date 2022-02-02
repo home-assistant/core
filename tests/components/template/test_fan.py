@@ -18,6 +18,7 @@ from homeassistant.components.fan import (
     SPEED_OFF,
     SUPPORT_PRESET_MODE,
     SUPPORT_SET_SPEED,
+    NotValidSpeedError,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
@@ -29,8 +30,6 @@ _TEST_FAN = "fan.test_fan"
 _STATE_INPUT_BOOLEAN = "input_boolean.state"
 # Represent for fan's state
 _STATE_AVAILABILITY_BOOLEAN = "availability_boolean.state"
-# Represent for fan's speed
-_SPEED_INPUT_SELECT = "input_select.speed"
 # Represent for fan's preset mode
 _PRESET_MODE_INPUT_SELECT = "input_select.preset_mode"
 # Represent for fan's speed percentage
@@ -148,7 +147,6 @@ async def test_wrong_template_config(hass, start_ha):
         {% endif %}
     """,
                         "percentage_template": "{{ states('input_number.percentage') }}",
-                        "speed_template": "{{ states('input_select.speed') }}",
                         "preset_mode_template": "{{ states('input_select.preset_mode') }}",
                         "oscillating_template": "{{ states('input_select.osc') }}",
                         "direction_template": "{{ states('input_select.direction') }}",
@@ -170,7 +168,7 @@ async def test_templates_with_entities(hass, start_ha):
     _verify(hass, STATE_OFF, None, 0, None, None, None)
 
     hass.states.async_set(_STATE_INPUT_BOOLEAN, True)
-    hass.states.async_set(_SPEED_INPUT_SELECT, SPEED_MEDIUM)
+    hass.states.async_set(_PERCENTAGE_INPUT_NUMBER, 66)
     hass.states.async_set(_OSC_INPUT, "True")
 
     for set_state, set_value, speed, value in [
@@ -262,7 +260,6 @@ async def test_templates_with_entities2(hass, entity, tests, start_ha):
                     "test_fan": {
                         "availability_template": "{{ is_state('availability_boolean.state', 'on') }}",
                         "value_template": "{{ 'on' }}",
-                        "speed_template": "{{ 'medium' }}",
                         "oscillating_template": "{{ 1 == 1 }}",
                         "direction_template": "{{ 'forward' }}",
                         "turn_on": {"service": "script.fan_on"},
@@ -307,9 +304,9 @@ async def test_availability_template_with_entities(hass, start_ha):
                     "fans": {
                         "test_fan": {
                             "value_template": "{{ 'on' }}",
-                            "speed_template": "{{ 'unavailable' }}",
                             "oscillating_template": "{{ 'unavailable' }}",
                             "direction_template": "{{ 'unavailable' }}",
+                            "percentage_template": "{{ 0 }}",
                             "turn_on": {"service": "script.fan_on"},
                             "turn_off": {"service": "script.fan_off"},
                         }
@@ -325,9 +322,9 @@ async def test_availability_template_with_entities(hass, start_ha):
                     "fans": {
                         "test_fan": {
                             "value_template": "{{ 'on' }}",
-                            "speed_template": "{{ 'medium' }}",
                             "oscillating_template": "{{ 1 == 1 }}",
                             "direction_template": "{{ 'forward' }}",
+                            "percentage_template": "{{ 66 }}",
                             "turn_on": {"service": "script.fan_on"},
                             "turn_off": {"service": "script.fan_off"},
                         }
@@ -343,9 +340,9 @@ async def test_availability_template_with_entities(hass, start_ha):
                     "fans": {
                         "test_fan": {
                             "value_template": "{{ 'abc' }}",
-                            "speed_template": "{{ '0' }}",
                             "oscillating_template": "{{ 'xyz' }}",
                             "direction_template": "{{ 'right' }}",
+                            "percentage_template": "{{ 0 }}",
                             "turn_on": {"service": "script.fan_on"},
                             "turn_off": {"service": "script.fan_off"},
                         }
@@ -372,7 +369,6 @@ async def test_template_with_unavailable_entities(hass, states, start_ha):
                     "test_fan": {
                         "value_template": "{{ 'on' }}",
                         "availability_template": "{{ x - 12 }}",
-                        "speed_template": "{{ states('input_select.speed') }}",
                         "preset_mode_template": "{{ states('input_select.preset_mode') }}",
                         "oscillating_template": "{{ states('input_select.osc') }}",
                         "direction_template": "{{ states('input_select.direction') }}",
@@ -411,16 +407,21 @@ async def test_set_speed(hass):
     await _register_components(hass, preset_modes=["auto", "smart"])
 
     await common.async_turn_on(hass, _TEST_FAN)
-    for cmd, t_state, type, state, value in [
-        (SPEED_HIGH, SPEED_HIGH, SPEED_HIGH, STATE_ON, 100),
-        (SPEED_MEDIUM, SPEED_MEDIUM, SPEED_MEDIUM, STATE_ON, 66),
-        (SPEED_OFF, SPEED_OFF, SPEED_OFF, STATE_OFF, 0),
-        (SPEED_MEDIUM, SPEED_MEDIUM, SPEED_MEDIUM, STATE_ON, 66),
-        ("invalid", SPEED_MEDIUM, SPEED_MEDIUM, STATE_ON, 66),
+    for cmd, type, state, value in [
+        (SPEED_HIGH, SPEED_HIGH, STATE_ON, 100),
+        (SPEED_MEDIUM, SPEED_MEDIUM, STATE_ON, 66),
+        (SPEED_OFF, SPEED_OFF, STATE_OFF, 0),
+        (SPEED_MEDIUM, SPEED_MEDIUM, STATE_ON, 66),
     ]:
         await common.async_set_speed(hass, _TEST_FAN, cmd)
-        assert hass.states.get(_SPEED_INPUT_SELECT).state == t_state
+        assert float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state) == value
         _verify(hass, state, type, value, None, None, None)
+
+    with pytest.raises(NotValidSpeedError):
+        await common.async_set_speed(hass, _TEST_FAN, "invalid")
+
+    assert float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state) == 66
+    _verify(hass, STATE_ON, SPEED_MEDIUM, 66, None, None, None)
 
 
 async def test_set_invalid_speed(hass):
@@ -428,21 +429,12 @@ async def test_set_invalid_speed(hass):
     await _register_components(hass)
 
     await common.async_turn_on(hass, _TEST_FAN)
-    for extra in [SPEED_HIGH, "invalid"]:
-        await common.async_set_speed(hass, _TEST_FAN, extra)
-        assert hass.states.get(_SPEED_INPUT_SELECT).state == SPEED_HIGH
-        _verify(hass, STATE_ON, SPEED_HIGH, 100, None, None, None)
+    await common.async_set_speed(hass, _TEST_FAN, SPEED_HIGH)
+    assert float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state) == 100
+    _verify(hass, STATE_ON, SPEED_HIGH, 100, None, None, None)
 
-
-async def test_custom_speed_list(hass):
-    """Test set custom speed list."""
-    await _register_components(hass, ["1", "2", "3"])
-
-    await common.async_turn_on(hass, _TEST_FAN)
-    for extra in ["1", SPEED_MEDIUM]:
-        await common.async_set_speed(hass, _TEST_FAN, extra)
-        assert hass.states.get(_SPEED_INPUT_SELECT).state == "1"
-        _verify(hass, STATE_ON, "1", 33, None, None, None)
+    with pytest.raises(NotValidSpeedError):
+        await common.async_set_speed(hass, _TEST_FAN, "invalid")
 
 
 async def test_set_invalid_direction_from_initial_stage(hass, calls):
@@ -610,7 +602,7 @@ def _verify(
     state = hass.states.get(_TEST_FAN)
     attributes = state.attributes
     assert state.state == str(expected_state)
-    assert attributes.get(ATTR_SPEED) == expected_speed
+    assert attributes.get(ATTR_SPEED) == expected_speed or SPEED_OFF
     assert attributes.get(ATTR_PERCENTAGE) == expected_percentage
     assert attributes.get(ATTR_OSCILLATING) == expected_oscillating
     assert attributes.get(ATTR_DIRECTION) == expected_direction
@@ -643,27 +635,12 @@ async def _register_components(
             },
         )
 
-    with assert_setup_component(4, "input_select"):
+    with assert_setup_component(3, "input_select"):
         assert await setup.async_setup_component(
             hass,
             "input_select",
             {
                 "input_select": {
-                    "speed": {
-                        "name": "Speed",
-                        "options": [
-                            "",
-                            SPEED_OFF,
-                            SPEED_LOW,
-                            SPEED_MEDIUM,
-                            SPEED_HIGH,
-                            "1",
-                            "2",
-                            "3",
-                            "auto",
-                            "smart",
-                        ],
-                    },
                     "preset_mode": {
                         "name": "Preset Mode",
                         "options": ["auto", "smart"],
@@ -688,7 +665,6 @@ async def _register_components(
 
         test_fan_config = {
             "value_template": value_template,
-            "speed_template": "{{ states('input_select.speed') }}",
             "preset_mode_template": "{{ states('input_select.preset_mode') }}",
             "percentage_template": "{{ states('input_number.percentage') }}",
             "oscillating_template": "{{ states('input_select.osc') }}",
@@ -697,17 +673,19 @@ async def _register_components(
                 "service": "input_boolean.turn_on",
                 "entity_id": _STATE_INPUT_BOOLEAN,
             },
-            "turn_off": {
-                "service": "input_boolean.turn_off",
-                "entity_id": _STATE_INPUT_BOOLEAN,
-            },
-            "set_speed": {
-                "service": "input_select.select_option",
-                "data_template": {
-                    "entity_id": _SPEED_INPUT_SELECT,
-                    "option": "{{ speed }}",
+            "turn_off": [
+                {
+                    "service": "input_boolean.turn_off",
+                    "entity_id": _STATE_INPUT_BOOLEAN,
                 },
-            },
+                {
+                    "service": "input_number.set_value",
+                    "data_template": {
+                        "entity_id": _PERCENTAGE_INPUT_NUMBER,
+                        "value": 0,
+                    },
+                },
+            ],
             "set_preset_mode": {
                 "service": "input_select.select_option",
                 "data_template": {
@@ -737,9 +715,6 @@ async def _register_components(
                 },
             },
         }
-
-        if speed_list:
-            test_fan_config["speeds"] = speed_list
 
         if preset_modes:
             test_fan_config["preset_modes"] = preset_modes
@@ -940,71 +915,3 @@ async def test_implemented_preset_mode(hass, start_ha):
     attributes = state.attributes
     assert attributes.get("percentage") is None
     assert attributes.get("supported_features") & SUPPORT_PRESET_MODE
-
-
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
-@pytest.mark.parametrize(
-    "config",
-    [
-        {
-            DOMAIN: {
-                "platform": "template",
-                "fans": {
-                    "mechanical_ventilation": {
-                        "friendly_name": "Mechanische ventilatie",
-                        "unique_id": "a2fd2e38-674b-4b47-b5ef-cc2362211a72",
-                        "value_template": "{{ states('light.mv_snelheid') }}",
-                        "speed_template": "{{ 'fast' }}",
-                        "speeds": ["slow", "fast"],
-                        "set_preset_mode": [
-                            {
-                                "service": "light.turn_on",
-                                "target": {
-                                    "entity_id": "light.mv_snelheid",
-                                },
-                                "data": {"brightness_pct": "{{ percentage }}"},
-                            }
-                        ],
-                        "turn_on": [
-                            {
-                                "service": "switch.turn_off",
-                                "target": {
-                                    "entity_id": "switch.mv_automatisch",
-                                },
-                            },
-                            {
-                                "service": "light.turn_on",
-                                "target": {
-                                    "entity_id": "light.mv_snelheid",
-                                },
-                                "data": {"brightness_pct": 40},
-                            },
-                        ],
-                        "turn_off": [
-                            {
-                                "service": "light.turn_off",
-                                "target": {
-                                    "entity_id": "light.mv_snelheid",
-                                },
-                            },
-                            {
-                                "service": "switch.turn_on",
-                                "target": {
-                                    "entity_id": "switch.mv_automatisch",
-                                },
-                            },
-                        ],
-                    },
-                },
-            }
-        },
-    ],
-)
-async def test_implemented_speed(hass, start_ha):
-    """Test a fan that implements speed."""
-    assert len(hass.states.async_all()) == 1
-
-    state = hass.states.get("fan.mechanical_ventilation")
-    attributes = state.attributes
-    assert attributes["percentage"] == 100
-    assert attributes["speed"] == "fast"

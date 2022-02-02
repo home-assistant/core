@@ -1,4 +1,8 @@
 """Climate platform for Advantage Air integration."""
+from __future__ import annotations
+
+import logging
+
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
@@ -15,8 +19,11 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ADVANTAGE_AIR_STATE_CLOSE,
@@ -58,13 +65,19 @@ ZONE_HVAC_MODES = [HVAC_MODE_OFF, HVAC_MODE_HEAT_COOL]
 
 PARALLEL_UPDATES = 0
 
+_LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up AdvantageAir climate platform."""
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
-    entities = []
+    entities: list[ClimateEntity] = []
     for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
         entities.append(AdvantageAirAC(instance, ac_key))
         for zone_key, zone in ac_device["zones"].items():
@@ -211,6 +224,9 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
 
     async def set_myzone(self, **kwargs):
         """Set this zone as the 'MyZone'."""
+        _LOGGER.warning(
+            "The advantage_air.set_myzone service has been deprecated and will be removed in a future version, please use the select.select_option service on the MyZone entity"
+        )
         await self.async_change(
             {self.ac_key: {"info": {"myZone": self._zone["number"]}}}
         )

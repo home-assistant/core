@@ -8,15 +8,11 @@ import logging
 from python_awair.air_data import AirData
 from python_awair.devices import AwairDevice
 
-from homeassistant.components.sensor import SensorEntityDescription
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE,
     LIGHT_LUX,
     PERCENTAGE,
     SOUND_PRESSURE_WEIGHTED_DBA,
@@ -48,7 +44,7 @@ UPDATE_INTERVAL = timedelta(minutes=5)
 
 @dataclass
 class AwairRequiredKeysMixin:
-    """Mixinf for required keys."""
+    """Mixin for required keys."""
 
     unique_id_tag: str
 
@@ -69,14 +65,14 @@ SENSOR_TYPE_SCORE = AwairSensorEntityDescription(
 SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
     AwairSensorEntityDescription(
         key=API_HUMID,
-        device_class=DEVICE_CLASS_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         name="Humidity",
         unique_id_tag="HUMID",  # matches legacy format
     ),
     AwairSensorEntityDescription(
         key=API_LUX,
-        device_class=DEVICE_CLASS_ILLUMINANCE,
+        device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
         name="Illuminance",
         unique_id_tag="illuminance",
@@ -97,14 +93,14 @@ SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
     ),
     AwairSensorEntityDescription(
         key=API_TEMP,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         name="Temperature",
         unique_id_tag="TEMP",  # matches legacy format
     ),
     AwairSensorEntityDescription(
         key=API_CO2,
-        device_class=DEVICE_CLASS_CO2,
+        device_class=SensorDeviceClass.CO2,
         icon="mdi:cloud",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         name="Carbon dioxide",

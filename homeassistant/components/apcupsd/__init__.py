@@ -6,7 +6,9 @@ from apcaccess import status
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +36,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Use config values to set up a function enabling status retrieval."""
     conf = config[DOMAIN]
     host = conf[CONF_HOST]

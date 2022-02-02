@@ -12,6 +12,8 @@ from awesomeversion import (
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
+from homeassistant.helpers import config_validation as cv
+
 from .model import Config, Integration
 
 DOCUMENTATION_URL_SCHEMA = "https"
@@ -50,6 +52,7 @@ NO_IOT_CLASS = [
     "default_config",
     "device_automation",
     "device_tracker",
+    "diagnostics",
     "discovery",
     "downloader",
     "fan",
@@ -62,6 +65,7 @@ NO_IOT_CLASS = [
     "image_processing",
     "image",
     "input_boolean",
+    "input_button",
     "input_datetime",
     "input_number",
     "input_select",
@@ -180,16 +184,26 @@ MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("zeroconf"): [
             vol.Any(
                 str,
-                vol.Schema(
-                    {
-                        vol.Required("type"): str,
-                        vol.Optional("macaddress"): vol.All(
-                            str, verify_uppercase, verify_wildcard
-                        ),
-                        vol.Optional("manufacturer"): vol.All(str, verify_lowercase),
-                        vol.Optional("model"): vol.All(str, verify_lowercase),
-                        vol.Optional("name"): vol.All(str, verify_lowercase),
-                    }
+                vol.All(
+                    cv.deprecated("macaddress"),
+                    cv.deprecated("model"),
+                    cv.deprecated("manufacturer"),
+                    vol.Schema(
+                        {
+                            vol.Required("type"): str,
+                            vol.Optional("macaddress"): vol.All(
+                                str, verify_uppercase, verify_wildcard
+                            ),
+                            vol.Optional("manufacturer"): vol.All(
+                                str, verify_lowercase
+                            ),
+                            vol.Optional("model"): vol.All(str, verify_lowercase),
+                            vol.Optional("name"): vol.All(str, verify_lowercase),
+                            vol.Optional("properties"): vol.Schema(
+                                {str: verify_lowercase}
+                            ),
+                        }
+                    ),
                 ),
             )
         ],

@@ -16,7 +16,10 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import async_get as async_get_device_registry
+from homeassistant.helpers.device_registry import (
+    CONNECTION_UPNP,
+    async_get as async_get_device_registry,
+)
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -61,7 +64,7 @@ class DeviceCoordinator(DataUpdateCoordinator):
             )
         else:
             updated = self.wemo.subscription_update(event_type, params)
-            self.hass.add_job(self._async_subscription_callback(updated))
+            self.hass.create_task(self._async_subscription_callback(updated))
 
     async def _async_subscription_callback(self, updated: bool) -> None:
         """Update the state by the Wemo device."""
@@ -120,13 +123,21 @@ class DeviceCoordinator(DataUpdateCoordinator):
             except ActionException as err:
                 raise UpdateFailed("WeMo update failed") from err
 
+    @callback
+    def async_update_listeners(self) -> None:
+        """Update all listeners."""
+        for update_callback in self._listeners:
+            update_callback()
+
 
 def _device_info(wemo: WeMoDevice) -> DeviceInfo:
     return DeviceInfo(
+        connections={(CONNECTION_UPNP, wemo.udn)},
         identifiers={(DOMAIN, wemo.serialnumber)},
         manufacturer="Belkin",
         model=wemo.model_name,
         name=wemo.name,
+        sw_version=wemo.firmware_version,
     )
 
 
@@ -165,4 +176,5 @@ async def async_register_device(
 @callback
 def async_get_coordinator(hass: HomeAssistant, device_id: str) -> DeviceCoordinator:
     """Return DeviceCoordinator for device_id."""
-    return hass.data[DOMAIN]["devices"][device_id]
+    coordinator: DeviceCoordinator = hass.data[DOMAIN]["devices"][device_id]
+    return coordinator
