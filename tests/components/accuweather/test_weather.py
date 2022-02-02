@@ -78,7 +78,7 @@ async def test_weather_with_forecast(hass):
     assert forecast.get(ATTR_FORECAST_TEMP_LOW) == 15.4
     assert forecast.get(ATTR_FORECAST_TIME) == "2020-07-26T05:00:00+00:00"
     assert forecast.get(ATTR_FORECAST_WIND_BEARING) == 166
-    assert forecast.get(ATTR_FORECAST_WIND_SPEED) == 13.0
+    assert forecast.get(ATTR_FORECAST_WIND_SPEED) == 3.61
 
     entry = registry.async_get("weather.home")
     assert entry
