@@ -231,9 +231,7 @@ class ISYNodeEntity(ISYEntity):
 class ISYProgramEntity(ISYEntity):
     """Representation of an ISY994 program base."""
 
-    def __init__(
-        self, name: str, status: Any | None, actions: Program | None = None
-    ) -> None:
+    def __init__(self, name: str, status: Any | None, actions: Program = None) -> None:
         """Initialize the ISY994 program-based entity."""
         super().__init__(status)
         self._name = name
