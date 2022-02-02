@@ -108,11 +108,12 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
             raise vol.Invalid(f"Error in {name} structure: {str(err)}") from err
 
         count = config.get(CONF_COUNT, 1)
-        bytecount = count * config.get(CONF_REGISTER_SIZE, 2)
-        if bytecount != size:
+        regsize = config.get(CONF_REGISTER_SIZE, 2)
+        bytecount = count * regsize
+        if bytecount != size or regsize < 2:
             raise vol.Invalid(
                 f"Structure request {size} bytes, "
-                f"but {count} registers have a size of {bytecount} bytes"
+                f"but {count} registers have a size of {bytecount} bytes. Register size: {regsize} bytes."
             )
 
         if swap_type != CONF_SWAP_NONE:
