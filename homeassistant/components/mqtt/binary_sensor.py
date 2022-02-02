@@ -127,7 +127,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
             and last_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
         ):
             expiration_at = last_state.last_changed + timedelta(seconds=expire_after)
-            if expiration_at < (dt_util.utcnow() + timedelta(seconds=5)):
+            if expiration_at < (time_now := dt_util.utcnow() + timedelta(seconds=5)):
                 # Skip reactivating the binary_sensor
                 _LOGGER.debug("Skip state recovery after reload for %s", self.entity_id)
                 return
@@ -137,7 +137,11 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
             self._expiration_trigger = async_track_point_in_utc_time(
                 self.hass, self._value_is_expired, expiration_at
             )
-            _LOGGER.debug("State recovered after reload for %s", self.entity_id)
+            _LOGGER.debug(
+                "State recovered after reload for %s, remaining time before expiring %s",
+                self.entity_id,
+                expiration_at - time_now,
+            )
             self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self) -> None:
