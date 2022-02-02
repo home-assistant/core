@@ -123,7 +123,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input and self._reauth_username:
             data = {
                 CONF_USERNAME: self._reauth_username,
-                CONF_PASSWORD: str(user_input[CONF_PASSWORD]),
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
             }
 
             if not (errors := await self.async_auth(data)):
