@@ -1,5 +1,9 @@
 """Constants for the AlphaEss integration."""
 
-DOMAIN = "alphaess"
+from datetime import timedelta
 
-ATTR_ENTRY_TYPE = "entry_type"
+from homeassistant.const import Platform
+
+DOMAIN = "alphaess"
+PLATFORMS = [Platform.SENSOR]
+SCAN_INTERVAL = timedelta(minutes=5)

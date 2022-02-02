@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import aiohttp
 from alphaess import alphaess
 import voluptuous as vol
 
@@ -50,13 +51,16 @@ class AlphaESSConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await validate_input(self.hass, user_input)
-        except CannotConnect:
+
+        except aiohttp.ClientResponseError as e:
+            if e.status == 401:
+                errors["base"] = "invalid_auth"
+            else:
+                errors["base"] = "unknown"
+        except aiohttp.client_exceptions.ClientConnectorError:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
         else:
             return self.async_create_entry(
                 title=user_input["username"], data=user_input
@@ -65,10 +69,6 @@ class AlphaESSConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
 
 
 class InvalidAuth(HomeAssistantError):

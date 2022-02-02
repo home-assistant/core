@@ -213,7 +213,7 @@ airthings_cloud==0.1.0
 airtouch4pyapi==1.0.5
 
 # homeassistant.components.alphaess
-alphaess==0.0.2
+alphaess==0.0.3
 
 # homeassistant.components.ambee
 ambee==0.4.0

@@ -8,19 +8,16 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ENERGY,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
 )
 from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_ENTRY_TYPE, DOMAIN
+from .const import DOMAIN
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -65,13 +62,13 @@ class AlphaESSSensor(CoordinatorEntity, SensorEntity):
             if self._serial == serial:
                 model = invertor["minv"]
 
-        self._attr_device_info = {
-            ATTR_IDENTIFIERS: {(DOMAIN, serial)},
-            ATTR_NAME: f"Alpha ESS Energy Statistics : {serial}",
-            ATTR_MANUFACTURER: "AlphaESS",
-            ATTR_MODEL: model,
-            ATTR_ENTRY_TYPE: DeviceEntryType.SERVICE,
-        }
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, serial)},
+            manufacturer="AlphaESS",
+            model=model,
+            name=f"Alpha ESS Energy Statistics : {serial}",
+        )
 
         if name == "State of Charge":
             self._attr_state_class = STATE_CLASS_MEASUREMENT
