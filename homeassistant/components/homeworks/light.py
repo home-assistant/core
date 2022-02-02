@@ -1,4 +1,6 @@
 """Support for Lutron Homeworks lights."""
+from __future__ import annotations
+
 import logging
 
 from pyhomeworks.pyhomeworks import HW_LIGHT_CHANGED
@@ -9,15 +11,22 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import CONF_ADDR, CONF_DIMMERS, CONF_RATE, HOMEWORKS_CONTROLLER, HomeworksDevice
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discover_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discover_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up Homeworks lights."""
     if discover_info is None:
         return

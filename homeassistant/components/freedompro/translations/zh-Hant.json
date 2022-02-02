@@ -10,10 +10,10 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API \u5bc6\u9470"
+                    "api_key": "API \u91d1\u9470"
                 },
-                "description": "\u8acb\u8f38\u5165\u7531 https://home.freedompro.eu \u6240\u7372\u5f97\u7684 API \u5bc6\u9470",
-                "title": "Freedompro API \u5bc6\u9470"
+                "description": "\u8acb\u8f38\u5165\u7531 https://home.freedompro.eu \u6240\u7372\u5f97\u7684 API \u91d1\u9470",
+                "title": "Freedompro API \u91d1\u9470"
             }
         }
     }

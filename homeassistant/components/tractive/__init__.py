@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 import logging
-from typing import Any, List, cast
+from typing import Any, cast
 
 import aiotractive
 
@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_EMAIL,
     CONF_PASSWORD,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -38,7 +39,12 @@ from .const import (
     TRACKER_POSITION_UPDATED,
 )
 
-PLATFORMS = ["binary_sensor", "device_tracker", "sensor", "switch"]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.DEVICE_TRACKER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -158,7 +164,7 @@ class TractiveClient:
     ) -> list[aiotractive.trackable_object.TrackableObject]:
         """Get list of trackable objects."""
         return cast(
-            List[aiotractive.trackable_object.TrackableObject],
+            list[aiotractive.trackable_object.TrackableObject],
             await self._client.trackable_objects(),
         )
 

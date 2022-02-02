@@ -8,18 +8,12 @@ import pysma
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_SENSORS,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_CUSTOM, CONF_GROUP, DOMAIN, GROUPS
+from .const import CONF_GROUP, DOMAIN, GROUPS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,8 +50,6 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_VERIFY_SSL: True,
             CONF_GROUP: GROUPS[0],
             CONF_PASSWORD: vol.UNDEFINED,
-            CONF_SENSORS: [],
-            CONF_CUSTOM: {},
         }
 
     async def async_step_user(
@@ -107,19 +99,4 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-        )
-
-    async def async_step_import(
-        self, import_config: dict[str, Any] | None
-    ) -> FlowResult:
-        """Import a config flow from configuration."""
-        device_info = await validate_input(self.hass, import_config)
-
-        # If unique is configured import was already run
-        # This means remap was already done, so we can abort
-        await self.async_set_unique_id(device_info["serial"])
-        self._abort_if_unique_id_configured(import_config)
-
-        return self.async_create_entry(
-            title=import_config[CONF_HOST], data=import_config
         )

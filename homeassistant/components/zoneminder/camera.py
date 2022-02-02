@@ -1,4 +1,6 @@
 """Support for ZoneMinder camera streaming."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.mjpeg.camera import (
@@ -8,13 +10,21 @@ from homeassistant.components.mjpeg.camera import (
     filter_urllib3_logging,
 )
 from homeassistant.const import CONF_NAME, CONF_VERIFY_SSL
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as ZONEMINDER_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ZoneMinder cameras."""
     filter_urllib3_logging()
     cameras = []

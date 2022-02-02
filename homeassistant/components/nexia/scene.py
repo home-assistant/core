@@ -1,8 +1,10 @@
 """Support for Nexia Automations."""
-
 from typing import Any
 
 from homeassistant.components.scene import Scene
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from .const import ATTR_DESCRIPTION, DOMAIN
@@ -12,7 +14,11 @@ from .entity import NexiaEntity
 SCENE_ACTIVATION_TIME = 5
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up automations for a Nexia device."""
     coordinator: NexiaDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     nexia_home = coordinator.nexia_home
@@ -25,7 +31,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         entities.append(NexiaAutomationScene(coordinator, automation))
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class NexiaAutomationScene(NexiaEntity, Scene):

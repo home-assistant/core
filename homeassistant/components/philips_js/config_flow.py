@@ -47,17 +47,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._hub: PhilipsTV | None = None
         self._pair_state: Any = None
 
-    async def async_step_import(self, conf: dict) -> dict:
-        """Import a configuration from config.yaml."""
-        self._async_abort_entries_match({CONF_HOST: conf[CONF_HOST]})
-
-        return await self.async_step_user(
-            {
-                CONF_HOST: conf[CONF_HOST],
-                CONF_API_VERSION: conf[CONF_API_VERSION],
-            }
-        )
-
     async def _async_create_current(self):
 
         system = self._current[CONF_SYSTEM]

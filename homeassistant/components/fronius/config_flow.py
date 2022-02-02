@@ -18,7 +18,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, FroniusConfigEntryData
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 DHCP_REQUEST_DELAY: Final = 60
 
@@ -102,9 +102,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             await self.async_set_unique_id(unique_id, raise_on_progress=False)
-            self._abort_if_unique_id_configured(
-                updates=dict(info), reload_on_update=False
-            )
+            self._abort_if_unique_id_configured(updates=dict(info))
+
             return self.async_create_entry(title=create_title(info), data=info)
 
         return self.async_show_form(
@@ -132,16 +131,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="invalid_host")
 
         await self.async_set_unique_id(unique_id, raise_on_progress=False)
-        self._abort_if_unique_id_configured(
-            updates=dict(self.info), reload_on_update=False
-        )
+        self._abort_if_unique_id_configured(updates=dict(self.info))
 
         return await self.async_step_confirm_discovery()
 
     async def async_step_confirm_discovery(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Attempt to confim."""
+        """Attempt to confirm."""
         title = create_title(self.info)
         if user_input is not None:
             return self.async_create_entry(title=title, data=self.info)

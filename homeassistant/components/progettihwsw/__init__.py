@@ -5,11 +5,12 @@ from ProgettiHWSW.input import Input
 from ProgettiHWSW.relay import Relay
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
-PLATFORMS = ["switch", "binary_sensor"]
+PLATFORMS = [Platform.SWITCH, Platform.BINARY_SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

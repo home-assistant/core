@@ -3,11 +3,12 @@
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
             "already_in_progress": "El flujo de configuraci\u00f3n para el dispositivo ya est\u00e1 en marcha.",
+            "cannot_connect": "No se pudo conectar",
             "not_konn_panel": "No es un dispositivo Konnected.io reconocido",
             "unknown": "Se produjo un error desconocido"
         },
         "error": {
-            "cannot_connect": "No se puede conectar a un Panel conectado en {host}:{port}"
+            "cannot_connect": "No se pudo conectar"
         },
         "step": {
             "confirm": {
@@ -64,7 +65,7 @@
                     "7": "Zona 7",
                     "out": "OUT"
                 },
-                "description": "Descubierto un {model} en {host} . Seleccione la configuraci\u00f3n base de cada E / S a continuaci\u00f3n: seg\u00fan la E / S, puede permitir sensores binarios (contactos de apertura / cierre), sensores digitales (dht y ds18b20) o salidas conmutables. Podr\u00e1 configurar opciones detalladas en los pr\u00f3ximos pasos.",
+                "description": "Descubierto un {model} en {host} . Seleccione la configuraci\u00f3n base de cada I/O a continuaci\u00f3n: seg\u00fan la I/O, puede permitir sensores binarios (contactos de apertura / cierre), sensores digitales (dht y ds18b20) o salidas conmutables. Podr\u00e1 configurar opciones detalladas en los pr\u00f3ximos pasos.",
                 "title": "Configurar E/S"
             },
             "options_io_ext": {

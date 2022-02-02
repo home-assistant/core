@@ -1,76 +1,95 @@
 """Test against characteristics captured from a ryse smart bridge platforms."""
 
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.components.cover import (
+    SUPPORT_CLOSE,
+    SUPPORT_OPEN,
+    SUPPORT_SET_POSITION,
+)
+from homeassistant.const import PERCENTAGE
 
 from tests.components.homekit_controller.common import (
-    Helper,
+    HUB_TEST_ACCESSORY_ID,
+    DeviceTestInfo,
+    EntityTestInfo,
+    assert_devices_and_entities_created,
     setup_accessories_from_file,
     setup_test_accessories,
 )
+
+RYSE_SUPPORTED_FEATURES = SUPPORT_CLOSE | SUPPORT_SET_POSITION | SUPPORT_OPEN
 
 
 async def test_ryse_smart_bridge_setup(hass):
     """Test that a Ryse smart bridge can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "ryse_smart_bridge.json")
-    config_entry, pairing = await setup_test_accessories(hass, accessories)
+    await setup_test_accessories(hass, accessories)
 
-    entity_registry = er.async_get(hass)
-
-    # Check that the cover.master_bath_south is correctly found and set up
-    cover_id = "cover.master_bath_south"
-    cover = entity_registry.async_get(cover_id)
-    assert cover.unique_id == "homekit-00:00:00:00:00:00-2-48"
-
-    cover_helper = Helper(
+    await assert_devices_and_entities_created(
         hass,
-        cover_id,
-        pairing,
-        accessories[0],
-        config_entry,
+        DeviceTestInfo(
+            unique_id=HUB_TEST_ACCESSORY_ID,
+            name="RYSE SmartBridge",
+            model="RYSE SmartBridge",
+            manufacturer="RYSE Inc.",
+            sw_version="1.3.0",
+            hw_version="0101.3521.0436",
+            devices=[
+                DeviceTestInfo(
+                    unique_id="00:00:00:00:00:00:aid:2",
+                    name="Master Bath South",
+                    model="RYSE Shade",
+                    manufacturer="RYSE Inc.",
+                    sw_version="3.0.8",
+                    hw_version="1.0.0",
+                    serial_number="",
+                    devices=[],
+                    entities=[
+                        EntityTestInfo(
+                            entity_id="cover.master_bath_south",
+                            friendly_name="Master Bath South",
+                            unique_id="homekit-00:00:00:00:00:00-2-48",
+                            supported_features=RYSE_SUPPORTED_FEATURES,
+                            state="closed",
+                        ),
+                        EntityTestInfo(
+                            entity_id="sensor.master_bath_south_battery",
+                            friendly_name="Master Bath South Battery",
+                            unique_id="homekit-00:00:00:00:00:00-2-64",
+                            unit_of_measurement=PERCENTAGE,
+                            state="100",
+                        ),
+                    ],
+                ),
+                DeviceTestInfo(
+                    unique_id="00:00:00:00:00:00:aid:3",
+                    name="RYSE SmartShade",
+                    model="RYSE Shade",
+                    manufacturer="RYSE Inc.",
+                    sw_version="",
+                    hw_version="",
+                    serial_number="",
+                    devices=[],
+                    entities=[
+                        EntityTestInfo(
+                            entity_id="cover.ryse_smartshade",
+                            friendly_name="RYSE SmartShade",
+                            unique_id="homekit-00:00:00:00:00:00-3-48",
+                            supported_features=RYSE_SUPPORTED_FEATURES,
+                            state="open",
+                        ),
+                        EntityTestInfo(
+                            entity_id="sensor.ryse_smartshade_battery",
+                            friendly_name="RYSE SmartShade Battery",
+                            unique_id="homekit-00:00:00:00:00:00-3-64",
+                            unit_of_measurement=PERCENTAGE,
+                            state="100",
+                        ),
+                    ],
+                ),
+            ],
+            entities=[],
+        ),
     )
-
-    cover_state = await cover_helper.poll_and_get_state()
-    assert cover_state.attributes["friendly_name"] == "Master Bath South"
-    assert cover_state.state == "closed"
-
-    device_registry = dr.async_get(hass)
-
-    device = device_registry.async_get(cover.device_id)
-    assert device.manufacturer == "RYSE Inc."
-    assert device.name == "Master Bath South"
-    assert device.model == "RYSE Shade"
-    assert device.sw_version == "3.0.8"
-
-    bridge = device_registry.async_get(device.via_device_id)
-    assert bridge.manufacturer == "RYSE Inc."
-    assert bridge.name == "RYSE SmartBridge"
-    assert bridge.model == "RYSE SmartBridge"
-    assert bridge.sw_version == "1.3.0"
-
-    # Check that the cover.ryse_smartshade is correctly found and set up
-    cover_id = "cover.ryse_smartshade"
-    cover = entity_registry.async_get(cover_id)
-    assert cover.unique_id == "homekit-00:00:00:00:00:00-3-48"
-
-    cover_helper = Helper(
-        hass,
-        cover_id,
-        pairing,
-        accessories[0],
-        config_entry,
-    )
-
-    cover_state = await cover_helper.poll_and_get_state()
-    assert cover_state.attributes["friendly_name"] == "RYSE SmartShade"
-    assert cover_state.state == "open"
-
-    device_registry = dr.async_get(hass)
-
-    device = device_registry.async_get(cover.device_id)
-    assert device.manufacturer == "RYSE Inc."
-    assert device.name == "RYSE SmartShade"
-    assert device.model == "RYSE Shade"
-    assert device.sw_version == ""
 
 
 async def test_ryse_smart_bridge_four_shades_setup(hass):
@@ -78,64 +97,123 @@ async def test_ryse_smart_bridge_four_shades_setup(hass):
     accessories = await setup_accessories_from_file(
         hass, "ryse_smart_bridge_four_shades.json"
     )
-    config_entry, pairing = await setup_test_accessories(hass, accessories)
+    await setup_test_accessories(hass, accessories)
 
-    entity_registry = er.async_get(hass)
-
-    cover_id = "cover.lr_left"
-    cover = entity_registry.async_get(cover_id)
-    assert cover.unique_id == "homekit-00:00:00:00:00:00-2-48"
-
-    cover_id = "cover.lr_right"
-    cover = entity_registry.async_get(cover_id)
-    assert cover.unique_id == "homekit-00:00:00:00:00:00-3-48"
-
-    cover_id = "cover.br_left"
-    cover = entity_registry.async_get(cover_id)
-    assert cover.unique_id == "homekit-00:00:00:00:00:00-4-48"
-
-    cover_id = "cover.rzss"
-    cover = entity_registry.async_get(cover_id)
-    assert cover.unique_id == "homekit-00:00:00:00:00:00-5-48"
-
-    sensor_id = "sensor.lr_left_battery"
-    sensor = entity_registry.async_get(sensor_id)
-    assert sensor.unique_id == "homekit-00:00:00:00:00:00-2-64"
-
-    sensor_id = "sensor.lr_right_battery"
-    sensor = entity_registry.async_get(sensor_id)
-    assert sensor.unique_id == "homekit-00:00:00:00:00:00-3-64"
-
-    sensor_id = "sensor.br_left_battery"
-    sensor = entity_registry.async_get(sensor_id)
-    assert sensor.unique_id == "homekit-00:00:00:00:00:00-4-64"
-
-    sensor_id = "sensor.rzss_battery"
-    sensor = entity_registry.async_get(sensor_id)
-    assert sensor.unique_id == "homekit-00:00:00:00:00:00-5-64"
-
-    cover_helper = Helper(
+    await assert_devices_and_entities_created(
         hass,
-        cover_id,
-        pairing,
-        accessories[0],
-        config_entry,
+        DeviceTestInfo(
+            unique_id=HUB_TEST_ACCESSORY_ID,
+            name="RYSE SmartBridge",
+            model="RYSE SmartBridge",
+            manufacturer="RYSE Inc.",
+            sw_version="1.3.0",
+            hw_version="0401.3521.0679",
+            devices=[
+                DeviceTestInfo(
+                    unique_id="00:00:00:00:00:00:aid:2",
+                    name="LR Left",
+                    model="RYSE Shade",
+                    manufacturer="RYSE Inc.",
+                    sw_version="3.0.8",
+                    hw_version="1.0.0",
+                    serial_number="",
+                    devices=[],
+                    entities=[
+                        EntityTestInfo(
+                            entity_id="cover.lr_left",
+                            friendly_name="LR Left",
+                            unique_id="homekit-00:00:00:00:00:00-2-48",
+                            supported_features=RYSE_SUPPORTED_FEATURES,
+                            state="closed",
+                        ),
+                        EntityTestInfo(
+                            entity_id="sensor.lr_left_battery",
+                            friendly_name="LR Left Battery",
+                            unique_id="homekit-00:00:00:00:00:00-2-64",
+                            unit_of_measurement=PERCENTAGE,
+                            state="89",
+                        ),
+                    ],
+                ),
+                DeviceTestInfo(
+                    unique_id="00:00:00:00:00:00:aid:3",
+                    name="LR Right",
+                    model="RYSE Shade",
+                    manufacturer="RYSE Inc.",
+                    sw_version="3.0.8",
+                    hw_version="1.0.0",
+                    serial_number="",
+                    devices=[],
+                    entities=[
+                        EntityTestInfo(
+                            entity_id="cover.lr_right",
+                            friendly_name="LR Right",
+                            unique_id="homekit-00:00:00:00:00:00-3-48",
+                            supported_features=RYSE_SUPPORTED_FEATURES,
+                            state="closed",
+                        ),
+                        EntityTestInfo(
+                            entity_id="sensor.lr_right_battery",
+                            friendly_name="LR Right Battery",
+                            unique_id="homekit-00:00:00:00:00:00-3-64",
+                            unit_of_measurement=PERCENTAGE,
+                            state="100",
+                        ),
+                    ],
+                ),
+                DeviceTestInfo(
+                    unique_id="00:00:00:00:00:00:aid:4",
+                    name="BR Left",
+                    model="RYSE Shade",
+                    manufacturer="RYSE Inc.",
+                    sw_version="3.0.8",
+                    hw_version="1.0.0",
+                    serial_number="",
+                    devices=[],
+                    entities=[
+                        EntityTestInfo(
+                            entity_id="cover.br_left",
+                            friendly_name="BR Left",
+                            unique_id="homekit-00:00:00:00:00:00-4-48",
+                            supported_features=RYSE_SUPPORTED_FEATURES,
+                            state="open",
+                        ),
+                        EntityTestInfo(
+                            entity_id="sensor.br_left_battery",
+                            friendly_name="BR Left Battery",
+                            unique_id="homekit-00:00:00:00:00:00-4-64",
+                            unit_of_measurement=PERCENTAGE,
+                            state="100",
+                        ),
+                    ],
+                ),
+                DeviceTestInfo(
+                    unique_id="00:00:00:00:00:00:aid:5",
+                    name="RZSS",
+                    model="RYSE Shade",
+                    manufacturer="RYSE Inc.",
+                    sw_version="3.0.8",
+                    hw_version="1.0.0",
+                    serial_number="",
+                    devices=[],
+                    entities=[
+                        EntityTestInfo(
+                            entity_id="cover.rzss",
+                            friendly_name="RZSS",
+                            unique_id="homekit-00:00:00:00:00:00-5-48",
+                            supported_features=RYSE_SUPPORTED_FEATURES,
+                            state="open",
+                        ),
+                        EntityTestInfo(
+                            entity_id="sensor.rzss_battery",
+                            friendly_name="RZSS Battery",
+                            unique_id="homekit-00:00:00:00:00:00-5-64",
+                            unit_of_measurement=PERCENTAGE,
+                            state="0",
+                        ),
+                    ],
+                ),
+            ],
+            entities=[],
+        ),
     )
-
-    cover_state = await cover_helper.poll_and_get_state()
-    assert cover_state.attributes["friendly_name"] == "RZSS"
-    assert cover_state.state == "open"
-
-    device_registry = dr.async_get(hass)
-
-    device = device_registry.async_get(cover.device_id)
-    assert device.manufacturer == "RYSE Inc."
-    assert device.name == "RZSS"
-    assert device.model == "RYSE Shade"
-    assert device.sw_version == "3.0.8"
-
-    bridge = device_registry.async_get(device.via_device_id)
-    assert bridge.manufacturer == "RYSE Inc."
-    assert bridge.name == "RYSE SmartBridge"
-    assert bridge.model == "RYSE SmartBridge"
-    assert bridge.sw_version == "1.3.0"

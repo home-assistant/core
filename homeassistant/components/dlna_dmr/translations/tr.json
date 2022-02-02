@@ -32,7 +32,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Ana bilgisayar",
+                    "host": "Sunucu",
                     "url": "URL"
                 },
                 "description": "Yap\u0131land\u0131rmak i\u00e7in bir cihaz se\u00e7in veya bir URL girmek i\u00e7in bo\u015f b\u0131rak\u0131n",

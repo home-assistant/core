@@ -47,8 +47,8 @@ class EditSceneConfigView(EditIdBasedConfigView):
 
     def _write_value(self, hass, data, config_key, new_value):
         """Set value."""
-        # Iterate through some keys that we want to have ordered in the output
         updated_value = {CONF_ID: config_key}
+        # Iterate through some keys that we want to have ordered in the output
         for key in ("name", "entities"):
             if key in new_value:
                 updated_value[key] = new_value[key]

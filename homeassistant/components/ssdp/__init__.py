@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import timedelta
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.const import DeviceOrServiceType, SsdpHeaders, SsdpSource
@@ -30,7 +30,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_ssdp, bind_hass
 
 DOMAIN = "ssdp"
-SCAN_INTERVAL = timedelta(seconds=60)
+SCAN_INTERVAL = timedelta(minutes=2)
 
 IPV4_BROADCAST = IPv4Address("255.255.255.255")
 
@@ -103,22 +103,20 @@ class SsdpServiceInfo(
 ):
     """Prepared info from ssdp/upnp entries."""
 
-    # Used to prevent log flooding. To be removed in 2022.6
-    _warning_logged: bool = False
-
     def __getitem__(self, name: str) -> Any:
         """
         Allow property access by name for compatibility reason.
 
         Deprecated, and will be removed in version 2022.6.
         """
-        if not self._warning_logged:
-            report(
-                f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
-                exclude_integrations={DOMAIN},
-                error_if_core=False,
-            )
-            self._warning_logged = True
+        report(
+            f"accessed discovery_info['{name}'] instead of discovery_info.{name}, "
+            f"discovery_info.upnp['{name}'] "
+            f"or discovery_info.ssdp_headers['{name}']; "
+            "this will fail in version 2022.6",
+            exclude_integrations={DOMAIN},
+            error_if_core=False,
+        )
         # Use a property if it is available, fallback to upnp data
         if hasattr(self, name):
             return getattr(self, name)
@@ -132,13 +130,14 @@ class SsdpServiceInfo(
 
         Deprecated, and will be removed in version 2022.6.
         """
-        if not self._warning_logged:
-            report(
-                f"accessed discovery_info.get('{name}') instead of discovery_info.{name}; this will fail in version 2022.6",
-                exclude_integrations={DOMAIN},
-                error_if_core=False,
-            )
-            self._warning_logged = True
+        report(
+            f"accessed discovery_info.get('{name}') instead of discovery_info.{name}, "
+            f"discovery_info.upnp.get('{name}') "
+            f"or discovery_info.ssdp_headers.get('{name}'); "
+            "this will fail in version 2022.6",
+            exclude_integrations={DOMAIN},
+            error_if_core=False,
+        )
         if hasattr(self, name):
             return getattr(self, name)
         return self.upnp.get(name, self.ssdp_headers.get(name, default))
@@ -149,14 +148,14 @@ class SsdpServiceInfo(
 
         Deprecated, and will be removed in version 2022.6.
         """
-        if not self._warning_logged:
-            report(
-                "accessed discovery_info.__contains__() instead of discovery_info.upnp.__contains__() "
-                "or discovery_info.ssdp_headers.__contains__(); this will fail in version 2022.6",
-                exclude_integrations={DOMAIN},
-                error_if_core=False,
-            )
-            self._warning_logged = True
+        report(
+            f"accessed discovery_info.__contains__('{name}') "
+            f"instead of discovery_info.upnp.__contains__('{name}') "
+            f"or discovery_info.ssdp_headers.__contains__('{name}'); "
+            "this will fail in version 2022.6",
+            exclude_integrations={DOMAIN},
+            error_if_core=False,
+        )
         if hasattr(self, name):
             return getattr(self, name) is not None
         return name in self.upnp or name in self.ssdp_headers
@@ -473,22 +472,24 @@ class Scanner:
         )
 
         location = ssdp_device.location
-        info_desc = await self._async_get_description_dict(location) or {}
+        info_desc = None
         combined_headers = ssdp_device.combined_headers(dst)
-        info_with_desc = CaseInsensitiveDict(combined_headers, **info_desc)
-
         callbacks = self._async_get_matching_callbacks(combined_headers)
         matching_domains: set[str] = set()
 
         # If there are no changes from a search, do not trigger a config flow
         if source != SsdpSource.SEARCH_ALIVE:
+            info_desc = await self._async_get_description_dict(location) or {}
+            assert isinstance(combined_headers, CaseInsensitiveDict)
             matching_domains = self.integration_matchers.async_matching_domains(
-                info_with_desc
+                CaseInsensitiveDict({**combined_headers.as_dict(), **info_desc})
             )
 
         if not callbacks and not matching_domains:
             return
 
+        if info_desc is None:
+            info_desc = await self._async_get_description_dict(location) or {}
         discovery_info = discovery_info_from_headers_and_description(
             combined_headers, info_desc
         )
@@ -566,7 +567,10 @@ def discovery_info_from_headers_and_description(
     """Convert headers and description to discovery_info."""
     ssdp_usn = combined_headers["usn"]
     ssdp_st = combined_headers.get("st")
-    upnp_info = {**info_desc}
+    if isinstance(info_desc, CaseInsensitiveDict):
+        upnp_info = {**info_desc.as_dict()}
+    else:
+        upnp_info = {**info_desc}
 
     # Increase compatibility: depending on the message type,
     # either the ST (Search Target, from M-SEARCH messages)
