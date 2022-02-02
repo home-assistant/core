@@ -9,7 +9,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER, KEY_STOP_COORDINATOR, PLATFORMS
+from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER, KEY_NEW_DEVICE_LISTENERS, PLATFORMS
 from .errors import CannotLoginException
 from .router import NetgearRouter
 
@@ -55,9 +55,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         configuration_url=f"http://{entry.data[CONF_HOST]}/",
     )
 
-    async def async_update_data() -> None:
+    async def async_update_data() -> bool:
         """Fetch data from the router."""
-        await router.async_update_device_trackers()
+        data = await router.async_update_device_trackers()
+        return data
 
     # Create update coordinator
     coordinator = DataUpdateCoordinator(
@@ -68,19 +69,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=SCAN_INTERVAL,
     )
 
-    # ensure the coordinator keeps updating to discover new devices
-    @callback
-    def dummy_coordinator_callback() -> None:
-        """Callback ensuring discovery of new devices."""
-
-    remove_dummy_update = coordinator.async_add_listener(dummy_coordinator_callback)
-
     await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.unique_id] = {
         KEY_ROUTER: router,
         KEY_COORDINATOR: coordinator,
-        KEY_STOP_COORDINATOR: remove_dummy_update,
+        KEY_NEW_DEVICE_LISTENERS: [],
     }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -92,9 +86,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    # stop the coordinator
-    remove_dummy_update = hass.data[DOMAIN][entry.unique_id][KEY_STOP_COORDINATOR]
-    remove_dummy_update()
+    # remove new device listeners from the coordinator
+    new_device_listeners = hass.data[DOMAIN][entry.unique_id][KEY_NEW_DEVICE_LISTENERS]
+    for new_device_listener in new_device_listeners:
+        new_device_listener()
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.unique_id)

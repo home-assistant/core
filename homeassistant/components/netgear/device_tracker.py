@@ -10,8 +10,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DEVICE_ICONS
-from .router import NetgearDeviceEntity, NetgearRouter, async_setup_netgear_entry
+from .const import DEVICE_ICONS, DOMAIN, KEY_COORDINATOR, KEY_ROUTER, KEY_NEW_DEVICE_LISTENERS
+from .router import NetgearDeviceEntity, NetgearRouter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,13 +20,32 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up device tracker for Netgear component."""
+    router = hass.data[DOMAIN][entry.unique_id][KEY_ROUTER]
+    coordinator = hass.data[DOMAIN][entry.unique_id][KEY_COORDINATOR]
+    tracked = set()
 
-    def generate_classes(
-        coordinator: DataUpdateCoordinator, router: NetgearRouter, device: dict
-    ):
-        return [NetgearScannerEntity(coordinator, router, device)]
+    @callback
+    def new_device_callback() -> None:
+        """Callback adding new devices if needed."""
+        if not coordinator.data:
+            return
 
-    async_setup_netgear_entry(hass, entry, async_add_entities, generate_classes)
+        new_entities = []
+
+        for mac, device in router.devices.items():
+            if mac in tracked:
+                continue
+
+            new_entities.add(NetgearScannerEntity(coordinator, router, device))
+            tracked.add(mac)
+
+        if new_entities:
+            async_add_entities(new_entities, update_before_add=True)
+
+    remove_new_device_listener = coordinator.async_add_listener(new_device_callback)
+    hass.data[DOMAIN][entry.unique_id][KEY_NEW_DEVICE_LISTENERS].add(remove_new_device_listener)
+    
+    new_device_callback()
 
 
 class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):

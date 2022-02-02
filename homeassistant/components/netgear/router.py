@@ -61,52 +61,6 @@ def get_api(
     return api
 
 
-@callback
-def async_setup_netgear_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-    entity_class_generator: Callable[
-        [DataUpdateCoordinator, NetgearRouter, dict], list
-    ],
-) -> None:
-    """Set up device tracker for Netgear component."""
-    router = hass.data[DOMAIN][entry.unique_id][KEY_ROUTER]
-    coordinator = hass.data[DOMAIN][entry.unique_id][KEY_COORDINATOR]
-    tracked = set()
-
-    @callback
-    def _async_router_updated():
-        """Update the values of the router."""
-        async_add_new_entities(
-            coordinator, router, async_add_entities, tracked, entity_class_generator
-        )
-
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, router.signal_device_new, _async_router_updated)
-    )
-
-    _async_router_updated()
-
-
-@callback
-def async_add_new_entities(
-    coordinator, router, async_add_entities, tracked, entity_class_generator
-):
-    """Add new tracker entities from the router."""
-    new_tracked = []
-
-    for mac, device in router.devices.items():
-        if mac in tracked:
-            continue
-
-        new_tracked.extend(entity_class_generator(coordinator, router, device))
-        tracked.add(mac)
-
-    if new_tracked:
-        async_add_entities(new_tracked, True)
-
-
 class NetgearRouter:
     """Representation of a Netgear router."""
 
@@ -229,12 +183,8 @@ class NetgearRouter:
 
         if new_device:
             _LOGGER.debug("Netgear tracker: new device found")
-            async_dispatcher_send(self.hass, self.signal_device_new)
 
-    @property
-    def signal_device_new(self) -> str:
-        """Event specific per Netgear entry to signal new device."""
-        return f"{DOMAIN}-{self._host}-device-new"
+        return new_device
 
     @property
     def port(self) -> int:

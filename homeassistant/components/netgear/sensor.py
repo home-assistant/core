@@ -11,7 +11,8 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .router import NetgearDeviceEntity, NetgearRouter, async_setup_netgear_entry
+from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER, KEY_NEW_DEVICE_LISTENERS
+from .router import NetgearDeviceEntity, NetgearRouter
 
 SENSOR_TYPES = {
     "type": SensorEntityDescription(
@@ -49,20 +50,39 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up device tracker for Netgear component."""
+    router = hass.data[DOMAIN][entry.unique_id][KEY_ROUTER]
+    coordinator = hass.data[DOMAIN][entry.unique_id][KEY_COORDINATOR]
+    tracked = set()
+    
+    sensors = ["type", "link_rate", "signal"]
+    if router.method_version == 2:
+        sensors.extend(["ssid", "conn_ap_mac"])
 
-    def generate_sensor_classes(
-        coordinator: DataUpdateCoordinator, router: NetgearRouter, device: dict
-    ):
-        sensors = ["type", "link_rate", "signal"]
-        if router.method_version == 2:
-            sensors.extend(["ssid", "conn_ap_mac"])
+    @callback
+    def new_device_callback() -> None:
+        """Callback adding new devices if needed."""
+        if not coordinator.data:
+            return
 
-        return [
-            NetgearSensorEntity(coordinator, router, device, attribute)
-            for attribute in sensors
-        ]
+        new_entities = []
 
-    async_setup_netgear_entry(hass, entry, async_add_entities, generate_sensor_classes)
+        for mac, device in router.devices.items():
+            if mac in tracked:
+                continue
+            
+            new_entities.extend([
+                NetgearSensorEntity(coordinator, router, device, attribute)
+                for attribute in sensors
+            ])
+            tracked.add(mac)
+
+        if new_entities:
+            async_add_entities(new_entities, update_before_add=True)
+
+    remove_new_device_listener = coordinator.async_add_listener(new_device_callback)
+    hass.data[DOMAIN][entry.unique_id][KEY_NEW_DEVICE_LISTENERS].add(remove_new_device_listener)
+    
+    new_device_callback()
 
 
 class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
