@@ -105,17 +105,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
-        """Handle reauth."""
-        errors: dict[str, str] | None = None
-        if user_input and user_input.get(CONF_USERNAME):
+        """Handle reauth on credential failure."""
+        if user_input:
             self._reauth_username = user_input[CONF_USERNAME]
 
-        elif self._reauth_username and user_input and user_input.get(CONF_PASSWORD):
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
+        """Handle users reauth credentials."""
+
+        errors: dict[str, str] | None = None
+
+        if user_input and self._reauth_username:
             data = {
                 CONF_USERNAME: self._reauth_username,
-                CONF_PASSWORD: user_input[CONF_PASSWORD],
+                CONF_PASSWORD: str(user_input[CONF_PASSWORD]),
             }
 
             if not (errors := await self.async_auth(data)):
@@ -130,7 +138,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=self._reauth_username, data=data)
 
         return self.async_show_form(
-            step_id="reauth",
+            step_id="reauth_confirm",
             description_placeholders={"username": self._reauth_username},
             data_schema=vol.Schema(
                 {
