@@ -293,7 +293,7 @@ airthings_cloud==0.1.0
 airtouch4pyapi==1.0.5
 
 # homeassistant.components.aladdin_connect
-aladdin_connect==0.3
+aladdin_connect==0.4
 
 # homeassistant.components.alpha_vantage
 alpha_vantage==2.3.1
