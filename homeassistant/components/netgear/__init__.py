@@ -4,12 +4,18 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER, KEY_NEW_DEVICE_LISTENERS, PLATFORMS
+from .const import (
+    DOMAIN,
+    KEY_COORDINATOR,
+    KEY_NEW_DEVICE_LISTENERS,
+    KEY_ROUTER,
+    PLATFORMS,
+)
 from .errors import CannotLoginException
 from .router import NetgearRouter
 

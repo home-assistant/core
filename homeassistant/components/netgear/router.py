@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Callable
 from datetime import timedelta
 import logging
 
@@ -19,12 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
 from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -36,8 +30,6 @@ from .const import (
     DEFAULT_CONSIDER_HOME,
     DEFAULT_NAME,
     DOMAIN,
-    KEY_COORDINATOR,
-    KEY_ROUTER,
     MODELS_V2,
 )
 from .errors import CannotLoginException

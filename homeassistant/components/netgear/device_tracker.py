@@ -10,7 +10,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DEVICE_ICONS, DOMAIN, KEY_COORDINATOR, KEY_ROUTER, KEY_NEW_DEVICE_LISTENERS
+from .const import (
+    DEVICE_ICONS,
+    DOMAIN,
+    KEY_COORDINATOR,
+    KEY_NEW_DEVICE_LISTENERS,
+    KEY_ROUTER,
+)
 from .router import NetgearDeviceEntity, NetgearRouter
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +32,7 @@ async def async_setup_entry(
 
     @callback
     def new_device_callback() -> None:
-        """Callback adding new devices if needed."""
+        """Add new devices if needed."""
         if not coordinator.data:
             return
 
@@ -36,15 +42,17 @@ async def async_setup_entry(
             if mac in tracked:
                 continue
 
-            new_entities.add(NetgearScannerEntity(coordinator, router, device))
+            new_entities.append(NetgearScannerEntity(coordinator, router, device))
             tracked.add(mac)
 
         if new_entities:
             async_add_entities(new_entities, update_before_add=True)
 
     remove_new_device_listener = coordinator.async_add_listener(new_device_callback)
-    hass.data[DOMAIN][entry.unique_id][KEY_NEW_DEVICE_LISTENERS].add(remove_new_device_listener)
-    
+    hass.data[DOMAIN][entry.unique_id][KEY_NEW_DEVICE_LISTENERS].add(
+        remove_new_device_listener
+    )
+
     new_device_callback()
 
 
