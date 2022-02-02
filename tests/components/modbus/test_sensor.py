@@ -8,6 +8,7 @@ from homeassistant.components.modbus.const import (
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_PRECISION,
+    CONF_REGISTER_SIZE,
     CONF_SCALE,
     CONF_SWAP,
     CONF_SWAP_BYTE,
@@ -672,6 +673,16 @@ async def test_lazy_error_sensor(hass, mock_do_cycle, start_expect, end_expect):
             },
             [0x0000, 0x0100, 0x0000, 0x0032],
             "256,50",
+        ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_DATA_TYPE: DataType.CUSTOM,
+                CONF_REGISTER_SIZE: 4,
+                CONF_STRUCTURE: ">2L",
+            },
+            [0x00BC, 0x614E, 0x00BC, 0x614E],
+            "12345678,12345678",
         ),
         (
             {
