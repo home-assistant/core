@@ -90,7 +90,11 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(mac)
         source_ip = discovery_info["source_ip"]
         direct_connect_domain = discovery_info["direct_connect_domain"]
-        for entry in self._async_current_entries(include_ignore=False):
+        for entry in self._async_current_entries():
+            if entry.source == config_entries.SOURCE_IGNORE:
+                if entry.unique_id == mac:
+                    return self.async_abort(reason="already_configured")
+                continue
             entry_host = entry.data[CONF_HOST]
             entry_has_direct_connect = _host_is_direct_connect(entry_host)
             if entry.unique_id == mac:
