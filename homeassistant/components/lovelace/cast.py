@@ -9,6 +9,7 @@ from homeassistant.components.cast.const import DOMAIN as CAST_DOMAIN
 from homeassistant.components.cast.home_assistant_cast import (
     ATTR_URL_PATH,
     ATTR_VIEW_PATH,
+    NO_URL_AVAILABLE_ERROR,
     SERVICE_SHOW_VIEW,
 )
 from homeassistant.components.media_player import BrowseError, BrowseMedia
@@ -16,6 +17,7 @@ from homeassistant.components.media_player.const import MEDIA_CLASS_APP
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from .const import DOMAIN, ConfigNotFound
 from .dashboard import LovelaceConfig
@@ -51,6 +53,11 @@ async def async_browse_media(
     """Browse media."""
     if media_content_type != DOMAIN:
         return None
+
+    try:
+        get_url(hass, require_ssl=True, prefer_external=True)
+    except NoURLAvailableError as err:
+        raise BrowseError(NO_URL_AVAILABLE_ERROR) from err
 
     # List dashboards.
     if not media_content_id:
@@ -149,8 +156,6 @@ async def _get_dashboard_info(hass, url_path):
     if dashboard is None:
         raise ValueError("Invalid dashboard specified")
 
-    views = []
-
     try:
         config = await dashboard.async_load(False)
     except ConfigNotFound:
@@ -162,8 +167,11 @@ async def _get_dashboard_info(hass, url_path):
     else:
         url_path = dashboard.url_path
         if config is not None:
-            title = config.get("title", url_path)
+            title = config["title"]
+        else:
+            title = "No Title"
 
+    views = []
     data = {
         "title": title,
         "url_path": url_path,
@@ -174,10 +182,11 @@ async def _get_dashboard_info(hass, url_path):
         return data
 
     for idx, view in enumerate(config["views"]):
+        path = view.get("path", f"{idx}")
         views.append(
             {
-                "title": view.get("title", ""),
-                "path": view.get("path", f"{idx}"),
+                "title": view.get("title", path),
+                "path": path,
             }
         )
 
