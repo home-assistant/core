@@ -49,7 +49,7 @@ async def async_setup_entry(
             async_add_entities(new_entities, update_before_add=True)
 
     remove_new_device_listener = coordinator.async_add_listener(new_device_callback)
-    hass.data[DOMAIN][entry.unique_id][KEY_NEW_DEVICE_LISTENERS].add(
+    hass.data[DOMAIN][entry.unique_id][KEY_NEW_DEVICE_LISTENERS].append(
         remove_new_device_listener
     )
 
