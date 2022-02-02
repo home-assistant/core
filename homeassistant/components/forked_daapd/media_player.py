@@ -115,7 +115,7 @@ async def async_setup_entry(
     ] = forked_daapd_updater
 
 
-async def update_listener(hass, entry):
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     async_dispatcher_send(
         hass, SIGNAL_CONFIG_OPTIONS_UPDATE.format(entry.entry_id), entry.options
