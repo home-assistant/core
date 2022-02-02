@@ -151,10 +151,9 @@ def async_is_connected(hass: HomeAssistant) -> bool:
     return DOMAIN in hass.data and hass.data[DOMAIN].iot.connected
 
 
-@bind_hass
 @callback
 def async_listen_connection_change(
-    hass: HomeAssistant, target: Callable[..., Any]
+    hass: HomeAssistant, target: Callable[[CloudConnectionState], None]
 ) -> Callable[[], None]:
     """Notify on connection state changes."""
     return async_dispatcher_connect(hass, SIGNAL_CLOUD_CONNECTION_STATE, target)
