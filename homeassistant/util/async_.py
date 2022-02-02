@@ -109,6 +109,7 @@ def check_loop(func: Callable, strict: bool = True) -> None:
         and stack[-3].filename.endswith("pydevd.py")
     ):
         # Don't report `time.sleep` injected by the debugger (pydevd.py)
+        # stack[-1] is us, stack[-2] is protected_loop_func, stack[-3] is the offender
         return
 
     for frame in reversed(stack):
