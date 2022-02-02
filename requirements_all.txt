@@ -184,14 +184,14 @@ aioguardian==2021.11.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.6.11
+aiohomekit==0.7.0
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==3.0.11
+aiohue==4.0.1
 
 # homeassistant.components.homewizard
 aiohwenergy==0.8.0
@@ -293,7 +293,7 @@ airthings_cloud==0.1.0
 airtouch4pyapi==1.0.5
 
 # homeassistant.components.aladdin_connect
-aladdin_connect==0.3
+aladdin_connect==0.4
 
 # homeassistant.components.alpha_vantage
 alpha_vantage==2.3.1
@@ -842,7 +842,7 @@ hole==0.7.0
 holidays==0.12
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220127.0
+home-assistant-frontend==20220201.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1648,7 +1648,7 @@ pylitejet==0.3.0
 pylitterbot==2021.12.0
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.13.0
+pylutron-caseta==0.13.1
 
 # homeassistant.components.lutron
 pylutron==0.2.8
@@ -2531,7 +2531,7 @@ youtube_dl==2021.12.17
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.38.1
+zeroconf==0.38.3
 
 # homeassistant.components.zha
 zha-quirks==0.0.66

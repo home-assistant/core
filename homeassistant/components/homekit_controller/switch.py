@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from aiohomekit.model.characteristics import (
     Characteristic,
@@ -9,15 +10,17 @@ from aiohomekit.model.characteristics import (
     InUseValues,
     IsConfiguredValues,
 )
-from aiohomekit.model.services import ServicesTypes
+from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 
 from . import KNOWN_DEVICES, CharacteristicEntity, HomeKitEntity
+from .connection import HKDevice
 
 OUTLET_IN_USE = "outlet_in_use"
 
@@ -35,14 +38,14 @@ class DeclarativeSwitchEntityDescription(SwitchEntityDescription):
 
 
 SWITCH_ENTITIES: dict[str, DeclarativeSwitchEntityDescription] = {
-    CharacteristicsTypes.Vendor.AQARA_PAIRING_MODE: DeclarativeSwitchEntityDescription(
-        key=CharacteristicsTypes.Vendor.AQARA_PAIRING_MODE,
+    CharacteristicsTypes.VENDOR_AQARA_PAIRING_MODE: DeclarativeSwitchEntityDescription(
+        key=CharacteristicsTypes.VENDOR_AQARA_PAIRING_MODE,
         name="Pairing Mode",
         icon="mdi:lock-open",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.Vendor.AQARA_E1_PAIRING_MODE: DeclarativeSwitchEntityDescription(
-        key=CharacteristicsTypes.Vendor.AQARA_E1_PAIRING_MODE,
+    CharacteristicsTypes.VENDOR_AQARA_E1_PAIRING_MODE: DeclarativeSwitchEntityDescription(
+        key=CharacteristicsTypes.VENDOR_AQARA_E1_PAIRING_MODE,
         name="Pairing Mode",
         icon="mdi:lock-open",
         entity_category=EntityCategory.CONFIG,
@@ -53,35 +56,36 @@ SWITCH_ENTITIES: dict[str, DeclarativeSwitchEntityDescription] = {
 class HomeKitSwitch(HomeKitEntity, SwitchEntity):
     """Representation of a Homekit switch."""
 
-    def get_characteristic_types(self):
+    def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [CharacteristicsTypes.ON, CharacteristicsTypes.OUTLET_IN_USE]
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self.service.value(CharacteristicsTypes.ON)
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified switch on."""
         await self.async_put_characteristics({CharacteristicsTypes.ON: True})
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the specified switch off."""
         await self.async_put_characteristics({CharacteristicsTypes.ON: False})
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes."""
         outlet_in_use = self.service.value(CharacteristicsTypes.OUTLET_IN_USE)
         if outlet_in_use is not None:
             return {OUTLET_IN_USE: outlet_in_use}
+        return None
 
 
 class HomeKitValve(HomeKitEntity, SwitchEntity):
     """Represents a valve in an irrigation system."""
 
-    def get_characteristic_types(self):
+    def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [
             CharacteristicsTypes.ACTIVE,
@@ -90,11 +94,11 @@ class HomeKitValve(HomeKitEntity, SwitchEntity):
             CharacteristicsTypes.REMAINING_DURATION,
         ]
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified valve on."""
         await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: True})
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the specified valve off."""
         await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: False})
 
@@ -104,12 +108,12 @@ class HomeKitValve(HomeKitEntity, SwitchEntity):
         return "mdi:water"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self.service.value(CharacteristicsTypes.ACTIVE)
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         attrs = {}
 
@@ -133,38 +137,38 @@ class DeclarativeCharacteristicSwitch(CharacteristicEntity, SwitchEntity):
 
     def __init__(
         self,
-        conn,
-        info,
-        char,
+        conn: HKDevice,
+        info: ConfigType,
+        char: Characteristic,
         description: DeclarativeSwitchEntityDescription,
-    ):
+    ) -> None:
         """Initialise a HomeKit switch."""
-        self.entity_description = description
+        self.entity_description: DeclarativeSwitchEntityDescription = description
         super().__init__(conn, info, char)
 
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         """Return the name of the device if any."""
         if prefix := super().name:
             return f"{prefix} {self.entity_description.name}"
         return self.entity_description.name
 
-    def get_characteristic_types(self):
+    def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [self._char.type]
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._char.value == self.entity_description.true_value
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified switch on."""
         await self.async_put_characteristics(
             {self._char.type: self.entity_description.true_value}
         )
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the specified switch off."""
         await self.async_put_characteristics(
             {self._char.type: self.entity_description.false_value}
@@ -188,8 +192,8 @@ async def async_setup_entry(
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_service(service):
-        if not (entity_class := ENTITY_TYPES.get(service.short_type)):
+    def async_add_service(service: Service) -> bool:
+        if not (entity_class := ENTITY_TYPES.get(service.type)):
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([entity_class(conn, info)], True)
@@ -198,7 +202,7 @@ async def async_setup_entry(
     conn.add_listener(async_add_service)
 
     @callback
-    def async_add_characteristic(char: Characteristic):
+    def async_add_characteristic(char: Characteristic) -> bool:
         if not (description := SWITCH_ENTITIES.get(char.type)):
             return False
 

@@ -24,7 +24,11 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -432,11 +436,11 @@ async def cleanup_device_registry(hass, device_id):
     # pylint: disable=import-outside-toplevel
     from . import device_trigger, tag
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
     if (
         device_id
-        and not hass.helpers.entity_registry.async_entries_for_device(
+        and not er.async_entries_for_device(
             entity_registry, device_id, include_disabled_entities=False
         )
         and not await device_trigger.async_get_triggers(hass, device_id)
@@ -469,11 +473,8 @@ class MqttDiscoveryUpdate(Entity):
             Remove entity from entity registry if it is registered, this also removes the state.
             If the entity is not in the entity registry, just remove the state.
             """
-            entity_registry = (
-                await self.hass.helpers.entity_registry.async_get_registry()
-            )
-            if entity_registry.async_is_registered(self.entity_id):
-                entity_entry = entity_registry.async_get(self.entity_id)
+            entity_registry = er.async_get(self.hass)
+            if entity_entry := entity_registry.async_get(self.entity_id):
                 entity_registry.async_remove(self.entity_id)
                 await cleanup_device_registry(self.hass, entity_entry.device_id)
             else:
@@ -598,7 +599,7 @@ class MqttEntityDeviceInfo(Entity):
     async def device_info_discovery_update(self, config: dict):
         """Handle updated discovery message."""
         self._device_config = config.get(CONF_DEVICE)
-        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+        device_registry = dr.async_get(self.hass)
         config_entry_id = self._config_entry.entry_id
         device_info = self.device_info
 
