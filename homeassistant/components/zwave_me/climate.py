@@ -85,12 +85,7 @@ class ZWaveMeClimate(ZWaveMeEntity, ClimateEntity):
     @property
     def hvac_modes(self) -> list[str]:
         """Return the list of available operation modes."""
-        return [HVAC_MODE_COOL, HVAC_MODE_HEAT]
-
-    @property
-    def hvac_action(self) -> str:
-        """Return the current action."""
-        return CURRENT_HVAC_HEAT
+        return [HVAC_MODE_HEAT, ]
 
     @property
     def hvac_mode(self) -> str:
