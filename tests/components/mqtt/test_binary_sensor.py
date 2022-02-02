@@ -45,7 +45,11 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import async_fire_mqtt_message, async_fire_time_changed
+from tests.common import (
+    assert_setup_component,
+    async_fire_mqtt_message,
+    async_fire_time_changed,
+)
 
 DEFAULT_CONFIG = {
     binary_sensor.DOMAIN: {
@@ -931,3 +935,29 @@ async def test_cleanup_triggers_and_restoring_state(
     async_fire_mqtt_message(hass, "test-topic2", "OFF")
     state = hass.states.get("binary_sensor.test2")
     assert state.state == "off"
+
+
+async def test_skip_restoring_state_with_over_due_expire_trigger(
+    hass, mqtt_mock, caplog, freezer
+):
+    """Test restoring a state with over due expire timer."""
+
+    freezer.move_to("2022-02-02 12:02:00+01:00")
+    domain = binary_sensor.DOMAIN
+    config3 = copy.deepcopy(DEFAULT_CONFIG[domain])
+    config3["name"] = "test3"
+    config3["expire_after"] = 10
+    config3["state_topic"] = "test-topic3"
+    fake_state = ha.State(
+        "binary_sensor.test3",
+        "on",
+        {},
+        last_changed=datetime.fromisoformat("2022-02-02 12:01:35+01:00"),
+    )
+    with patch(
+        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
+        return_value=fake_state,
+    ), assert_setup_component(1, domain):
+        assert await async_setup_component(hass, domain, {domain: config3})
+        await hass.async_block_till_done()
+    assert "Skip state recovery after reload for binary_sensor.test3" in caplog.text

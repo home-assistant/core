@@ -171,12 +171,12 @@ class MqttSensor(MqttEntity, SensorEntity, RestoreEntity):
             and expire_after > 0
             and (last_state := await self.async_get_last_state()) is not None
             and last_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
-            and (
-                expiration_at := last_state.last_changed
-                + timedelta(seconds=expire_after)
-            )
-            > (time_now := dt_util.utcnow())
         ):
+            expiration_at = last_state.last_changed + timedelta(seconds=expire_after)
+            if expiration_at < (time_now := dt_util.utcnow()):
+                # Skip reactivating the sensor
+                _LOGGER.debug("Skip state recovery after reload for %s", self.entity_id)
+                return
             self._expired = False
             self._state = last_state.state
 
