@@ -1,13 +1,18 @@
 """Sensor component for PECO outage counter."""
+import asyncio
 from datetime import timedelta
 from types import MappingProxyType
 from typing import Any, Final
 
-import async_timeout
 from peco import BadJSONError, HttpError
 
-from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -16,9 +21,19 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import _LOGGER, DOMAIN, SCAN_INTERVAL, SENSOR_LIST
+from .const import _LOGGER, DOMAIN, SCAN_INTERVAL
 
 PARALLEL_UPDATES: Final = 0
+SENSOR_LIST = (
+    SensorEntityDescription(key="customers_out", name="Customers Out"),
+    SensorEntityDescription(
+        key="percent_customers_out",
+        name="Percent Customers Out",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(key="outage_count", name="Outage Count"),
+    SensorEntityDescription(key="customers_served", name="Customers Served"),
+)
 
 
 async def async_setup_entry(
@@ -33,26 +48,30 @@ async def async_setup_entry(
 
     async def async_update_data():
         """Fetch data from API."""
-        async with async_timeout.timeout(10):
-            if conf["county"] == "TOTAL":
-                try:
-                    data = await api.get_outage_totals(websession)
-                except HttpError as err:
-                    raise UpdateFailed(f"Error fetching data: {err}") from err
-                except BadJSONError as err:
-                    raise UpdateFailed(f"Error parsing data: {err}") from err
-                if data["percent_customers_out"] < 5:
-                    data["percent_customers_out"] = "Less than 5%"
-                return data
+        if conf["county"] == "TOTAL":
             try:
-                data = await api.get_outage_count(conf["county"], websession)
+                data = await api.get_outage_totals(websession)
             except HttpError as err:
-                raise UpdateFailed from err
+                raise UpdateFailed(f"Error fetching data: {err}") from err
             except BadJSONError as err:
-                raise UpdateFailed from err
+                raise UpdateFailed(f"Error parsing data: {err}") from err
+            except asyncio.TimeoutError as err:
+                raise UpdateFailed(f"Timeout fetching data: {err}") from err
             if data["percent_customers_out"] < 5:
                 data["percent_customers_out"] = "Less than 5%"
             return data
+        try:
+            data = await api.get_outage_count(conf["county"], websession)
+        except HttpError as err:
+            raise UpdateFailed(f"Error fetching data: {err}") from err
+        except BadJSONError as err:
+            raise UpdateFailed(f"Error parsing data: {err}") from err
+        except asyncio.TimeoutError as err:
+            raise UpdateFailed(f"Timeout fetching data: {err}") from err
+        if data["percent_customers_out"] < 5:
+            percent_out = data["customers_out"] / data["customers_served"] * 100
+            data["percent_customers_out"] = percent_out
+        return data
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -66,14 +85,9 @@ async def async_setup_entry(
 
     county = conf["county"]
 
-    county_name = county.lower()[0].upper() + county.lower()[1:]
-
     sensors = []
     for sensor in SENSOR_LIST:
-        sensor_name = getattr(sensor, "name", "This should never happen").format(
-            county_name
-        )
-        sensors.append(PecoSensor(hass, sensor_name, county, coordinator, sensor.key))
+        sensors.append(PecoSensor(hass, sensor, county, coordinator))
     async_add_entities(
         sensors,
         True,
@@ -90,20 +104,28 @@ class PecoSensor(CoordinatorEntity, SensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        name: str,
+        description: SensorEntityDescription,
         county: str,
         coordinator: DataUpdateCoordinator,
-        key: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.hass = hass
         self._county = county
-        self._attr_name = name
-        self._attr_unique_id = f"{self._county}_{key}"
-        self._key = key
+        self._attr_name = f"{county.capitalize()} {description.name}"
+        self._attr_unique_id = f"{self._county}_{description.key}"
+        self._key = description.key
+        self._unit_of_measurement = description.native_unit_of_measurement
 
     @property
     def native_value(self) -> int:
         """Return the value of the sensor."""
         return self.coordinator.data[self._key]
+
+    @property
+    def native_unit_of_measurement(self) -> Any:
+        """Return the unit of measurement."""
+        if self._unit_of_measurement is not None:
+            return self._unit_of_measurement
+        else:
+            return None

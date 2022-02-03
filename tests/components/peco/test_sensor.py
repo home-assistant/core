@@ -1,4 +1,6 @@
 """Test the PECO Outage Counter sensors."""
+import asyncio
+
 from homeassistant.components.peco.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -123,7 +125,7 @@ async def test_sensor_available(
         if sensor == "bucks_customers_out":
             assert sensor_entity.state == "123"
         elif sensor == "bucks_percent_customers_out":
-            assert sensor_entity.state == "Less than 5%"
+            assert sensor_entity.state == "15.5893536121673"
         elif sensor == "bucks_outage_count":
             assert sensor_entity.state == "456"
         elif sensor == "bucks_customers_served":
@@ -214,3 +216,41 @@ async def test_total_bad_json(
     assert hass.data[DOMAIN]
 
     assert "ConfigEntryNotReady" in caplog.text
+
+
+async def test_update_timeout(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+):
+    """Test if it raises an error when there is a timeout."""
+    aioclient_mock.get(
+        "https://kubra.io/stormcenter/api/v1/stormcenters/39e6d9f3-fdea-4539-848f-b8631945da6f/views/74de8a50-3f45-4f6a-9483-fd618bb9165d/currentState?preview=false",
+        exc=asyncio.TimeoutError(),
+    )
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data=COUNTY_ENTRY_DATA)
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.data[DOMAIN]
+
+    assert "Timeout fetching data" in caplog.text
+
+
+async def test_total_update_timeout(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+):
+    """Test if it raises an error when there is a timeout."""
+    aioclient_mock.get(
+        "https://kubra.io/stormcenter/api/v1/stormcenters/39e6d9f3-fdea-4539-848f-b8631945da6f/views/74de8a50-3f45-4f6a-9483-fd618bb9165d/currentState?preview=false",
+        exc=asyncio.TimeoutError(),
+    )
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.data[DOMAIN]
+
+    assert "Timeout fetching data" in caplog.text
