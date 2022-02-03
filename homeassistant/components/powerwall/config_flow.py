@@ -93,6 +93,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if errors:
             if CONF_PASSWORD in errors:
                 # The default password is the gateway din last 5
+                # if it does not work, we have to ask
                 return await self.async_step_user()
             return self.async_abort(reason="cannot_connect")
         assert info is not None
