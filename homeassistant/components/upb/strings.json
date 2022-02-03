@@ -19,5 +19,16 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "UPB Options",
+        "description": "Setting the Transmission Count to 2 may be required for networks with a repeater.",
+        "data": {
+          "tx_count": "Transmission Count"
+        }
+      }
+    }
   }
 }

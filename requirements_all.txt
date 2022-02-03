@@ -2401,7 +2401,7 @@ unifi-discovery==1.1.2
 unifiled==0.11
 
 # homeassistant.components.upb
-upb_lib==0.4.12
+upb_lib==0.5.1
 
 # homeassistant.components.upcloud
 upcloud-api==2.0.0

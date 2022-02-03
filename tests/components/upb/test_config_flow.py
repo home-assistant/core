@@ -2,8 +2,10 @@
 
 from unittest.mock import MagicMock, PropertyMock, patch
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.upb.const import DOMAIN
+
+from tests.common import MockConfigEntry
 
 
 def mocked_upb(sync_complete=True, config_ok=True):
@@ -141,3 +143,35 @@ async def test_form_junk_input(hass):
     assert result["errors"] == {"base": "unknown"}
 
     await hass.async_block_till_done()
+
+
+async def test_options_flow(hass):
+    """Test options flow."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        unique_id="test_upb",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "tx_count": 2,
+        },
+    )
+
+    with patch(
+        "homeassistant.components.upb.async_setup_entry", return_value=True
+    ), patch("homeassistant.components.upb.async_unload_entry", return_value=True):
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+        await hass.async_block_till_done()
+
+    assert entry.options == {"tx_count": 2}

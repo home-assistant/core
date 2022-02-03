@@ -1,4 +1,6 @@
 """Support the UPB PIM."""
+import logging
+
 import upb_lib
 
 from homeassistant.config_entries import ConfigEntry
@@ -10,11 +12,14 @@ from .const import (
     ATTR_ADDRESS,
     ATTR_BRIGHTNESS_PCT,
     ATTR_RATE,
+    CONF_TX_COUNT,
     DOMAIN,
     EVENT_UPB_SCENE_CHANGED,
 )
 
 PLATFORMS = [Platform.LIGHT, Platform.SCENE]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -23,7 +28,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     url = config_entry.data[CONF_HOST]
     file = config_entry.data[CONF_FILE_PATH]
 
-    upb = upb_lib.UpbPim({"url": url, "UPStartExportFile": file})
+    pim_config = {
+        "url": url,
+        "UPStartExportFile": file,
+    }
+
+    if tx_count := config_entry.options.get(CONF_TX_COUNT, None):
+        pim_config["tx_count"] = tx_count
+
+    upb = upb_lib.UpbPim(pim_config)
     upb.connect()
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {"upb": upb}
@@ -50,6 +63,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         element = upb.links[link]
         element.add_callback(_element_changed)
 
+    config_entry.async_on_unload(
+        config_entry.add_update_listener(_async_update_listener)
+    )
+
     return True
 
 
@@ -63,6 +80,17 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         upb.disconnect()
         hass.data[DOMAIN].pop(config_entry.entry_id)
     return unload_ok
+
+
+async def _async_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Handle options update."""
+    upb = hass.data[DOMAIN][config_entry.entry_id]["upb"]
+    tx_count = config_entry.options.get(CONF_TX_COUNT, None)
+    if tx_count:
+        _LOGGER.debug("Setting tx_count = %d", tx_count)
+        upb.encoder.tx_count = tx_count
+
+    return True
 
 
 class UpbEntity(Entity):

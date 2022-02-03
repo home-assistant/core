@@ -12,6 +12,7 @@ ATTR_BRIGHTNESS = "brightness"
 ATTR_BRIGHTNESS_PCT = "brightness_pct"
 ATTR_RATE = "rate"
 CONF_NETWORK = "network"
+CONF_TX_COUNT = "tx_count"
 EVENT_UPB_SCENE_CHANGED = "upb.scene_changed"
 
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
