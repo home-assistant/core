@@ -31,6 +31,8 @@ from .const import (
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOSTNAME, default=DEFAULT_HOSTNAME): cv.string,
+        vol.Optional(CONF_RESOLVER, default=DEFAULT_RESOLVER): cv.string,
+        vol.Optional(CONF_RESOLVER_IPV6, default=DEFAULT_RESOLVER_IPV6): cv.string,
     }
 )
 
@@ -94,8 +96,8 @@ class DnsIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             hostname = user_input[CONF_HOSTNAME]
             name = DEFAULT_NAME if hostname == DEFAULT_HOSTNAME else hostname
-            resolver = DEFAULT_RESOLVER
-            resolver_ipv6 = DEFAULT_RESOLVER_IPV6
+            resolver = user_input.get(CONF_RESOLVER, DEFAULT_RESOLVER)
+            resolver_ipv6 = user_input.get(CONF_RESOLVER_IPV6, DEFAULT_RESOLVER_IPV6)
 
             validate = await async_validate_hostname(hostname, resolver, resolver_ipv6)
 
