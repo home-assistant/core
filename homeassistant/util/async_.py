@@ -88,7 +88,7 @@ def run_callback_threadsafe(
     return future
 
 
-def check_loop(strict: bool = True) -> None:
+def check_loop(func: Callable, strict: bool = True) -> None:
     """Warn if called inside the event loop. Raise if `strict` is True."""
     try:
         get_running_loop()
@@ -101,7 +101,18 @@ def check_loop(strict: bool = True) -> None:
 
     found_frame = None
 
-    for frame in reversed(extract_stack()):
+    stack = extract_stack()
+
+    if (
+        func.__name__ == "sleep"
+        and len(stack) >= 3
+        and stack[-3].filename.endswith("pydevd.py")
+    ):
+        # Don't report `time.sleep` injected by the debugger (pydevd.py)
+        # stack[-1] is us, stack[-2] is protected_loop_func, stack[-3] is the offender
+        return
+
+    for frame in reversed(stack):
         for path in ("custom_components/", "homeassistant/components/"):
             try:
                 index = frame.filename.index(path)
@@ -152,7 +163,7 @@ def protect_loop(func: Callable, strict: bool = True) -> Callable:
 
     @functools.wraps(func)
     def protected_loop_func(*args, **kwargs):  # type: ignore
-        check_loop(strict=strict)
+        check_loop(func, strict=strict)
         return func(*args, **kwargs)
 
     return protected_loop_func
