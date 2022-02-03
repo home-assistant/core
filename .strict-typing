@@ -155,7 +155,6 @@ homeassistant.components.shelly.*
 homeassistant.components.simplisafe.*
 homeassistant.components.slack.*
 homeassistant.components.smhi.*
-homeassistant.components.sonos.media_player
 homeassistant.components.ssdp.*
 homeassistant.components.stookalert.*
 homeassistant.components.statistics.*
