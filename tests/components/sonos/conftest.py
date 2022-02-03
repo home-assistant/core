@@ -49,6 +49,7 @@ def zeroconf_payload():
     """Return a default zeroconf payload."""
     return zeroconf.ZeroconfServiceInfo(
         host="192.168.4.2",
+        addresses=["192.168.4.2"],
         hostname="Sonos-aaa",
         name="Sonos-aaa@Living Room._sonos._tcp.local.",
         port=None,

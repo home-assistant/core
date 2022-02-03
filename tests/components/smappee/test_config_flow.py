@@ -57,6 +57,7 @@ async def test_show_zeroconf_connection_error_form(hass):
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
                 host="1.2.3.4",
+                addresses=["1.2.3.4"],
                 port=22,
                 hostname="Smappee1006000212.local.",
                 type="_ssh._tcp.local.",
@@ -86,6 +87,7 @@ async def test_show_zeroconf_connection_error_form_next_generation(hass):
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
                 host="1.2.3.4",
+                addresses=["1.2.3.4"],
                 port=22,
                 hostname="Smappee5001000212.local.",
                 type="_ssh._tcp.local.",
@@ -168,6 +170,7 @@ async def test_zeroconf_wrong_mdns(hass):
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="1.2.3.4",
+            addresses=["1.2.3.4"],
             port=22,
             hostname="example.local.",
             type="_ssh._tcp.local.",
@@ -278,6 +281,7 @@ async def test_zeroconf_device_exists_abort(hass):
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
                 host="1.2.3.4",
+                addresses=["1.2.3.4"],
                 port=22,
                 hostname="Smappee1006000212.local.",
                 type="_ssh._tcp.local.",
@@ -327,6 +331,7 @@ async def test_zeroconf_abort_if_cloud_device_exists(hass):
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="1.2.3.4",
+            addresses=["1.2.3.4"],
             port=22,
             hostname="Smappee1006000212.local.",
             type="_ssh._tcp.local.",
@@ -346,6 +351,7 @@ async def test_zeroconf_confirm_abort_if_cloud_device_exists(hass):
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="1.2.3.4",
+            addresses=["1.2.3.4"],
             port=22,
             hostname="Smappee1006000212.local.",
             type="_ssh._tcp.local.",
@@ -465,6 +471,7 @@ async def test_full_zeroconf_flow(hass):
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
                 host="1.2.3.4",
+                addresses=["1.2.3.4"],
                 port=22,
                 hostname="Smappee1006000212.local.",
                 type="_ssh._tcp.local.",
@@ -540,6 +547,7 @@ async def test_full_zeroconf_flow_next_generation(hass):
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
                 host="1.2.3.4",
+                addresses=["1.2.3.4"],
                 port=22,
                 hostname="Smappee5001000212.local.",
                 type="_ssh._tcp.local.",

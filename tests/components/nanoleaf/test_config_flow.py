@@ -238,6 +238,7 @@ async def test_discovery_link_unavailable(
             context={"source": source},
             data=zeroconf.ZeroconfServiceInfo(
                 host=TEST_HOST,
+                addresses=[TEST_HOST],
                 hostname="mock_hostname",
                 name=f"{TEST_NAME}.{type_in_discovery_info}",
                 port=None,
@@ -422,6 +423,7 @@ async def test_import_discovery_integration(
             context={"source": source},
             data=zeroconf.ZeroconfServiceInfo(
                 host=TEST_HOST,
+                addresses=[TEST_HOST],
                 hostname="mock_hostname",
                 name=f"{TEST_NAME}.{type_in_discovery}",
                 port=None,

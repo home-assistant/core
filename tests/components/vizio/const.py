@@ -199,6 +199,7 @@ ZEROCONF_PORT = HOST.split(":")[1]
 
 MOCK_ZEROCONF_SERVICE_INFO = zeroconf.ZeroconfServiceInfo(
     host=ZEROCONF_HOST,
+    addresses=[ZEROCONF_HOST],
     hostname="mock_hostname",
     name=ZEROCONF_NAME,
     port=ZEROCONF_PORT,

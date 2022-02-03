@@ -1095,6 +1095,7 @@ async def test_service_info_compatibility(hass, caplog):
     """
     discovery_info = zeroconf.ZeroconfServiceInfo(
         host="mock_host",
+        addresses=["mock_host"],
         port=None,
         hostname="mock_hostname",
         type="mock_type",

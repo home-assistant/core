@@ -51,6 +51,7 @@ async def test_discovery(detect_mock, hass):
     """Test zeroconf flow -- radio detected."""
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.200",
+        addresses=["192.168.1.200"],
         hostname="_tube_zb_gw._tcp.local.",
         name="mock_name",
         port=6053,
@@ -95,6 +96,7 @@ async def test_discovery_via_zeroconf_ip_change(detect_mock, hass):
 
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.22",
+        addresses=["192.168.1.22"],
         hostname="tube_zb_gw_cc2652p2_poe.local.",
         name="mock_name",
         port=6053,
@@ -127,6 +129,7 @@ async def test_discovery_via_zeroconf_ip_change_ignored(detect_mock, hass):
 
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.22",
+        addresses=["192.168.1.22"],
         hostname="tube_zb_gw_cc2652p2_poe.local.",
         name="mock_name",
         port=6053,
@@ -389,6 +392,7 @@ async def test_discovery_already_setup(detect_mock, hass):
     """Test zeroconf flow -- radio detected."""
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.200",
+        addresses=["192.168.1.200"],
         hostname="_tube_zb_gw._tcp.local.",
         name="mock_name",
         port=6053,

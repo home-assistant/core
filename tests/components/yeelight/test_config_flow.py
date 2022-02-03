@@ -467,6 +467,7 @@ async def test_discovered_by_homekit_and_dhcp(hass):
             context={"source": config_entries.SOURCE_HOMEKIT},
             data=zeroconf.ZeroconfServiceInfo(
                 host=IP_ADDRESS,
+                addresses=[IP_ADDRESS],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -536,6 +537,7 @@ async def test_discovered_by_homekit_and_dhcp(hass):
             config_entries.SOURCE_HOMEKIT,
             zeroconf.ZeroconfServiceInfo(
                 host=IP_ADDRESS,
+                addresses=[IP_ADDRESS],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -603,6 +605,7 @@ async def test_discovered_by_dhcp_or_homekit(hass, source, data):
             config_entries.SOURCE_HOMEKIT,
             zeroconf.ZeroconfServiceInfo(
                 host=IP_ADDRESS,
+                addresses=[IP_ADDRESS],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,

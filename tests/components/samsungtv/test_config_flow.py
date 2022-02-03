@@ -101,6 +101,7 @@ MOCK_DHCP_DATA = dhcp.DhcpServiceInfo(
 EXISTING_IP = "192.168.40.221"
 MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
     host="fake_host",
+    addresses=["fake_host"],
     hostname="mock_hostname",
     name="mock_name",
     port=1234,

@@ -101,6 +101,7 @@ async def test_zeroconf_updates_title(hass, config_entry):
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
     discovery_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.1",
+        addresses=["192.168.1.1"],
         hostname="mock_hostname",
         name="mock_name",
         port=23,
@@ -135,6 +136,7 @@ async def test_config_flow_zeroconf_invalid(hass):
     # test with no discovery properties
     discovery_info = zeroconf.ZeroconfServiceInfo(
         host="127.0.0.1",
+        addresses=["127.0.0.1"],
         hostname="mock_hostname",
         name="mock_name",
         port=23,
@@ -149,6 +151,7 @@ async def test_config_flow_zeroconf_invalid(hass):
     # test with forked-daapd version < 27
     discovery_info = zeroconf.ZeroconfServiceInfo(
         host="127.0.0.1",
+        addresses=["127.0.0.1"],
         hostname="mock_hostname",
         name="mock_name",
         port=23,
@@ -163,6 +166,7 @@ async def test_config_flow_zeroconf_invalid(hass):
     # test with verbose mtd-version from Firefly
     discovery_info = zeroconf.ZeroconfServiceInfo(
         host="127.0.0.1",
+        addresses=["127.0.0.1"],
         hostname="mock_hostname",
         name="mock_name",
         port=23,
@@ -177,6 +181,7 @@ async def test_config_flow_zeroconf_invalid(hass):
     # test with svn mtd-version from Firefly
     discovery_info = zeroconf.ZeroconfServiceInfo(
         host="127.0.0.1",
+        addresses=["127.0.0.1"],
         hostname="mock_hostname",
         name="mock_name",
         port=23,
@@ -194,6 +199,7 @@ async def test_config_flow_zeroconf_valid(hass):
     """Test that a valid zeroconf entry works."""
     discovery_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.1",
+        addresses=["192.168.1.1"],
         hostname="mock_hostname",
         name="mock_name",
         port=23,

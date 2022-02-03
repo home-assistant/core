@@ -220,6 +220,7 @@ async def device_config_changed(hass, accessories):
 
     discovery_info = zeroconf.ZeroconfServiceInfo(
         host="127.0.0.1",
+        addresses=["127.0.0.1"],
         hostname="mock_hostname",
         name="TestDevice",
         port=8080,

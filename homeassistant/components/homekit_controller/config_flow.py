@@ -164,6 +164,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_zeroconf(
                 zeroconf.ZeroconfServiceInfo(
                     host=record["address"],
+                    addresses=[record["address"]],
                     port=record["port"],
                     hostname=record["name"],
                     type="_hap._tcp.local.",

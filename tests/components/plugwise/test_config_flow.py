@@ -42,6 +42,7 @@ TEST_USERNAME2 = "stretch"
 
 TEST_DISCOVERY = zeroconf.ZeroconfServiceInfo(
     host=TEST_HOST,
+    addresses=[TEST_HOST],
     hostname=f"{TEST_HOSTNAME}.local.",
     name="mock_name",
     port=DEFAULT_PORT,
@@ -54,6 +55,7 @@ TEST_DISCOVERY = zeroconf.ZeroconfServiceInfo(
 )
 TEST_DISCOVERY2 = zeroconf.ZeroconfServiceInfo(
     host=TEST_HOST,
+    addresses=[TEST_HOST],
     hostname=f"{TEST_HOSTNAME2}.local.",
     name="mock_name",
     port=DEFAULT_PORT,

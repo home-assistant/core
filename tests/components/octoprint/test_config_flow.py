@@ -175,6 +175,7 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.123",
+            addresses=["192.168.1.123"],
             hostname="example.local.",
             name="mock_name",
             port=80,
@@ -496,6 +497,7 @@ async def test_duplicate_zerconf_ignored(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.123",
+            addresses=["192.168.1.123"],
             hostname="example.local.",
             name="mock_name",
             port=80,
