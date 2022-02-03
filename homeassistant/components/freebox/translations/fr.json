@@ -16,9 +16,12 @@
             "user": {
                 "data": {
                     "host": "H\u00f4te",
-                    "port": "Port"
+                    "port": "Port",
+                    "enable_device_trackers": "Suivi périphériques connectés sur le LAN",
+                    "enable_home_devices": "Delta (V7) : Suivi de la Maison -> réseaux IOHomeControl/RTS (Ex: Velux) et DomusRf (module Alarme si installé)."
                 },
-                "title": "Freebox"
+                "title": "Freebox",
+                "description": "Aller sur http://mafreebox.freebox.fr/api_version et rentrer la valeur de 'api_domain' dans Hôte et 'https_port' dans Port. Avec la Freebox Delta (V7), cochez l'option 'Suivi de la maison' pour retrouver tous vos périphériques connectés sur tous les réseaux"
             }
         }
     }

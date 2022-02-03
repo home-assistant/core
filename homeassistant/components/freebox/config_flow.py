@@ -24,6 +24,8 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize Freebox config flow."""
         self._host = None
         self._port = None
+        self._enable_device_trackers = True
+        self._enable_home_devices = False
 
     def _show_setup_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""
@@ -37,6 +39,12 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
                     vol.Required(CONF_PORT, default=user_input.get(CONF_PORT, "")): int,
+                    vol.Required(
+                        "enable_device_trackers", default=self._enable_device_trackers
+                    ): bool,
+                    vol.Required(
+                        "enable_home_devices", default=self._enable_home_devices
+                    ): bool,
                 }
             ),
             errors=errors or {},
@@ -51,6 +59,8 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._host = user_input[CONF_HOST]
         self._port = user_input[CONF_PORT]
+        self._enable_device_trackers = user_input["enable_device_trackers"]
+        self._enable_home_devices = user_input["enable_home_devices"]
 
         # Check if already configured
         await self.async_set_unique_id(self._host)
@@ -84,7 +94,12 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(
                 title=self._host,
-                data={CONF_HOST: self._host, CONF_PORT: self._port},
+                data={
+                    CONF_HOST: self._host,
+                    CONF_PORT: self._port,
+                    "enable_device_trackers": self._enable_device_trackers,
+                    "enable_home_devices": self._enable_home_devices,
+                },
             )
 
         except AuthorizationError as error:
