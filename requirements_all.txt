@@ -2337,6 +2337,9 @@ temperusb==1.5.3
 # homeassistant.components.tensorflow
 # tensorflow==2.5.0
 
+# homeassistant.components.powerwall
+tesla-powerwall==0.3.15
+
 # homeassistant.components.tesla_wall_connector
 tesla-wall-connector==1.0.1
 
