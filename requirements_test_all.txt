@@ -1035,7 +1035,7 @@ pylitejet==0.3.0
 pylitterbot==2021.12.0
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.13.0
+pylutron-caseta==0.13.1
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -1484,7 +1484,7 @@ vallox-websocket-api==2.9.0
 vehicle==0.3.1
 
 # homeassistant.components.velbus
-velbus-aio==2021.11.7
+velbus-aio==2022.2.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.15
