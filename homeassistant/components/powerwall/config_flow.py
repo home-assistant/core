@@ -152,7 +152,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not errors:
                 assert info is not None
                 if info["unique_id"]:
-                    await self.async_set_unique_id(info["unique_id"])
+                    await self.async_set_unique_id(
+                        info["unique_id"], raise_on_progress=False
+                    )
                     self._abort_if_unique_id_configured(
                         updates={CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]}
                     )
