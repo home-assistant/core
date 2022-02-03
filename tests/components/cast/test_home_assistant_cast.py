@@ -12,7 +12,7 @@ from tests.common import MockConfigEntry, async_mock_signal
 
 
 async def test_service_show_view(hass, mock_zeroconf):
-    """Test we don't set app id in prod."""
+    """Test showing a view."""
     await home_assistant_cast.async_setup_ha_cast(hass, MockConfigEntry())
     calls = async_mock_signal(hass, home_assistant_cast.SIGNAL_HASS_CAST_SHOW_VIEW)
 
