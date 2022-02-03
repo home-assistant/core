@@ -51,13 +51,14 @@ class EntityMapStorage:
 
     async def async_initialize(self) -> None:
         """Get the pairing cache data."""
-        if not (raw_storage := cast(StorageLayout, await self.store.async_load())):
+        if not (raw_storage := await self.store.async_load()):
             # There is no cached data about HomeKit devices yet
             return
 
-        self.storage_data = raw_storage.get("pairings", {})
+        storage = cast(StorageLayout, raw_storage)
+        self.storage_data = storage.get("pairings", {})
 
-    def get_map(self, homekit_id) -> Pairing | None:
+    def get_map(self, homekit_id: str) -> Pairing | None:
         """Get a pairing cache item."""
         return self.storage_data.get(homekit_id)
 

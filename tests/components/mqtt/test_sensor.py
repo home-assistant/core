@@ -268,6 +268,38 @@ async def test_setting_sensor_value_via_mqtt_json_message(hass, mqtt_mock):
     assert state.state == "100"
 
 
+async def test_setting_sensor_value_via_mqtt_json_message_and_default_current_state(
+    hass, mqtt_mock
+):
+    """Test the setting of the value via MQTT with fall back to current state."""
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            sensor.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "test-topic",
+                "unit_of_measurement": "fav unit",
+                "value_template": "{{ value_json.val | is_defined }}-{{ value_json.par }}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(
+        hass, "test-topic", '{ "val": "valcontent", "par": "parcontent" }'
+    )
+    state = hass.states.get("sensor.test")
+
+    assert state.state == "valcontent-parcontent"
+
+    async_fire_mqtt_message(hass, "test-topic", '{ "par": "invalidcontent" }')
+    state = hass.states.get("sensor.test")
+
+    assert state.state == "valcontent-parcontent"
+
+
 async def test_setting_sensor_last_reset_via_mqtt_message(hass, mqtt_mock, caplog):
     """Test the setting of the last_reset property via MQTT."""
     assert await async_setup_component(

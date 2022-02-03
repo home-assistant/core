@@ -94,6 +94,8 @@ DEFAULT_SPEED_RANGE_MAX = 100
 OSCILLATE_ON_PAYLOAD = "oscillate_on"
 OSCILLATE_OFF_PAYLOAD = "oscillate_off"
 
+PAYLOAD_NONE = "None"
+
 MQTT_FAN_ATTRIBUTES_BLOCKED = frozenset(
     {
         fan.ATTR_DIRECTION,
@@ -243,7 +245,7 @@ class MqttFan(MqttEntity, FanEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT fan."""
-        self._state = False
+        self._state = None
         self._percentage = None
         self._preset_mode = None
         self._oscillation = None
@@ -367,6 +369,8 @@ class MqttFan(MqttEntity, FanEntity):
                 self._state = True
             elif payload == self._payload["STATE_OFF"]:
                 self._state = False
+            elif payload == PAYLOAD_NONE:
+                self._state = None
             self.async_write_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
@@ -493,7 +497,7 @@ class MqttFan(MqttEntity, FanEntity):
         return self._optimistic
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._state
 
