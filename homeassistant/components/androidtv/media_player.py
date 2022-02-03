@@ -14,7 +14,7 @@ from adb_shell.exceptions import (
     InvalidResponseError,
     TcpTimeoutException,
 )
-from androidtv.constants import APPS, CUSTOMIZABLE_COMMANDS, KEYS
+from androidtv.constants import APPS, HA_CUSTOMIZABLE_COMMANDS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
 from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
@@ -297,7 +297,7 @@ class ADBDevice(MediaPlayerEntity):
 
         # Setup customizable commands
         cust_commands = options.get(CONF_CUSTOM_COMMANDS, {})
-        for cmd in CUSTOMIZABLE_COMMANDS:
+        for cmd in HA_CUSTOMIZABLE_COMMANDS:
             self.aftv.customize_command(cmd, cust_commands.get(cmd))
 
     async def async_added_to_hass(self):

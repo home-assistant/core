@@ -4,7 +4,7 @@ import logging
 import os
 
 from androidtv import state_detection_rules_validator
-from androidtv.constants import CUSTOM_CURRENT_APP, CUSTOMIZABLE_COMMANDS
+from androidtv.constants import HA_CUSTOMIZABLE_COMMANDS
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -41,7 +41,6 @@ CONF_APP_ID = "app_id"
 CONF_APP_NAME = "app_name"
 
 CONF_CMD_VALUE = "cmd_value"
-NOT_USED_COMMANDS = [CUSTOM_CURRENT_APP]
 
 RULES_NEW_ID = "NewRule"
 CONF_RULE_DELETE = "rule_delete"
@@ -219,8 +218,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         apps_list = {k: f"{v} ({k})" if v else k for k, v in self._apps.items()}
         apps = {APPS_NEW_ID: "Add new", **apps_list}
-        commands = [c for c in CUSTOMIZABLE_COMMANDS if c not in NOT_USED_COMMANDS]
-        commands.sort()
         rules = [RULES_NEW_ID] + list(self._state_det_rules)
         options = self.config_entry.options
 
@@ -241,7 +238,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_SCREENCAP,
                     default=options.get(CONF_SCREENCAP, DEFAULT_SCREENCAP),
                 ): bool,
-                vol.Optional(CONF_CUSTOM_COMMANDS): vol.In(commands),
+                vol.Optional(CONF_CUSTOM_COMMANDS): vol.In(HA_CUSTOMIZABLE_COMMANDS),
                 vol.Optional(CONF_STATE_DETECTION_RULES): vol.In(rules),
             }
         )
