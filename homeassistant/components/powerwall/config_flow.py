@@ -91,7 +91,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {CONF_IP_ADDRESS: self.ip_address, CONF_PASSWORD: gateway_din[-5:]}
         )
         if errors:
-            return await self.async_step_user()
+            if CONF_PASSWORD in errors:
+                # The default password is the gateway din last 5
+                return await self.async_step_user()
+            return self.async_abort(reason="cannot_connect")
         assert info is not None
         self.title = info["title"]
         return await self.async_step_confirm_discovery()

@@ -167,16 +167,41 @@ async def test_already_configured_with_ignored(hass):
     )
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
-            ip="1.1.1.1",
-            macaddress="AA:BB:CC:DD:EE:FF",
-            hostname="any",
-        ),
-    )
+    mock_powerwall = await _mock_powerwall_site_name(hass, "Some site")
+
+    with patch(
+        "homeassistant.components.powerwall.config_flow.Powerwall",
+        return_value=mock_powerwall,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=dhcp.DhcpServiceInfo(
+                ip="1.1.1.1",
+                macaddress="AA:BB:CC:DD:EE:FF",
+                hostname="00GGX",
+            ),
+        )
     assert result["type"] == "form"
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.powerwall.config_flow.Powerwall",
+        return_value=mock_powerwall,
+    ), patch(
+        "homeassistant.components.powerwall.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "Some site"
+    assert result2["data"] == {"ip_address": "1.1.1.1", "password": "00GGX"}
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_dhcp_discovery_manual_configure(hass):
@@ -255,6 +280,27 @@ async def test_dhcp_discovery_auto_configure(hass):
     assert result2["title"] == "Some site"
     assert result2["data"] == {"ip_address": "1.1.1.1", "password": "00GGX"}
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_dhcp_discovery_cannot_connect(hass):
+    """Test we can process the discovery from dhcp and we cannot connect."""
+    mock_powerwall = _mock_powerwall_side_effect(site_info=PowerwallUnreachableError)
+
+    with patch(
+        "homeassistant.components.powerwall.config_flow.Powerwall",
+        return_value=mock_powerwall,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=dhcp.DhcpServiceInfo(
+                ip="1.1.1.1",
+                macaddress="AA:BB:CC:DD:EE:FF",
+                hostname="00GGX",
+            ),
+        )
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_form_reauth(hass):
