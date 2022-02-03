@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Final
 
 from aiohomekit.model.characteristics import (
     ActivationStateValues,
@@ -90,6 +90,7 @@ TARGET_HEATER_COOLER_STATE_HASS_TO_HOMEKIT = {
 
 SWING_MODE_HASS_TO_HOMEKIT = {v: k for k, v in SWING_MODE_HOMEKIT_TO_HASS.items()}
 
+DEFAULT_MIN_STEP: Final = 1.0
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -197,16 +198,16 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         ):
             return (
                 self.service[CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD].minStep
-                or 1.0
+                or DEFAULT_MIN_STEP
             )
         if state == TargetHeaterCoolerStateValues.HEAT and self.service.has(
             CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD
         ):
             return (
                 self.service[CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD].minStep
-                or 1.0
+                or DEFAULT_MIN_STEP
             )
-        return 1.0
+        return DEFAULT_MIN_STEP
 
     @property
     def min_temp(self) -> float:
