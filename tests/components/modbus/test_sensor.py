@@ -5,6 +5,7 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
     CONF_DATA_TYPE,
+    CONF_EXPERT_MODE,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_PRECISION,
@@ -672,6 +673,16 @@ async def test_lazy_error_sensor(hass, mock_do_cycle, start_expect, end_expect):
             },
             [0x0000, 0x0100, 0x0000, 0x0032],
             "256,50",
+        ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_EXPERT_MODE: True,
+                CONF_DATA_TYPE: DataType.CUSTOM,
+                CONF_STRUCTURE: ">2L",
+            },
+            [0x4996, 0x02D2, 0x4996, 0x02D2],
+            "1234567890,1234567890",
         ),
         (
             {

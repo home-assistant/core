@@ -25,6 +25,7 @@ from homeassistant.const import (
 
 from .const import (
     CONF_DATA_TYPE,
+    CONF_EXPERT_MODE,
     CONF_INPUT_TYPE,
     CONF_SWAP,
     CONF_SWAP_BYTE,
@@ -107,7 +108,10 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
             raise vol.Invalid(f"Error in {name} structure: {str(err)}") from err
 
         count = config.get(CONF_COUNT, 1)
-        bytecount = count * 2
+        if config.get(CONF_EXPERT_MODE, False) is True:
+            bytecount = size
+        else:
+            bytecount = count * 2
         if bytecount != size:
             raise vol.Invalid(
                 f"Structure request {size} bytes, "

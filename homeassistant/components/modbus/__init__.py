@@ -62,6 +62,7 @@ from .const import (
     CONF_CLOSE_COMM_ON_ERROR,
     CONF_DATA_COUNT,
     CONF_DATA_TYPE,
+    CONF_EXPERT_MODE,
     CONF_FANS,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
@@ -137,6 +138,7 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
             ]
         ),
         vol.Optional(CONF_COUNT): cv.positive_int,
+        vol.Optional(CONF_EXPERT_MODE, default=False): cv.boolean,
         vol.Optional(CONF_DATA_TYPE, default=DataType.INT): vol.In(
             [
                 DataType.INT16,
