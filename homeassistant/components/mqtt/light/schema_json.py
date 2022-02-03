@@ -100,6 +100,8 @@ CONF_FLASH_TIME_SHORT = "flash_time_short"
 CONF_MAX_MIREDS = "max_mireds"
 CONF_MIN_MIREDS = "min_mireds"
 
+PAYLOAD_NONE = "None"
+
 
 def valid_color_configuration(config):
     """Test color_mode is not combined with deprecated config."""
@@ -179,7 +181,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize MQTT JSON light."""
-        self._state = False
+        self._state = None
         self._supported_features = 0
 
         self._topic = None
@@ -317,6 +319,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 self._state = True
             elif values["state"] == "OFF":
                 self._state = False
+            elif values["state"] is None:
+                self._state = None
 
             if self._supported_features and SUPPORT_COLOR and "color" in values:
                 if values["color"] is None:
