@@ -1,4 +1,5 @@
 """Support for Netgear routers."""
+from datetime import timedelta
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -6,19 +7,23 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER, PLATFORMS
 from .errors import CannotLoginException
 from .router import NetgearRouter
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(seconds=30)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Netgear component."""
     router = NetgearRouter(hass, entry)
     try:
-        await router.async_setup()
+        if not await router.async_setup():
+            raise ConfigEntryNotReady
     except CannotLoginException as ex:
         raise ConfigEntryNotReady from ex
 
@@ -37,7 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.unique_id] = router
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
@@ -52,6 +56,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         configuration_url=f"http://{entry.data[CONF_HOST]}/",
     )
 
+    async def async_update_data() -> bool:
+        """Fetch data from the router."""
+        data = await router.async_update_device_trackers()
+        return data
+
+    # Create update coordinator
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=router.device_name,
+        update_method=async_update_data,
+        update_interval=SCAN_INTERVAL,
+    )
+
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        KEY_ROUTER: router,
+        KEY_COORDINATOR: coordinator,
+    }
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -62,7 +87,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.unique_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
         if not hass.data[DOMAIN]:
             hass.data.pop(DOMAIN)
 
