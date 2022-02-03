@@ -29,9 +29,11 @@ SOURCES = [
     CONF_SOURCE_6,
 ]
 
-OPTIONS_FOR_DATA = {vol.Optional(source): str for source in SOURCES}
+OPTIONS_SCHEMA = {vol.Optional(source): str for source in SOURCES}
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_IP_ADDRESS): str, **OPTIONS_FOR_DATA})
+DATA_SCHEMA = vol.Schema({vol.Required(CONF_IP_ADDRESS): str})
+
+FIRST_ZONE = 11
 
 
 @core.callback
@@ -54,19 +56,18 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
     ws66i = get_ws66i(data[CONF_IP_ADDRESS])
     await hass.async_add_executor_job(ws66i.open)
-    # no exception. run a simple test to make sure we opened correct port
-    ret_val = await hass.async_add_executor_job(ws66i.zone_status, 11)
+    # No exception. run a simple test to make sure we opened correct port
+    # Test on FIRST_ZONE because this zone will always be valid
+    ret_val = await hass.async_add_executor_job(ws66i.zone_status, FIRST_ZONE)
     if ret_val is None:
         ws66i.close()
         raise ConnectionError("Not a valid WS66i connection")
 
-    # no issues
+    # Validation done. No issues. Close the connection
     ws66i.close()
 
-    sources = _sources_from_config(data)
-
     # Return info that you want to store in the config entry.
-    return {CONF_IP_ADDRESS: data[CONF_IP_ADDRESS], CONF_SOURCES: sources}
+    return {CONF_IP_ADDRESS: data[CONF_IP_ADDRESS]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -100,7 +101,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 @core.callback
 def _key_for_source(index, source, previous_sources):
-    if str(index) in previous_sources:
+    if previous_sources is not None and str(index) in previous_sources:
         key = vol.Optional(
             source, description={"suggested_value": previous_sources[str(index)]}
         )
@@ -121,7 +122,8 @@ class Ws66iOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(
-                title="", data={CONF_SOURCES: _sources_from_config(user_input)}
+                title="Source Names",
+                data={CONF_SOURCES: _sources_from_config(user_input)},
             )
 
         # Fill form with previous source names

@@ -1,4 +1,5 @@
 """Support for interfacing with WS66i 6 zone home audio controller."""
+from datetime import timedelta
 import logging
 
 from homeassistant import core
@@ -29,15 +30,20 @@ SUPPORT_WS66I = (
     | SUPPORT_SELECT_SOURCE
 )
 
+SCAN_INTERVAL = timedelta(seconds=30)
+
 
 @core.callback
 def _get_sources_from_dict(data):
     sources_config = data[CONF_SOURCES]
 
+    # Dict index to custom name
     source_id_name = {int(index): name for index, name in sources_config.items()}
 
+    # Dict custom name to index
     source_name_id = {v: k for k, v in source_id_name.items()}
 
+    # List of custom names
     source_names = sorted(source_name_id.keys(), key=lambda v: source_name_id[v])
 
     return [source_id_name, source_name_id, source_names]
@@ -90,15 +96,18 @@ class Ws66iZone(MediaPlayerEntity):
     def __init__(self, ws66i, sources, namespace, zone_id):
         """Initialize new zone."""
         self._ws66i = ws66i
+        self._zone_id = zone_id
         # dict source_id -> source name
         self._source_id_name = sources[0]
         # dict source name -> source_id
         self._source_name_id = sources[1]
         # ordered list of all source names
-        self._source_names = sources[2]
-        self._zone_id = zone_id
+        self._attr_source_list = sources[2]
         self._attr_unique_id = f"{namespace}_{self._zone_id}"
         self._attr_name = f"Zone {self._zone_id}"
+        self._attr_supported_features = SUPPORT_WS66I
+        self._attr_available = True
+        self._attr_should_poll = True
         self._attr_device_info = {
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
@@ -116,7 +125,10 @@ class Ws66iZone(MediaPlayerEntity):
         """Retrieve latest state."""
         new_state = self._ws66i.zone_status(self._zone_id)
         if not new_state:
-            _LOGGER.debug("Zone %d was not detected", self._zone_id)
+            # End-user should turn on Amp and reload integration
+            _LOGGER.warning("Zone %d not detected. Is it turned off?", self._zone_id)
+            self._attr_available = False
+            self._attr_should_poll = False
             return
 
         # successfully retrieved zone state
@@ -128,11 +140,6 @@ class Ws66iZone(MediaPlayerEntity):
             self._source = self._source_id_name[idx]
         else:
             self._source = None
-
-    @property
-    def entity_registry_enabled_default(self):
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return True
 
     @property
     def state(self):
@@ -152,11 +159,6 @@ class Ws66iZone(MediaPlayerEntity):
         return self._mute
 
     @property
-    def supported_features(self):
-        """Return flag of media commands that are supported."""
-        return SUPPORT_WS66I
-
-    @property
     def media_title(self):
         """Return the current source as medial title."""
         return self._source
@@ -165,11 +167,6 @@ class Ws66iZone(MediaPlayerEntity):
     def source(self):
         """Return the current input source of the device."""
         return self._source
-
-    @property
-    def source_list(self):
-        """List of available input sources."""
-        return self._source_names
 
     def snapshot(self):
         """Save zone's current state."""

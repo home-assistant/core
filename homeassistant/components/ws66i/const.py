@@ -11,6 +11,15 @@ CONF_SOURCE_4 = "source_4"
 CONF_SOURCE_5 = "source_5"
 CONF_SOURCE_6 = "source_6"
 
+INIT_OPTIONS_DEFAULT = {
+    "1": "Source 1",
+    "2": "Source 2",
+    "3": "Source 3",
+    "4": "Source 4",
+    "5": "Source 5",
+    "6": "Source 6",
+}
+
 SERVICE_SNAPSHOT = "snapshot"
 SERVICE_RESTORE = "restore"
 

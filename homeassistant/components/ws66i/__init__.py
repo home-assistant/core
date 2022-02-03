@@ -1,24 +1,22 @@
 """The Soundavo WS66i 6-Zone Amplifier integration."""
-import logging
 
 from pyws66i import get_ws66i
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_SOURCES, DOMAIN, WS66I_OBJECT
+from .const import CONF_SOURCES, DOMAIN, INIT_OPTIONS_DEFAULT, WS66I_OBJECT
 
 PLATFORMS = ["media_player"]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Soundavo WS66i 6-Zone Amplifier from a config entry."""
-    # Copy the config entry data to options for future use
+    # Check if options was set. If not, initialize a dict for it
     if not entry.options:
-        options = {CONF_SOURCES: entry.data.get(CONF_SOURCES)}
+        options = {CONF_SOURCES: INIT_OPTIONS_DEFAULT}
         hass.config_entries.async_update_entry(entry, options=options)
 
     entry.async_on_unload(entry.add_update_listener(_update_listener))
@@ -26,10 +24,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ws66i = get_ws66i(entry.data[CONF_IP_ADDRESS])
     try:
         await hass.async_add_executor_job(ws66i.open)
-    except ConnectionError:
+    except ConnectionError as err:
         # Amplifier is probably turned off
-        _LOGGER.warning("Could not connect to WS66i Amp. Is it off?")
-        return False
+        raise ConfigEntryNotReady("Could not connect to WS66i Amp. Is it off?") from err
 
     def close(event):
         """Close the Telnet connection to the amplifier."""
@@ -44,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

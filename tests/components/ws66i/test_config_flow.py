@@ -13,12 +13,7 @@ from homeassistant.const import CONF_IP_ADDRESS
 
 from tests.common import MockConfigEntry
 
-CONFIG = {
-    CONF_IP_ADDRESS: "1.1.1.1",
-    CONF_SOURCE_1: "one",
-    CONF_SOURCE_4: "four",
-    CONF_SOURCE_5: "    ",
-}
+CONFIG = {CONF_IP_ADDRESS: "1.1.1.1"}
 
 
 async def test_form(hass):
@@ -49,10 +44,7 @@ async def test_form(hass):
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "WS66i Amp"
-    assert result2["data"] == {
-        CONF_IP_ADDRESS: CONFIG[CONF_IP_ADDRESS],
-        CONF_SOURCES: {"1": CONFIG[CONF_SOURCE_1], "4": CONFIG[CONF_SOURCE_4]},
-    }
+    assert result2["data"] == {CONF_IP_ADDRESS: CONFIG[CONF_IP_ADDRESS]}
 
     assert len(mock_setup_entry.mock_calls) == 1
 

@@ -18,6 +18,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.components.ws66i.const import (
     CONF_SOURCES,
     DOMAIN,
+    INIT_OPTIONS_DEFAULT,
     SERVICE_RESTORE,
     SERVICE_SNAPSHOT,
 )
@@ -29,14 +30,17 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
+    STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from tests.common import MockConfigEntry
 
-MOCK_CONFIG = {CONF_IP_ADDRESS: "fake ip", CONF_SOURCES: {"1": "one", "3": "three"}}
-MOCK_OPTIONS = {CONF_SOURCES: {"2": "two", "4": "four"}}
+MOCK_SOURCE_DIC = {"1": "one", "2": "two", "3": "three", "4": "four"}
+MOCK_CONFIG = {CONF_IP_ADDRESS: "fake ip"}
+MOCK_OPTIONS = {CONF_SOURCES: MOCK_SOURCE_DIC}
 
 ZONE_1_ID = "media_player.zone_11"
 ZONE_2_ID = "media_player.zone_12"
@@ -176,7 +180,7 @@ async def test_cannot_connect_2(hass):
 
 async def test_service_calls_with_entity_id(hass):
     """Test snapshot save/restore service calls."""
-    await _setup_ws66i(hass, MockWs66i())
+    await _setup_ws66i_with_options(hass, MockWs66i())
 
     # Changing media player to new state
     await _call_media_player_service(
@@ -219,8 +223,8 @@ async def test_service_calls_with_entity_id(hass):
 
 
 async def test_service_calls_with_all_entities(hass):
-    """Test snapshot save/restore service calls."""
-    await _setup_ws66i(hass, MockWs66i())
+    """Test snapshot save/restore service calls with entity id all."""
+    await _setup_ws66i_with_options(hass, MockWs66i())
 
     # Changing media player to new state
     await _call_media_player_service(
@@ -252,8 +256,8 @@ async def test_service_calls_with_all_entities(hass):
 
 
 async def test_service_calls_without_relevant_entities(hass):
-    """Test snapshot save/restore service calls."""
-    await _setup_ws66i(hass, MockWs66i())
+    """Test snapshot save/restore service calls with bad entity id."""
+    await _setup_ws66i_with_options(hass, MockWs66i())
 
     # Changing media player to new state
     await _call_media_player_service(
@@ -298,7 +302,7 @@ async def test_restore_without_snapshot(hass):
 async def test_update(hass):
     """Test updating values from ws66i."""
     ws66i = MockWs66i()
-    await _setup_ws66i(hass, ws66i)
+    await _setup_ws66i_with_options(hass, ws66i)
 
     # Changing media player to new state
     await _call_media_player_service(
@@ -316,6 +320,7 @@ async def test_update(hass):
 
     state = hass.states.get(ZONE_1_ID)
 
+    assert hass.states.is_state(ZONE_1_ID, STATE_ON)
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 1.0
     assert state.attributes[ATTR_INPUT_SOURCE] == "three"
 
@@ -323,7 +328,7 @@ async def test_update(hass):
 async def test_failed_update(hass):
     """Test updating failure from ws66i."""
     ws66i = MockWs66i()
-    await _setup_ws66i(hass, ws66i)
+    await _setup_ws66i_with_options(hass, ws66i)
 
     # Changing media player to new state
     await _call_media_player_service(
@@ -340,10 +345,7 @@ async def test_failed_update(hass):
         await async_update_entity(hass, ZONE_1_ID)
         await hass.async_block_till_done()
 
-    state = hass.states.get(ZONE_1_ID)
-
-    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.0
-    assert state.attributes[ATTR_INPUT_SOURCE] == "one"
+    assert hass.states.is_state(ZONE_1_ID, STATE_UNAVAILABLE)
 
 
 async def test_supported_features(hass):
@@ -368,7 +370,9 @@ async def test_source_list(hass):
 
     state = hass.states.get(ZONE_1_ID)
     # Note, the list is sorted!
-    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["one", "three"]
+    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == list(
+        INIT_OPTIONS_DEFAULT.values()
+    )
 
 
 async def test_source_list_with_options(hass):
@@ -377,13 +381,13 @@ async def test_source_list_with_options(hass):
 
     state = hass.states.get(ZONE_1_ID)
     # Note, the list is sorted!
-    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["two", "four"]
+    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == list(MOCK_SOURCE_DIC.values())
 
 
 async def test_select_source(hass):
     """Test source selection methods."""
     ws66i = MockWs66i()
-    await _setup_ws66i(hass, ws66i)
+    await _setup_ws66i_with_options(hass, ws66i)
 
     await _call_media_player_service(
         hass,
@@ -404,7 +408,7 @@ async def test_select_source(hass):
 async def test_unknown_source(hass):
     """Test behavior when device has unknown source."""
     ws66i = MockWs66i()
-    await _setup_ws66i(hass, ws66i)
+    await _setup_ws66i_with_options(hass, ws66i)
 
     ws66i.set_source(11, 5)
 
