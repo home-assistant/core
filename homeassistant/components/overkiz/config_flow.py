@@ -146,7 +146,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle discovery of a gateway."""
         await self.async_set_unique_id(gateway_id)
         self._abort_if_unique_id_configured()
-        self.context["title_placeholders"] = {"name": f"gateway: {gateway_id}"}
+        self.context["title_placeholders"] = {
+            "name": f"Gateway: {obfuscate_id(gateway_id)}"
+        }
 
         return await self.async_step_user()
 
