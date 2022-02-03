@@ -221,7 +221,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         try:
             await self.async_scan_devices()
         except FRITZ_EXCEPTIONS as ex:
-            raise update_coordinator.UpdateFailed from ex
+            raise update_coordinator.UpdateFailed(ex) from ex
 
     @property
     def unique_id(self) -> str:
