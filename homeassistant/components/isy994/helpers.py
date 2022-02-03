@@ -428,7 +428,7 @@ def convert_isy_value_to_hass(
     if uom in (UOM_DOUBLE_TEMP, UOM_ISYV4_DEGREES):
         return round(float(value) / 2.0, 1)
     if precision not in ("0", 0):
-        return float(round(float(value) / 10 ** int(precision), int(precision)))
+        return cast(float, round(float(value) / 10 ** int(precision), int(precision)))
     if fallback_precision:
         return round(float(value), fallback_precision)
     return value

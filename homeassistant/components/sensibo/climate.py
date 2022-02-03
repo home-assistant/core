@@ -26,7 +26,6 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_STATE,
     ATTR_TEMPERATURE,
     CONF_API_KEY,
@@ -34,9 +33,9 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -53,10 +52,6 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_ID, default=ALL): vol.All(cv.ensure_list, [cv.string]),
     }
-)
-
-ASSUME_STATE_SCHEMA = vol.Schema(
-    {vol.Optional(ATTR_ENTITY_ID): cv.entity_ids, vol.Required(ATTR_STATE): cv.string}
 )
 
 FIELD_TO_FLAG = {
@@ -112,28 +107,13 @@ async def async_setup_entry(
 
     async_add_entities(entities)
 
-    async def async_assume_state(service: ServiceCall) -> None:
-        """Set state according to external service call.."""
-        if entity_ids := service.data.get(ATTR_ENTITY_ID):
-            target_climate = [
-                entity for entity in entities if entity.entity_id in entity_ids
-            ]
-        else:
-            target_climate = entities
-
-        update_tasks = []
-        for climate in target_climate:
-            await climate.async_assume_state(service.data.get(ATTR_STATE))
-            update_tasks.append(climate.async_update_ha_state(True))
-
-        if update_tasks:
-            await asyncio.wait(update_tasks)
-
-    hass.services.async_register(
-        DOMAIN,
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
         SERVICE_ASSUME_STATE,
-        async_assume_state,
-        schema=ASSUME_STATE_SCHEMA,
+        {
+            vol.Required(ATTR_STATE): vol.In(["on", "off"]),
+        },
+        "async_assume_state",
     )
 
 
@@ -364,7 +344,5 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
 
     async def async_assume_state(self, state) -> None:
         """Sync state with api."""
-        if state == self.state or (state == "on" and self.state != HVAC_MODE_OFF):
-            return
         await self._async_set_ac_state_property("on", state != HVAC_MODE_OFF, True)
         await self.coordinator.async_refresh()
