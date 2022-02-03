@@ -109,6 +109,8 @@ CONF_WHITE_VALUE_STATE_TOPIC = "white_value_state_topic"
 CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 CONF_ON_COMMAND_TYPE = "on_command_type"
 
+PAYLOAD_NONE = "None"
+
 MQTT_LIGHT_ATTRIBUTES_BLOCKED = frozenset(
     {
         ATTR_COLOR_MODE,
@@ -257,7 +259,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         self._rgb_color = None
         self._rgbw_color = None
         self._rgbww_color = None
-        self._state = False
+        self._state = None
         self._supported_color_modes = None
         self._white_value = None
         self._xy_color = None
@@ -435,9 +437,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new MQTT messages."""
-            payload = self._value_templates[CONF_STATE_VALUE_TEMPLATE](
-                msg.payload, None
-            )
+            payload = self._value_templates[CONF_STATE_VALUE_TEMPLATE](msg.payload)
             if not payload:
                 _LOGGER.debug("Ignoring empty state message from '%s'", msg.topic)
                 return
@@ -446,6 +446,8 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 self._state = True
             elif payload == self._payload["off"]:
                 self._state = False
+            elif payload == PAYLOAD_NONE:
+                self._state = None
             self.async_write_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
