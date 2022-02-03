@@ -276,61 +276,44 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
         result = await self._async_set_ac_state_property(
             "targetTemperature", int(temperature)
         )
-        if result:
-            self.coordinator.data[self.unique_id]["target_temp"] = int(temperature)
-            self.async_write_ha_state()
+        await self.async_write_result(result, "target_temp", int(temperature))
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         result = await self._async_set_ac_state_property("fanLevel", fan_mode)
-        if result:
-            self.coordinator.data[self.unique_id]["fan_mode"] = fan_mode
-            self.async_write_ha_state()
+        await self.async_write_result(result, "fan_mode", fan_mode)
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target operation mode."""
         if hvac_mode == HVAC_MODE_OFF:
             result = await self._async_set_ac_state_property("on", False)
-            if result:
-                self.coordinator.data[self.unique_id]["on"] = False
-                self.async_write_ha_state()
+            await self.async_write_result(result, "on", False)
             return
 
         # Turn on if not currently on.
         if not self.coordinator.data[self.unique_id]["on"]:
             result = await self._async_set_ac_state_property("on", True)
-            if result:
-                self.coordinator.data[self.unique_id]["on"] = True
+            await self.async_write_result(result, "on", True)
 
         result = await self._async_set_ac_state_property(
             "mode", HA_TO_SENSIBO[hvac_mode]
         )
-        if result:
-            self.coordinator.data[self.unique_id]["hvac_mode"] = HA_TO_SENSIBO[
-                hvac_mode
-            ]
-            self.async_write_ha_state()
+        await self.async_write_result(result, "hvac_mode", HA_TO_SENSIBO[hvac_mode])
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
         result = await self._async_set_ac_state_property("swing", swing_mode)
-        if result:
-            self.coordinator.data[self.unique_id]["swing_mode"] = swing_mode
-            self.async_write_ha_state()
+        await self.async_write_result(result, "swing_mode", swing_mode)
 
     async def async_turn_on(self) -> None:
         """Turn Sensibo unit on."""
         result = await self._async_set_ac_state_property("on", True)
-        if result:
-            self.coordinator.data[self.unique_id]["on"] = True
-            self.async_write_ha_state()
+        await self.async_write_result(result, "on", True)
 
     async def async_turn_off(self) -> None:
         """Turn Sensibo unit on."""
         result = await self._async_set_ac_state_property("on", False)
-        if result:
-            self.coordinator.data[self.unique_id]["on"] = False
-            self.async_write_ha_state()
+        await self.async_write_result(result, "on", False)
 
     async def _async_set_ac_state_property(
         self, name: str, value: Any, assumed_state: bool = False
@@ -368,3 +351,11 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
             return
         await self._async_set_ac_state_property("on", state != HVAC_MODE_OFF, True)
         await self.coordinator.async_refresh()
+
+    async def async_write_result(
+        self, result: bool, attribute: str, state: Any
+    ) -> None:
+        """Write result to coordinator and write state."""
+        if result:
+            self.coordinator.data[self.unique_id][attribute] = state
+            self.async_write_ha_state()
