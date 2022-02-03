@@ -6,6 +6,8 @@ from omnilogic import LightEffect, OmniLogicException
 import voluptuous as vol
 
 from homeassistant.components.light import ATTR_EFFECT, SUPPORT_EFFECT, LightEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 
 from .common import OmniLogicEntity, OmniLogicUpdateCoordinator
@@ -16,7 +18,11 @@ SERVICE_SET_V2EFFECT = "set_v2_lights"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: entity_platform.AddEntitiesCallback,
+) -> None:
     """Set up the light platform."""
 
     coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
@@ -60,7 +66,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
     # register service
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_SET_V2EFFECT,
@@ -97,12 +103,13 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
 
         self._state_key = state_key
         self._wait_for_state_change = False
+        self._version = 1
+
         if coordinator.data[item_id]["V2"] == "yes":
             self._version = 2
             self._brightness = 4
             self._speed = 4
-        else:
-            self._version = 1
+
         self._state = None
         self._last_action = 0
         self._state_delay = 60
@@ -191,25 +198,25 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
     async def async_set_v2effect(self, **kwargs):
         """Set the light effect speed or brightness for V2 lights."""
 
-        if self._version == 2:
-            speed = kwargs.get("speed", self._speed)
-            brightness = kwargs.get("brightness", self._brightness)
-            if 0 <= speed <= 8 and 0 <= brightness <= 4:
-                await self.coordinator.api.set_lightshowv2(
-                    int(self._item_id[1]),
-                    int(self._item_id[3]),
-                    int(self._item_id[-1]),
-                    int(self.coordinator.data[self._item_id]["currentShow"]),
-                    speed,
-                    brightness,
-                )
-
-            else:
-                raise OmniLogicException("Speed must be 0-8 and brightness 0-4.")
-        else:
+        if self._version != 2:
             raise OmniLogicException(
                 "Cannot set effect speed or brightness on version 1 lights."
             )
+
+        speed = kwargs.get("speed", self._speed)
+        brightness = kwargs.get("brightness", self._brightness)
+
+        if (speed < 0 or speed > 8) or (brightness < 0 or brightness > 4):
+            raise OmniLogicException("Speed must be 0-8 and brightness 0-4.")
+
+        await self.coordinator.api.set_lightshowv2(
+            int(self._item_id[1]),
+            int(self._item_id[3]),
+            int(self._item_id[-1]),
+            int(self.coordinator.data[self._item_id]["currentShow"]),
+            speed,
+            brightness,
+        )
 
 
 LIGHT_TYPES = {
