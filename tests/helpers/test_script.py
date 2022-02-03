@@ -1742,6 +1742,50 @@ async def test_repeat_count(hass, caplog, count):
     )
 
 
+async def test_repeat_count_0(hass, caplog):
+    """Test repeat action w/ count option."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    count = 0
+
+    alias = "condition step"
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "alias": alias,
+            "repeat": {
+                "count": count,
+                "sequence": {
+                    "event": event,
+                    "event_data_template": {
+                        "first": "{{ repeat.first }}",
+                        "index": "{{ repeat.index }}",
+                        "last": "{{ repeat.last }}",
+                    },
+                },
+            },
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == count
+    for index, event in enumerate(events):
+        assert event.data.get("first") == (index == 0)
+        assert event.data.get("index") == index + 1
+        assert event.data.get("last") == (index == count - 1)
+    assert caplog.text.count(f"Repeating {alias}") == count
+    first_index = max(1, count - script.ACTION_TRACE_NODE_MAX_LEN + 1)
+    last_index = count + 1
+    assert_action_trace(
+        {
+            "0": [{}],
+        }
+    )
+
+
 @pytest.mark.parametrize("condition", ["while", "until"])
 async def test_repeat_condition_warning(hass, caplog, condition):
     """Test warning on repeat conditions."""
