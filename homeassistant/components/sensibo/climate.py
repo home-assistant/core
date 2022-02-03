@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectionError
 import async_timeout
@@ -70,6 +69,14 @@ SENSIBO_TO_HA = {
 }
 
 HA_TO_SENSIBO = {value: key for key, value in SENSIBO_TO_HA.items()}
+
+AC_STATE_TO_DATA = {
+    "targetTemperature": "target_temp",
+    "fanLevel": "fan_mode",
+    "on": "on",
+    "mode": "hvac_mode",
+    "swing": "swing_mode",
+}
 
 
 async def async_setup_platform(
@@ -253,21 +260,16 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
             else:
                 return
 
-        if await self._async_set_ac_state_property(
-            "targetTemperature", int(temperature)
-        ):
-            await self.async_write_result("target_temp", int(temperature))
+        await self._async_set_ac_state_property("targetTemperature", int(temperature))
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        if await self._async_set_ac_state_property("fanLevel", fan_mode):
-            await self.async_write_result("fan_mode", fan_mode)
+        await self._async_set_ac_state_property("fanLevel", fan_mode)
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target operation mode."""
         if hvac_mode == HVAC_MODE_OFF:
-            if await self._async_set_ac_state_property("on", False):
-                await self.async_write_result("on", False)
+            await self._async_set_ac_state_property("on", False)
             return
 
         # Turn on if not currently on.
@@ -275,26 +277,22 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
             if await self._async_set_ac_state_property("on", True):
                 self.coordinator.data[self.unique_id]["on"] = True
 
-        if await self._async_set_ac_state_property("mode", HA_TO_SENSIBO[hvac_mode]):
-            await self.async_write_result("hvac_mode", HA_TO_SENSIBO[hvac_mode])
+        await self._async_set_ac_state_property("mode", HA_TO_SENSIBO[hvac_mode])
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
-        if await self._async_set_ac_state_property("swing", swing_mode):
-            await self.async_write_result("swing_mode", swing_mode)
+        await self._async_set_ac_state_property("swing", swing_mode)
 
     async def async_turn_on(self) -> None:
         """Turn Sensibo unit on."""
-        if await self._async_set_ac_state_property("on", True):
-            await self.async_write_result("on", True)
+        await self._async_set_ac_state_property("on", True)
 
     async def async_turn_off(self) -> None:
         """Turn Sensibo unit on."""
-        if await self._async_set_ac_state_property("on", False):
-            await self.async_write_result("on", False)
+        await self._async_set_ac_state_property("on", False)
 
     async def _async_set_ac_state_property(
-        self, name: str, value: Any, assumed_state: bool = False
+        self, name: str, value: str | int | bool, assumed_state: bool = False
     ) -> bool:
         """Set AC state."""
         result = {}
@@ -317,6 +315,8 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
             ) from err
         LOGGER.debug("Result: %s", result)
         if result["status"] == "Success":
+            self.coordinator.data[self.unique_id][AC_STATE_TO_DATA[name]] = value
+            self.async_write_ha_state()
             return True
         failure = result["failureReason"]
         raise HomeAssistantError(
@@ -327,8 +327,3 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
         """Sync state with api."""
         await self._async_set_ac_state_property("on", state != HVAC_MODE_OFF, True)
         await self.coordinator.async_refresh()
-
-    async def async_write_result(self, attribute: str, state: str | int | bool) -> None:
-        """Write result to coordinator and write state."""
-        self.coordinator.data[self.unique_id][attribute] = state
-        self.async_write_ha_state()
