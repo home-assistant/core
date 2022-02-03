@@ -66,7 +66,11 @@ from .discovery import (
     set_discovery_hash,
 )
 from .models import ReceiveMessage
-from .subscription import async_subscribe_topics, async_unsubscribe_topics
+from .subscription import (
+    async_prepare_subscribe_topics,
+    async_subscribe_topics,
+    async_unsubscribe_topics,
+)
 from .util import valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
@@ -249,14 +253,19 @@ class MqttAttributes(Entity):
     async def async_added_to_hass(self) -> None:
         """Subscribe MQTT events."""
         await super().async_added_to_hass()
+        self._attributes_prepare_subscribe_topics()
         await self._attributes_subscribe_topics()
+
+    def attributes_prepare_discovery_update(self, config: dict):
+        """Handle updated discovery message."""
+        self._attributes_config = config
+        self._attributes_prepare_subscribe_topics()
 
     async def attributes_discovery_update(self, config: dict):
         """Handle updated discovery message."""
-        self._attributes_config = config
         await self._attributes_subscribe_topics()
 
-    async def _attributes_subscribe_topics(self):
+    def _attributes_prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
         attr_tpl = MqttValueTemplate(
             self._attributes_config.get(CONF_JSON_ATTRS_TEMPLATE), entity=self
@@ -284,7 +293,7 @@ class MqttAttributes(Entity):
                 _LOGGER.warning("Erroneous JSON: %s", payload)
                 self._attributes = None
 
-        self._attributes_sub_state = await async_subscribe_topics(
+        self._attributes_sub_state = async_prepare_subscribe_topics(
             self.hass,
             self._attributes_sub_state,
             {
@@ -297,9 +306,13 @@ class MqttAttributes(Entity):
             },
         )
 
+    async def _attributes_subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await async_subscribe_topics(self.hass, self._attributes_sub_state)
+
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        self._attributes_sub_state = await async_unsubscribe_topics(
+        self._attributes_sub_state = async_unsubscribe_topics(
             self.hass, self._attributes_sub_state
         )
 
@@ -322,6 +335,7 @@ class MqttAvailability(Entity):
     async def async_added_to_hass(self) -> None:
         """Subscribe MQTT events."""
         await super().async_added_to_hass()
+        self._availability_prepare_subscribe_topics()
         await self._availability_subscribe_topics()
         self.async_on_remove(
             async_dispatcher_connect(self.hass, MQTT_CONNECTED, self.async_mqtt_connect)
@@ -332,9 +346,13 @@ class MqttAvailability(Entity):
             )
         )
 
-    async def availability_discovery_update(self, config: dict):
+    def availability_prepare_discovery_update(self, config: dict):
         """Handle updated discovery message."""
         self._availability_setup_from_config(config)
+        self._availability_prepare_subscribe_topics()
+
+    async def availability_discovery_update(self, config: dict):
+        """Handle updated discovery message."""
         await self._availability_subscribe_topics()
 
     def _availability_setup_from_config(self, config):
@@ -366,7 +384,7 @@ class MqttAvailability(Entity):
 
         self._avail_config = config
 
-    async def _availability_subscribe_topics(self):
+    def _availability_prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
         @callback
@@ -398,11 +416,15 @@ class MqttAvailability(Entity):
             for topic in self._avail_topics
         }
 
-        self._availability_sub_state = await async_subscribe_topics(
+        self._availability_sub_state = async_prepare_subscribe_topics(
             self.hass,
             self._availability_sub_state,
             topics,
         )
+
+    async def _availability_subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await async_subscribe_topics(self.hass, self._availability_sub_state)
 
     @callback
     def async_mqtt_connect(self):
@@ -412,7 +434,7 @@ class MqttAvailability(Entity):
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        self._availability_sub_state = await async_unsubscribe_topics(
+        self._availability_sub_state = async_unsubscribe_topics(
             self.hass, self._availability_sub_state
         )
 
@@ -601,7 +623,7 @@ class MqttEntityDeviceInfo(Entity):
         self._device_config = device_config
         self._config_entry = config_entry
 
-    async def device_info_discovery_update(self, config: dict):
+    def device_info_discovery_update(self, config: dict):
         """Handle updated discovery message."""
         self._device_config = config.get(CONF_DEVICE)
         device_registry = dr.async_get(self.hass)
@@ -657,6 +679,7 @@ class MqttEntity(
     async def async_added_to_hass(self):
         """Subscribe mqtt events."""
         await super().async_added_to_hass()
+        self._prepare_subscribe_topics()
         await self._subscribe_topics()
 
     async def discovery_update(self, discovery_payload):
@@ -664,15 +687,22 @@ class MqttEntity(
         config = self.config_schema()(discovery_payload)
         self._config = config
         self._setup_from_config(self._config)
+
+        # Prepare MQTT subscriptions
+        self.attributes_prepare_discovery_update(config)
+        self.availability_prepare_discovery_update(config)
+        self.device_info_discovery_update(config)
+        self._prepare_subscribe_topics()
+
+        # Finalize MQTT subscriptions
         await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
-        await self.device_info_discovery_update(config)
         await self._subscribe_topics()
         self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        self._sub_state = await subscription.async_unsubscribe_topics(
+        self._sub_state = subscription.async_unsubscribe_topics(
             self.hass, self._sub_state
         )
         await MqttAttributes.async_will_remove_from_hass(self)
@@ -686,6 +716,10 @@ class MqttEntity(
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
+
+    @abstractmethod
+    def _prepare_subscribe_topics(self):
+        """(Re)Subscribe to topics."""
 
     @abstractmethod
     async def _subscribe_topics(self):

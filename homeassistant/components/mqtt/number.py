@@ -162,7 +162,7 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
             ).async_render_with_possible_json_value,
         }
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
         @callback
@@ -200,7 +200,7 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
             # Force into optimistic mode.
             self._optimistic = True
         else:
-            self._sub_state = await subscription.async_subscribe_topics(
+            self._sub_state = subscription.async_prepare_subscribe_topics(
                 self.hass,
                 self._sub_state,
                 {
@@ -212,6 +212,10 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
                     }
                 },
             )
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
         if self._optimistic and (last_state := await self.async_get_last_state()):
             self._current_number = last_state.state

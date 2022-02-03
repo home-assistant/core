@@ -304,9 +304,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             except (KeyError, ValueError):
                 _LOGGER.warning("Invalid or incomplete color value received")
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
-        last_state = await self.async_get_last_state()
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -370,7 +369,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             self.async_write_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
-            self._sub_state = await subscription.async_subscribe_topics(
+            self._sub_state = subscription.async_prepare_subscribe_topics(
                 self.hass,
                 self._sub_state,
                 {
@@ -383,6 +382,11 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 },
             )
 
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+
+        last_state = await self.async_get_last_state()
         if self._optimistic and last_state:
             self._state = last_state.state == STATE_ON
             last_attributes = last_state.attributes
