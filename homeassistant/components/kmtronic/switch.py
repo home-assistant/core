@@ -37,13 +37,12 @@ class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
         self._config_entry_id = config_entry_id
         self._reverse = reverse
 
-        hub_host = hub.host
-        hostname = urllib.parse.urlsplit(hub_host).hostname
+        hostname = urllib.parse.urlsplit(hub.host).hostname
         self._attr_device_info = {
             "identifiers": {(DOMAIN, self._config_entry_id)},
             "name": f"Controller {hostname}",
             "manufacturer": MANUFACTURER,
-            "configuration_url": hub_host,
+            "configuration_url": hub.host,
         }
 
         self._attr_name = f"Relay{self._relay.id}"
