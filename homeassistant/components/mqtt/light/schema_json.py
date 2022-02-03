@@ -212,8 +212,6 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         }
         optimistic = config[CONF_OPTIMISTIC]
         self._optimistic = optimistic or self._topic[CONF_STATE_TOPIC] is None
-        if self._optimistic:
-            self._state = False
 
         self._flash_times = {
             key: config.get(key)
