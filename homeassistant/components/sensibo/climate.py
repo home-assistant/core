@@ -292,8 +292,8 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
 
         # Turn on if not currently on.
         if not self.coordinator.data[self.unique_id]["on"]:
-            result = await self._async_set_ac_state_property("on", True)
-            await self.async_write_result(result, "on", True)
+            if result := await self._async_set_ac_state_property("on", True):
+                self.coordinator.data[self.unique_id]["on"] = True
 
         result = await self._async_set_ac_state_property(
             "mode", HA_TO_SENSIBO[hvac_mode]
@@ -353,7 +353,7 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
         await self.coordinator.async_refresh()
 
     async def async_write_result(
-        self, result: bool, attribute: str, state: Any
+        self, result: bool, attribute: str, state: str | int | bool
     ) -> None:
         """Write result to coordinator and write state."""
         if result:
