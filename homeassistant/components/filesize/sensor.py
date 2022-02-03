@@ -5,7 +5,6 @@ import datetime
 import logging
 import os
 import pathlib
-from typing import Any
 
 import voluptuous as vol
 
@@ -76,32 +75,22 @@ class Filesize(SensorEntity):
     def __init__(self, path: str) -> None:
         """Initialize the data object."""
         self._path = path  # Need to check its a valid path
-        self._size: int | None = None
-        self._last_updated: str | None = None
         self._attr_name = slugify(path.split("/")[-1]).strip().capitalize()
-        self._attr_unique_id = path
+        self._attr_extra_state_attributes = {}
 
     def update(self) -> None:
         """Update the sensor."""
-        statinfo = os.stat(self._path)
-        self._size = statinfo.st_size
-        self._last_updated = datetime.datetime.fromtimestamp(
-            statinfo.st_mtime
-        ).isoformat()
+        try:
+            statinfo = os.stat(self._path)
+        except OSError as error:
+            _LOGGER.error("Can not retrieve file statistics %s", error)
 
-    @property
-    def native_value(self) -> float | None:
-        """Return the size of the file in MB."""
-        decimals = 2
-        if self._size:
-            return round(self._size / 1e6, decimals)
-        return None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return other details about the sensor state."""
-        return {
+        size = statinfo.st_size
+        last_updated = datetime.datetime.fromtimestamp(statinfo.st_mtime).isoformat()
+        if size:
+            self._attr_native_value = round(size / 1e6, 2)
+        self._attr_extra_state_attributes = {
             "path": self._path,
-            "last_updated": self._last_updated,
-            "bytes": self._size,
+            "last_updated": last_updated,
+            "bytes": size,
         }
