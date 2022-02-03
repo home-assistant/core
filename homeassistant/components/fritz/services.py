@@ -1,5 +1,9 @@
 """Services for Fritz integration."""
+from __future__ import annotations
+
 import logging
+
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -13,14 +17,20 @@ from .const import (
     SERVICE_CLEANUP,
     SERVICE_REBOOT,
     SERVICE_RECONNECT,
-    SERVICE_SCHEMA_SET_GUEST_WIFI_PW,
     SERVICE_SET_GUEST_WIFI_PW,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
+SERVICE_SCHEMA_SET_GUEST_WIFI_PW = vol.Schema(
+    {
+        vol.Required("device_id"): str,
+        vol.Optional("password"): vol.Length(min=8, max=63),
+        vol.Optional("length"): vol.Range(min=8, max=63),
+    }
+)
 
-SERVICE_LIST = [
+SERVICE_LIST: list[tuple[str, vol.Schema | None]] = [
     (SERVICE_CLEANUP, None),
     (SERVICE_REBOOT, None),
     (SERVICE_RECONNECT, None),

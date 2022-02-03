@@ -9,7 +9,6 @@ from fritzconnection.core.exceptions import (
     FritzLookUpError,
     FritzServiceError,
 )
-import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.const import Platform
@@ -51,14 +50,6 @@ SERVICE_REBOOT = "reboot"
 SERVICE_RECONNECT = "reconnect"
 SERVICE_CLEANUP = "cleanup"
 SERVICE_SET_GUEST_WIFI_PW = "set_guest_wifi_password"
-
-SERVICE_SCHEMA_SET_GUEST_WIFI_PW = vol.Schema(
-    {
-        vol.Required("device_id"): str,
-        vol.Optional("password"): vol.Length(min=8, max=63),
-        vol.Optional("length"): vol.Range(min=8, max=63),
-    }
-)
 
 SWITCH_TYPE_DEFLECTION = "CallDeflection"
 SWITCH_TYPE_PORTFORWARD = "PortForward"
