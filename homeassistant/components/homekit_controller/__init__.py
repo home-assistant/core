@@ -136,7 +136,7 @@ class HomeKitEntity(Entity):
     @property
     def name(self) -> str | None:
         """Return the name of the device if any."""
-        return self.accessory_info.value(CharacteristicsTypes.NAME)
+        return self.accessory.name
 
     @property
     def available(self) -> bool:
