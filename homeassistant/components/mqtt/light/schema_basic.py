@@ -352,8 +352,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             optimistic or topic[CONF_COLOR_MODE_STATE_TOPIC] is None
         )
         self._optimistic = optimistic or topic[CONF_STATE_TOPIC] is None
-        if self._optimistic:
-            self._state = False
         self._optimistic_rgb_color = optimistic or topic[CONF_RGB_STATE_TOPIC] is None
         self._optimistic_rgbw_color = optimistic or topic[CONF_RGBW_STATE_TOPIC] is None
         self._optimistic_rgbww_color = (
