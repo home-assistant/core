@@ -37,12 +37,13 @@ async def async_setup_entry(
             continue
 
         for entity_setting in entity_settings:
-            for state_key, entity_class in entity_setting.get("entity_classes").items():
+            assert entity_setting["entity_classes"] is not None
+            for state_key, entity_class in entity_setting["entity_classes"].items():
                 if state_key not in item:
                     continue
 
                 guard = False
-                for guard_condition in entity_setting.get("guard_condition"):
+                for guard_condition in entity_setting["guard_condition"]:
                     if guard_condition and all(
                         item.get(guard_key) == guard_value
                         for guard_key, guard_value in guard_condition.items()
