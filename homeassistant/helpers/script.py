@@ -741,10 +741,8 @@ class _ScriptRun:
 
         if saved_repeat_vars:
             self._variables["repeat"] = saved_repeat_vars
-        elif "repeat" in self._variables:
-            del self._variables["repeat"]
         else:
-            _LOGGER.warning("Variables key repeat does not exist")
+            self._variables.pop("repeat", None)  # Not set if count = 0
 
     async def _async_choose_step(self) -> None:
         """Choose a sequence."""
