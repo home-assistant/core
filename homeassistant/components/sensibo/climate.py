@@ -336,6 +336,7 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
         if result["status"] == "Success":
             self.coordinator.data[self.unique_id][AC_STATE_TO_DATA[name]] = value
             self.async_write_ha_state()
+            return
 
         failure = result["failureReason"]
         raise HomeAssistantError(
