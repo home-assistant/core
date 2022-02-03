@@ -11,9 +11,6 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
