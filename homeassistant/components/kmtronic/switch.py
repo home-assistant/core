@@ -21,7 +21,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            KMtronicSwitch(coordinator, relay, reverse, entry.entry_id)
+            KMtronicSwitch(hass, coordinator, relay, reverse, entry.entry_id)
             for relay in hub.relays
         ]
     )
@@ -30,22 +30,24 @@ async def async_setup_entry(
 class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
     """KMtronic Switch Entity."""
 
-    def __init__(self, coordinator, relay, reverse, config_entry_id):
+    def __init__(self, hass, coordinator, relay, reverse, config_entry_id):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self._relay = relay
         self._config_entry_id = config_entry_id
         self._reverse = reverse
 
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return f"Relay{self._relay.id}"
+        hub_host = hass.data[DOMAIN][self._config_entry_id][DATA_HUB].host
+        hostname = urllib.parse.urlsplit(hub_host).hostname
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, self._config_entry_id)},
+            "name": f"Controller {hostname}",
+            "manufacturer": MANUFACTURER,
+            "configuration_url": hub_host,
+        }
 
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the entity."""
-        return f"{self._config_entry_id}_relay{self._relay.id}"
+        self._attr_name = f"Relay{self._relay.id}"
+        self._attr_unique_id = f"{self._config_entry_id}_relay{self._relay.id}"
 
     @property
     def is_on(self):
@@ -53,19 +55,6 @@ class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
         if self._reverse:
             return not self._relay.is_energised
         return self._relay.is_energised
-
-    @property
-    def device_info(self):
-        """Return device information."""
-        hub_host = self.hass.data[DOMAIN][self._config_entry_id][DATA_HUB].host
-        hostname = urllib.parse.urlsplit(hub_host).hostname
-
-        return {
-            "identifiers": {(DOMAIN, self._config_entry_id)},
-            "name": f"Controller {hostname}",
-            "manufacturer": MANUFACTURER,
-            "configuration_url": hub_host,
-        }
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the switch on."""
