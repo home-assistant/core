@@ -418,7 +418,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         await self.hass.async_add_executor_job(self.connection.reconnect)
 
     async def async_trigger_set_guest_password(
-        self, password: str | None, length: int | None
+        self, password: str | None, length: int
     ) -> None:
         """Trigger service to set a new guest wifi password."""
         await self.hass.async_add_executor_job(
