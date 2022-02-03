@@ -274,8 +274,7 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
 
         # Turn on if not currently on.
         if not self.coordinator.data[self.unique_id]["on"]:
-            if await self._async_set_ac_state_property("on", True):
-                self.coordinator.data[self.unique_id]["on"] = True
+            await self._async_set_ac_state_property("on", True)
 
         await self._async_set_ac_state_property("mode", HA_TO_SENSIBO[hvac_mode])
 
@@ -293,7 +292,7 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
 
     async def _async_set_ac_state_property(
         self, name: str, value: str | int | bool, assumed_state: bool = False
-    ) -> bool:
+    ) -> None:
         """Set AC state."""
         result = {}
         try:
@@ -317,7 +316,8 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
         if result["status"] == "Success":
             self.coordinator.data[self.unique_id][AC_STATE_TO_DATA[name]] = value
             self.async_write_ha_state()
-            return True
+            return
+
         failure = result["failureReason"]
         raise HomeAssistantError(
             f"Could not set state for device {self.name} due to reason {failure}"
