@@ -66,6 +66,8 @@ DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_PAYLOAD_RESET = "None"
 
+PAYLOAD_NONE = "None"
+
 MQTT_HUMIDIFIER_ATTRIBUTES_BLOCKED = frozenset(
     {
         humidifier.ATTR_HUMIDITY,
@@ -187,7 +189,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT humidifier."""
-        self._state = False
+        self._state = None
         self._target_humidity = None
         self._mode = None
         self._supported_features = 0
@@ -283,6 +285,8 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 self._state = True
             elif payload == self._payload["STATE_OFF"]:
                 self._state = False
+            elif payload == PAYLOAD_NONE:
+                self._state = None
             self.async_write_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
@@ -392,7 +396,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         return self._available_modes
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._state
 
