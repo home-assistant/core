@@ -6,8 +6,9 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import DATA_SONOS
+from .const import DATA_SONOS, DOMAIN
 from .speaker import SonosSpeaker
 
 MEDIA_DIAGNOSTIC_ATTRIBUTES = (
@@ -63,6 +64,23 @@ async def async_get_config_entry_diagnostics(
     return payload
 
 
+async def async_get_device_diagnostics(
+    hass: HomeAssistant, config_entry: ConfigEntry, device: DeviceEntry
+) -> dict[str, Any] | None:
+    """Return diagnostics for a device."""
+    uid = next(
+        (identifier[1] for identifier in device.identifiers if identifier[0] == DOMAIN),
+        None,
+    )
+    if uid is None:
+        return None
+
+    if (speaker := hass.data[DATA_SONOS].discovered.get(uid)) is None:
+        return None
+
+    return await async_generate_speaker_info(hass, speaker)
+
+
 async def async_generate_media_info(
     hass: HomeAssistant, speaker: SonosSpeaker
 ) -> dict[str, Any]:
@@ -73,9 +91,13 @@ async def async_generate_media_info(
         payload[attrib] = getattr(speaker.media, attrib)
 
     def poll_current_track_info():
-        return speaker.soco.avTransport.GetPositionInfo(
-            [("InstanceID", 0), ("Channel", "Master")]
-        )
+        try:
+            return speaker.soco.avTransport.GetPositionInfo(
+                [("InstanceID", 0), ("Channel", "Master")],
+                timeout=3,
+            )
+        except OSError as ex:
+            return f"Error retrieving: {ex}"
 
     payload["current_track_poll"] = await hass.async_add_executor_job(
         poll_current_track_info
@@ -112,5 +134,6 @@ async def async_generate_speaker_info(
         if s is speaker
     }
     payload["media"] = await async_generate_media_info(hass, speaker)
+    payload["activity_stats"] = speaker.activity_stats.report()
     payload["event_stats"] = speaker.event_stats.report()
     return payload

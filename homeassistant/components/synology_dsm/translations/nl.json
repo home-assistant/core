@@ -64,6 +64,7 @@
             "init": {
                 "data": {
                     "scan_interval": "Minuten tussen scans",
+                    "snap_profile_type": "Kwaliteitsniveau van camera-snapshots (0:hoog 1:gemiddeld 2:laag)",
                     "timeout": "Time-out (seconden)"
                 }
             }

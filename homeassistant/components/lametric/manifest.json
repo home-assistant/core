@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/lametric",
   "requirements": ["lmnotify==0.0.4"],
   "codeowners": ["@robbiet480", "@frenck"],
-  "iot_class": "cloud_push"
+  "iot_class": "cloud_push",
+  "loggers": ["lmnotify"]
 }

@@ -12,9 +12,7 @@ from typing import Any, TypedDict, cast
 from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import (
     FritzActionError,
-    FritzActionFailedError,
     FritzConnectionException,
-    FritzLookUpError,
     FritzSecurityError,
     FritzServiceError,
 )
@@ -45,6 +43,7 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_USERNAME,
     DOMAIN,
+    FRITZ_EXCEPTIONS,
     SERVICE_CLEANUP,
     SERVICE_REBOOT,
     SERVICE_RECONNECT,
@@ -106,7 +105,7 @@ class Device:
     ip_address: str
     name: str
     ssid: str | None
-    wan_access: bool = True
+    wan_access: bool | None = None
 
 
 class Interface(TypedDict):
@@ -187,9 +186,26 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
             _LOGGER.error("Unable to establish a connection with %s", self.host)
             return
 
+        _LOGGER.debug(
+            "detected services on %s %s",
+            self.host,
+            list(self.connection.services.keys()),
+        )
+
         self.fritz_hosts = FritzHosts(fc=self.connection)
         self.fritz_status = FritzStatus(fc=self.connection)
         info = self.connection.call_action("DeviceInfo:1", "GetInfo")
+
+        _LOGGER.debug(
+            "gathered device info of %s %s",
+            self.host,
+            {
+                **info,
+                "NewDeviceLog": "***omitted***",
+                "NewSerialNumber": "***omitted***",
+            },
+        )
+
         if not self._unique_id:
             self._unique_id = info["NewSerialNumber"]
 
@@ -276,6 +292,14 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         )
         return bool(version), version
 
+    def _get_wan_access(self, ip_address: str) -> bool | None:
+        """Get WAN access rule for given IP address."""
+        return not self.connection.call_action(
+            "X_AVM-DE_HostFilter:1",
+            "GetWANAccessByIP",
+            NewIPv4Address=ip_address,
+        ).get("NewDisallow")
+
     async def async_scan_devices(self, now: datetime | None = None) -> None:
         """Wrap up FritzboxTools class scan."""
         await self.hass.async_add_executor_job(self.scan_devices, now)
@@ -314,7 +338,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                 connection_type="",
                 ip_address=host["ip"],
                 ssid=None,
-                wan_access=False,
+                wan_access=None,
             )
 
         mesh_intf = {}
@@ -342,32 +366,33 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
 
             for interf in node["node_interfaces"]:
                 dev_mac = interf["mac_address"]
+
+                if dev_mac not in hosts:
+                    continue
+
+                dev_info: Device = hosts[dev_mac]
+
+                if dev_info.ip_address:
+                    dev_info.wan_access = self._get_wan_access(dev_info.ip_address)
+
                 for link in interf["node_links"]:
                     intf = mesh_intf.get(link["node_interface_1_uid"])
-                    if (
-                        intf is not None
-                        and link["state"] == "CONNECTED"
-                        and dev_mac in hosts
-                    ):
-                        dev_info: Device = hosts[dev_mac]
-                        if intf["op_mode"] != "AP_GUEST":
-                            dev_info.wan_access = not self.connection.call_action(
-                                "X_AVM-DE_HostFilter:1",
-                                "GetWANAccessByIP",
-                                NewIPv4Address=dev_info.ip_address,
-                            ).get("NewDisallow")
+                    if intf is not None:
+                        if intf["op_mode"] == "AP_GUEST":
+                            dev_info.wan_access = None
 
                         dev_info.connected_to = intf["device"]
                         dev_info.connection_type = intf["type"]
                         dev_info.ssid = intf.get("ssid")
+                _LOGGER.debug("Client dev_info: %s", dev_info)
 
-                        if dev_mac in self._devices:
-                            self._devices[dev_mac].update(dev_info, consider_home)
-                        else:
-                            device = FritzDevice(dev_mac, dev_info.name)
-                            device.update(dev_info, consider_home)
-                            self._devices[dev_mac] = device
-                            new_device = True
+                if dev_mac in self._devices:
+                    self._devices[dev_mac].update(dev_info, consider_home)
+                else:
+                    device = FritzDevice(dev_mac, dev_info.name)
+                    device.update(dev_info, consider_home)
+                    self._devices[dev_mac] = device
+                    new_device = True
 
         dispatcher_send(self.hass, self.signal_device_update)
         if new_device:
@@ -520,12 +545,7 @@ class AvmWrapper(FritzBoxTools):
                 "Authorization Error: Please check the provided credentials and verify that you can log into the web interface",
                 exc_info=True,
             )
-        except (
-            FritzActionError,
-            FritzActionFailedError,
-            FritzServiceError,
-            FritzLookUpError,
-        ):
+        except FRITZ_EXCEPTIONS:
             _LOGGER.error(
                 "Service/Action Error: cannot execute service %s with action %s",
                 service_name,
@@ -758,7 +778,7 @@ class FritzDevice:
         self._mac = mac
         self._name = name
         self._ssid: str | None = None
-        self._wan_access = False
+        self._wan_access: bool | None = False
 
     def update(self, dev_info: Device, consider_home: float) -> None:
         """Update device info."""
@@ -826,7 +846,7 @@ class FritzDevice:
         return self._ssid
 
     @property
-    def wan_access(self) -> bool:
+    def wan_access(self) -> bool | None:
         """Return device wan access."""
         return self._wan_access
 

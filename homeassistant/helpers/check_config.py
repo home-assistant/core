@@ -10,7 +10,7 @@ from typing import NamedTuple
 import voluptuous as vol
 
 from homeassistant import loader
-from homeassistant.config import (
+from homeassistant.config import (  # type: ignore[attr-defined]
     CONF_CORE,
     CONF_PACKAGES,
     CORE_CONFIG_SCHEMA,

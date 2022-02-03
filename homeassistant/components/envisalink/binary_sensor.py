@@ -30,25 +30,25 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Envisalink binary sensor devices."""
+    """Set up the Envisalink binary sensor entities."""
     if not discovery_info:
         return
     configured_zones = discovery_info["zones"]
 
-    devices = []
+    entities = []
     for zone_num in configured_zones:
-        device_config_data = ZONE_SCHEMA(configured_zones[zone_num])
-        device = EnvisalinkBinarySensor(
+        entity_config_data = ZONE_SCHEMA(configured_zones[zone_num])
+        entity = EnvisalinkBinarySensor(
             hass,
             zone_num,
-            device_config_data[CONF_ZONENAME],
-            device_config_data[CONF_ZONETYPE],
+            entity_config_data[CONF_ZONENAME],
+            entity_config_data[CONF_ZONETYPE],
             hass.data[DATA_EVL].alarm_state["zone"][zone_num],
             hass.data[DATA_EVL],
         )
-        devices.append(device)
+        entities.append(entity)
 
-    async_add_entities(devices)
+    async_add_entities(entities)
 
 
 class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorEntity):
@@ -64,7 +64,11 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorEntity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(self.hass, SIGNAL_ZONE_UPDATE, self._update_callback)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_ZONE_UPDATE, self.async_update_callback
+            )
+        )
 
     @property
     def extra_state_attributes(self):
@@ -102,7 +106,7 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorEntity):
         return self._zone_type
 
     @callback
-    def _update_callback(self, zone):
+    def async_update_callback(self, zone):
         """Update the zone's state, if needed."""
         if zone is None or int(zone) == self._zone_number:
             self.async_write_ha_state()

@@ -46,7 +46,10 @@ MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA = {
     "source": config_entries.SOURCE_USER,
 }
 
-UPTIMEROBOT_TEST_ENTITY = "binary_sensor.test_monitor"
+STATE_UP = "up"
+
+UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY = "binary_sensor.test_monitor"
+UPTIMEROBOT_SENSOR_TEST_ENTITY = "sensor.test_monitor"
 
 
 class MockApiResponseKey(str, Enum):
@@ -94,7 +97,8 @@ async def setup_uptimerobot_integration(hass: HomeAssistant) -> MockConfigEntry:
         assert await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.states.get(UPTIMEROBOT_TEST_ENTITY).state == STATE_ON
+    assert hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY).state == STATE_ON
+    assert hass.states.get(UPTIMEROBOT_SENSOR_TEST_ENTITY).state == STATE_UP
     assert mock_entry.state == config_entries.ConfigEntryState.LOADED
 
     return mock_entry

@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from functools import lru_cache
+from functools import cache
 import logging
 import os
 import socket
@@ -561,34 +561,32 @@ def _update(  # noqa: C901
     return state, value, update_time
 
 
-# When we drop python 3.8 support these can be switched to
-# @cache https://docs.python.org/3.9/library/functools.html#functools.cache
-@lru_cache(maxsize=None)
+@cache
 def _disk_usage(path: str) -> Any:
     return psutil.disk_usage(path)
 
 
-@lru_cache(maxsize=None)
+@cache
 def _swap_memory() -> Any:
     return psutil.swap_memory()
 
 
-@lru_cache(maxsize=None)
+@cache
 def _virtual_memory() -> Any:
     return psutil.virtual_memory()
 
 
-@lru_cache(maxsize=None)
+@cache
 def _net_io_counters() -> Any:
     return psutil.net_io_counters(pernic=True)
 
 
-@lru_cache(maxsize=None)
+@cache
 def _net_if_addrs() -> Any:
     return psutil.net_if_addrs()
 
 
-@lru_cache(maxsize=None)
+@cache
 def _getloadavg() -> tuple[float, float, float]:
     return os.getloadavg()
 

@@ -1,8 +1,9 @@
 """Tests for the Sonarr sensor platform."""
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
+from sonarr import SonarrError
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.sonarr.const import DOMAIN
@@ -16,18 +17,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
-from tests.components.sonarr import mock_connection, setup_integration
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 UPCOMING_ENTITY_ID = f"{SENSOR_DOMAIN}.sonarr_upcoming"
 
 
 async def test_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_sonarr: MagicMock,
 ) -> None:
     """Test the creation and values of the sensors."""
-    entry = await setup_integration(hass, aioclient_mock, skip_entry_setup=True)
+    entry = mock_config_entry
     registry = er.async_get(hass)
 
     # Pre-create registry entries for disabled by default sensors
@@ -48,6 +49,7 @@ async def test_sensors(
             disabled_by=None,
         )
 
+    mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -104,10 +106,11 @@ async def test_sensors(
     ),
 )
 async def test_disabled_by_default_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, entity_id: str
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    entity_id: str,
 ) -> None:
     """Test the disabled by default sensors."""
-    await setup_integration(hass, aioclient_mock)
     registry = er.async_get(hass)
 
     state = hass.states.get(entity_id)
@@ -120,19 +123,22 @@ async def test_disabled_by_default_sensors(
 
 
 async def test_availability(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_sonarr: MagicMock,
 ) -> None:
     """Test entity availability."""
     now = dt_util.utcnow()
 
+    mock_config_entry.add_to_hass(hass)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
-        await setup_integration(hass, aioclient_mock)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert hass.states.get(UPCOMING_ENTITY_ID).state == "1"
 
     # state to unavailable
-    aioclient_mock.clear_requests()
-    mock_connection(aioclient_mock, error=True)
+    mock_sonarr.calendar.side_effect = SonarrError
 
     future = now + timedelta(minutes=1)
     with patch("homeassistant.util.dt.utcnow", return_value=future):
@@ -142,8 +148,7 @@ async def test_availability(
     assert hass.states.get(UPCOMING_ENTITY_ID).state == STATE_UNAVAILABLE
 
     # state to available
-    aioclient_mock.clear_requests()
-    mock_connection(aioclient_mock)
+    mock_sonarr.calendar.side_effect = None
 
     future += timedelta(minutes=1)
     with patch("homeassistant.util.dt.utcnow", return_value=future):
@@ -153,8 +158,7 @@ async def test_availability(
     assert hass.states.get(UPCOMING_ENTITY_ID).state == "1"
 
     # state to unavailable
-    aioclient_mock.clear_requests()
-    mock_connection(aioclient_mock, invalid_auth=True)
+    mock_sonarr.calendar.side_effect = SonarrError
 
     future += timedelta(minutes=1)
     with patch("homeassistant.util.dt.utcnow", return_value=future):
@@ -164,8 +168,7 @@ async def test_availability(
     assert hass.states.get(UPCOMING_ENTITY_ID).state == STATE_UNAVAILABLE
 
     # state to available
-    aioclient_mock.clear_requests()
-    mock_connection(aioclient_mock)
+    mock_sonarr.calendar.side_effect = None
 
     future += timedelta(minutes=1)
     with patch("homeassistant.util.dt.utcnow", return_value=future):

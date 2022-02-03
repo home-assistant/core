@@ -10,5 +10,18 @@
                 }
             }
         }
+    },
+    "options": {
+        "error": {
+            "invalid_resolver": "Ongeldig IP-adres voor resolver"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "resolver": "Resolver voor IPV4 lookup",
+                    "resolver_ipv6": "Resolver voor IPV6 lookup"
+                }
+            }
+        }
     }
 }

@@ -137,8 +137,8 @@ async def test_light_goes_unavailable_and_recovers(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
 
 
-async def test_light_no_unique_id(hass: HomeAssistant) -> None:
-    """Test a light without a unique id."""
+async def test_light_mac_address_not_found(hass: HomeAssistant) -> None:
+    """Test a light when we cannot discover the mac address."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE}
     )
@@ -150,7 +150,7 @@ async def test_light_no_unique_id(hass: HomeAssistant) -> None:
 
     entity_id = "light.bulb_rgbcw_ddeeff"
     entity_registry = er.async_get(hass)
-    assert entity_registry.async_get(entity_id) is None
+    assert entity_registry.async_get(entity_id).unique_id == config_entry.entry_id
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 

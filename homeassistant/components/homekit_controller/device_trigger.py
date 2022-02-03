@@ -76,7 +76,7 @@ class TriggerSource:
 
     async def async_attach_trigger(
         self,
-        config: TRIGGER_SCHEMA,
+        config: ConfigType,
         action: AutomationActionType,
         automation_info: AutomationTriggerInfo,
     ) -> CALLBACK_TYPE:
@@ -197,7 +197,7 @@ async def async_setup_triggers_for_entry(hass: HomeAssistant, config_entry):
     @callback
     def async_add_service(service):
         aid = service.accessory.aid
-        service_type = service.short_type
+        service_type = service.type
 
         # If not a known service type then we can't handle any stateless events for it
         if service_type not in TRIGGER_FINDERS:

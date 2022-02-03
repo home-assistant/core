@@ -5,5 +5,6 @@
   "requirements": ["PySwitchbot==0.13.2"],
   "config_flow": true,
   "codeowners": ["@danielhiversen", "@RenierM26"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["switchbot"]
 }

@@ -165,7 +165,7 @@ async def test_media_browse(hass, hass_ws_client):
         "homeassistant.components.demo.media_player.YOUTUBE_PLAYER_SUPPORT",
         media_player.SUPPORT_BROWSE_MEDIA,
     ), patch(
-        "homeassistant.components.media_player.MediaPlayerEntity." "async_browse_media",
+        "homeassistant.components.media_player.MediaPlayerEntity.async_browse_media",
         return_value={"bla": "yo"},
     ) as mock_browse_media:
         await client.send_json(
@@ -190,7 +190,7 @@ async def test_media_browse(hass, hass_ws_client):
         "homeassistant.components.demo.media_player.YOUTUBE_PLAYER_SUPPORT",
         media_player.SUPPORT_BROWSE_MEDIA,
     ), patch(
-        "homeassistant.components.media_player.MediaPlayerEntity." "async_browse_media",
+        "homeassistant.components.media_player.MediaPlayerEntity.async_browse_media",
         return_value={"bla": "yo"},
     ):
         await client.send_json(

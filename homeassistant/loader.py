@@ -88,6 +88,7 @@ class Manifest(TypedDict, total=False):
     is_built_in: bool
     version: str
     codeowners: list[str]
+    loggers: list[str]
 
 
 def manifest_from_legacy_module(domain: str, module: ModuleType) -> Manifest:
@@ -443,6 +444,11 @@ class Integration:
         return self.manifest.get("issue_tracker")
 
     @property
+    def loggers(self) -> list[str] | None:
+        """Return list of loggers used by the integration."""
+        return self.manifest.get("loggers")
+
+    @property
     def quality_scale(self) -> str | None:
         """Return Integration Quality Scale."""
         return self.manifest.get("quality_scale")
@@ -539,18 +545,44 @@ class Integration:
 
     def get_component(self) -> ModuleType:
         """Return the component."""
-        cache = self.hass.data.setdefault(DATA_COMPONENTS, {})
-        if self.domain not in cache:
+        cache: dict[str, ModuleType] = self.hass.data.setdefault(DATA_COMPONENTS, {})
+        if self.domain in cache:
+            return cache[self.domain]
+
+        try:
             cache[self.domain] = importlib.import_module(self.pkg_path)
-        return cache[self.domain]  # type: ignore
+        except ImportError:
+            raise
+        except Exception as err:
+            _LOGGER.exception(
+                "Unexpected exception importing component %s", self.pkg_path
+            )
+            raise ImportError(f"Exception importing {self.pkg_path}") from err
+
+        return cache[self.domain]
 
     def get_platform(self, platform_name: str) -> ModuleType:
         """Return a platform for an integration."""
-        cache = self.hass.data.setdefault(DATA_COMPONENTS, {})
+        cache: dict[str, ModuleType] = self.hass.data.setdefault(DATA_COMPONENTS, {})
         full_name = f"{self.domain}.{platform_name}"
-        if full_name not in cache:
+        if full_name in cache:
+            return cache[full_name]
+
+        try:
             cache[full_name] = self._import_platform(platform_name)
-        return cache[full_name]  # type: ignore
+        except ImportError:
+            raise
+        except Exception as err:
+            _LOGGER.exception(
+                "Unexpected exception importing platform %s.%s",
+                self.pkg_path,
+                platform_name,
+            )
+            raise ImportError(
+                f"Exception importing {self.pkg_path}.{platform_name}"
+            ) from err
+
+        return cache[full_name]
 
     def _import_platform(self, platform_name: str) -> ModuleType:
         """Import the platform."""

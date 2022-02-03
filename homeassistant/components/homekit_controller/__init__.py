@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import Any
 
 import aiohomekit
@@ -16,7 +17,7 @@ from aiohomekit.model.services import Service, ServicesTypes
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
@@ -26,10 +27,7 @@ from .connection import HKDevice, valid_serial_number
 from .const import CONTROLLER, ENTITY_MAP, KNOWN_DEVICES, TRIGGERS
 from .storage import EntityMapStorage
 
-
-def escape_characteristic_name(char_name):
-    """Escape any dash or dots in a characteristics name."""
-    return char_name.replace("-", "_").replace(".", "_")
+_LOGGER = logging.getLogger(__name__)
 
 
 class HomeKitEntity(Entity):
@@ -37,15 +35,13 @@ class HomeKitEntity(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, accessory: HKDevice, devinfo):
+    def __init__(self, accessory: HKDevice, devinfo: ConfigType) -> None:
         """Initialise a generic HomeKit device."""
         self._accessory = accessory
         self._aid = devinfo["aid"]
         self._iid = devinfo["iid"]
         self._features = 0
         self.setup()
-
-        self._signals = []
 
         super().__init__()
 
@@ -66,9 +62,9 @@ class HomeKitEntity(Entity):
         """Return a Service model that this entity is attached to."""
         return self.accessory.services.iid(self._iid)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
-        self._signals.append(
+        self.async_on_remove(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
                 self._accessory.signal_state_updated, self.async_write_ha_state
             )
@@ -77,16 +73,12 @@ class HomeKitEntity(Entity):
         self._accessory.add_pollable_characteristics(self.pollable_characteristics)
         self._accessory.add_watchable_characteristics(self.watchable_characteristics)
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Prepare to be removed from hass."""
         self._accessory.remove_pollable_characteristics(self._aid)
         self._accessory.remove_watchable_characteristics(self._aid)
 
-        for signal_remove in self._signals:
-            signal_remove()
-        self._signals.clear()
-
-    async def async_put_characteristics(self, characteristics: dict[str, Any]):
+    async def async_put_characteristics(self, characteristics: dict[str, Any]) -> None:
         """
         Write characteristics to the device.
 
@@ -104,10 +96,10 @@ class HomeKitEntity(Entity):
         payload = self.service.build_update(characteristics)
         return await self._accessory.put_characteristics(payload)
 
-    def setup(self):
-        """Configure an entity baed on its HomeKit characteristics metadata."""
-        self.pollable_characteristics = []
-        self.watchable_characteristics = []
+    def setup(self) -> None:
+        """Configure an entity based on its HomeKit characteristics metadata."""
+        self.pollable_characteristics: list[tuple[int, int]] = []
+        self.watchable_characteristics: list[tuple[int, int]] = []
 
         char_types = self.get_characteristic_types()
 
@@ -121,7 +113,7 @@ class HomeKitEntity(Entity):
             for char in service.characteristics.filter(char_types=char_types):
                 self._setup_characteristic(char)
 
-    def _setup_characteristic(self, char: Characteristic):
+    def _setup_characteristic(self, char: Characteristic) -> None:
         """Configure an entity based on a HomeKit characteristics metadata."""
         # Build up a list of (aid, iid) tuples to poll on update()
         if CharacteristicPermissions.paired_read in char.perms:
@@ -142,7 +134,7 @@ class HomeKitEntity(Entity):
         return f"homekit-{self._accessory.unique_id}-{self._aid}-{self._iid}"
 
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         """Return the name of the device if any."""
         return self.accessory_info.value(CharacteristicsTypes.NAME)
 
@@ -156,7 +148,7 @@ class HomeKitEntity(Entity):
         """Return the device info."""
         return self._accessory.device_info_for_accessory(self.accessory)
 
-    def get_characteristic_types(self):
+    def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         raise NotImplementedError
 
@@ -179,7 +171,9 @@ class CharacteristicEntity(HomeKitEntity):
     the service entity.
     """
 
-    def __init__(self, accessory, devinfo, char):
+    def __init__(
+        self, accessory: HKDevice, devinfo: ConfigType, char: Characteristic
+    ) -> None:
         """Initialise a generic single characteristic HomeKit entity."""
         self._char = char
         super().__init__(accessory, devinfo)
@@ -221,7 +215,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[KNOWN_DEVICES] = {}
     hass.data[TRIGGERS] = {}
 
-    async def _async_stop_homekit_controller(event):
+    async def _async_stop_homekit_controller(event: Event) -> None:
         await asyncio.gather(
             *(
                 connection.async_unload()
@@ -248,4 +242,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Cleanup caches before removing config entry."""
     hkid = entry.data["AccessoryPairingID"]
+
+    # Remove cached type data from .storage/homekit_controller-entity-map
     hass.data[ENTITY_MAP].async_delete_map(hkid)
+
+    # Remove the pairing on the device, making the device discoverable again.
+    # Don't reuse any objects in hass.data as they are already unloaded
+    async_zeroconf_instance = await zeroconf.async_get_async_instance(hass)
+    controller = aiohomekit.Controller(async_zeroconf_instance=async_zeroconf_instance)
+    controller.load_pairing(hkid, dict(entry.data))
+    try:
+        await controller.remove_pairing(hkid)
+    except aiohomekit.AccessoryDisconnectedError:
+        _LOGGER.warning(
+            "Accessory %s was removed from HomeAssistant but was not reachable "
+            "to properly unpair. It may need resetting before you can use it with "
+            "HomeKit again",
+            entry.title,
+        )

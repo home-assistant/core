@@ -8,7 +8,11 @@ from homeassistant.components.watttime.config_flow import (
     CONF_LOCATION_TYPE,
     LOCATION_TYPE_COORDINATES,
 )
-from homeassistant.components.watttime.const import DOMAIN
+from homeassistant.components.watttime.const import (
+    CONF_BALANCING_AUTHORITY,
+    CONF_BALANCING_AUTHORITY_ABBREV,
+    DOMAIN,
+)
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -21,11 +25,13 @@ from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(name="client")
-def client_fixture(get_grid_region):
+def client_fixture(get_grid_region, data_realtime_emissions):
     """Define an aiowatttime client."""
     client = Mock()
     client.emissions.async_get_grid_region = get_grid_region
-    client.emissions.async_get_realtime_emissions = AsyncMock()
+    client.emissions.async_get_realtime_emissions = AsyncMock(
+        return_value=data_realtime_emissions
+    )
     return client
 
 
@@ -61,7 +67,12 @@ def config_entry_fixture(hass, config_auth, config_coordinates, unique_id):
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=unique_id,
-        data={**config_auth, **config_coordinates},
+        data={
+            **config_auth,
+            **config_coordinates,
+            CONF_BALANCING_AUTHORITY: "PJM New Jersey",
+            CONF_BALANCING_AUTHORITY_ABBREV: "PJM_NJ",
+        },
     )
     entry.add_to_hass(hass)
     return entry
@@ -71,6 +82,12 @@ def config_entry_fixture(hass, config_auth, config_coordinates, unique_id):
 def data_grid_region_fixture():
     """Define grid region data."""
     return json.loads(load_fixture("grid_region_data.json", "watttime"))
+
+
+@pytest.fixture(name="data_realtime_emissions", scope="session")
+def data_realtime_emissions_fixture():
+    """Define realtime emissions data."""
+    return json.loads(load_fixture("realtime_emissions_data.json", "watttime"))
 
 
 @pytest.fixture(name="get_grid_region")

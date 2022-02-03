@@ -5,5 +5,6 @@
   "requirements": ["VL53L1X2==0.1.5"],
   "dependencies": ["rpi_gpio"],
   "codeowners": [],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["VL53L1X2"]
 }

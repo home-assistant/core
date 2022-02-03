@@ -8,5 +8,6 @@
     "@sebfortier2288"
   ],
   "requirements": ["pysoma==0.0.10"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["api"]
 }
