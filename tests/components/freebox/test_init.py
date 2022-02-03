@@ -46,7 +46,6 @@ async def test_setup(hass: HomeAssistant, router: Mock):
 
 async def test_setup_import(hass: HomeAssistant, router: Mock):
     """Test setup of integration from import."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
         domain=DOMAIN,

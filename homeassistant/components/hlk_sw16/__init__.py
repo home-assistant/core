@@ -4,15 +4,16 @@ import logging
 from hlk_sw16 import create_hlk_sw16_connection
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SWITCHES
-from homeassistant.core import callback
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SWITCHES, Platform
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONNECTION_TIMEOUT,
@@ -24,7 +25,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["switch"]
+PLATFORMS = [Platform.SWITCH]
 
 DATA_DEVICE_REGISTER = "hlk_sw16_device_register"
 DATA_DEVICE_LISTENER = "hlk_sw16_device_listener"
@@ -55,7 +56,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Component setup, do nothing."""
     if DOMAIN not in config:
         return True
@@ -72,7 +73,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the HLK-SW16 switch."""
     hass.data.setdefault(DOMAIN, {})
     host = entry.data[CONF_HOST]
@@ -122,7 +123,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     client = hass.data[DOMAIN][entry.entry_id].pop(DATA_DEVICE_REGISTER)
     client.stop()

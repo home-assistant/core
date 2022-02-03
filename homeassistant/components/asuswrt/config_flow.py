@@ -217,8 +217,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             }
         )
 
-        conf_mode = self.config_entry.data[CONF_MODE]
-        if conf_mode == MODE_AP:
+        if self.config_entry.data[CONF_MODE] == MODE_AP:
             data_schema = data_schema.extend(
                 {
                     vol.Optional(

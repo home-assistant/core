@@ -16,7 +16,3 @@ class ServerNotSpecified(PlexException):
 
 class ShouldUpdateConfigEntry(PlexException):
     """Config entry data is out of date and should be updated."""
-
-
-class MediaNotFound(PlexException):
-    """Media lookup failed for a given search query."""

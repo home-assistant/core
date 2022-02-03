@@ -1,5 +1,11 @@
 {
     "config": {
+        "abort": {
+            "api_ratelimit": "Se excedi\u00f3 el l\u00edmite de tasa de API"
+        },
+        "error": {
+            "api_ratelimit": "Se excedi\u00f3 el l\u00edmite de tasa de API"
+        },
         "step": {
             "country": {
                 "data": {
@@ -9,7 +15,8 @@
             "user": {
                 "data": {
                     "location": "Obtener datos para"
-                }
+                },
+                "description": "Visite https://co2signal.com/ para solicitar un token."
             }
         }
     }

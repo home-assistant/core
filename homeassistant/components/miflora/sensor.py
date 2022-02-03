@@ -12,9 +12,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONDUCTIVITY,
@@ -23,16 +24,15 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE,
     EVENT_HOMEASSISTANT_START,
     LIGHT_LUX,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 try:
@@ -63,13 +63,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="temperature",
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="light",
         name="Light intensity",
         native_unit_of_measurement=LIGHT_LUX,
-        device_class=DEVICE_CLASS_ILLUMINANCE,
+        device_class=SensorDeviceClass.ILLUMINANCE,
     ),
     SensorEntityDescription(
         key="moisture",
@@ -81,13 +81,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="conductivity",
         name="Conductivity",
         native_unit_of_measurement=CONDUCTIVITY,
-        icon="mdi:flash-circle",
+        icon="mdi:lightning-bolt-circle",
     ),
     SensorEntityDescription(
         key="battery",
         name="Battery",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_BATTERY,
+        device_class=SensorDeviceClass.BATTERY,
     ),
 )
 
@@ -110,7 +110,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the MiFlora sensor."""
     backend = BACKEND
     _LOGGER.debug("Miflora is using %s backend", backend.__name__)
@@ -148,7 +153,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class MiFloraSensor(SensorEntity):
     """Implementing the MiFlora sensor."""
 
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,

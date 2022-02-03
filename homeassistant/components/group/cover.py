@@ -12,14 +12,6 @@ from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
     DOMAIN,
     PLATFORM_SCHEMA,
-    SERVICE_CLOSE_COVER,
-    SERVICE_CLOSE_COVER_TILT,
-    SERVICE_OPEN_COVER,
-    SERVICE_OPEN_COVER_TILT,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_SET_COVER_TILT_POSITION,
-    SERVICE_STOP_COVER,
-    SERVICE_STOP_COVER_TILT,
     SUPPORT_CLOSE,
     SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN,
@@ -37,15 +29,24 @@ from homeassistant.const import (
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    SERVICE_CLOSE_COVER,
+    SERVICE_CLOSE_COVER_TILT,
+    SERVICE_OPEN_COVER,
+    SERVICE_OPEN_COVER_TILT,
+    SERVICE_SET_COVER_POSITION,
+    SERVICE_SET_COVER_TILT_POSITION,
+    SERVICE_STOP_COVER,
+    SERVICE_STOP_COVER_TILT,
+    STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.core import CoreState, Event, HomeAssistant, State
+from homeassistant.core import Event, HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import GroupEntity
 from .util import attribute_equal, reduce_attribute
@@ -70,7 +71,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, Any] | None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Group Cover platform."""
     async_add_entities(
@@ -85,7 +86,7 @@ async def async_setup_platform(
 class CoverGroup(GroupEntity, CoverEntity):
     """Representation of a CoverGroup."""
 
-    _attr_is_closed: bool | None = False
+    _attr_is_closed: bool | None = None
     _attr_is_opening: bool | None = False
     _attr_is_closing: bool | None = False
     _attr_current_cover_position: int | None = 100
@@ -109,15 +110,14 @@ class CoverGroup(GroupEntity, CoverEntity):
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entities}
         self._attr_unique_id = unique_id
 
-    async def _update_supported_features_event(self, event: Event) -> None:
+    @callback
+    def _update_supported_features_event(self, event: Event) -> None:
         self.async_set_context(event.context)
-        entity = event.data.get("entity_id")
-        if entity is not None:
-            await self.async_update_supported_features(
-                entity, event.data.get("new_state")
-            )
+        if (entity := event.data.get("entity_id")) is not None:
+            self.async_update_supported_features(entity, event.data.get("new_state"))
 
-    async def async_update_supported_features(
+    @callback
+    def async_update_supported_features(
         self,
         entity_id: str,
         new_state: State | None,
@@ -130,7 +130,7 @@ class CoverGroup(GroupEntity, CoverEntity):
             for values in self._tilts.values():
                 values.discard(entity_id)
             if update_state:
-                await self.async_defer_or_update_ha_state()
+                self.async_defer_or_update_ha_state()
             return
 
         features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
@@ -162,15 +162,14 @@ class CoverGroup(GroupEntity, CoverEntity):
             self._tilts[KEY_POSITION].discard(entity_id)
 
         if update_state:
-            await self.async_defer_or_update_ha_state()
+            self.async_defer_or_update_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Register listeners."""
         for entity_id in self._entities:
-            new_state = self.hass.states.get(entity_id)
-            if new_state is None:
+            if (new_state := self.hass.states.get(entity_id)) is None:
                 continue
-            await self.async_update_supported_features(
+            self.async_update_supported_features(
                 entity_id, new_state, update_state=False
             )
         self.async_on_remove(
@@ -179,9 +178,6 @@ class CoverGroup(GroupEntity, CoverEntity):
             )
         )
 
-        if self.hass.state == CoreState.running:
-            await self.async_update()
-            return
         await super().async_added_to_hass()
 
     async def async_open_cover(self, **kwargs: Any) -> None:
@@ -254,26 +250,35 @@ class CoverGroup(GroupEntity, CoverEntity):
             context=self._context,
         )
 
-    async def async_update(self) -> None:
+    @callback
+    def async_update_group_state(self) -> None:
         """Update state and attributes."""
         self._attr_assumed_state = False
 
         self._attr_is_closed = True
         self._attr_is_closing = False
         self._attr_is_opening = False
+        has_valid_state = False
         for entity_id in self._entities:
-            state = self.hass.states.get(entity_id)
-            if not state:
+            if not (state := self.hass.states.get(entity_id)):
                 continue
             if state.state == STATE_OPEN:
                 self._attr_is_closed = False
+                has_valid_state = True
+                continue
+            if state.state == STATE_CLOSED:
+                has_valid_state = True
                 continue
             if state.state == STATE_CLOSING:
                 self._attr_is_closing = True
+                has_valid_state = True
                 continue
             if state.state == STATE_OPENING:
                 self._attr_is_opening = True
+                has_valid_state = True
                 continue
+        if not has_valid_state:
+            self._attr_is_closed = None
 
         position_covers = self._covers[KEY_POSITION]
         all_position_states = [self.hass.states.get(x) for x in position_covers]
@@ -312,8 +317,7 @@ class CoverGroup(GroupEntity, CoverEntity):
 
         if not self._attr_assumed_state:
             for entity_id in self._entities:
-                state = self.hass.states.get(entity_id)
-                if state is None:
+                if (state := self.hass.states.get(entity_id)) is None:
                     continue
                 if state and state.attributes.get(ATTR_ASSUMED_STATE):
                     self._attr_assumed_state = True

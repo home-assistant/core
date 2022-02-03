@@ -9,6 +9,15 @@
             "unknown": "Error inesperado"
         },
         "step": {
+            "reauth_validate": {
+                "description": "Introduzca la contrase\u00f1a para {username} .",
+                "title": "Volver a autenticar una cuenta de agosto"
+            },
+            "user_validate": {
+                "data": {
+                    "login_method": "M\u00e9todo de inicio de sesi\u00f3n"
+                }
+            },
             "validation": {
                 "data": {
                     "code": "C\u00f3digo de verificaci\u00f3n"

@@ -6,5 +6,6 @@
   "codeowners": ["@DavidMStraub"],
   "requirements": ["homeconnect==0.6.3"],
   "config_flow": true,
-  "iot_class": "cloud_push"
+  "iot_class": "cloud_push",
+  "loggers": ["homeconnect"]
 }

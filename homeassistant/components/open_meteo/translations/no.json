@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "zone": "Sone"
+                },
+                "description": "Velg lokasjon som skal brukes til v\u00e6rvarsling"
+            }
+        }
+    }
+}

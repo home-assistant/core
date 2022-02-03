@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/zoneminder",
   "requirements": ["zm-py==0.5.2"],
   "codeowners": ["@rohankapoorcom"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["zoneminder"]
 }

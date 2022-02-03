@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-import logging
 from typing import Any
 from unittest.mock import patch
 
@@ -50,8 +49,6 @@ from homeassistant.util import dt as dt_util
 from .const import API_V3_ENTRY_DATA, API_V4_ENTRY_DATA
 
 from tests.common import MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @callback

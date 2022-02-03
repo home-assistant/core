@@ -10,31 +10,22 @@ from pyflunearyou import Client
 from pyflunearyou.errors import FluNearYouError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    CATEGORY_CDC_REPORT,
-    CATEGORY_USER_REPORT,
-    DATA_COORDINATOR,
-    DOMAIN,
-    LOGGER,
-)
+from .const import CATEGORY_CDC_REPORT, CATEGORY_USER_REPORT, DOMAIN, LOGGER
 
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=30)
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flu Near You as config entry."""
-    hass.data.setdefault(DOMAIN, {DATA_COORDINATOR: {}})
-    hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = {}
-
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(session=websession)
 
@@ -57,20 +48,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         return data
 
+    coordinators = {}
     data_init_tasks = []
+
     for api_category in (CATEGORY_CDC_REPORT, CATEGORY_USER_REPORT):
-        coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
-            api_category
-        ] = DataUpdateCoordinator(
+        coordinator = coordinators[api_category] = DataUpdateCoordinator(
             hass,
             LOGGER,
             name=f"{api_category} ({latitude}, {longitude})",
             update_interval=DEFAULT_UPDATE_INTERVAL,
             update_method=partial(async_update, api_category),
         )
-        data_init_tasks.append(coordinator.async_refresh())
+        data_init_tasks.append(coordinator.async_config_entry_first_refresh())
 
     await asyncio.gather(*data_init_tasks)
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = coordinators
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -81,6 +74,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an Flu Near You config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

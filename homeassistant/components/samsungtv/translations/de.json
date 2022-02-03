@@ -6,6 +6,7 @@
             "auth_missing": "Home Assistant ist nicht berechtigt, eine Verbindung zu diesem Samsung TV herzustellen. \u00dcberpr\u00fcfe den Ger\u00e4teverbindungsmanager in den Einstellungen deines Fernsehger\u00e4ts, um Home Assistant zu autorisieren.",
             "cannot_connect": "Verbindung fehlgeschlagen",
             "id_missing": "Dieses Samsung-Ger\u00e4t hat keine Seriennummer.",
+            "missing_config_entry": "Dieses Samsung-Ger\u00e4t hat keinen Konfigurationseintrag.",
             "not_supported": "Dieses Samsung TV-Ger\u00e4t wird derzeit nicht unterst\u00fctzt.",
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
             "unknown": "Unerwarteter Fehler"

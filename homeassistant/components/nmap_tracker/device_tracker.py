@@ -2,94 +2,23 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable
+from typing import Any
 
-import voluptuous as vol
-
-from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
-    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
-    SOURCE_TYPE_ROUTER,
-)
+from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
-from homeassistant.components.device_tracker.const import (
-    CONF_CONSIDER_HOME,
-    CONF_SCAN_INTERVAL,
-    DEFAULT_CONSIDER_HOME,
-)
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NmapDevice, NmapDeviceScanner, short_hostname, signal_device_update
-from .const import (
-    CONF_HOME_INTERVAL,
-    CONF_OPTIONS,
-    DEFAULT_OPTIONS,
-    DOMAIN,
-    TRACKER_SCAN_INTERVAL,
-)
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOSTS): cv.ensure_list,
-        vol.Required(CONF_HOME_INTERVAL, default=0): cv.positive_int,
-        vol.Required(
-            CONF_CONSIDER_HOME, default=DEFAULT_CONSIDER_HOME.total_seconds()
-        ): cv.time_period,
-        vol.Optional(CONF_EXCLUDE, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_OPTIONS, default=DEFAULT_OPTIONS): cv.string,
-    }
-)
-
-
-async def async_get_scanner(hass: HomeAssistant, config: ConfigType) -> None:
-    """Validate the configuration and return a Nmap scanner."""
-    validated_config = config[DEVICE_TRACKER_DOMAIN]
-
-    if CONF_SCAN_INTERVAL in validated_config:
-        scan_interval = validated_config[CONF_SCAN_INTERVAL].total_seconds()
-    else:
-        scan_interval = TRACKER_SCAN_INTERVAL
-
-    if CONF_CONSIDER_HOME in validated_config:
-        consider_home = validated_config[CONF_CONSIDER_HOME].total_seconds()
-    else:
-        consider_home = DEFAULT_CONSIDER_HOME.total_seconds()
-
-    import_config = {
-        CONF_HOSTS: ",".join(validated_config[CONF_HOSTS]),
-        CONF_HOME_INTERVAL: validated_config[CONF_HOME_INTERVAL],
-        CONF_CONSIDER_HOME: consider_home,
-        CONF_EXCLUDE: ",".join(validated_config[CONF_EXCLUDE]),
-        CONF_OPTIONS: validated_config[CONF_OPTIONS],
-        CONF_SCAN_INTERVAL: scan_interval,
-    }
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=import_config,
-        )
-    )
-
-    _LOGGER.warning(
-        "Your Nmap Tracker configuration has been imported into the UI, "
-        "please remove it from configuration.yaml. "
-    )
-
-
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up device tracker for Nmap Tracker component."""
     nmap_tracker = hass.data[DOMAIN][entry.entry_id]
@@ -167,15 +96,6 @@ class NmapTrackerEntity(ScannerEntity):
     def source_type(self) -> str:
         """Return tracker source type."""
         return SOURCE_TYPE_ROUTER
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, self._mac_address)},
-            "default_manufacturer": self._device.manufacturer,
-            "default_name": self.name,
-        }
 
     @property
     def should_poll(self) -> bool:

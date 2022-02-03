@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device_key": "Enhetsn\u00f8kkel",
+                    "host": "Vert",
+                    "port": "Port",
+                    "verify_ssl": "Verifisere SSL-sertifikat"
+                }
+            }
+        }
+    }
+}

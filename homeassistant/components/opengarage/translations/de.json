@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device_key": "Ger\u00e4teschl\u00fcssel",
+                    "host": "Host",
+                    "port": "Port",
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
+                }
+            }
+        }
+    }
+}

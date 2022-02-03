@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from amcrest import AmcrestError
 
@@ -77,7 +77,7 @@ class AmcrestSensor(SensorEntity):
         self.entity_description = description
         self._signal_name = name
         self._api = device.api
-        self._unsub_dispatcher: Callable[[], None] | None = None
+        self._channel = device.channel
 
         self._attr_name = f"{name} {description.name}"
         self._attr_extra_state_attributes = {}
@@ -87,19 +87,25 @@ class AmcrestSensor(SensorEntity):
         """Return True if entity is available."""
         return self._api.available
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Get the latest data and updates the state."""
         if not self.available:
             return
         _LOGGER.debug("Updating %s sensor", self.name)
 
         sensor_type = self.entity_description.key
+
         try:
+            if self._attr_unique_id is None and (
+                serial_number := (await self._api.async_serial_number)
+            ):
+                self._attr_unique_id = f"{serial_number}-{sensor_type}-{self._channel}"
+
             if sensor_type == SENSOR_PTZ_PRESET:
-                self._attr_native_value = self._api.ptz_presets_count
+                self._attr_native_value = await self._api.async_ptz_presets_count
 
             elif sensor_type == SENSOR_SDCARD:
-                storage = self._api.storage_all
+                storage = await self._api.async_storage_all
                 try:
                     self._attr_extra_state_attributes[
                         "Total"
@@ -123,19 +129,12 @@ class AmcrestSensor(SensorEntity):
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "sensor", error)
 
-    async def async_on_demand_update(self) -> None:
-        """Update state."""
-        self.async_schedule_update_ha_state(True)
-
     async def async_added_to_hass(self) -> None:
         """Subscribe to update signal."""
-        self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass,
-            service_signal(SERVICE_UPDATE, self._signal_name),
-            self.async_on_demand_update,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                service_signal(SERVICE_UPDATE, self._signal_name),
+                self.async_write_ha_state,
+            )
         )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect from update signal."""
-        assert self._unsub_dispatcher is not None
-        self._unsub_dispatcher()

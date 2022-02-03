@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "J\u00e1 configurado. Apenas uma configura\u00e7\u00e3o \u00e9 poss\u00edvel."
+        },
+        "error": {
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
+                },
+                "title": "Entrar com a conta mijn.ithodaalderop.nl"
+            }
+        }
+    }
+}

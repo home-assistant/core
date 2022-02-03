@@ -2,7 +2,6 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.utility_meter.const import (
     DOMAIN,
     SERVICE_RESET,
@@ -16,6 +15,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     ENERGY_KILO_WATT_HOUR,
     EVENT_HOMEASSISTANT_START,
+    Platform,
 )
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
@@ -45,7 +45,7 @@ async def test_restore_state(hass):
     )
 
     assert await async_setup_component(hass, DOMAIN, config)
-    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
+    assert await async_setup_component(hass, Platform.SENSOR, config)
     await hass.async_block_till_done()
 
     # restore from cache
@@ -66,7 +66,7 @@ async def test_services(hass):
     }
 
     assert await async_setup_component(hass, DOMAIN, config)
-    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
+    assert await async_setup_component(hass, Platform.SENSOR, config)
     await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)

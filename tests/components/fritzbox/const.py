@@ -15,6 +15,6 @@ MOCK_CONFIG = {
 }
 
 CONF_FAKE_NAME = "fake_name"
-CONF_FAKE_AIN = "fake_ain"
+CONF_FAKE_AIN = "12345 1234567"
 CONF_FAKE_MANUFACTURER = "fake_manufacturer"
 CONF_FAKE_PRODUCTNAME = "fake_productname"

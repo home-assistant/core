@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_BATTERY_CHARGING,
@@ -13,7 +14,11 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import as_local
 
 from .const import ATTRIBUTION, DEVICE_BRAND, DOMAIN as LOGI_CIRCLE_DOMAIN, SENSOR_TYPES
@@ -21,17 +26,24 @@ from .const import ATTRIBUTION, DEVICE_BRAND, DOMAIN as LOGI_CIRCLE_DOMAIN, SENS
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up a sensor for a Logi Circle device. Obsolete."""
     _LOGGER.warning("Logi Circle no longer works with sensor platform configuration")
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up a Logi Circle sensor based on a config entry."""
     devices = await hass.data[LOGI_CIRCLE_DOMAIN].cameras
     time_zone = str(hass.config.time_zone)
 
-    monitored_conditions = entry.data.get(CONF_SENSORS).get(CONF_MONITORED_CONDITIONS)
+    monitored_conditions = entry.data[CONF_SENSORS].get(CONF_MONITORED_CONDITIONS)
     entities = [
         LogiSensor(device, time_zone, description)
         for description in SENSOR_TYPES
@@ -56,15 +68,15 @@ class LogiSensor(SensorEntity):
         self._tz = time_zone
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return information about the device."""
-        return {
-            "name": self._camera.name,
-            "identifiers": {(LOGI_CIRCLE_DOMAIN, self._camera.id)},
-            "model": self._camera.model_name,
-            "sw_version": self._camera.firmware,
-            "manufacturer": DEVICE_BRAND,
-        }
+        return DeviceInfo(
+            identifiers={(LOGI_CIRCLE_DOMAIN, self._camera.id)},
+            manufacturer=DEVICE_BRAND,
+            model=self._camera.model_name,
+            name=self._camera.name,
+            sw_version=self._camera.firmware,
+        )
 
     @property
     def extra_state_attributes(self):

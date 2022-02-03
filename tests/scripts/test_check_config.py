@@ -74,7 +74,7 @@ def test_component_platform_not_found(mock_is_file, loop):
         assert res["components"].keys() == {"homeassistant"}
         assert res["except"] == {
             check_config.ERROR_STR: [
-                "Component error: beer - Integration 'beer' not found."
+                "Integration error: beer - Integration 'beer' not found."
             ]
         }
         assert res["secret_cache"] == {}

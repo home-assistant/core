@@ -1,8 +1,6 @@
 """Support for Elgato lights."""
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
 from typing import Any
 
 from elgato import Elgato, ElgatoError, Info, Settings, State
@@ -16,26 +14,22 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
-)
+from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
 )
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
-from .const import DATA_ELGATO_CLIENT, DOMAIN, SERVICE_IDENTIFY
-
-_LOGGER = logging.getLogger(__name__)
+from . import HomeAssistantElgatoData
+from .const import DOMAIN, LOGGER, SERVICE_IDENTIFY
+from .entity import ElgatoEntity
 
 PARALLEL_UPDATES = 1
-SCAN_INTERVAL = timedelta(seconds=10)
 
 
 async def async_setup_entry(
@@ -44,10 +38,20 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Elgato Light based on a config entry."""
-    elgato: Elgato = hass.data[DOMAIN][entry.entry_id][DATA_ELGATO_CLIENT]
-    info = await elgato.info()
-    settings = await elgato.settings()
-    async_add_entities([ElgatoLight(elgato, info, settings)], True)
+    data: HomeAssistantElgatoData = hass.data[DOMAIN][entry.entry_id]
+    settings = await data.client.settings()
+    async_add_entities(
+        [
+            ElgatoLight(
+                data.coordinator,
+                data.client,
+                data.info,
+                entry.data.get(CONF_MAC),
+                settings,
+            )
+        ],
+        True,
+    )
 
     platform = async_get_current_platform()
     platform.async_register_entity_service(
@@ -57,15 +61,22 @@ async def async_setup_entry(
     )
 
 
-class ElgatoLight(LightEntity):
+class ElgatoLight(ElgatoEntity, CoordinatorEntity, LightEntity):
     """Defines an Elgato Light."""
 
-    def __init__(self, elgato: Elgato, info: Info, settings: Settings) -> None:
+    coordinator: DataUpdateCoordinator[State]
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        client: Elgato,
+        info: Info,
+        mac: str | None,
+        settings: Settings,
+    ) -> None:
         """Initialize Elgato Light."""
-        self._info = info
-        self._settings = settings
-        self._state: State | None = None
-        self.elgato = elgato
+        super().__init__(client, info, mac)
+        CoordinatorEntity.__init__(self, coordinator)
 
         min_mired = 143
         max_mired = 344
@@ -84,26 +95,19 @@ class ElgatoLight(LightEntity):
         self._attr_unique_id = info.serial_number
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._state is not None
-
-    @property
     def brightness(self) -> int | None:
         """Return the brightness of this light between 1..255."""
-        assert self._state is not None
-        return round((self._state.brightness * 255) / 100)
+        return round((self.coordinator.data.brightness * 255) / 100)
 
     @property
     def color_temp(self) -> int | None:
         """Return the CT color value in mireds."""
-        assert self._state is not None
-        return self._state.temperature
+        return self.coordinator.data.temperature
 
     @property
     def color_mode(self) -> str | None:
         """Return the color mode of the light."""
-        if self._state and self._state.hue is not None:
+        if self.coordinator.data.hue is not None:
             return COLOR_MODE_HS
 
         return COLOR_MODE_COLOR_TEMP
@@ -111,28 +115,20 @@ class ElgatoLight(LightEntity):
     @property
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
-        if (
-            self._state is None
-            or self._state.hue is None
-            or self._state.saturation is None
-        ):
-            return None
-
-        return (self._state.hue, self._state.saturation)
+        return (self.coordinator.data.hue or 0, self.coordinator.data.saturation or 0)
 
     @property
     def is_on(self) -> bool:
         """Return the state of the light."""
-        assert self._state is not None
-        return self._state.on
+        return self.coordinator.data.on
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         try:
-            await self.elgato.light(on=False)
+            await self.client.light(on=False)
         except ElgatoError:
-            _LOGGER.error("An error occurred while updating the Elgato Light")
-            self._state = None
+            LOGGER.error("An error occurred while updating the Elgato Light")
+        await self.coordinator.async_refresh()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
@@ -161,7 +157,7 @@ class ElgatoLight(LightEntity):
             temperature = self.color_temp
 
         try:
-            await self.elgato.light(
+            await self.client.light(
                 on=True,
                 brightness=brightness,
                 hue=hue,
@@ -169,36 +165,13 @@ class ElgatoLight(LightEntity):
                 temperature=temperature,
             )
         except ElgatoError:
-            _LOGGER.error("An error occurred while updating the Elgato Light")
-            self._state = None
-
-    async def async_update(self) -> None:
-        """Update Elgato entity."""
-        restoring = self._state is None
-        try:
-            self._state = await self.elgato.state()
-            if restoring:
-                _LOGGER.info("Connection restored")
-        except ElgatoError as err:
-            meth = _LOGGER.error if self._state else _LOGGER.debug
-            meth("An error occurred while updating the Elgato Light: %s", err)
-            self._state = None
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this Elgato Light."""
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._info.serial_number)},
-            ATTR_NAME: self._info.product_name,
-            ATTR_MANUFACTURER: "Elgato",
-            ATTR_MODEL: self._info.product_name,
-            ATTR_SW_VERSION: f"{self._info.firmware_version} ({self._info.firmware_build_number})",
-        }
+            LOGGER.error("An error occurred while updating the Elgato Light")
+        await self.coordinator.async_refresh()
 
     async def async_identify(self) -> None:
         """Identify the light, will make it blink."""
         try:
-            await self.elgato.identify()
+            await self.client.identify()
         except ElgatoError:
-            _LOGGER.exception("An error occurred while identifying the Elgato Light")
-            self._state = None
+            LOGGER.exception("An error occurred while identifying the Elgato Light")
+            await self.coordinator.async_refresh()

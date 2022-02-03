@@ -16,7 +16,7 @@
                     "serial_number": "Seriennummer des Thermostats.",
                     "username": "Benutzername"
                 },
-                "description": "Du musst die numerische Seriennummer oder ID deines Thermostats erhalten, indem du dich bei https://MyNuHeat.com anmeldest und deine Thermostate ausw\u00e4hlst.",
+                "description": "Du musst die numerische Seriennummer oder ID deines Thermostats erhalten, indem du dich bei https://MyNuHeat.com anmeldest und dein(e) Thermostat(e) ausw\u00e4hlst.",
                 "title": "Stelle eine Verbindung zu NuHeat her"
             }
         }

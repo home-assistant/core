@@ -1,29 +1,50 @@
 """Support for deCONZ scenes."""
+
+from __future__ import annotations
+
+from collections.abc import ValuesView
 from typing import Any
 
-from homeassistant.components.scene import Scene
-from homeassistant.core import callback
+from pydeconz.group import DeconzScene as PydeconzScene
+
+from homeassistant.components.scene import DOMAIN, Scene
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import NEW_SCENE
-from .gateway import get_gateway_from_config_entry
+from .gateway import DeconzGateway, get_gateway_from_config_entry
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up scenes for deCONZ component."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
+    gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_scene(scenes=gateway.api.scenes.values()):
+    def async_add_scene(
+        scenes: list[PydeconzScene]
+        | ValuesView[PydeconzScene] = gateway.api.scenes.values(),
+    ) -> None:
         """Add scene from deCONZ."""
-        entities = [DeconzScene(scene, gateway) for scene in scenes]
+        entities = [
+            DeconzScene(scene, gateway)
+            for scene in scenes
+            if scene.deconz_id not in gateway.entities[DOMAIN]
+        ]
 
         if entities:
             async_add_entities(entities)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
-            hass, gateway.async_signal_new_device(NEW_SCENE), async_add_scene
+            hass,
+            gateway.signal_new_scene,
+            async_add_scene,
         )
     )
 
@@ -33,22 +54,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DeconzScene(Scene):
     """Representation of a deCONZ scene."""
 
-    def __init__(self, scene, gateway):
+    def __init__(self, scene: PydeconzScene, gateway: DeconzGateway) -> None:
         """Set up a scene."""
         self._scene = scene
         self.gateway = gateway
 
         self._attr_name = scene.full_name
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to sensors events."""
         self.gateway.deconz_ids[self.entity_id] = self._scene.deconz_id
+        self.gateway.entities[DOMAIN].add(self._scene.deconz_id)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect scene object when removed."""
         del self.gateway.deconz_ids[self.entity_id]
+        self.gateway.entities[DOMAIN].remove(self._scene.deconz_id)
         self._scene = None
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
-        await self._scene.async_set_state({})
+        await self._scene.recall()

@@ -1,6 +1,4 @@
 """Support for Meteo-France raining forecast sensor."""
-import logging
-
 from meteofrance_api.helpers import (
     get_warning_text_status_from_indice_color,
     readeable_phenomenoms_dict,
@@ -10,6 +8,9 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -24,94 +25,90 @@ from .const import (
     COORDINATOR_FORECAST,
     COORDINATOR_RAIN,
     DOMAIN,
-    ENTITY_API_DATA_PATH,
-    ENTITY_DEVICE_CLASS,
-    ENTITY_ENABLE,
-    ENTITY_ICON,
-    ENTITY_NAME,
-    ENTITY_UNIT,
     MANUFACTURER,
     MODEL,
     SENSOR_TYPES,
+    SENSOR_TYPES_ALERT,
+    SENSOR_TYPES_PROBABILITY,
+    SENSOR_TYPES_RAIN,
+    MeteoFranceSensorEntityDescription,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Meteo-France sensor platform."""
     coordinator_forecast = hass.data[DOMAIN][entry.entry_id][COORDINATOR_FORECAST]
     coordinator_rain = hass.data[DOMAIN][entry.entry_id][COORDINATOR_RAIN]
     coordinator_alert = hass.data[DOMAIN][entry.entry_id][COORDINATOR_ALERT]
 
-    entities = []
-    for sensor_type in SENSOR_TYPES:
-        if sensor_type == "next_rain":
-            if coordinator_rain:
-                entities.append(MeteoFranceRainSensor(sensor_type, coordinator_rain))
+    entities = [
+        MeteoFranceSensor(coordinator_forecast, description)
+        for description in SENSOR_TYPES
+    ]
+    # Add rain forecast entity only if location support this feature
+    if coordinator_rain:
+        entities.extend(
+            [
+                MeteoFranceRainSensor(coordinator_rain, description)
+                for description in SENSOR_TYPES_RAIN
+            ]
+        )
+    # Add weather alert entity only if location support this feature
+    if coordinator_alert:
+        entities.extend(
+            [
+                MeteoFranceAlertSensor(coordinator_alert, description)
+                for description in SENSOR_TYPES_ALERT
+            ]
+        )
+    # Add weather probability entities only if location support this feature
+    if coordinator_forecast.data.probability_forecast:
+        entities.extend(
+            [
+                MeteoFranceSensor(coordinator_forecast, description)
+                for description in SENSOR_TYPES_PROBABILITY
+            ]
+        )
 
-        elif sensor_type == "weather_alert":
-            if coordinator_alert:
-                entities.append(MeteoFranceAlertSensor(sensor_type, coordinator_alert))
-
-        elif sensor_type in ("rain_chance", "freeze_chance", "snow_chance"):
-            if coordinator_forecast.data.probability_forecast:
-                entities.append(MeteoFranceSensor(sensor_type, coordinator_forecast))
-            else:
-                _LOGGER.warning(
-                    "Sensor %s skipped for %s as data is missing in the API",
-                    sensor_type,
-                    coordinator_forecast.data.position["name"],
-                )
-
-        else:
-            entities.append(MeteoFranceSensor(sensor_type, coordinator_forecast))
-
-    async_add_entities(
-        entities,
-        False,
-    )
+    async_add_entities(entities, False)
 
 
 class MeteoFranceSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Meteo-France sensor."""
 
-    def __init__(self, sensor_type: str, coordinator: DataUpdateCoordinator) -> None:
+    entity_description: MeteoFranceSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        description: MeteoFranceSensorEntityDescription,
+    ) -> None:
         """Initialize the Meteo-France sensor."""
         super().__init__(coordinator)
-        self._type = sensor_type
-        if hasattr(self.coordinator.data, "position"):
-            city_name = self.coordinator.data.position["name"]
-            self._name = f"{city_name} {SENSOR_TYPES[self._type][ENTITY_NAME]}"
-            self._unique_id = f"{self.coordinator.data.position['lat']},{self.coordinator.data.position['lon']}_{self._type}"
+        self.entity_description = description
+        if hasattr(coordinator.data, "position"):
+            city_name = coordinator.data.position["name"]
+            self._attr_name = f"{city_name} {description.name}"
+            self._attr_unique_id = f"{coordinator.data.position['lat']},{coordinator.data.position['lon']}_{description.key}"
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
-    def unique_id(self):
-        """Return the unique id."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name."""
-        return self._name
-
-    @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self.platform.config_entry.unique_id)},
-            "name": self.coordinator.name,
-            "manufacturer": MANUFACTURER,
-            "model": MODEL,
-            "entry_type": "service",
-        }
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
+            manufacturer=MANUFACTURER,
+            model=MODEL,
+            name=self.coordinator.name,
+        )
 
     @property
     def native_value(self):
         """Return the state."""
-        path = SENSOR_TYPES[self._type][ENTITY_API_DATA_PATH].split(":")
+        path = self.entity_description.data_path.split(":")
         data = getattr(self.coordinator.data, path[0])
 
         # Specific case for probability forecast
@@ -129,35 +126,10 @@ class MeteoFranceSensor(CoordinatorEntity, SensorEntity):
             else:
                 value = data[path[1]]
 
-        if self._type in ("wind_speed", "wind_gust"):
+        if self.entity_description.key in ("wind_speed", "wind_gust"):
             # convert API wind speed from m/s to km/h
             value = round(value * 3.6)
         return value
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return SENSOR_TYPES[self._type][ENTITY_UNIT]
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return SENSOR_TYPES[self._type][ENTITY_ICON]
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return SENSOR_TYPES[self._type][ENTITY_DEVICE_CLASS]
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return SENSOR_TYPES[self._type][ENTITY_ENABLE]
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
 
 class MeteoFranceRainSensor(MeteoFranceSensor):
@@ -171,11 +143,7 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
             (cadran for cadran in self.coordinator.data.forecast if cadran["rain"] > 1),
             None,
         )
-        return (
-            dt_util.utc_from_timestamp(next_rain["dt"]).isoformat()
-            if next_rain
-            else None
-        )
+        return dt_util.utc_from_timestamp(next_rain["dt"]) if next_rain else None
 
     @property
     def extra_state_attributes(self):
@@ -194,12 +162,16 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
 class MeteoFranceAlertSensor(MeteoFranceSensor):
     """Representation of a Meteo-France alert sensor."""
 
-    def __init__(self, sensor_type: str, coordinator: DataUpdateCoordinator) -> None:
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        description: MeteoFranceSensorEntityDescription,
+    ) -> None:
         """Initialize the Meteo-France sensor."""
-        super().__init__(sensor_type, coordinator)
+        super().__init__(coordinator, description)
         dept_code = self.coordinator.data.domain_id
-        self._name = f"{dept_code} {SENSOR_TYPES[self._type][ENTITY_NAME]}"
-        self._unique_id = self._name
+        self._attr_name = f"{dept_code} {description.name}"
+        self._attr_unique_id = self._attr_name
 
     @property
     def native_value(self):

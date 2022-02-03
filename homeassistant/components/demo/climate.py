@@ -1,4 +1,6 @@
 """Demo platform that offers a fake climate device."""
+from __future__ import annotations
+
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
@@ -19,14 +21,24 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
 
 SUPPORT_FLAGS = 0
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Demo climate devices."""
     async_add_entities(
         [
@@ -89,7 +101,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Demo climate devices config entry."""
     await async_setup_platform(hass, {}, async_add_entities)
 
@@ -154,15 +170,15 @@ class DemoClimate(ClimateEntity):
         self._target_temperature_low = target_temp_low
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "identifiers": {
+        return DeviceInfo(
+            identifiers={
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, self.unique_id)
             },
-            "name": self.name,
-        }
+            name=self.name,
+        )
 
     @property
     def unique_id(self):

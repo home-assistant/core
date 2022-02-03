@@ -5,7 +5,6 @@ import pykulersky
 import pytest
 from pytest import approx
 
-from homeassistant import setup
 from homeassistant.components.kulersky.const import (
     DATA_ADDRESSES,
     DATA_DISCOVERY_SUBSCRIPTION,
@@ -44,7 +43,6 @@ async def mock_entry(hass):
 @pytest.fixture
 async def mock_light(hass, mock_entry):
     """Create a mock light entity."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     light = MagicMock(spec=pykulersky.Light)
     light.address = "AA:BB:CC:11:22:33"
@@ -102,7 +100,6 @@ async def test_remove_entry_exceptions_caught(hass, mock_light, mock_entry):
 
 async def test_update_exception(hass, mock_light):
     """Test platform setup."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     mock_light.get_color.side_effect = pykulersky.PykulerskyException
     await hass.helpers.entity_component.async_update_entity("light.bedroom")

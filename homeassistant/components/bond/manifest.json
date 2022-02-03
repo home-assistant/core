@@ -3,9 +3,10 @@
   "name": "Bond",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bond",
-  "requirements": ["bond-api==0.1.12"],
+  "requirements": ["bond-api==0.1.16"],
   "zeroconf": ["_bond._tcp.local."],
-  "codeowners": ["@prystupa"],
+  "codeowners": ["@bdraco", "@prystupa", "@joshs85"],
   "quality_scale": "platinum",
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "loggers": ["bond_api"]
 }

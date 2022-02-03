@@ -6,10 +6,18 @@
             "invalid_key_format": "La clave no es un valor hexadecimal, por favor utilice s\u00f3lo 0-9 y A-F.",
             "invalid_key_length": "La clave no tiene la longitud correcta, tiene que ser de 16, 24 o 32 caracteres hexadecimales.",
             "invalid_ping": "El intervalo de ping debe estar entre 1 y 1440 minutos.",
-            "invalid_zones": "Tiene que haber al menos 1 zona."
+            "invalid_zones": "Tiene que haber al menos 1 zona.",
+            "unknown": "Error inesperado"
         },
         "step": {
             "additional_account": {
+                "data": {
+                    "account": "ID de la cuenta",
+                    "additional_account": "Cuentas adicionales",
+                    "encryption_key": "Clave de encriptaci\u00f3n",
+                    "ping_interval": "Intervalo de ping (min)",
+                    "zones": "N\u00famero de zonas de la cuenta"
+                },
                 "title": "Agrega otra cuenta al puerto actual."
             },
             "user": {
@@ -18,6 +26,7 @@
                     "additional_account": "Cuentas adicionales",
                     "encryption_key": "Clave de encriptaci\u00f3n",
                     "ping_interval": "Intervalo de ping (min)",
+                    "port": "Puerto",
                     "protocol": "Protocolo",
                     "zones": "N\u00famero de zonas de la cuenta"
                 },
@@ -29,7 +38,8 @@
         "step": {
             "options": {
                 "data": {
-                    "ignore_timestamps": "Ignore la verificaci\u00f3n de la marca de tiempo de los eventos SIA"
+                    "ignore_timestamps": "Ignore la verificaci\u00f3n de la marca de tiempo de los eventos SIA",
+                    "zones": "N\u00famero de zonas de la cuenta"
                 },
                 "description": "Configure las opciones para la cuenta: {account}",
                 "title": "Opciones para la configuraci\u00f3n de SIA."

@@ -1,6 +1,7 @@
 """Config flow to configure Logi Circle component."""
 import asyncio
 from collections import OrderedDict
+from http import HTTPStatus
 
 import async_timeout
 from logi_circle import LogiCircle
@@ -14,7 +15,6 @@ from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_SENSORS,
-    HTTP_BAD_REQUEST,
 )
 from homeassistant.core import callback
 
@@ -158,7 +158,7 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            with async_timeout.timeout(_TIMEOUT):
+            async with async_timeout.timeout(_TIMEOUT):
                 await logi_session.authorize(code)
         except AuthorizationFailed:
             (self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS]) = "invalid_auth"
@@ -201,5 +201,6 @@ class LogiCircleAuthCallbackView(HomeAssistantView):
             )
             return self.json_message("Authorisation code saved")
         return self.json_message(
-            "Authorisation code missing from query string", status_code=HTTP_BAD_REQUEST
+            "Authorisation code missing from query string",
+            status_code=HTTPStatus.BAD_REQUEST,
         )

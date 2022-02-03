@@ -1,7 +1,7 @@
 """This platform allows several media players to be grouped into one media player."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any
 
 import voluptuous as vol
 
@@ -15,18 +15,7 @@ from homeassistant.components.media_player import (
     DOMAIN,
     PLATFORM_SCHEMA,
     SERVICE_CLEAR_PLAYLIST,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_SEEK,
-    SERVICE_MEDIA_STOP,
     SERVICE_PLAY_MEDIA,
-    SERVICE_SHUFFLE_SET,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -49,6 +38,17 @@ from homeassistant.const import (
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_SEEK,
+    SERVICE_MEDIA_STOP,
+    SERVICE_SHUFFLE_SET,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -56,6 +56,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
@@ -82,7 +83,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities: Callable,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Media Group platform."""
@@ -205,7 +206,7 @@ class MediaGroup(MediaPlayerEntity):
         return False
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes for the media group."""
         return {ATTR_ENTITY_ID: self._entities}
 

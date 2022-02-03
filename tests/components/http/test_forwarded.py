@@ -1,4 +1,5 @@
 """Test real forwarded middleware."""
+from http import HTTPStatus
 from ipaddress import ip_network
 from unittest.mock import Mock, patch
 
@@ -34,7 +35,7 @@ async def test_x_forwarded_for_without_trusted_proxy(aiohttp_client, caplog):
     mock_api_client = await aiohttp_client(app)
     resp = await mock_api_client.get("/", headers={X_FORWARDED_FOR: "255.255.255.255"})
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
     assert (
         "Received X-Forwarded-For header from an untrusted proxy 127.0.0.1"
         in caplog.text
@@ -81,7 +82,7 @@ async def test_x_forwarded_for_with_trusted_proxy(
     mock_api_client = await aiohttp_client(app)
     resp = await mock_api_client.get("/", headers={X_FORWARDED_FOR: x_forwarded_for})
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
 
 async def test_x_forwarded_for_disabled_with_proxy(aiohttp_client, caplog):
@@ -104,7 +105,7 @@ async def test_x_forwarded_for_disabled_with_proxy(aiohttp_client, caplog):
     mock_api_client = await aiohttp_client(app)
     resp = await mock_api_client.get("/", headers={X_FORWARDED_FOR: "255.255.255.255"})
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
     assert (
         "A request from a reverse proxy was received from 127.0.0.1, but your HTTP "
         "integration is not set-up for reverse proxies" in caplog.text
@@ -132,7 +133,7 @@ async def test_x_forwarded_for_with_spoofed_header(aiohttp_client):
         "/", headers={X_FORWARDED_FOR: "222.222.222.222, 255.255.255.255"}
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
 
 @pytest.mark.parametrize(
@@ -160,7 +161,7 @@ async def test_x_forwarded_for_with_malformed_header(
 
     resp = await mock_api_client.get("/", headers={X_FORWARDED_FOR: x_forwarded_for})
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
     assert "Invalid IP address in X-Forwarded-For" in caplog.text
 
 
@@ -180,7 +181,7 @@ async def test_x_forwarded_for_with_multiple_headers(aiohttp_client, caplog):
         ],
     )
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
     assert "Too many headers for X-Forwarded-For" in caplog.text
 
 
@@ -237,7 +238,7 @@ async def test_x_forwarded_proto_with_trusted_proxy(
         },
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
 
 async def test_x_forwarded_proto_with_trusted_proxy_multiple_for(aiohttp_client):
@@ -265,7 +266,7 @@ async def test_x_forwarded_proto_with_trusted_proxy_multiple_for(aiohttp_client)
         },
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
 
 async def test_x_forwarded_proto_not_processed_without_for(aiohttp_client):
@@ -287,7 +288,7 @@ async def test_x_forwarded_proto_not_processed_without_for(aiohttp_client):
     mock_api_client = await aiohttp_client(app)
     resp = await mock_api_client.get("/", headers={X_FORWARDED_PROTO: "https"})
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
 
 async def test_x_forwarded_proto_with_multiple_headers(aiohttp_client, caplog):
@@ -306,7 +307,7 @@ async def test_x_forwarded_proto_with_multiple_headers(aiohttp_client, caplog):
         ],
     )
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
     assert "Too many headers for X-Forward-Proto" in caplog.text
 
 
@@ -328,7 +329,7 @@ async def test_x_forwarded_proto_empty_element(
         headers={X_FORWARDED_FOR: "1.1.1.1", X_FORWARDED_PROTO: x_forwarded_proto},
     )
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
     assert "Empty item received in X-Forward-Proto header" in caplog.text
 
 
@@ -356,7 +357,7 @@ async def test_x_forwarded_proto_incorrect_number_of_elements(
         },
     )
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
     assert (
         f"Incorrect number of elements in X-Forward-Proto. Expected 1 or {expected}, got {got}"
         in caplog.text
@@ -384,7 +385,7 @@ async def test_x_forwarded_host_with_trusted_proxy(aiohttp_client):
         headers={X_FORWARDED_FOR: "255.255.255.255", X_FORWARDED_HOST: "example.com"},
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
 
 async def test_x_forwarded_host_not_processed_without_for(aiohttp_client):
@@ -406,7 +407,7 @@ async def test_x_forwarded_host_not_processed_without_for(aiohttp_client):
     mock_api_client = await aiohttp_client(app)
     resp = await mock_api_client.get("/", headers={X_FORWARDED_HOST: "example.com"})
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
 
 async def test_x_forwarded_host_with_multiple_headers(aiohttp_client, caplog):
@@ -425,7 +426,7 @@ async def test_x_forwarded_host_with_multiple_headers(aiohttp_client, caplog):
         ],
     )
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
     assert "Too many headers for X-Forwarded-Host" in caplog.text
 
 
@@ -440,7 +441,7 @@ async def test_x_forwarded_host_with_empty_header(aiohttp_client, caplog):
         "/", headers={X_FORWARDED_FOR: "222.222.222.222", X_FORWARDED_HOST: ""}
     )
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
     assert "Empty value received in X-Forward-Host header" in caplog.text
 
 
@@ -460,4 +461,4 @@ async def test_x_forwarded_cloud(aiohttp_client, caplog):
         )
 
     # This request would normally fail because it's invalid, now it works.
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK

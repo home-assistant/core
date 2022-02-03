@@ -1,8 +1,10 @@
 """Test the DHCP discovery integration."""
 import datetime
 import threading
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
+import pytest
+from scapy import arch  # pylint: disable=unused-import  # noqa: F401
 from scapy.error import Scapy_Exception
 from scapy.layers.dhcp import DHCP
 from scapy.layers.l2 import Ether
@@ -16,6 +18,7 @@ from homeassistant.components.device_tracker.const import (
     ATTR_SOURCE_TYPE,
     SOURCE_TYPE_ROUTER,
 )
+from homeassistant.components.dhcp.const import DOMAIN
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
@@ -123,176 +126,207 @@ RAW_DHCP_REQUEST_WITHOUT_HOSTNAME = (
 )
 
 
-async def test_dhcp_match_hostname_and_macaddress(hass):
-    """Test matching based on hostname and macaddress."""
+async def _async_get_handle_dhcp_packet(hass, integration_matchers):
     dhcp_watcher = dhcp.DHCPWatcher(
         hass,
         {},
-        [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
+        integration_matchers,
     )
+    async_handle_dhcp_packet = None
 
+    def _mock_sniffer(*args, **kwargs):
+        nonlocal async_handle_dhcp_packet
+        callback = kwargs["prn"]
+
+        async def _async_handle_dhcp_packet(packet):
+            await hass.async_add_executor_job(callback, packet)
+
+        async_handle_dhcp_packet = _async_handle_dhcp_packet
+        return MagicMock()
+
+    with patch("homeassistant.components.dhcp._verify_l2socket_setup",), patch(
+        "scapy.arch.common.compile_filter"
+    ), patch("scapy.sendrecv.AsyncSniffer", _mock_sniffer):
+        await dhcp_watcher.async_start()
+
+    return async_handle_dhcp_packet
+
+
+async def test_dhcp_match_hostname_and_macaddress(hass):
+    """Test matching based on hostname and macaddress."""
+    integration_matchers = [
+        {"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}
+    ]
     packet = Ether(RAW_DHCP_REQUEST)
 
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
+        hass, integration_matchers
+    )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        dhcp_watcher.handle_dhcp_packet(packet)
+        await async_handle_dhcp_packet(packet)
         # Ensure no change is ignored
-        dhcp_watcher.handle_dhcp_packet(packet)
+        await async_handle_dhcp_packet(packet)
 
     assert len(mock_init.mock_calls) == 1
     assert mock_init.mock_calls[0][1][0] == "mock-domain"
     assert mock_init.mock_calls[0][2]["context"] == {
         "source": config_entries.SOURCE_DHCP
     }
-    assert mock_init.mock_calls[0][2]["data"] == {
-        dhcp.IP_ADDRESS: "192.168.210.56",
-        dhcp.HOSTNAME: "connect",
-        dhcp.MAC_ADDRESS: "b8b7f16db533",
-    }
+    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.210.56",
+        hostname="connect",
+        macaddress="b8b7f16db533",
+    )
 
 
 async def test_dhcp_renewal_match_hostname_and_macaddress(hass):
     """Test renewal matching based on hostname and macaddress."""
-    dhcp_watcher = dhcp.DHCPWatcher(
-        hass,
-        {},
-        [{"domain": "mock-domain", "hostname": "irobot-*", "macaddress": "501479*"}],
-    )
+    integration_matchers = [
+        {"domain": "mock-domain", "hostname": "irobot-*", "macaddress": "501479*"}
+    ]
 
     packet = Ether(RAW_DHCP_RENEWAL)
 
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
+        hass, integration_matchers
+    )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        dhcp_watcher.handle_dhcp_packet(packet)
+        await async_handle_dhcp_packet(packet)
         # Ensure no change is ignored
-        dhcp_watcher.handle_dhcp_packet(packet)
+        await async_handle_dhcp_packet(packet)
 
     assert len(mock_init.mock_calls) == 1
     assert mock_init.mock_calls[0][1][0] == "mock-domain"
     assert mock_init.mock_calls[0][2]["context"] == {
         "source": config_entries.SOURCE_DHCP
     }
-    assert mock_init.mock_calls[0][2]["data"] == {
-        dhcp.IP_ADDRESS: "192.168.1.120",
-        dhcp.HOSTNAME: "irobot-ae9ec12dd3b04885bcbfa36afb01e1cc",
-        dhcp.MAC_ADDRESS: "50147903852c",
-    }
+    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.1.120",
+        hostname="irobot-ae9ec12dd3b04885bcbfa36afb01e1cc",
+        macaddress="50147903852c",
+    )
 
 
 async def test_dhcp_match_hostname(hass):
     """Test matching based on hostname only."""
-    dhcp_watcher = dhcp.DHCPWatcher(
-        hass, {}, [{"domain": "mock-domain", "hostname": "connect"}]
-    )
+    integration_matchers = [{"domain": "mock-domain", "hostname": "connect"}]
 
     packet = Ether(RAW_DHCP_REQUEST)
 
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
+        hass, integration_matchers
+    )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        dhcp_watcher.handle_dhcp_packet(packet)
+        await async_handle_dhcp_packet(packet)
 
     assert len(mock_init.mock_calls) == 1
     assert mock_init.mock_calls[0][1][0] == "mock-domain"
     assert mock_init.mock_calls[0][2]["context"] == {
         "source": config_entries.SOURCE_DHCP
     }
-    assert mock_init.mock_calls[0][2]["data"] == {
-        dhcp.IP_ADDRESS: "192.168.210.56",
-        dhcp.HOSTNAME: "connect",
-        dhcp.MAC_ADDRESS: "b8b7f16db533",
-    }
+    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.210.56",
+        hostname="connect",
+        macaddress="b8b7f16db533",
+    )
 
 
 async def test_dhcp_match_macaddress(hass):
     """Test matching based on macaddress only."""
-    dhcp_watcher = dhcp.DHCPWatcher(
-        hass, {}, [{"domain": "mock-domain", "macaddress": "B8B7F1*"}]
-    )
+    integration_matchers = [{"domain": "mock-domain", "macaddress": "B8B7F1*"}]
 
     packet = Ether(RAW_DHCP_REQUEST)
 
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
+        hass, integration_matchers
+    )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        dhcp_watcher.handle_dhcp_packet(packet)
+        await async_handle_dhcp_packet(packet)
 
     assert len(mock_init.mock_calls) == 1
     assert mock_init.mock_calls[0][1][0] == "mock-domain"
     assert mock_init.mock_calls[0][2]["context"] == {
         "source": config_entries.SOURCE_DHCP
     }
-    assert mock_init.mock_calls[0][2]["data"] == {
-        dhcp.IP_ADDRESS: "192.168.210.56",
-        dhcp.HOSTNAME: "connect",
-        dhcp.MAC_ADDRESS: "b8b7f16db533",
-    }
+    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.210.56",
+        hostname="connect",
+        macaddress="b8b7f16db533",
+    )
 
 
 async def test_dhcp_match_macaddress_without_hostname(hass):
     """Test matching based on macaddress only."""
-    dhcp_watcher = dhcp.DHCPWatcher(
-        hass, {}, [{"domain": "mock-domain", "macaddress": "606BBD*"}]
-    )
+    integration_matchers = [{"domain": "mock-domain", "macaddress": "606BBD*"}]
 
     packet = Ether(RAW_DHCP_REQUEST_WITHOUT_HOSTNAME)
 
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
+        hass, integration_matchers
+    )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        dhcp_watcher.handle_dhcp_packet(packet)
+        await async_handle_dhcp_packet(packet)
 
     assert len(mock_init.mock_calls) == 1
     assert mock_init.mock_calls[0][1][0] == "mock-domain"
     assert mock_init.mock_calls[0][2]["context"] == {
         "source": config_entries.SOURCE_DHCP
     }
-    assert mock_init.mock_calls[0][2]["data"] == {
-        dhcp.IP_ADDRESS: "192.168.107.151",
-        dhcp.HOSTNAME: "",
-        dhcp.MAC_ADDRESS: "606bbd59e4b4",
-    }
+    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.107.151",
+        hostname="",
+        macaddress="606bbd59e4b4",
+    )
 
 
 async def test_dhcp_nomatch(hass):
     """Test not matching based on macaddress only."""
-    dhcp_watcher = dhcp.DHCPWatcher(
-        hass, {}, [{"domain": "mock-domain", "macaddress": "ABC123*"}]
-    )
+    integration_matchers = [{"domain": "mock-domain", "macaddress": "ABC123*"}]
 
     packet = Ether(RAW_DHCP_REQUEST)
 
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
+        hass, integration_matchers
+    )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        dhcp_watcher.handle_dhcp_packet(packet)
+        await async_handle_dhcp_packet(packet)
 
     assert len(mock_init.mock_calls) == 0
 
 
 async def test_dhcp_nomatch_hostname(hass):
     """Test not matching based on hostname only."""
-    dhcp_watcher = dhcp.DHCPWatcher(
-        hass, {}, [{"domain": "mock-domain", "hostname": "nomatch*"}]
-    )
+    integration_matchers = [{"domain": "mock-domain", "hostname": "nomatch*"}]
 
     packet = Ether(RAW_DHCP_REQUEST)
 
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
+        hass, integration_matchers
+    )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        dhcp_watcher.handle_dhcp_packet(packet)
+        await async_handle_dhcp_packet(packet)
 
     assert len(mock_init.mock_calls) == 0
 
 
 async def test_dhcp_nomatch_non_dhcp_packet(hass):
     """Test matching does not throw on a non-dhcp packet."""
-    dhcp_watcher = dhcp.DHCPWatcher(
-        hass, {}, [{"domain": "mock-domain", "hostname": "nomatch*"}]
-    )
+    integration_matchers = [{"domain": "mock-domain", "hostname": "nomatch*"}]
 
     packet = Ether(b"")
 
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
+        hass, integration_matchers
+    )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        dhcp_watcher.handle_dhcp_packet(packet)
+        await async_handle_dhcp_packet(packet)
 
     assert len(mock_init.mock_calls) == 0
 
 
 async def test_dhcp_nomatch_non_dhcp_request_packet(hass):
     """Test nothing happens with the wrong message-type."""
-    dhcp_watcher = dhcp.DHCPWatcher(
-        hass, {}, [{"domain": "mock-domain", "hostname": "nomatch*"}]
-    )
+    integration_matchers = [{"domain": "mock-domain", "hostname": "nomatch*"}]
 
     packet = Ether(RAW_DHCP_REQUEST)
 
@@ -305,17 +339,18 @@ async def test_dhcp_nomatch_non_dhcp_request_packet(hass):
         ("hostname", b"connect"),
     ]
 
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
+        hass, integration_matchers
+    )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        dhcp_watcher.handle_dhcp_packet(packet)
+        await async_handle_dhcp_packet(packet)
 
     assert len(mock_init.mock_calls) == 0
 
 
 async def test_dhcp_invalid_hostname(hass):
     """Test we ignore invalid hostnames."""
-    dhcp_watcher = dhcp.DHCPWatcher(
-        hass, {}, [{"domain": "mock-domain", "hostname": "nomatch*"}]
-    )
+    integration_matchers = [{"domain": "mock-domain", "hostname": "nomatch*"}]
 
     packet = Ether(RAW_DHCP_REQUEST)
 
@@ -328,17 +363,18 @@ async def test_dhcp_invalid_hostname(hass):
         ("hostname", "connect"),
     ]
 
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
+        hass, integration_matchers
+    )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        dhcp_watcher.handle_dhcp_packet(packet)
+        await async_handle_dhcp_packet(packet)
 
     assert len(mock_init.mock_calls) == 0
 
 
 async def test_dhcp_missing_hostname(hass):
     """Test we ignore missing hostnames."""
-    dhcp_watcher = dhcp.DHCPWatcher(
-        hass, {}, [{"domain": "mock-domain", "hostname": "nomatch*"}]
-    )
+    integration_matchers = [{"domain": "mock-domain", "hostname": "nomatch*"}]
 
     packet = Ether(RAW_DHCP_REQUEST)
 
@@ -351,17 +387,18 @@ async def test_dhcp_missing_hostname(hass):
         ("hostname", None),
     ]
 
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
+        hass, integration_matchers
+    )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        dhcp_watcher.handle_dhcp_packet(packet)
+        await async_handle_dhcp_packet(packet)
 
     assert len(mock_init.mock_calls) == 0
 
 
 async def test_dhcp_invalid_option(hass):
     """Test we ignore invalid hostname option."""
-    dhcp_watcher = dhcp.DHCPWatcher(
-        hass, {}, [{"domain": "mock-domain", "hostname": "nomatch*"}]
-    )
+    integration_matchers = [{"domain": "mock-domain", "hostname": "nomatch*"}]
 
     packet = Ether(RAW_DHCP_REQUEST)
 
@@ -374,8 +411,11 @@ async def test_dhcp_invalid_option(hass):
         ("hostname"),
     ]
 
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
+        hass, integration_matchers
+    )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        dhcp_watcher.handle_dhcp_packet(packet)
+        await async_handle_dhcp_packet(packet)
 
     assert len(mock_init.mock_calls) == 0
 
@@ -385,14 +425,14 @@ async def test_setup_and_stop(hass):
 
     assert await async_setup_component(
         hass,
-        dhcp.DOMAIN,
+        DOMAIN,
         {},
     )
     await hass.async_block_till_done()
 
-    with patch("homeassistant.components.dhcp.AsyncSniffer.start") as start_call, patch(
+    with patch("scapy.sendrecv.AsyncSniffer.start") as start_call, patch(
         "homeassistant.components.dhcp._verify_l2socket_setup",
-    ), patch("homeassistant.components.dhcp.compile_filter",), patch(
+    ), patch("scapy.arch.common.compile_filter"), patch(
         "homeassistant.components.dhcp.DiscoverHosts.async_discover"
     ):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -409,7 +449,7 @@ async def test_setup_fails_as_root(hass, caplog):
 
     assert await async_setup_component(
         hass,
-        dhcp.DOMAIN,
+        DOMAIN,
         {},
     )
     await hass.async_block_till_done()
@@ -434,7 +474,7 @@ async def test_setup_fails_non_root(hass, caplog):
 
     assert await async_setup_component(
         hass,
-        dhcp.DOMAIN,
+        DOMAIN,
         {},
     )
     await hass.async_block_till_done()
@@ -456,17 +496,15 @@ async def test_setup_fails_with_broken_libpcap(hass, caplog):
 
     assert await async_setup_component(
         hass,
-        dhcp.DOMAIN,
+        DOMAIN,
         {},
     )
     await hass.async_block_till_done()
 
-    with patch("homeassistant.components.dhcp._verify_l2socket_setup",), patch(
-        "homeassistant.components.dhcp.compile_filter",
+    with patch("homeassistant.components.dhcp._verify_l2socket_setup"), patch(
+        "scapy.arch.common.compile_filter",
         side_effect=ImportError,
-    ) as compile_filter, patch(
-        "homeassistant.components.dhcp.AsyncSniffer",
-    ) as async_sniffer, patch(
+    ) as compile_filter, patch("scapy.sendrecv.AsyncSniffer") as async_sniffer, patch(
         "homeassistant.components.dhcp.DiscoverHosts.async_discover"
     ):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -511,11 +549,11 @@ async def test_device_tracker_hostname_and_macaddress_exists_before_start(hass):
     assert mock_init.mock_calls[0][2]["context"] == {
         "source": config_entries.SOURCE_DHCP
     }
-    assert mock_init.mock_calls[0][2]["data"] == {
-        dhcp.IP_ADDRESS: "192.168.210.56",
-        dhcp.HOSTNAME: "connect",
-        dhcp.MAC_ADDRESS: "b8b7f16db533",
-    }
+    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.210.56",
+        hostname="connect",
+        macaddress="b8b7f16db533",
+    )
 
 
 async def test_device_tracker_hostname_and_macaddress_after_start(hass):
@@ -548,11 +586,11 @@ async def test_device_tracker_hostname_and_macaddress_after_start(hass):
     assert mock_init.mock_calls[0][2]["context"] == {
         "source": config_entries.SOURCE_DHCP
     }
-    assert mock_init.mock_calls[0][2]["data"] == {
-        dhcp.IP_ADDRESS: "192.168.210.56",
-        dhcp.HOSTNAME: "connect",
-        dhcp.MAC_ADDRESS: "b8b7f16db533",
-    }
+    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.210.56",
+        hostname="connect",
+        macaddress="b8b7f16db533",
+    )
 
 
 async def test_device_tracker_hostname_and_macaddress_after_start_not_home(hass):
@@ -694,11 +732,11 @@ async def test_aiodiscover_finds_new_hosts(hass):
     assert mock_init.mock_calls[0][2]["context"] == {
         "source": config_entries.SOURCE_DHCP
     }
-    assert mock_init.mock_calls[0][2]["data"] == {
-        dhcp.IP_ADDRESS: "192.168.210.56",
-        dhcp.HOSTNAME: "connect",
-        dhcp.MAC_ADDRESS: "b8b7f16db533",
-    }
+    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.210.56",
+        hostname="connect",
+        macaddress="b8b7f16db533",
+    )
 
 
 async def test_aiodiscover_does_not_call_again_on_shorter_hostname(hass):
@@ -749,20 +787,20 @@ async def test_aiodiscover_does_not_call_again_on_shorter_hostname(hass):
     assert mock_init.mock_calls[0][2]["context"] == {
         "source": config_entries.SOURCE_DHCP
     }
-    assert mock_init.mock_calls[0][2]["data"] == {
-        dhcp.IP_ADDRESS: "192.168.210.56",
-        dhcp.HOSTNAME: "irobot-abc",
-        dhcp.MAC_ADDRESS: "b8b7f16db533",
-    }
+    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.210.56",
+        hostname="irobot-abc",
+        macaddress="b8b7f16db533",
+    )
     assert mock_init.mock_calls[1][1][0] == "mock-domain"
     assert mock_init.mock_calls[1][2]["context"] == {
         "source": config_entries.SOURCE_DHCP
     }
-    assert mock_init.mock_calls[1][2]["data"] == {
-        dhcp.IP_ADDRESS: "192.168.210.56",
-        dhcp.HOSTNAME: "irobot-abcdef",
-        dhcp.MAC_ADDRESS: "b8b7f16db533",
-    }
+    assert mock_init.mock_calls[1][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.210.56",
+        hostname="irobot-abcdef",
+        macaddress="b8b7f16db533",
+    )
 
 
 async def test_aiodiscover_finds_new_hosts_after_interval(hass):
@@ -801,8 +839,32 @@ async def test_aiodiscover_finds_new_hosts_after_interval(hass):
     assert mock_init.mock_calls[0][2]["context"] == {
         "source": config_entries.SOURCE_DHCP
     }
-    assert mock_init.mock_calls[0][2]["data"] == {
-        dhcp.IP_ADDRESS: "192.168.210.56",
-        dhcp.HOSTNAME: "connect",
-        dhcp.MAC_ADDRESS: "b8b7f16db533",
-    }
+    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.210.56",
+        hostname="connect",
+        macaddress="b8b7f16db533",
+    )
+
+
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_service_info_compatibility(hass, caplog):
+    """Test compatibility with old-style dict.
+
+    To be removed in 2022.6
+    """
+    discovery_info = dhcp.DhcpServiceInfo(
+        ip="192.168.210.56",
+        hostname="connect",
+        macaddress="b8b7f16db533",
+    )
+
+    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
+        assert discovery_info["ip"] == "192.168.210.56"
+    assert "Detected integration that accessed discovery_info['ip']" in caplog.text
+
+    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
+        assert discovery_info.get("ip") == "192.168.210.56"
+    assert "Detected integration that accessed discovery_info.get('ip')" in caplog.text
+
+    assert discovery_info.get("ip", "fallback_host") == "192.168.210.56"
+    assert discovery_info.get("invalid_key", "fallback_host") == "fallback_host"

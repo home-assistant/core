@@ -10,7 +10,9 @@ from evdev import InputDevice, categorize, ecodes, list_devices
 import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,6 +25,7 @@ ICON = "mdi:remote"
 
 KEY_CODE = "key_code"
 KEY_VALUE = {"key_up": 0, "key_down": 1, "key_hold": 2}
+KEY_VALUE_NAME = {value: key for key, value in KEY_VALUE.items()}
 KEYBOARD_REMOTE_COMMAND_RECEIVED = "keyboard_remote_command_received"
 KEYBOARD_REMOTE_CONNECTED = "keyboard_remote_connected"
 KEYBOARD_REMOTE_DISCONNECTED = "keyboard_remote_disconnected"
@@ -59,9 +62,9 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the keyboard_remote."""
-    config = config.get(DOMAIN)
+    config = config[DOMAIN]
 
     remote = KeyboardRemote(hass, config)
     remote.setup()
@@ -236,7 +239,12 @@ class KeyboardRemote:
             while True:
                 self.hass.bus.async_fire(
                     KEYBOARD_REMOTE_COMMAND_RECEIVED,
-                    {KEY_CODE: code, DEVICE_DESCRIPTOR: path, DEVICE_NAME: name},
+                    {
+                        KEY_CODE: code,
+                        TYPE: "key_hold",
+                        DEVICE_DESCRIPTOR: path,
+                        DEVICE_NAME: name,
+                    },
                 )
                 await asyncio.sleep(repeat)
 
@@ -294,6 +302,7 @@ class KeyboardRemote:
                                 KEYBOARD_REMOTE_COMMAND_RECEIVED,
                                 {
                                     KEY_CODE: event.code,
+                                    TYPE: KEY_VALUE_NAME[event.value],
                                     DEVICE_DESCRIPTOR: dev.path,
                                     DEVICE_NAME: dev.name,
                                 },

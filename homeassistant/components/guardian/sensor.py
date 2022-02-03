@@ -1,17 +1,17 @@
 """Sensors for the Elexa Guardian integration."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-    TEMP_FAHRENHEIT,
-    TIME_MINUTES,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, TEMP_FAHRENHEIT, TIME_MINUTES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import PairedSensorEntity, ValveControllerEntity
@@ -21,7 +21,6 @@ from .const import (
     CONF_UID,
     DATA_COORDINATOR,
     DATA_COORDINATOR_PAIRED_SENSOR,
-    DATA_UNSUB_DISPATCHER_CONNECT,
     DOMAIN,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
 )
@@ -33,19 +32,22 @@ SENSOR_KIND_UPTIME = "uptime"
 SENSOR_DESCRIPTION_BATTERY = SensorEntityDescription(
     key=SENSOR_KIND_BATTERY,
     name="Battery",
-    device_class=DEVICE_CLASS_BATTERY,
+    device_class=SensorDeviceClass.BATTERY,
+    entity_category=EntityCategory.DIAGNOSTIC,
     native_unit_of_measurement=PERCENTAGE,
 )
 SENSOR_DESCRIPTION_TEMPERATURE = SensorEntityDescription(
     key=SENSOR_KIND_TEMPERATURE,
     name="Temperature",
-    device_class=DEVICE_CLASS_TEMPERATURE,
+    device_class=SensorDeviceClass.TEMPERATURE,
     native_unit_of_measurement=TEMP_FAHRENHEIT,
+    state_class=SensorStateClass.MEASUREMENT,
 )
 SENSOR_DESCRIPTION_UPTIME = SensorEntityDescription(
     key=SENSOR_KIND_UPTIME,
     name="Uptime",
     icon="mdi:timer",
+    entity_category=EntityCategory.DIAGNOSTIC,
     native_unit_of_measurement=TIME_MINUTES,
 )
 
@@ -67,7 +69,7 @@ async def async_setup_entry(
     @callback
     def add_new_paired_sensor(uid: str) -> None:
         """Add a new paired sensor."""
-        coordinator = hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR][entry.entry_id][
+        coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR_PAIRED_SENSOR][
             uid
         ]
 
@@ -79,7 +81,7 @@ async def async_setup_entry(
         )
 
     # Handle adding paired sensors after HASS startup:
-    hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT][entry.entry_id].append(
+    entry.async_on_unload(
         async_dispatcher_connect(
             hass,
             SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED.format(entry.data[CONF_UID]),
@@ -90,7 +92,7 @@ async def async_setup_entry(
     # Add all valve controller-specific binary sensors:
     sensors: list[PairedSensorSensor | ValveControllerSensor] = [
         ValveControllerSensor(
-            entry, hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id], description
+            entry, hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR], description
         )
         for description in VALVE_CONTROLLER_DESCRIPTIONS
     ]
@@ -99,8 +101,8 @@ async def async_setup_entry(
     sensors.extend(
         [
             PairedSensorSensor(entry, coordinator, description)
-            for coordinator in hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR][
-                entry.entry_id
+            for coordinator in hass.data[DOMAIN][entry.entry_id][
+                DATA_COORDINATOR_PAIRED_SENSOR
             ].values()
             for description in PAIRED_SENSOR_DESCRIPTIONS
         ]

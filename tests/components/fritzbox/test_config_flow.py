@@ -1,4 +1,5 @@
 """Tests for AVM Fritz!Box config flow."""
+import dataclasses
 from unittest import mock
 from unittest.mock import Mock, patch
 
@@ -6,12 +7,9 @@ from pyfritzhome import LoginError
 import pytest
 from requests.exceptions import HTTPError
 
+from homeassistant.components import ssdp
 from homeassistant.components.fritzbox.const import DOMAIN
-from homeassistant.components.ssdp import (
-    ATTR_SSDP_LOCATION,
-    ATTR_UPNP_FRIENDLY_NAME,
-    ATTR_UPNP_UDN,
-)
+from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_UDN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -26,17 +24,23 @@ from .const import CONF_FAKE_NAME, MOCK_CONFIG
 from tests.common import MockConfigEntry
 
 MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
-MOCK_SSDP_DATA = {
-    ATTR_SSDP_LOCATION: "https://fake_host:12345/test",
-    ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
-    ATTR_UPNP_UDN: "uuid:only-a-test",
-}
+MOCK_SSDP_DATA = ssdp.SsdpServiceInfo(
+    ssdp_usn="mock_usn",
+    ssdp_st="mock_st",
+    ssdp_location="https://fake_host:12345/test",
+    upnp={
+        ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
+        ATTR_UPNP_UDN: "uuid:only-a-test",
+    },
+)
 
 
 @pytest.fixture(name="fritz")
 def fritz_fixture() -> Mock:
     """Patch libraries."""
-    with patch("homeassistant.components.fritzbox.config_flow.Fritzhome") as fritz:
+    with patch("homeassistant.components.fritzbox.async_setup_entry"), patch(
+        "homeassistant.components.fritzbox.config_flow.Fritzhome"
+    ) as fritz:
         yield fritz
 
 
@@ -201,8 +205,9 @@ async def test_ssdp(hass: HomeAssistant, fritz: Mock):
 
 async def test_ssdp_no_friendly_name(hass: HomeAssistant, fritz: Mock):
     """Test starting a flow from discovery without friendly name."""
-    MOCK_NO_NAME = MOCK_SSDP_DATA.copy()
-    del MOCK_NO_NAME[ATTR_UPNP_FRIENDLY_NAME]
+    MOCK_NO_NAME = dataclasses.replace(MOCK_SSDP_DATA)
+    MOCK_NO_NAME.upnp = MOCK_NO_NAME.upnp.copy()
+    del MOCK_NO_NAME.upnp[ATTR_UPNP_FRIENDLY_NAME]
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_NO_NAME
     )
@@ -300,8 +305,9 @@ async def test_ssdp_already_in_progress_host(hass: HomeAssistant, fritz: Mock):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "confirm"
 
-    MOCK_NO_UNIQUE_ID = MOCK_SSDP_DATA.copy()
-    del MOCK_NO_UNIQUE_ID[ATTR_UPNP_UDN]
+    MOCK_NO_UNIQUE_ID = dataclasses.replace(MOCK_SSDP_DATA)
+    MOCK_NO_UNIQUE_ID.upnp = MOCK_NO_UNIQUE_ID.upnp.copy()
+    del MOCK_NO_UNIQUE_ID.upnp[ATTR_UPNP_UDN]
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_NO_UNIQUE_ID
     )

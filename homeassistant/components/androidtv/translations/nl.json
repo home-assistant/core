@@ -1,0 +1,66 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "invalid_unique_id": "Onmogelijk om een geldige unieke id voor het apparaat te bepalen"
+        },
+        "error": {
+            "adbkey_not_file": "ADB key file niet gevonden",
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_host": "Ongeldige hostnaam of IP-adres",
+            "key_and_server": "Geef alleen ADB-sleutel of ADB-server op",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "adb_server_ip": "IP-adres van de ADB-server (leeg laten om niet te gebruiken)",
+                    "adb_server_port": "Poort van de ADB-server",
+                    "adbkey": "Pad naar uw ADB-key file (leeg laten om automatisch te genereren)",
+                    "device_class": "Het type apparaat",
+                    "host": "Host",
+                    "port": "Poort"
+                },
+                "description": "Stel de vereiste parameters in om verbinding te maken met uw Android TV-apparaat",
+                "title": "Android TV"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_det_rules": "Ongeldige statusdetectieregels"
+        },
+        "step": {
+            "apps": {
+                "data": {
+                    "app_delete": "Vink aan om deze applicatie te verwijderen",
+                    "app_id": "Applicatie ID",
+                    "app_name": "Applicatienaam"
+                },
+                "description": "Configureer applicatie id {app_id}",
+                "title": "Configureer Android TV Apps"
+            },
+            "init": {
+                "data": {
+                    "apps": "Configureer applicaties lijst",
+                    "exclude_unnamed_apps": "Apps met onbekende naam uitsluiten van de bronnenlijst",
+                    "get_sources": "Haal de actieve apps op als de lijst met bronnen",
+                    "screencap": "Schermafbeelding gebruiken voor albumhoezen",
+                    "state_detection_rules": "Regels voor statusdetectie van Android TV configureren",
+                    "turn_off_command": "ADB shell-uitschakelcommando(laat standaard leeg)",
+                    "turn_on_command": "ADB shell-inschakelcommando (laat standaard leeg)"
+                },
+                "title": "Android TV-opties"
+            },
+            "rules": {
+                "data": {
+                    "rule_delete": "Vink aan om deze regel te verwijderen",
+                    "rule_id": "Application ID",
+                    "rule_values": "Lijst met statusdetectieregels (zie documentatie)"
+                },
+                "description": "Detectieregel configureren voor applicatie-ID {rule_id}",
+                "title": "Regels voor statusdetectie van Android TV configureren"
+            }
+        }
+    }
+}

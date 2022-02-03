@@ -10,7 +10,7 @@
         "error": {
             "invalid_auth": "Authentification invalide"
         },
-        "flow_title": "AVM FRITZ!Box : {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {

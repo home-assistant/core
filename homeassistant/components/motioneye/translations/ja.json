@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30b5\u30fc\u30d3\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
+            "reauth_successful": "\u518d\u8a8d\u8a3c\u306b\u6210\u529f\u3057\u307e\u3057\u305f"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+            "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c",
+            "invalid_url": "\u7121\u52b9\u306aURL",
+            "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "\u30a2\u30c9\u30aa\u30f3: {addon} \u306b\u3088\u3063\u3066\u63d0\u4f9b\u3055\u308c\u308b\u3001motionEye service\u306b\u63a5\u7d9a\u3059\u308b\u3088\u3046\u306bHome Assistant\u306e\u8a2d\u5b9a\u3092\u3057\u307e\u3059\u304b\uff1f",
+                "title": "Home Assistant\u30a2\u30c9\u30aa\u30f3\u7d4c\u7531\u306emotionEye"
+            },
+            "user": {
+                "data": {
+                    "admin_password": "\u7ba1\u7406\u8005(Admin)\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "admin_username": "\u7ba1\u7406\u8005\u30e6\u30fc\u30b6\u30fc\u540d",
+                    "surveillance_password": "\u76e3\u8996(Surveillance)\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "surveillance_username": "\u76e3\u8996\u30e6\u30fc\u30b6\u30fc\u540d",
+                    "url": "URL"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "stream_url_template": "Stream URL\u30c6\u30f3\u30d7\u30ec\u30fc\u30c8",
+                    "webhook_set": "Home Assistant\u306b\u30a4\u30d9\u30f3\u30c8\u3092\u5831\u544a\u3059\u308b\u3088\u3046\u306b\u3001motionEye webhooks\u3092\u8a2d\u5b9a\u3059\u308b",
+                    "webhook_set_overwrite": "\u8a8d\u8b58\u3055\u308c\u3066\u3044\u306a\u3044Webhooks\u3092\u4e0a\u66f8\u304d\u3059\u308b"
+                }
+            }
+        }
+    }
+}

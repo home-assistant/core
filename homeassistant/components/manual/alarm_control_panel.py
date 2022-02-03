@@ -1,4 +1,6 @@
 """Support for manual alarms."""
+from __future__ import annotations
+
 import copy
 import datetime
 import logging
@@ -33,10 +35,12 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -153,7 +157,12 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the manual alarm platform."""
     add_entities(
         [
@@ -412,7 +421,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        if self.state == STATE_ALARM_PENDING or self.state == STATE_ALARM_ARMING:
+        if self.state in (STATE_ALARM_PENDING, STATE_ALARM_ARMING):
             return {
                 ATTR_PREVIOUS_STATE: self._previous_state,
                 ATTR_NEXT_STATE: self._state,
@@ -427,13 +436,9 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if state:
+        if state := await self.async_get_last_state():
             if (
-                (
-                    state.state == STATE_ALARM_PENDING
-                    or state.state == STATE_ALARM_ARMING
-                )
+                state.state in (STATE_ALARM_PENDING, STATE_ALARM_ARMING)
                 and hasattr(state, "attributes")
                 and state.attributes[ATTR_PREVIOUS_STATE]
             ):

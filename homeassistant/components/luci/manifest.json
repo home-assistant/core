@@ -2,7 +2,8 @@
   "domain": "luci",
   "name": "OpenWRT (luci)",
   "documentation": "https://www.home-assistant.io/integrations/luci",
-  "requirements": ["openwrt-luci-rpc==1.1.8"],
+  "requirements": ["openwrt-luci-rpc==1.1.11"],
   "codeowners": ["@mzdrale"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["openwrt_luci_rpc"]
 }

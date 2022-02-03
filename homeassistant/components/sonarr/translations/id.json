@@ -9,7 +9,7 @@
             "cannot_connect": "Gagal terhubung",
             "invalid_auth": "Autentikasi tidak valid"
         },
-        "flow_title": "Sonarr: {name}",
+        "flow_title": "{name}",
         "step": {
             "reauth_confirm": {
                 "description": "Integrasi Sonarr perlu diautentikasi ulang secara manual dengan API Sonarr yang dihosting di: {host}",

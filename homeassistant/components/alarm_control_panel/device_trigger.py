@@ -5,13 +5,10 @@ from typing import Any, Final
 
 import voluptuous as vol
 
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_ARM_VACATION,
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
 )
-from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import (
@@ -35,6 +32,12 @@ from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
+from .const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+    SUPPORT_ALARM_ARM_VACATION,
+)
 
 BASIC_TRIGGER_TYPES: Final[set[str]] = {"triggered", "disarmed", "arming"}
 TRIGGER_TYPES: Final[set[str]] = BASIC_TRIGGER_TYPES | {
@@ -129,7 +132,7 @@ async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: AutomationActionType,
-    automation_info: dict,
+    automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     if config[CONF_TYPE] == "triggered":
@@ -154,7 +157,7 @@ async def async_attach_trigger(
     }
     if CONF_FOR in config:
         state_config[CONF_FOR] = config[CONF_FOR]
-    state_config = state_trigger.TRIGGER_SCHEMA(state_config)
+    state_config = await state_trigger.async_validate_trigger_config(hass, state_config)
     return await state_trigger.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"
     )

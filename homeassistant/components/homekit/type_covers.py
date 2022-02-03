@@ -122,10 +122,12 @@ class GarageDoorOpener(HomeAccessory):
         Run inside the Home Assistant event loop.
         """
         if self.linked_obstruction_sensor:
-            async_track_state_change_event(
-                self.hass,
-                [self.linked_obstruction_sensor],
-                self._async_update_obstruction_event,
+            self._subscriptions.append(
+                async_track_state_change_event(
+                    self.hass,
+                    [self.linked_obstruction_sensor],
+                    self._async_update_obstruction_event,
+                )
             )
 
         await super().run()
@@ -247,14 +249,17 @@ class OpeningDeviceBase(HomeAccessory):
     def async_update_state(self, new_state):
         """Update cover position and tilt after state changed."""
         # update tilt
+        if not self._supports_tilt:
+            return
         current_tilt = new_state.attributes.get(ATTR_CURRENT_TILT_POSITION)
-        if isinstance(current_tilt, (float, int)):
-            # HomeKit sends values between -90 and 90.
-            # We'll have to normalize to [0,100]
-            current_tilt = (current_tilt / 100.0 * 180.0) - 90.0
-            current_tilt = int(current_tilt)
-            self.char_current_tilt.set_value(current_tilt)
-            self.char_target_tilt.set_value(current_tilt)
+        if not isinstance(current_tilt, (float, int)):
+            return
+        # HomeKit sends values between -90 and 90.
+        # We'll have to normalize to [0,100]
+        current_tilt = (current_tilt / 100.0 * 180.0) - 90.0
+        current_tilt = int(current_tilt)
+        self.char_current_tilt.set_value(current_tilt)
+        self.char_target_tilt.set_value(current_tilt)
 
 
 class OpeningDevice(OpeningDeviceBase, HomeAccessory):
@@ -314,7 +319,7 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
 
 @TYPES.register("Window")
 class Window(OpeningDevice):
-    """Generate a Window accessory for a cover entity with DEVICE_CLASS_WINDOW.
+    """Generate a Window accessory for a cover entity with WINDOW device class.
 
     The entity must support: set_cover_position.
     """

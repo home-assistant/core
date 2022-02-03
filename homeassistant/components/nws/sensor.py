@@ -1,25 +1,28 @@
 """Sensors for National Weather Service (NWS)."""
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    LENGTH_KILOMETERS,
     LENGTH_METERS,
     LENGTH_MILES,
     PERCENTAGE,
     PRESSURE_INHG,
     PRESSURE_PA,
+    SPEED_KILOMETERS_PER_HOUR,
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.dt import utcnow
 from homeassistant.util.pressure import convert as convert_pressure
+from homeassistant.util.speed import convert as convert_speed
 
-from . import base_unique_id
+from . import base_unique_id, device_info
 from .const import (
     ATTRIBUTION,
     CONF_STATION,
@@ -34,7 +37,9 @@ from .const import (
 PARALLEL_UPDATES = 0
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the NWS weather platform."""
     hass_data = hass.data[DOMAIN][entry.entry_id]
     station = entry.data[CONF_STATION]
@@ -55,6 +60,7 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
     """An NWS Sensor Entity."""
 
     entity_description: NWSSensorEntityDescription
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
@@ -84,7 +90,9 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
         # Set alias to unit property -> prevent unnecessary hasattr calls
         unit_of_measurement = self.native_unit_of_measurement
         if unit_of_measurement == SPEED_MILES_PER_HOUR:
-            return round(convert_distance(value, LENGTH_KILOMETERS, LENGTH_MILES))
+            return round(
+                convert_speed(value, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR)
+            )
         if unit_of_measurement == LENGTH_MILES:
             return round(convert_distance(value, LENGTH_METERS, LENGTH_MILES))
         if unit_of_measurement == PRESSURE_INHG:
@@ -94,11 +102,6 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
         if unit_of_measurement == PERCENTAGE:
             return round(value)
         return value
-
-    @property
-    def device_state_attributes(self):
-        """Return the attribution."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
     def unique_id(self):
@@ -121,3 +124,8 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return False
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return device_info(self._latitude, self._longitude)

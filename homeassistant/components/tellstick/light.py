@@ -1,9 +1,14 @@
 """Support for Tellstick lights."""
+from __future__ import annotations
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     SUPPORT_BRIGHTNESS,
     LightEntity,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     ATTR_DISCOVER_CONFIG,
@@ -16,7 +21,12 @@ from . import (
 SUPPORT_TELLSTICK = SUPPORT_BRIGHTNESS
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Tellstick lights."""
     if discovery_info is None or discovery_info[ATTR_DISCOVER_DEVICES] is None:
         return
@@ -66,8 +76,7 @@ class TellstickLight(TellstickDevice, LightEntity):
     def _update_model(self, new_state, data):
         """Update the device entity state to match the arguments."""
         if new_state:
-            brightness = data
-            if brightness is not None:
+            if (brightness := data) is not None:
                 self._brightness = brightness
 
             # _brightness is not defined when called from super

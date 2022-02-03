@@ -17,11 +17,14 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
-    DATA_RATE_KILOBYTES_PER_SECOND,
+    DATA_RATE_KIBIBYTES_PER_SECOND,
     STATE_IDLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,12 +42,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=SENSOR_TYPE_DOWNLOAD_SPEED,
         name="Down Speed",
-        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_UPLOAD_SPEED,
         name="Up Speed",
-        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
     ),
 )
 
@@ -58,7 +61,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the qBittorrent sensors."""
 
     try:

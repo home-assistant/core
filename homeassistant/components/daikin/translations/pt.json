@@ -12,7 +12,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API Key",
+                    "api_key": "Chave da API",
                     "host": "Servidor",
                     "password": "Palavra-passe"
                 },

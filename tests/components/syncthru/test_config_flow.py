@@ -3,7 +3,9 @@
 import re
 from unittest.mock import patch
 
-from homeassistant import config_entries, data_entry_flow, setup
+from pysyncthru import SyncThruAPINotSupported
+
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.components.syncthru.config_flow import SyncThru
 from homeassistant.components.syncthru.const import DOMAIN
@@ -47,7 +49,7 @@ async def test_show_setup_form(hass):
 
 async def test_already_configured_by_url(hass, aioclient_mock):
     """Test we match and update already configured devices by URL."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     udn = "uuid:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
     MockConfigEntry(
         domain=DOMAIN,
@@ -71,7 +73,7 @@ async def test_already_configured_by_url(hass, aioclient_mock):
 
 async def test_syncthru_not_supported(hass):
     """Test we show user form on unsupported device."""
-    with patch.object(SyncThru, "update", side_effect=ValueError):
+    with patch.object(SyncThru, "update", side_effect=SyncThruAPINotSupported):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
@@ -101,7 +103,7 @@ async def test_unknown_state(hass):
 
 async def test_success(hass, aioclient_mock):
     """Test successful flow provides entry creation data."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     mock_connection(aioclient_mock)
 
     with patch(
@@ -121,21 +123,25 @@ async def test_success(hass, aioclient_mock):
 
 async def test_ssdp(hass, aioclient_mock):
     """Test SSDP discovery initiates config properly."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     mock_connection(aioclient_mock)
 
     url = "http://192.168.1.2/"
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            ssdp.ATTR_SSDP_LOCATION: "http://192.168.1.2:5200/Printer.xml",
-            ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:Printer:1",
-            ssdp.ATTR_UPNP_MANUFACTURER: "Samsung Electronics",
-            ssdp.ATTR_UPNP_PRESENTATION_URL: url,
-            ssdp.ATTR_UPNP_SERIAL: "00000000",
-            ssdp.ATTR_UPNP_UDN: "uuid:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://192.168.1.2:5200/Printer.xml",
+            upnp={
+                ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:Printer:1",
+                ssdp.ATTR_UPNP_MANUFACTURER: "Samsung Electronics",
+                ssdp.ATTR_UPNP_PRESENTATION_URL: url,
+                ssdp.ATTR_UPNP_SERIAL: "00000000",
+                ssdp.ATTR_UPNP_UDN: "uuid:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
+            },
+        ),
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

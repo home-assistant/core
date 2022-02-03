@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error",
+            "unknown_coordinates": "No data for latitude/longitude"
+        },
+        "step": {
+            "coordinates": {
+                "data": {
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                },
+                "description": "Input the latitude and longitude to monitor:"
+            },
+            "location": {
+                "data": {
+                    "location_type": "Location"
+                },
+                "description": "Pick a location to monitor:"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Please re-enter the password for {username}:",
+                "title": "Reauthenticate Integration"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Input your username and password:"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Show monitored location on the map"
+                },
+                "title": "Configure WattTime"
+            }
+        }
+    }
+}

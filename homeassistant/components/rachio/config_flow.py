@@ -1,4 +1,5 @@
 """Config flow for Rachio integration."""
+from http import HTTPStatus
 import logging
 
 from rachiopy import Rachio
@@ -6,8 +7,10 @@ from requests.exceptions import ConnectTimeout
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_API_KEY, HTTP_OK
+from homeassistant.components import zeroconf
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_MANUAL_RUN_MINS,
@@ -33,13 +36,13 @@ async def validate_input(hass: core.HomeAssistant, data):
     try:
         data = await hass.async_add_executor_job(rachio.person.info)
         _LOGGER.debug("rachio.person.getInfo: %s", data)
-        if int(data[0][KEY_STATUS]) != HTTP_OK:
+        if int(data[0][KEY_STATUS]) != HTTPStatus.OK:
             raise InvalidAuth
 
         rachio_id = data[1][KEY_ID]
         data = await hass.async_add_executor_job(rachio.person.get, rachio_id)
         _LOGGER.debug("rachio.person.get: %s", data)
-        if int(data[0][KEY_STATUS]) != HTTP_OK:
+        if int(data[0][KEY_STATUS]) != HTTPStatus.OK:
             raise CannotConnect
 
         username = data[1][KEY_USERNAME]
@@ -77,13 +80,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_homekit(self, discovery_info):
+    async def async_step_homekit(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle HomeKit discovery."""
         self._async_abort_entries_match()
-        properties = {
-            key.lower(): value for (key, value) in discovery_info["properties"].items()
-        }
-        await self.async_set_unique_id(properties["id"])
+        await self.async_set_unique_id(
+            discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID]
+        )
         return await self.async_step_user()
 
     @staticmethod

@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Konto on juba h\u00e4\u00e4lestatud",
-            "kamereon_no_account": "Kamereoni kontot ei leitud."
+            "kamereon_no_account": "Kamereoni kontot ei leitud.",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
             "invalid_credentials": "Tuvastamine nurjus"
@@ -13,6 +14,13 @@
                     "kamereon_account_id": "Kamereoni konto ID"
                 },
                 "title": "Vali Kamereoni konto ID"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                },
+                "description": "Uuenda kasutaja {username} salas\u00f5na.",
+                "title": "Sidumise taastuvastamine"
             },
             "user": {
                 "data": {

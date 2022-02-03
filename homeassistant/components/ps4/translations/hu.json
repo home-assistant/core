@@ -9,7 +9,7 @@
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
-            "credential_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s. Az \u00fajraind\u00edt\u00e1shoz nyomja meg a bek\u00fcld\u00e9s gombot.",
+            "credential_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s. Az \u00fajraind\u00edt\u00e1shoz nyomja meg a K\u00fcld\u00e9s gombot.",
             "login_failed": "Nem siker\u00fclt p\u00e1ros\u00edtani a PlayStation 4-gyel. Ellen\u0151rizze, hogy a PIN-k\u00f3d helyes-e.",
             "no_ipaddress": "\u00cdrja be a konfigur\u00e1lni k\u00edv\u00e1nt PlayStation 4 IP c\u00edm\u00e9t"
         },
@@ -30,7 +30,7 @@
             },
             "mode": {
                 "data": {
-                    "ip_address": "IP c\u00edm (Hagyd \u00fcresen az Automatikus Felder\u00edt\u00e9s haszn\u00e1lat\u00e1hoz).",
+                    "ip_address": "IP c\u00edm (Hagyja \u00fcresen az Automatikus Felder\u00edt\u00e9s haszn\u00e1lat\u00e1hoz).",
                     "mode": "Konfigur\u00e1ci\u00f3s m\u00f3d"
                 },
                 "description": "V\u00e1lassza ki a m\u00f3dot a konfigur\u00e1l\u00e1shoz. Az IP c\u00edm mez\u0151 \u00fcresen maradhat, ha az Automatikus felder\u00edt\u00e9s lehet\u0151s\u00e9get v\u00e1lasztja, mivel az eszk\u00f6z\u00f6k automatikusan felfedez\u0151dnek.",

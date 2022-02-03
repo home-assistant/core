@@ -29,4 +29,5 @@ def mock_turbo_jpeg(
         (second_width, second_height, 0, 0),
     ]
     mocked_turbo_jpeg.scale_with_quality.return_value = EMPTY_8_6_JPEG
+    mocked_turbo_jpeg.encode.return_value = EMPTY_8_6_JPEG
     return mocked_turbo_jpeg

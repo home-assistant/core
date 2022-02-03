@@ -1,11 +1,15 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
+        },
         "step": {
             "user": {
                 "data": {
                     "one": "",
                     "other": "Otros"
-                }
+                },
+                "description": "\u00bfQuieres iniciar la configuraci\u00f3n?"
             }
         }
     },

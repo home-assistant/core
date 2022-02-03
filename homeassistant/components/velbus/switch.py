@@ -1,45 +1,45 @@
 """Support for Velbus switches."""
-import logging
+from typing import Any
 
-from velbus.util import VelbusException
+from velbusaio.channels import Relay as VelbusRelay
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VelbusEntity
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Velbus switch based on config_entry."""
+    await hass.data[DOMAIN][entry.entry_id]["tsk"]
     cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
-    modules_data = hass.data[DOMAIN][entry.entry_id]["switch"]
     entities = []
-    for address, channel in modules_data:
-        module = cntrl.get_module(address)
-        entities.append(VelbusSwitch(module, channel))
+    for channel in cntrl.get_all("switch"):
+        entities.append(VelbusSwitch(channel))
     async_add_entities(entities)
 
 
 class VelbusSwitch(VelbusEntity, SwitchEntity):
     """Representation of a switch."""
 
+    _channel: VelbusRelay
+
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the switch is on."""
-        return self._module.is_on(self._channel)
+        return self._channel.is_on()
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the switch to turn on."""
-        try:
-            self._module.turn_on(self._channel)
-        except VelbusException as err:
-            _LOGGER.error("A Velbus error occurred: %s", err)
+        await self._channel.turn_on()
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
-        try:
-            self._module.turn_off(self._channel)
-        except VelbusException as err:
-            _LOGGER.error("A Velbus error occurred: %s", err)
+        await self._channel.turn_off()
