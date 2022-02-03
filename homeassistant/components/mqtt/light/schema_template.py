@@ -157,8 +157,6 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             or self._topics[CONF_STATE_TOPIC] is None
             or self._templates[CONF_STATE_TEMPLATE] is None
         )
-        if self._optimistic:
-            self._state = False
 
     async def _subscribe_topics(self):  # noqa: C901
         """(Re)Subscribe to topics."""
