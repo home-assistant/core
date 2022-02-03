@@ -220,7 +220,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         """Update FritzboxTools data."""
         try:
             await self.async_scan_devices()
-        except (FritzSecurityError, FritzConnectionException) as ex:
+        except FRITZ_EXCEPTIONS as ex:
             raise update_coordinator.UpdateFailed from ex
 
     @property
