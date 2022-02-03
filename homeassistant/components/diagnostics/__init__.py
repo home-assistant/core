@@ -4,7 +4,7 @@ from __future__ import annotations
 from http import HTTPStatus
 import json
 import logging
-from typing import Protocol
+from typing import Any, Protocol
 
 from aiohttp import web
 import voluptuous as vol
@@ -51,12 +51,12 @@ class DiagnosticsProtocol(Protocol):
 
     async def async_get_config_entry_diagnostics(
         self, hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> dict:
+    ) -> Any:
         """Return diagnostics for a config entry."""
 
     async def async_get_device_diagnostics(
         self, hass: HomeAssistant, config_entry: ConfigEntry, device: DeviceEntry
-    ) -> dict:
+    ) -> Any:
         """Return diagnostics for a device."""
 
 
@@ -125,7 +125,7 @@ def handle_get(
 
 async def _async_get_json_file_response(
     hass: HomeAssistant,
-    data: dict | list,
+    data: Any,
     filename: str,
     domain: str,
     d_type: DiagnosticsType,
