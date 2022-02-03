@@ -20,8 +20,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up device tracker for Netgear component."""
-    router = hass.data[DOMAIN][entry.unique_id][KEY_ROUTER]
-    coordinator = hass.data[DOMAIN][entry.unique_id][KEY_COORDINATOR]
+    router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]
+    coordinator = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR]
     tracked = set()
 
     @callback
