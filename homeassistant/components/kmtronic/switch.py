@@ -21,7 +21,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            KMtronicSwitch(hass, coordinator, relay, reverse, entry.entry_id)
+            KMtronicSwitch(hub, coordinator, relay, reverse, entry.entry_id)
             for relay in hub.relays
         ]
     )
@@ -30,14 +30,14 @@ async def async_setup_entry(
 class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
     """KMtronic Switch Entity."""
 
-    def __init__(self, hass, coordinator, relay, reverse, config_entry_id):
+    def __init__(self, hub, coordinator, relay, reverse, config_entry_id):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self._relay = relay
         self._config_entry_id = config_entry_id
         self._reverse = reverse
 
-        hub_host = hass.data[DOMAIN][self._config_entry_id][DATA_HUB].host
+        hub_host = hub.host
         hostname = urllib.parse.urlsplit(hub_host).hostname
         self._attr_device_info = {
             "identifiers": {(DOMAIN, self._config_entry_id)},
