@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     power_wall = Powerwall(ip_address, http_session=http_session)
     try:
         base_info = await hass.async_add_executor_job(
-            _login_and_fetch_base_info, power_wall, password
+            _login_and_fetch_base_info, ip_address, power_wall, password
         )
     except PowerwallUnreachableError as err:
         http_session.close()
