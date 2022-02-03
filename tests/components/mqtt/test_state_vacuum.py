@@ -264,9 +264,7 @@ async def test_status(hass, mqtt_mock):
     assert state.attributes.get(ATTR_FAN_SPEED) == "min"
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) == ["min", "medium", "high", "max"]
 
-    message = """{
-        "state": null
-    }"""
+    message = '{"state":null}'
     async_fire_mqtt_message(hass, "vacuum/state", message)
     state = hass.states.get("vacuum.mqtttest")
     assert state.state == STATE_UNKNOWN
