@@ -1,6 +1,8 @@
 """Support for Insteon Thermostats via ISY994 Platform."""
 from __future__ import annotations
 
+from typing import Any
+
 from pyisy.constants import (
     CMD_CLIMATE_FAN_SETTING,
     CMD_CLIMATE_MODE,
@@ -11,6 +13,7 @@ from pyisy.constants import (
     PROP_UOM,
     PROTO_INSTEON,
 )
+from pyisy.nodes import Node
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -18,9 +21,11 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE,
     FAN_AUTO,
+    FAN_OFF,
     FAN_ON,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
@@ -76,16 +81,15 @@ async def async_setup_entry(
 class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
     """Representation of an ISY994 thermostat entity."""
 
-    def __init__(self, node) -> None:
+    def __init__(self, node: Node) -> None:
         """Initialize the ISY Thermostat entity."""
         super().__init__(node)
-        self._node = node
         self._uom = self._node.uom
         if isinstance(self._uom, list):
             self._uom = self._node.uom[0]
-        self._hvac_action = None
-        self._hvac_mode = None
-        self._fan_mode = None
+        self._hvac_action: str | None = None
+        self._hvac_mode: str | None = None
+        self._fan_mode: str | None = None
         self._temp_unit = None
         self._current_humidity = 0
         self._target_temp_low = 0
@@ -97,7 +101,7 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         return ISY_SUPPORTED_FEATURES
 
     @property
-    def precision(self) -> str:
+    def precision(self) -> float:
         """Return the precision of the system."""
         return PRECISION_TENTHS
 
@@ -110,6 +114,7 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
             return TEMP_CELSIUS
         if uom.value == UOM_ISY_FAHRENHEIT:
             return TEMP_FAHRENHEIT
+        return TEMP_FAHRENHEIT
 
     @property
     def current_humidity(self) -> int | None:
@@ -119,10 +124,10 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         return int(humidity.value)
 
     @property
-    def hvac_mode(self) -> str | None:
+    def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
         if not (hvac_mode := self._node.aux_properties.get(CMD_CLIMATE_MODE)):
-            return None
+            return HVAC_MODE_OFF
 
         # Which state values used depends on the mode property's UOM:
         uom = hvac_mode.uom
@@ -133,7 +138,7 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
                 if self._node.protocol == PROTO_INSTEON
                 else UOM_HVAC_MODE_GENERIC
             )
-        return UOM_TO_STATES[uom].get(hvac_mode.value)
+        return UOM_TO_STATES[uom].get(hvac_mode.value, HVAC_MODE_OFF)
 
     @property
     def hvac_modes(self) -> list[str]:
@@ -186,7 +191,7 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         return convert_isy_value_to_hass(target.value, target.uom, target.prec, 1)
 
     @property
-    def fan_modes(self):
+    def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
         return [FAN_AUTO, FAN_ON]
 
@@ -195,10 +200,10 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         """Return the current fan mode ie. auto, on."""
         fan_mode = self._node.aux_properties.get(CMD_CLIMATE_FAN_SETTING)
         if not fan_mode:
-            return None
-        return UOM_TO_STATES[UOM_FAN_MODES].get(fan_mode.value)
+            return FAN_OFF
+        return UOM_TO_STATES[UOM_FAN_MODES].get(fan_mode.value, FAN_OFF)
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temp = kwargs.get(ATTR_TEMPERATURE)
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
