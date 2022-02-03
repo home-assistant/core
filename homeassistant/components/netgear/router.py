@@ -197,7 +197,7 @@ class NetgearRouter:
         return self._api.ssl
 
 
-class NetgearBaseEntity(CoordinatorEntity, Entity):
+class NetgearBaseEntity(CoordinatorEntity):
     """Base class for a device connected to a Netgear router."""
 
     def __init__(
