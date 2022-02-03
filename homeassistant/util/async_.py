@@ -127,7 +127,7 @@ def check_loop(func: Callable, strict: bool = True) -> None:
     # Did not source from integration? Hard error.
     if found_frame is None:
         raise RuntimeError(
-            "Detected blocking call inside the event loop. "
+            f"Detected blocking call to {func.__name__} inside the event loop. "
             "This is causing stability issues. Please report issue"
         )
 
@@ -142,8 +142,9 @@ def check_loop(func: Callable, strict: bool = True) -> None:
         extra = ""
 
     _LOGGER.warning(
-        "Detected blocking call inside the event loop. This is causing stability issues. "
+        "Detected blocking call to %s inside the event loop. This is causing stability issues. "
         "Please report issue%s for %s doing blocking calls at %s, line %s: %s",
+        func.__name__,
         extra,
         integration,
         found_frame.filename[index:],
