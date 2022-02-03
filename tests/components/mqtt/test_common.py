@@ -43,6 +43,8 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
     "configuration_url": "http://example.com",
 }
 
+_SENTINEL = object()
+
 
 async def help_test_availability_when_connection_lost(hass, mqtt_mock, domain, config):
     """Test availability after MQTT disconnection."""
@@ -1110,7 +1112,7 @@ async def help_test_entity_debug_info(hass, mqtt_mock, domain, config):
     device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"]) == 1
     assert (
         debug_info_data["entities"][0]["discovery_data"]["topic"]
@@ -1121,6 +1123,7 @@ async def help_test_entity_debug_info(hass, mqtt_mock, domain, config):
     assert {"topic": "test-topic", "messages": []} in debug_info_data["entities"][0][
         "subscriptions"
     ]
+    assert debug_info_data["entities"][0]["transmitted"] == []
     assert len(debug_info_data["triggers"]) == 0
 
 
@@ -1143,7 +1146,7 @@ async def help_test_entity_debug_info_max_messages(hass, mqtt_mock, domain, conf
     device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
     assert {"topic": "test-topic", "messages": []} in debug_info_data["entities"][0][
         "subscriptions"
@@ -1155,7 +1158,7 @@ async def help_test_entity_debug_info_max_messages(hass, mqtt_mock, domain, conf
         for i in range(0, debug_info.STORED_MESSAGES + 1):
             async_fire_mqtt_message(hass, "test-topic", f"{i}")
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
     assert (
         len(debug_info_data["entities"][0]["subscriptions"][0]["messages"])
@@ -1177,9 +1180,18 @@ async def help_test_entity_debug_info_max_messages(hass, mqtt_mock, domain, conf
 
 
 async def help_test_entity_debug_info_message(
-    hass, mqtt_mock, domain, config, topic=None, payload=None
+    hass,
+    mqtt_mock,
+    domain,
+    config,
+    service,
+    command_topic=_SENTINEL,
+    command_payload=_SENTINEL,
+    state_topic=_SENTINEL,
+    state_payload=_SENTINEL,
+    service_parameters=None,
 ):
-    """Test debug_info message overflow.
+    """Test debug_info.
 
     This is a test helper for MQTT debug_info.
     """
@@ -1188,13 +1200,21 @@ async def help_test_entity_debug_info_message(
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["unique_id"] = "veryunique"
 
-    if topic is None:
+    if command_topic is _SENTINEL:
+        # Add default topic to config
+        config["command_topic"] = "command-topic"
+        command_topic = "command-topic"
+
+    if command_payload is _SENTINEL:
+        command_payload = "ON"
+
+    if state_topic is _SENTINEL:
         # Add default topic to config
         config["state_topic"] = "state-topic"
-        topic = "state-topic"
+        state_topic = "state-topic"
 
-    if payload is None:
-        payload = "ON"
+    if state_payload is _SENTINEL:
+        state_payload = "ON"
 
     registry = dr.async_get(hass)
 
@@ -1205,31 +1225,69 @@ async def help_test_entity_debug_info_message(
     device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
-    assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
-    assert {"topic": topic, "messages": []} in debug_info_data["entities"][0][
-        "subscriptions"
-    ]
+    debug_info_data = debug_info.info_for_device(hass, device.id)
 
     start_dt = datetime(2019, 1, 1, 0, 0, 0)
-    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
-        dt_utcnow.return_value = start_dt
-        async_fire_mqtt_message(hass, topic, payload)
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
-    assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
-    assert {
-        "topic": topic,
-        "messages": [
+    if state_topic is not None:
+        assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
+        assert {"topic": state_topic, "messages": []} in debug_info_data["entities"][0][
+            "subscriptions"
+        ]
+
+        with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+            dt_utcnow.return_value = start_dt
+            async_fire_mqtt_message(hass, state_topic, state_payload)
+
+        debug_info_data = debug_info.info_for_device(hass, device.id)
+        assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
+        assert {
+            "topic": state_topic,
+            "messages": [
+                {
+                    "payload": str(state_payload),
+                    "qos": 0,
+                    "retain": False,
+                    "time": start_dt,
+                    "topic": state_topic,
+                }
+            ],
+        } in debug_info_data["entities"][0]["subscriptions"]
+
+    expected_transmissions = []
+    if service:
+        # Trigger an outgoing MQTT message
+        with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+            dt_utcnow.return_value = start_dt
+            if service:
+                service_data = {ATTR_ENTITY_ID: f"{domain}.test"}
+                if service_parameters:
+                    service_data.update(service_parameters)
+
+                await hass.services.async_call(
+                    domain,
+                    service,
+                    service_data,
+                    blocking=True,
+                )
+
+        expected_transmissions = [
             {
-                "payload": str(payload),
-                "qos": 0,
-                "retain": False,
-                "time": start_dt,
-                "topic": topic,
+                "topic": command_topic,
+                "messages": [
+                    {
+                        "payload": str(command_payload),
+                        "qos": 0,
+                        "retain": False,
+                        "time": start_dt,
+                        "topic": command_topic,
+                    }
+                ],
             }
-        ],
-    } in debug_info_data["entities"][0]["subscriptions"]
+        ]
+
+    debug_info_data = debug_info.info_for_device(hass, device.id)
+    assert debug_info_data["entities"][0]["transmitted"] == expected_transmissions
 
 
 async def help_test_entity_debug_info_remove(hass, mqtt_mock, domain, config):
@@ -1251,7 +1309,7 @@ async def help_test_entity_debug_info_remove(hass, mqtt_mock, domain, config):
     device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"]) == 1
     assert (
         debug_info_data["entities"][0]["discovery_data"]["topic"]
@@ -1269,7 +1327,7 @@ async def help_test_entity_debug_info_remove(hass, mqtt_mock, domain, config):
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", "")
     await hass.async_block_till_done()
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"]) == 0
     assert len(debug_info_data["triggers"]) == 0
     assert entity_id not in hass.data[debug_info.DATA_MQTT_DEBUG_INFO]["entities"]
@@ -1295,7 +1353,7 @@ async def help_test_entity_debug_info_update_entity_id(hass, mqtt_mock, domain, 
     device = dev_registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"]) == 1
     assert (
         debug_info_data["entities"][0]["discovery_data"]["topic"]
@@ -1313,7 +1371,7 @@ async def help_test_entity_debug_info_update_entity_id(hass, mqtt_mock, domain, 
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"]) == 1
     assert (
         debug_info_data["entities"][0]["discovery_data"]["topic"]

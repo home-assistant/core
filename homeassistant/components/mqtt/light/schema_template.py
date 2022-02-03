@@ -388,8 +388,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         if ATTR_TRANSITION in kwargs:
             values["transition"] = kwargs[ATTR_TRANSITION]
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topics[CONF_COMMAND_TOPIC],
             self._templates[CONF_COMMAND_ON_TEMPLATE].async_render(
                 parse_result=False, **values
@@ -414,8 +413,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         if ATTR_TRANSITION in kwargs:
             values["transition"] = kwargs[ATTR_TRANSITION]
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topics[CONF_COMMAND_TOPIC],
             self._templates[CONF_COMMAND_OFF_TEMPLATE].async_render(
                 parse_result=False, **values

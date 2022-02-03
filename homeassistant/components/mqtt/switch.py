@@ -191,8 +191,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
 
         This method is a coroutine.
         """
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._config[CONF_COMMAND_TOPIC],
             self._config[CONF_PAYLOAD_ON],
             self._config[CONF_QOS],
@@ -209,8 +208,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
 
         This method is a coroutine.
         """
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._config[CONF_COMMAND_TOPIC],
             self._config[CONF_PAYLOAD_OFF],
             self._config[CONF_QOS],
