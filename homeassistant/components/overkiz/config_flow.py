@@ -17,7 +17,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import dhcp, zeroconf
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -147,7 +147,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(gateway_id)
         self._abort_if_unique_id_configured()
         self.context["title_placeholders"] = {
-            "name": f"Gateway: {obfuscate_id(gateway_id)}"
+            CONF_NAME: f"Gateway: {obfuscate_id(gateway_id)}"
         }
 
         return await self.async_step_user()
