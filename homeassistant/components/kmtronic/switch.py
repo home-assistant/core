@@ -34,7 +34,6 @@ class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self._relay = relay
-        self._config_entry_id = config_entry_id
         self._reverse = reverse
 
         hostname = urllib.parse.urlsplit(hub.host).hostname
