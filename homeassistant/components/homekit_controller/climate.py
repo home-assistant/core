@@ -92,6 +92,7 @@ SWING_MODE_HASS_TO_HOMEKIT = {v: k for k, v in SWING_MODE_HOMEKIT_TO_HASS.items(
 
 DEFAULT_MIN_STEP: Final = 1.0
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
