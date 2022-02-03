@@ -197,7 +197,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             )
         }
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
         topics = {}
 
@@ -219,9 +219,13 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
                 "qos": self._config[CONF_QOS],
                 "encoding": self._config[CONF_ENCODING] or None,
             }
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics
         )
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
     def state(self):
