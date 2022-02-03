@@ -173,7 +173,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             self._config[CONF_COMMAND_TEMPLATE], entity=self
         ).async_render
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
         @callback
@@ -198,7 +198,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             self._state = payload
             self.async_write_ha_state()
 
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
             self._sub_state,
             {
@@ -210,6 +210,10 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
                 }
             },
         )
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
     def state(self):

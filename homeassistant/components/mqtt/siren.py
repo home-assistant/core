@@ -214,7 +214,7 @@ class MqttSiren(MqttEntity, SirenEntity):
             entity=self,
         ).async_render_with_possible_json_value
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
         @callback
@@ -274,7 +274,7 @@ class MqttSiren(MqttEntity, SirenEntity):
             # Force into optimistic mode.
             self._optimistic = True
         else:
-            self._sub_state = await subscription.async_subscribe_topics(
+            self._sub_state = subscription.async_prepare_subscribe_topics(
                 self.hass,
                 self._sub_state,
                 {
@@ -286,6 +286,10 @@ class MqttSiren(MqttEntity, SirenEntity):
                     }
                 },
             )
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
     def assumed_state(self):

@@ -240,7 +240,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
             )
         }
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
         for tpl in self._templates.values():
             if tpl is not None:
@@ -325,7 +325,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
             self.async_write_ha_state()
 
         topics_list = {topic for topic in self._state_topics.values() if topic}
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
             self._sub_state,
             {
@@ -338,6 +338,10 @@ class MqttVacuum(MqttEntity, VacuumEntity):
                 for i, topic in enumerate(topics_list)
             },
         )
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
     def is_on(self):

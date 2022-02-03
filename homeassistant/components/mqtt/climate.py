@@ -358,11 +358,6 @@ class MqttClimate(MqttEntity, ClimateEntity):
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
-    async def async_added_to_hass(self):
-        """Handle being added to Home Assistant."""
-        await super().async_added_to_hass()
-        await self._subscribe_topics()
-
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
         self._topic = {key: config.get(key) for key in TOPIC_KEYS}
@@ -417,7 +412,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
         self._command_templates = command_templates
 
-    async def _subscribe_topics(self):  # noqa: C901
+    def _prepare_subscribe_topics(self):  # noqa: C901
         """(Re)Subscribe to topics."""
         topics = {}
         qos = self._config[CONF_QOS]
@@ -615,9 +610,13 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
         add_subscription(topics, CONF_HOLD_STATE_TOPIC, handle_hold_mode_received)
 
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics
         )
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
     def temperature_unit(self):
