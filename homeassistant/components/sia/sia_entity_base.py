@@ -14,7 +14,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN, SIA_EVENT, SIA_HUB_ZONE
+from .const import AVAILABILITY_EVENT_CODE, DOMAIN, SIA_EVENT, SIA_HUB_ZONE
 from .utils import get_attr_from_sia_event, get_unavailability_interval
 
 _LOGGER = logging.getLogger(__name__)
@@ -105,7 +105,7 @@ class SIABaseEntity(RestoreEntity):
             return
         self._attr_extra_state_attributes.update(get_attr_from_sia_event(sia_event))
         state_changed = self.update_state(sia_event)
-        if state_changed:
+        if state_changed or sia_event.code == AVAILABILITY_EVENT_CODE:
             self.async_reset_availability_cb()
         self.async_write_ha_state()
 
