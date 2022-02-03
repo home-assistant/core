@@ -45,8 +45,8 @@ class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
             "configuration_url": hub.host,
         }
 
-        self._attr_name = f"Relay{self._relay.id}"
-        self._attr_unique_id = f"{self._config_entry_id}_relay{self._relay.id}"
+        self._attr_name = f"Relay{relay.id}"
+        self._attr_unique_id = f"{config_entry_id}_relay{relay.id}"
 
     @property
     def is_on(self):
