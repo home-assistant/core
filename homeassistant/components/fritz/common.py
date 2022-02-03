@@ -302,7 +302,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
             ).get("NewDisallow")
         except FRITZ_EXCEPTIONS as ex:
             _LOGGER.debug(
-                "could not get WAN access rule for client device with ip '%s', bceause: %s",
+                "could not get WAN access rule for client device with IP '%s', error: %s",
                 ip_address,
                 ex,
             )
