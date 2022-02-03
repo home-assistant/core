@@ -39,7 +39,7 @@ class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
 
         hostname = urllib.parse.urlsplit(hub.host).hostname
         self._attr_device_info = {
-            "identifiers": {(DOMAIN, self._config_entry_id)},
+            "identifiers": {(DOMAIN, config_entry_id)},
             "name": f"Controller {hostname}",
             "manufacturer": MANUFACTURER,
             "configuration_url": hub.host,
