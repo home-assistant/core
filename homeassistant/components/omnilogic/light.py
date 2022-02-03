@@ -43,7 +43,7 @@ async def async_setup_entry(
                     continue
 
                 guard = False
-                assert entity_setting["guard_condition"] is not None  # type: ignore
+                assert entity_setting["guard_condition"] is not None
                 for guard_condition in entity_setting["guard_condition"]:
                     assert guard_condition is not None
                     if guard_condition and all(
