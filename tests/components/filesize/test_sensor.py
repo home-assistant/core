@@ -7,8 +7,9 @@ import pytest
 from homeassistant import config as hass_config
 from homeassistant.components.filesize import DOMAIN
 from homeassistant.components.filesize.sensor import CONF_FILE_PATHS
-from homeassistant.const import SERVICE_RELOAD, STATE_UNAVAILABLE
+from homeassistant.const import SERVICE_RELOAD, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
@@ -66,6 +67,32 @@ async def test_valid_path(hass: HomeAssistant) -> None:
     assert state.attributes.get("bytes") == 4
 
 
+async def test_state_unknown(hass: HomeAssistant, tmpdir: str) -> None:
+    """Verify we handle state unavailable."""
+    testfile = f"{tmpdir}/file"
+    await hass.async_add_executor_job(create_file, testfile)
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": {
+                    "platform": "filesize",
+                    "file_paths": [testfile],
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.file")
+
+    await hass.async_add_executor_job(os.remove, testfile)
+    await async_update_entity(hass, "sensor.file")
+
+    state = hass.states.get("sensor.file")
+    assert state.state == STATE_UNKNOWN
+
+
 async def test_reload(hass: HomeAssistant, tmpdir: str) -> None:
     """Verify we can reload filesize sensors."""
     testfile = f"{tmpdir}/file"
@@ -99,4 +126,4 @@ async def test_reload(hass: HomeAssistant, tmpdir: str) -> None:
         )
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.file").state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.file") is None

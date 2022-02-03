@@ -76,7 +76,6 @@ class Filesize(SensorEntity):
         """Initialize the data object."""
         self._path = path  # Need to check its a valid path
         self._attr_name = slugify(path.split("/")[-1]).strip().capitalize()
-        self._attr_extra_state_attributes = {}
 
     def update(self) -> None:
         """Update the sensor."""
@@ -84,11 +83,12 @@ class Filesize(SensorEntity):
             statinfo = os.stat(self._path)
         except OSError as error:
             _LOGGER.error("Can not retrieve file statistics %s", error)
+            self._attr_native_value = None
+            return
 
         size = statinfo.st_size
         last_updated = datetime.datetime.fromtimestamp(statinfo.st_mtime).isoformat()
-        if size:
-            self._attr_native_value = round(size / 1e6, 2)
+        self._attr_native_value = round(size / 1e6, 2) if size else None
         self._attr_extra_state_attributes = {
             "path": self._path,
             "last_updated": last_updated,
