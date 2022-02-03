@@ -31,6 +31,11 @@ from .const import (
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOSTNAME, default=DEFAULT_HOSTNAME): cv.string,
+    }
+)
+DATA_SCHEMA_ADV = vol.Schema(
+    {
+        vol.Required(CONF_HOSTNAME, default=DEFAULT_HOSTNAME): cv.string,
         vol.Optional(CONF_RESOLVER, default=DEFAULT_RESOLVER): cv.string,
         vol.Optional(CONF_RESOLVER_IPV6, default=DEFAULT_RESOLVER_IPV6): cv.string,
     }
@@ -121,6 +126,12 @@ class DnsIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     },
                 )
 
+        if self.show_advanced_options is True:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=DATA_SCHEMA_ADV,
+                errors=errors,
+            )
         return self.async_show_form(
             step_id="user",
             data_schema=DATA_SCHEMA,
