@@ -132,9 +132,6 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
             config[CONF_OPTIMISTIC] or config.get(CONF_STATE_TOPIC) is None
         )
 
-        if self._optimistic:
-            self._state = False
-
         self._value_template = MqttValueTemplate(
             self._config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value

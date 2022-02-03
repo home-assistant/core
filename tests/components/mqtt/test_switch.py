@@ -154,7 +154,7 @@ async def test_sending_inital_state_and_optimistic(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
