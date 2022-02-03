@@ -150,86 +150,62 @@ SERVICES = (
     SERVICE_NAME_SET_SYSTEM_PROPERTIES,
 )
 
-SERVICE_CLEAR_NOTIFICATIONS_SCHEMA = vol.All(
-    cv.deprecated(ATTR_SYSTEM_ID),
-    vol.Schema(
-        {
-            vol.Optional(ATTR_DEVICE_ID): cv.string,
-            vol.Optional(ATTR_SYSTEM_ID): cv.string,
-        }
-    ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_SYSTEM_ID),
+SERVICE_CLEAR_NOTIFICATIONS_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+    },
 )
 
-SERVICE_REMOVE_PIN_SCHEMA = vol.All(
-    cv.deprecated(ATTR_SYSTEM_ID),
-    vol.Schema(
-        {
-            vol.Optional(ATTR_DEVICE_ID): cv.string,
-            vol.Optional(ATTR_SYSTEM_ID): cv.string,
-            vol.Required(ATTR_PIN_LABEL_OR_VALUE): cv.string,
-        }
-    ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_SYSTEM_ID),
+SERVICE_REMOVE_PIN_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Required(ATTR_PIN_LABEL_OR_VALUE): cv.string,
+    }
 )
 
-SERVICE_SET_PIN_SCHEMA = vol.All(
-    cv.deprecated(ATTR_SYSTEM_ID),
-    vol.Schema(
-        {
-            vol.Optional(ATTR_DEVICE_ID): cv.string,
-            vol.Optional(ATTR_SYSTEM_ID): cv.string,
-            vol.Required(ATTR_PIN_LABEL): cv.string,
-            vol.Required(ATTR_PIN_VALUE): cv.string,
-        },
-    ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_SYSTEM_ID),
+SERVICE_SET_PIN_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Required(ATTR_PIN_LABEL): cv.string,
+        vol.Required(ATTR_PIN_VALUE): cv.string,
+    },
 )
 
-SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = vol.All(
-    cv.deprecated(ATTR_SYSTEM_ID),
-    vol.Schema(
-        {
-            vol.Optional(ATTR_DEVICE_ID): cv.string,
-            vol.Optional(ATTR_SYSTEM_ID): cv.string,
-            vol.Optional(ATTR_ALARM_DURATION): vol.All(
-                cv.time_period,
-                lambda value: value.total_seconds(),
-                vol.Range(min=MIN_ALARM_DURATION, max=MAX_ALARM_DURATION),
-            ),
-            vol.Optional(ATTR_ALARM_VOLUME): vol.All(
-                vol.In(VOLUME_MAP), VOLUME_MAP.get
-            ),
-            vol.Optional(ATTR_CHIME_VOLUME): vol.All(
-                vol.In(VOLUME_MAP), VOLUME_MAP.get
-            ),
-            vol.Optional(ATTR_ENTRY_DELAY_AWAY): vol.All(
-                cv.time_period,
-                lambda value: value.total_seconds(),
-                vol.Range(min=MIN_ENTRY_DELAY_AWAY, max=MAX_ENTRY_DELAY_AWAY),
-            ),
-            vol.Optional(ATTR_ENTRY_DELAY_HOME): vol.All(
-                cv.time_period,
-                lambda value: value.total_seconds(),
-                vol.Range(max=MAX_ENTRY_DELAY_HOME),
-            ),
-            vol.Optional(ATTR_EXIT_DELAY_AWAY): vol.All(
-                cv.time_period,
-                lambda value: value.total_seconds(),
-                vol.Range(min=MIN_EXIT_DELAY_AWAY, max=MAX_EXIT_DELAY_AWAY),
-            ),
-            vol.Optional(ATTR_EXIT_DELAY_HOME): vol.All(
-                cv.time_period,
-                lambda value: value.total_seconds(),
-                vol.Range(max=MAX_EXIT_DELAY_HOME),
-            ),
-            vol.Optional(ATTR_LIGHT): cv.boolean,
-            vol.Optional(ATTR_VOICE_PROMPT_VOLUME): vol.All(
-                vol.In(VOLUME_MAP), VOLUME_MAP.get
-            ),
-        }
-    ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_SYSTEM_ID),
+SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Optional(ATTR_ALARM_DURATION): vol.All(
+            cv.time_period,
+            lambda value: value.total_seconds(),
+            vol.Range(min=MIN_ALARM_DURATION, max=MAX_ALARM_DURATION),
+        ),
+        vol.Optional(ATTR_ALARM_VOLUME): vol.All(vol.In(VOLUME_MAP), VOLUME_MAP.get),
+        vol.Optional(ATTR_CHIME_VOLUME): vol.All(vol.In(VOLUME_MAP), VOLUME_MAP.get),
+        vol.Optional(ATTR_ENTRY_DELAY_AWAY): vol.All(
+            cv.time_period,
+            lambda value: value.total_seconds(),
+            vol.Range(min=MIN_ENTRY_DELAY_AWAY, max=MAX_ENTRY_DELAY_AWAY),
+        ),
+        vol.Optional(ATTR_ENTRY_DELAY_HOME): vol.All(
+            cv.time_period,
+            lambda value: value.total_seconds(),
+            vol.Range(max=MAX_ENTRY_DELAY_HOME),
+        ),
+        vol.Optional(ATTR_EXIT_DELAY_AWAY): vol.All(
+            cv.time_period,
+            lambda value: value.total_seconds(),
+            vol.Range(min=MIN_EXIT_DELAY_AWAY, max=MAX_EXIT_DELAY_AWAY),
+        ),
+        vol.Optional(ATTR_EXIT_DELAY_HOME): vol.All(
+            cv.time_period,
+            lambda value: value.total_seconds(),
+            vol.Range(max=MAX_EXIT_DELAY_HOME),
+        ),
+        vol.Optional(ATTR_LIGHT): cv.boolean,
+        vol.Optional(ATTR_VOICE_PROMPT_VOLUME): vol.All(
+            vol.In(VOLUME_MAP), VOLUME_MAP.get
+        ),
+    }
 )
 
 WEBSOCKET_EVENTS_REQUIRING_SERIAL = [EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED]
@@ -251,15 +227,6 @@ def _async_get_system_for_service_call(
     hass: HomeAssistant, call: ServiceCall
 ) -> SystemType:
     """Get the SimpliSafe system related to a service call (by device ID)."""
-    if ATTR_SYSTEM_ID in call.data:
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            simplisafe = hass.data[DOMAIN][entry.entry_id]
-            if (
-                system := simplisafe.systems.get(int(call.data[ATTR_SYSTEM_ID]))
-            ) is None:
-                continue
-            return cast(SystemType, system)
-
     device_id = call.data[ATTR_DEVICE_ID]
     device_registry = dr.async_get(hass)
 
