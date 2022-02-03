@@ -1,4 +1,5 @@
 """The Tesla Powerwall integration."""
+import contextlib
 from datetime import timedelta
 import logging
 
@@ -8,6 +9,7 @@ from tesla_powerwall import (
     APIError,
     MissingAttributeError,
     Powerwall,
+    PowerwallError,
     PowerwallUnreachableError,
 )
 
@@ -19,12 +21,14 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.network import is_ip_address
 
 from .const import (
     DOMAIN,
     POWERWALL_API_CHANGED,
     POWERWALL_API_CHARGE,
     POWERWALL_API_DEVICE_TYPE,
+    POWERWALL_API_GATEWAY_DIN,
     POWERWALL_API_GRID_SERVICES_ACTIVE,
     POWERWALL_API_GRID_STATUS,
     POWERWALL_API_METERS,
@@ -117,6 +121,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryAuthFailed from err
 
     await _migrate_old_unique_ids(hass, entry_id, powerwall_data)
+
+    gateway_din = powerwall_data[POWERWALL_API_GATEWAY_DIN]
+    if gateway_din and entry.unique_id is not None and is_ip_address(entry.unique_id):
+        hass.config_entries.async_update_entry(entry, unique_id=gateway_din)
+
     login_failed_count = 0
 
     runtime_data = hass.data[DOMAIN][entry.entry_id] = {
@@ -224,14 +233,16 @@ def _login_and_fetch_base_info(power_wall: Powerwall, password: str):
 
 def call_base_info(power_wall):
     """Wrap powerwall properties to be a callable."""
-    serial_numbers = power_wall.get_serial_numbers()
     # Make sure the serial numbers always have the same order
-    serial_numbers.sort()
+    gateway_din = None
+    with contextlib.suppress((AssertionError, PowerwallError)):
+        gateway_din = power_wall.get_gateway_din().upper()
     return {
         POWERWALL_API_SITE_INFO: power_wall.get_site_info(),
         POWERWALL_API_STATUS: power_wall.get_status(),
         POWERWALL_API_DEVICE_TYPE: power_wall.get_device_type(),
-        POWERWALL_API_SERIAL_NUMBERS: serial_numbers,
+        POWERWALL_API_SERIAL_NUMBERS: sorted(power_wall.get_serial_numbers()),
+        POWERWALL_API_GATEWAY_DIN: gateway_din,
     }
 
 

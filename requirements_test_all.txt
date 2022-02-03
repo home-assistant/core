@@ -1429,7 +1429,7 @@ tailscale==0.2.0
 tellduslive==0.10.11
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.3.12
+tesla-powerwall==0.3.15
 
 # homeassistant.components.tesla_wall_connector
 tesla-wall-connector==1.0.1
