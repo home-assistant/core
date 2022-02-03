@@ -26,7 +26,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.evohome.*",
     "homeassistant.components.fireservicerota.*",
     "homeassistant.components.firmata.*",
-    "homeassistant.components.freebox.*",
     "homeassistant.components.geniushub.*",
     "homeassistant.components.google_assistant.*",
     "homeassistant.components.gree.*",
