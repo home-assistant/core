@@ -343,18 +343,30 @@ def _async_setup_device_registry(
     sw_version = device_info.esphome_version
     if device_info.compilation_time:
         sw_version += f" ({device_info.compilation_time})"
+
     configuration_url = None
     if device_info.webserver_port > 0:
         configuration_url = f"http://{entry.data['host']}:{device_info.webserver_port}"
+
+    manufacturer = "espressif"
+    model = device_info.model
+    hw_version = None
+    if device_info.project_name:
+        project_name = device_info.project_name.split(".")
+        manufacturer = project_name[0]
+        model = project_name[1]
+        hw_version = device_info.project_version
+
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         configuration_url=configuration_url,
         connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
         name=device_info.name,
-        manufacturer="espressif",
-        model=device_info.model,
+        manufacturer=manufacturer,
+        model=model,
         sw_version=sw_version,
+        hw_version=hw_version,
     )
     return device_entry.id
 

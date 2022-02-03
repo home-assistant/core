@@ -335,7 +335,7 @@ class MqttCover(MqttEntity, CoverEntity):
             config_attributes=template_config_attributes,
         ).async_render_with_possible_json_value
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
         topics = {}
 
@@ -460,9 +460,13 @@ class MqttCover(MqttEntity, CoverEntity):
                 "encoding": self._config[CONF_ENCODING] or None,
             }
 
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics
         )
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
     def assumed_state(self):
