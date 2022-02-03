@@ -1772,13 +1772,7 @@ async def test_repeat_count_0(hass, caplog):
     await hass.async_block_till_done()
 
     assert len(events) == count
-    for index, event in enumerate(events):
-        assert event.data.get("first") == (index == 0)
-        assert event.data.get("index") == index + 1
-        assert event.data.get("last") == (index == count - 1)
     assert caplog.text.count(f"Repeating {alias}") == count
-    first_index = max(1, count - script.ACTION_TRACE_NODE_MAX_LEN + 1)
-    last_index = count + 1
     assert_action_trace(
         {
             "0": [{}],
