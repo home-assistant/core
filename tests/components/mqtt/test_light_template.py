@@ -172,7 +172,7 @@ async def test_rgb_light(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     expected_features = (
         light.SUPPORT_TRANSITION
         | light.SUPPORT_COLOR
@@ -646,7 +646,7 @@ async def test_effect(hass, mqtt_mock):
         await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 44
 
     await common.async_turn_on(hass, "light.test")
@@ -697,7 +697,7 @@ async def test_flash(hass, mqtt_mock):
         await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 40
 
     await common.async_turn_on(hass, "light.test")
@@ -745,7 +745,7 @@ async def test_transition(hass, mqtt_mock):
         await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 40
 
