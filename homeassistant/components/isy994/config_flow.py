@@ -41,7 +41,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _data_schema(schema_input: dict[Any, Any]) -> vol.Schema:
+def _data_schema(schema_input: dict[str, str]) -> vol.Schema:
     """Generate schema with defaults."""
     return vol.Schema(
         {
