@@ -1,1 +1,1 @@
-"""Tests for the IGD component."""
+"""Tests for the upnp component."""

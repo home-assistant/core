@@ -9,7 +9,7 @@
             "old_firmware": "Firmware lama yang tidak didukung pada perangkat Bond - tingkatkan versi sebelum melanjutkan",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
-        "flow_title": "Bond: {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "confirm": {
                 "data": {

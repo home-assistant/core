@@ -10,7 +10,7 @@
             "invalid_auth": "Authentification invalide",
             "unknown": "Erreur inattendue"
         },
-        "flow_title": "Pont syst\u00e8me: {name}",
+        "flow_title": "{name}",
         "step": {
             "authenticate": {
                 "data": {

@@ -10,6 +10,7 @@
             "relayer_connected": "Relayer verbonden",
             "remote_connected": "Op afstand verbonden",
             "remote_enabled": "Op afstand ingeschakeld",
+            "remote_server": "Externe server",
             "subscription_expiration": "Afloop abonnement"
         }
     }

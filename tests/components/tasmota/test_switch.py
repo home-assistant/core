@@ -9,9 +9,8 @@ from hatasmota.utils import (
     get_topic_tele_will,
 )
 
-from homeassistant.components import switch
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
-from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON, Platform
 
 from .test_common import (
     DEFAULT_CONFIG,
@@ -48,6 +47,7 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("switch.test")
     assert state.state == STATE_OFF
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
@@ -87,6 +87,7 @@ async def test_sending_mqtt_commands(hass, mqtt_mock, setup_tasmota):
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("switch.test")
     assert state.state == STATE_OFF
     await hass.async_block_till_done()
@@ -141,7 +142,7 @@ async def test_availability_when_connection_lost(
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["rl"][0] = 1
     await help_test_availability_when_connection_lost(
-        hass, mqtt_client_mock, mqtt_mock, switch.DOMAIN, config
+        hass, mqtt_client_mock, mqtt_mock, Platform.SWITCH, config
     )
 
 
@@ -149,7 +150,7 @@ async def test_availability(hass, mqtt_mock, setup_tasmota):
     """Test availability."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["rl"][0] = 1
-    await help_test_availability(hass, mqtt_mock, switch.DOMAIN, config)
+    await help_test_availability(hass, mqtt_mock, Platform.SWITCH, config)
 
 
 async def test_availability_discovery_update(hass, mqtt_mock, setup_tasmota):
@@ -157,7 +158,7 @@ async def test_availability_discovery_update(hass, mqtt_mock, setup_tasmota):
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["rl"][0] = 1
     await help_test_availability_discovery_update(
-        hass, mqtt_mock, switch.DOMAIN, config
+        hass, mqtt_mock, Platform.SWITCH, config
     )
 
 
@@ -169,7 +170,7 @@ async def test_availability_poll_state(
     config["rl"][0] = 1
     poll_topic = "tasmota_49A3BC/cmnd/STATE"
     await help_test_availability_poll_state(
-        hass, mqtt_client_mock, mqtt_mock, switch.DOMAIN, config, poll_topic, ""
+        hass, mqtt_client_mock, mqtt_mock, Platform.SWITCH, config, poll_topic, ""
     )
 
 
@@ -181,7 +182,7 @@ async def test_discovery_removal_switch(hass, mqtt_mock, caplog, setup_tasmota):
     config2["rl"][0] = 0
 
     await help_test_discovery_removal(
-        hass, mqtt_mock, caplog, switch.DOMAIN, config1, config2
+        hass, mqtt_mock, caplog, Platform.SWITCH, config1, config2
     )
 
 
@@ -195,7 +196,7 @@ async def test_discovery_removal_relay_as_light(hass, mqtt_mock, caplog, setup_t
     config2["so"]["30"] = 1  # Enforce Home Assistant auto-discovery as light
 
     await help_test_discovery_removal(
-        hass, mqtt_mock, caplog, switch.DOMAIN, config1, config2
+        hass, mqtt_mock, caplog, Platform.SWITCH, config1, config2
     )
 
 
@@ -209,7 +210,7 @@ async def test_discovery_update_unchanged_switch(
         "homeassistant.components.tasmota.switch.TasmotaSwitch.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass, mqtt_mock, caplog, switch.DOMAIN, config, discovery_update
+            hass, mqtt_mock, caplog, Platform.SWITCH, config, discovery_update
         )
 
 
@@ -219,7 +220,7 @@ async def test_discovery_device_remove(hass, mqtt_mock, setup_tasmota):
     config["rl"][0] = 1
     unique_id = f"{DEFAULT_CONFIG['mac']}_switch_relay_0"
     await help_test_discovery_device_remove(
-        hass, mqtt_mock, switch.DOMAIN, unique_id, config
+        hass, mqtt_mock, Platform.SWITCH, unique_id, config
     )
 
 
@@ -233,7 +234,7 @@ async def test_entity_id_update_subscriptions(hass, mqtt_mock, setup_tasmota):
         get_topic_tele_will(config),
     ]
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock, switch.DOMAIN, config, topics
+        hass, mqtt_mock, Platform.SWITCH, config, topics
     )
 
 
@@ -242,5 +243,5 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock, setup_tasmota)
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["rl"][0] = 1
     await help_test_entity_id_update_discovery_update(
-        hass, mqtt_mock, switch.DOMAIN, config
+        hass, mqtt_mock, Platform.SWITCH, config
     )

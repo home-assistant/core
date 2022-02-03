@@ -43,8 +43,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Meteo-France from legacy config file."""
-    conf = config.get(DOMAIN)
-    if not conf:
+    if not (conf := config.get(DOMAIN)):
         return True
 
     for city_conf in conf:
@@ -61,23 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an Meteo-France account from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    latitude = entry.data.get(CONF_LATITUDE)
-
     client = MeteoFranceClient()
-    # Migrate from previous config
-    if not latitude:
-        places = await hass.async_add_executor_job(
-            client.search_places, entry.data[CONF_CITY]
-        )
-        hass.config_entries.async_update_entry(
-            entry,
-            title=f"{places[0]}",
-            data={
-                CONF_LATITUDE: places[0].latitude,
-                CONF_LONGITUDE: places[0].longitude,
-            },
-        )
-
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
 
@@ -180,7 +163,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if hass.data[DOMAIN][entry.entry_id][COORDINATOR_ALERT]:
 
@@ -203,6 +186,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)

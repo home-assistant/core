@@ -34,7 +34,6 @@ ALLOWED_IGNORE_VIOLATIONS = {
     ("ifttt", "config_flow.py"),
     ("ios", "config_flow.py"),
     ("iqvia", "config_flow.py"),
-    ("knx", "scene.py"),
     ("konnected", "config_flow.py"),
     ("lcn", "scene.py"),
     ("life360", "config_flow.py"),
@@ -53,7 +52,6 @@ ALLOWED_IGNORE_VIOLATIONS = {
     ("spider", "config_flow.py"),
     ("starline", "config_flow.py"),
     ("tado", "config_flow.py"),
-    ("tahoma", "scene.py"),
     ("totalconnect", "config_flow.py"),
     ("tradfri", "config_flow.py"),
     ("tuya", "config_flow.py"),
@@ -62,7 +60,6 @@ ALLOWED_IGNORE_VIOLATIONS = {
     ("velux", "scene.py"),
     ("wemo", "config_flow.py"),
     ("wiffi", "config_flow.py"),
-    ("wink", "scene.py"),
 }
 
 

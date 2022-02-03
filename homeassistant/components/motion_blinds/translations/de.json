@@ -6,13 +6,15 @@
             "connection_error": "Verbindung fehlgeschlagen"
         },
         "error": {
-            "discovery_error": "Motion-Gateway konnte nicht gefunden werden"
+            "discovery_error": "Motion-Gateway konnte nicht gefunden werden",
+            "invalid_interface": "Ung\u00fcltige Netzwerkschnittstelle"
         },
         "flow_title": "Jalousien",
         "step": {
             "connect": {
                 "data": {
-                    "api_key": "API-Schl\u00fcssel"
+                    "api_key": "API-Schl\u00fcssel",
+                    "interface": "Die zu verwendende Netzwerkschnittstelle"
                 },
                 "description": "Ein 16-Zeichen-API-Schl\u00fcssel wird ben\u00f6tigt, siehe https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key",
                 "title": "Motion Jalousien"
@@ -31,6 +33,17 @@
                 },
                 "description": "Stelle eine Verbindung zu deinem Motion Gateway her. Wenn die IP-Adresse leer bleibt, wird die automatische Erkennung verwendet",
                 "title": "Jalousien"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "wait_for_push": "Warten auf Multicast-Push bei Aktualisierung"
+                },
+                "description": "Optionale Einstellungen angeben",
+                "title": "Motion Jalousien"
             }
         }
     }

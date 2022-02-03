@@ -1,7 +1,12 @@
 """Support for AirVisual air quality sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
@@ -14,20 +19,11 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_SHOW_ON_MAP,
     CONF_STATE,
-    DEVICE_CLASS_AQI,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_PM1,
-    DEVICE_CLASS_PM10,
-    DEVICE_CLASS_PM25,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -36,7 +32,6 @@ from .const import (
     CONF_CITY,
     CONF_COUNTRY,
     CONF_INTEGRATION_TYPE,
-    DATA_COORDINATOR,
     DOMAIN,
     INTEGRATION_TYPE_GEOGRAPHY_COORDS,
     INTEGRATION_TYPE_GEOGRAPHY_NAME,
@@ -74,8 +69,9 @@ GEOGRAPHY_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=SENSOR_KIND_AQI,
         name="Air Quality Index",
-        device_class=DEVICE_CLASS_AQI,
+        device_class=SensorDeviceClass.AQI,
         native_unit_of_measurement="AQI",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_POLLUTANT,
@@ -90,56 +86,64 @@ NODE_PRO_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=SENSOR_KIND_AQI,
         name="Air Quality Index",
-        device_class=DEVICE_CLASS_AQI,
+        device_class=SensorDeviceClass.AQI,
         native_unit_of_measurement="AQI",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_BATTERY_LEVEL,
         name="Battery",
-        device_class=DEVICE_CLASS_BATTERY,
+        device_class=SensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_CO2,
         name="C02",
-        device_class=DEVICE_CLASS_CO2,
+        device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_HUMIDITY,
         name="Humidity",
-        device_class=DEVICE_CLASS_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_PM_0_1,
         name="PM 0.1",
-        device_class=DEVICE_CLASS_PM1,
+        device_class=SensorDeviceClass.PM1,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_PM_1_0,
         name="PM 1.0",
-        device_class=DEVICE_CLASS_PM10,
+        device_class=SensorDeviceClass.PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_PM_2_5,
         name="PM 2.5",
-        device_class=DEVICE_CLASS_PM25,
+        device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_TEMPERATURE,
         name="Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_VOC,
         name="VOC",
-        device_class=DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -177,26 +181,24 @@ POLLUTANT_UNITS = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up AirVisual sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
     sensors: list[AirVisualGeographySensor | AirVisualNodeProSensor]
-    if config_entry.data[CONF_INTEGRATION_TYPE] in (
+    if entry.data[CONF_INTEGRATION_TYPE] in (
         INTEGRATION_TYPE_GEOGRAPHY_COORDS,
         INTEGRATION_TYPE_GEOGRAPHY_NAME,
     ):
         sensors = [
-            AirVisualGeographySensor(coordinator, config_entry, description, locale)
+            AirVisualGeographySensor(coordinator, entry, description, locale)
             for locale in GEOGRAPHY_SENSOR_LOCALES
             for description in GEOGRAPHY_SENSOR_DESCRIPTIONS
         ]
     else:
         sensors = [
-            AirVisualNodeProSensor(coordinator, description)
+            AirVisualNodeProSensor(coordinator, entry, description)
             for description in NODE_PRO_SENSOR_DESCRIPTIONS
         ]
 
@@ -209,23 +211,22 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        config_entry: ConfigEntry,
+        entry: ConfigEntry,
         description: SensorEntityDescription,
         locale: str,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, description)
+        super().__init__(coordinator, entry, description)
 
         self._attr_extra_state_attributes.update(
             {
-                ATTR_CITY: config_entry.data.get(CONF_CITY),
-                ATTR_STATE: config_entry.data.get(CONF_STATE),
-                ATTR_COUNTRY: config_entry.data.get(CONF_COUNTRY),
+                ATTR_CITY: entry.data.get(CONF_CITY),
+                ATTR_STATE: entry.data.get(CONF_STATE),
+                ATTR_COUNTRY: entry.data.get(CONF_COUNTRY),
             }
         )
         self._attr_name = f"{GEOGRAPHY_SENSOR_LOCALES[locale]} {description.name}"
-        self._attr_unique_id = f"{config_entry.unique_id}_{locale}_{description.key}"
-        self._config_entry = config_entry
+        self._attr_unique_id = f"{entry.unique_id}_{locale}_{description.key}"
         self._locale = locale
 
     @property
@@ -267,16 +268,16 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
         #
         # We use any coordinates in the config entry and, in the case of a geography by
         # name, we fall back to the latitude longitude provided in the coordinator data:
-        latitude = self._config_entry.data.get(
+        latitude = self._entry.data.get(
             CONF_LATITUDE,
             self.coordinator.data["location"]["coordinates"][1],
         )
-        longitude = self._config_entry.data.get(
+        longitude = self._entry.data.get(
             CONF_LONGITUDE,
             self.coordinator.data["location"]["coordinates"][0],
         )
 
-        if self._config_entry.options[CONF_SHOW_ON_MAP]:
+        if self._entry.options[CONF_SHOW_ON_MAP]:
             self._attr_extra_state_attributes[ATTR_LATITUDE] = latitude
             self._attr_extra_state_attributes[ATTR_LONGITUDE] = longitude
             self._attr_extra_state_attributes.pop("lati", None)
@@ -292,10 +293,13 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
     """Define an AirVisual sensor related to a Node/Pro unit."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, description: SensorEntityDescription
+        self,
+        coordinator: DataUpdateCoordinator,
+        entry: ConfigEntry,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, description)
+        super().__init__(coordinator, entry, description)
 
         self._attr_name = (
             f"{coordinator.data['settings']['node_name']} Node/Pro: {description.name}"
@@ -305,16 +309,16 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.data["serial_number"])},
-            "name": self.coordinator.data["settings"]["node_name"],
-            "manufacturer": "AirVisual",
-            "model": f'{self.coordinator.data["status"]["model"]}',
-            "sw_version": (
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.data["serial_number"])},
+            manufacturer="AirVisual",
+            model=f'{self.coordinator.data["status"]["model"]}',
+            name=self.coordinator.data["settings"]["node_name"],
+            sw_version=(
                 f'Version {self.coordinator.data["status"]["system_version"]}'
                 f'{self.coordinator.data["status"]["app_version"]}'
             ),
-        }
+        )
 
     @callback
     def update_from_latest_data(self) -> None:

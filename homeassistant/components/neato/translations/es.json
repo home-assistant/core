@@ -8,7 +8,7 @@
             "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
         },
         "create_entry": {
-            "default": "Ver [documentaci\u00f3n Neato]({docs_url})."
+            "default": "Autenticado correctamente"
         },
         "step": {
             "pick_implementation": {

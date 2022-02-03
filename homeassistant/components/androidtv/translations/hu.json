@@ -1,0 +1,66 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "invalid_unique_id": "Lehetetlen \u00e9rv\u00e9nyes egyedi azonos\u00edt\u00f3t meghat\u00e1rozni az eszk\u00f6zh\u00f6z"
+        },
+        "error": {
+            "adbkey_not_file": "ADB kulcsf\u00e1jl nem tal\u00e1lhat\u00f3",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_host": "\u00c9rv\u00e9nytelen hosztn\u00e9v vagy IP-c\u00edm",
+            "key_and_server": "Csak ADB-kulcsot vagy ADB-kiszolg\u00e1l\u00f3t adjon meg",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "adb_server_ip": "Az ADB szerver IP-c\u00edme (ha nem szeretn\u00e9 haszn\u00e1lni, hagyja \u00fcresen)",
+                    "adb_server_port": "Az ADB szerver portja",
+                    "adbkey": "Az ADB-kulcsf\u00e1jl el\u00e9r\u00e9si \u00fatja (az automatikus gener\u00e1l\u00e1shoz hagyja \u00fcresen)",
+                    "device_class": "Az eszk\u00f6z t\u00edpusa",
+                    "host": "C\u00edm",
+                    "port": "Port"
+                },
+                "description": "Az Android TV k\u00e9sz\u00fcl\u00e9khez val\u00f3 csatlakoz\u00e1shoz sz\u00fcks\u00e9ges param\u00e9terek be\u00e1ll\u00edt\u00e1sa",
+                "title": "Android TV"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_det_rules": "\u00c9rv\u00e9nytelen \u00e1llapotfelismer\u00e9si szab\u00e1lyok"
+        },
+        "step": {
+            "apps": {
+                "data": {
+                    "app_delete": "Jel\u00f6lje be az alkalmaz\u00e1s t\u00f6rl\u00e9s\u00e9hez",
+                    "app_id": "Alkalmaz\u00e1s azonos\u00edt\u00f3ja",
+                    "app_name": "Alkalmaz\u00e1s neve"
+                },
+                "description": "Alkalmaz\u00e1sazonos\u00edt\u00f3 konfigur\u00e1l\u00e1sa: {app_id}",
+                "title": "Android TV alkalmaz\u00e1sok konfigur\u00e1l\u00e1sa"
+            },
+            "init": {
+                "data": {
+                    "apps": "Alkalmaz\u00e1slista konfigur\u00e1l\u00e1sa",
+                    "exclude_unnamed_apps": "Ismeretlen nev\u0171 alkalmaz\u00e1s kiz\u00e1r\u00e1sa",
+                    "get_sources": "A fut\u00f3 alkalmaz\u00e1sok forr\u00e1slist\u00e1jak\u00e9nt val\u00f3 megjelen\u00edt\u00e9se",
+                    "screencap": "A k\u00e9perny\u0151n megjelen\u0151 k\u00e9p legyen-e az albumbor\u00edt\u00f3",
+                    "state_detection_rules": "\u00c1llapotfelismer\u00e9si szab\u00e1lyok konfigur\u00e1l\u00e1sa",
+                    "turn_off_command": "ADB shell parancs az alap\u00e9rtelmezett kikapcsol\u00e1si (turn_off) parancs fel\u00fcl\u00edr\u00e1s\u00e1ra",
+                    "turn_on_command": "ADB shell parancs az alap\u00e9rtelmezett bekapcsol\u00e1si (turn_on) parancs fel\u00fcl\u00edr\u00e1s\u00e1ra"
+                },
+                "title": "Android TV be\u00e1ll\u00edt\u00e1sok"
+            },
+            "rules": {
+                "data": {
+                    "rule_delete": "Jel\u00f6lje be a szab\u00e1ly t\u00f6rl\u00e9s\u00e9hez",
+                    "rule_id": "Alkalmaz\u00e1s azonos\u00edt\u00f3ja",
+                    "rule_values": "Az \u00e1llapotfelismer\u0151 szab\u00e1lyok list\u00e1ja (l\u00e1sd a dokument\u00e1ci\u00f3t)"
+                },
+                "description": "\u00c1llapotfelismer\u00e9si szab\u00e1ly konfigur\u00e1l\u00e1sa: {rule_id}",
+                "title": "Az Android TV \u00e1llapotfelismer\u00e9si szab\u00e1lyainak konfigur\u00e1l\u00e1sa"
+            }
+        }
+    }
+}

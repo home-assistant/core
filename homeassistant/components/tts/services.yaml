@@ -6,7 +6,7 @@ say:
   fields:
     entity_id:
       name: Entity
-      description: Name(s) of media player entities.\
+      description: Name(s) of media player entities.
       required: true
       selector:
         entity:

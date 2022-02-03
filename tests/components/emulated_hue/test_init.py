@@ -1,5 +1,6 @@
 """Test the Emulated Hue component."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from homeassistant.components.emulated_hue import (
     DATA_KEY,
@@ -7,6 +8,7 @@ from homeassistant.components.emulated_hue import (
     SAVE_DELAY,
     Config,
 )
+from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
 
 from tests.common import async_fire_time_changed
@@ -14,7 +16,7 @@ from tests.common import async_fire_time_changed
 
 async def test_config_google_home_entity_id_to_number(hass, hass_storage):
     """Test config adheres to the type."""
-    conf = Config(hass, {"type": "google_home"})
+    conf = Config(hass, {"type": "google_home"}, "127.0.0.1")
     hass_storage[DATA_KEY] = {
         "version": DATA_VERSION,
         "key": DATA_KEY,
@@ -45,7 +47,7 @@ async def test_config_google_home_entity_id_to_number(hass, hass_storage):
 
 async def test_config_google_home_entity_id_to_number_altered(hass, hass_storage):
     """Test config adheres to the type."""
-    conf = Config(hass, {"type": "google_home"})
+    conf = Config(hass, {"type": "google_home"}, "127.0.0.1")
     hass_storage[DATA_KEY] = {
         "version": DATA_VERSION,
         "key": DATA_KEY,
@@ -76,7 +78,7 @@ async def test_config_google_home_entity_id_to_number_altered(hass, hass_storage
 
 async def test_config_google_home_entity_id_to_number_empty(hass, hass_storage):
     """Test config adheres to the type."""
-    conf = Config(hass, {"type": "google_home"})
+    conf = Config(hass, {"type": "google_home"}, "127.0.0.1")
     hass_storage[DATA_KEY] = {"version": DATA_VERSION, "key": DATA_KEY, "data": {}}
 
     await conf.async_setup()
@@ -100,7 +102,7 @@ async def test_config_google_home_entity_id_to_number_empty(hass, hass_storage):
 
 def test_config_alexa_entity_id_to_number():
     """Test config adheres to the type."""
-    conf = Config(None, {"type": "alexa"})
+    conf = Config(None, {"type": "alexa"}, "127.0.0.1")
 
     number = conf.entity_id_to_number("light.test")
     assert number == "light.test"
@@ -113,3 +115,12 @@ def test_config_alexa_entity_id_to_number():
 
     entity_id = conf.number_to_entity_id("light.test")
     assert entity_id == "light.test"
+
+
+async def test_setup_works(hass):
+    """Test setup works."""
+    hass.config.components.add("network")
+    with patch(
+        "homeassistant.components.emulated_hue.create_upnp_datagram_endpoint"
+    ), patch("homeassistant.components.emulated_hue.async_get_source_ip"):
+        assert await async_setup_component(hass, "emulated_hue", {})

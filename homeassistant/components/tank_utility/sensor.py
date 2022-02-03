@@ -1,4 +1,5 @@
 """Support for the Tank Utility propane monitor."""
+from __future__ import annotations
 
 import datetime
 import logging
@@ -9,7 +10,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_DEVICES, CONF_EMAIL, CONF_PASSWORD, PERCENTAGE
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,12 +41,17 @@ SENSOR_ATTRS = [
 ]
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Tank Utility sensor."""
 
-    email = config.get(CONF_EMAIL)
-    password = config.get(CONF_PASSWORD)
-    devices = config.get(CONF_DEVICES)
+    email = config[CONF_EMAIL]
+    password = config[CONF_PASSWORD]
+    devices = config[CONF_DEVICES]
 
     try:
         token = auth.get_token(email, password)
@@ -111,11 +120,9 @@ class TankUtilitySensor(SensorEntity):
         try:
             data = tank_monitor.get_device_data(self._token, self.device)
         except requests.exceptions.HTTPError as http_error:
-            if (
-                http_error.response.status_code
-                == requests.codes.unauthorized  # pylint: disable=no-member
-                or http_error.response.status_code
-                == requests.codes.bad_request  # pylint: disable=no-member
+            if http_error.response.status_code in (
+                requests.codes.unauthorized,  # pylint: disable=no-member
+                requests.codes.bad_request,  # pylint: disable=no-member
             ):
                 _LOGGER.info("Getting new token")
                 self._token = auth.get_token(self._email, self._password, force=True)

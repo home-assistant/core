@@ -15,24 +15,28 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 import yarl
 
-from homeassistant import config as conf_util, config_entries, core, loader
-from homeassistant.components import http
-from homeassistant.const import REQUIRED_NEXT_PYTHON_DATE, REQUIRED_NEXT_PYTHON_VER
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import area_registry, device_registry, entity_registry
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import (
+from . import config as conf_util, config_entries, core, loader
+from .components import http, persistent_notification
+from .const import (
+    REQUIRED_NEXT_PYTHON_HA_RELEASE,
+    REQUIRED_NEXT_PYTHON_VER,
+    SIGNAL_BOOTSTRAP_INTEGRATONS,
+)
+from .exceptions import HomeAssistantError
+from .helpers import area_registry, device_registry, entity_registry
+from .helpers.dispatcher import async_dispatcher_send
+from .helpers.typing import ConfigType
+from .setup import (
     DATA_SETUP,
     DATA_SETUP_STARTED,
     DATA_SETUP_TIME,
     async_set_domains_to_be_loaded,
     async_setup_component,
 )
-from homeassistant.util.async_ import gather_with_concurrency
-import homeassistant.util.dt as dt_util
-from homeassistant.util.logging import async_activate_log_queue_handler
-from homeassistant.util.package import async_get_user_site, is_virtual_env
+from .util import dt as dt_util
+from .util.async_ import gather_with_concurrency
+from .util.logging import async_activate_log_queue_handler
+from .util.package import async_get_user_site, is_virtual_env
 
 if TYPE_CHECKING:
     from .runner import RuntimeConfig
@@ -46,7 +50,6 @@ DATA_LOGGING = "logging"
 
 LOG_SLOW_STARTUP_INTERVAL = 60
 SLOW_STARTUP_CHECK_INTERVAL = 1
-SIGNAL_BOOTSTRAP_INTEGRATONS = "bootstrap_integrations"
 
 STAGE_1_TIMEOUT = 120
 STAGE_2_TIMEOUT = 300
@@ -109,9 +112,8 @@ async def async_setup_hass(
 
     config_dict = None
     basic_setup_success = False
-    safe_mode = runtime_config.safe_mode
 
-    if not safe_mode:
+    if not (safe_mode := runtime_config.safe_mode):
         await hass.async_add_executor_job(conf_util.process_ha_config_upgrade, hass)
 
         try:
@@ -241,18 +243,20 @@ async def async_from_config_dict(
     stop = monotonic()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop - start)
 
-    if REQUIRED_NEXT_PYTHON_DATE and sys.version_info[:3] < REQUIRED_NEXT_PYTHON_VER:
+    if (
+        REQUIRED_NEXT_PYTHON_HA_RELEASE
+        and sys.version_info[:3] < REQUIRED_NEXT_PYTHON_VER
+    ):
         msg = (
             "Support for the running Python version "
             f"{'.'.join(str(x) for x in sys.version_info[:3])} is deprecated and will "
-            f"be removed in the first release after {REQUIRED_NEXT_PYTHON_DATE}. "
+            f"be removed in Home Assistant {REQUIRED_NEXT_PYTHON_HA_RELEASE}. "
             "Please upgrade Python to "
-            f"{'.'.join(str(x) for x in REQUIRED_NEXT_PYTHON_VER)} or "
-            "higher."
+            f"{'.'.join(str(x) for x in REQUIRED_NEXT_PYTHON_VER[:2])}."
         )
         _LOGGER.warning(msg)
-        hass.components.persistent_notification.async_create(
-            msg, "Python version", "python_version"
+        persistent_notification.async_create(
+            hass, msg, "Python version", "python_version"
         )
 
     return hass
@@ -368,8 +372,7 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
     This function is a coroutine.
     """
     deps_dir = os.path.join(config_dir, "deps")
-    lib_dir = await async_get_user_site(deps_dir)
-    if lib_dir not in sys.path:
+    if (lib_dir := await async_get_user_site(deps_dir)) not in sys.path:
         sys.path.insert(0, lib_dir)
     return deps_dir
 
@@ -494,17 +497,13 @@ async def _async_set_up_integrations(
 
     _LOGGER.info("Domains to be set up: %s", domains_to_setup)
 
-    logging_domains = domains_to_setup & LOGGING_INTEGRATIONS
-
     # Load logging as soon as possible
-    if logging_domains:
+    if logging_domains := domains_to_setup & LOGGING_INTEGRATIONS:
         _LOGGER.info("Setting up logging: %s", logging_domains)
         await async_setup_multi_components(hass, logging_domains, config)
 
     # Start up debuggers. Start these first in case they want to wait.
-    debuggers = domains_to_setup & DEBUGGER_INTEGRATIONS
-
-    if debuggers:
+    if debuggers := domains_to_setup & DEBUGGER_INTEGRATIONS:
         _LOGGER.debug("Setting up debuggers: %s", debuggers)
         await async_setup_multi_components(hass, debuggers, config)
 
@@ -524,9 +523,7 @@ async def _async_set_up_integrations(
 
             stage_1_domains.add(domain)
 
-            dep_itg = integration_cache.get(domain)
-
-            if dep_itg is None:
+            if (dep_itg := integration_cache.get(domain)) is None:
                 continue
 
             deps_promotion.update(dep_itg.all_dependencies)
@@ -564,6 +561,14 @@ async def _async_set_up_integrations(
         except asyncio.TimeoutError:
             _LOGGER.warning("Setup timed out for stage 2 - moving forward")
 
+    # Wrap up startup
+    _LOGGER.debug("Waiting for startup to wrap up")
+    try:
+        async with hass.timeout.async_timeout(WRAP_UP_TIMEOUT, cool_down=COOLDOWN_TIME):
+            await hass.async_block_till_done()
+    except asyncio.TimeoutError:
+        _LOGGER.warning("Setup timed out for bootstrap - moving forward")
+
     watch_task.cancel()
     async_dispatcher_send(hass, SIGNAL_BOOTSTRAP_INTEGRATONS, {})
 
@@ -576,11 +581,3 @@ async def _async_set_up_integrations(
             )
         },
     )
-
-    # Wrap up startup
-    _LOGGER.debug("Waiting for startup to wrap up")
-    try:
-        async with hass.timeout.async_timeout(WRAP_UP_TIMEOUT, cool_down=COOLDOWN_TIME):
-            await hass.async_block_till_done()
-    except asyncio.TimeoutError:
-        _LOGGER.warning("Setup timed out for bootstrap - moving forward")

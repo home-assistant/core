@@ -1,4 +1,6 @@
 """Demo platform for the vacuum component."""
+from __future__ import annotations
+
 from homeassistant.components.vacuum import (
     ATTR_CLEANED_AREA,
     STATE_CLEANING,
@@ -22,6 +24,11 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import event
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 SUPPORT_MINIMAL_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
@@ -72,12 +79,21 @@ DEMO_VACUUM_NONE = "4_Fourth_floor"
 DEMO_VACUUM_STATE = "5_Fifth_floor"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Demo config entry."""
     await async_setup_platform(hass, {}, async_add_entities)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Demo vacuums."""
     async_add_entities(
         [
@@ -328,7 +344,7 @@ class StateDemoVacuum(StateVacuumEntity):
         self._state = STATE_RETURNING
         self.schedule_update_ha_state()
 
-        self.hass.loop.call_later(30, self.__set_state_to_dock)
+        event.call_later(self.hass, 30, self.__set_state_to_dock)
 
     def clean_spot(self, **kwargs):
         """Perform a spot clean-up."""
@@ -349,6 +365,6 @@ class StateDemoVacuum(StateVacuumEntity):
             self._fan_speed = fan_speed
             self.schedule_update_ha_state()
 
-    def __set_state_to_dock(self):
+    def __set_state_to_dock(self, _):
         self._state = STATE_DOCKED
         self.schedule_update_ha_state()

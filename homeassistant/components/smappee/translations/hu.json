@@ -6,7 +6,7 @@
             "authorize_url_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s a hiteles\u00edt\u00e9si URL gener\u00e1l\u00e1sa sor\u00e1n.",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "invalid_mdns": "Nem t\u00e1mogatott eszk\u00f6z a Smappee integr\u00e1ci\u00f3hoz.",
-            "missing_configuration": "A komponens nincs konfigur\u00e1lva. K\u00e9rlek, k\u00f6vesd a dokument\u00e1ci\u00f3t.",
+            "missing_configuration": "A komponens nincs konfigur\u00e1lva. K\u00e9rem, k\u00f6vesse a dokument\u00e1ci\u00f3t.",
             "no_url_available": "Nincs el\u00e9rhet\u0151 URL. A hib\u00e1r\u00f3l tov\u00e1bbi inform\u00e1ci\u00f3t [a s\u00fag\u00f3ban]({docs_url}) tal\u00e1lsz."
         },
         "flow_title": "{name}",
@@ -15,13 +15,13 @@
                 "data": {
                     "environment": "K\u00f6rnyezet"
                 },
-                "description": "\u00c1ll\u00edtsa be a Smappee k\u00e9sz\u00fcl\u00e9ket az HomeAssistant-al val\u00f3 integr\u00e1ci\u00f3hoz."
+                "description": "Integr\u00e1lja \u00f6ssze Smappee k\u00e9sz\u00fcl\u00e9ket HomeAssistanttal."
             },
             "local": {
                 "data": {
-                    "host": "Hoszt"
+                    "host": "C\u00edm"
                 },
-                "description": "Adja meg a gazdag\u00e9pet a Smappee helyi integr\u00e1ci\u00f3j\u00e1nak elind\u00edt\u00e1s\u00e1hoz"
+                "description": "Adja meg a c\u00edmet a Smappee helyi integr\u00e1ci\u00f3j\u00e1nak elind\u00edt\u00e1s\u00e1hoz"
             },
             "pick_implementation": {
                 "title": "V\u00e1lassz hiteles\u00edt\u00e9si m\u00f3dszert"

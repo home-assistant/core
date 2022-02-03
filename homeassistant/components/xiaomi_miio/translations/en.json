@@ -13,7 +13,8 @@
             "cloud_login_error": "Could not login to Xiaomi Miio Cloud, check the credentials.",
             "cloud_no_devices": "No devices found in this Xiaomi Miio cloud account.",
             "no_device_selected": "No device selected, please select one device.",
-            "unknown_device": "The device model is not known, not able to setup the device using config flow."
+            "unknown_device": "The device model is not known, not able to setup the device using config flow.",
+            "wrong_token": "Checksum error, wrong token"
         },
         "flow_title": "{name}",
         "step": {

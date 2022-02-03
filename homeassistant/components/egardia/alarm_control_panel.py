@@ -1,4 +1,6 @@
 """Interfaces with Egardia/Woonveilig alarm control panel."""
+from __future__ import annotations
+
 import logging
 
 import requests
@@ -15,6 +17,9 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     CONF_REPORT_SERVER_CODES,
@@ -38,7 +43,12 @@ STATES = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Egardia Alarm Control Panael platform."""
     if discovery_info is None:
         return
@@ -97,8 +107,7 @@ class EgardiaAlarm(alarm.AlarmControlPanelEntity):
 
     def handle_status_event(self, event):
         """Handle the Egardia system status event."""
-        statuscode = event.get("status")
-        if statuscode is not None:
+        if (statuscode := event.get("status")) is not None:
             status = self.lookupstatusfromcode(statuscode)
             self.parsestatus(status)
             self.schedule_update_ha_state()

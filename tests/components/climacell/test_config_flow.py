@@ -1,5 +1,4 @@
 """Test the ClimaCell config flow."""
-import logging
 from unittest.mock import patch
 
 from pyclimacell.exceptions import (
@@ -33,8 +32,6 @@ from homeassistant.core import HomeAssistant
 from .const import API_KEY, MIN_CONFIG
 
 from tests.common import MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def test_user_flow_minimum_fields(hass: HomeAssistant) -> None:

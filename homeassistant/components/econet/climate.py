@@ -1,6 +1,4 @@
 """Support for Rheem EcoNet thermostats."""
-import logging
-
 from pyeconet.equipment import EquipmentType
 from pyeconet.equipment.thermostat import ThermostatFanMode, ThermostatOperationMode
 
@@ -23,12 +21,13 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import EcoNetEntity
 from .const import DOMAIN, EQUIPMENT
-
-_LOGGER = logging.getLogger(__name__)
 
 ECONET_STATE_TO_HA = {
     ThermostatOperationMode.HEATING: HVAC_MODE_HEAT,
@@ -55,7 +54,9 @@ SUPPORT_FLAGS_THERMOSTAT = (
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up EcoNet thermostat based on a config entry."""
     equipment = hass.data[DOMAIN][EQUIPMENT][entry.entry_id]
     async_add_entities(

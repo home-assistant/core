@@ -32,7 +32,7 @@
             "start_addon": {
                 "data": {
                     "network_key": "Clau de xarxa",
-                    "usb_path": "Ruta del port USB del dispositiu"
+                    "usb_path": "Ruta del dispositiu USB"
                 },
                 "title": "Introdueix la configuraci\u00f3 del complement OpenZWave"
             }

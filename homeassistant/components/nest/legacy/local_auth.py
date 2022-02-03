@@ -1,10 +1,12 @@
 """Local Nest authentication for the legacy api."""
+# mypy: ignore-errors
+
 import asyncio
 from functools import partial
+from http import HTTPStatus
 
 from nest.nest import AUTHORIZE_URL, AuthorizationError, NestAuth
 
-from homeassistant.const import HTTP_UNAUTHORIZED
 from homeassistant.core import callback
 
 from ..config_flow import CodeInvalid, NestAuthError, register_flow_implementation
@@ -43,7 +45,7 @@ async def resolve_auth_code(hass, client_id, client_secret, code):
         await hass.async_add_executor_job(auth.login)
         return await result
     except AuthorizationError as err:
-        if err.response.status_code == HTTP_UNAUTHORIZED:
+        if err.response.status_code == HTTPStatus.UNAUTHORIZED:
             raise CodeInvalid() from err
         raise NestAuthError(
             f"Unknown error: {err} ({err.response.status_code})"

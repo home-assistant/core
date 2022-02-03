@@ -9,7 +9,7 @@
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "cannot_connect": "Impossibile connettersi",
-            "discovery_requires_supervisor": "Il rilevamento richiede il Supervisor.",
+            "discovery_requires_supervisor": "Il rilevamento richiede il supervisore.",
             "not_zwave_device": "Il dispositivo rilevato non \u00e8 un dispositivo Z-Wave."
         },
         "error": {
@@ -27,8 +27,13 @@
             "configure_addon": {
                 "data": {
                     "network_key": "Chiave di rete",
+                    "s0_legacy_key": "Chiave S0 (Obsoleta)",
+                    "s2_access_control_key": "Chiave di controllo di accesso S2",
+                    "s2_authenticated_key": "Chiave S2 autenticata",
+                    "s2_unauthenticated_key": "Chiave S2 non autenticata",
                     "usb_path": "Percorso del dispositivo USB"
                 },
+                "description": "Il componente aggiuntivo generer\u00e0 chiavi di sicurezza se questi campi vengono lasciati vuoti.",
                 "title": "Accedi alla configurazione del componente aggiuntivo Z-Wave JS"
             },
             "hassio_confirm": {
@@ -44,9 +49,9 @@
             },
             "on_supervisor": {
                 "data": {
-                    "use_addon": "Usa il componente aggiuntivo Z-Wave JS Supervisor"
+                    "use_addon": "Usa il componente aggiuntivo Z-Wave JS del supervisore"
                 },
-                "description": "Desideri utilizzare il componente aggiuntivo Z-Wave JS Supervisor?",
+                "description": "Desideri utilizzare il componente aggiuntivo Z-Wave JS del supervisore?",
                 "title": "Seleziona il metodo di connessione"
             },
             "start_addon": {
@@ -58,6 +63,15 @@
         }
     },
     "device_automation": {
+        "action_type": {
+            "clear_lock_usercode": "Cancella codice utente su {entity_name}",
+            "ping": "Dispositivo ping",
+            "refresh_value": "Aggiorna il/i valore/i per {entity_name}",
+            "reset_meter": "Azzera i contatori su {subtype}",
+            "set_config_parameter": "Imposta il valore del parametro di configurazione {subtype}",
+            "set_lock_usercode": "Imposta un codice utente su {entity_name}",
+            "set_value": "Imposta un valore Z-Wave"
+        },
         "condition_type": {
             "config_parameter": "Valore del parametro di configurazione {subtype}",
             "node_status": "Stato del nodo",
@@ -97,11 +111,16 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "emulate_hardware": "Emulare l'hardware",
+                    "emulate_hardware": "Emula l'hardware",
                     "log_level": "Livello di registro",
                     "network_key": "Chiave di rete",
+                    "s0_legacy_key": "Chiave S0 (Obsoleta)",
+                    "s2_access_control_key": "Chiave di controllo di accesso S2",
+                    "s2_authenticated_key": "Chiave S2 autenticata",
+                    "s2_unauthenticated_key": "Chiave S2 non autenticata",
                     "usb_path": "Percorso del dispositivo USB"
                 },
+                "description": "Il componente aggiuntivo generer\u00e0 chiavi di sicurezza se questi campi vengono lasciati vuoti.",
                 "title": "Entra nella configurazione del componente aggiuntivo Z-Wave JS"
             },
             "install_addon": {
@@ -114,9 +133,9 @@
             },
             "on_supervisor": {
                 "data": {
-                    "use_addon": "Usa il componente aggiuntivo Z-Wave JS di Supervisor"
+                    "use_addon": "Usa il componente aggiuntivo Z-Wave JS del supervisore"
                 },
-                "description": "Desideri utilizzare il componente aggiuntivo Z-Wave JS di Supervisor?",
+                "description": "Desideri utilizzare il componente aggiuntivo Z-Wave JS del supervisore?",
                 "title": "Seleziona il metodo di connessione"
             },
             "start_addon": {

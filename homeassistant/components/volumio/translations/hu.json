@@ -10,12 +10,12 @@
         },
         "step": {
             "discovery_confirm": {
-                "description": "Szeretn\u00e9d hozz\u00e1adni a Volumio (`{name}`)-t a Home Assistant-hoz?",
-                "title": "Felfedezett Volumio"
+                "description": "Szeretn\u00e9 hozz\u00e1adni a Volumio (`{name}`)-t a Home Assistanthoz?",
+                "title": "Volumio felfedezve"
             },
             "user": {
                 "data": {
-                    "host": "Hoszt",
+                    "host": "C\u00edm",
                     "port": "Port"
                 }
             }

@@ -3,8 +3,14 @@
         "abort": {
             "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
         },
+        "error": {
+            "invalid_discovery_topic": "Ge\u00e7ersiz ba\u015fl\u0131k ke\u015ffi"
+        },
         "step": {
             "config": {
+                "data": {
+                    "discovery_prefix": "Ba\u015fl\u0131k Ke\u015ffet"
+                },
                 "description": "L\u00fctfen Tasmota yap\u0131land\u0131rmas\u0131n\u0131 girin.",
                 "title": "Tasmota"
             },

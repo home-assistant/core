@@ -5,7 +5,10 @@
                 "data": {
                     "azimuth": "Acimut (360 grados, 0 = Norte, 90 = Este, 180 = Sur, 270 = Oeste)",
                     "declination": "Declinaci\u00f3n (0 = Horizontal, 90 = Vertical)",
-                    "modules power": "Potencia total en vatios pico de sus m\u00f3dulos solares"
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "modules power": "Potencia total en vatios pico de sus m\u00f3dulos solares",
+                    "name": "Nombre"
                 },
                 "description": "Rellene los datos de sus paneles solares. Consulte la documentaci\u00f3n si alg\u00fan campo no est\u00e1 claro."
             }

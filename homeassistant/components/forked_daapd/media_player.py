@@ -8,6 +8,7 @@ from pylibrespot_java import LibrespotJavaAPI
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -18,12 +19,13 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .const import (
@@ -62,7 +64,11 @@ WS_NOTIFY_EVENT_TYPES = ["player", "outputs", "volume", "options", "queue", "dat
 WEBSOCKET_RECONNECT_TIME = 30  # seconds
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up forked-daapd from a config entry."""
     host = config_entry.data[CONF_HOST]
     port = config_entry.data[CONF_PORT]
@@ -109,7 +115,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     ] = forked_daapd_updater
 
 
-async def update_listener(hass, entry):
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     async_dispatcher_send(
         hass, SIGNAL_CONFIG_OPTIONS_UPDATE.format(entry.entry_id), entry.options
@@ -621,8 +627,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        url = self._track_info.get("artwork_url")
-        if url:
+        if url := self._track_info.get("artwork_url"):
             url = self._api.full_url(url)
         return url
 
@@ -769,11 +774,10 @@ class ForkedDaapdUpdater:
     async def async_init(self):
         """Perform async portion of class initialization."""
         server_config = await self._api.get_request("config")
-        websocket_port = server_config.get("websocket_port")
-        if websocket_port:
+        if websocket_port := server_config.get("websocket_port"):
             self.websocket_handler = asyncio.create_task(
                 self._api.start_websocket_handler(
-                    server_config["websocket_port"],
+                    websocket_port,
                     WS_NOTIFY_EVENT_TYPES,
                     self._update,
                     WEBSOCKET_RECONNECT_TIME,
@@ -799,8 +803,7 @@ class ForkedDaapdUpdater:
         if (
             "queue" in update_types
         ):  # update queue, queue before player for async_play_media
-            queue = await self._api.get_request("queue")
-            if queue:
+            if queue := await self._api.get_request("queue"):
                 update_events["queue"] = asyncio.Event()
                 async_dispatcher_send(
                     self.hass,
@@ -810,8 +813,7 @@ class ForkedDaapdUpdater:
                 )
         # order of below don't matter
         if not {"outputs", "volume"}.isdisjoint(update_types):  # update outputs
-            outputs = await self._api.get_request("outputs")
-            if outputs:
+            if outputs := await self._api.get_request("outputs"):
                 outputs = outputs["outputs"]
                 update_events[
                     "outputs"
@@ -840,8 +842,7 @@ class ForkedDaapdUpdater:
         if not {"player", "options", "volume"}.isdisjoint(
             update_types
         ):  # update player
-            player = await self._api.get_request("player")
-            if player:
+            if player := await self._api.get_request("player"):
                 update_events["player"] = asyncio.Event()
                 if update_events.get("queue"):
                     await update_events[

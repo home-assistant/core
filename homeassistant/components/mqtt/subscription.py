@@ -1,12 +1,12 @@
 """Helper to handle a set of topics to subscribe to."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable, Coroutine
+from typing import Any
 
 import attr
 
 from homeassistant.core import HomeAssistant
-from homeassistant.loader import bind_hass
 
 from . import debug_info
 from .. import mqtt
@@ -21,11 +21,12 @@ class EntitySubscription:
     hass: HomeAssistant = attr.ib()
     topic: str = attr.ib()
     message_callback: MessageCallbackType = attr.ib()
+    subscribe_task: Coroutine | None = attr.ib()
     unsubscribe_callback: Callable[[], None] | None = attr.ib()
     qos: int = attr.ib(default=0)
     encoding: str = attr.ib(default="utf-8")
 
-    async def resubscribe_if_necessary(self, hass, other):
+    def resubscribe_if_necessary(self, hass, other):
         """Re-subscribe to the new topic if necessary."""
         if not self._should_resubscribe(other):
             self.unsubscribe_callback = other.unsubscribe_callback
@@ -45,32 +46,40 @@ class EntitySubscription:
         # Prepare debug data
         debug_info.add_subscription(self.hass, self.message_callback, self.topic)
 
-        self.unsubscribe_callback = await mqtt.async_subscribe(
+        self.subscribe_task = mqtt.async_subscribe(
             hass, self.topic, self.message_callback, self.qos, self.encoding
         )
+
+    async def subscribe(self):
+        """Subscribe to a topic."""
+        if not self.subscribe_task:
+            return
+        self.unsubscribe_callback = await self.subscribe_task
 
     def _should_resubscribe(self, other):
         """Check if we should re-subscribe to the topic using the old state."""
         if other is None:
             return True
 
-        return (self.topic, self.qos, self.encoding) != (
+        return (self.topic, self.qos, self.encoding,) != (
             other.topic,
             other.qos,
             other.encoding,
         )
 
 
-@bind_hass
-async def async_subscribe_topics(
+def async_prepare_subscribe_topics(
     hass: HomeAssistant,
     new_state: dict[str, EntitySubscription] | None,
     topics: dict[str, Any],
 ) -> dict[str, EntitySubscription]:
-    """(Re)Subscribe to a set of MQTT topics.
+    """Prepare (re)subscribe to a set of MQTT topics.
 
     State is kept in sub_state and a dictionary mapping from the subscription
     key to the subscription state.
+
+    After this function has been called, async_subscribe_topics must be called to
+    finalize any new subscriptions.
 
     Please note that the sub state must not be shared between multiple
     sets of topics. Every call to async_subscribe_topics must always
@@ -87,10 +96,11 @@ async def async_subscribe_topics(
             qos=value.get("qos", DEFAULT_QOS),
             encoding=value.get("encoding", "utf-8"),
             hass=hass,
+            subscribe_task=None,
         )
         # Get the current subscription state
         current = current_subscriptions.pop(key, None)
-        await requested.resubscribe_if_necessary(hass, current)
+        requested.resubscribe_if_necessary(hass, current)
         new_state[key] = requested
 
     # Go through all remaining subscriptions and unsubscribe them
@@ -105,9 +115,19 @@ async def async_subscribe_topics(
     return new_state
 
 
-@bind_hass
-async def async_unsubscribe_topics(
+async def async_subscribe_topics(
+    hass: HomeAssistant,
+    sub_state: dict[str, EntitySubscription] | None,
+) -> None:
+    """(Re)Subscribe to a set of MQTT topics."""
+    if sub_state is None:
+        return
+    for sub in sub_state.values():
+        await sub.subscribe()
+
+
+def async_unsubscribe_topics(
     hass: HomeAssistant, sub_state: dict[str, EntitySubscription] | None
 ) -> dict[str, EntitySubscription]:
     """Unsubscribe from all MQTT topics managed by async_subscribe_topics."""
-    return await async_subscribe_topics(hass, sub_state, {})
+    return async_prepare_subscribe_topics(hass, sub_state, {})

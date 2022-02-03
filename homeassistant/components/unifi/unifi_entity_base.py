@@ -1,11 +1,11 @@
-"""Base class for UniFi entities."""
+"""Base class for UniFi Network entities."""
 import logging
 from typing import Any
 
 from homeassistant.core import callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_registry import async_entries_for_device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ class UniFiBase(Entity):
     TYPE = ""
 
     def __init__(self, item, controller) -> None:
-        """Set up UniFi entity base.
+        """Set up UniFi Network entity base.
 
         Register mac to controller entities to cover disabled entities.
         """
@@ -78,42 +78,14 @@ class UniFiBase(Entity):
         raise NotImplementedError
 
     async def remove_item(self, keys: set) -> None:
-        """Remove entity if key is part of set.
-
-        Remove entity if no entry in entity registry exist.
-        Remove entity registry entry if no entry in device registry exist.
-        Remove device registry entry if there is only one linked entity (this entity).
-        Remove entity registry entry if there are more than one entity linked to the device registry entry.
-        """
+        """Remove entity if key is part of set."""
         if self.key not in keys:
             return
 
-        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
-        entity_entry = entity_registry.async_get(self.entity_id)
-        if not entity_entry:
+        if self.registry_entry:
+            er.async_get(self.hass).async_remove(self.entity_id)
+        else:
             await self.async_remove(force_remove=True)
-            return
-
-        device_registry = await self.hass.helpers.device_registry.async_get_registry()
-        device_entry = device_registry.async_get(entity_entry.device_id)
-        if not device_entry:
-            entity_registry.async_remove(self.entity_id)
-            return
-
-        if (
-            len(
-                async_entries_for_device(
-                    entity_registry,
-                    entity_entry.device_id,
-                    include_disabled_entities=True,
-                )
-            )
-            == 1
-        ):
-            device_registry.async_remove_device(device_entry.id)
-            return
-
-        entity_registry.async_remove(self.entity_id)
 
     @property
     def should_poll(self) -> bool:

@@ -1,0 +1,22 @@
+{
+    "config": {
+        "step": {
+            "site": {
+                "data": {
+                    "site_name": "Site Name",
+                    "site_nmi": "Site NMI"
+                },
+                "description": "Select the NMI of the site you would like to add",
+                "title": "Amber Electric"
+            },
+            "user": {
+                "data": {
+                    "api_token": "API Token",
+                    "site_id": "Site ID"
+                },
+                "description": "Go to {api_url} to generate an API key",
+                "title": "Amber Electric"
+            }
+        }
+    }
+}

@@ -1,6 +1,5 @@
 """The test for the data filter sensor platform."""
 from datetime import timedelta
-from os import path
 from unittest.mock import patch
 
 from pytest import fixture
@@ -15,13 +14,26 @@ from homeassistant.components.filter.sensor import (
     TimeSMAFilter,
     TimeThrottleFilter,
 )
-from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE
-from homeassistant.const import SERVICE_RELOAD, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    SERVICE_RELOAD,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import assert_setup_component, async_init_recorder_component
+from tests.common import (
+    assert_setup_component,
+    async_init_recorder_component,
+    get_fixture_path,
+)
 
 
 @fixture
@@ -175,11 +187,7 @@ async def test_source_state_none(hass, values):
     assert state.state == "0.0"
 
     # Force Template Reload
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "template/sensor_configuration.yaml",
-    )
+    yaml_path = get_fixture_path("sensor_configuration.yaml", "template")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             "template",
@@ -264,12 +272,17 @@ async def test_setup(hass):
         hass.states.async_set(
             "sensor.test_monitored",
             1,
-            {"icon": "mdi:test", "device_class": DEVICE_CLASS_TEMPERATURE},
+            {
+                "icon": "mdi:test",
+                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+                ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+            },
         )
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test")
         assert state.attributes["icon"] == "mdi:test"
-        assert state.attributes["device_class"] == DEVICE_CLASS_TEMPERATURE
+        assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
+        assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
         assert state.state == "1.0"
 
 
@@ -464,11 +477,8 @@ async def test_reload(hass):
 
     assert hass.states.get("sensor.test")
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "filter/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "filter")
+
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
@@ -482,7 +492,3 @@ async def test_reload(hass):
 
     assert hass.states.get("sensor.test") is None
     assert hass.states.get("sensor.filtered_realistic_humidity")
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))

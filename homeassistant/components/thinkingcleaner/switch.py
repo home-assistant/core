@@ -14,7 +14,10 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.const import CONF_HOST, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
@@ -40,10 +43,14 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Optional(CONF_HOST): cv.string})
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ThinkingCleaner platform."""
-    host = config.get(CONF_HOST)
-    if host:
+    if host := config.get(CONF_HOST):
         devices = [ThinkingCleaner(host, "unknown")]
     else:
         discovery = Discovery()
@@ -80,7 +87,7 @@ class ThinkingCleanerSwitch(SwitchEntity):
         self.last_lock_time = None
         self.graceful_state = False
 
-        self._attr_name = f"{tc_object} {description.name}"
+        self._attr_name = f"{tc_object.name} {description.name}"
 
     def lock_update(self):
         """Lock the update since TC clean takes some time to update."""

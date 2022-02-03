@@ -14,7 +14,7 @@ from homeassistant.setup import async_setup_component
 from tests.components.logbook.test_init import MockLazyEventPartialState
 
 
-async def test_humanify_homekit_changed_event(hass, hk_driver):
+async def test_humanify_homekit_changed_event(hass, hk_driver, mock_get_source_ip):
     """Test humanifying HomeKit changed event."""
     hass.config.components.add("recorder")
     with patch("homeassistant.components.homekit.HomeKit"):

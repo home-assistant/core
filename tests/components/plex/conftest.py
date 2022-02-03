@@ -78,16 +78,52 @@ def library_movies_all_fixture():
     return load_fixture("plex/library_movies_all.xml")
 
 
+@pytest.fixture(name="library_movies_metadata", scope="session")
+def library_movies_metadata_fixture():
+    """Load payload for metadata in the movies library and return it."""
+    return load_fixture("plex/library_movies_metadata.xml")
+
+
+@pytest.fixture(name="library_movies_collections", scope="session")
+def library_movies_collections_fixture():
+    """Load payload for collections in the movies library and return it."""
+    return load_fixture("plex/library_movies_collections.xml")
+
+
 @pytest.fixture(name="library_tvshows_all", scope="session")
 def library_tvshows_all_fixture():
     """Load payload for all items in the tvshows library and return it."""
     return load_fixture("plex/library_tvshows_all.xml")
 
 
+@pytest.fixture(name="library_tvshows_metadata", scope="session")
+def library_tvshows_metadata_fixture():
+    """Load payload for metadata in the TV shows library and return it."""
+    return load_fixture("plex/library_tvshows_metadata.xml")
+
+
+@pytest.fixture(name="library_tvshows_collections", scope="session")
+def library_tvshows_collections_fixture():
+    """Load payload for collections in the TV shows library and return it."""
+    return load_fixture("plex/library_tvshows_collections.xml")
+
+
 @pytest.fixture(name="library_music_all", scope="session")
 def library_music_all_fixture():
     """Load payload for all items in the music library and return it."""
     return load_fixture("plex/library_music_all.xml")
+
+
+@pytest.fixture(name="library_music_metadata", scope="session")
+def library_music_metadata_fixture():
+    """Load payload for metadata in the music library and return it."""
+    return load_fixture("plex/library_music_metadata.xml")
+
+
+@pytest.fixture(name="library_music_collections", scope="session")
+def library_music_collections_fixture():
+    """Load payload for collections in the music library and return it."""
+    return load_fixture("plex/library_music_collections.xml")
 
 
 @pytest.fixture(name="library_movies_sort", scope="session")
@@ -118,6 +154,18 @@ def library_movies_filtertypes_fixture():
 def library_fixture():
     """Load library payload and return it."""
     return load_fixture("plex/library.xml")
+
+
+@pytest.fixture(name="library_movies_size", scope="session")
+def library_movies_size_fixture():
+    """Load movie library size payload and return it."""
+    return load_fixture("plex/library_movies_size.xml")
+
+
+@pytest.fixture(name="library_music_size", scope="session")
+def library_music_size_fixture():
+    """Load music library size payload and return it."""
+    return load_fixture("plex/library_music_size.xml")
 
 
 @pytest.fixture(name="library_tvshows_size", scope="session")
@@ -230,20 +278,20 @@ def plextv_account_fixture():
     return load_fixture("plex/plextv_account.xml")
 
 
-@pytest.fixture(name="plextv_resources_base", scope="session")
-def plextv_resources_base_fixture():
-    """Load base payload for plex.tv resources and return it."""
-    return load_fixture("plex/plextv_resources_base.xml")
-
-
 @pytest.fixture(name="plextv_resources", scope="session")
-def plextv_resources_fixture(plextv_resources_base):
-    """Load default payload for plex.tv resources and return it."""
-    return plextv_resources_base.format(first_server_enabled=1, second_server_enabled=0)
+def plextv_resources_fixture():
+    """Load single-server payload for plex.tv resources and return it."""
+    return load_fixture("plex/plextv_resources_one_server.xml")
+
+
+@pytest.fixture(name="plextv_resources_two_servers", scope="session")
+def plextv_resources_two_servers_fixture():
+    """Load two-server payload for plex.tv resources and return it."""
+    return load_fixture("plex/plextv_resources_two_servers.xml")
 
 
 @pytest.fixture(name="plextv_shared_users", scope="session")
-def plextv_shared_users_fixture(plextv_resources_base):
+def plextv_shared_users_fixture():
     """Load payload for plex.tv shared users and return it."""
     return load_fixture("plex/plextv_shared_users.xml")
 
@@ -320,6 +368,18 @@ def sonos_resources_fixture():
     return load_fixture("plex/sonos_resources.xml")
 
 
+@pytest.fixture(name="hubs", scope="session")
+def hubs_fixture():
+    """Load hubs resource payload and return it."""
+    return load_fixture("plex/hubs.xml")
+
+
+@pytest.fixture(name="hubs_music_library", scope="session")
+def hubs_music_library_fixture():
+    """Load music library hubs resource payload and return it."""
+    return load_fixture("plex/hubs_library_section.xml")
+
+
 @pytest.fixture(name="entry")
 def mock_config_entry():
     """Return the default mocked config entry."""
@@ -352,10 +412,16 @@ def mock_plex_calls(
     library,
     library_sections,
     library_movies_all,
+    library_movies_collections,
+    library_movies_metadata,
     library_movies_sort,
     library_music_all,
+    library_music_collections,
+    library_music_metadata,
     library_music_sort,
     library_tvshows_all,
+    library_tvshows_collections,
+    library_tvshows_metadata,
     library_tvshows_sort,
     media_1,
     media_30,
@@ -395,6 +461,32 @@ def mock_plex_calls(
     requests_mock.get(f"{url}/library/sections/1/all", text=library_movies_all)
     requests_mock.get(f"{url}/library/sections/2/all", text=library_tvshows_all)
     requests_mock.get(f"{url}/library/sections/3/all", text=library_music_all)
+
+    requests_mock.get(
+        f"{url}/library/sections/1/all?includeMeta=1&includeAdvanced=1&X-Plex-Container-Start=0&X-Plex-Container-Size=0",
+        text=library_movies_metadata,
+    )
+    requests_mock.get(
+        f"{url}/library/sections/2/all?includeMeta=1&includeAdvanced=1&X-Plex-Container-Start=0&X-Plex-Container-Size=0",
+        text=library_tvshows_metadata,
+    )
+    requests_mock.get(
+        f"{url}/library/sections/3/all?includeMeta=1&includeAdvanced=1&X-Plex-Container-Start=0&X-Plex-Container-Size=0",
+        text=library_music_metadata,
+    )
+
+    requests_mock.get(
+        f"{url}/library/sections/1/collections?includeMeta=1&includeAdvanced=1&X-Plex-Container-Start=0&X-Plex-Container-Size=0",
+        text=library_movies_collections,
+    )
+    requests_mock.get(
+        f"{url}/library/sections/2/collections?includeMeta=1&includeAdvanced=1&X-Plex-Container-Start=0&X-Plex-Container-Size=0",
+        text=library_tvshows_collections,
+    )
+    requests_mock.get(
+        f"{url}/library/sections/3/collections?includeMeta=1&includeAdvanced=1&X-Plex-Container-Start=0&X-Plex-Container-Size=0",
+        text=library_music_collections,
+    )
 
     requests_mock.get(f"{url}/library/metadata/200/children", text=children_200)
     requests_mock.get(f"{url}/library/metadata/300/children", text=children_300)

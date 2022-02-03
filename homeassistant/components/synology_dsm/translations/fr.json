@@ -12,7 +12,7 @@
             "otp_failed": "\u00c9chec de l'authentification en deux \u00e9tapes, r\u00e9essayez avec un nouveau code d'acc\u00e8s",
             "unknown": "Erreur inattendue"
         },
-        "flow_title": "Synology DSM {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "2sa": {
                 "data": {
@@ -37,6 +37,13 @@
                     "username": "Nom d'utilisateur"
                 },
                 "description": "Raison: {details}",
+                "title": "Synology DSM R\u00e9-authentifier l'int\u00e9gration"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                },
                 "title": "Synology DSM R\u00e9-authentifier l'int\u00e9gration"
             },
             "user": {

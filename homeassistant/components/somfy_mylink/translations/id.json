@@ -8,7 +8,7 @@
             "invalid_auth": "Autentikasi tidak valid",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
-        "flow_title": "Somfy MyLink {mac} ({ip})",
+        "flow_title": "{mac} ({ip})",
         "step": {
             "user": {
                 "data": {

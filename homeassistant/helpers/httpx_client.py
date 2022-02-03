@@ -1,15 +1,17 @@
 """Helper for httpx."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import sys
-from typing import Any, Callable
+from typing import Any
 
 import httpx
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers.frame import warn_use
 from homeassistant.loader import bind_hass
+
+from .frame import warn_use
 
 DATA_ASYNC_CLIENT = "httpx_async_client"
 DATA_ASYNC_CLIENT_NOVERIFY = "httpx_async_client_noverify"

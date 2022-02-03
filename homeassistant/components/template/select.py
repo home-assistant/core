@@ -1,7 +1,6 @@
 """Support for selects which integrates with other components."""
 from __future__ import annotations
 
-import contextlib
 import logging
 from typing import Any
 
@@ -14,15 +13,19 @@ from homeassistant.components.select.const import (
     DOMAIN as SELECT_DOMAIN,
 )
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, CONF_UNIQUE_ID
-from homeassistant.core import Config, HomeAssistant
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
-from homeassistant.helpers.template import Template, TemplateError
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
-from .const import CONF_AVAILABILITY
-from .template_entity import TemplateEntity
+from .const import DOMAIN
+from .template_entity import (
+    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
+    TEMPLATE_ENTITY_ICON_SCHEMA,
+    TemplateEntity,
+)
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,53 +35,45 @@ CONF_SELECT_OPTION = "select_option"
 DEFAULT_NAME = "Template Select"
 DEFAULT_OPTIMISTIC = False
 
-SELECT_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
-        vol.Required(CONF_STATE): cv.template,
-        vol.Required(CONF_SELECT_OPTION): cv.SCRIPT_SCHEMA,
-        vol.Required(ATTR_OPTIONS): cv.template,
-        vol.Optional(CONF_AVAILABILITY): cv.template,
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-    }
+SELECT_SCHEMA = (
+    vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
+            vol.Required(CONF_STATE): cv.template,
+            vol.Required(CONF_SELECT_OPTION): cv.SCRIPT_SCHEMA,
+            vol.Required(ATTR_OPTIONS): cv.template,
+            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+        }
+    )
+    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
+    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema)
 )
 
 
 async def _async_create_entities(
-    hass: HomeAssistant, entities: list[dict[str, Any]], unique_id_prefix: str | None
+    hass: HomeAssistant, definitions: list[dict[str, Any]], unique_id_prefix: str | None
 ) -> list[TemplateSelect]:
     """Create the Template select."""
-    for entity in entities:
-        unique_id = entity.get(CONF_UNIQUE_ID)
-
+    entities = []
+    for definition in definitions:
+        unique_id = definition.get(CONF_UNIQUE_ID)
         if unique_id and unique_id_prefix:
             unique_id = f"{unique_id_prefix}-{unique_id}"
-
-        return [
-            TemplateSelect(
-                hass,
-                entity.get(CONF_NAME, DEFAULT_NAME),
-                entity[CONF_STATE],
-                entity.get(CONF_AVAILABILITY),
-                entity[CONF_SELECT_OPTION],
-                entity[ATTR_OPTIONS],
-                entity.get(CONF_OPTIMISTIC, DEFAULT_OPTIMISTIC),
-                unique_id,
-            )
-        ]
+        entities.append(TemplateSelect(hass, definition, unique_id))
+    return entities
 
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: Config,
+    config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, Any] | None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template select."""
     if discovery_info is None:
         _LOGGER.warning(
-            "Template number entities can only be configured under template:"
+            "Template select entities can only be configured under template:"
         )
         return
 
@@ -102,29 +97,17 @@ class TemplateSelect(TemplateEntity, SelectEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        name_template: Template | None,
-        value_template: Template,
-        availability_template: Template | None,
-        command_select_option: dict[str, Any],
-        options_template: Template,
-        optimistic: bool,
+        config: dict[str, Any],
         unique_id: str | None,
     ) -> None:
         """Initialize the select."""
-        super().__init__(availability_template=availability_template)
-        self._attr_name = DEFAULT_NAME
-        name_template.hass = hass
-        with contextlib.suppress(TemplateError):
-            self._attr_name = name_template.async_render(parse_result=False)
-        self._name_template = name_template
-        self._value_template = value_template
-        domain = __name__.split(".")[-2]
+        super().__init__(hass, config=config, unique_id=unique_id)
+        self._value_template = config[CONF_STATE]
         self._command_select_option = Script(
-            hass, command_select_option, self._attr_name, domain
+            hass, config[CONF_SELECT_OPTION], self._attr_name, DOMAIN
         )
-        self._options_template = options_template
-        self._attr_assumed_state = self._optimistic = optimistic
-        self._attr_unique_id = unique_id
+        self._options_template = config[ATTR_OPTIONS]
+        self._attr_assumed_state = self._optimistic = config[CONF_OPTIMISTIC]
         self._attr_options = None
         self._attr_current_option = None
 
@@ -142,8 +125,6 @@ class TemplateSelect(TemplateEntity, SelectEntity):
             validator=vol.All(cv.ensure_list, [cv.string]),
             none_on_template_error=True,
         )
-        if self._name_template and not self._name_template.is_static:
-            self.add_template_attribute("_attr_name", self._name_template, cv.string)
         await super().async_added_to_hass()
 
     async def async_select_option(self, option: str) -> None:
@@ -171,12 +152,11 @@ class TriggerSelectEntity(TriggerEntity, SelectEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(hass, coordinator, config)
-        domain = __name__.split(".")[-2]
         self._command_select_option = Script(
             hass,
             config[CONF_SELECT_OPTION],
             self._rendered.get(CONF_NAME, DEFAULT_NAME),
-            domain,
+            DOMAIN,
         )
 
     @property

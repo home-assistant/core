@@ -88,6 +88,11 @@ def check_value_schema(value, schema):
     return True
 
 
+def compute_value_unique_id(node, value):
+    """Compute unique_id a value would get if it were to get one."""
+    return f"{node.node_id}-{value.object_id}"
+
+
 def node_name(node):
     """Return the name of the node."""
     if is_node_parsed(node):

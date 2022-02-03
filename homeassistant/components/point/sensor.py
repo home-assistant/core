@@ -6,19 +6,15 @@ import logging
 
 from homeassistant.components.sensor import (
     DOMAIN,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-    PRESSURE_HPA,
-    SOUND_PRESSURE_WEIGHTED_DBA,
-    TEMP_CELSIUS,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, SOUND_PRESSURE_WEIGHTED_DBA, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import parse_datetime
 
 from . import MinutPointEntity
@@ -47,19 +43,13 @@ SENSOR_TYPES: tuple[MinutPointSensorEntityDescription, ...] = (
     MinutPointSensorEntityDescription(
         key="temperature",
         precision=1,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
-    ),
-    MinutPointSensorEntityDescription(
-        key="pressure",
-        precision=0,
-        device_class=DEVICE_CLASS_PRESSURE,
-        native_unit_of_measurement=PRESSURE_HPA,
     ),
     MinutPointSensorEntityDescription(
         key="humidity",
         precision=1,
-        device_class=DEVICE_CLASS_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
     ),
     MinutPointSensorEntityDescription(
@@ -72,7 +62,11 @@ SENSOR_TYPES: tuple[MinutPointSensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up a Point's sensors based on a config entry."""
 
     async def async_discover_sensor(device_id):

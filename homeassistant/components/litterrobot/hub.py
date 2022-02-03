@@ -13,7 +13,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-UPDATE_INTERVAL_SECONDS = 10
+UPDATE_INTERVAL_SECONDS = 20
 
 
 class LitterRobotHub:

@@ -174,4 +174,4 @@ async def test_disabled_basic_number(hass, ge_in_wall_dimmer_switch, integration
 
     assert entity_entry
     assert entity_entry.disabled
-    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

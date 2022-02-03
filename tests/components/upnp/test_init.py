@@ -4,22 +4,21 @@ from __future__ import annotations
 import pytest
 
 from homeassistant.components import ssdp
+from homeassistant.components.upnp import UpnpDataUpdateCoordinator
 from homeassistant.components.upnp.const import (
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
     DOMAIN,
 )
-from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.components.upnp.device import Device
+from homeassistant.core import HomeAssistant
 
-from .common import TEST_DISCOVERY, TEST_ST, TEST_UDN
-from .mock_ssdp_scanner import mock_ssdp_scanner  # noqa: F401
-from .mock_upnp_device import mock_upnp_device  # noqa: F401
+from .conftest import TEST_DISCOVERY, TEST_ST, TEST_UDN
 
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_ssdp_scanner", "mock_upnp_device", "mock_get_source_ip")
+@pytest.mark.usefixtures("ssdp_instant_discovery", "mock_get_source_ip")
 async def test_async_setup_entry_default(hass: HomeAssistant):
     """Test async_setup_entry."""
     entry = MockConfigEntry(
@@ -30,16 +29,24 @@ async def test_async_setup_entry_default(hass: HomeAssistant):
         },
     )
 
-    # Initialisation of component, no device discovered.
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-
-    # Device is discovered.
-    ssdp_scanner: ssdp.Scanner = hass.data[ssdp.DOMAIN]
-    ssdp_scanner.cache[(TEST_UDN, TEST_ST)] = TEST_DISCOVERY
-    # Speed up callback in ssdp.async_register_callback.
-    hass.state = CoreState.not_running
-
     # Load config_entry.
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id) is True
+
+
+async def test_reinitialize_device(
+    hass: HomeAssistant, setup_integration: MockConfigEntry
+):
+    """Test device is reinitialized when device changes location."""
+    config_entry = setup_integration
+    coordinator: UpnpDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    device: Device = coordinator.device
+    assert device._igd_device.device.device_url == TEST_DISCOVERY.ssdp_location
+
+    # Reinit.
+    new_location = "http://192.168.1.1:12345/desc.xml"
+    headers = {
+        ssdp.ATTR_SSDP_LOCATION: new_location,
+    }
+    await device.async_ssdp_callback(headers, ...)
+    assert device._igd_device.device.device_url == new_location

@@ -19,8 +19,11 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady, TemplateError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 from . import create_influx_url, get_influx_connection, validate_version_specific_config
@@ -148,7 +151,12 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the InfluxDB component."""
     try:
         influx = get_influx_connection(config, test_read=True)
@@ -234,8 +242,7 @@ class InfluxSensor(SensorEntity):
     def update(self):
         """Get the latest data from Influxdb and updates the states."""
         self.data.update()
-        value = self.data.value
-        if value is None:
+        if (value := self.data.value) is None:
             value = STATE_UNKNOWN
         if self._value_template is not None:
             value = self._value_template.render_with_possible_json_value(

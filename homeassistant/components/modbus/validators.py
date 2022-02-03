@@ -25,64 +25,53 @@ from homeassistant.const import (
 
 from .const import (
     CONF_DATA_TYPE,
+    CONF_INPUT_TYPE,
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_NONE,
-    DATA_TYPE_CUSTOM,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_FLOAT16,
-    DATA_TYPE_FLOAT32,
-    DATA_TYPE_FLOAT64,
-    DATA_TYPE_INT,
-    DATA_TYPE_INT16,
-    DATA_TYPE_INT32,
-    DATA_TYPE_INT64,
-    DATA_TYPE_STRING,
-    DATA_TYPE_UINT,
-    DATA_TYPE_UINT16,
-    DATA_TYPE_UINT32,
-    DATA_TYPE_UINT64,
+    CONF_WRITE_TYPE,
     DEFAULT_HUB,
     DEFAULT_SCAN_INTERVAL,
     PLATFORMS,
     SERIAL,
+    DataType,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 OLD_DATA_TYPES = {
-    DATA_TYPE_INT: {
-        1: DATA_TYPE_INT16,
-        2: DATA_TYPE_INT32,
-        4: DATA_TYPE_INT64,
+    DataType.INT: {
+        1: DataType.INT16,
+        2: DataType.INT32,
+        4: DataType.INT64,
     },
-    DATA_TYPE_UINT: {
-        1: DATA_TYPE_UINT16,
-        2: DATA_TYPE_UINT32,
-        4: DATA_TYPE_UINT64,
+    DataType.UINT: {
+        1: DataType.UINT16,
+        2: DataType.UINT32,
+        4: DataType.UINT64,
     },
-    DATA_TYPE_FLOAT: {
-        1: DATA_TYPE_FLOAT16,
-        2: DATA_TYPE_FLOAT32,
-        4: DATA_TYPE_FLOAT64,
+    DataType.FLOAT: {
+        1: DataType.FLOAT16,
+        2: DataType.FLOAT32,
+        4: DataType.FLOAT64,
     },
 }
 ENTRY = namedtuple("ENTRY", ["struct_id", "register_count"])
 DEFAULT_STRUCT_FORMAT = {
-    DATA_TYPE_INT16: ENTRY("h", 1),
-    DATA_TYPE_INT32: ENTRY("i", 2),
-    DATA_TYPE_INT64: ENTRY("q", 4),
-    DATA_TYPE_UINT16: ENTRY("H", 1),
-    DATA_TYPE_UINT32: ENTRY("I", 2),
-    DATA_TYPE_UINT64: ENTRY("Q", 4),
-    DATA_TYPE_FLOAT16: ENTRY("e", 1),
-    DATA_TYPE_FLOAT32: ENTRY("f", 2),
-    DATA_TYPE_FLOAT64: ENTRY("d", 4),
-    DATA_TYPE_STRING: ENTRY("s", 1),
+    DataType.INT16: ENTRY("h", 1),
+    DataType.INT32: ENTRY("i", 2),
+    DataType.INT64: ENTRY("q", 4),
+    DataType.UINT16: ENTRY("H", 1),
+    DataType.UINT32: ENTRY("I", 2),
+    DataType.UINT64: ENTRY("Q", 4),
+    DataType.FLOAT16: ENTRY("e", 1),
+    DataType.FLOAT32: ENTRY("f", 2),
+    DataType.FLOAT64: ENTRY("d", 4),
+    DataType.STRING: ENTRY("s", 1),
 }
 
 
-def struct_validator(config):
+def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     """Sensor schema validator."""
 
     data_type = config[CONF_DATA_TYPE]
@@ -90,7 +79,7 @@ def struct_validator(config):
     name = config[CONF_NAME]
     structure = config.get(CONF_STRUCTURE)
     swap_type = config.get(CONF_SWAP)
-    if data_type in (DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT):
+    if data_type in (DataType.INT, DataType.UINT, DataType.FLOAT):
         error = f"{name}  with {data_type} is not valid, trying to convert"
         _LOGGER.warning(error)
         try:
@@ -99,7 +88,7 @@ def struct_validator(config):
         except KeyError as exp:
             error = f"{name}  cannot convert automatically {data_type}"
             raise vol.Invalid(error) from exp
-    if config[CONF_DATA_TYPE] != DATA_TYPE_CUSTOM:
+    if config[CONF_DATA_TYPE] != DataType.CUSTOM:
         if structure:
             error = f"{name}  structure: cannot be mixed with {data_type}"
             raise vol.Invalid(error)
@@ -152,13 +141,11 @@ def number_validator(value: Any) -> int | float:
         return value
 
     try:
-        value = int(value)
-        return value
+        return int(value)
     except (TypeError, ValueError):
         pass
     try:
-        value = float(value)
-        return value
+        return float(value)
     except (TypeError, ValueError) as err:
         raise vol.Invalid(f"invalid number {value}") from err
 
@@ -212,6 +199,10 @@ def duplicate_entity_validator(config: dict) -> dict:
             for index, entry in enumerate(hub[conf_key]):
                 name = entry[CONF_NAME]
                 addr = str(entry[CONF_ADDRESS])
+                if CONF_INPUT_TYPE in entry:
+                    addr += "_" + str(entry[CONF_INPUT_TYPE])
+                elif CONF_WRITE_TYPE in entry:
+                    addr += "_" + str(entry[CONF_WRITE_TYPE])
                 if CONF_COMMAND_ON in entry:
                     addr += "_" + str(entry[CONF_COMMAND_ON])
                 if CONF_COMMAND_OFF in entry:
@@ -242,7 +233,10 @@ def duplicate_modbus_validator(config: list) -> list:
     errors = []
     for index, hub in enumerate(config):
         name = hub.get(CONF_NAME, DEFAULT_HUB)
-        host = hub[CONF_PORT] if hub[CONF_TYPE] == SERIAL else hub[CONF_HOST]
+        if hub[CONF_TYPE] == SERIAL:
+            host = hub[CONF_PORT]
+        else:
+            host = f"{hub[CONF_HOST]}_{hub[CONF_PORT]}"
         if host in hosts:
             err = f"Modbus {name}  contains duplicate host/port {host}, not loaded!"
             _LOGGER.warning(err)

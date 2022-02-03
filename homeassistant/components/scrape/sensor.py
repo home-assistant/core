@@ -1,4 +1,6 @@
 """Support for getting data from websites with scraping."""
+from __future__ import annotations
+
 import logging
 
 from bs4 import BeautifulSoup
@@ -6,9 +8,16 @@ import httpx
 import voluptuous as vol
 
 from homeassistant.components.rest.data import RestData
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    DEVICE_CLASSES_SCHEMA,
+    PLATFORM_SCHEMA,
+    STATE_CLASSES_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_AUTHENTICATION,
+    CONF_DEVICE_CLASS,
     CONF_HEADERS,
     CONF_NAME,
     CONF_PASSWORD,
@@ -20,8 +29,11 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +57,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
@@ -52,7 +66,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Web scrape sensor."""
     name = config.get(CONF_NAME)
     resource = config.get(CONF_RESOURCE)
@@ -64,12 +83,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     attr = config.get(CONF_ATTR)
     index = config.get(CONF_INDEX)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
+    device_class = config.get(CONF_DEVICE_CLASS)
+    state_class = config.get(CONF_STATE_CLASS)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    value_template = config.get(CONF_VALUE_TEMPLATE)
-    if value_template is not None:
+
+    if (value_template := config.get(CONF_VALUE_TEMPLATE)) is not None:
         value_template.hass = hass
 
+    auth: httpx.DigestAuth | tuple[str, str] | None
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
             auth = httpx.DigestAuth(username, password)
@@ -84,33 +106,49 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         raise PlatformNotReady
 
     async_add_entities(
-        [ScrapeSensor(rest, name, select, attr, index, value_template, unit)], True
+        [
+            ScrapeSensor(
+                rest,
+                name,
+                select,
+                attr,
+                index,
+                value_template,
+                unit,
+                device_class,
+                state_class,
+            )
+        ],
+        True,
     )
 
 
 class ScrapeSensor(SensorEntity):
     """Representation of a web scrape sensor."""
 
-    def __init__(self, rest, name, select, attr, index, value_template, unit):
+    def __init__(
+        self,
+        rest,
+        name,
+        select,
+        attr,
+        index,
+        value_template,
+        unit,
+        device_class,
+        state_class,
+    ):
         """Initialize a web scrape sensor."""
         self.rest = rest
-        self._name = name
         self._state = None
         self._select = select
         self._attr = attr
         self._index = index
         self._value_template = value_template
-        self._unit_of_measurement = unit
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
+        self._attr_name = name
+        self._attr_native_unit_of_measurement = unit
+        self._attr_device_class = device_class
+        self._attr_state_class = state_class
 
     @property
     def native_value(self):
@@ -122,14 +160,23 @@ class ScrapeSensor(SensorEntity):
         raw_data = BeautifulSoup(self.rest.data, "html.parser")
         _LOGGER.debug(raw_data)
 
-        if self._attr is not None:
-            value = raw_data.select(self._select)[self._index][self._attr]
-        else:
-            tag = raw_data.select(self._select)[self._index]
-            if tag.name in ("style", "script", "template"):
-                value = tag.string
+        try:
+            if self._attr is not None:
+                value = raw_data.select(self._select)[self._index][self._attr]
             else:
-                value = tag.text
+                tag = raw_data.select(self._select)[self._index]
+                if tag.name in ("style", "script", "template"):
+                    value = tag.string
+                else:
+                    value = tag.text
+        except IndexError:
+            _LOGGER.warning("Index '%s' not found in %s", self._attr, self.entity_id)
+            value = None
+        except KeyError:
+            _LOGGER.warning(
+                "Attribute '%s' not found in %s", self._attr, self.entity_id
+            )
+            value = None
         _LOGGER.debug(value)
         return value
 

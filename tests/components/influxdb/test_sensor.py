@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
@@ -416,14 +417,14 @@ async def test_state_for_no_results(
             BASE_V2_CONFIG,
             BASE_V2_QUERY,
             _set_query_mock_v2,
-            ApiException(),
+            ApiException(http_resp=MagicMock()),
         ),
         (
             API_VERSION_2,
             BASE_V2_CONFIG,
             BASE_V2_QUERY,
             _set_query_mock_v2,
-            ApiException(status=400),
+            ApiException(status=HTTPStatus.BAD_REQUEST, http_resp=MagicMock()),
         ),
     ],
     indirect=["mock_client"],
@@ -533,7 +534,7 @@ async def test_error_rendering_template(
             BASE_V2_CONFIG,
             BASE_V2_QUERY,
             _set_query_mock_v2,
-            ApiException(),
+            ApiException(http_resp=MagicMock()),
             _make_v2_resultset,
         ),
     ],

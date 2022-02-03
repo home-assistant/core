@@ -3,7 +3,7 @@
   "name": "Elexa Guardian",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/guardian",
-  "requirements": ["aioguardian==1.0.8"],
+  "requirements": ["aioguardian==2021.11.0"],
   "zeroconf": ["_api._udp.local."],
   "codeowners": ["@bachya"],
   "iot_class": "local_polling",
@@ -13,8 +13,13 @@
         "macaddress": "30AEA4*"
       },
       {
+        "hostname": "gvc*",
+        "macaddress": "B4E62D*"
+      },
+      {
         "hostname": "guardian*",
         "macaddress": "30AEA4*"
       }
-  ]
+  ],
+  "loggers": ["aioguardian"]
 }

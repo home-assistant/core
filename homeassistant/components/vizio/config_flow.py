@@ -11,6 +11,7 @@ from pyvizio.const import APP_HOME
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.components.media_player import DEVICE_CLASS_SPEAKER, DEVICE_CLASS_TV
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
@@ -26,14 +27,11 @@ from homeassistant.const import (
     CONF_INCLUDE,
     CONF_NAME,
     CONF_PIN,
-    CONF_PORT,
-    CONF_TYPE,
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.util.network import is_ip_address
 
 from .const import (
@@ -338,28 +336,25 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_user(user_input=import_config)
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType | None = None
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
+        host = discovery_info.host
         # If host already has port, no need to add it again
-        if ":" not in discovery_info[CONF_HOST]:
-            discovery_info[
-                CONF_HOST
-            ] = f"{discovery_info[CONF_HOST]}:{discovery_info[CONF_PORT]}"
+        if ":" not in host:
+            host = f"{host}:{discovery_info.port}"
 
         # Set default name to discovered device name by stripping zeroconf service
         # (`type`) from `name`
-        num_chars_to_strip = len(discovery_info[CONF_TYPE]) + 1
-        discovery_info[CONF_NAME] = discovery_info[CONF_NAME][:-num_chars_to_strip]
+        num_chars_to_strip = len(discovery_info.type) + 1
+        name = discovery_info.name[:-num_chars_to_strip]
 
-        discovery_info[CONF_DEVICE_CLASS] = await async_guess_device_type(
-            discovery_info[CONF_HOST]
-        )
+        device_class = await async_guess_device_type(host)
 
         # Set unique ID early for discovery flow so we can abort if needed
         unique_id = await VizioAsync.get_unique_id(
-            discovery_info[CONF_HOST],
-            discovery_info[CONF_DEVICE_CLASS],
+            host,
+            device_class,
             session=async_get_clientsession(self.hass, False),
         )
 
@@ -372,7 +367,13 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Form must be shown after discovery so user can confirm/update configuration
         # before ConfigEntry creation.
         self._must_show_form = True
-        return await self.async_step_user(user_input=discovery_info)
+        return await self.async_step_user(
+            user_input={
+                CONF_HOST: host,
+                CONF_NAME: name,
+                CONF_DEVICE_CLASS: device_class,
+            }
+        )
 
     async def async_step_pair_tv(self, user_input: dict[str, Any] = None) -> FlowResult:
         """

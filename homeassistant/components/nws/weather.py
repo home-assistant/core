@@ -10,6 +10,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_WIND_SPEED,
     WeatherEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -19,17 +20,21 @@ from homeassistant.const import (
     PRESSURE_HPA,
     PRESSURE_INHG,
     PRESSURE_PA,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.dt import utcnow
 from homeassistant.util.pressure import convert as convert_pressure
+from homeassistant.util.speed import convert as convert_speed
 from homeassistant.util.temperature import convert as convert_temperature
 
-from . import base_unique_id
+from . import base_unique_id, device_info
 from .const import (
     ATTR_FORECAST_DAYTIME,
     ATTR_FORECAST_DETAILED_DESCRIPTION,
@@ -78,7 +83,7 @@ def convert_condition(time, weather):
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigType, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the NWS weather platform."""
     hass_data = hass.data[DOMAIN][entry.entry_id]
@@ -195,7 +200,9 @@ class NWSWeather(WeatherEntity):
         if self.is_metric:
             wind = wind_km_hr
         else:
-            wind = convert_distance(wind_km_hr, LENGTH_KILOMETERS, LENGTH_MILES)
+            wind = convert_speed(
+                wind_km_hr, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR
+            )
         return round(wind)
 
     @property
@@ -270,7 +277,9 @@ class NWSWeather(WeatherEntity):
             if wind_speed is not None:
                 if self.is_metric:
                     data[ATTR_FORECAST_WIND_SPEED] = round(
-                        convert_distance(wind_speed, LENGTH_MILES, LENGTH_KILOMETERS)
+                        convert_speed(
+                            wind_speed, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR
+                        )
                     )
                 else:
                     data[ATTR_FORECAST_WIND_SPEED] = round(wind_speed)
@@ -317,3 +326,8 @@ class NWSWeather(WeatherEntity):
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self.mode == DAYNIGHT
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return device_info(self.latitude, self.longitude)

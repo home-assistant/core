@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "Gagal terhubung"
         },
-        "flow_title": "Sony Songpal {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "init": {
                 "description": "Ingin menyiapkan {name} ({host})?"

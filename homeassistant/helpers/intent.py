@@ -1,21 +1,22 @@
 """Module to coordinate user intentions."""
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 import logging
 import re
-from typing import Any, Callable, Dict
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
 from homeassistant.core import Context, HomeAssistant, State, T, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
 from homeassistant.loader import bind_hass
 
+from . import config_validation as cv
+
 _LOGGER = logging.getLogger(__name__)
-_SlotsType = Dict[str, Any]
+_SlotsType = dict[str, Any]
 
 INTENT_TURN_OFF = "HassTurnOff"
 INTENT_TURN_ON = "HassTurnOn"
@@ -33,8 +34,7 @@ SPEECH_TYPE_SSML = "ssml"
 @bind_hass
 def async_register(hass: HomeAssistant, handler: IntentHandler) -> None:
     """Register an intent with Home Assistant."""
-    intents = hass.data.get(DATA_KEY)
-    if intents is None:
+    if (intents := hass.data.get(DATA_KEY)) is None:
         intents = hass.data[DATA_KEY] = {}
 
     assert handler.intent_type is not None, "intent_type cannot be None"
@@ -169,8 +169,7 @@ def _fuzzymatch(name: str, items: Iterable[T], key: Callable[[T], str]) -> T | N
     pattern = ".*?".join(name)
     regex = re.compile(pattern, re.IGNORECASE)
     for idx, item in enumerate(items):
-        match = regex.search(key(item))
-        if match:
+        if match := regex.search(key(item)):
             # Add key length so we prefer shorter keys with the same group and start.
             # Add index so we pick first match in case same group, start, and key length.
             matches.append(
@@ -250,6 +249,7 @@ class IntentResponse:
         """Initialize an IntentResponse."""
         self.intent = intent
         self.speech: dict[str, dict[str, Any]] = {}
+        self.reprompt: dict[str, dict[str, Any]] = {}
         self.card: dict[str, dict[str, str]] = {}
 
     @callback
@@ -260,13 +260,24 @@ class IntentResponse:
         self.speech[speech_type] = {"speech": speech, "extra_data": extra_data}
 
     @callback
+    def async_set_reprompt(
+        self, speech: str, speech_type: str = "plain", extra_data: Any | None = None
+    ) -> None:
+        """Set reprompt response."""
+        self.reprompt[speech_type] = {"reprompt": speech, "extra_data": extra_data}
+
+    @callback
     def async_set_card(
         self, title: str, content: str, card_type: str = "simple"
     ) -> None:
-        """Set speech response."""
+        """Set card response."""
         self.card[card_type] = {"title": title, "content": content}
 
     @callback
     def as_dict(self) -> dict[str, dict[str, dict[str, Any]]]:
         """Return a dictionary representation of an intent response."""
-        return {"speech": self.speech, "card": self.card}
+        return (
+            {"speech": self.speech, "reprompt": self.reprompt, "card": self.card}
+            if self.reprompt
+            else {"speech": self.speech, "card": self.card}
+        )

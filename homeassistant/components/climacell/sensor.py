@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-import logging
 
 from pyclimacell.const import CURRENT
 
@@ -21,8 +20,6 @@ from .const import (
     ClimaCellSensorEntityDescription,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -31,9 +28,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    api_version = config_entry.data[CONF_API_VERSION]
+    api_class: type[BaseClimaCellSensorEntity]
+    sensor_types: tuple[ClimaCellSensorEntityDescription, ...]
 
-    if api_version == 3:
+    if (api_version := config_entry.data[CONF_API_VERSION]) == 3:
         api_class = ClimaCellV3SensorEntity
         sensor_types = CC_V3_SENSOR_TYPES
     else:
@@ -85,6 +83,7 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
         state = self._state
         if (
             state is not None
+            and not isinstance(state, str)
             and self.entity_description.unit_imperial is not None
             and self.entity_description.metric_conversion != 1.0
             and self.entity_description.is_metric_check is not None
@@ -99,7 +98,8 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
             return round(state * conversion, 4)
 
         if self.entity_description.value_map is not None and state is not None:
-            return self.entity_description.value_map(state).name.lower()
+            # mypy bug: "Literal[IntEnum.value]" not callable
+            return self.entity_description.value_map(state).name.lower()  # type: ignore[misc]
 
         return state
 

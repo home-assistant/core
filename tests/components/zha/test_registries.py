@@ -314,3 +314,59 @@ def test_weighted_match(channel, entity_registry, manufacturer, model, match_nam
 
     assert match.__name__ == match_name
     assert claimed == [ch_on_off]
+
+
+def test_multi_sensor_match(channel, entity_registry):
+    """Test multi-entity match."""
+
+    s = mock.sentinel
+
+    @entity_registry.multipass_match(
+        s.binary_sensor,
+        channel_names="smartenergy_metering",
+    )
+    class SmartEnergySensor2:
+        pass
+
+    ch_se = channel("smartenergy_metering", 0x0702)
+    ch_illuminati = channel("illuminance", 0x0401)
+
+    match, claimed = entity_registry.get_multi_entity(
+        "manufacturer", "model", channels=[ch_se, ch_illuminati]
+    )
+
+    assert s.binary_sensor in match
+    assert s.component not in match
+    assert set(claimed) == {ch_se}
+    assert {cls.entity_class.__name__ for cls in match[s.binary_sensor]} == {
+        SmartEnergySensor2.__name__
+    }
+
+    @entity_registry.multipass_match(
+        s.component, channel_names="smartenergy_metering", aux_channels="illuminance"
+    )
+    class SmartEnergySensor1:
+        pass
+
+    @entity_registry.multipass_match(
+        s.binary_sensor,
+        channel_names="smartenergy_metering",
+        aux_channels="illuminance",
+    )
+    class SmartEnergySensor3:
+        pass
+
+    match, claimed = entity_registry.get_multi_entity(
+        "manufacturer", "model", channels={ch_se, ch_illuminati}
+    )
+
+    assert s.binary_sensor in match
+    assert s.component in match
+    assert set(claimed) == {ch_se, ch_illuminati}
+    assert {cls.entity_class.__name__ for cls in match[s.binary_sensor]} == {
+        SmartEnergySensor2.__name__,
+        SmartEnergySensor3.__name__,
+    }
+    assert {cls.entity_class.__name__ for cls in match[s.component]} == {
+        SmartEnergySensor1.__name__
+    }

@@ -1,0 +1,34 @@
+{
+  "host": "myhome",
+  "ip_address": "192.168.2.42",
+  "port": 4114,
+  "username": "lcn",
+  "password": "lcn",
+  "sk_num_tries": 0,
+  "dim_mode": "STEPS200",
+  "devices": [],
+  "entities": [
+    {
+      "address": [0, 7, false],
+      "name": "Light_Relay3",
+      "resource": "relay3",
+      "domain": "light",
+      "domain_data": {
+        "output": "RELAY3",
+        "dimmable": false,
+        "transition": 0.0
+      }
+    },
+    {
+      "address": [0, 7, false],
+      "name": "Light_Relay4",
+      "resource": "relay4",
+      "domain": "light",
+      "domain_data": {
+        "output": "RELAY4",
+        "dimmable": false,
+        "transition": 0.0
+      }
+    }
+  ]
+}

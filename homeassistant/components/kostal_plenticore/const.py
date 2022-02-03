@@ -1,17 +1,17 @@
 """Constants for the Kostal Plenticore Solar Inverter integration."""
+from typing import NamedTuple
 
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
@@ -43,9 +43,9 @@ SENSOR_PROCESS_DATA = [
         "Solar Power",
         {
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_ENABLED_DEFAULT: True,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -55,9 +55,9 @@ SENSOR_PROCESS_DATA = [
         "Grid Power",
         {
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_ENABLED_DEFAULT: True,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -65,7 +65,10 @@ SENSOR_PROCESS_DATA = [
         "devices:local",
         "HomeBat_P",
         "Home Power from Battery",
-        {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
+        },
         "format_round",
     ),
     (
@@ -74,8 +77,8 @@ SENSOR_PROCESS_DATA = [
         "Home Power from Grid",
         {
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -85,8 +88,8 @@ SENSOR_PROCESS_DATA = [
         "Home Power from Own",
         {
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -96,8 +99,8 @@ SENSOR_PROCESS_DATA = [
         "Home Power from PV",
         {
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -107,8 +110,8 @@ SENSOR_PROCESS_DATA = [
         "Home Power",
         {
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -118,9 +121,9 @@ SENSOR_PROCESS_DATA = [
         "AC Power",
         {
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_ENABLED_DEFAULT: True,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -130,10 +133,32 @@ SENSOR_PROCESS_DATA = [
         "DC1 Power",
         {
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
+    ),
+    (
+        "devices:local:pv1",
+        "U",
+        "DC1 Voltage",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+        },
+        "format_round",
+    ),
+    (
+        "devices:local:pv1",
+        "I",
+        "DC1 Current",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.CURRENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+        },
+        "format_float",
     ),
     (
         "devices:local:pv2",
@@ -141,10 +166,32 @@ SENSOR_PROCESS_DATA = [
         "DC2 Power",
         {
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
+    ),
+    (
+        "devices:local:pv2",
+        "U",
+        "DC2 Voltage",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+        },
+        "format_round",
+    ),
+    (
+        "devices:local:pv2",
+        "I",
+        "DC2 Current",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.CURRENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+        },
+        "format_float",
     ),
     (
         "devices:local:pv3",
@@ -152,10 +199,32 @@ SENSOR_PROCESS_DATA = [
         "DC3 Power",
         {
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
+    ),
+    (
+        "devices:local:pv3",
+        "U",
+        "DC3 Voltage",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+        },
+        "format_round",
+    ),
+    (
+        "devices:local:pv3",
+        "I",
+        "DC3 Current",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.CURRENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+        },
+        "format_float",
     ),
     (
         "devices:local",
@@ -163,8 +232,8 @@ SENSOR_PROCESS_DATA = [
         "PV to Battery Power",
         {
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -179,7 +248,7 @@ SENSOR_PROCESS_DATA = [
         "devices:local:battery",
         "Cycles",
         "Battery Cycles",
-        {ATTR_ICON: "mdi:recycle", ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT},
+        {ATTR_ICON: "mdi:recycle", ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT},
         "format_round",
     ),
     (
@@ -188,8 +257,8 @@ SENSOR_PROCESS_DATA = [
         "Battery Power",
         {
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -197,7 +266,10 @@ SENSOR_PROCESS_DATA = [
         "devices:local:battery",
         "SoC",
         "Battery SoC",
-        {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY,
+        },
         "format_round",
     ),
     (
@@ -221,7 +293,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             ATTR_ICON: "mdi:chart-donut",
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -253,7 +325,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             ATTR_ICON: "mdi:chart-donut",
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -270,7 +342,7 @@ SENSOR_PROCESS_DATA = [
         "Home Consumption Day",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
         "format_energy",
     ),
@@ -280,7 +352,7 @@ SENSOR_PROCESS_DATA = [
         "Home Consumption Month",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
         "format_energy",
     ),
@@ -290,7 +362,7 @@ SENSOR_PROCESS_DATA = [
         "Home Consumption Year",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
         "format_energy",
     ),
@@ -300,8 +372,8 @@ SENSOR_PROCESS_DATA = [
         "Home Consumption Total",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -311,7 +383,7 @@ SENSOR_PROCESS_DATA = [
         "Home Consumption from Battery Day",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
         "format_energy",
     ),
@@ -321,7 +393,7 @@ SENSOR_PROCESS_DATA = [
         "Home Consumption from Battery Month",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
         "format_energy",
     ),
@@ -331,7 +403,7 @@ SENSOR_PROCESS_DATA = [
         "Home Consumption from Battery Year",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
         "format_energy",
     ),
@@ -341,8 +413,8 @@ SENSOR_PROCESS_DATA = [
         "Home Consumption from Battery Total",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -352,7 +424,7 @@ SENSOR_PROCESS_DATA = [
         "Home Consumption from Grid Day",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
         "format_energy",
     ),
@@ -362,7 +434,7 @@ SENSOR_PROCESS_DATA = [
         "Home Consumption from Grid Month",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
         "format_energy",
     ),
@@ -372,7 +444,7 @@ SENSOR_PROCESS_DATA = [
         "Home Consumption from Grid Year",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
         "format_energy",
     ),
@@ -382,8 +454,8 @@ SENSOR_PROCESS_DATA = [
         "Home Consumption from Grid Total",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -393,7 +465,7 @@ SENSOR_PROCESS_DATA = [
         "Home Consumption from PV Day",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
         "format_energy",
     ),
@@ -403,7 +475,7 @@ SENSOR_PROCESS_DATA = [
         "Home Consumption from PV Month",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
         "format_energy",
     ),
@@ -413,7 +485,7 @@ SENSOR_PROCESS_DATA = [
         "Home Consumption from PV Year",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
         "format_energy",
     ),
@@ -423,8 +495,8 @@ SENSOR_PROCESS_DATA = [
         "Home Consumption from PV Total",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -434,7 +506,7 @@ SENSOR_PROCESS_DATA = [
         "Energy PV1 Day",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
         "format_energy",
     ),
@@ -444,7 +516,7 @@ SENSOR_PROCESS_DATA = [
         "Energy PV1 Month",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
         "format_energy",
     ),
@@ -454,7 +526,7 @@ SENSOR_PROCESS_DATA = [
         "Energy PV1 Year",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
         "format_energy",
     ),
@@ -464,8 +536,8 @@ SENSOR_PROCESS_DATA = [
         "Energy PV1 Total",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -475,7 +547,7 @@ SENSOR_PROCESS_DATA = [
         "Energy PV2 Day",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
         "format_energy",
     ),
@@ -485,7 +557,7 @@ SENSOR_PROCESS_DATA = [
         "Energy PV2 Month",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
         "format_energy",
     ),
@@ -495,7 +567,7 @@ SENSOR_PROCESS_DATA = [
         "Energy PV2 Year",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
         "format_energy",
     ),
@@ -505,8 +577,8 @@ SENSOR_PROCESS_DATA = [
         "Energy PV2 Total",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -516,7 +588,7 @@ SENSOR_PROCESS_DATA = [
         "Energy PV3 Day",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
         "format_energy",
     ),
@@ -526,7 +598,7 @@ SENSOR_PROCESS_DATA = [
         "Energy PV3 Month",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
         "format_energy",
     ),
@@ -536,7 +608,7 @@ SENSOR_PROCESS_DATA = [
         "Energy PV3 Year",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
         "format_energy",
     ),
@@ -546,8 +618,8 @@ SENSOR_PROCESS_DATA = [
         "Energy PV3 Total",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -557,7 +629,7 @@ SENSOR_PROCESS_DATA = [
         "Energy Yield Day",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
             ATTR_ENABLED_DEFAULT: True,
         },
         "format_energy",
@@ -568,7 +640,7 @@ SENSOR_PROCESS_DATA = [
         "Energy Yield Month",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
         "format_energy",
     ),
@@ -578,7 +650,7 @@ SENSOR_PROCESS_DATA = [
         "Energy Yield Year",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
         "format_energy",
     ),
@@ -588,8 +660,131 @@ SENSOR_PROCESS_DATA = [
         "Energy Yield Total",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyChargeGrid:Day",
+        "Battery Charge from Grid Day",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyChargeGrid:Month",
+        "Battery Charge from Grid Month",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyChargeGrid:Year",
+        "Battery Charge from Grid Year",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyChargeGrid:Total",
+        "Battery Charge from Grid Total",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyChargePv:Day",
+        "Battery Charge from PV Day",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyChargePv:Month",
+        "Battery Charge from PV Month",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyChargePv:Year",
+        "Battery Charge from PV Year",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyChargePv:Total",
+        "Battery Charge from PV Total",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyDischargeGrid:Day",
+        "Energy Discharge to Grid Day",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyDischargeGrid:Month",
+        "Energy Discharge to Grid Month",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyDischargeGrid:Year",
+        "Energy Discharge to Grid Year",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyDischargeGrid:Total",
+        "Energy Discharge to Grid Total",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -608,7 +803,10 @@ SENSOR_SETTINGS_DATA = [
         "devices:local",
         "Battery:MinHomeComsumption",
         "Battery min Home Consumption",
-        {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
+        },
         "format_round",
     ),
     (
@@ -618,11 +816,70 @@ SENSOR_SETTINGS_DATA = [
         {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:battery-negative"},
         "format_round",
     ),
-    (
+]
+
+
+class SwitchData(NamedTuple):
+    """Representation of a SelectData tuple."""
+
+    module_id: str
+    data_id: str
+    name: str
+    is_on: str
+    on_value: str
+    on_label: str
+    off_value: str
+    off_label: str
+
+
+# Defines all entities for switches.
+#
+# Each entry is defined with a tuple of these values:
+#  - module id (str)
+#  - process data id (str)
+#  - entity name suffix (str)
+#  - on Value (str)
+#  - on Label (str)
+#  - off Value (str)
+#  - off Label (str)
+SWITCH_SETTINGS_DATA = [
+    SwitchData(
         "devices:local",
         "Battery:Strategy",
         "Battery Strategy",
-        {},
-        "format_round",
+        "1",
+        "1",
+        "Automatic",
+        "2",
+        "Automatic economical",
     ),
+]
+
+
+class SelectData(NamedTuple):
+    """Representation of a SelectData tuple."""
+
+    module_id: str
+    data_id: str
+    name: str
+    options: list
+    is_on: str
+
+
+# Defines all entities for select widgets.
+#
+# Each entry is defined with a tuple of these values:
+#  - module id (str)
+#  - process data id (str)
+#  - entity name suffix (str)
+#  - options
+#  - entity is enabled by default (bool)
+SELECT_SETTINGS_DATA = [
+    SelectData(
+        "devices:local",
+        "battery_charge",
+        "Battery Charging / Usage mode",
+        ["None", "Battery:SmartBatteryControl:Enable", "Battery:TimeControl:Enable"],
+        "1",
+    )
 ]

@@ -5,13 +5,15 @@ import logging
 import requests
 from tesla_powerwall import (
     AccessDeniedError,
+    APIError,
     MissingAttributeError,
     Powerwall,
     PowerwallUnreachableError,
 )
 
+from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry
@@ -23,6 +25,7 @@ from .const import (
     POWERWALL_API_CHANGED,
     POWERWALL_API_CHARGE,
     POWERWALL_API_DEVICE_TYPE,
+    POWERWALL_API_GRID_SERVICES_ACTIVE,
     POWERWALL_API_GRID_STATUS,
     POWERWALL_API_METERS,
     POWERWALL_API_SERIAL_NUMBERS,
@@ -35,9 +38,9 @@ from .const import (
     UPDATE_INTERVAL,
 )
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +80,8 @@ async def _async_handle_api_changed_error(
 ):
     # The error might include some important information about what exactly changed.
     _LOGGER.error(str(error))
-    hass.components.persistent_notification.async_create(
+    persistent_notification.async_create(
+        hass,
         "It seems like your powerwall uses an unsupported version. "
         "Please update the software of your powerwall or if it is "
         "already the newest consider reporting this issue.\nSee logs for more information",
@@ -91,11 +95,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry_id = entry.entry_id
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault(entry_id, {})
     http_session = requests.Session()
+    ip_address = entry.data[CONF_IP_ADDRESS]
 
     password = entry.data.get(CONF_PASSWORD)
-    power_wall = Powerwall(entry.data[CONF_IP_ADDRESS], http_session=http_session)
+    power_wall = Powerwall(ip_address, http_session=http_session)
     try:
         powerwall_data = await hass.async_add_executor_job(
             _login_and_fetch_base_info, power_wall, password
@@ -115,13 +119,49 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await _migrate_old_unique_ids(hass, entry_id, powerwall_data)
     login_failed_count = 0
 
+    runtime_data = hass.data[DOMAIN][entry.entry_id] = {
+        POWERWALL_API_CHANGED: False,
+        POWERWALL_HTTP_SESSION: http_session,
+    }
+
+    def _recreate_powerwall_login():
+        nonlocal http_session
+        nonlocal power_wall
+        http_session.close()
+        http_session = requests.Session()
+        power_wall = Powerwall(ip_address, http_session=http_session)
+        runtime_data[POWERWALL_OBJECT] = power_wall
+        runtime_data[POWERWALL_HTTP_SESSION] = http_session
+        power_wall.login(password)
+
+    async def _async_login_and_retry_update_data():
+        """Retry the update after a failed login."""
+        nonlocal login_failed_count
+        # If the session expired, recreate, relogin, and try again
+        _LOGGER.debug("Retrying login and updating data")
+        try:
+            await hass.async_add_executor_job(_recreate_powerwall_login)
+            data = await _async_update_powerwall_data(hass, entry, power_wall)
+        except AccessDeniedError as err:
+            login_failed_count += 1
+            if login_failed_count == MAX_LOGIN_FAILURES:
+                raise ConfigEntryAuthFailed from err
+            raise UpdateFailed(
+                f"Login attempt {login_failed_count}/{MAX_LOGIN_FAILURES} failed, will retry: {err}"
+            ) from err
+        except APIError as err:
+            raise UpdateFailed(f"Updated failed due to {err}, will retry") from err
+        else:
+            login_failed_count = 0
+            return data
+
     async def async_update_data():
         """Fetch data from API endpoint."""
         # Check if we had an error before
         nonlocal login_failed_count
         _LOGGER.debug("Checking if update failed")
-        if hass.data[DOMAIN][entry.entry_id][POWERWALL_API_CHANGED]:
-            return hass.data[DOMAIN][entry.entry_id][POWERWALL_COORDINATOR].data
+        if runtime_data[POWERWALL_API_CHANGED]:
+            return runtime_data[POWERWALL_COORDINATOR].data
 
         _LOGGER.debug("Updating data")
         try:
@@ -129,18 +169,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except AccessDeniedError as err:
             if password is None:
                 raise ConfigEntryAuthFailed from err
-
-            # If the session expired, relogin, and try again
-            try:
-                await hass.async_add_executor_job(power_wall.login, "", password)
-                return await _async_update_powerwall_data(hass, entry, power_wall)
-            except AccessDeniedError as ex:
-                login_failed_count += 1
-                if login_failed_count == MAX_LOGIN_FAILURES:
-                    raise ConfigEntryAuthFailed from ex
-                raise UpdateFailed(
-                    f"Login attempt {login_failed_count}/{MAX_LOGIN_FAILURES} failed, will retry"
-                ) from ex
+            return await _async_login_and_retry_update_data()
+        except APIError as err:
+            raise UpdateFailed(f"Updated failed due to {err}, will retry") from err
         else:
             login_failed_count = 0
             return data
@@ -153,13 +184,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=timedelta(seconds=UPDATE_INTERVAL),
     )
 
-    hass.data[DOMAIN][entry.entry_id] = powerwall_data
-    hass.data[DOMAIN][entry.entry_id].update(
+    runtime_data.update(
         {
+            **powerwall_data,
             POWERWALL_OBJECT: power_wall,
             POWERWALL_COORDINATOR: coordinator,
-            POWERWALL_HTTP_SESSION: http_session,
-            POWERWALL_API_CHANGED: False,
         }
     )
 
@@ -212,11 +241,12 @@ def _fetch_powerwall_data(power_wall):
         POWERWALL_API_CHARGE: power_wall.get_charge(),
         POWERWALL_API_SITEMASTER: power_wall.get_sitemaster(),
         POWERWALL_API_METERS: power_wall.get_meters(),
+        POWERWALL_API_GRID_SERVICES_ACTIVE: power_wall.is_grid_services_active(),
         POWERWALL_API_GRID_STATUS: power_wall.get_grid_status(),
     }
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

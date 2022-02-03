@@ -144,7 +144,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         return self._api_version >= APIVersion(1, 6)
 
     @esphome_state_property
-    def is_on(self) -> bool | None:  # type: ignore[override]
+    def is_on(self) -> bool | None:
         """Return true if the light is on."""
         return self._state.state
 
@@ -248,11 +248,6 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             try_keep_current_mode = False
 
         if self._supports_color_mode and color_modes:
-            # try the color mode with the least complexity (fewest capabilities set)
-            # popcount with bin() function because it appears to be the best way: https://stackoverflow.com/a/9831671
-            color_modes.sort(key=lambda mode: bin(mode).count("1"))
-            data["color_mode"] = color_modes[0]
-        if self._supports_color_mode and color_modes:
             if (
                 try_keep_current_mode
                 and self._state is not None
@@ -286,8 +281,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
     def color_mode(self) -> str | None:
         """Return the color mode of the light."""
         if not self._supports_color_mode:
-            supported = self.supported_color_modes
-            if not supported:
+            if not (supported := self.supported_color_modes):
                 return None
             return next(iter(supported))
 

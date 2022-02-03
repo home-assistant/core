@@ -7,7 +7,7 @@ from typing import cast
 import voluptuous as vol
 
 from homeassistant.auth import EVENT_USER_REMOVED
-from homeassistant.components import websocket_api
+from homeassistant.components import persistent_notification, websocket_api
 from homeassistant.components.device_tracker import (
     ATTR_SOURCE_TYPE,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -119,7 +119,7 @@ async def async_add_user_device_tracker(
             return
 
         await coll.async_update_item(
-            person[collection.CONF_ID],
+            person[CONF_ID],
             {CONF_DEVICE_TRACKERS: device_trackers + [device_tracker_entity_id]},
         )
         break
@@ -148,7 +148,7 @@ UPDATE_FIELDS = {
 class PersonStore(Store):
     """Person storage."""
 
-    async def _async_migrate_func(self, old_version, old_data):
+    async def _async_migrate_func(self, old_major_version, old_minor_version, old_data):
         """Migrate to the new version.
 
         Migrate storage to use format of collection helper.
@@ -212,7 +212,7 @@ class PersonStorageCollection(collection.StorageCollection):
                 continue
 
             await self.async_update_item(
-                person[collection.CONF_ID],
+                person[CONF_ID],
                 {
                     CONF_DEVICE_TRACKERS: [
                         devt
@@ -226,9 +226,7 @@ class PersonStorageCollection(collection.StorageCollection):
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(data)
 
-        user_id = data.get(CONF_USER_ID)
-
-        if user_id is not None:
+        if (user_id := data.get(CONF_USER_ID)) is not None:
             await self._validate_user_id(user_id)
 
         return data
@@ -270,17 +268,18 @@ async def filter_yaml_data(hass: HomeAssistant, persons: list[dict]) -> list[dic
         if user_id is not None and await hass.auth.async_get_user(user_id) is None:
             _LOGGER.error(
                 "Invalid user_id detected for person %s",
-                person_conf[collection.CONF_ID],
+                person_conf[CONF_ID],
             )
             person_invalid_user.append(
-                f"- Person {person_conf[CONF_NAME]} (id: {person_conf[collection.CONF_ID]}) points at invalid user {user_id}"
+                f"- Person {person_conf[CONF_NAME]} (id: {person_conf[CONF_ID]}) points at invalid user {user_id}"
             )
             continue
 
         filtered.append(person_conf)
 
     if person_invalid_user:
-        hass.components.persistent_notification.async_create(
+        persistent_notification.async_create(
+            hass,
             f"""
 The following persons point at invalid users:
 
@@ -338,7 +337,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.bus.async_listen(EVENT_USER_REMOVED, _handle_user_removed)
 
-    async def async_reload_yaml(call: ServiceCall):
+    async def async_reload_yaml(call: ServiceCall) -> None:
         """Reload YAML."""
         conf = await entity_component.async_prepare_reload(skip_reset=True)
         if conf is None:
@@ -410,8 +409,7 @@ class Person(RestoreEntity):
             data[ATTR_GPS_ACCURACY] = self._gps_accuracy
         if self._source is not None:
             data[ATTR_SOURCE] = self._source
-        user_id = self._config.get(CONF_USER_ID)
-        if user_id is not None:
+        if (user_id := self._config.get(CONF_USER_ID)) is not None:
             data[ATTR_USER_ID] = user_id
         return data
 
@@ -423,8 +421,7 @@ class Person(RestoreEntity):
     async def async_added_to_hass(self):
         """Register device trackers."""
         await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if state:
+        if state := await self.async_get_last_state():
             self._parse_source_state(state)
 
         if self.hass.is_running:
@@ -448,9 +445,7 @@ class Person(RestoreEntity):
             self._unsub_track_device()
             self._unsub_track_device = None
 
-        trackers = self._config[CONF_DEVICE_TRACKERS]
-
-        if trackers:
+        if trackers := self._config[CONF_DEVICE_TRACKERS]:
             _LOGGER.debug("Subscribe to device trackers for %s", self.entity_id)
 
             self._unsub_track_device = async_track_state_change_event(

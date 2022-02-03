@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
-            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt"
+            "no_locations": "Nincs el\u00e9rhet\u0151 helyzet a felhaszn\u00e1l\u00f3 sz\u00e1m\u00e1ra, ellen\u0151rizze a TotalConnect be\u00e1ll\u00edt\u00e1sait.",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
         },
         "error": {
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
@@ -14,7 +15,7 @@
                     "location": "Elhelyezked\u00e9s",
                     "usercode": "Felhaszn\u00e1l\u00f3i k\u00f3d"
                 },
-                "description": "Adja meg ennek a felhaszn\u00e1l\u00f3nak a felhaszn\u00e1l\u00f3i k\u00f3dj\u00e1t a k\u00f6vetkez\u0151 helyen: {location_id}",
+                "description": "Adja meg ennek a felhaszn\u00e1l\u00f3i k\u00f3dj\u00e1t a k\u00f6vetkez\u0151 helyen: {location_id}",
                 "title": "Helyhaszn\u00e1lati k\u00f3dok"
             },
             "reauth_confirm": {

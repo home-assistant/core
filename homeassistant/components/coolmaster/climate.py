@@ -1,5 +1,4 @@
-"""CoolMasterNet platform to control of CoolMasteNet Climate Devices."""
-
+"""CoolMasterNet platform to control of CoolMasterNet Climate Devices."""
 import logging
 
 from homeassistant.components.climate import ClimateEntity
@@ -13,8 +12,11 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_SUPPORTED_MODES, DATA_COORDINATOR, DATA_INFO, DOMAIN
@@ -41,7 +43,11 @@ def _build_entity(coordinator, unit_id, unit, supported_modes, info):
     return CoolmasterClimate(coordinator, unit_id, unit, supported_modes, info)
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_devices: AddEntitiesCallback,
+) -> None:
     """Set up the CoolMasterNet climate platform."""
     supported_modes = config_entry.data.get(CONF_SUPPORTED_MODES)
     info = hass.data[DOMAIN][config_entry.entry_id][DATA_INFO]
@@ -73,15 +79,15 @@ class CoolmasterClimate(CoordinatorEntity, ClimateEntity):
         super()._handle_coordinator_update()
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info for this device."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "CoolAutomation",
-            "model": "CoolMasterNet",
-            "sw_version": self._info["version"],
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="CoolAutomation",
+            model="CoolMasterNet",
+            name=self.name,
+            sw_version=self._info["version"],
+        )
 
     @property
     def unique_id(self):
@@ -120,8 +126,7 @@ class CoolmasterClimate(CoordinatorEntity, ClimateEntity):
     def hvac_mode(self):
         """Return hvac target hvac state."""
         mode = self._unit.mode
-        is_on = self._unit.is_on
-        if not is_on:
+        if not self._unit.is_on:
             return HVAC_MODE_OFF
 
         return CM_TO_HA_STATE[mode]
@@ -143,8 +148,7 @@ class CoolmasterClimate(CoordinatorEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperatures."""
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        if temp is not None:
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             _LOGGER.debug("Setting temp of %s to %s", self.unique_id, str(temp))
             self._unit = await self._unit.set_thermostat(temp)
             self.async_write_ha_state()

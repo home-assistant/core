@@ -3,16 +3,9 @@ from __future__ import annotations
 
 from directv import DIRECTV
 
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
-)
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import ATTR_VIA_DEVICE, DOMAIN
+from .const import DOMAIN
 
 
 class DIRECTVEntity(Entity):
@@ -28,11 +21,10 @@ class DIRECTVEntity(Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this DirecTV receiver."""
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._device_id)},
-            ATTR_NAME: self.name,
-            ATTR_MANUFACTURER: self.dtv.device.info.brand,
-            ATTR_MODEL: None,
-            ATTR_SW_VERSION: self.dtv.device.info.version,
-            ATTR_VIA_DEVICE: (DOMAIN, self.dtv.device.info.receiver_id),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer=self.dtv.device.info.brand,
+            name=self.name,
+            sw_version=self.dtv.device.info.version,
+            via_device=(DOMAIN, self.dtv.device.info.receiver_id),
+        )

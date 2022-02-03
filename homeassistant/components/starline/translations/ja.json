@@ -1,0 +1,41 @@
+{
+    "config": {
+        "error": {
+            "error_auth_app": "\u4e0d\u6b63\u306a\u30a2\u30d7\u30ea\u30b1\u30fc\u30b7\u30e7\u30f3ID\u307e\u305f\u306f\u30b7\u30fc\u30af\u30ec\u30c3\u30c8",
+            "error_auth_mfa": "\u4e0d\u9069\u5207\u306a\u30b3\u30fc\u30c9",
+            "error_auth_user": "\u30e6\u30fc\u30b6\u30fc\u30cd\u30fc\u30e0\u307e\u305f\u306f\u30d1\u30b9\u30ef\u30fc\u30c9\u304c\u9055\u3044\u307e\u3059"
+        },
+        "step": {
+            "auth_app": {
+                "data": {
+                    "app_id": "App ID",
+                    "app_secret": "\u30b7\u30fc\u30af\u30ec\u30c3\u30c8"
+                },
+                "description": "[StarLine developer account](https://my.starline.ru/developer)\u306e\u30a2\u30d7\u30ea\u30b1\u30fc\u30b7\u30e7\u30f3ID\u3068\u30b7\u30fc\u30af\u30ec\u30c3\u30c8\u30b3\u30fc\u30c9",
+                "title": "\u30a2\u30d7\u30ea\u30b1\u30fc\u30b7\u30e7\u30f3\u8a8d\u8a3c\u60c5\u5831"
+            },
+            "auth_captcha": {
+                "data": {
+                    "captcha_code": "\u753b\u50cf\u304b\u3089\u306e\u30b3\u30fc\u30c9"
+                },
+                "description": "{captcha_img}",
+                "title": "Captcha"
+            },
+            "auth_mfa": {
+                "data": {
+                    "mfa_code": "SMS\u30b3\u30fc\u30c9"
+                },
+                "description": "\u96fb\u8a71 {phone_number} \u306b\u9001\u4fe1\u3055\u308c\u305f\u30b3\u30fc\u30c9\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044",
+                "title": "2\u8981\u7d20\u8a8d\u8a3c"
+            },
+            "auth_user": {
+                "data": {
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
+                },
+                "description": "StarLine\u30a2\u30ab\u30a6\u30f3\u30c8\u306e\u30e1\u30fc\u30eb\u30a2\u30c9\u30ec\u30b9\u3068\u30d1\u30b9\u30ef\u30fc\u30c9",
+                "title": "\u30e6\u30fc\u30b6\u30fc\u306e\u8a8d\u8a3c\u60c5\u5831"
+            }
+        }
+    }
+}

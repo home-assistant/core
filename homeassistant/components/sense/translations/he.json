@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "email": "\u05d3\u05d5\u05d0\"\u05dc",
-                    "password": "\u05e1\u05d9\u05e1\u05de\u05d4"
+                    "password": "\u05e1\u05d9\u05e1\u05de\u05d4",
+                    "timeout": "\u05e4\u05e1\u05e7 \u05d6\u05de\u05df"
                 }
             }
         }

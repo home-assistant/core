@@ -1,14 +1,22 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamine nurjus",
+            "reauth_invalid": "Taastuvastamine nurjus, seerianumber ei vasta originaalile",
             "unknown": "Tundmatu t\u00f5rge"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Salas\u00f5na",

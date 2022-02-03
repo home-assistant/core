@@ -1,6 +1,10 @@
 """Support for Goal Zero Yeti Switches."""
 from __future__ import annotations
 
+from typing import Any, cast
+
+from goalzero import Yeti
+
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
@@ -8,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import Yeti, YetiEntity
+from . import YetiEntity
 from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN
 
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
@@ -65,15 +69,15 @@ class YetiSwitch(YetiEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return state of the switch."""
-        return self.api.data.get(self.entity_description.key)
+        return cast(bool, self.api.data[self.entity_description.key] == 1)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         payload = {self.entity_description.key: 0}
         await self.api.post_state(payload=payload)
         self.coordinator.async_set_updated_data(data=payload)
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         payload = {self.entity_description.key: 1}
         await self.api.post_state(payload=payload)

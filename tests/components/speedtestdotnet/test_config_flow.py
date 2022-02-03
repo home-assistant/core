@@ -2,8 +2,6 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
-from speedtest import NoMatchedServers
-
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import speedtestdotnet
 from homeassistant.components.speedtestdotnet.const import (
@@ -11,9 +9,8 @@ from homeassistant.components.speedtestdotnet.const import (
     CONF_SERVER_ID,
     CONF_SERVER_NAME,
     DOMAIN,
-    SENSOR_TYPES,
 )
-from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -31,45 +28,6 @@ async def test_flow_works(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-
-
-async def test_import_fails(hass: HomeAssistant, mock_api: MagicMock) -> None:
-    """Test import step fails if server_id is not valid."""
-
-    mock_api.return_value.get_servers.side_effect = NoMatchedServers
-    result = await hass.config_entries.flow.async_init(
-        speedtestdotnet.DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_SERVER_ID: "223",
-            CONF_MANUAL: True,
-            CONF_SCAN_INTERVAL: timedelta(minutes=1),
-            CONF_MONITORED_CONDITIONS: list(SENSOR_TYPES),
-        },
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "wrong_server_id"
-
-
-async def test_import_success(hass):
-    """Test import step is successful if server_id is valid."""
-
-    result = await hass.config_entries.flow.async_init(
-        speedtestdotnet.DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_SERVER_ID: "1",
-            CONF_MANUAL: True,
-            CONF_SCAN_INTERVAL: timedelta(minutes=1),
-            CONF_MONITORED_CONDITIONS: list(SENSOR_TYPES),
-        },
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "SpeedTest"
-    assert result["data"][CONF_SERVER_ID] == "1"
-    assert result["data"][CONF_MANUAL] is True
-    assert result["data"][CONF_SCAN_INTERVAL] == 1
 
 
 async def test_options(hass: HomeAssistant, mock_api: MagicMock) -> None:
@@ -106,6 +64,28 @@ async def test_options(hass: HomeAssistant, mock_api: MagicMock) -> None:
     await hass.async_block_till_done()
 
     assert hass.data[DOMAIN].update_interval is None
+
+    # test setting server name to "*Auto Detect"
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_SERVER_NAME: "*Auto Detect",
+            CONF_SCAN_INTERVAL: 30,
+            CONF_MANUAL: True,
+        },
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"] == {
+        CONF_SERVER_NAME: "*Auto Detect",
+        CONF_SERVER_ID: None,
+        CONF_SCAN_INTERVAL: 30,
+        CONF_MANUAL: True,
+    }
 
     # test setting the option to update periodically
     result2 = await hass.config_entries.options.async_init(entry.entry_id)

@@ -216,7 +216,6 @@ async def test_create_radio_button_group(hass, hass_ws_client, properties_data):
 
     # Make sure the baseline is correct
     assert len(rb_props) == 3
-    print(rb_props)
 
     rb_props[0]["value"].append("1")
 

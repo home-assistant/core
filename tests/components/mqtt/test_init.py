@@ -3,7 +3,7 @@ import asyncio
 from datetime import datetime, timedelta
 import json
 import ssl
-from unittest.mock import AsyncMock, MagicMock, call, mock_open, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, call, mock_open, patch
 
 import pytest
 import voluptuous as vol
@@ -12,14 +12,16 @@ from homeassistant.components import mqtt, websocket_api
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.mixins import MQTT_ENTITY_DEVICE_INFO_SCHEMA
 from homeassistant.const import (
-    ATTR_DOMAIN,
-    ATTR_SERVICE,
-    EVENT_CALL_SERVICE,
+    ATTR_ASSUMED_STATE,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr
+import homeassistant.core as ha
+from homeassistant.core import CoreState, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, template
+from homeassistant.helpers.entity import Entity
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -92,26 +94,293 @@ async def test_mqtt_disconnects_on_home_assistant_stop(hass, mqtt_mock):
     assert mqtt_mock.async_disconnect.called
 
 
-async def test_publish_calls_service(hass, mqtt_mock, calls, record_calls):
-    """Test the publishing of call to services."""
-    hass.bus.async_listen_once(EVENT_CALL_SERVICE, record_calls)
-
-    mqtt.async_publish(hass, "test-topic", "test-payload")
-
+async def test_publish(hass, mqtt_mock):
+    """Test the publish function."""
+    await mqtt.async_publish(hass, "test-topic", "test-payload")
     await hass.async_block_till_done()
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0] == (
+        "test-topic",
+        "test-payload",
+        0,
+        False,
+    )
+    mqtt_mock.reset_mock()
 
-    assert len(calls) == 1
-    assert calls[0][0].data["service_data"][mqtt.ATTR_TOPIC] == "test-topic"
-    assert calls[0][0].data["service_data"][mqtt.ATTR_PAYLOAD] == "test-payload"
+    await mqtt.async_publish(hass, "test-topic", "test-payload", 2, True)
+    await hass.async_block_till_done()
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0] == (
+        "test-topic",
+        "test-payload",
+        2,
+        True,
+    )
+    mqtt_mock.reset_mock()
+
+    mqtt.publish(hass, "test-topic2", "test-payload2")
+    await hass.async_block_till_done()
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0] == (
+        "test-topic2",
+        "test-payload2",
+        0,
+        False,
+    )
+    mqtt_mock.reset_mock()
+
+    mqtt.publish(hass, "test-topic2", "test-payload2", 2, True)
+    await hass.async_block_till_done()
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0] == (
+        "test-topic2",
+        "test-payload2",
+        2,
+        True,
+    )
+    mqtt_mock.reset_mock()
+
+    # test binary pass-through
+    mqtt.publish(
+        hass,
+        "test-topic3",
+        b"\xde\xad\xbe\xef",
+        0,
+        False,
+    )
+    await hass.async_block_till_done()
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0] == (
+        "test-topic3",
+        b"\xde\xad\xbe\xef",
+        0,
+        False,
+    )
+    mqtt_mock.reset_mock()
+
+
+async def test_convert_outgoing_payload(hass):
+    """Test the converting of outgoing MQTT payloads without template."""
+    command_template = mqtt.MqttCommandTemplate(None, hass=hass)
+    assert command_template.async_render(b"\xde\xad\xbe\xef") == b"\xde\xad\xbe\xef"
+
+    assert (
+        command_template.async_render("b'\\xde\\xad\\xbe\\xef'")
+        == "b'\\xde\\xad\\xbe\\xef'"
+    )
+
+    assert command_template.async_render(1234) == 1234
+
+    assert command_template.async_render(1234.56) == 1234.56
+
+    assert command_template.async_render(None) is None
+
+
+async def test_command_template_value(hass):
+    """Test the rendering of MQTT command template."""
+
+    variables = {"id": 1234, "some_var": "beer"}
+
+    # test rendering value
+    tpl = template.Template("{{ value + 1 }}", hass=hass)
+    cmd_tpl = mqtt.MqttCommandTemplate(tpl, hass=hass)
+    assert cmd_tpl.async_render(4321) == "4322"
+
+    # test variables at rendering
+    tpl = template.Template("{{ some_var }}", hass=hass)
+    cmd_tpl = mqtt.MqttCommandTemplate(tpl, hass=hass)
+    assert cmd_tpl.async_render(None, variables=variables) == "beer"
+
+
+async def test_command_template_variables(hass, mqtt_mock):
+    """Test the rendering of enitity_variables."""
+    topic = "test/select"
+
+    fake_state = ha.State("select.test", "milk")
+
+    with patch(
+        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
+        return_value=fake_state,
+    ):
+        assert await async_setup_component(
+            hass,
+            "select",
+            {
+                "select": {
+                    "platform": "mqtt",
+                    "command_topic": topic,
+                    "name": "Test Select",
+                    "options": ["milk", "beer"],
+                    "command_template": '{"option": "{{ value }}", "entity_id": "{{ entity_id }}", "name": "{{ name }}"}',
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("select.test_select")
+    assert state.state == "milk"
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": "select.test_select", "option": "beer"},
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        topic,
+        '{"option": "beer", "entity_id": "select.test_select", "name": "Test Select"}',
+        0,
+        False,
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("select.test_select")
+    assert state.state == "beer"
+
+
+async def test_value_template_value(hass):
+    """Test the rendering of MQTT value template."""
+
+    variables = {"id": 1234, "some_var": "beer"}
+
+    # test rendering value
+    tpl = template.Template("{{ value_json.id }}")
+    val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass)
+    assert val_tpl.async_render_with_possible_json_value('{"id": 4321}') == "4321"
+
+    # test variables at rendering
+    tpl = template.Template("{{ value_json.id }} {{ some_var }} {{ code }}")
+    val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass, config_attributes={"code": 1234})
+    assert (
+        val_tpl.async_render_with_possible_json_value(
+            '{"id": 4321}', variables=variables
+        )
+        == "4321 beer 1234"
+    )
+
+    # test with default value if an error occurs due to an invalid template
+    tpl = template.Template("{{ value_json.id | as_datetime }}")
+    val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass)
+    assert (
+        val_tpl.async_render_with_possible_json_value('{"otherid": 4321}', "my default")
+        == "my default"
+    )
+
+    # test value template with entity
+    entity = Entity()
+    entity.hass = hass
+    tpl = template.Template("{{ value_json.id }}")
+    val_tpl = mqtt.MqttValueTemplate(tpl, entity=entity)
+    assert val_tpl.async_render_with_possible_json_value('{"id": 4321}') == "4321"
 
 
 async def test_service_call_without_topic_does_not_publish(hass, mqtt_mock):
     """Test the service call if topic is missing."""
-    hass.bus.fire(
-        EVENT_CALL_SERVICE,
-        {ATTR_DOMAIN: mqtt.DOMAIN, ATTR_SERVICE: mqtt.SERVICE_PUBLISH},
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            mqtt.DOMAIN,
+            mqtt.SERVICE_PUBLISH,
+            {},
+            blocking=True,
+        )
+    assert not mqtt_mock.async_publish.called
+
+
+async def test_service_call_with_topic_and_topic_template_does_not_publish(
+    hass, mqtt_mock
+):
+    """Test the service call with topic/topic template.
+
+    If both 'topic' and 'topic_template' are provided then fail.
+    """
+    topic = "test/topic"
+    topic_template = "test/{{ 'topic' }}"
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            mqtt.DOMAIN,
+            mqtt.SERVICE_PUBLISH,
+            {
+                mqtt.ATTR_TOPIC: topic,
+                mqtt.ATTR_TOPIC_TEMPLATE: topic_template,
+                mqtt.ATTR_PAYLOAD: "payload",
+            },
+            blocking=True,
+        )
+    assert not mqtt_mock.async_publish.called
+
+
+async def test_service_call_with_invalid_topic_template_does_not_publish(
+    hass, mqtt_mock
+):
+    """Test the service call with a problematic topic template."""
+    await hass.services.async_call(
+        mqtt.DOMAIN,
+        mqtt.SERVICE_PUBLISH,
+        {
+            mqtt.ATTR_TOPIC_TEMPLATE: "test/{{ 1 | no_such_filter }}",
+            mqtt.ATTR_PAYLOAD: "payload",
+        },
+        blocking=True,
     )
-    await hass.async_block_till_done()
+    assert not mqtt_mock.async_publish.called
+
+
+async def test_service_call_with_template_topic_renders_template(hass, mqtt_mock):
+    """Test the service call with rendered topic template.
+
+    If 'topic_template' is provided and 'topic' is not, then render it.
+    """
+    await hass.services.async_call(
+        mqtt.DOMAIN,
+        mqtt.SERVICE_PUBLISH,
+        {
+            mqtt.ATTR_TOPIC_TEMPLATE: "test/{{ 1+1 }}",
+            mqtt.ATTR_PAYLOAD: "payload",
+        },
+        blocking=True,
+    )
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0][0] == "test/2"
+
+
+async def test_service_call_with_template_topic_renders_invalid_topic(hass, mqtt_mock):
+    """Test the service call with rendered, invalid topic template.
+
+    If a wildcard topic is rendered, then fail.
+    """
+    await hass.services.async_call(
+        mqtt.DOMAIN,
+        mqtt.SERVICE_PUBLISH,
+        {
+            mqtt.ATTR_TOPIC_TEMPLATE: "test/{{ '+' if True else 'topic' }}/topic",
+            mqtt.ATTR_PAYLOAD: "payload",
+        },
+        blocking=True,
+    )
+    assert not mqtt_mock.async_publish.called
+
+
+async def test_service_call_with_invalid_rendered_template_topic_doesnt_render_template(
+    hass, mqtt_mock
+):
+    """Test the service call with unrendered template.
+
+    If both 'payload' and 'payload_template' are provided then fail.
+    """
+    payload = "not a template"
+    payload_template = "a template"
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            mqtt.DOMAIN,
+            mqtt.SERVICE_PUBLISH,
+            {
+                mqtt.ATTR_TOPIC: "test/topic",
+                mqtt.ATTR_PAYLOAD: payload,
+                mqtt.ATTR_PAYLOAD_TEMPLATE: payload_template,
+            },
+            blocking=True,
+        )
     assert not mqtt_mock.async_publish.called
 
 
@@ -120,10 +389,39 @@ async def test_service_call_with_template_payload_renders_template(hass, mqtt_mo
 
     If 'payload_template' is provided and 'payload' is not, then render it.
     """
-    mqtt.async_publish_template(hass, "test/topic", "{{ 1+1 }}")
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        mqtt.DOMAIN,
+        mqtt.SERVICE_PUBLISH,
+        {mqtt.ATTR_TOPIC: "test/topic", mqtt.ATTR_PAYLOAD_TEMPLATE: "{{ 4+4 }}"},
+        blocking=True,
+    )
     assert mqtt_mock.async_publish.called
-    assert mqtt_mock.async_publish.call_args[0][1] == "2"
+    assert mqtt_mock.async_publish.call_args[0][1] == "8"
+    mqtt_mock.reset_mock()
+
+    await hass.services.async_call(
+        mqtt.DOMAIN,
+        mqtt.SERVICE_PUBLISH,
+        {
+            mqtt.ATTR_TOPIC: "test/topic",
+            mqtt.ATTR_PAYLOAD_TEMPLATE: "{{ (4+4) | pack('B') }}",
+        },
+        blocking=True,
+    )
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0][1] == b"\x08"
+    mqtt_mock.reset_mock()
+
+
+async def test_service_call_with_bad_template(hass, mqtt_mock):
+    """Test the service call with a bad template does not publish."""
+    await hass.services.async_call(
+        mqtt.DOMAIN,
+        mqtt.SERVICE_PUBLISH,
+        {mqtt.ATTR_TOPIC: "test/topic", mqtt.ATTR_PAYLOAD_TEMPLATE: "{{ 1 | bad }}"},
+        blocking=True,
+    )
+    assert not mqtt_mock.async_publish.called
 
 
 async def test_service_call_with_payload_doesnt_render_template(hass, mqtt_mock):
@@ -166,6 +464,30 @@ async def test_service_call_with_ascii_qos_retain_flags(hass, mqtt_mock):
     assert mqtt_mock.async_publish.called
     assert mqtt_mock.async_publish.call_args[0][2] == 2
     assert not mqtt_mock.async_publish.call_args[0][3]
+
+
+async def test_publish_function_with_bad_encoding_conditions(hass, caplog):
+    """Test internal publish function with bas use cases."""
+    await mqtt.async_publish(
+        hass, "some-topic", "test-payload", qos=0, retain=False, encoding=None
+    )
+    assert (
+        "Can't pass-through payload for publishing test-payload on some-topic with no encoding set, need 'bytes' got <class 'str'>"
+        in caplog.text
+    )
+    caplog.clear()
+    await mqtt.async_publish(
+        hass,
+        "some-topic",
+        "test-payload",
+        qos=0,
+        retain=False,
+        encoding="invalid_encoding",
+    )
+    assert (
+        "Can't encode payload for publishing test-payload on some-topic with encoding invalid_encoding"
+        in caplog.text
+    )
 
 
 def test_validate_topic():
@@ -260,6 +582,7 @@ def test_entity_device_info_schema():
             "name": "Beer",
             "model": "Glass",
             "sw_version": "0.1-beta",
+            "configuration_url": "http://example.com",
         }
     )
     # full device info with via_device
@@ -275,6 +598,7 @@ def test_entity_device_info_schema():
             "model": "Glass",
             "sw_version": "0.1-beta",
             "via_device": "test-hub",
+            "configuration_url": "http://example.com",
         }
     )
     # no identifiers
@@ -291,6 +615,18 @@ def test_entity_device_info_schema():
     with pytest.raises(vol.Invalid):
         MQTT_ENTITY_DEVICE_INFO_SCHEMA(
             {"identifiers": [], "connections": [], "name": "Beer"}
+        )
+
+    # not an valid URL
+    with pytest.raises(vol.Invalid):
+        MQTT_ENTITY_DEVICE_INFO_SCHEMA(
+            {
+                "manufacturer": "Whatever",
+                "name": "Beer",
+                "model": "Glass",
+                "sw_version": "0.1-beta",
+                "configuration_url": "fake://link",
+            }
         )
 
 
@@ -338,6 +674,34 @@ async def test_subscribe_topic(hass, mqtt_mock, calls, record_calls):
 
     await hass.async_block_till_done()
     assert len(calls) == 1
+
+
+async def test_subscribe_topic_non_async(hass, mqtt_mock, calls, record_calls):
+    """Test the subscription of a topic using the non-async function."""
+    unsub = await hass.async_add_executor_job(
+        mqtt.subscribe, hass, "test-topic", record_calls
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "test-topic", "test-payload")
+
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0][0].topic == "test-topic"
+    assert calls[0][0].payload == "test-payload"
+
+    await hass.async_add_executor_job(unsub)
+
+    async_fire_mqtt_message(hass, "test-topic", "test-payload")
+
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def test_subscribe_bad_topic(hass, mqtt_mock, calls, record_calls):
+    """Test the subscription of a topic."""
+    with pytest.raises(HomeAssistantError):
+        await mqtt.async_subscribe(hass, 55, record_calls)
 
 
 async def test_subscribe_deprecated(hass, mqtt_mock):
@@ -838,6 +1202,62 @@ async def test_no_birth_message(hass, mqtt_client_mock, mqtt_mock):
     [
         {
             mqtt.CONF_BROKER: "mock-broker",
+            mqtt.CONF_BIRTH_MESSAGE: {
+                mqtt.ATTR_TOPIC: "homeassistant/status",
+                mqtt.ATTR_PAYLOAD: "online",
+            },
+        }
+    ],
+)
+async def test_delayed_birth_message(hass, mqtt_client_mock, mqtt_config):
+    """Test sending birth message does not happen until Home Assistant starts."""
+    hass.state = CoreState.starting
+    birth = asyncio.Event()
+
+    result = await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: mqtt_config})
+    assert result
+    await hass.async_block_till_done()
+
+    # Workaround: asynctest==0.13 fails on @functools.lru_cache
+    spec = dir(hass.data["mqtt"])
+    spec.remove("_matching_subscriptions")
+
+    mqtt_component_mock = MagicMock(
+        return_value=hass.data["mqtt"],
+        spec_set=spec,
+        wraps=hass.data["mqtt"],
+    )
+    mqtt_component_mock._mqttc = mqtt_client_mock
+
+    hass.data["mqtt"] = mqtt_component_mock
+    mqtt_mock = hass.data["mqtt"]
+    mqtt_mock.reset_mock()
+
+    async def wait_birth(topic, payload, qos):
+        """Handle birth message."""
+        birth.set()
+
+    with patch("homeassistant.components.mqtt.DISCOVERY_COOLDOWN", 0.1):
+        await mqtt.async_subscribe(hass, "homeassistant/status", wait_birth)
+        mqtt_mock._mqtt_on_connect(None, None, 0, 0)
+        await hass.async_block_till_done()
+        with pytest.raises(asyncio.TimeoutError):
+            await asyncio.wait_for(birth.wait(), 0.2)
+        assert not mqtt_client_mock.publish.called
+        assert not birth.is_set()
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await birth.wait()
+        mqtt_client_mock.publish.assert_called_with(
+            "homeassistant/status", "online", 0, False
+        )
+
+
+@pytest.mark.parametrize(
+    "mqtt_config",
+    [
+        {
+            mqtt.CONF_BROKER: "mock-broker",
             mqtt.CONF_WILL_MESSAGE: {
                 mqtt.ATTR_TOPIC: "death",
                 mqtt.ATTR_PAYLOAD: "death",
@@ -1112,6 +1532,68 @@ async def test_mqtt_ws_get_device_debug_info(
                 "discovery_data": {
                     "payload": config,
                     "topic": "homeassistant/sensor/bla/config",
+                },
+            }
+        ],
+        "triggers": [],
+    }
+    assert response["result"] == expected_result
+
+
+async def test_mqtt_ws_get_device_debug_info_binary(
+    hass, device_reg, hass_ws_client, mqtt_mock
+):
+    """Test MQTT websocket device debug info."""
+    config = {
+        "device": {"identifiers": ["0AFFD2"]},
+        "platform": "mqtt",
+        "topic": "foobar/image",
+        "unique_id": "unique",
+    }
+    data = json.dumps(config)
+
+    async_fire_mqtt_message(hass, "homeassistant/camera/bla/config", data)
+    await hass.async_block_till_done()
+
+    # Verify device entry is created
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
+    assert device_entry is not None
+
+    small_png = (
+        b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x04\x00\x00\x00\x04\x08\x06"
+        b"\x00\x00\x00\xa9\xf1\x9e~\x00\x00\x00\x13IDATx\xdac\xfc\xcf\xc0P\xcf\x80\x04"
+        b"\x18I\x17\x00\x00\xf2\xae\x05\xfdR\x01\xc2\xde\x00\x00\x00\x00IEND\xaeB`\x82"
+    )
+    async_fire_mqtt_message(hass, "foobar/image", small_png)
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 5, "type": "mqtt/device/debug_info", "device_id": device_entry.id}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    expected_result = {
+        "entities": [
+            {
+                "entity_id": "camera.mqtt_camera",
+                "subscriptions": [
+                    {
+                        "topic": "foobar/image",
+                        "messages": [
+                            {
+                                "payload": str(small_png),
+                                "qos": 0,
+                                "retain": False,
+                                "time": ANY,
+                                "topic": "foobar/image",
+                            }
+                        ],
+                    }
+                ],
+                "discovery_data": {
+                    "payload": config,
+                    "topic": "homeassistant/camera/bla/config",
                 },
             }
         ],
@@ -1567,3 +2049,23 @@ async def test_publish_json_from_template(hass, mqtt_mock):
 
     assert mqtt_mock.async_publish.called
     assert mqtt_mock.async_publish.call_args[0][1] == test_str
+
+
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_service_info_compatibility(hass, caplog):
+    """Test compatibility with old-style dict.
+
+    To be removed in 2022.6
+    """
+    discovery_info = mqtt.MqttServiceInfo(
+        topic="tasmota/discovery/DC4F220848A2/config",
+        payload="",
+        qos=0,
+        retain=False,
+        subscribed_topic="tasmota/discovery/#",
+        timestamp=None,
+    )
+
+    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
+        assert discovery_info["topic"] == "tasmota/discovery/DC4F220848A2/config"
+    assert "Detected integration that accessed discovery_info['topic']" in caplog.text
