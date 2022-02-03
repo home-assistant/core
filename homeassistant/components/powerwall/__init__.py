@@ -42,19 +42,12 @@ _LOGGER = logging.getLogger(__name__)
 
 MAX_LOGIN_FAILURES = 5
 
-
-async def _async_handle_api_changed_error(
-    hass: HomeAssistant, error: MissingAttributeError
-) -> None:
-    # The error might include some important information about what exactly changed.
-    _LOGGER.error(str(error))
-    persistent_notification.async_create(
-        hass,
-        "It seems like your powerwall uses an unsupported version. "
-        "Please update the software of your powerwall or if it is "
-        "already the newest consider reporting this issue.\nSee logs for more information",
-        title="Unknown powerwall software version",
-    )
+API_CHANGED_ERROR_BODY = (
+    "It seems like your powerwall uses an unsupported version. "
+    "Please update the software of your powerwall or if it is "
+    "already the newest consider reporting this issue.\nSee logs for more information"
+)
+API_CHANGED_TITLE = "Unknown powerwall software version"
 
 
 class PowerwallDataManager:
@@ -75,6 +68,22 @@ class PowerwallDataManager:
         self.runtime_data = runtime_data
         self.power_wall = power_wall
 
+    @property
+    def login_failed_count(self) -> int:
+        """Return the current number of failed logins."""
+        return self.runtime_data[POWERWALL_LOGIN_FAILED_COUNT]
+
+    @property
+    def api_changed(self) -> int:
+        """Return true if the api has changed out from under us."""
+        return self.runtime_data[POWERWALL_API_CHANGED]
+
+    def _increment_failed_logins(self) -> None:
+        self.runtime_data[POWERWALL_LOGIN_FAILED_COUNT] += 1
+
+    def _clear_failed_logins(self) -> None:
+        self.runtime_data[POWERWALL_LOGIN_FAILED_COUNT] = 0
+
     def _recreate_powerwall_login(self) -> None:
         """Recreate the login on auth failure."""
         http_session = self.runtime_data[POWERWALL_HTTP_SESSION]
@@ -84,49 +93,47 @@ class PowerwallDataManager:
         self.power_wall = Powerwall(self.ip_address, http_session=http_session)
         self.power_wall.login(self.password)
 
-    async def _async_login_and_retry_update_data(self) -> PowerwallData:
-        """Retry the update after a failed login."""
-        # If the session expired, recreate, relogin, and try again
-        _LOGGER.debug("Retrying login and updating data")
-        try:
-            await self.hass.async_add_executor_job(self._recreate_powerwall_login)
-            data = await _async_update_powerwall_data(
-                self.hass, self.runtime_data, self.power_wall
-            )
-        except AccessDeniedError as err:
-            self.runtime_data[POWERWALL_LOGIN_FAILED_COUNT] += 1
-            if self.runtime_data[POWERWALL_LOGIN_FAILED_COUNT] == MAX_LOGIN_FAILURES:
-                raise ConfigEntryAuthFailed from err
-            raise UpdateFailed(
-                f"Login attempt {self.runtime_data[POWERWALL_LOGIN_FAILED_COUNT]}/{MAX_LOGIN_FAILURES} failed, will retry: {err}"
-            ) from err
-        except APIError as err:
-            raise UpdateFailed(f"Updated failed due to {err}, will retry") from err
-        else:
-            self.runtime_data[POWERWALL_LOGIN_FAILED_COUNT] = 0
-            return data
-
     async def async_update_data(self) -> PowerwallData:
         """Fetch data from API endpoint."""
         # Check if we had an error before
         _LOGGER.debug("Checking if update failed")
-        if self.runtime_data[POWERWALL_API_CHANGED]:
+        if self.api_changed:
             raise UpdateFailed("The powerwall api has changed")
+        return await self.hass.async_add_executor_job(self._update_data)
 
+    def _update_data(self) -> PowerwallData:
+        """Fetch data from API endpoint."""
         _LOGGER.debug("Updating data")
-        try:
-            data = await _async_update_powerwall_data(
-                self.hass, self.runtime_data, self.power_wall
-            )
-        except AccessDeniedError as err:
-            if self.password is None:
-                raise ConfigEntryAuthFailed from err
-            return await self._async_login_and_retry_update_data()
-        except APIError as err:
-            raise UpdateFailed(f"Updated failed due to {err}, will retry") from err
-        else:
-            self.runtime_data[POWERWALL_LOGIN_FAILED_COUNT] = 0
-            return data
+        for attempt in range(2):
+            try:
+                if attempt == 1:
+                    self._recreate_powerwall_login()
+                data = _fetch_powerwall_data(self.power_wall)
+            except PowerwallUnreachableError as err:
+                raise UpdateFailed("Unable to fetch data from powerwall") from err
+            except MissingAttributeError as err:
+                _LOGGER.error("The powerwall api has changed: %s", str(err))
+                # The error might include some important information about what exactly changed.
+                persistent_notification.create(
+                    self.hass, API_CHANGED_ERROR_BODY, API_CHANGED_TITLE
+                )
+                self.runtime_data[POWERWALL_API_CHANGED] = True
+                raise UpdateFailed("The powerwall api has changed") from err
+            except AccessDeniedError as err:
+                if attempt == 1:
+                    self._increment_failed_logins()
+                    raise ConfigEntryAuthFailed from err
+                if self.password is None:
+                    raise ConfigEntryAuthFailed from err
+                raise UpdateFailed(
+                    f"Login attempt {self.login_failed_count}/{MAX_LOGIN_FAILURES} failed, will retry: {err}"
+                ) from err
+            except APIError as err:
+                raise UpdateFailed(f"Updated failed due to {err}, will retry") from err
+            else:
+                self._clear_failed_logins()
+                return data
+        raise RuntimeError("unreachable")
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -145,7 +152,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
     except MissingAttributeError as err:
         http_session.close()
-        await _async_handle_api_changed_error(hass, err)
+        # The error might include some important information about what exactly changed.
+        _LOGGER.error("The powerwall api has changed: %s", str(err))
+        persistent_notification.async_create(
+            hass, API_CHANGED_ERROR_BODY, API_CHANGED_TITLE
+        )
         return False
     except AccessDeniedError as err:
         _LOGGER.debug("Authentication failed", exc_info=err)
@@ -183,20 +194,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
-
-
-async def _async_update_powerwall_data(
-    hass: HomeAssistant, runtime_data: PowerwallRuntimeData, power_wall: Powerwall
-) -> PowerwallData:
-    """Fetch updated powerwall data."""
-    try:
-        return await hass.async_add_executor_job(_fetch_powerwall_data, power_wall)
-    except PowerwallUnreachableError as err:
-        raise UpdateFailed("Unable to fetch data from powerwall") from err
-    except MissingAttributeError as err:
-        await _async_handle_api_changed_error(hass, err)
-        runtime_data[POWERWALL_API_CHANGED] = True
-        raise UpdateFailed("The powerwall api has changed") from err
 
 
 def _login_and_fetch_base_info(
