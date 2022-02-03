@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.lovelace import cast as lovelace_cast
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
@@ -12,13 +13,12 @@ from tests.common import async_mock_service
 
 
 @pytest.fixture
-def mock_get_url():
-    """Mock get_url not raising."""
-    with patch(
-        "homeassistant.components.lovelace.cast.get_url",
-        return_value="https://example.com",
-    ):
-        yield
+async def mock_https_url(hass):
+    """Mock valid URL."""
+    await async_process_ha_core_config(
+        hass,
+        {"external_url": "https://example.com"},
+    )
 
 
 @pytest.fixture
@@ -88,8 +88,15 @@ async def test_browse_media_error(hass):
             hass, "lovelace", "", lovelace_cast.CAST_TYPE_CHROMECAST
         )
 
+    assert (
+        await lovelace_cast.async_browse_media(
+            hass, "not_lovelace", "", lovelace_cast.CAST_TYPE_CHROMECAST
+        )
+        is None
+    )
 
-async def test_browse_media(hass, mock_yaml_dashboard, mock_get_url):
+
+async def test_browse_media(hass, mock_yaml_dashboard, mock_https_url):
     """Test browse media."""
     top_level_items = await lovelace_cast.async_browse_media(
         hass, "lovelace", "", lovelace_cast.CAST_TYPE_CHROMECAST
@@ -142,6 +149,14 @@ async def test_browse_media(hass, mock_yaml_dashboard, mock_get_url):
     )
     assert grandchild_2.can_play is True
     assert grandchild_2.can_expand is False
+
+    with pytest.raises(HomeAssistantError):
+        await lovelace_cast.async_browse_media(
+            hass,
+            "lovelace",
+            "non-existing-dashboard",
+            lovelace_cast.CAST_TYPE_CHROMECAST,
+        )
 
 
 async def test_play_media(hass, mock_yaml_dashboard):

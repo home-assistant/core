@@ -166,10 +166,7 @@ async def _get_dashboard_info(hass, url_path):
         title = "Default"
     else:
         url_path = dashboard.url_path
-        if config is not None:
-            title = config.get("title", url_path)
-        else:
-            title = "No Title"
+        title = config.get("title", url_path) if config else url_path
 
     views = []
     data = {
