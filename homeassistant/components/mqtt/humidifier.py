@@ -257,8 +257,6 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             optimistic or self._topic[CONF_TARGET_HUMIDITY_STATE_TOPIC] is None
         )
         self._optimistic_mode = optimistic or self._topic[CONF_MODE_STATE_TOPIC] is None
-        if self._optimistic:
-            self._state = False
 
         for key, tpl in self._command_templates.items():
             self._command_templates[key] = MqttCommandTemplate(
