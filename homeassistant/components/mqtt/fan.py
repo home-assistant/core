@@ -331,8 +331,6 @@ class MqttFan(MqttEntity, FanEntity):
         self._optimistic_preset_mode = (
             optimistic or self._topic[CONF_PRESET_MODE_STATE_TOPIC] is None
         )
-        if self._optimistic:
-            self._state = False
 
         self._supported_features = 0
         self._supported_features |= (
