@@ -49,78 +49,78 @@ SENSOR_TYPES = {
     ),
 }
 
-SENSOR_TRAFFIC_TYPES = {
-    "NewTodayUpload": SensorEntityDescription(
+SENSOR_TRAFFIC_TYPES = [
+    SensorEntityDescription(
         key="NewTodayUpload",
         name="Upload today",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:upload",
     ),
-    "NewTodayDownload": SensorEntityDescription(
+    SensorEntityDescription(
         key="NewTodayDownload",
         name="Download today",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:download",
     ),
-    "NewYesterdayUpload": SensorEntityDescription(
+    SensorEntityDescription(
         key="NewYesterdayUpload",
         name="Upload yesterday",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:upload",
     ),
-    "NewYesterdayDownload": SensorEntityDescription(
+    SensorEntityDescription(
         key="NewYesterdayDownload",
         name="Download yesterday",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:download",
     ),
-    "NewWeekUpload": SensorEntityDescription(
+    SensorEntityDescription(
         key="NewWeekUpload",
         name="Upload week",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:upload",
     ),
-    "NewWeekDownload": SensorEntityDescription(
+    SensorEntityDescription(
         key="NewWeekDownload",
         name="Download week",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:download",
     ),
-    "NewMonthUpload": SensorEntityDescription(
+    SensorEntityDescription(
         key="NewMonthUpload",
         name="Upload month",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:upload",
     ),
-    "NewMonthDownload": SensorEntityDescription(
+    SensorEntityDescription(
         key="NewMonthDownload",
         name="Download month",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:download",
     ),
-    "NewLastMonthUpload": SensorEntityDescription(
+    SensorEntityDescription(
         key="NewLastMonthUpload",
         name="Upload last month",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:upload",
     ),
-    "NewLastMonthDownload": SensorEntityDescription(
+    SensorEntityDescription(
         key="NewLastMonthDownload",
         name="Download last month",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:download",
     ),
-}
+]
 
 
 async def async_setup_entry(
@@ -133,9 +133,9 @@ async def async_setup_entry(
     # Router entities
     router_entities = []
 
-    for attribute in SENSOR_TRAFFIC_TYPES:
+    for entity_des in SENSOR_TRAFFIC_TYPES:
         router_entities.append(
-            NetgearRouterTrafficEntity(coordinator, router, attribute)
+            NetgearRouterTrafficEntity(coordinator, router, entity_des)
         )
 
     async_add_entities(router_entities)
@@ -218,14 +218,13 @@ class NetgearRouterTrafficEntity(NetgearRouterEntity, SensorEntity):
         self,
         coordinator: DataUpdateCoordinator,
         router: NetgearRouter,
-        attribute: str,
+        entity_description: SensorEntityDescription,
     ) -> None:
         """Initialize a Netgear device."""
         super().__init__(coordinator, router)
-        self._attribute = attribute
-        self.entity_description = SENSOR_TRAFFIC_TYPES[self._attribute]
+        self.entity_description = entity_description
         self._name = f"{router.device_name} {self.entity_description.name}"
-        self._unique_id = f"{router.serial_number}-{self._attribute}"
+        self._unique_id = f"{router.serial_number}-{self.entity_description.key}"
         self._traffic = None
         self._traffic_avg = None
         self._traffic_avg_attr = f"{self.entity_description.name} average"
@@ -248,7 +247,7 @@ class NetgearRouterTrafficEntity(NetgearRouterEntity, SensorEntity):
     def async_update_device(self) -> None:
         """Update the Netgear device."""
         if self._router.traffic_data is not None:
-            data = self._router.traffic_data.get(self._attribute)
+            data = self._router.traffic_data.get(self.entity_description.key)
             if isinstance(data, float):
                 self._traffic = data
             elif isinstance(data, tuple):
