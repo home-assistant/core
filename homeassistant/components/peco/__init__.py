@@ -11,7 +11,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import COUNTY_LIST, DOMAIN
 
-PLATFORMS: list[str] = [Platform.SENSOR]
+PLATFORMS: Final = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
