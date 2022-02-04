@@ -852,7 +852,6 @@ def test_delete_duplicates(caplog, tmpdir):
 
     assert "Deleted 2 duplicated statistics rows" in caplog.text
     assert "Found non identical" not in caplog.text
-    assert "Found more than" not in caplog.text
     assert "Found duplicated" not in caplog.text
 
 
@@ -989,7 +988,6 @@ def test_delete_duplicates_non_identical(caplog, tmpdir):
 
     assert "Deleted 2 duplicated statistics rows" in caplog.text
     assert "Deleted 1 non identical" in caplog.text
-    assert "Found more than" not in caplog.text
     assert "Found duplicated" not in caplog.text
 
     isotime = dt_util.utcnow().isoformat()
@@ -1028,7 +1026,6 @@ def test_delete_duplicates_non_identical(caplog, tmpdir):
     ]
 
 
-@patch.object(statistics, "MAX_DUPLICATES", 2)
 def test_delete_duplicates_short_term(caplog, tmpdir):
     """Test removal of duplicated statistics."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
@@ -1091,7 +1088,6 @@ def test_delete_duplicates_short_term(caplog, tmpdir):
 
     assert "duplicated statistics rows" not in caplog.text
     assert "Found non identical" not in caplog.text
-    assert "Found more than" not in caplog.text
     assert "Deleted duplicated short term statistic" in caplog.text
 
 
@@ -1103,7 +1099,6 @@ def test_delete_duplicates_no_duplicates(hass_recorder, caplog):
         delete_duplicates(hass.data[DATA_INSTANCE], session)
     assert "duplicated statistics rows" not in caplog.text
     assert "Found non identical" not in caplog.text
-    assert "Found more than" not in caplog.text
     assert "Found duplicated" not in caplog.text
 
 
