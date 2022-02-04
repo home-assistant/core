@@ -16,42 +16,42 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
-    diag: dict[str, Any] = {"entry": entry.as_dict(), "modules": []}
-    for mod in cntrl.get_modules().values():
-        diag["modules"].append(build_module_diag_info(mod))
-    return diag
+    controller = hass.data[DOMAIN][entry.entry_id]["cntrl"]
+    data: dict[str, Any] = {"entry": entry.as_dict(), "modules": []}
+    for module in controller.get_modules().values():
+        data["modules"].append(build_module_diagnostics_info(module))
+    return data
 
 
 async def async_get_device_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry, device: DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
-    cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
+    controller = hass.data[DOMAIN][entry.entry_id]["cntrl"]
     chan = list(next(iter(device.identifiers)))[1]
-    mods = cntrl.get_modules()
-    return build_module_diag_info(mods[int(chan)])
+    modules = controller.get_modules()
+    return build_module_diagnostics_info(modules[int(chan)])
 
 
-def build_module_diag_info(mod: VelbusModule) -> dict[str, Any]:
-    """Build per module diag info."""
-    diag: dict[str, Any] = {
-        "type": mod.get_type_name(),
-        "address": mod.get_addresses(),
-        "name": mod.get_name(),
-        "sw_version": mod.get_sw_version(),
-        "is_loaded": mod.is_loaded(),
-        "channels": build_channels_diag_info(mod.get_channels()),
+def build_module_diagnostics_info(module: VelbusModule) -> dict[str, Any]:
+    """Build per module diagnostics info."""
+    data: dict[str, Any] = {
+        "type": module.get_type_name(),
+        "address": module.get_addresses(),
+        "name": module.get_name(),
+        "sw_version": module.get_sw_version(),
+        "is_loaded": module.is_loaded(),
+        "channels": build_channels_diagnostics_info(module.get_channels()),
     }
-    return diag
+    return data
 
 
-def build_channels_diag_info(chans: dict[str, Any]) -> dict[str, Any]:
-    """Build diag info for all channels."""
-    diag: dict[str, Any] = {}
-    for chan in chans.values():
-        diag[chan.get_channel_number()] = {}
-        for key, value in chan.__dict__.items():
+def build_channels_diagnostics_info(channels: dict[str, Any]) -> dict[str, Any]:
+    """Build diagnostics info for all channels."""
+    data: dict[str, Any] = {}
+    for channel in channels.values():
+        data[channel.get_channel_number()] = {}
+        for key, value in channel.__dict__.items():
             if key not in ["_module", "_writer", "_name_parts", "_on_status_update"]:
-                diag[chan.get_channel_number()][key.replace("_", "", 1)] = value
-    return diag
+                data[channel.get_channel_number()][key.replace("_", "", 1)] = value
+    return data
