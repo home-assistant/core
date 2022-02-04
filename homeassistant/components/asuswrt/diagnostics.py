@@ -52,7 +52,7 @@ async def async_get_config_entry_diagnostics(
         state = hass.states.get(entity_entry.entity_id)
         state_dict = None
         if state:
-            state_dict = state.as_dict()
+            state_dict = dict(state.as_dict())
             # The context doesn't provide useful information in this case.
             state_dict.pop("context", None)
 
