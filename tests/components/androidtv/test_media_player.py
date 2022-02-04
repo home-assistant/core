@@ -399,7 +399,9 @@ async def _test_exclude_sources(hass, config0, expected_sources):
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
+    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[
+        patch_key
+    ], patchers.PATCH_DEVICE_PROPERTIES:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         await hass.helpers.entity_component.async_update_entity(entity_id)
