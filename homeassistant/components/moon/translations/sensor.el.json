@@ -1,0 +1,8 @@
+{
+    "state": {
+        "moon__phase": {
+            "full_moon": "\u03a0\u03b1\u03bd\u03c3\u03ad\u03bb\u03b7\u03bd\u03bf\u03c2",
+            "new_moon": "\u039d\u03ad\u03b1 \u03a3\u03b5\u03bb\u03ae\u03bd\u03b7"
+        }
+    }
+}
