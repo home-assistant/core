@@ -1054,7 +1054,7 @@ class State:
         self.last_changed = last_changed or self.last_updated
         self.context = context or Context()
         self.domain, self.object_id = split_entity_id(self.entity_id)
-        self._as_dict: dict[str, Collection[Any]] | None = None
+        self._as_dict: MappingProxyType[str, Collection[Any]] | None = None
 
     @property
     def name(self) -> str:
@@ -1063,7 +1063,7 @@ class State:
             "_", " "
         )
 
-    def as_dict(self) -> dict[str, Collection[Any]]:
+    def as_dict(self) -> MappingProxyType[str, Collection[Any]]:
         """Return a dict representation of the State.
 
         Async friendly.
@@ -1077,14 +1077,16 @@ class State:
                 last_updated_isoformat = last_changed_isoformat
             else:
                 last_updated_isoformat = self.last_updated.isoformat()
-            self._as_dict = {
-                "entity_id": self.entity_id,
-                "state": self.state,
-                "attributes": dict(self.attributes),
-                "last_changed": last_changed_isoformat,
-                "last_updated": last_updated_isoformat,
-                "context": self.context.as_dict(),
-            }
+            self._as_dict = MappingProxyType(
+                {
+                    "entity_id": self.entity_id,
+                    "state": self.state,
+                    "attributes": dict(self.attributes),
+                    "last_changed": last_changed_isoformat,
+                    "last_updated": last_updated_isoformat,
+                    "context": MappingProxyType(self.context.as_dict()),
+                }
+            )
         return self._as_dict
 
     @classmethod
