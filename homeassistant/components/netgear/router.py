@@ -82,14 +82,14 @@ class NetgearRouter:
         )
         self._consider_home = timedelta(seconds=consider_home_int)
 
-        self._api: Netgear = None
-        self._api_lock = asyncio.Lock()
+        self.api: Netgear = None
+        self.api_lock = asyncio.Lock()
 
         self.devices = {}
 
     def _setup(self) -> None:
         """Set up a Netgear router sync portion."""
-        self._api = get_api(
+        self.api = get_api(
             self._password,
             self._host,
             self._username,
@@ -97,7 +97,7 @@ class NetgearRouter:
             self._ssl,
         )
 
-        self._info = self._api.get_info()
+        self._info = self.api.get_info()
         if self._info is None:
             return False
 
@@ -112,7 +112,7 @@ class NetgearRouter:
                 self.method_version = 2
 
         if self.method_version == 2:
-            if not self._api.get_attached_devices_2():
+            if not self.api.get_attached_devices_2():
                 _LOGGER.error(
                     "Netgear Model '%s' in MODELS_V2 list, but failed to get attached devices using V2",
                     self.model,
@@ -147,6 +147,7 @@ class NetgearRouter:
                 "ip": None,
                 "ssid": None,
                 "conn_ap_mac": None,
+                "allow_or_block": "Allow",
             }
 
         return True
@@ -154,14 +155,14 @@ class NetgearRouter:
     async def async_get_attached_devices(self) -> list:
         """Get the devices connected to the router."""
         if self.method_version == 1:
-            async with self._api_lock:
+            async with self.api_lock:
                 return await self.hass.async_add_executor_job(
-                    self._api.get_attached_devices
+                    self.api.get_attached_devices
                 )
 
-        async with self._api_lock:
+        async with self.api_lock:
             return await self.hass.async_add_executor_job(
-                self._api.get_attached_devices_2
+                self.api.get_attached_devices_2
             )
 
     async def async_update_device_trackers(self, now=None) -> None:
@@ -197,18 +198,18 @@ class NetgearRouter:
 
     async def async_get_traffic_meter(self) -> None:
         """Get the traffic meter data of the router."""
-        async with self._api_lock:
-            return await self.hass.async_add_executor_job(self._api.get_traffic_meter)
+        async with self.api_lock:
+            return await self.hass.async_add_executor_job(self.api.get_traffic_meter)
 
     @property
     def port(self) -> int:
         """Port used by the API."""
-        return self._api.port
+        return self.api.port
 
     @property
     def ssl(self) -> bool:
         """SSL used by the API."""
-        return self._api.ssl
+        return self.api.ssl
 
 
 class NetgearBaseEntity(CoordinatorEntity):
