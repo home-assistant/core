@@ -83,7 +83,7 @@ class NetgearRouter:
         self._consider_home = timedelta(seconds=consider_home_int)
 
         self.api: Netgear = None
-        self._api_lock = asyncio.Lock()
+        self.api_lock = asyncio.Lock()
 
         self.devices = {}
 
@@ -154,12 +154,12 @@ class NetgearRouter:
     async def async_get_attached_devices(self) -> list:
         """Get the devices connected to the router."""
         if self.method_version == 1:
-            async with self._api_lock:
+            async with self.api_lock:
                 return await self.hass.async_add_executor_job(
                     self.api.get_attached_devices
                 )
 
-        async with self._api_lock:
+        async with self.api_lock:
             return await self.hass.async_add_executor_job(
                 self.api.get_attached_devices_2
             )
@@ -197,7 +197,7 @@ class NetgearRouter:
 
     async def async_get_traffic_meter(self) -> None:
         """Get the traffic meter data of the router."""
-        async with self._api_lock:
+        async with self.api_lock:
             return await self.hass.async_add_executor_job(self.api.get_traffic_meter)
 
     @property
