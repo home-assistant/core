@@ -864,6 +864,12 @@ class LightEntity(ToggleEntity):
             data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
         elif color_mode == COLOR_MODE_RGBWW and self.rgbww_color:
             rgbww_color = self.rgbww_color
+            _LOGGER.warning(
+                "Color_rgbww_to_rgb: %s %s %s",
+                rgbww_color,
+                self.min_mireds,
+                self.max_mireds,
+            )
             rgb_color = color_util.color_rgbww_to_rgb(
                 *rgbww_color, self.min_mireds, self.max_mireds
             )

@@ -175,7 +175,7 @@ aioflo==2021.11.0
 aioftp==0.12.0
 
 # homeassistant.components.github
-aiogithubapi==22.1.0
+aiogithubapi==22.2.0
 
 # homeassistant.components.guardian
 aioguardian==2021.11.0
@@ -311,7 +311,7 @@ ambiclimate==0.2.1
 amcrest==1.9.3
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.62
+androidtv[async]==0.0.63
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2

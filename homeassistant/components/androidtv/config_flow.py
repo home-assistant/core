@@ -124,6 +124,14 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return RESULT_CONN_ERROR, None
 
         dev_prop = aftv.device_properties
+        _LOGGER.info(
+            "Android TV at %s: %s = %r, %s = %r",
+            user_input[CONF_HOST],
+            PROP_ETHMAC,
+            dev_prop.get(PROP_ETHMAC),
+            PROP_WIFIMAC,
+            dev_prop.get(PROP_WIFIMAC),
+        )
         unique_id = format_mac(
             dev_prop.get(PROP_ETHMAC) or dev_prop.get(PROP_WIFIMAC, "")
         )

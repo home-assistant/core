@@ -495,6 +495,10 @@ def test_rgbww_to_color_temperature():
         348,
         128,
     )
+    assert color_util.rgbww_to_color_temperature((0, 0, 0, 0, 0), 153, 500) == (
+        500,
+        0,
+    )
 
 
 def test_white_levels_to_color_temperature():
@@ -531,4 +535,8 @@ def test_white_levels_to_color_temperature():
     assert color_util.while_levels_to_color_temperature(56, 72, 153, 500) == (
         348,
         128,
+    )
+    assert color_util.while_levels_to_color_temperature(0, 0, 153, 500) == (
+        500,
+        0,
     )
