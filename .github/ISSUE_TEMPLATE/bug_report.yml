@@ -76,8 +76,6 @@ body:
       value: |
         # Details
   - type: textarea
-    validations:
-      required: true
     attributes:
       label: Diagnostics information
       description: >-
