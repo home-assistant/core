@@ -2,7 +2,7 @@
 import asyncio
 from datetime import timedelta
 from types import MappingProxyType
-from typing import Any, Final
+from typing import Any, Final, cast
 
 from peco import BadJSONError, HttpError
 
@@ -46,11 +46,11 @@ async def async_setup_entry(
     websession = hass.data[DOMAIN][config_entry.entry_id]["websession"]
     conf: MappingProxyType[str, Any] = config_entry.data
 
-    async def async_update_data() -> dict[str, int]:
+    async def async_update_data() -> dict[str, float]:
         """Fetch data from API."""
         if conf["county"] == "TOTAL":
             try:
-                data: dict = await api.get_outage_totals(websession)
+                data = cast(dict[str, float], await api.get_outage_totals(websession))
             except HttpError as err:
                 raise UpdateFailed(f"Error fetching data: {err}") from err
             except BadJSONError as err:
@@ -62,7 +62,10 @@ async def async_setup_entry(
                 data["percent_customers_out"] = percent_out
             return data
         try:
-            county_data: dict = await api.get_outage_count(conf["county"], websession)
+            county_data = cast(
+                dict[str, float],
+                await api.get_outage_count(conf["county"], websession),
+            )
         except HttpError as err:
             raise UpdateFailed(f"Error fetching data: {err}") from err
         except BadJSONError as err:
