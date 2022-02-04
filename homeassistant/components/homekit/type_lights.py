@@ -55,6 +55,8 @@ RGB_COLOR = "rgb_color"
 
 CHANGE_COALESCE_TIME_WINDOW = 0.01
 
+DEFAULT_MIN_MIREDS = 153
+DEFAULT_MAX_MIREDS = 500
 
 COLOR_MODES_WITH_WHITES = {COLOR_MODE_RGBW, COLOR_MODE_RGBWW}
 
@@ -81,6 +83,7 @@ class Light(HomeAccessory):
         )
         self.color_supported = color_supported(color_modes)
         self.color_temp_supported = color_temp_supported(color_modes)
+        self.rgbww_supported = COLOR_MODE_RGBWW in color_modes
         self.brightness_supported = brightness_supported(color_modes)
 
         if self.brightness_supported:
@@ -89,7 +92,9 @@ class Light(HomeAccessory):
         if self.color_supported:
             self.chars.extend([CHAR_HUE, CHAR_SATURATION])
 
-        if self.color_temp_supported:
+        if self.color_temp_supported or COLOR_MODES_WITH_WHITES.intersection(
+            self.color_modes
+        ):
             self.chars.append(CHAR_COLOR_TEMPERATURE)
 
         serv_light = self.add_preload_service(SERV_LIGHTBULB, self.chars)
@@ -101,9 +106,9 @@ class Light(HomeAccessory):
             # to set to the correct initial value.
             self.char_brightness = serv_light.configure_char(CHAR_BRIGHTNESS, value=100)
 
-        if self.color_temp_supported:
-            min_mireds = math.floor(attributes.get(ATTR_MIN_MIREDS, 153))
-            max_mireds = math.ceil(attributes.get(ATTR_MAX_MIREDS, 500))
+        if CHAR_COLOR_TEMPERATURE in self.chars:
+            min_mireds = math.floor(attributes.get(ATTR_MIN_MIREDS, DEFAULT_MIN_MIREDS))
+            max_mireds = math.ceil(attributes.get(ATTR_MAX_MIREDS, DEFAULT_MAX_MIREDS))
             self.char_color_temp = serv_light.configure_char(
                 CHAR_COLOR_TEMPERATURE,
                 value=min_mireds,
@@ -166,8 +171,14 @@ class Light(HomeAccessory):
             return
 
         if CHAR_COLOR_TEMPERATURE in char_values:
-            params[ATTR_COLOR_TEMP] = char_values[CHAR_COLOR_TEMPERATURE]
-            events.append(f"color temperature at {params[ATTR_COLOR_TEMP]}")
+            events.append(f"color temperature at {char_values[CHAR_COLOR_TEMPERATURE]}")
+            if self.color_temp_supported or self.rgbww_supported:
+                params[ATTR_COLOR_TEMP] = char_values[CHAR_COLOR_TEMPERATURE]
+            else:
+                params[ATTR_RGBW_COLOR] = (
+                    *(0,) * 3,
+                    brightness_pct or self.char_brightness.value,
+                )
 
         elif (
             CHAR_HUE in char_values
