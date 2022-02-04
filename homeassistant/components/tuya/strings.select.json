@@ -96,12 +96,13 @@
     },
     "tuya__countdown": {
         "cancel": "[%key:component::tuya::platform::select::state::tuya__countdown_set::cancel%]",
-        "1": "[%key:component::tuya::platform::select::state::tuya__countdown_set::1h%]",
-        "2": "[%key:component::tuya::platform::select::state::tuya__countdown_set::2h%]",
-        "3": "[%key:component::tuya::platform::select::state::tuya__countdown_set::3h%]",
-        "4": "[%key:component::tuya::platform::select::state::tuya__countdown_set::4h%]",
-        "5": "[%key:component::tuya::platform::select::state::tuya__countdown_set::5h%]",
-        "6": "[%key:component::tuya::platform::select::state::tuya__countdown_set::6h%]"
+        "0": "[%key:component::tuya::platform::select::state::tuya__countdown_set::cancel%]",
+        "1": "30 minutes",
+        "2": "60 minutes",
+        "3": "90 minutes",
+        "4": "120 minutes",
+        "5": "180 minutes",
+        "6": "240 minutes"
     },
     "tuya__countdown_set": {
         "cancel": "Cancel",
