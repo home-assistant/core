@@ -232,7 +232,11 @@ class WebDavCalendarData:
                     new_events.append(new_event)
                 elif _start_of_tomorrow <= start_dt:
                     break
-        vevents = [event.instance.vevent for event in results + new_events]
+        vevents = [
+            event.instance.vevent
+            for event in results + new_events
+            if hasattr(event.instance, "vevent")
+        ]
 
         # dtstart can be a date or datetime depending if the event lasts a
         # whole day. Convert everything to datetime to be able to sort it
