@@ -109,6 +109,8 @@ class Light(HomeAccessory):
         if CHAR_COLOR_TEMPERATURE in self.chars:
             min_mireds = math.floor(attributes.get(ATTR_MIN_MIREDS, DEFAULT_MIN_MIREDS))
             max_mireds = math.ceil(attributes.get(ATTR_MAX_MIREDS, DEFAULT_MAX_MIREDS))
+            if not self.color_temp_supported and not self.rgbww_supported:
+                max_mireds = min_mireds
             self.char_color_temp = serv_light.configure_char(
                 CHAR_COLOR_TEMPERATURE,
                 value=min_mireds,
