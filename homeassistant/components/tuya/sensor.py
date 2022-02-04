@@ -749,17 +749,10 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             icon="mdi:ticket-percent-outline",
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.FILTER_DAYS,
-            name="Remaining days of the filter",
-            entity_category=EntityCategory.DIAGNOSTIC,
-            icon="mdi:ticket-confirmation-outline",
-        ),
-        TuyaSensorEntityDescription(
             key=DPCode.PM25,
             name="Particulate Matter 2.5 µm",
             device_class=SensorDeviceClass.PM25,
             state_class=SensorStateClass.MEASUREMENT,
-            icon="mdi:molecule",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP,
@@ -804,7 +797,6 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Air quality",
             icon="mdi:air-filter",
             device_class=TuyaDeviceClass.AIR_QUALITY,
-            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
     ),
 }
