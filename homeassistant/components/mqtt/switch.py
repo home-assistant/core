@@ -33,6 +33,7 @@ from .const import (
     CONF_RETAIN,
     CONF_STATE_TOPIC,
     DOMAIN,
+    PAYLOAD_NONE,
 )
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
@@ -50,8 +51,6 @@ DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_OPTIMISTIC = False
 CONF_STATE_ON = "state_on"
 CONF_STATE_OFF = "state_off"
-
-PAYLOAD_NONE = "None"
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
     {

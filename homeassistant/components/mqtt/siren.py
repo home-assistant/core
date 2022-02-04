@@ -48,6 +48,7 @@ from .const import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
+    CONF_STATE_VALUE_TEMPLATE,
     DOMAIN,
     PAYLOAD_EMPTY_JSON,
     PAYLOAD_NONE,
@@ -66,7 +67,6 @@ CONF_AVAILABLE_TONES = "available_tones"
 CONF_COMMAND_OFF_TEMPLATE = "command_off_template"
 CONF_STATE_ON = "state_on"
 CONF_STATE_OFF = "state_off"
-CONF_STATE_VALUE_TEMPLATE = "state_value_template"
 CONF_SUPPORT_DURATION = "support_duration"
 CONF_SUPPORT_VOLUME_SET = "support_volume_set"
 

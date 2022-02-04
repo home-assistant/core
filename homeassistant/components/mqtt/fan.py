@@ -49,12 +49,13 @@ from .const import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
+    CONF_STATE_VALUE_TEMPLATE,
     DOMAIN,
+    PAYLOAD_NONE,
 )
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
-CONF_STATE_VALUE_TEMPLATE = "state_value_template"
 CONF_PERCENTAGE_STATE_TOPIC = "percentage_state_topic"
 CONF_PERCENTAGE_COMMAND_TOPIC = "percentage_command_topic"
 CONF_PERCENTAGE_VALUE_TEMPLATE = "percentage_value_template"
@@ -93,8 +94,6 @@ DEFAULT_SPEED_RANGE_MAX = 100
 
 OSCILLATE_ON_PAYLOAD = "oscillate_on"
 OSCILLATE_OFF_PAYLOAD = "oscillate_off"
-
-PAYLOAD_NONE = "None"
 
 MQTT_FAN_ATTRIBUTES_BLOCKED = frozenset(
     {
