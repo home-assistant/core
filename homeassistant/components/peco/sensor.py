@@ -46,7 +46,7 @@ async def async_setup_entry(
     websession = hass.data[DOMAIN][config_entry.entry_id]["websession"]
     conf: MappingProxyType[str, Any] = config_entry.data
 
-    async def async_update_data() -> dict:
+    async def async_update_data() -> dict[str, int]:
         """Fetch data from API."""
         if conf["county"] == "TOTAL":
             try:
@@ -58,7 +58,8 @@ async def async_setup_entry(
             except asyncio.TimeoutError as err:
                 raise UpdateFailed(f"Timeout fetching data: {err}") from err
             if data["percent_customers_out"] < 5:
-                data["percent_customers_out"] = "Less than 5%"
+                percent_out = data["customers_out"] / data["customers_served"] * 100
+                data["percent_customers_out"] = percent_out
             return data
         try:
             county_data: dict = await api.get_outage_count(conf["county"], websession)
