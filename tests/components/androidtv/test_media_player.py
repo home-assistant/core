@@ -288,6 +288,7 @@ async def test_setup_with_adbkey(hass):
         with patchers.patch_shell(MAC_ADDRESS_RESPONSE)[patch_key]:
             assert await hass.config_entries.async_setup(config_entry.entry_id)
             await hass.async_block_till_done()
+
         with patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
             await hass.helpers.entity_component.async_update_entity(entity_id)
             state = hass.states.get(entity_id)
@@ -317,15 +318,16 @@ async def test_sources(hass, config0):
     patch_key, entity_id, config_entry = _setup(config)
     config_entry.add_to_hass(hass)
 
-    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
-        patch_key
-    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        await hass.helpers.entity_component.async_update_entity(entity_id)
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == STATE_OFF
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[patch_key]:
+        with patchers.patch_shell(MAC_ADDRESS_RESPONSE)[patch_key]:
+            assert await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+
+        with patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
+            await hass.helpers.entity_component.async_update_entity(entity_id)
+            state = hass.states.get(entity_id)
+            assert state is not None
+            assert state.state == STATE_OFF
 
     if config[DOMAIN].get(CONF_DEVICE_CLASS) != "firetv":
         patch_update = patchers.patch_androidtv_update(
