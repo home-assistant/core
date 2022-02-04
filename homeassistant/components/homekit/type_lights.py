@@ -356,7 +356,7 @@ class Light(HomeAccessory):
                         color_temperature_mired_to_kelvin(
                             rgbww_to_color_temperature(
                                 rgbww, self.min_mireds, self.max_mireds
-                            )
+                            )[0]
                         )
                     )
                 else:
