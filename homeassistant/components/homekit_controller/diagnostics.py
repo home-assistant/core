@@ -1,7 +1,7 @@
 """Diagnostics support for HomeKit Controller."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from aiohomekit.model.characteristics.characteristic_types import CharacteristicsTypes
 
@@ -66,7 +66,7 @@ def _async_get_diagnostics_for_device(
         state = hass.states.get(entity_entry.entity_id)
         state_dict = None
         if state:
-            state_dict = async_redact_data(state.as_dict(), REDACTED_STATE)
+            state_dict = cast(dict, async_redact_data(state.as_dict(), REDACTED_STATE))
             state_dict.pop("context", None)
 
         entities.append(
