@@ -237,10 +237,10 @@ class Light(HomeAccessory):
             _LOGGER.debug("%s: Set hs_color to %s", self.entity_id, hue_sat)
             events.append(f"set color at {hue_sat}")
             # HomeKit doesn't support RGBW/RGBWW so we need to remove any white values
-            if COLOR_MODE_RGBWW in self.color_modes:
+            if state and state.attributes.get(ATTR_COLOR_MODE) == COLOR_MODE_RGBWW:
                 val = brightness_pct or self.char_brightness.value
                 params[ATTR_RGBWW_COLOR] = (*color_hsv_to_RGB(*hue_sat, val), 0, 0)
-            elif COLOR_MODE_RGBW in self.color_modes:
+            if state and state.attributes.get(ATTR_COLOR_MODE) == COLOR_MODE_RGBW:
                 val = brightness_pct or self.char_brightness.value
                 params[ATTR_RGBW_COLOR] = (*color_hsv_to_RGB(*hue_sat, val), 0)
             else:
@@ -253,8 +253,8 @@ class Light(HomeAccessory):
         ):
             # HomeKit assumes RGB and WHITE values are interlocked
             # similar to esphome's color_interlock: true
-            if not self.color_temp_supported and COLOR_MODES_WITH_WHITES.intersection(
-                self.color_modes
+            if state and COLOR_MODES_WITH_WHITES.intersection(
+                {state.attributes.get(ATTR_COLOR_MODE)}
             ):
                 assert isinstance(state, State)
                 if _has_no_color_values(state):
