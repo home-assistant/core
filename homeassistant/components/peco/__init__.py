@@ -1,5 +1,6 @@
 """The PECO Outage Counter integration."""
 from __future__ import annotations
+from typing import Final
 
 import peco
 
