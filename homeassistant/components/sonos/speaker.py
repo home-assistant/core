@@ -400,7 +400,12 @@ class SonosSpeaker:
         )
         for result in results:
             if isinstance(result, Exception):
-                _LOGGER.debug("Unsubscribe failed for %s: %s", self.zone_name, result)
+                _LOGGER.debug(
+                    "Unsubscribe failed for %s: %s",
+                    self.zone_name,
+                    result,
+                    exc_info=result,
+                )
         self._subscriptions = []
 
     @callback
@@ -701,7 +706,7 @@ class SonosSpeaker:
         """Handle callback for topology change event."""
         if xml := event.variables.get("zone_group_state"):
             zgs = ET.fromstring(xml)
-            for vanished_device in zgs.find("VanishedDevices"):
+            for vanished_device in zgs.find("VanishedDevices") or []:
                 if (reason := vanished_device.get("Reason")) != "sleeping":
                     _LOGGER.debug(
                         "Ignoring %s marked %s as vanished with reason: %s",
