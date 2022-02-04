@@ -33,8 +33,11 @@ from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.color import (
     color_hsv_to_RGB,
+    color_RGB_to_hs,
     color_temperature_mired_to_kelvin,
     color_temperature_to_hs,
+    color_temperature_to_rgbww,
+    while_levels_to_color_temperature,
 )
 
 from .accessories import TYPES, HomeAccessory
@@ -83,6 +86,7 @@ class Light(HomeAccessory):
         )
         self.color_supported = color_supported(color_modes)
         self.color_temp_supported = color_temp_supported(color_modes)
+        self.rgbw_supported = COLOR_MODE_RGBW in color_modes
         self.rgbww_supported = COLOR_MODE_RGBWW in color_modes
         self.brightness_supported = brightness_supported(color_modes)
 
@@ -107,14 +111,21 @@ class Light(HomeAccessory):
             self.char_brightness = serv_light.configure_char(CHAR_BRIGHTNESS, value=100)
 
         if CHAR_COLOR_TEMPERATURE in self.chars:
-            min_mireds = math.floor(attributes.get(ATTR_MIN_MIREDS, DEFAULT_MIN_MIREDS))
-            max_mireds = math.ceil(attributes.get(ATTR_MAX_MIREDS, DEFAULT_MAX_MIREDS))
+            self.min_mireds = math.floor(
+                attributes.get(ATTR_MIN_MIREDS, DEFAULT_MIN_MIREDS)
+            )
+            self.max_mireds = math.ceil(
+                attributes.get(ATTR_MAX_MIREDS, DEFAULT_MAX_MIREDS)
+            )
             if not self.color_temp_supported and not self.rgbww_supported:
-                max_mireds = min_mireds
+                self.max_mireds = self.min_mireds
             self.char_color_temp = serv_light.configure_char(
                 CHAR_COLOR_TEMPERATURE,
-                value=min_mireds,
-                properties={PROP_MIN_VALUE: min_mireds, PROP_MAX_VALUE: max_mireds},
+                value=self.min_mireds,
+                properties={
+                    PROP_MIN_VALUE: self.min_mireds,
+                    PROP_MAX_VALUE: self.max_mireds,
+                },
             )
 
         if self.color_supported:
@@ -173,14 +184,19 @@ class Light(HomeAccessory):
             return
 
         if CHAR_COLOR_TEMPERATURE in char_values:
-            events.append(f"color temperature at {char_values[CHAR_COLOR_TEMPERATURE]}")
-            if self.color_temp_supported or self.rgbww_supported:
-                params[ATTR_COLOR_TEMP] = char_values[CHAR_COLOR_TEMPERATURE]
-            else:  # TODO: set the ATTR_RGBWW_COLOR here so we don't send brightness
-                params[ATTR_RGBW_COLOR] = (
-                    *(0,) * 3,
-                    round(((brightness_pct or self.char_brightness.value) * 255) / 100),
+            temp = char_values[CHAR_COLOR_TEMPERATURE]
+            events.append(f"color temperature at {temp}")
+            bright_val = round(
+                ((brightness_pct or self.char_brightness.value) * 255) / 100
+            )
+            if self.color_temp_supported:
+                params[ATTR_COLOR_TEMP] = temp
+            elif self.rgbww_supported:
+                params[ATTR_RGBWW_COLOR] = color_temperature_to_rgbww(
+                    temp, bright_val, self.min_mireds, self.max_mireds
                 )
+            else:
+                params[ATTR_RGBW_COLOR] = (*(0,) * 3, bright_val)
 
         elif (
             CHAR_HUE in char_values
@@ -211,9 +227,46 @@ class Light(HomeAccessory):
             and ATTR_RGBWW_COLOR not in params
             and ATTR_RGBW_COLOR not in params
         ):
-            # TODO: if we are in RGB (RGBW/RGBWW) mode, we need adjust brightness manually -- might be ok!
-            # TODO: if we are in WHITE (RGBW/RGBWW) mode, we need adjust brightness manually
-
+            # HomeKit assumes RGB and WHITE values are interlocked
+            # similar to esphome's color_interlock: true
+            if not self.color_temp_supported and COLOR_MODES_WITH_WHITES.intersection(
+                self.color_modes
+            ):
+                state = self.hass.states.get(self.entity_id)
+                if self.rgbww_supported:
+                    red, green, blue, cold, warm = state[ATTR_RGBWW_COLOR]
+                    if red == 0 and green == 0 and blue == 0:
+                        # White interlock
+                        params[ATTR_RGBWW_COLOR] = color_temperature_to_rgbww(
+                            while_levels_to_color_temperature(
+                                cold, warm, self.min_mireds, self.max_mireds
+                            )[0],
+                            brightness_pct * 2.55,
+                            self.min_mireds,
+                            self.max_mireds,
+                        )
+                    if cold == 0 and warm == 0:
+                        params[ATTR_RGBWW_COLOR] = (
+                            *color_hsv_to_RGB(
+                                *color_RGB_to_hs(red, green, blue), brightness_pct
+                            ),
+                            *(0,) * 2,
+                        )
+                else:
+                    red, green, blue, white = state[ATTR_RGBWW_COLOR]
+                    if red == 0 and green == 0 and blue == 0:
+                        params[ATTR_RGBWW_COLOR] = (
+                            *(0,) * 3,
+                            min(255, round(brightness_pct * 2.55)),
+                        )
+                    if white == 0:
+                        params[ATTR_RGBW_COLOR] = (
+                            *color_hsv_to_RGB(
+                                *color_RGB_to_hs(red, green, blue), brightness_pct
+                            ),
+                            0,
+                        )
+        if ATTR_RGBWW_COLOR not in params and ATTR_RGBW_COLOR not in params:
             params[ATTR_BRIGHTNESS_PCT] = brightness_pct
 
         self.async_call_service(DOMAIN, service, params, ", ".join(events))
