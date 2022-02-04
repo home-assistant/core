@@ -25,7 +25,6 @@ SENSOR_TYPES = {
     "com.fibaro.smokeSensor": ["Smoke", "mdi:smoking", BinarySensorDeviceClass.SMOKE],
     "com.fibaro.FGMS001": ["Motion", "mdi:run", BinarySensorDeviceClass.MOTION],
     "com.fibaro.heatDetector": ["Heat", "mdi:fire", "heat"],
-    "com.fibaro.binarySensor": ["Binary", None, None],
 }
 
 
