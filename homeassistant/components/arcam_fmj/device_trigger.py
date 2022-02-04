@@ -76,7 +76,7 @@ async def async_attach_trigger(
                     job,
                     {
                         "trigger": {
-                            **trigger_data,
+                            **trigger_data,  # type: ignore  # https://github.com/python/mypy/issues/9117
                             **config,
                             "description": f"{DOMAIN} - {entity_id}",
                         }

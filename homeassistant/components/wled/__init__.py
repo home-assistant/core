@@ -5,7 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import WLEDDataUpdateCoordinator
 
 PLATFORMS = (
@@ -24,14 +24,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = WLEDDataUpdateCoordinator(hass, entry=entry)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
-
-    # For backwards compat, set unique ID
-    if entry.unique_id is None:
-        hass.config_entries.async_update_entry(
-            entry, unique_id=coordinator.data.info.mac_address
+    if coordinator.data.info.leds.cct:
+        LOGGER.error(
+            "WLED device '%s' has a CCT channel, which is not supported by "
+            "this integration",
+            entry.title,
         )
+        return False
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     # Set up all platforms for this device/entry.
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -44,8 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload WLED config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
         # Ensure disconnected and cleanup stop sub

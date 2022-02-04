@@ -80,8 +80,8 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
         adguard = AdGuardHome(
             user_input[CONF_HOST],
             port=user_input[CONF_PORT],
-            username=username,  # type:ignore[arg-type]
-            password=password,  # type:ignore[arg-type]
+            username=username,
+            password=password,
             tls=user_input[CONF_SSL],
             verify_ssl=user_input[CONF_VERIFY_SSL],
             session=session,

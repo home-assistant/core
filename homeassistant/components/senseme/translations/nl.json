@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_host": "Ongeldige hostnaam of IP-adres"
+        },
+        "flow_title": "{name} - {model} ({host})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Wilt u {name} - {model} ({host})?"
+            },
+            "manual": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Voer een IP-adres in."
+            },
+            "user": {
+                "data": {
+                    "device": "Apparaat"
+                },
+                "description": "Selecteer een apparaat, of kies 'IP-adres' om handmatig een IP-adres in te voeren."
+            }
+        }
+    }
+}

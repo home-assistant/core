@@ -24,8 +24,6 @@ class MockConfig(helpers.AbstractConfig):
         enabled=True,
         entity_config=None,
         hass=None,
-        local_sdk_user_id=None,
-        local_sdk_webhook_id=None,
         secure_devices_pin=None,
         should_2fa=None,
         should_expose=None,
@@ -35,8 +33,6 @@ class MockConfig(helpers.AbstractConfig):
         super().__init__(hass)
         self._enabled = enabled
         self._entity_config = entity_config or {}
-        self._local_sdk_user_id = local_sdk_user_id
-        self._local_sdk_webhook_id = local_sdk_webhook_id
         self._secure_devices_pin = secure_devices_pin
         self._should_2fa = should_2fa
         self._should_expose = should_expose
@@ -57,16 +53,6 @@ class MockConfig(helpers.AbstractConfig):
     def entity_config(self):
         """Return secure devices pin."""
         return self._entity_config
-
-    @property
-    def local_sdk_webhook_id(self):
-        """Return local SDK webhook id."""
-        return self._local_sdk_webhook_id
-
-    @property
-    def local_sdk_user_id(self):
-        """Return local SDK webhook id."""
-        return self._local_sdk_user_id
 
     def get_agent_user_id(self, context):
         """Get agent user ID making request."""
@@ -397,8 +383,8 @@ DEMO_DEVICES = [
         "willReportState": False,
     },
     {
-        "id": "alarm_control_panel.alarm",
-        "name": {"name": "Alarm"},
+        "id": "alarm_control_panel.security",
+        "name": {"name": "Security"},
         "traits": ["action.devices.traits.ArmDisarm"],
         "type": "action.devices.types.SECURITYSYSTEM",
         "willReportState": False,

@@ -24,7 +24,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -342,13 +342,13 @@ def _create_elk_services(hass):
             raise HomeAssistantError(f"No ElkM1 with prefix '{prefix}' found")
         return elk
 
-    def _speak_word_service(service):
+    def _speak_word_service(service: ServiceCall) -> None:
         _getelk(service).panel.speak_word(service.data["number"])
 
-    def _speak_phrase_service(service):
+    def _speak_phrase_service(service: ServiceCall) -> None:
         _getelk(service).panel.speak_phrase(service.data["number"])
 
-    def _set_time_service(service):
+    def _set_time_service(service: ServiceCall) -> None:
         _getelk(service).panel.set_time(dt_util.now())
 
     hass.services.async_register(

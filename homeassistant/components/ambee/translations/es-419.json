@@ -5,6 +5,9 @@
                 "data": {
                     "description": "Vuelva a autenticarse con su cuenta de Ambee."
                 }
+            },
+            "user": {
+                "description": "Configure Ambee para que se integre con Home Assistant."
             }
         }
     }

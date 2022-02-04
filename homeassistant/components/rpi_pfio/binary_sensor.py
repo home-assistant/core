@@ -1,10 +1,15 @@
 """Support for binary sensor using the PiFace Digital I/O module on a RPi."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.components import rpi_pfio
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_INVERT_LOGIC = "invert_logic"
 CONF_PORTS = "ports"
@@ -26,10 +31,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the PiFace Digital Input devices."""
     binary_sensors = []
-    ports = config.get(CONF_PORTS)
+    ports = config[CONF_PORTS]
     for port, port_entity in ports.items():
         name = port_entity.get(CONF_NAME)
         settle_time = port_entity[CONF_SETTLE_TIME] / 1000

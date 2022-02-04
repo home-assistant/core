@@ -37,6 +37,11 @@ ZEROCONF = {
             }
         }
     ],
+    "_airport._tcp.local.": [
+        {
+            "domain": "apple_tv"
+        }
+    ],
     "_api._udp.local.": [
         {
             "domain": "guardian"
@@ -76,6 +81,11 @@ ZEROCONF = {
     "_bond._tcp.local.": [
         {
             "domain": "bond"
+        }
+    ],
+    "_companion-link._tcp.local.": [
+        {
+            "domain": "apple_tv"
         }
     ],
     "_daap._tcp.local.": [
@@ -179,6 +189,11 @@ ZEROCONF = {
             "domain": "hue"
         }
     ],
+    "_hwenergy._tcp.local.": [
+        {
+            "domain": "homewizard"
+        }
+    ],
     "_ipp._tcp.local.": [
         {
             "domain": "ipp"
@@ -190,6 +205,10 @@ ZEROCONF = {
         }
     ],
     "_kizbox._tcp.local.": [
+        {
+            "domain": "overkiz",
+            "name": "gateway*"
+        },
         {
             "domain": "somfy",
             "name": "gateway*"
@@ -295,6 +314,11 @@ ZEROCONF = {
             "properties": {
                 "mdl": "ecobee*"
             }
+        }
+    ],
+    "_sleep-proxy._udp.local.": [
+        {
+            "domain": "apple_tv"
         }
     ],
     "_sonos._tcp.local.": [

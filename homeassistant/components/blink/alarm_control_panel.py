@@ -3,12 +3,15 @@ import logging
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
 from homeassistant.components.alarm_control_panel.const import SUPPORT_ALARM_ARM_AWAY
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_DISARMED,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
 
@@ -17,7 +20,9 @@ _LOGGER = logging.getLogger(__name__)
 ICON = "mdi:security"
 
 
-async def async_setup_entry(hass, config, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the Blink Alarm Control Panels."""
     data = hass.data[DOMAIN][config.entry_id]
 

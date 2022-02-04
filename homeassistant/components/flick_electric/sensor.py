@@ -9,13 +9,12 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .const import ATTR_COMPONENTS, ATTR_END_AT, ATTR_START_AT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-_AUTH_URL = "https://api.flick.energy/identity/oauth/token"
-_RESOURCE = "https://api.flick.energy/customer/mobile_provider/price"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -25,8 +24,8 @@ UNIT_NAME = "cents"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Flick Sensor Setup."""
     api: FlickAPI = hass.data[DOMAIN][entry.entry_id]
 
@@ -69,6 +68,8 @@ class FlickPricingSensor(SensorEntity):
 
         async with async_timeout.timeout(60):
             self._price = await self._api.getPricing()
+
+        _LOGGER.debug("Pricing data: %s", self._price)
 
         self._attributes[ATTR_START_AT] = self._price.start_at
         self._attributes[ATTR_END_AT] = self._price.end_at

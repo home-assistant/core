@@ -1,4 +1,5 @@
 """Support for Nest devices."""
+# mypy: ignore-errors
 
 from datetime import datetime, timedelta
 import logging
@@ -107,6 +108,12 @@ async def async_setup_legacy(hass: HomeAssistant, config: dict) -> bool:
     """Set up Nest components using the legacy nest API."""
     if DOMAIN not in config:
         return True
+
+    _LOGGER.warning(
+        "The Legacy Works With Nest API is deprecated and support will be removed "
+        "in Home Assistant Core 2022.5; See instructions for using the Smart Device "
+        "Management API at https://www.home-assistant.io/integrations/nest/"
+    )
 
     conf = config[DOMAIN]
 

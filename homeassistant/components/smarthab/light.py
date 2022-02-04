@@ -6,6 +6,9 @@ import pysmarthab
 from requests.exceptions import Timeout
 
 from homeassistant.components.light import LightEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DATA_HUB, DOMAIN
 
@@ -14,7 +17,11 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up SmartHab lights from a config entry."""
     hub = hass.data[DOMAIN][config_entry.entry_id][DATA_HUB]
 

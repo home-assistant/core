@@ -166,8 +166,7 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
         """Init ZHA entity."""
         super().__init__(unique_id, zha_device, **kwargs)
         ieeetail = "".join([f"{o:02x}" for o in zha_device.ieee[:4]])
-        ch_names = [ch.cluster.ep_attribute for ch in channels]
-        ch_names = ", ".join(sorted(ch_names))
+        ch_names = ", ".join(sorted(ch.name for ch in channels))
         self._name: str = f"{zha_device.name} {ieeetail} {ch_names}"
         if self.unique_id_suffix:
             self._name += f" {self.unique_id_suffix}"

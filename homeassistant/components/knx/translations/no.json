@@ -12,16 +12,17 @@
                 "data": {
                     "host": "Vert",
                     "individual_address": "Individuell adresse for tilkoblingen",
-                    "local_ip": "Lokal IP (la st\u00e5 tomt hvis du er usikker)",
+                    "local_ip": "Lokal IP for Home Assistant (la st\u00e5 tomt for automatisk gjenkjenning)",
                     "port": "Port",
-                    "route_back": "Rute tilbake / NAT-modus"
+                    "route_back": "Rute tilbake / NAT-modus",
+                    "tunneling_type": "KNX tunneltype"
                 },
                 "description": "Vennligst skriv inn tilkoblingsinformasjonen til tunnelenheten din."
             },
             "routing": {
                 "data": {
                     "individual_address": "Individuell adresse for ruteforbindelsen",
-                    "local_ip": "Lokal IP (la st\u00e5 tomt hvis du er usikker)",
+                    "local_ip": "Lokal IP for Home Assistant (la st\u00e5 tomt for automatisk gjenkjenning)",
                     "multicast_group": "Multicast-gruppen som brukes til ruting",
                     "multicast_port": "Multicast-porten som brukes til ruting"
                 },
@@ -47,7 +48,7 @@
                 "data": {
                     "connection_type": "KNX tilkoblingstype",
                     "individual_address": "Standard individuell adresse",
-                    "local_ip": "Lokal IP (la st\u00e5 tomt hvis du er usikker)",
+                    "local_ip": "Lokal IP for Home Assistant (bruk 0.0.0.0 for automatisk deteksjon)",
                     "multicast_group": "Multicast-gruppe brukt til ruting og oppdagelse",
                     "multicast_port": "Multicast-port som brukes til ruting og oppdagelse",
                     "rate_limit": "Maksimalt utg\u00e5ende telegrammer per sekund",
@@ -59,7 +60,8 @@
                     "host": "Vert",
                     "local_ip": "Lokal IP (la st\u00e5 tomt hvis du er usikker)",
                     "port": "Port",
-                    "route_back": "Rute tilbake / NAT-modus"
+                    "route_back": "Rute tilbake / NAT-modus",
+                    "tunneling_type": "KNX tunneltype"
                 }
             }
         }

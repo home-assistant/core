@@ -6,6 +6,7 @@ import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.security as security
 import zigpy.zcl.foundation as zcl_f
 
+from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_ALARM_ARMED_AWAY,
@@ -62,7 +63,7 @@ async def test_alarm_control_panel(hass, zha_device_joined_restored, zigpy_devic
     # arm_away from HA
     cluster.client_command.reset_mock()
     await hass.services.async_call(
-        Platform.ALARM_CONTROL_PANEL,
+        ALARM_DOMAIN,
         "alarm_arm_away",
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
@@ -85,7 +86,7 @@ async def test_alarm_control_panel(hass, zha_device_joined_restored, zigpy_devic
     # trip alarm from faulty code entry
     cluster.client_command.reset_mock()
     await hass.services.async_call(
-        Platform.ALARM_CONTROL_PANEL,
+        ALARM_DOMAIN,
         "alarm_arm_away",
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
@@ -94,13 +95,13 @@ async def test_alarm_control_panel(hass, zha_device_joined_restored, zigpy_devic
     assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_AWAY
     cluster.client_command.reset_mock()
     await hass.services.async_call(
-        Platform.ALARM_CONTROL_PANEL,
+        ALARM_DOMAIN,
         "alarm_disarm",
         {ATTR_ENTITY_ID: entity_id, "code": "1111"},
         blocking=True,
     )
     await hass.services.async_call(
-        Platform.ALARM_CONTROL_PANEL,
+        ALARM_DOMAIN,
         "alarm_disarm",
         {ATTR_ENTITY_ID: entity_id, "code": "1111"},
         blocking=True,
@@ -123,7 +124,7 @@ async def test_alarm_control_panel(hass, zha_device_joined_restored, zigpy_devic
     # arm_home from HA
     cluster.client_command.reset_mock()
     await hass.services.async_call(
-        Platform.ALARM_CONTROL_PANEL,
+        ALARM_DOMAIN,
         "alarm_arm_home",
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
@@ -143,7 +144,7 @@ async def test_alarm_control_panel(hass, zha_device_joined_restored, zigpy_devic
     # arm_night from HA
     cluster.client_command.reset_mock()
     await hass.services.async_call(
-        Platform.ALARM_CONTROL_PANEL,
+        ALARM_DOMAIN,
         "alarm_arm_night",
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
@@ -240,7 +241,7 @@ async def reset_alarm_panel(hass, cluster, entity_id):
     """Reset the state of the alarm panel."""
     cluster.client_command.reset_mock()
     await hass.services.async_call(
-        Platform.ALARM_CONTROL_PANEL,
+        ALARM_DOMAIN,
         "alarm_disarm",
         {ATTR_ENTITY_ID: entity_id, "code": "4321"},
         blocking=True,

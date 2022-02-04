@@ -9,8 +9,10 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import (
     CONF_INVERT_OPENCLOSE_BUTTONS,
@@ -30,7 +32,11 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Z-Wave Cover from Config Entry."""
 
     @callback

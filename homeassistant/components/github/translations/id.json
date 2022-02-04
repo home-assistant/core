@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Layanan sudah dikonfigurasi",
+            "could_not_register": "Tidak dapat mendaftarkan integrasi dengan GitHub"
+        },
+        "step": {
+            "repositories": {
+                "data": {
+                    "repositories": "Pilih repositori untuk dilacak."
+                },
+                "title": "Konfigurasikan repositori"
+            }
+        }
+    }
+}

@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import functools
-from typing import Callable, TypeVar, cast
+from typing import TypeVar, cast
 
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass

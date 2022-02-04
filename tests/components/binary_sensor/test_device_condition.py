@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 import homeassistant.components.automation as automation
-from homeassistant.components.binary_sensor import DEVICE_CLASSES, DOMAIN
+from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDeviceClass
 from homeassistant.components.binary_sensor.device_condition import ENTITY_CONDITIONS
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
@@ -53,7 +53,7 @@ async def test_get_conditions(hass, device_reg, entity_reg, enable_custom_integr
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    for device_class in DEVICE_CLASSES:
+    for device_class in BinarySensorDeviceClass:
         entity_reg.async_get_or_create(
             DOMAIN,
             "test",
@@ -72,7 +72,7 @@ async def test_get_conditions(hass, device_reg, entity_reg, enable_custom_integr
             "device_id": device_entry.id,
             "entity_id": platform.ENTITIES[device_class].entity_id,
         }
-        for device_class in DEVICE_CLASSES
+        for device_class in BinarySensorDeviceClass
         for condition in ENTITY_CONDITIONS[device_class]
     ]
     conditions = await async_get_device_automations(
@@ -90,7 +90,7 @@ async def test_get_conditions_no_state(hass, device_reg, entity_reg):
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entity_ids = {}
-    for device_class in DEVICE_CLASSES:
+    for device_class in BinarySensorDeviceClass:
         entity_ids[device_class] = entity_reg.async_get_or_create(
             DOMAIN,
             "test",
@@ -109,7 +109,7 @@ async def test_get_conditions_no_state(hass, device_reg, entity_reg):
             "device_id": device_entry.id,
             "entity_id": entity_ids[device_class],
         }
-        for device_class in DEVICE_CLASSES
+        for device_class in BinarySensorDeviceClass
         for condition in ENTITY_CONDITIONS[device_class]
     ]
     conditions = await async_get_device_automations(

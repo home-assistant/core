@@ -1,4 +1,6 @@
 """Support for MQTT fans."""
+from __future__ import annotations
+
 import functools
 import logging
 import math
@@ -19,6 +21,7 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_OPTIMISTIC,
@@ -28,22 +31,30 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.percentage import (
     int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
 
-from . import PLATFORMS, MqttCommandTemplate, subscription
+from . import PLATFORMS, MqttCommandTemplate, MqttValueTemplate, subscription
 from .. import mqtt
-from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
+from .const import (
+    CONF_COMMAND_TEMPLATE,
+    CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
+    CONF_QOS,
+    CONF_RETAIN,
+    CONF_STATE_TOPIC,
+    DOMAIN,
+)
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
 CONF_STATE_VALUE_TEMPLATE = "state_value_template"
-CONF_COMMAND_TEMPLATE = "command_template"
 CONF_PERCENTAGE_STATE_TOPIC = "percentage_state_topic"
 CONF_PERCENTAGE_COMMAND_TOPIC = "percentage_command_topic"
 CONF_PERCENTAGE_VALUE_TEMPLATE = "percentage_value_template"
@@ -82,6 +93,8 @@ DEFAULT_SPEED_RANGE_MAX = 100
 
 OSCILLATE_ON_PAYLOAD = "oscillate_on"
 OSCILLATE_OFF_PAYLOAD = "oscillate_off"
+
+PAYLOAD_NONE = "None"
 
 MQTT_FAN_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -172,16 +185,6 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 PLATFORM_SCHEMA = vol.All(
-    # CONF_SPEED_COMMAND_TOPIC, CONF_SPEED_LIST, CONF_SPEED_STATE_TOPIC, CONF_SPEED_VALUE_TEMPLATE and
-    # Speeds SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH SPEED_OFF,
-    # are deprecated, support will be removed with release 2021.9
-    cv.removed(CONF_PAYLOAD_HIGH_SPEED),
-    cv.removed(CONF_PAYLOAD_LOW_SPEED),
-    cv.removed(CONF_PAYLOAD_MEDIUM_SPEED),
-    cv.removed(CONF_SPEED_COMMAND_TOPIC),
-    cv.removed(CONF_SPEED_LIST),
-    cv.removed(CONF_SPEED_STATE_TOPIC),
-    cv.removed(CONF_SPEED_VALUE_TEMPLATE),
     _PLATFORM_SCHEMA_BASE,
     valid_speed_range_configuration,
     valid_preset_mode_configuration,
@@ -190,7 +193,7 @@ PLATFORM_SCHEMA = vol.All(
 DISCOVERY_SCHEMA = vol.All(
     # CONF_SPEED_COMMAND_TOPIC, CONF_SPEED_LIST, CONF_SPEED_STATE_TOPIC, CONF_SPEED_VALUE_TEMPLATE and
     # Speeds SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH SPEED_OFF,
-    # are deprecated, support will be removed with release 2021.9
+    # are no longer supported, support was removed in release 2021.12
     cv.removed(CONF_PAYLOAD_HIGH_SPEED),
     cv.removed(CONF_PAYLOAD_LOW_SPEED),
     cv.removed(CONF_PAYLOAD_MEDIUM_SPEED),
@@ -205,14 +208,21 @@ DISCOVERY_SCHEMA = vol.All(
 
 
 async def async_setup_platform(
-    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
-):
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up MQTT fan through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     await _async_setup_entity(hass, async_add_entities, config)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up MQTT fan dynamically through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
@@ -235,7 +245,7 @@ class MqttFan(MqttEntity, FanEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT fan."""
-        self._state = False
+        self._state = None
         self._percentage = None
         self._preset_mode = None
         self._oscillation = None
@@ -334,17 +344,16 @@ class MqttFan(MqttEntity, FanEntity):
 
         for key, tpl in self._command_templates.items():
             self._command_templates[key] = MqttCommandTemplate(
-                tpl, self.hass
+                tpl, entity=self
             ).async_render
 
         for key, tpl in self._value_templates.items():
-            if tpl is None:
-                self._value_templates[key] = lambda value: value
-            else:
-                tpl.hass = self.hass
-                self._value_templates[key] = tpl.async_render_with_possible_json_value
+            self._value_templates[key] = MqttValueTemplate(
+                tpl,
+                entity=self,
+            ).async_render_with_possible_json_value
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
         topics = {}
 
@@ -360,6 +369,8 @@ class MqttFan(MqttEntity, FanEntity):
                 self._state = True
             elif payload == self._payload["STATE_OFF"]:
                 self._state = False
+            elif payload == PAYLOAD_NONE:
+                self._state = None
             self.async_write_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
@@ -367,6 +378,7 @@ class MqttFan(MqttEntity, FanEntity):
                 "topic": self._topic[CONF_STATE_TOPIC],
                 "msg_callback": state_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
 
         @callback
@@ -411,6 +423,7 @@ class MqttFan(MqttEntity, FanEntity):
                 "topic": self._topic[CONF_PERCENTAGE_STATE_TOPIC],
                 "msg_callback": percentage_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
             self._percentage = None
 
@@ -443,6 +456,7 @@ class MqttFan(MqttEntity, FanEntity):
                 "topic": self._topic[CONF_PRESET_MODE_STATE_TOPIC],
                 "msg_callback": preset_mode_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
             self._preset_mode = None
 
@@ -465,12 +479,17 @@ class MqttFan(MqttEntity, FanEntity):
                 "topic": self._topic[CONF_OSCILLATION_STATE_TOPIC],
                 "msg_callback": oscillation_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
             self._oscillation = False
 
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics
         )
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
     def assumed_state(self):
@@ -478,7 +497,7 @@ class MqttFan(MqttEntity, FanEntity):
         return self._optimistic
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._state
 
@@ -531,6 +550,7 @@ class MqttFan(MqttEntity, FanEntity):
             mqtt_payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
         if percentage:
             await self.async_set_percentage(percentage)
@@ -552,6 +572,7 @@ class MqttFan(MqttEntity, FanEntity):
             mqtt_payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
         if self._optimistic:
             self._state = False
@@ -572,6 +593,7 @@ class MqttFan(MqttEntity, FanEntity):
             mqtt_payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
         if self._optimistic_percentage:
@@ -595,6 +617,7 @@ class MqttFan(MqttEntity, FanEntity):
             mqtt_payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
         if self._optimistic_preset_mode:
@@ -621,6 +644,7 @@ class MqttFan(MqttEntity, FanEntity):
             mqtt_payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
         if self._optimistic_oscillation:

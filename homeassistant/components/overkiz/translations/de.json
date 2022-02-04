@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto wurde bereits konfiguriert"
+            "already_configured": "Konto wurde bereits konfiguriert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
+            "reauth_wrong_account": "Du kannst diesen Eintrag nur mit demselben Overkiz-Konto und -Hub erneut authentifizieren"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
