@@ -5,7 +5,11 @@ from datetime import timedelta
 from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
 import pytest
 
-from homeassistant.components.homekit.const import ATTR_VALUE
+from homeassistant.components.homekit.const import (
+    ATTR_VALUE,
+    PROP_MAX_VALUE,
+    PROP_MIN_VALUE,
+)
 from homeassistant.components.homekit.type_lights import (
     CHANGE_COALESCE_TIME_WINDOW,
     Light,
@@ -937,6 +941,10 @@ async def test_light_rgbw_with_color_temp_conversion(
     char_hue_iid = acc.char_hue.to_HAP()[HAP_REPR_IID]
     char_saturation_iid = acc.char_saturation.to_HAP()[HAP_REPR_IID]
     char_color_temp_iid = acc.char_color_temp.to_HAP()[HAP_REPR_IID]
+    assert (
+        acc.char_color_temp.properties[PROP_MIN_VALUE]
+        == acc.char_color_temp.properties[PROP_MAX_VALUE]
+    )
 
     hk_driver.set_characteristics(
         {
