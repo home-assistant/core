@@ -276,14 +276,14 @@ class Light(HomeAccessory):
                     if rgbww := state.attributes.get(ATTR_RGBWW_COLOR):
                         hue_sat = color_RGB_to_hs(*rgbww[:3])
                         params[ATTR_RGBWW_COLOR] = (
-                            *color_hsv_to_RGB(*hue_sat, bright_val),
+                            *color_hsv_to_RGB(*hue_sat, brightness_pct),
                             0,
                             0,
                         )
                     elif rgbw := state.attributes.get(ATTR_RGBW_COLOR):
                         hue_sat = color_RGB_to_hs(*rgbw[:3])
                         params[ATTR_RGBW_COLOR] = (
-                            *color_hsv_to_RGB(*hue_sat, bright_val),
+                            *color_hsv_to_RGB(*hue_sat, brightness_pct),
                             0,
                         )
             if ATTR_RGBWW_COLOR not in params and ATTR_RGBW_COLOR not in params:
