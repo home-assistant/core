@@ -18,7 +18,7 @@ async def test_container_installationtype(hass):
     """Test container installation type."""
     with patch("platform.system", return_value="Linux"), patch(
         "os.path.isfile", return_value=True
-    ):
+    ), patch("homeassistant.helpers.system_info.getuser", return_value="root"):
         info = await hass.helpers.system_info.async_get_system_info()
         assert info["installation_type"] == "Home Assistant Container"
 
