@@ -613,9 +613,6 @@ def _apply_update(instance, new_version, old_version):  # noqa: C901
         # Add name column to StatisticsMeta
         _add_columns(instance, "statistics_meta", ["name VARCHAR(255)"])
     elif new_version == 24:
-        # Delete duplicated statistics
-        with session_scope(session=instance.get_session()) as session:
-            delete_duplicates(instance, session)
         # Recreate statistics indices to block duplicated statistics
         _drop_index(instance, "statistics", "ix_statistics_statistic_id_start")
         _drop_index(
@@ -633,7 +630,8 @@ def _apply_update(instance, new_version, old_version):  # noqa: C901
         except DatabaseError:
             # There may be duplicated statistics entries, delete duplicated statistics
             # and try again
-            delete_duplicates(instance, session)
+            with session_scope(session=instance.get_session()) as session:
+                delete_duplicates(instance, session)
             _create_index(instance, "statistics", "ix_statistics_statistic_id_start")
             _create_index(
                 instance,
