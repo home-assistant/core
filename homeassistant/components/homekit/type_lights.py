@@ -176,7 +176,7 @@ class Light(HomeAccessory):
             events.append(f"color temperature at {char_values[CHAR_COLOR_TEMPERATURE]}")
             if self.color_temp_supported or self.rgbww_supported:
                 params[ATTR_COLOR_TEMP] = char_values[CHAR_COLOR_TEMPERATURE]
-            else:
+            else:  # TODO: set the ATTR_RGBWW_COLOR here so we don't send brightness
                 params[ATTR_RGBW_COLOR] = (
                     *(0,) * 3,
                     round(((brightness_pct or self.char_brightness.value) * 255) / 100),
@@ -211,6 +211,9 @@ class Light(HomeAccessory):
             and ATTR_RGBWW_COLOR not in params
             and ATTR_RGBW_COLOR not in params
         ):
+            # TODO: if we are in RGB (RGBW/RGBWW) mode, we need adjust brightness manually
+            # TODO: if we are in WHITE (RGBW/RGBWW) mode, we need adjust brightness manually
+
             params[ATTR_BRIGHTNESS_PCT] = brightness_pct
 
         self.async_call_service(DOMAIN, service, params, ", ".join(events))
