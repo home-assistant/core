@@ -211,7 +211,7 @@ class Light(HomeAccessory):
             and ATTR_RGBWW_COLOR not in params
             and ATTR_RGBW_COLOR not in params
         ):
-            # TODO: if we are in RGB (RGBW/RGBWW) mode, we need adjust brightness manually
+            # TODO: if we are in RGB (RGBW/RGBWW) mode, we need adjust brightness manually -- might be ok!
             # TODO: if we are in WHITE (RGBW/RGBWW) mode, we need adjust brightness manually
 
             params[ATTR_BRIGHTNESS_PCT] = brightness_pct
