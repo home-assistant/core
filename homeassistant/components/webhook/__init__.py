@@ -115,16 +115,22 @@ async def async_handle_webhook(
         _LOGGER.debug("%s", content)
         return Response(status=HTTPStatus.OK)
 
-    if webhook["local_only"]:
-        try:
-            remote = ip_address(request.remote)
-        except ValueError:
-            _LOGGER.debug("Unable to parse remote ip %s", request.remote)
-            return Response(status=HTTPStatus.OK)
+    # ais try...
+    try:
+        if webhook["local_only"]:
+            try:
+                remote = ip_address(request.remote)
+            except ValueError:
+                _LOGGER.debug("Unable to parse remote ip %s", request.remote)
+                return Response(status=HTTPStatus.OK)
 
-        if not network.is_local(remote):
-            _LOGGER.warning("Received remote request for local webhook %s", webhook_id)
-            return Response(status=HTTPStatus.OK)
+            if not network.is_local(remote):
+                _LOGGER.warning(
+                    "Received remote request for local webhook %s", webhook_id
+                )
+                return Response(status=HTTPStatus.OK)
+    except Exception:
+        _LOGGER.info("NOT local_only webhook %s", webhook_id)
 
     try:
         # ais
