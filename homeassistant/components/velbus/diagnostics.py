@@ -28,9 +28,9 @@ async def async_get_device_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
     controller = hass.data[DOMAIN][entry.entry_id]["cntrl"]
-    chan = list(next(iter(device.identifiers)))[1]
+    channel = list(next(iter(device.identifiers)))[1]
     modules = controller.get_modules()
-    return build_module_diagnostics_info(modules[int(chan)])
+    return build_module_diagnostics_info(modules[int(channel)])
 
 
 def build_module_diagnostics_info(module: VelbusModule) -> dict[str, Any]:
