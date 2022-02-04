@@ -28,6 +28,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the HomeWizard config flow."""
         self.config: dict[str, str | int] = {}
 
+    async def async_step_import(self, import_config: dict) -> FlowResult:
+        """Handle a flow initiated by older `homewizard_energy` component."""
+        _LOGGER.debug("config_flow async_step_import")
+
+        self.hass.components.persistent_notification.async_create(
+            (
+                "The custom integration of HomeWizard Energy has been migrated to core. "
+                "You can safely remove the custom integration from the custom_integrations folder."
+            ),
+            "HomeWizard Energy",
+            f"homewizard_energy_to_{DOMAIN}",
+        )
+
+        return await self.async_step_user({CONF_IP_ADDRESS: import_config["host"]})
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -59,12 +74,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
+        data: dict[str, str] = {CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]}
+
+        if self.source == config_entries.SOURCE_IMPORT:
+            old_config_entry_id = self.context["old_config_entry_id"]
+            assert self.hass.config_entries.async_get_entry(old_config_entry_id)
+            data["old_config_entry_id"] = old_config_entry_id
+
         # Add entry
         return self.async_create_entry(
             title=f"{device_info[CONF_PRODUCT_NAME]} ({device_info[CONF_SERIAL]})",
-            data={
-                CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
-            },
+            data=data,
         )
 
     async def async_step_zeroconf(
