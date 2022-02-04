@@ -33,8 +33,6 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_FEATURES_RGB = (
     SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT
 )
-SUPPORT_FEATURES_DIM = SUPPORT_BRIGHTNESS
-SUPPORT_FEATURES_WHITE = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
 
 
 # set poll interval to 15 sec because of changes from external to the bulb
@@ -70,7 +68,6 @@ class WizBulbEntity(LightEntity):
         self._mac = light.mac
         self._attr_unique_id = light.mac
         # new init states
-        # self._attr_device_info = self.get_device_info()
         self._attr_min_mireds = self.get_min_mireds()
         self._attr_max_mireds = self.get_max_mireds()
         self._attr_supported_features = self.get_supported_features()
@@ -253,7 +250,7 @@ class WizBulbEntity(LightEntity):
             "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
             "name": self._attr_name,
             "manufacturer": "WiZ Light Platform",
-            "model": f"{self._bulbtype.name} Mac: {self._mac}",
+            "model": self._bulbtype.name",
         }
 
     def update_state_available(self):
@@ -349,10 +346,3 @@ class WizBulbEntity(LightEntity):
             _LOGGER.debug(
                 "[wizlight %s] Bulbtype update failed - Timeout", self._light.ip
             )
-
-    async def get_mac(self):
-        """Get the mac from the bulb."""
-        try:
-            self._mac = await self._light.getMac()
-        except WizLightTimeOutError:
-            _LOGGER.debug("[wizlight %s] Mac update failed - Timeout", self._light.ip)

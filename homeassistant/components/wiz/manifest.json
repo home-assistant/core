@@ -1,9 +1,8 @@
 {
   "domain": "wiz",
-  "name": "WiZ Platform",
+  "name": "WiZ",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/wiz_light",
-  "issue_tracker": "https://github.com/sbidy/wiz_light/issues",
+  "documentation": "https://www.home-assistant.io/integrations/wiz",
   "requirements": [
     "pywizlight==0.4.15"
   ],

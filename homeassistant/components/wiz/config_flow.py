@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.data_entry_flow import AbortFlow
 
 from .const import DEFAULT_NAME, DOMAIN
 
@@ -39,8 +38,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except WizLightConnectionError:
                 errors["base"] = "no_wiz_light"
-            except AbortFlow:
-                return self.async_abort(reason="single_instance_allowed")
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
