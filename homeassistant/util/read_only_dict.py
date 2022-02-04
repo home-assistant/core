@@ -1,4 +1,4 @@
-"""Dict utilities."""
+"""Read only dictionary."""
 from typing import Any, TypeVar
 
 
