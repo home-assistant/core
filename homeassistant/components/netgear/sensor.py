@@ -214,7 +214,7 @@ async def async_setup_entry(
 
     for description in SENSOR_TRAFFIC_TYPES:
         router_entities.append(
-            NetgearRouterSensorEntity(coordinator_traffic, router, entity_des)
+            NetgearRouterSensorEntity(coordinator_traffic, router, description)
         )
 
     async_add_entities(router_entities)
