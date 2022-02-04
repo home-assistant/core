@@ -240,7 +240,7 @@ class Light(HomeAccessory):
             if self.rgbww_supported:
                 val = brightness_pct or self.char_brightness.value
                 params[ATTR_RGBWW_COLOR] = (*color_hsv_to_RGB(*hue_sat, val), 0, 0)
-            if self.rgbw_supported:
+            elif self.rgbw_supported:
                 val = brightness_pct or self.char_brightness.value
                 params[ATTR_RGBW_COLOR] = (*color_hsv_to_RGB(*hue_sat, val), 0)
             else:
