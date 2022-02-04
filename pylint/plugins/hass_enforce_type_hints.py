@@ -10,6 +10,7 @@ from pylint.interfaces import IAstroidChecker
 from pylint.lint import PyLinter
 
 from homeassistant.const import Platform
+from homeassistant.helpers.typing import UNDEFINED
 
 
 @dataclass
@@ -39,9 +40,9 @@ _MODULE_FILTERS: dict[str, re.Pattern] = {
         f"^homeassistant\\.components\\.\\w+\\.({'|'.join([platform.value for platform in Platform])})$"
     ),
     # device_tracker matches only in the package root (device_tracker.py)
-    "device_tracker": re.compile(
-        f"^homeassistant\\.components\\.\\w+\\.({Platform.DEVICE_TRACKER.value})$"
-    ),
+    "device_tracker": re.compile(r"^homeassistant\.components\.\w+\.(device_tracker)$"),
+    # diagnostics matches only in the package root (diagnostics.py)
+    "diagnostics": re.compile(r"^homeassistant\.components\.\w+\.(diagnostics)$"),
 }
 
 _METHOD_MATCH: list[TypeHintMatch] = [
@@ -171,11 +172,33 @@ _METHOD_MATCH: list[TypeHintMatch] = [
         },
         return_type=["DeviceScanner", "DeviceScanner | None"],
     ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["diagnostics"],
+        function_name="async_get_config_entry_diagnostics",
+        arg_types={
+            0: "HomeAssistant",
+            1: "ConfigEntry",
+        },
+        return_type=UNDEFINED,
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["diagnostics"],
+        function_name="async_get_device_diagnostics",
+        arg_types={
+            0: "HomeAssistant",
+            1: "ConfigEntry",
+            2: "DeviceEntry",
+        },
+        return_type=UNDEFINED,
+    ),
 ]
 
 
 def _is_valid_type(expected_type: list[str] | str | None, node: astroid.NodeNG) -> bool:
     """Check the argument node against the expected type."""
+    if expected_type is UNDEFINED:
+        return True
+
     if isinstance(expected_type, list):
         for expected_type_item in expected_type:
             if _is_valid_type(expected_type_item, node):
