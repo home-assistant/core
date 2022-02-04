@@ -406,7 +406,7 @@ def test_color_rgb_to_rgbww():
 
 
 def test_color_rgbww_to_rgb():
-    """Test color_rgb_to_rgbww conversions."""
+    """Test color_rgbww_to_rgb conversions."""
     assert color_util.color_rgbww_to_rgb(0, 54, 98, 255, 255, 154, 370) == (
         255,
         255,
