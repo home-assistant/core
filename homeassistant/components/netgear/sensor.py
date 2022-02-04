@@ -57,7 +57,7 @@ SENSOR_TYPES = {
 class NetgearSensorEntityDescription(SensorEntityDescription):
     """Class describing Netgear sensor entities."""
 
-    value: Callable = None
+    value: Callable = lambda data: data
     index: int = 0
 
 
@@ -68,7 +68,6 @@ SENSOR_TRAFFIC_TYPES = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:upload",
-        value=lambda data: data,
     ),
     NetgearSensorEntityDescription(
         key="NewTodayDownload",
@@ -76,7 +75,6 @@ SENSOR_TRAFFIC_TYPES = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:download",
-        value=lambda data: data,
     ),
     NetgearSensorEntityDescription(
         key="NewYesterdayUpload",
@@ -84,7 +82,6 @@ SENSOR_TRAFFIC_TYPES = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:upload",
-        value=lambda data: data,
     ),
     NetgearSensorEntityDescription(
         key="NewYesterdayDownload",
@@ -92,7 +89,6 @@ SENSOR_TRAFFIC_TYPES = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:download",
-        value=lambda data: data,
     ),
     NetgearSensorEntityDescription(
         key="NewWeekUpload",
