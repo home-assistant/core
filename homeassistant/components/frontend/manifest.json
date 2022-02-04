@@ -10,6 +10,7 @@
     "auth",
     "config",
     "device_automation",
+    "diagnostics",
     "http",
     "lovelace",
     "onboarding",
