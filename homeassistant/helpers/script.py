@@ -742,7 +742,7 @@ class _ScriptRun:
         if saved_repeat_vars:
             self._variables["repeat"] = saved_repeat_vars
         else:
-            del self._variables["repeat"]
+            self._variables.pop("repeat", None)  # Not set if count = 0
 
     async def _async_choose_step(self) -> None:
         """Choose a sequence."""
