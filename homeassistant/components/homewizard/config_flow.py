@@ -10,7 +10,7 @@ import async_timeout
 from voluptuous import Required, Schema
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
+from homeassistant.components import persistent_notification, zeroconf
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 
@@ -32,13 +32,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by older `homewizard_energy` component."""
         _LOGGER.debug("config_flow async_step_import")
 
-        self.hass.components.persistent_notification.async_create(
-            (
+        persistent_notification.async_create(
+            self.hass,
+            title="HomeWizard Energy",
+            message=(
                 "The custom integration of HomeWizard Energy has been migrated to core. "
                 "You can safely remove the custom integration from the custom_integrations folder."
             ),
-            "HomeWizard Energy",
-            f"homewizard_energy_to_{DOMAIN}",
+            notification_id=f"homewizard_energy_to_{DOMAIN}",
         )
 
         return await self.async_step_user({CONF_IP_ADDRESS: import_config["host"]})
