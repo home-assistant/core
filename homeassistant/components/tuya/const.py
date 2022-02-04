@@ -367,6 +367,8 @@ class DPCode(StrEnum):
     WATER_SET = "water_set"  # Water level
     WATERSENSOR_STATE = "watersensor_state"
     WET = "wet"  # Humidification
+    WINDOW_CHECK = "window_check"
+    WINDOW_STATE = "window_state"
     WINDSPEED = "windspeed"
     WIRELESS_BATTERYLOCK = "wireless_batterylock"
     WIRELESS_ELECTRICITY = "wireless_electricity"

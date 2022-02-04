@@ -194,6 +194,16 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TAMPER_BINARY_SENSOR,
     ),
+    # Thermostatic Radiator Valve
+    # Not documented
+    "wkf": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.WINDOW_STATE,
+            name="Window",
+            device_class=BinarySensorDeviceClass.WINDOW,
+            on_value="opened",
+        ),
+    ),
     # Temperature and Humidity Sensor
     # https://developer.tuya.com/en/docs/iot/categorywsdcg?id=Kaiuz3hinij34
     "wsdcg": (TAMPER_BINARY_SENSOR,),

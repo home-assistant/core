@@ -79,6 +79,12 @@ CLIMATE_DESCRIPTIONS: dict[str, TuyaClimateEntityDescription] = {
         key="wk",
         switch_only_hvac_mode=HVAC_MODE_HEAT_COOL,
     ),
+    # Thermostatic Radiator Valve
+    # Not documented
+    "wkf": TuyaClimateEntityDescription(
+        key="wkf",
+        switch_only_hvac_mode=HVAC_MODE_HEAT,
+    ),
 }
 
 
