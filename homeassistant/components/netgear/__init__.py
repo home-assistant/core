@@ -1,6 +1,7 @@
 """Support for Netgear routers."""
 from datetime import timedelta
 import logging
+import asyncio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
@@ -9,7 +10,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER, PLATFORMS
+from .const import DOMAIN, KEY_COORDINATOR, KEY_COORDINATOR_TRAFFIC, KEY_ROUTER, PLATFORMS
 from .errors import CannotLoginException
 from .router import NetgearRouter
 
@@ -57,26 +58,43 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         configuration_url=f"http://{entry.data[CONF_HOST]}/",
     )
 
-    async def async_update_data() -> bool:
-        """Fetch data from the router."""
-        data = await router.async_update_device_trackers()
-        await router.async_get_traffic_meter()
-        return data
+    # create lock for all coordinators
+    coordinator_lock = asyncio.Lock()
 
-    # Create update coordinator
+    async def async_update_devices() -> bool:
+        """Fetch data from the router."""
+        with coordinator_lock:
+            data = await router.async_update_device_trackers()
+            return data
+
+    async def async_update_traffic_meter() -> None:
+        """Fetch data from the router."""
+        with coordinator_lock:
+            await router.async_get_traffic_meter()
+
+    # Create update coordinators
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name=router.device_name,
-        update_method=async_update_data,
+        name=f"{router.device_name} Devices",
+        update_method=async_update_devices,
+        update_interval=SCAN_INTERVAL,
+    )
+    coordinator_traffic_meter = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"{router.device_name} Traffic meter",
+        update_method=async_update_traffic_meter,
         update_interval=SCAN_INTERVAL,
     )
 
     await coordinator.async_config_entry_first_refresh()
+    await coordinator_traffic_meter.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = {
         KEY_ROUTER: router,
         KEY_COORDINATOR: coordinator,
+        KEY_COORDINATOR_TRAFFIC: coordinator_traffic_meter,
     }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
