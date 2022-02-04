@@ -287,7 +287,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         SelectEntityDescription(
             key=DPCode.COUNTDOWN_SET,
             name="Countdown",
-            device_class=TuyaDeviceClass.COUNTDOWN_SET,
+            device_class=TuyaDeviceClass.COUNTDOWN_HOURS,
             entity_category=EntityCategory.CONFIG,
             icon="mdi:timer-cog-outline",
         ),

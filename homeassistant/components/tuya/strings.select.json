@@ -94,7 +94,7 @@
         "forward": "Forward",
         "back": "Back"
     },
-    "tuya__countdown_set": {
+    "tuya__countdown_hours": {
         "cancel": "Cancel",
         "1h": "1 hour",
         "2h": "2 hours",
