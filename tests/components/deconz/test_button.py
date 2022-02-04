@@ -1,14 +1,13 @@
-"""deCONZ scene platform tests."""
+"""deCONZ button platform tests."""
 
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
-from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SERVICE_TURN_ON
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import EntityCategory
 
 from .test_gateway import (
     DECONZ_WEB_REQUEST,
@@ -17,14 +16,14 @@ from .test_gateway import (
 )
 
 
-async def test_no_scenes(hass, aioclient_mock):
-    """Test that scenes can be loaded without scenes being available."""
+async def test_no_binary_sensors(hass, aioclient_mock):
+    """Test that no sensors in deconz results in no sensor entities."""
     await setup_deconz_integration(hass, aioclient_mock)
     assert len(hass.states.async_all()) == 0
 
 
 TEST_DATA = [
-    (  # Scene
+    (  # Store scene button
         {
             "groups": {
                 "1": {
@@ -41,21 +40,22 @@ TEST_DATA = [
         {
             "entity_count": 2,
             "device_count": 3,
-            "entity_id": "scene.light_group_scene",
-            "unique_id": "01234E56789A/groups/1/scenes/1",
-            "entity_category": None,
+            "entity_id": "button.light_group_scene_store_current_scene",
+            "unique_id": "01234E56789A/groups/1/scenes/1-store",
+            "entity_category": EntityCategory.CONFIG,
             "attributes": {
-                "friendly_name": "Light group Scene",
+                "icon": "mdi:inbox-arrow-down",
+                "friendly_name": "Light group Scene Store Current Scene",
             },
-            "request": "/groups/1/scenes/1/recall",
+            "request": "/groups/1/scenes/1/store",
         },
     ),
 ]
 
 
 @pytest.mark.parametrize("raw_data, expected", TEST_DATA)
-async def test_scenes(hass, aioclient_mock, raw_data, expected):
-    """Test successful creation of scene entities."""
+async def test_button(hass, aioclient_mock, raw_data, expected):
+    """Test successful creation of button entities."""
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
 
@@ -66,8 +66,8 @@ async def test_scenes(hass, aioclient_mock, raw_data, expected):
 
     # Verify state data
 
-    scene = hass.states.get(expected["entity_id"])
-    assert scene.attributes == expected["attributes"]
+    button = hass.states.get(expected["entity_id"])
+    assert button.attributes == expected["attributes"]
 
     # Verify entity registry data
 
@@ -87,8 +87,8 @@ async def test_scenes(hass, aioclient_mock, raw_data, expected):
     mock_deconz_put_request(aioclient_mock, config_entry.data, expected["request"])
 
     await hass.services.async_call(
-        SCENE_DOMAIN,
-        SERVICE_TURN_ON,
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
         {ATTR_ENTITY_ID: expected["entity_id"]},
         blocking=True,
     )
@@ -104,30 +104,3 @@ async def test_scenes(hass, aioclient_mock, raw_data, expected):
     await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
-
-
-async def test_only_new_scenes_are_created(hass, aioclient_mock):
-    """Test that scenes works."""
-    data = {
-        "groups": {
-            "1": {
-                "id": "Light group id",
-                "name": "Light group",
-                "type": "LightGroup",
-                "state": {"all_on": False, "any_on": True},
-                "action": {},
-                "scenes": [{"id": "1", "name": "Scene"}],
-                "lights": [],
-            }
-        }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
-    assert len(hass.states.async_all()) == 2
-
-    gateway = get_gateway_from_config_entry(hass, config_entry)
-    async_dispatcher_send(hass, gateway.signal_new_scene)
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 2

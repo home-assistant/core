@@ -11,12 +11,10 @@ from homeassistant.components.scene import DOMAIN, Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as DECONZ_DOMAIN
-from .deconz_device import DeconzDevice
-from .gateway import DeconzGateway, get_gateway_from_config_entry
+from .deconz_device import DeconzSceneMixin
+from .gateway import get_gateway_from_config_entry
 
 
 async def async_setup_entry(
@@ -34,11 +32,14 @@ async def async_setup_entry(
         | ValuesView[PydeconzScene] = gateway.api.scenes.values(),
     ) -> None:
         """Add scene from deCONZ."""
-        entities = [
-            DeconzScene(scene, gateway)
-            for scene in scenes
-            if scene.deconz_id not in gateway.entities[DOMAIN]
-        ]
+        entities = []
+
+        for scene in scenes:
+
+            known_entities = set(gateway.entities[DOMAIN])
+            new_entity = DeconzScene(scene, gateway)
+            if new_entity.unique_id not in known_entities:
+                entities.append(new_entity)
 
         if entities:
             async_add_entities(entities)
@@ -54,36 +55,11 @@ async def async_setup_entry(
     async_add_scene()
 
 
-class DeconzScene(DeconzDevice, Scene):
+class DeconzScene(DeconzSceneMixin, Scene):
     """Representation of a deCONZ scene."""
 
     TYPE = DOMAIN
 
-    _device: PydeconzScene
-
-    def __init__(self, device: PydeconzScene, gateway: DeconzGateway) -> None:
-        """Set up a scene."""
-        self._unique_id = f"{gateway.bridgeid}-{device.deconz_id}"
-        super().__init__(device, gateway)
-
-        self._attr_name = device.full_name
-        self._group_identifier = f"{gateway.bridgeid}-{device.group_deconz_id}"
-
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         await self._device.recall()
-
-    @property
-    def available(self):
-        """Return True if device is available."""
-        return self.gateway.available
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique identifier for this scene."""
-        return self._unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        return DeviceInfo(identifiers={(DECONZ_DOMAIN, self._group_identifier)})
