@@ -70,11 +70,11 @@ class NetgearRouter:
         self._password = entry.data[CONF_PASSWORD]
 
         self._info = None
-        self.model = None
-        self.device_name = None
-        self.firmware_version = None
-        self.hardware_version = None
-        self.serial_number = None
+        self.model = ""
+        self.device_name = ""
+        self.firmware_version = ""
+        self.hardware_version = ""
+        self.serial_number = ""
 
         self.method_version = 1
         consider_home_int = entry.options.get(
