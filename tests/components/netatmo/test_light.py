@@ -11,6 +11,8 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_WEBHOOK_ID
 
 from .common import FAKE_WEBHOOK_ACTIVATION, selected_platforms, simulate_webhook
 
+from tests.test_util.aiohttp import AiohttpClientMockResponse
+
 
 async def test_light_setup_and_services(hass, config_entry, netatmo_auth):
     """Test setup and services."""
@@ -89,7 +91,11 @@ async def test_setup_component_no_devices(hass, config_entry):
         """Fake error during requesting backend data."""
         nonlocal fake_post_hits
         fake_post_hits += 1
-        return "{}"
+        return AiohttpClientMockResponse(
+            method="POST",
+            url=kwargs["url"],
+            json={},
+        )
 
     with patch(
         "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
@@ -98,7 +104,7 @@ async def test_setup_component_no_devices(hass, config_entry):
     ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
-        "homeassistant.components.webhook.async_generate_url"
+        "homeassistant.components.netatmo.webhook_generate_url"
     ):
         mock_auth.return_value.async_post_request.side_effect = (
             fake_post_request_no_data
@@ -115,7 +121,7 @@ async def test_setup_component_no_devices(hass, config_entry):
         )
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 1
+        assert fake_post_hits == 4
 
         assert hass.config_entries.async_entries(DOMAIN)
         assert len(hass.states.async_all()) == 0

@@ -22,15 +22,17 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_HEATING_TYPE,
     DOMAIN,
     VICARE_API,
-    VICARE_CIRCUITS,
     VICARE_DEVICE_CONFIG,
     VICARE_NAME,
 )
@@ -99,32 +101,39 @@ def _build_entity(name, vicare_api, circuit, device_config, heating_type):
     return ViCareClimate(name, vicare_api, device_config, circuit, heating_type)
 
 
-async def async_setup_platform(
-    hass, hass_config, async_add_entities, discovery_info=None
-):
-    """Create the ViCare climate devices."""
-    # Legacy setup. Remove after configuration.yaml deprecation end
-    if discovery_info is None:
-        return
+def _get_circuits(vicare_api):
+    """Return the list of circuits."""
+    try:
+        return vicare_api.circuits
+    except PyViCareNotSupportedFeatureError:
+        _LOGGER.info("No circuits found")
+        return []
 
-    name = hass.data[DOMAIN][VICARE_NAME]
-    all_devices = []
 
-    for circuit in hass.data[DOMAIN][VICARE_CIRCUITS]:
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the ViCare climate platform."""
+    name = VICARE_NAME
+    entities = []
+    api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
+    circuits = await hass.async_add_executor_job(_get_circuits, api)
+
+    for circuit in circuits:
         suffix = ""
-        if len(hass.data[DOMAIN][VICARE_CIRCUITS]) > 1:
+        if len(circuits) > 1:
             suffix = f" {circuit.id}"
+
         entity = _build_entity(
             f"{name} Heating{suffix}",
-            hass.data[DOMAIN][VICARE_API],
-            hass.data[DOMAIN][VICARE_DEVICE_CONFIG],
+            api,
+            hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
             circuit,
-            hass.data[DOMAIN][CONF_HEATING_TYPE],
+            config_entry.data[CONF_HEATING_TYPE],
         )
-        if entity is not None:
-            all_devices.append(entity)
-
-    async_add_entities(all_devices)
+        entities.append(entity)
 
     platform = entity_platform.async_get_current_platform()
 
@@ -133,6 +142,8 @@ async def async_setup_platform(
         {vol.Required(SERVICE_SET_VICARE_MODE_ATTR_MODE): cv.string},
         "set_vicare_mode",
     )
+
+    async_add_entities(entities)
 
 
 class ViCareClimate(ClimateEntity):

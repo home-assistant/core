@@ -30,8 +30,8 @@ def mock_device():
 def mock_validate_input():
     """Mock setup entry and user input."""
     info = {
-        "serial_number": DISCOVERY_INFO["properties"]["SN"],
-        "title": DISCOVERY_INFO["properties"]["Product"],
+        "serial_number": DISCOVERY_INFO.properties["SN"],
+        "title": DISCOVERY_INFO.properties["Product"],
     }
 
     with patch(

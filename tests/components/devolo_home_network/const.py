@@ -36,7 +36,14 @@ DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     },
 )
 
-DISCOVERY_INFO_WRONG_DEVICE = zeroconf.ZeroconfServiceInfo(properties={"MT": "2600"})
+DISCOVERY_INFO_WRONG_DEVICE = zeroconf.ZeroconfServiceInfo(
+    host="mock_host",
+    hostname="mock_hostname",
+    name="mock_name",
+    port=None,
+    properties={"MT": "2600"},
+    type="mock_type",
+)
 
 NEIGHBOR_ACCESS_POINTS = {
     "neighbor_aps": [

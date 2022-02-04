@@ -1,9 +1,11 @@
 """Binary sensor platform for mobile_app."""
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID, CONF_WEBHOOK_ID, STATE_ON
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ATTR_DEVICE_NAME,
@@ -22,7 +24,11 @@ from .const import (
 from .entity import MobileAppEntity, unique_id
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up mobile app binary sensor from a config entry."""
     entities = []
 
@@ -35,7 +41,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             continue
         config = {
             ATTR_SENSOR_ATTRIBUTES: {},
-            ATTR_SENSOR_DEVICE_CLASS: entry.device_class,
+            ATTR_SENSOR_DEVICE_CLASS: entry.device_class or entry.original_device_class,
             ATTR_SENSOR_ICON: entry.original_icon,
             ATTR_SENSOR_NAME: entry.original_name,
             ATTR_SENSOR_STATE: None,

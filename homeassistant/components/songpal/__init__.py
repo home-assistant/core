@@ -1,9 +1,8 @@
 """The songpal component."""
-
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -19,7 +18,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["media_player"]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

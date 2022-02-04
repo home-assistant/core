@@ -5,12 +5,13 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from functools import partial
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 from pyiqvia import Client
 from pyiqvia.errors import IQVIAError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
@@ -37,7 +38,7 @@ from .const import (
 DEFAULT_ATTRIBUTION = "Data provided by IQVIA™"
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -51,6 +52,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(entry.data[CONF_ZIP_CODE], session=websession)
 
+    # We disable the client's request retry abilities here to avoid a lengthy (and
+    # blocking) startup:
+    client.disable_request_retries()
+
     async def async_get_data_from_api(
         api_coro: Callable[..., Awaitable]
     ) -> dict[str, Any]:
@@ -60,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except IQVIAError as err:
             raise UpdateFailed from err
 
-        return cast(Dict[str, Any], data)
+        return cast(dict[str, Any], data)
 
     coordinators = {}
     init_data_update_tasks = []
@@ -89,6 +94,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # API calls could fail. We only retry integration setup if *all* of the initial
         # API calls fail:
         raise ConfigEntryNotReady()
+
+    # Once we've successfully authenticated, we re-enable client request retries:
+    client.enable_request_retries()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinators

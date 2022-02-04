@@ -4,16 +4,17 @@ from __future__ import annotations
 from typing import Any, cast
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.components.speedtestdotnet import SpeedTestDataCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import SpeedTestDataCoordinator
 from .const import (
     ATTR_BYTES_RECEIVED,
     ATTR_BYTES_SENT,
@@ -64,7 +65,7 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
             name=DEFAULT_NAME,
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
             configuration_url="https://www.speedtest.net/",
         )
 

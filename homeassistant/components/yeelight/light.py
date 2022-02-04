@@ -40,6 +40,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 import homeassistant.util.color as color_util
 from homeassistant.util.color import (
@@ -47,7 +48,8 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
 
-from . import (
+from . import YEELIGHT_FLOW_TRANSITION_SCHEMA
+from .const import (
     ACTION_RECOVER,
     ATTR_ACTION,
     ATTR_COUNT,
@@ -65,9 +67,8 @@ from . import (
     DOMAIN,
     MODELS_WITH_DELAYED_ON_TRANSITION,
     POWER_STATE_CHANGE_TIME,
-    YEELIGHT_FLOW_TRANSITION_SCHEMA,
-    YeelightEntity,
 )
+from .entity import YeelightEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -276,7 +277,9 @@ def _async_cmd(func):
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Yeelight from a config entry."""
     custom_effects = _parse_custom_effects(hass.data[DOMAIN][DATA_CUSTOM_EFFECTS])

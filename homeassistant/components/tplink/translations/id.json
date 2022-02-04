@@ -13,10 +13,19 @@
             "confirm": {
                 "description": "Ingin menyiapkan perangkat cerdas TP-Link?"
             },
+            "discovery_confirm": {
+                "description": "Ingin menyiapkan {name} {model} ({host})?"
+            },
+            "pick_device": {
+                "data": {
+                    "device": "Perangkat"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "description": "Jika host dibiarkan kosong, proses penemuan akan digunakan untuk menemukan perangkat."
             }
         }
     }

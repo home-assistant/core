@@ -5,23 +5,29 @@ from typing import Any
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
-from aiohue.v2.controllers.scenes import ScenesController
-from aiohue.v2.models.scene import Scene as HueScene
+from aiohue.v2.controllers.scenes import Scene as HueScene, ScenesController
+import voluptuous as vol
 
-from homeassistant.components.scene import Scene as SceneEntity
+from homeassistant.components.scene import ATTR_TRANSITION, Scene as SceneEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import entity_platform
 
 from .bridge import HueBridge
 from .const import DOMAIN
 from .v2.entity import HueBaseEntity
+from .v2.helpers import normalize_hue_brightness, normalize_hue_transition
+
+SERVICE_ACTIVATE_SCENE = "activate_scene"
+ATTR_DYNAMIC = "dynamic"
+ATTR_SPEED = "speed"
+ATTR_BRIGHTNESS = "brightness"
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: entity_platform.AddEntitiesCallback,
 ) -> None:
     """Set up scene platform from Hue group scenes."""
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
@@ -46,6 +52,25 @@ async def async_setup_entry(
         api.scenes.subscribe(async_add_entity, event_filter=EventType.RESOURCE_ADDED)
     )
 
+    # add platform service to turn_on/activate scene with advanced options
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_ACTIVATE_SCENE,
+        {
+            vol.Optional(ATTR_DYNAMIC): vol.Coerce(bool),
+            vol.Optional(ATTR_SPEED): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=100)
+            ),
+            vol.Optional(ATTR_TRANSITION): vol.All(
+                vol.Coerce(float), vol.Range(min=0, max=600)
+            ),
+            vol.Optional(ATTR_BRIGHTNESS): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=255)
+            ),
+        },
+        "async_activate",
+    )
+
 
 class HueSceneEntity(HueBaseEntity, SceneEntity):
     """Representation of a Scene entity from Hue Scenes."""
@@ -60,6 +85,19 @@ class HueSceneEntity(HueBaseEntity, SceneEntity):
         super().__init__(bridge, controller, resource)
         self.resource = resource
         self.controller = controller
+        self.group = self.controller.get_group(self.resource.id)
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added."""
+        await super().async_added_to_hass()
+        # Add value_changed callback for group to catch name changes.
+        self.async_on_remove(
+            self.bridge.api.groups.subscribe(
+                self._handle_event,
+                self.group.id,
+                (EventType.RESOURCE_UPDATED),
+            )
+        )
 
     @property
     def name(self) -> str:
@@ -81,22 +119,32 @@ class HueSceneEntity(HueBaseEntity, SceneEntity):
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate Hue scene."""
-        transition = kwargs.get("transition")
-        if transition is not None:
-            # hue transition duration is in steps of 100 ms
-            transition = int(transition * 100)
-        dynamic = kwargs.get("dynamic", self.is_dynamic)
+        transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
+        # the options below are advanced only
+        # as we're not allowed to override the default scene turn_on service
+        # we've implemented a `activate_scene` entity service
+        dynamic = kwargs.get(ATTR_DYNAMIC, False)
+        speed = kwargs.get(ATTR_SPEED)
+        brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
+
+        if speed is not None:
+            await self.bridge.async_request_call(
+                self.controller.update,
+                self.resource.id,
+                HueScene(self.resource.id, speed=speed / 100),
+            )
+
         await self.bridge.async_request_call(
             self.controller.recall,
             self.resource.id,
             dynamic=dynamic,
             duration=transition,
+            brightness=brightness,
         )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes."""
-        group = self.controller.get_group(self.resource.id)
         brightness = None
         if palette := self.resource.palette:
             if palette.dimming:
@@ -108,8 +156,8 @@ class HueSceneEntity(HueBaseEntity, SceneEntity):
                     brightness = action.action.dimming.brightness
                     break
         return {
-            "group_name": group.metadata.name,
-            "group_type": group.type.value,
+            "group_name": self.group.metadata.name,
+            "group_type": self.group.type.value,
             "name": self.resource.metadata.name,
             "speed": self.resource.speed,
             "brightness": brightness,

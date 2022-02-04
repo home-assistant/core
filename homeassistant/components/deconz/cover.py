@@ -3,15 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import ValuesView
-from typing import Any
+from typing import Any, cast
 
 from pydeconz.light import Cover
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_DAMPER,
-    DEVICE_CLASS_SHADE,
     DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_CLOSE_TILT,
@@ -21,6 +19,7 @@ from homeassistant.components.cover import (
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
     SUPPORT_STOP_TILT,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -32,9 +31,9 @@ from .deconz_device import DeconzDevice
 from .gateway import DeconzGateway, get_gateway_from_config_entry
 
 DEVICE_CLASS = {
-    "Level controllable output": DEVICE_CLASS_DAMPER,
-    "Window covering controller": DEVICE_CLASS_SHADE,
-    "Window covering device": DEVICE_CLASS_SHADE,
+    "Level controllable output": CoverDeviceClass.DAMPER,
+    "Window covering controller": CoverDeviceClass.SHADE,
+    "Window covering device": CoverDeviceClass.SHADE,
 }
 
 
@@ -108,9 +107,9 @@ class DeconzCover(DeconzDevice, CoverEntity):
         """Return if the cover is closed."""
         return not self._device.is_open
 
-    async def async_set_cover_position(self, **kwargs: int) -> None:
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position = 100 - kwargs[ATTR_POSITION]
+        position = 100 - cast(int, kwargs[ATTR_POSITION])
         await self._device.set_position(lift=position)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
@@ -132,9 +131,9 @@ class DeconzCover(DeconzDevice, CoverEntity):
             return 100 - self._device.tilt  # type: ignore[no-any-return]
         return None
 
-    async def async_set_cover_tilt_position(self, **kwargs: int) -> None:
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Tilt the cover to a specific position."""
-        position = 100 - kwargs[ATTR_TILT_POSITION]
+        position = 100 - cast(int, kwargs[ATTR_TILT_POSITION])
         await self._device.set_position(tilt=position)
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:

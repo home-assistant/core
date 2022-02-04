@@ -1,6 +1,7 @@
 """The Energy websocket API."""
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 
 import voluptuous as vol
@@ -15,6 +16,8 @@ from .util import async_migration_in_progress
 if TYPE_CHECKING:
     from . import Recorder
 
+_LOGGER: logging.Logger = logging.getLogger(__package__)
+
 
 @callback
 def async_setup(hass: HomeAssistant) -> None:
@@ -23,6 +26,8 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_clear_statistics)
     websocket_api.async_register_command(hass, ws_update_statistics_metadata)
     websocket_api.async_register_command(hass, ws_info)
+    websocket_api.async_register_command(hass, ws_backup_start)
+    websocket_api.async_register_command(hass, ws_backup_end)
 
 
 @websocket_api.websocket_command(
@@ -106,3 +111,38 @@ def ws_info(
         "thread_running": thread_alive,
     }
     connection.send_result(msg["id"], recorder_info)
+
+
+@websocket_api.ws_require_user(only_supervisor=True)
+@websocket_api.websocket_command({vol.Required("type"): "backup/start"})
+@websocket_api.async_response
+async def ws_backup_start(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Backup start notification."""
+
+    _LOGGER.info("Backup start notification, locking database for writes")
+    instance: Recorder = hass.data[DATA_INSTANCE]
+    try:
+        await instance.lock_database()
+    except TimeoutError as err:
+        connection.send_error(msg["id"], "timeout_error", str(err))
+        return
+    connection.send_result(msg["id"])
+
+
+@websocket_api.ws_require_user(only_supervisor=True)
+@websocket_api.websocket_command({vol.Required("type"): "backup/end"})
+@websocket_api.async_response
+async def ws_backup_end(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Backup end notification."""
+
+    instance: Recorder = hass.data[DATA_INSTANCE]
+    _LOGGER.info("Backup end notification, releasing write lock")
+    if not instance.unlock_database():
+        connection.send_error(
+            msg["id"], "database_unlock_failed", "Failed to unlock database."
+        )
+    connection.send_result(msg["id"])

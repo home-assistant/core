@@ -15,6 +15,7 @@ from typing import Any, Final, Literal, TypedDict, final
 
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -34,14 +35,17 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Context, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import EntityPlatform
-from homeassistant.helpers.event import Event, async_track_entity_registry_updated_event
-from homeassistant.helpers.typing import StateType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
+
+from . import entity_registry as er
+from .device_registry import DeviceEntryType
+from .entity_platform import EntityPlatform
+from .event import async_track_entity_registry_updated_event
+from .frame import report
+from .typing import StateType
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -127,7 +131,7 @@ def get_device_class(hass: HomeAssistant, entity_id: str) -> str | None:
     if not (entry := entity_registry.async_get(entity_id)):
         raise HomeAssistantError(f"Unknown entity {entity_id}")
 
-    return entry.device_class
+    return entry.device_class or entry.original_device_class
 
 
 def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
@@ -168,14 +172,53 @@ class DeviceInfo(TypedDict, total=False):
     default_manufacturer: str
     default_model: str
     default_name: str
-    entry_type: str | None
+    entry_type: DeviceEntryType | None
     identifiers: set[tuple[str, str]]
     manufacturer: str | None
     model: str | None
     name: str | None
     suggested_area: str | None
     sw_version: str | None
+    hw_version: str | None
     via_device: tuple[str, str]
+
+
+class EntityCategory(StrEnum):
+    """Category of an entity.
+
+    An entity with a category will:
+    - Not be exposed to cloud, Alexa, or Google Assistant components
+    - Not be included in indirect service calls to devices or areas
+    """
+
+    # Config: An entity which allows changing the configuration of a device
+    CONFIG = "config"
+
+    # Diagnostic: An entity exposing some configuration parameter or diagnostics of a device
+    DIAGNOSTIC = "diagnostic"
+
+    # System: An entity which is not useful for the user to interact with
+    SYSTEM = "system"
+
+
+def convert_to_entity_category(
+    value: EntityCategory | str | None, raise_report: bool = True
+) -> EntityCategory | None:
+    """Force incoming entity_category to be an enum."""
+
+    if value is None:
+        return value
+
+    if not isinstance(value, EntityCategory):
+        if raise_report:
+            report(
+                "uses %s (%s) for entity category. This is deprecated and will "
+                "stop working in Home Assistant 2022.4, it should be updated to use "
+                "EntityCategory instead" % (type(value).__name__, value),
+                error_if_core=False,
+            )
+        return EntityCategory(value)
+    return value
 
 
 @dataclass
@@ -186,7 +229,10 @@ class EntityDescription:
     key: str
 
     device_class: str | None = None
-    entity_category: Literal["config", "diagnostic", "system"] | None = None
+    # Type string is deprecated as of 2021.12, use EntityCategory
+    entity_category: EntityCategory | Literal[
+        "config", "diagnostic", "system"
+    ] | None = None
     entity_registry_enabled_default: bool = True
     force_update: bool = False
     icon: str | None = None
@@ -219,6 +265,9 @@ class Entity(ABC):
     # If we reported this entity is updated while disabled
     _disabled_reported = False
 
+    # If we reported this entity is using deprecated device_state_attributes
+    _deprecated_device_state_attributes_reported = False
+
     # Protect for multiple updates
     _update_staged = False
 
@@ -245,7 +294,7 @@ class Entity(ABC):
     _attr_context_recent_time: timedelta = timedelta(seconds=5)
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
-    _attr_entity_category: str | None
+    _attr_entity_category: EntityCategory | None
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
     _attr_extra_state_attributes: MutableMapping[str, Any]
@@ -412,8 +461,9 @@ class Entity(ABC):
         """Return the attribution."""
         return self._attr_attribution
 
+    # Type str is deprecated as of 2021.12, use EntityCategory
     @property
-    def entity_category(self) -> str | None:
+    def entity_category(self) -> EntityCategory | str | None:
         """Return the category of the entity, if any."""
         if hasattr(self, "_attr_entity_category"):
             return self._attr_entity_category
@@ -516,7 +566,10 @@ class Entity(ABC):
             extra_state_attributes = self.extra_state_attributes
             # Backwards compatibility for "device_state_attributes" deprecated in 2021.4
             # Warning added in 2021.12, will be removed in 2022.4
-            if self.device_state_attributes is not None:
+            if (
+                self.device_state_attributes is not None
+                and not self._deprecated_device_state_attributes_reported
+            ):
                 report_issue = self._suggest_report_issue()
                 _LOGGER.warning(
                     "Entity %s (%s) implements device_state_attributes. Please %s",
@@ -524,6 +577,7 @@ class Entity(ABC):
                     type(self),
                     report_issue,
                 )
+                self._deprecated_device_state_attributes_reported = True
             if extra_state_attributes is None:
                 extra_state_attributes = self.device_state_attributes
             attr.update(extra_state_attributes or {})
@@ -533,14 +587,16 @@ class Entity(ABC):
             attr[ATTR_UNIT_OF_MEASUREMENT] = unit_of_measurement
 
         entry = self.registry_entry
-        # pylint: disable=consider-using-ternary
+
         if assumed_state := self.assumed_state:
             attr[ATTR_ASSUMED_STATE] = assumed_state
 
         if (attribution := self.attribution) is not None:
             attr[ATTR_ATTRIBUTION] = attribution
 
-        if (device_class := self.device_class) is not None:
+        if (
+            device_class := (entry and entry.device_class) or self.device_class
+        ) is not None:
             attr[ATTR_DEVICE_CLASS] = str(device_class)
 
         if (entity_picture := self.entity_picture) is not None:
@@ -894,17 +950,19 @@ class ToggleEntity(Entity):
     """An abstract class for entities that can be turned on and off."""
 
     entity_description: ToggleEntityDescription
-    _attr_is_on: bool
+    _attr_is_on: bool | None = None
     _attr_state: None = None
 
     @property
     @final
-    def state(self) -> str | None:
+    def state(self) -> Literal["on", "off"] | None:
         """Return the state."""
-        return STATE_ON if self.is_on else STATE_OFF
+        if (is_on := self.is_on) is None:
+            return None
+        return STATE_ON if is_on else STATE_OFF
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self._attr_is_on
 

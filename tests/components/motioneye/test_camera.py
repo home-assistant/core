@@ -75,7 +75,7 @@ async def test_setup_camera(hass: HomeAssistant) -> None:
 
     entity_state = hass.states.get(TEST_CAMERA_ENTITY_ID)
     assert entity_state
-    assert entity_state.state == "idle"
+    assert entity_state.state == "streaming"
     assert entity_state.attributes.get("friendly_name") == TEST_CAMERA_NAME
 
 
@@ -192,7 +192,7 @@ async def test_setup_camera_new_data_without_streaming(hass: HomeAssistant) -> N
     await setup_mock_motioneye_config_entry(hass, client=client)
     entity_state = hass.states.get(TEST_CAMERA_ENTITY_ID)
     assert entity_state
-    assert entity_state.state == "idle"
+    assert entity_state.state == "streaming"
 
     cameras = copy.deepcopy(TEST_CAMERAS)
     cameras[KEY_CAMERAS][0][KEY_VIDEO_STREAMING] = False

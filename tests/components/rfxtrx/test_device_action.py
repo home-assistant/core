@@ -7,6 +7,7 @@ import RFXtrx
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.setup import async_setup_component
@@ -98,7 +99,9 @@ async def test_get_actions(hass, device_reg: DeviceRegistry, device, expected):
     device_entry = device_reg.async_get_device(device.device_identifiers, set())
     assert device_entry
 
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     actions = [action for action in actions if action["domain"] == DOMAIN]
 
     expected_actions = [

@@ -12,12 +12,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_GATEWAY_ID,
-    CONF_HOST,
     CONF_IDENTITY,
     CONF_IMPORT_GROUPS,
     CONF_KEY,
@@ -96,10 +96,12 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle homekit discovery."""
-        await self.async_set_unique_id(discovery_info["properties"]["id"])
-        self._abort_if_unique_id_configured({CONF_HOST: discovery_info["host"]})
+        await self.async_set_unique_id(
+            discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID]
+        )
+        self._abort_if_unique_id_configured({CONF_HOST: discovery_info.host})
 
-        host = discovery_info["host"]
+        host = discovery_info.host
 
         for entry in self._async_current_entries():
             if entry.data.get(CONF_HOST) != host:
@@ -108,7 +110,8 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # Backwards compat, we update old entries
             if not entry.unique_id:
                 self.hass.config_entries.async_update_entry(
-                    entry, unique_id=discovery_info["properties"]["id"]
+                    entry,
+                    unique_id=discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID],
                 )
 
             return self.async_abort(reason="already_configured")

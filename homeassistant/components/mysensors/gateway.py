@@ -246,15 +246,8 @@ async def finish_setup(
     hass: HomeAssistant, entry: ConfigEntry, gateway: BaseAsyncGateway
 ) -> None:
     """Load any persistent devices and platforms and start gateway."""
-    discover_tasks = []
-    start_tasks = []
-    discover_tasks.append(_discover_persistent_devices(hass, entry, gateway))
-    start_tasks.append(_gw_start(hass, entry, gateway))
-    if discover_tasks:
-        # Make sure all devices and platforms are loaded before gateway start.
-        await asyncio.wait(discover_tasks)
-    if start_tasks:
-        await asyncio.wait(start_tasks)
+    await _discover_persistent_devices(hass, entry, gateway)
+    await _gw_start(hass, entry, gateway)
 
 
 async def _discover_persistent_devices(

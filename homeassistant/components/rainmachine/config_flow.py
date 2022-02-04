@@ -42,7 +42,7 @@ async def async_get_controller(
 class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a RainMachine config flow."""
 
-    VERSION = 1
+    VERSION = 2
 
     discovered_ip_address: str | None = None
 
@@ -70,7 +70,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle discovery via zeroconf."""
-        ip_address = discovery_info["host"]
+        ip_address = discovery_info.host
 
         self._async_abort_entries_match({CONF_IP_ADDRESS: ip_address})
         # Handle IP change
@@ -85,7 +85,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 await self.async_set_unique_id(controller.mac)
                 self._abort_if_unique_id_configured(
-                    updates={CONF_IP_ADDRESS: ip_address}
+                    updates={CONF_IP_ADDRESS: ip_address}, reload_on_update=False
                 )
 
         # A new rain machine: We will change out the unique id

@@ -6,7 +6,7 @@ from blebox_uniapi.products import Products
 from blebox_uniapi.session import ApiHost
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -16,7 +16,14 @@ from .const import DEFAULT_SETUP_TIMEOUT, DOMAIN, PRODUCT
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["cover", "sensor", "switch", "air_quality", "light", "climate"]
+PLATFORMS = [
+    Platform.COVER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.AIR_QUALITY,
+    Platform.LIGHT,
+    Platform.CLIMATE,
+]
 
 PARALLEL_UPDATES = 0
 

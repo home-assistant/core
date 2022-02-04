@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from http import HTTPStatus
 
+from aiohttp import web
 import aiohttp.web_exceptions
 import voluptuous as vol
 
@@ -11,7 +12,7 @@ from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import Unauthorized
+from homeassistant.exceptions import DependencyError, Unauthorized
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
     FlowManagerResourceView,
@@ -31,10 +32,10 @@ async def async_setup(hass):
     hass.http.register_view(OptionManagerFlowIndexView(hass.config_entries.options))
     hass.http.register_view(OptionManagerFlowResourceView(hass.config_entries.options))
 
-    hass.components.websocket_api.async_register_command(config_entry_disable)
-    hass.components.websocket_api.async_register_command(config_entry_update)
-    hass.components.websocket_api.async_register_command(config_entries_progress)
-    hass.components.websocket_api.async_register_command(ignore_config_flow)
+    websocket_api.async_register_command(hass, config_entry_disable)
+    websocket_api.async_register_command(hass, config_entry_update)
+    websocket_api.async_register_command(hass, config_entries_progress)
+    websocket_api.async_register_command(hass, ignore_config_flow)
 
     return True
 
@@ -127,7 +128,13 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
             raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
 
         # pylint: disable=no-value-for-parameter
-        return await super().post(request)
+        try:
+            return await super().post(request)
+        except DependencyError as exc:
+            return web.Response(
+                text=f"Failed dependencies {', '.join(exc.failed_dependencies)}",
+                status=HTTPStatus.BAD_REQUEST,
+            )
 
     def _prepare_result_json(self, result):
         """Convert result to JSON."""
@@ -304,12 +311,15 @@ async def config_entry_update(hass, connection, msg):
         "type": "config_entries/disable",
         "entry_id": str,
         # We only allow setting disabled_by user via API.
-        "disabled_by": vol.Any(config_entries.DISABLED_USER, None),
+        # No Enum support like this in voluptuous, use .value
+        "disabled_by": vol.Any(config_entries.ConfigEntryDisabler.USER.value, None),
     }
 )
 async def config_entry_disable(hass, connection, msg):
     """Disable config entry."""
     disabled_by = msg["disabled_by"]
+    if disabled_by is not None:
+        disabled_by = config_entries.ConfigEntryDisabler(disabled_by)
 
     result = False
     try:
@@ -366,13 +376,11 @@ async def ignore_config_flow(hass, connection, msg):
 def entry_json(entry: config_entries.ConfigEntry) -> dict:
     """Return JSON value of a config entry."""
     handler = config_entries.HANDLERS.get(entry.domain)
-    supports_options = (
-        # Guard in case handler is no longer registered (custom component etc)
-        handler is not None
-        # pylint: disable=comparison-with-callable
-        and handler.async_get_options_flow
-        != config_entries.ConfigFlow.async_get_options_flow
+    # work out if handler has support for options flow
+    supports_options = handler is not None and handler.async_supports_options_flow(
+        entry
     )
+
     return {
         "entry_id": entry.entry_id,
         "domain": entry.domain,

@@ -160,7 +160,7 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Prepare configuration for a discovered forked-daapd device."""
         version_num = 0
-        zeroconf_properties = discovery_info[zeroconf.ATTR_PROPERTIES]
+        zeroconf_properties = discovery_info.properties
         if zeroconf_properties.get("Machine Name"):
             with suppress(ValueError):
                 version_num = int(
@@ -173,7 +173,7 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Update title and abort if we already have an entry for this host
         for entry in self._async_current_entries():
-            if entry.data.get(CONF_HOST) != discovery_info[zeroconf.ATTR_HOST]:
+            if entry.data.get(CONF_HOST) != discovery_info.host:
                 continue
             self.hass.config_entries.async_update_entry(
                 entry,
@@ -182,8 +182,8 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured")
 
         zeroconf_data = {
-            CONF_HOST: discovery_info[zeroconf.ATTR_HOST],
-            CONF_PORT: discovery_info[zeroconf.ATTR_PORT],
+            CONF_HOST: discovery_info.host,
+            CONF_PORT: discovery_info.port,
             CONF_NAME: zeroconf_properties["Machine Name"],
         }
         self.discovery_schema = vol.Schema(fill_in_schema_dict(zeroconf_data))

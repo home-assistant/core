@@ -14,9 +14,9 @@ from homeassistant.components.mqtt.abbreviations import (
 from homeassistant.components.mqtt.discovery import ALREADY_DISCOVERED, async_start
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
-    STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 import homeassistant.core as ha
 
@@ -649,7 +649,7 @@ async def test_discovery_expansion(hass, mqtt_mock, caplog):
     assert state is not None
     assert state.name == "DiscoveryExpansionTest1"
     assert ("switch", "bla") in hass.data[ALREADY_DISCOVERED]
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "test_topic/some/base/topic", "ON")
 
@@ -699,7 +699,7 @@ async def test_discovery_expansion_2(hass, mqtt_mock, caplog):
     assert state is not None
     assert state.name == "DiscoveryExpansionTest1"
     assert ("switch", "bla") in hass.data[ALREADY_DISCOVERED]
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.no_fail_on_log_exception
@@ -731,6 +731,100 @@ async def test_discovery_expansion_3(hass, mqtt_mock, caplog):
         "voluptuous.error.MultipleInvalid: expected a dictionary @ data['availability'][0]"
         in caplog.text
     )
+
+
+async def test_discovery_expansion_without_encoding_and_value_template_1(
+    hass, mqtt_mock, caplog
+):
+    """Test expansion of raw availability payload with a template as list."""
+    data = (
+        '{ "~": "some/base/topic",'
+        '  "name": "DiscoveryExpansionTest1",'
+        '  "stat_t": "test_topic/~",'
+        '  "cmd_t": "~/test_topic",'
+        '  "encoding":"",'
+        '  "availability": [{'
+        '    "topic":"~/avail_item1",'
+        '    "payload_available": "1",'
+        '    "payload_not_available": "0",'
+        '    "value_template":"{{value|unpack(\'b\')}}"'
+        "  }],"
+        '  "dev":{'
+        '    "ids":["5706DF"],'
+        '    "name":"DiscoveryExpansionTest1 Device",'
+        '    "mdl":"Generic",'
+        '    "sw":"1.2.3.4",'
+        '    "mf":"None",'
+        '    "sa":"default_area"'
+        "  }"
+        "}"
+    )
+
+    async_fire_mqtt_message(hass, "homeassistant/switch/bla/config", data)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.DiscoveryExpansionTest1")
+    assert state.state == STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, "some/base/topic/avail_item1", b"\x01")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.DiscoveryExpansionTest1")
+    assert state is not None
+    assert state.name == "DiscoveryExpansionTest1"
+    assert ("switch", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert state.state == STATE_UNKNOWN
+
+    async_fire_mqtt_message(hass, "some/base/topic/avail_item1", b"\x00")
+
+    state = hass.states.get("switch.DiscoveryExpansionTest1")
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_discovery_expansion_without_encoding_and_value_template_2(
+    hass, mqtt_mock, caplog
+):
+    """Test expansion of raw availability payload with a template directly."""
+    data = (
+        '{ "~": "some/base/topic",'
+        '  "name": "DiscoveryExpansionTest1",'
+        '  "stat_t": "test_topic/~",'
+        '  "cmd_t": "~/test_topic",'
+        '  "availability_topic":"~/avail_item1",'
+        '  "payload_available": "1",'
+        '  "payload_not_available": "0",'
+        '  "encoding":"",'
+        '  "availability_template":"{{ value | unpack(\'b\') }}",'
+        '  "dev":{'
+        '    "ids":["5706DF"],'
+        '    "name":"DiscoveryExpansionTest1 Device",'
+        '    "mdl":"Generic",'
+        '    "sw":"1.2.3.4",'
+        '    "mf":"None",'
+        '    "sa":"default_area"'
+        "  }"
+        "}"
+    )
+
+    async_fire_mqtt_message(hass, "homeassistant/switch/bla/config", data)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.DiscoveryExpansionTest1")
+    assert state.state == STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, "some/base/topic/avail_item1", b"\x01")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.DiscoveryExpansionTest1")
+    assert state is not None
+    assert state.name == "DiscoveryExpansionTest1"
+    assert ("switch", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert state.state == STATE_UNKNOWN
+
+    async_fire_mqtt_message(hass, "some/base/topic/avail_item1", b"\x00")
+
+    state = hass.states.get("switch.DiscoveryExpansionTest1")
+    assert state.state == STATE_UNAVAILABLE
 
 
 ABBREVIATIONS_WHITE_LIST = [
@@ -801,13 +895,13 @@ async def test_no_implicit_state_topic_switch(hass, mqtt_mock, caplog):
     assert state is not None
     assert state.name == "Test1"
     assert ("switch", "bla") in hass.data[ALREADY_DISCOVERED]
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes["assumed_state"] is True
 
     async_fire_mqtt_message(hass, "homeassistant/switch/bla/state", "ON")
 
     state = hass.states.get("switch.Test1")
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(

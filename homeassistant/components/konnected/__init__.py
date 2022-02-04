@@ -31,6 +31,7 @@ from homeassistant.const import (
     CONF_ZONE,
     STATE_OFF,
     STATE_ON,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -216,7 +217,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 YAML_CONFIGS = "yaml_configs"
-PLATFORMS = ["binary_sensor", "sensor", "switch"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -280,7 +281,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_entry_updated(hass: HomeAssistant, entry: ConfigEntry):
+async def async_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload the config entry when options change."""
     await hass.config_entries.async_reload(entry.entry_id)
 

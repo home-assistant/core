@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "invalid_host": "Ugyldig vertsnavn eller IP-adresse"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "unknown": "Uventet feil"
+        },
+        "flow_title": "{device}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Vil du legge til {device} i Home Assistant?"
+            },
+            "user": {
+                "data": {
+                    "host": "Vert"
+                },
+                "description": "Konfigurer IP-adressen eller det lokale vertsnavnet til Fronius-enheten.",
+                "title": "Fronius SolarNet"
+            }
+        }
+    }
+}

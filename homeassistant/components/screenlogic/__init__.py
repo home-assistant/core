@@ -1,5 +1,4 @@
 """The Screenlogic integration."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -11,16 +10,17 @@ from screenlogicpy.const import (
     SL_GATEWAY_IP,
     SL_GATEWAY_NAME,
     SL_GATEWAY_PORT,
+    ScreenLogicWarning,
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -28,35 +28,42 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .config_flow import async_discover_gateways_by_unique_id, name_for_mac
-from .const import DEFAULT_SCAN_INTERVAL, DISCOVERED_GATEWAYS, DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from .services import async_load_screenlogic_services, async_unload_screenlogic_services
 
 _LOGGER = logging.getLogger(__name__)
 
 
-REQUEST_REFRESH_DELAY = 1
+REQUEST_REFRESH_DELAY = 2
+HEATER_COOLDOWN_DELAY = 6
 
-PLATFORMS = ["switch", "sensor", "binary_sensor", "climate", "light"]
+# These seem to be constant across all controller models
+PRIMARY_CIRCUIT_IDS = [500, 505]  # [Spa, Pool]
 
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Screenlogic component."""
-    domain_data = hass.data[DOMAIN] = {}
-    domain_data[DISCOVERED_GATEWAYS] = await async_discover_gateways_by_unique_id(hass)
-    return True
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Screenlogic from a config entry."""
+    connect_info = await async_get_connect_info(hass, entry)
 
-    gateway = await hass.async_add_executor_job(get_new_gateway, hass, entry)
+    gateway = ScreenLogicGateway(**connect_info)
 
-    # The api library uses a shared socket connection and does not handle concurrent
-    # requests very well.
-    api_lock = asyncio.Lock()
+    try:
+        await gateway.async_connect()
+    except ScreenLogicError as ex:
+        _LOGGER.error("Error while connecting to the gateway %s: %s", connect_info, ex)
+        raise ConfigEntryNotReady from ex
 
     coordinator = ScreenlogicDataUpdateCoordinator(
-        hass, config_entry=entry, gateway=gateway, api_lock=api_lock
+        hass, config_entry=entry, gateway=gateway
     )
 
     async_load_screenlogic_services(hass)
@@ -65,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -75,8 +82,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    hass.data[DOMAIN][entry.entry_id]["listener"]()
     if unload_ok:
+        coordinator = hass.data[DOMAIN][entry.entry_id]
+        await coordinator.gateway.async_disconnect()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     async_unload_screenlogic_services(hass)
@@ -84,16 +92,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-def get_connect_info(hass: HomeAssistant, entry: ConfigEntry):
+async def async_get_connect_info(hass: HomeAssistant, entry: ConfigEntry):
     """Construct connect_info from configuration entry and returns it to caller."""
     mac = entry.unique_id
-    # Attempt to re-discover named gateway to follow IP changes
-    discovered_gateways = hass.data[DOMAIN][DISCOVERED_GATEWAYS]
+    # Attempt to rediscover gateway to follow IP changes
+    discovered_gateways = await async_discover_gateways_by_unique_id(hass)
     if mac in discovered_gateways:
         connect_info = discovered_gateways[mac]
     else:
@@ -108,28 +116,13 @@ def get_connect_info(hass: HomeAssistant, entry: ConfigEntry):
     return connect_info
 
 
-def get_new_gateway(hass: HomeAssistant, entry: ConfigEntry):
-    """Instantiate a new ScreenLogicGateway, connect to it and return it to caller."""
-
-    connect_info = get_connect_info(hass, entry)
-
-    try:
-        gateway = ScreenLogicGateway(**connect_info)
-    except ScreenLogicError as ex:
-        _LOGGER.error("Error while connecting to the gateway %s: %s", connect_info, ex)
-        raise ConfigEntryNotReady from ex
-
-    return gateway
-
-
 class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage the data update for the Screenlogic component."""
 
-    def __init__(self, hass, *, config_entry, gateway, api_lock):
+    def __init__(self, hass, *, config_entry, gateway):
         """Initialize the Screenlogic Data Update Coordinator."""
         self.config_entry = config_entry
         self.gateway = gateway
-        self.api_lock = api_lock
         self.screenlogic_data = {}
 
         interval = timedelta(
@@ -140,44 +133,44 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=DOMAIN,
             update_interval=interval,
-            # We don't want an immediate refresh since the device
-            # takes a moment to reflect the state change
+            # Debounced option since the device takes
+            # a moment to reflect the knock-on changes
             request_refresh_debouncer=Debouncer(
                 hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
         )
 
-    def reconnect_gateway(self):
-        """Instantiate a new ScreenLogicGateway, connect to it and update. Return new gateway to caller."""
-
-        connect_info = get_connect_info(self.hass, self.config_entry)
-
-        try:
-            gateway = ScreenLogicGateway(**connect_info)
-            gateway.update()
-        except ScreenLogicError as error:
-            raise UpdateFailed(error) from error
-
-        return gateway
-
     async def _async_update_data(self):
         """Fetch data from the Screenlogic gateway."""
         try:
-            async with self.api_lock:
-                await self.hass.async_add_executor_job(self.gateway.update)
+            await self.gateway.async_update()
         except ScreenLogicError as error:
-            _LOGGER.warning("ScreenLogicError - attempting reconnect: %s", error)
-
-            async with self.api_lock:
-                self.gateway = await self.hass.async_add_executor_job(
-                    self.reconnect_gateway
-                )
+            _LOGGER.warning("Update error - attempting reconnect: %s", error)
+            await self._async_reconnect_update_data()
+        except ScreenLogicWarning as warn:
+            raise UpdateFailed(f"Incomplete update: {warn}") from warn
 
         return self.gateway.get_data()
+
+    async def _async_reconnect_update_data(self):
+        """Attempt to reconnect to the gateway and fetch data."""
+        try:
+            # Clean up the previous connection as we're about to create a new one
+            await self.gateway.async_disconnect()
+
+            connect_info = await async_get_connect_info(self.hass, self.config_entry)
+            self.gateway = ScreenLogicGateway(**connect_info)
+
+            await self.gateway.async_update()
+
+        except (ScreenLogicError, ScreenLogicWarning) as ex:
+            raise UpdateFailed(ex) from ex
 
 
 class ScreenlogicEntity(CoordinatorEntity):
     """Base class for all ScreenLogic entities."""
+
+    coordinator: ScreenlogicDataUpdateCoordinator
 
     def __init__(self, coordinator, data_key, enabled=True):
         """Initialize of the entity."""
@@ -231,7 +224,19 @@ class ScreenlogicEntity(CoordinatorEntity):
             manufacturer="Pentair",
             model=equipment_model,
             name=self.gateway_name,
+            sw_version=self.gateway.version,
         )
+
+    async def _async_refresh(self):
+        """Refresh the data from the gateway."""
+        await self.coordinator.async_refresh()
+        # Second debounced refresh to catch any secondary
+        # changes in the device
+        await self.coordinator.async_request_refresh()
+
+    async def _async_refresh_timed(self, now):
+        """Refresh from a timed called."""
+        await self.coordinator.async_request_refresh()
 
 
 class ScreenLogicCircuitEntity(ScreenlogicEntity):
@@ -255,15 +260,18 @@ class ScreenLogicCircuitEntity(ScreenlogicEntity):
         """Send the OFF command."""
         await self._async_set_circuit(ON_OFF.OFF)
 
-    async def _async_set_circuit(self, circuit_value) -> None:
-        async with self.coordinator.api_lock:
-            success = await self.hass.async_add_executor_job(
-                self.gateway.set_circuit, self._data_key, circuit_value
+        # Turning off spa or pool circuit may require more time for the
+        # heater to reflect changes depending on the pool controller,
+        # so we schedule an extra refresh a bit farther out
+        if self._data_key in PRIMARY_CIRCUIT_IDS:
+            async_call_later(
+                self.hass, HEATER_COOLDOWN_DELAY, self._async_refresh_timed
             )
 
-        if success:
+    async def _async_set_circuit(self, circuit_value) -> None:
+        if await self.gateway.async_set_circuit(self._data_key, circuit_value):
             _LOGGER.debug("Turn %s %s", self._data_key, circuit_value)
-            await self.coordinator.async_request_refresh()
+            await self._async_refresh()
         else:
             _LOGGER.warning(
                 "Failed to set_circuit %s %s", self._data_key, circuit_value

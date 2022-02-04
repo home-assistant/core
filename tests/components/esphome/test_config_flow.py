@@ -218,9 +218,11 @@ async def test_discovery_initiation(hass, mock_client, mock_zeroconf):
 
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
-        port=6053,
         hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
         properties={},
+        type="mock_type",
     )
     flow = await hass.config_entries.flow.async_init(
         "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
@@ -250,9 +252,11 @@ async def test_discovery_already_configured_hostname(hass, mock_client):
 
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
-        port=6053,
         hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
         properties={},
+        type="mock_type",
     )
     result = await hass.config_entries.flow.async_init(
         "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
@@ -275,9 +279,11 @@ async def test_discovery_already_configured_ip(hass, mock_client):
 
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
-        port=6053,
         hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
         properties={"address": "192.168.43.183"},
+        type="mock_type",
     )
     result = await hass.config_entries.flow.async_init(
         "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
@@ -304,9 +310,11 @@ async def test_discovery_already_configured_name(hass, mock_client):
 
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.184",
-        port=6053,
         hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
         properties={"address": "test8266.local"},
+        type="mock_type",
     )
     result = await hass.config_entries.flow.async_init(
         "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
@@ -323,9 +331,11 @@ async def test_discovery_duplicate_data(hass, mock_client):
     """Test discovery aborts if same mDNS packet arrives."""
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
-        port=6053,
         hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
         properties={"address": "test8266.local"},
+        type="mock_type",
     )
 
     mock_client.device_info = AsyncMock(return_value=MockDeviceInfo(False, "test8266"))
@@ -354,9 +364,11 @@ async def test_discovery_updates_unique_id(hass, mock_client):
 
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
-        port=6053,
         hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
         properties={"address": "test8266.local"},
+        type="mock_type",
     )
     result = await hass.config_entries.flow.async_init(
         "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info

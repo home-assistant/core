@@ -6,6 +6,7 @@ from typing import Optional
 import attr
 from pychromecast import dial
 from pychromecast.const import CAST_TYPE_GROUP
+from pychromecast.models import CastInfo
 
 
 @attr.s(slots=True, frozen=True)
@@ -15,18 +16,23 @@ class ChromecastInfo:
     This also has the same attributes as the mDNS fields by zeroconf.
     """
 
-    services: set | None = attr.ib()
-    uuid: str = attr.ib(converter=attr.converters.optional(str))
-    model_name: str = attr.ib()
-    friendly_name: str = attr.ib()
-    cast_type: str = attr.ib()
-    manufacturer: str = attr.ib()
+    cast_info: CastInfo = attr.ib()
     is_dynamic_group = attr.ib(type=Optional[bool], default=None)
+
+    @property
+    def friendly_name(self) -> str:
+        """Return the UUID."""
+        return self.cast_info.friendly_name
 
     @property
     def is_audio_group(self) -> bool:
         """Return if the cast is an audio group."""
-        return self.cast_type == CAST_TYPE_GROUP
+        return self.cast_info.cast_type == CAST_TYPE_GROUP
+
+    @property
+    def uuid(self) -> bool:
+        """Return the UUID."""
+        return self.cast_info.uuid
 
     def fill_out_missing_chromecast_info(self) -> ChromecastInfo:
         """Return a new ChromecastInfo object with missing attributes filled in.
@@ -42,21 +48,16 @@ class ChromecastInfo:
         http_group_status = None
         http_group_status = dial.get_multizone_status(
             None,
-            services=self.services,
+            services=self.cast_info.services,
             zconf=ChromeCastZeroconf.get_zeroconf(),
         )
         if http_group_status is not None:
             is_dynamic_group = any(
-                str(g.uuid) == self.uuid for g in http_group_status.dynamic_groups
+                g.uuid == self.cast_info.uuid for g in http_group_status.dynamic_groups
             )
 
         return ChromecastInfo(
-            services=self.services,
-            uuid=self.uuid,
-            friendly_name=self.friendly_name,
-            model_name=self.model_name,
-            cast_type=self.cast_type,
-            manufacturer=self.manufacturer,
+            cast_info=self.cast_info,
             is_dynamic_group=is_dynamic_group,
         )
 

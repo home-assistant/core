@@ -1,19 +1,20 @@
 """Support for RDW sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
-from typing import Callable
 
 from vehicle import Vehicle
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_DATE,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -21,7 +22,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import CONF_LICENSE_PLATE, DOMAIN, ENTRY_TYPE_SERVICE
+from .const import CONF_LICENSE_PLATE, DOMAIN
 
 
 @dataclass
@@ -42,13 +43,13 @@ SENSORS: tuple[RDWSensorEntityDescription, ...] = (
     RDWSensorEntityDescription(
         key="apk_expiration",
         name="APK Expiration",
-        device_class=DEVICE_CLASS_DATE,
+        device_class=SensorDeviceClass.DATE,
         value_fn=lambda vehicle: vehicle.apk_expiration,
     ),
     RDWSensorEntityDescription(
         key="ascription_date",
         name="Ascription Date",
-        device_class=DEVICE_CLASS_DATE,
+        device_class=SensorDeviceClass.DATE,
         value_fn=lambda vehicle: vehicle.ascription_date,
     ),
 )
@@ -89,7 +90,7 @@ class RDWSensorEntity(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{license_plate}_{description.key}"
 
         self._attr_device_info = DeviceInfo(
-            entry_type=ENTRY_TYPE_SERVICE,
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{license_plate}")},
             manufacturer=coordinator.data.brand,
             name=f"{coordinator.data.brand}: {coordinator.data.license_plate}",

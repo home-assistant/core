@@ -21,12 +21,12 @@
             "user": {
                 "data": {
                     "api_key": "API Anahtar\u0131",
-                    "host": "Ana bilgisayar",
+                    "host": "Sunucu",
                     "port": "Port"
                 },
                 "description": "L\u00fctfen ba\u011flant\u0131 bilgilerinizi giriniz."
             }
         }
     },
-    "title": "Sistem K\u00f6pr\u00fcs\u00fc"
+    "title": "System Bridge"
 }

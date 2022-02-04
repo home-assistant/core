@@ -139,7 +139,7 @@ async def info_for_device(hass, device_id):
                 "topic": topic,
                 "messages": [
                     {
-                        "payload": msg.payload,
+                        "payload": str(msg.payload),
                         "qos": msg.qos,
                         "retain": msg.retain,
                         "time": msg.timestamp,

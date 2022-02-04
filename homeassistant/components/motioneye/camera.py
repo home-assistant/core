@@ -38,6 +38,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -65,7 +66,7 @@ from .const import (
     TYPE_MOTIONEYE_MJPEG_CAMERA,
 )
 
-PLATFORMS = ["camera"]
+PLATFORMS = [Platform.CAMERA]
 
 SCHEMA_TEXT_OVERLAY = vol.In(
     [
@@ -159,7 +160,7 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         self._motion_detection_enabled: bool = camera.get(KEY_MOTION_DETECTION, False)
 
         # motionEye cameras are always streaming or unavailable.
-        self.is_streaming = True
+        self._attr_is_streaming = True
 
         MotionEyeEntity.__init__(
             self,

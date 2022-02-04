@@ -9,10 +9,11 @@ from hatasmota.utils import (
     get_topic_tele_sensor,
     get_topic_tele_will,
 )
+import pytest
 
 from homeassistant.components import cover
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
-from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNKNOWN
+from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNKNOWN, Platform
 
 from .test_common import (
     DEFAULT_CONFIG,
@@ -32,6 +33,35 @@ from tests.common import async_fire_mqtt_message
 
 async def test_missing_relay(hass, mqtt_mock, setup_tasmota):
     """Test no cover is discovered if relays are missing."""
+
+
+@pytest.mark.parametrize(
+    "relay_config, num_covers",
+    [
+        ([3, 3, 3, 3, 3, 3, 1, 1, 3, 3], 4),
+        ([3, 3, 3, 3, 0, 0, 0, 0], 2),
+        ([3, 3, 1, 1, 0, 0, 0, 0], 1),
+        ([3, 3, 3, 1, 0, 0, 0, 0], 0),
+    ],
+)
+async def test_multiple_covers(
+    hass, mqtt_mock, setup_tasmota, relay_config, num_covers
+):
+    """Test discovery of multiple covers."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["rl"] = relay_config
+    mac = config["mac"]
+
+    assert len(hass.states.async_all("cover")) == 0
+
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all("cover")) == num_covers
 
 
 async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
@@ -508,7 +538,7 @@ async def test_availability_when_connection_lost(
         hass,
         mqtt_client_mock,
         mqtt_mock,
-        cover.DOMAIN,
+        Platform.COVER,
         config,
         entity_id="test_cover_1",
     )
@@ -521,7 +551,7 @@ async def test_availability(hass, mqtt_mock, setup_tasmota):
     config["rl"][0] = 3
     config["rl"][1] = 3
     await help_test_availability(
-        hass, mqtt_mock, cover.DOMAIN, config, entity_id="test_cover_1"
+        hass, mqtt_mock, Platform.COVER, config, entity_id="test_cover_1"
     )
 
 
@@ -532,7 +562,7 @@ async def test_availability_discovery_update(hass, mqtt_mock, setup_tasmota):
     config["rl"][0] = 3
     config["rl"][1] = 3
     await help_test_availability_discovery_update(
-        hass, mqtt_mock, cover.DOMAIN, config, entity_id="test_cover_1"
+        hass, mqtt_mock, Platform.COVER, config, entity_id="test_cover_1"
     )
 
 
@@ -545,7 +575,7 @@ async def test_availability_poll_state(
     config["rl"][1] = 3
     poll_topic = "tasmota_49A3BC/cmnd/STATUS"
     await help_test_availability_poll_state(
-        hass, mqtt_client_mock, mqtt_mock, cover.DOMAIN, config, poll_topic, "10"
+        hass, mqtt_client_mock, mqtt_mock, Platform.COVER, config, poll_topic, "10"
     )
 
 
@@ -564,7 +594,7 @@ async def test_discovery_removal_cover(hass, mqtt_mock, caplog, setup_tasmota):
         hass,
         mqtt_mock,
         caplog,
-        cover.DOMAIN,
+        Platform.COVER,
         config1,
         config2,
         entity_id="test_cover_1",
@@ -585,7 +615,7 @@ async def test_discovery_update_unchanged_cover(hass, mqtt_mock, caplog, setup_t
             hass,
             mqtt_mock,
             caplog,
-            cover.DOMAIN,
+            Platform.COVER,
             config,
             discovery_update,
             entity_id="test_cover_1",
@@ -601,7 +631,7 @@ async def test_discovery_device_remove(hass, mqtt_mock, setup_tasmota):
     config["rl"][1] = 3
     unique_id = f"{DEFAULT_CONFIG['mac']}_cover_shutter_0"
     await help_test_discovery_device_remove(
-        hass, mqtt_mock, cover.DOMAIN, unique_id, config
+        hass, mqtt_mock, Platform.COVER, unique_id, config
     )
 
 
@@ -618,7 +648,7 @@ async def test_entity_id_update_subscriptions(hass, mqtt_mock, setup_tasmota):
         get_topic_tele_will(config),
     ]
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock, cover.DOMAIN, config, topics, entity_id="test_cover_1"
+        hass, mqtt_mock, Platform.COVER, config, topics, entity_id="test_cover_1"
     )
 
 
@@ -629,5 +659,5 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock, setup_tasmota)
     config["rl"][0] = 3
     config["rl"][1] = 3
     await help_test_entity_id_update_discovery_update(
-        hass, mqtt_mock, cover.DOMAIN, config, entity_id="test_cover_1"
+        hass, mqtt_mock, Platform.COVER, config, entity_id="test_cover_1"
     )

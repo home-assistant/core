@@ -7,11 +7,11 @@ from aioshelly.block_device import Block
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_SHUTTER,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     SUPPORT_STOP,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -41,15 +41,15 @@ async def async_setup_entry(
 class ShellyCover(ShellyBlockEntity, CoverEntity):
     """Switch that controls a cover block on Shelly devices."""
 
-    _attr_device_class = DEVICE_CLASS_SHUTTER
+    _attr_device_class = CoverDeviceClass.SHUTTER
 
     def __init__(self, wrapper: BlockDeviceWrapper, block: Block) -> None:
         """Initialize light."""
         super().__init__(wrapper, block)
         self.control_result: dict[str, Any] | None = None
-        self._supported_features: int = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
+        self._attr_supported_features: int = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
         if self.wrapper.device.settings["rollers"][0]["positioning"]:
-            self._supported_features |= SUPPORT_SET_POSITION
+            self._attr_supported_features |= SUPPORT_SET_POSITION
 
     @property
     def is_closed(self) -> bool:
@@ -82,11 +82,6 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
             return cast(bool, self.control_result["state"] == "open")
 
         return self.block.roller == "open"
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._supported_features
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""

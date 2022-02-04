@@ -1,11 +1,12 @@
 """The met component."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
 import logging
 from random import randrange
 from types import MappingProxyType
-from typing import Any, Callable
+from typing import Any
 
 import metno
 
@@ -17,8 +18,9 @@ from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
     LENGTH_FEET,
     LENGTH_METERS,
+    Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.distance import convert as convert_distance
@@ -33,7 +35,7 @@ from .const import (
 
 URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/2.0/complete"
 
-PLATFORMS = ["weather"]
+PLATFORMS = [Platform.WEATHER]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,7 +109,7 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator):
         if self._unsub_track_home:
             return
 
-        async def _async_update_weather_data(_event: str | None = None) -> None:
+        async def _async_update_weather_data(_event: Event | None = None) -> None:
             """Update weather data."""
             if self.weather.set_coordinates():
                 await self.async_refresh()

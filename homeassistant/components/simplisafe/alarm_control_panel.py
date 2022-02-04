@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 
 from simplipy.errors import SimplipyError
 from simplipy.system import SystemStates
-from simplipy.system.v2 import SystemV2
 from simplipy.system.v3 import SystemV3
 from simplipy.websocket import (
     EVENT_ALARM_CANCELED,
@@ -38,9 +37,11 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
+    STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SimpliSafe, SimpliSafeEntity
@@ -57,6 +58,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+from .typing import SystemType
 
 ATTR_BATTERY_BACKUP_POWER_LEVEL = "battery_backup_power_level"
 ATTR_GSM_STRENGTH = "gsm_strength"
@@ -67,6 +69,7 @@ ATTR_WIFI_STRENGTH = "wifi_strength"
 
 STATE_MAP_FROM_REST_API = {
     SystemStates.ALARM: STATE_ALARM_TRIGGERED,
+    SystemStates.ALARM_COUNT: STATE_ALARM_PENDING,
     SystemStates.AWAY: STATE_ALARM_ARMED_AWAY,
     SystemStates.AWAY_COUNT: STATE_ALARM_ARMING,
     SystemStates.EXIT_DELAY: STATE_ALARM_ARMING,
@@ -117,7 +120,7 @@ async def async_setup_entry(
 class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
     """Representation of a SimpliSafe alarm."""
 
-    def __init__(self, simplisafe: SimpliSafe, system: SystemV2 | SystemV3) -> None:
+    def __init__(self, simplisafe: SimpliSafe, system: SystemType) -> None:
         """Initialize the SimpliSafe alarm."""
         super().__init__(
             simplisafe,
@@ -154,11 +157,14 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         """Set the state based on the latest REST API data."""
         if self._system.alarm_going_off:
             self._attr_state = STATE_ALARM_TRIGGERED
+        elif self._system.state == SystemStates.ERROR:
+            self.async_increment_error_count()
         elif state := STATE_MAP_FROM_REST_API.get(self._system.state):
             self._attr_state = state
+            self.async_reset_error_count()
         else:
             LOGGER.error("Unknown system state (REST API): %s", self._system.state)
-            self._attr_state = None
+            self.async_increment_error_count()
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
@@ -168,8 +174,9 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         try:
             await self._system.async_set_off()
         except SimplipyError as err:
-            LOGGER.error('Error while disarming "%s": %s', self._system.system_id, err)
-            return
+            raise HomeAssistantError(
+                f'Error while disarming "{self._system.system_id}": {err}'
+            ) from err
 
         self._attr_state = STATE_ALARM_DISARMED
         self.async_write_ha_state()
@@ -182,10 +189,9 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         try:
             await self._system.async_set_home()
         except SimplipyError as err:
-            LOGGER.error(
-                'Error while arming "%s" (home): %s', self._system.system_id, err
-            )
-            return
+            raise HomeAssistantError(
+                f'Error while arming (home) "{self._system.system_id}": {err}'
+            ) from err
 
         self._attr_state = STATE_ALARM_ARMED_HOME
         self.async_write_ha_state()
@@ -198,10 +204,9 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         try:
             await self._system.async_set_away()
         except SimplipyError as err:
-            LOGGER.error(
-                'Error while arming "%s" (away): %s', self._system.system_id, err
-            )
-            return
+            raise HomeAssistantError(
+                f'Error while arming (away) "{self._system.system_id}": {err}'
+            ) from err
 
         self._attr_state = STATE_ALARM_ARMING
         self.async_write_ha_state()
@@ -237,4 +242,9 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         self._attr_changed_by = event.changed_by
         if TYPE_CHECKING:
             assert event.event_type
-        self._attr_state = STATE_MAP_FROM_WEBSOCKET_EVENT.get(event.event_type)
+        if state := STATE_MAP_FROM_WEBSOCKET_EVENT.get(event.event_type):
+            self._attr_state = state
+            self.async_reset_error_count()
+        else:
+            LOGGER.error("Unknown alarm websocket event: %s", event.event_type)
+            self.async_increment_error_count()

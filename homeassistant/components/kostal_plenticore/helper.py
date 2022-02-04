@@ -91,6 +91,7 @@ class Plenticore:
         prod2 = device_local["Branding:ProductName2"]
 
         self.device_info = DeviceInfo(
+            configuration_url=f"http://{self.host}",
             identifiers={(DOMAIN, device_local["Properties:SerialNo"])},
             manufacturer="Kostal",
             model=f"{prod1} {prod2}",
@@ -278,11 +279,11 @@ class SelectDataUpdateCoordinator(
 
         _LOGGER.debug("Fetching select %s for %s", self.name, self._fetch)
 
-        fetched_data = await self.async_get_currentoption(self._fetch)
+        fetched_data = await self._async_get_current_option(self._fetch)
 
         return fetched_data
 
-    async def async_get_currentoption(
+    async def _async_get_current_option(
         self,
         module_id: str | dict[str, Iterable[str]],
     ) -> dict[str, dict[str, str]]:

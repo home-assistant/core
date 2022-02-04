@@ -12,6 +12,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_IP_ADDRESS,
@@ -19,9 +20,11 @@ from homeassistant.const import (
     PRECISION_WHOLE,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -49,7 +52,9 @@ SET_ROOM_TEMP_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the Mill climate."""
     if entry.data.get(CONNECTION_TYPE) == LOCAL:
         mill_data_coordinator = hass.data[DOMAIN][LOCAL][entry.data[CONF_IP_ADDRESS]]
@@ -65,7 +70,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     ]
     async_add_entities(entities)
 
-    async def set_room_temp(service):
+    async def set_room_temp(service: ServiceCall) -> None:
         """Set room temp."""
         room_name = service.data.get(ATTR_ROOM_NAME)
         sleep_temp = service.data.get(ATTR_SLEEP_TEMP)
@@ -86,7 +91,6 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
     _attr_fan_modes = [FAN_ON, HVAC_MODE_OFF]
     _attr_max_temp = MAX_TEMP
     _attr_min_temp = MIN_TEMP
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_temperature_unit = TEMP_CELSIUS
 
@@ -103,13 +107,21 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, heater.device_id)},
             manufacturer=MANUFACTURER,
-            model=f"generation {1 if heater.is_gen1 else 2}",
+            model=f"Generation {heater.generation}",
             name=self.name,
         )
-        if heater.is_gen1 or heater.is_gen3:
+        if heater.is_gen1:
             self._attr_hvac_modes = [HVAC_MODE_HEAT]
         else:
             self._attr_hvac_modes = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+
+        if heater.generation < 3:
+            self._attr_supported_features = (
+                SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+            )
+        else:
+            self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+
         self._update_attr(heater)
 
     async def async_set_temperature(self, **kwargs):
@@ -162,7 +174,7 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
             "open_window": heater.open_window,
             "heating": heater.is_heating,
             "controlled_by_tibber": heater.tibber_control,
-            "heater_generation": 1 if heater.is_gen1 else 2,
+            "heater_generation": heater.generation,
         }
         if heater.room:
             self._attr_extra_state_attributes["room"] = heater.room.name
@@ -197,6 +209,17 @@ class LocalMillHeater(CoordinatorEntity, ClimateEntity):
         """Initialize the thermostat."""
         super().__init__(coordinator)
         self._attr_name = coordinator.mill_data_connection.name
+        if mac := coordinator.mill_data_connection.mac_address:
+            self._attr_unique_id = mac
+            self._attr_device_info = DeviceInfo(
+                connections={(CONNECTION_NETWORK_MAC, mac)},
+                configuration_url=self.coordinator.mill_data_connection.url,
+                manufacturer=MANUFACTURER,
+                model="Generation 3",
+                name=coordinator.mill_data_connection.name,
+                sw_version=coordinator.mill_data_connection.version,
+            )
+
         self._update_attr()
 
     async def async_set_temperature(self, **kwargs):

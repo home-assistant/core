@@ -6,7 +6,7 @@ import logging
 from wiffi import WiffiTcpServer
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PORT, CONF_TIMEOUT
+from homeassistant.const import CONF_PORT, CONF_TIMEOUT, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry
@@ -29,7 +29,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORMS = ["sensor", "binary_sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -58,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_update_options(hass: HomeAssistant, entry: ConfigEntry):
+async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update options."""
     await hass.config_entries.async_reload(entry.entry_id)
 
@@ -148,6 +148,7 @@ class WiffiEntity(Entity):
             model=device.moduletype,
             name=f"{device.moduletype} {device.mac_address}",
             sw_version=device.sw_version,
+            configuration_url=device.configuration_url,
         )
         self._name = metric.description
         self._expiration_date = None

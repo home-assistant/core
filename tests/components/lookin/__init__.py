@@ -17,14 +17,14 @@ DEFAULT_ENTRY_TITLE = DEVICE_NAME
 
 ZC_NAME = f"LOOKin_{DEVICE_ID}"
 ZC_TYPE = "_lookin._tcp."
-ZEROCONF_DATA: ZeroconfServiceInfo = {
-    "host": IP_ADDRESS,
-    "hostname": f"{ZC_NAME.lower()}.local.",
-    "port": 80,
-    "type": ZC_TYPE,
-    "name": ZC_NAME,
-    "properties": {},
-}
+ZEROCONF_DATA = ZeroconfServiceInfo(
+    host=IP_ADDRESS,
+    hostname=f"{ZC_NAME.lower()}.local.",
+    port=80,
+    type=ZC_TYPE,
+    name=ZC_NAME,
+    properties={},
+)
 
 
 def _mocked_climate() -> Climate:

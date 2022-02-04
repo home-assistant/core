@@ -4,9 +4,9 @@ import asyncio
 import async_timeout
 from pydeconz import DeconzSession, errors, group, light, sensor
 
-from homeassistant.config_entries import SOURCE_HASSIO
+from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
@@ -25,6 +25,7 @@ from .const import (
     DEFAULT_ALLOW_DECONZ_GROUPS,
     DEFAULT_ALLOW_NEW_DEVICES,
     DOMAIN as DECONZ_DOMAIN,
+    HASSIO_CONFIGURATION_URL,
     LOGGER,
     PLATFORMS,
 )
@@ -152,11 +153,11 @@ class DeconzGateway:
         # Gateway service
         configuration_url = f"http://{self.host}:{self.config_entry.data[CONF_PORT]}"
         if self.config_entry.source == SOURCE_HASSIO:
-            configuration_url = "homeassistant://hassio/ingress/core_deconz"
+            configuration_url = HASSIO_CONFIGURATION_URL
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             configuration_url=configuration_url,
-            entry_type="service",
+            entry_type=dr.DeviceEntryType.SERVICE,
             identifiers={(DECONZ_DOMAIN, self.api.config.bridge_id)},
             manufacturer="Dresden Elektronik",
             model=self.api.config.model_id,
@@ -192,7 +193,9 @@ class DeconzGateway:
         return True
 
     @staticmethod
-    async def async_config_entry_updated(hass, entry) -> None:
+    async def async_config_entry_updated(
+        hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
         """Handle signals of config entry being updated.
 
         This is a static method because a class method (bound method), can not be used with weak references.

@@ -1,12 +1,11 @@
 """Tests for the sensors provided by the RDW integration."""
-from homeassistant.components.rdw.const import DOMAIN, ENTRY_TYPE_SERVICE
-from homeassistant.components.sensor import ATTR_STATE_CLASS
+from homeassistant.components.rdw.const import DOMAIN
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_DATE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -29,7 +28,7 @@ async def test_vehicle_sensors(
     assert entry.unique_id == "11ZKZ3_apk_expiration"
     assert state.state == "2022-01-04"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "APK Expiration"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_DATE
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATE
     assert ATTR_ICON not in state.attributes
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
@@ -41,7 +40,7 @@ async def test_vehicle_sensors(
     assert entry.unique_id == "11ZKZ3_ascription_date"
     assert state.state == "2021-11-04"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Ascription Date"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_DATE
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATE
     assert ATTR_ICON not in state.attributes
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
@@ -52,7 +51,7 @@ async def test_vehicle_sensors(
     assert device_entry.identifiers == {(DOMAIN, "11ZKZ3")}
     assert device_entry.manufacturer == "Skoda"
     assert device_entry.name == "Skoda: 11ZKZ3"
-    assert device_entry.entry_type == ENTRY_TYPE_SERVICE
+    assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
     assert device_entry.model == "Citigo"
     assert (
         device_entry.configuration_url

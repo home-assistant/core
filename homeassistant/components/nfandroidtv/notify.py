@@ -16,7 +16,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import ATTR_ICON, CONF_HOST, CONF_TIMEOUT
+from homeassistant.const import CONF_HOST, CONF_TIMEOUT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -24,14 +24,21 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .const import (
     ATTR_COLOR,
     ATTR_DURATION,
-    ATTR_FILE,
-    ATTR_FILE_AUTH,
-    ATTR_FILE_AUTH_DIGEST,
-    ATTR_FILE_PASSWORD,
-    ATTR_FILE_PATH,
-    ATTR_FILE_URL,
-    ATTR_FILE_USERNAME,
     ATTR_FONTSIZE,
+    ATTR_ICON,
+    ATTR_ICON_AUTH,
+    ATTR_ICON_AUTH_DIGEST,
+    ATTR_ICON_PASSWORD,
+    ATTR_ICON_PATH,
+    ATTR_ICON_URL,
+    ATTR_ICON_USERNAME,
+    ATTR_IMAGE,
+    ATTR_IMAGE_AUTH,
+    ATTR_IMAGE_AUTH_DIGEST,
+    ATTR_IMAGE_PASSWORD,
+    ATTR_IMAGE_PATH,
+    ATTR_IMAGE_URL,
+    ATTR_IMAGE_USERNAME,
     ATTR_INTERRUPT,
     ATTR_POSITION,
     ATTR_TRANSPARENCY,
@@ -158,22 +165,23 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                     _LOGGER.warning(
                         "Invalid interrupt-value: %s", str(data.get(ATTR_INTERRUPT))
                     )
-            filedata = data.get(ATTR_FILE) if data else None
-            if filedata is not None:
-                if ATTR_ICON in filedata:
-                    icon = self.load_file(
-                        url=filedata[ATTR_ICON],
-                        local_path=filedata.get(ATTR_FILE_PATH),
-                        username=filedata.get(ATTR_FILE_USERNAME),
-                        password=filedata.get(ATTR_FILE_PASSWORD),
-                        auth=filedata.get(ATTR_FILE_AUTH),
-                    )
+            imagedata = data.get(ATTR_IMAGE) if data else None
+            if imagedata is not None:
                 image_file = self.load_file(
-                    url=filedata.get(ATTR_FILE_URL),
-                    local_path=filedata.get(ATTR_FILE_PATH),
-                    username=filedata.get(ATTR_FILE_USERNAME),
-                    password=filedata.get(ATTR_FILE_PASSWORD),
-                    auth=filedata.get(ATTR_FILE_AUTH),
+                    url=imagedata.get(ATTR_IMAGE_URL),
+                    local_path=imagedata.get(ATTR_IMAGE_PATH),
+                    username=imagedata.get(ATTR_IMAGE_USERNAME),
+                    password=imagedata.get(ATTR_IMAGE_PASSWORD),
+                    auth=imagedata.get(ATTR_IMAGE_AUTH),
+                )
+            icondata = data.get(ATTR_ICON) if data else None
+            if icondata is not None:
+                icon = self.load_file(
+                    url=icondata.get(ATTR_ICON_URL),
+                    local_path=icondata.get(ATTR_ICON_PATH),
+                    username=icondata.get(ATTR_ICON_USERNAME),
+                    password=icondata.get(ATTR_ICON_PASSWORD),
+                    auth=icondata.get(ATTR_ICON_AUTH),
                 )
         self.notify.send(
             message,
@@ -203,7 +211,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                 if username is not None and password is not None:
                     # Use digest or basic authentication
                     auth_: HTTPDigestAuth | HTTPBasicAuth
-                    if ATTR_FILE_AUTH_DIGEST == auth:
+                    if auth in (ATTR_IMAGE_AUTH_DIGEST, ATTR_ICON_AUTH_DIGEST):
                         auth_ = HTTPDigestAuth(username, password)
                     else:
                         auth_ = HTTPBasicAuth(username, password)

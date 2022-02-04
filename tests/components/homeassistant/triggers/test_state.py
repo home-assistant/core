@@ -8,6 +8,7 @@ import homeassistant.components.automation as automation
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
 from homeassistant.core import Context
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -78,6 +79,64 @@ async def test_if_fires_on_entity_change(hass, calls):
         blocking=True,
     )
     hass.states.async_set("test.entity", "planet")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def test_if_fires_on_entity_change_uuid(hass, calls):
+    """Test for firing on entity change."""
+    context = Context()
+
+    registry = er.async_get(hass)
+    entry = registry.async_get_or_create(
+        "test", "hue", "1234", suggested_object_id="beer"
+    )
+
+    assert entry.entity_id == "test.beer"
+
+    hass.states.async_set("test.beer", "hello")
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "state", "entity_id": entry.id},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {
+                        "some": "{{ trigger.%s }}"
+                        % "}} - {{ trigger.".join(
+                            (
+                                "platform",
+                                "entity_id",
+                                "from_state.state",
+                                "to_state.state",
+                                "for",
+                                "id",
+                            )
+                        )
+                    },
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("test.beer", "world", context=context)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].context.parent_id == context.id
+    assert calls[0].data["some"] == "state - test.beer - hello - world - None - 0"
+
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
+        blocking=True,
+    )
+    hass.states.async_set("test.beer", "planet")
     await hass.async_block_till_done()
     assert len(calls) == 1
 

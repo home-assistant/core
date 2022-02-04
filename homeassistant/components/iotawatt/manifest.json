@@ -10,5 +10,6 @@
     "@gtdiehl",
     "@jyavenard"
   ],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["iotawattpy"]
 }

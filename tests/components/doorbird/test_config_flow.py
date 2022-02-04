@@ -83,9 +83,12 @@ async def test_form_zeroconf_wrong_oui(hass):
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            properties={"macaddress": "notdoorbirdoui"},
             host="192.168.1.8",
+            hostname="mock_hostname",
             name="Doorstation - abc123._axis-video._tcp.local.",
+            port=None,
+            properties={"macaddress": "notdoorbirdoui"},
+            type="mock_type",
         ),
     )
     assert result["type"] == "abort"
@@ -99,9 +102,12 @@ async def test_form_zeroconf_link_local_ignored(hass):
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            properties={"macaddress": "1CCAE3DOORBIRD"},
             host="169.254.103.61",
+            hostname="mock_hostname",
             name="Doorstation - abc123._axis-video._tcp.local.",
+            port=None,
+            properties={"macaddress": "1CCAE3DOORBIRD"},
+            type="mock_type",
         ),
     )
     assert result["type"] == "abort"
@@ -122,9 +128,12 @@ async def test_form_zeroconf_correct_oui(hass):
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                properties={"macaddress": "1CCAE3DOORBIRD"},
-                name="Doorstation - abc123._axis-video._tcp.local.",
                 host="192.168.1.5",
+                hostname="mock_hostname",
+                name="Doorstation - abc123._axis-video._tcp.local.",
+                port=None,
+                properties={"macaddress": "1CCAE3DOORBIRD"},
+                type="mock_type",
             ),
         )
         await hass.async_block_till_done()
@@ -181,9 +190,12 @@ async def test_form_zeroconf_correct_oui_wrong_device(hass, doorbell_state_side_
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                properties={"macaddress": "1CCAE3DOORBIRD"},
-                name="Doorstation - abc123._axis-video._tcp.local.",
                 host="192.168.1.5",
+                hostname="mock_hostname",
+                name="Doorstation - abc123._axis-video._tcp.local.",
+                port=None,
+                properties={"macaddress": "1CCAE3DOORBIRD"},
+                type="mock_type",
             ),
         )
         await hass.async_block_till_done()

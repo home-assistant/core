@@ -62,7 +62,7 @@ class DiscordNotificationService(BaseNotificationService):
         embed = None
         if ATTR_EMBED in data:
             embedding = data[ATTR_EMBED]
-            fields = embedding.get(ATTR_EMBED_FIELDS)
+            fields = embedding.get(ATTR_EMBED_FIELDS) or []
 
             if embedding:
                 embed = discord.Embed(**embedding)
@@ -94,12 +94,13 @@ class DiscordNotificationService(BaseNotificationService):
             for channelid in kwargs[ATTR_TARGET]:
                 channelid = int(channelid)
                 try:
-                    channel = await discord_bot.fetch_channel(
-                        channelid
-                    ) or await discord_bot.fetch_user(channelid)
+                    channel = await discord_bot.fetch_channel(channelid)
                 except discord.NotFound:
-                    _LOGGER.warning("Channel not found for ID: %s", channelid)
-                    continue
+                    try:
+                        channel = await discord_bot.fetch_user(channelid)
+                    except discord.NotFound:
+                        _LOGGER.warning("Channel not found for ID: %s", channelid)
+                        continue
                 # Must create new instances of File for each channel.
                 files = [discord.File(image) for image in images] if images else None
                 await channel.send(message, files=files, embed=embed)

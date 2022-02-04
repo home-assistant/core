@@ -7,9 +7,12 @@
             "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "Wilt u {name} - {model} ( {host} ) instellen?"
+            },
             "user": {
                 "data": {
-                    "host": "Hostnaam (of IP-adres van uw Twinkly apparaat"
+                    "host": "Host"
                 },
                 "description": "Uw Twinkly LED-string instellen",
                 "title": "Twinkly"

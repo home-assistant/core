@@ -22,7 +22,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
@@ -94,6 +93,14 @@ class OneWireHub:
         if self.type == CONF_TYPE_SYSBUS:
             mount_dir = config_entry.data[CONF_MOUNT_DIR]
             _LOGGER.debug("Initializing using SysBus %s", mount_dir)
+            _LOGGER.warning(
+                "Using the 1-Wire integration via SysBus is deprecated and will be removed "
+                "in Home Assistant Core 2022.6; this integration is being adjusted to comply "
+                "with Architectural Decision Record 0019, more information can be found here: "
+                "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md "
+                "Access via OWServer is still supported"
+            )
+
             await self.check_mount_dir(mount_dir)
         elif self.type == CONF_TYPE_OWSERVER:
             host = config_entry.data[CONF_HOST]
@@ -221,16 +228,6 @@ class OneWireHub:
         if TYPE_CHECKING:
             assert isinstance(device_type, str)
         return device_type
-
-    def has_device_in_cache(self, device: DeviceEntry) -> bool:
-        """Check if device was present in the cache."""
-        if TYPE_CHECKING:
-            assert self.devices
-        for internal_device in self.devices:
-            for identifier in internal_device.device_info[ATTR_IDENTIFIERS]:
-                if identifier in device.identifiers:
-                    return True
-        return False
 
 
 class CannotConnect(HomeAssistantError):

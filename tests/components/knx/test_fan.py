@@ -11,7 +11,7 @@ async def test_fan_percent(hass: HomeAssistant, knx: KNXTestKit):
     """Test KNX fan with percentage speed."""
     await knx.setup_integration(
         {
-            FanSchema.PLATFORM_NAME: {
+            FanSchema.PLATFORM: {
                 CONF_NAME: "test",
                 KNX_ADDRESS: "1/2/3",
             }
@@ -56,7 +56,7 @@ async def test_fan_step(hass: HomeAssistant, knx: KNXTestKit):
     """Test KNX fan with speed steps."""
     await knx.setup_integration(
         {
-            FanSchema.PLATFORM_NAME: {
+            FanSchema.PLATFORM: {
                 CONF_NAME: "test",
                 KNX_ADDRESS: "1/2/3",
                 FanSchema.CONF_MAX_STEP: 4,
@@ -109,7 +109,7 @@ async def test_fan_oscillation(hass: HomeAssistant, knx: KNXTestKit):
     """Test KNX fan oscillation."""
     await knx.setup_integration(
         {
-            FanSchema.PLATFORM_NAME: {
+            FanSchema.PLATFORM: {
                 CONF_NAME: "test",
                 KNX_ADDRESS: "1/1/1",
                 FanSchema.CONF_OSCILLATION_ADDRESS: "2/2/2",

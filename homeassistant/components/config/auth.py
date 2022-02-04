@@ -16,14 +16,14 @@ SCHEMA_WS_DELETE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 
 async def async_setup(hass):
     """Enable the Home Assistant views."""
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_LIST, websocket_list, SCHEMA_WS_LIST
+    websocket_api.async_register_command(
+        hass, WS_TYPE_LIST, websocket_list, SCHEMA_WS_LIST
     )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_DELETE, websocket_delete, SCHEMA_WS_DELETE
+    websocket_api.async_register_command(
+        hass, WS_TYPE_DELETE, websocket_delete, SCHEMA_WS_DELETE
     )
-    hass.components.websocket_api.async_register_command(websocket_create)
-    hass.components.websocket_api.async_register_command(websocket_update)
+    websocket_api.async_register_command(hass, websocket_create)
+    websocket_api.async_register_command(hass, websocket_update)
     return True
 
 
@@ -66,11 +66,14 @@ async def websocket_delete(hass, connection, msg):
         vol.Required("type"): "config/auth/create",
         vol.Required("name"): str,
         vol.Optional("group_ids"): [str],
+        vol.Optional("local_only"): bool,
     }
 )
 async def websocket_create(hass, connection, msg):
     """Create a user."""
-    user = await hass.auth.async_create_user(msg["name"], msg.get("group_ids"))
+    user = await hass.auth.async_create_user(
+        msg["name"], group_ids=msg.get("group_ids"), local_only=msg.get("local_only")
+    )
 
     connection.send_message(
         websocket_api.result_message(msg["id"], {"user": _user_info(user)})
@@ -86,6 +89,7 @@ async def websocket_create(hass, connection, msg):
         vol.Optional("name"): str,
         vol.Optional("is_active"): bool,
         vol.Optional("group_ids"): [str],
+        vol.Optional("local_only"): bool,
     }
 )
 async def websocket_update(hass, connection, msg):
@@ -146,6 +150,7 @@ def _user_info(user):
         "name": user.name,
         "is_owner": user.is_owner,
         "is_active": user.is_active,
+        "local_only": user.local_only,
         "system_generated": user.system_generated,
         "group_ids": [group.id for group in user.groups],
         "credentials": [{"type": c.auth_provider_type} for c in user.credentials],

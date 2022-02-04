@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Konto on juba h\u00e4\u00e4lestatud"
+        },
         "error": {
             "name_exists": "Nimi on juba olemas",
             "wrong_location": "Asukoht saab olla ainult Rootsis"

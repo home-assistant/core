@@ -1,4 +1,4 @@
-"""Support for International Space Station binary sensor."""
+"""Support for iss binary sensor."""
 from __future__ import annotations
 
 from datetime import timedelta
@@ -10,6 +10,7 @@ from requests.exceptions import HTTPError
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -21,6 +22,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,22 +49,40 @@ def setup_platform(
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the ISS binary sensor."""
-    if None in (hass.config.latitude, hass.config.longitude):
-        _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return
+    """Import ISS configuration from yaml."""
+    _LOGGER.warning(
+        "Configuration of the iss platform in YAML is deprecated and will be "
+        "removed in Home Assistant 2022.5; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the sensor platform."""
+
+    name = entry.data.get(CONF_NAME, DEFAULT_NAME)
+    show_on_map = entry.data.get(CONF_SHOW_ON_MAP, False)
 
     try:
         iss_data = IssData(hass.config.latitude, hass.config.longitude)
-        iss_data.update()
+        await hass.async_add_executor_job(iss_data.update)
     except HTTPError as error:
         _LOGGER.error(error)
         return
 
-    name = config.get(CONF_NAME)
-    show_on_map = config.get(CONF_SHOW_ON_MAP)
-
-    add_entities([IssBinarySensor(iss_data, name, show_on_map)], True)
+    async_add_entities([IssBinarySensor(iss_data, name, show_on_map)], True)
 
 
 class IssBinarySensor(BinarySensorEntity):

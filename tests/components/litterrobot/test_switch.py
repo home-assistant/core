@@ -10,14 +10,10 @@ from homeassistant.components.switch import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ENTITY_CATEGORY_CONFIG,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util.dt import utcnow
 
 from .conftest import setup_integration
@@ -39,7 +35,7 @@ async def test_switch(hass: HomeAssistant, mock_account: MagicMock):
     ent_reg = entity_registry.async_get(hass)
     entity_entry = ent_reg.async_get(NIGHT_LIGHT_MODE_ENTITY_ID)
     assert entity_entry
-    assert entity_entry.entity_category == ENTITY_CATEGORY_CONFIG
+    assert entity_entry.entity_category is EntityCategory.CONFIG
 
 
 @pytest.mark.parametrize(

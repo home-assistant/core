@@ -11,8 +11,11 @@ import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_SSL
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utc_from_timestamp
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,7 +38,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Discover cameras on a Unifi NVR."""
     addr = config[CONF_NVR]
     key = config[CONF_KEY]
@@ -58,7 +66,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ]
     except nvr.NotAuthorized:
         _LOGGER.error("Authorization failure while connecting to NVR")
-        return False
+        return
     except nvr.NvrError as ex:
         _LOGGER.error("NVR refuses to talk to me: %s", str(ex))
         raise PlatformNotReady from ex
@@ -73,7 +81,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ],
         True,
     )
-    return True
 
 
 class UnifiVideoCamera(Camera):
@@ -86,7 +93,7 @@ class UnifiVideoCamera(Camera):
         self._uuid = uuid
         self._name = name
         self._password = password
-        self.is_streaming = False
+        self._attr_is_streaming = False
         self._connect_addr = None
         self._camera = None
         self._motion_status = False

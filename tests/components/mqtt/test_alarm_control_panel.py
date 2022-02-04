@@ -18,6 +18,7 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_NIGHT,
     SERVICE_ALARM_ARM_VACATION,
     SERVICE_ALARM_DISARM,
+    SERVICE_ALARM_TRIGGER,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
@@ -42,6 +43,7 @@ from .test_common import (
     help_test_discovery_update,
     help_test_discovery_update_attr,
     help_test_discovery_update_unchanged,
+    help_test_encoding_subscribable_topics,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -49,6 +51,8 @@ from .test_common import (
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
+    help_test_publishing_with_custom_encoding,
+    help_test_reloadable,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -192,6 +196,7 @@ async def test_ignore_update_state_if_unknown_via_state_topic(hass, mqtt_mock):
         (SERVICE_ALARM_ARM_VACATION, "ARM_VACATION"),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, "ARM_CUSTOM_BYPASS"),
         (SERVICE_ALARM_DISARM, "DISARM"),
+        (SERVICE_ALARM_TRIGGER, "TRIGGER"),
     ],
 )
 async def test_publish_mqtt_no_code(hass, mqtt_mock, service, payload):
@@ -222,6 +227,7 @@ async def test_publish_mqtt_no_code(hass, mqtt_mock, service, payload):
         (SERVICE_ALARM_ARM_VACATION, "ARM_VACATION"),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, "ARM_CUSTOM_BYPASS"),
         (SERVICE_ALARM_DISARM, "DISARM"),
+        (SERVICE_ALARM_TRIGGER, "TRIGGER"),
     ],
 )
 async def test_publish_mqtt_with_code(hass, mqtt_mock, service, payload):
@@ -271,6 +277,7 @@ async def test_publish_mqtt_with_code(hass, mqtt_mock, service, payload):
         (SERVICE_ALARM_ARM_VACATION, "ARM_VACATION"),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, "ARM_CUSTOM_BYPASS"),
         (SERVICE_ALARM_DISARM, "DISARM"),
+        (SERVICE_ALARM_TRIGGER, "TRIGGER"),
     ],
 )
 async def test_publish_mqtt_with_remote_code(hass, mqtt_mock, service, payload):
@@ -311,6 +318,7 @@ async def test_publish_mqtt_with_remote_code(hass, mqtt_mock, service, payload):
         (SERVICE_ALARM_ARM_VACATION, "ARM_VACATION"),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, "ARM_CUSTOM_BYPASS"),
         (SERVICE_ALARM_DISARM, "DISARM"),
+        (SERVICE_ALARM_TRIGGER, "TRIGGER"),
     ],
 )
 async def test_publish_mqtt_with_remote_code_text(hass, mqtt_mock, service, payload):
@@ -351,6 +359,7 @@ async def test_publish_mqtt_with_remote_code_text(hass, mqtt_mock, service, payl
         (SERVICE_ALARM_ARM_VACATION, "ARM_VACATION", "code_arm_required"),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, "ARM_CUSTOM_BYPASS", "code_arm_required"),
         (SERVICE_ALARM_DISARM, "DISARM", "code_disarm_required"),
+        (SERVICE_ALARM_TRIGGER, "TRIGGER", "code_trigger_required"),
     ],
 )
 async def test_publish_mqtt_with_code_required_false(
@@ -358,7 +367,8 @@ async def test_publish_mqtt_with_code_required_false(
 ):
     """Test publishing of MQTT messages when code is configured.
 
-    code_arm_required = False / code_disarm_required = false
+    code_arm_required = False / code_disarm_required = False /
+    code_trigger_required = False
     """
     config = copy.deepcopy(DEFAULT_CONFIG_CODE)
     config[alarm_control_panel.DOMAIN][disable_code] = False
@@ -696,6 +706,26 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
     )
 
 
+@pytest.mark.parametrize(
+    "topic,value",
+    [
+        ("state_topic", "armed_home"),
+        ("state_topic", "disarmed"),
+    ],
+)
+async def test_encoding_subscribable_topics(hass, mqtt_mock, caplog, topic, value):
+    """Test handling of incoming encoded payload."""
+    await help_test_encoding_subscribable_topics(
+        hass,
+        mqtt_mock,
+        caplog,
+        alarm_control_panel.DOMAIN,
+        DEFAULT_CONFIG[alarm_control_panel.DOMAIN],
+        topic,
+        value,
+    )
+
+
 async def test_entity_device_info_with_connection(hass, mqtt_mock):
     """Test MQTT alarm control panel device registry integration."""
     await help_test_entity_device_info_with_connection(
@@ -743,3 +773,65 @@ async def test_entity_debug_info_message(hass, mqtt_mock):
     await help_test_entity_debug_info_message(
         hass, mqtt_mock, alarm_control_panel.DOMAIN, DEFAULT_CONFIG
     )
+
+
+@pytest.mark.parametrize(
+    "service,topic,parameters,payload,template,tpl_par,tpl_output",
+    [
+        (
+            alarm_control_panel.SERVICE_ALARM_ARM_AWAY,
+            "command_topic",
+            {"code": "secret"},
+            "ARM_AWAY",
+            "command_template",
+            "code",
+            b"s",
+        ),
+        (
+            alarm_control_panel.SERVICE_ALARM_DISARM,
+            "command_topic",
+            {"code": "secret"},
+            "DISARM",
+            "command_template",
+            "code",
+            b"s",
+        ),
+    ],
+)
+async def test_publishing_with_custom_encoding(
+    hass,
+    mqtt_mock,
+    caplog,
+    service,
+    topic,
+    parameters,
+    payload,
+    template,
+    tpl_par,
+    tpl_output,
+):
+    """Test publishing MQTT payload with different encoding."""
+    domain = alarm_control_panel.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+
+    await help_test_publishing_with_custom_encoding(
+        hass,
+        mqtt_mock,
+        caplog,
+        domain,
+        config,
+        service,
+        topic,
+        parameters,
+        payload,
+        template,
+        tpl_par=tpl_par,
+        tpl_output=tpl_output,
+    )
+
+
+async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform."""
+    domain = alarm_control_panel.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)

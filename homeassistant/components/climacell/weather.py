@@ -4,7 +4,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Mapping
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
 from pyclimacell.const import (
     CURRENT,
@@ -136,7 +136,7 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
     @staticmethod
     @abstractmethod
     def _translate_condition(
-        condition: int | None, sun_is_up: bool = True
+        condition: str | int | None, sun_is_up: bool = True
     ) -> str | None:
         """Translate ClimaCell condition into an HA condition."""
 
@@ -144,7 +144,7 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
         self,
         forecast_dt: datetime,
         use_datetime: bool,
-        condition: str,
+        condition: int | str,
         precipitation: float | None,
         precipitation_probability: float | None,
         temp: float | None,
@@ -274,7 +274,7 @@ class ClimaCellWeatherEntity(BaseClimaCellWeatherEntity):
 
     @staticmethod
     def _translate_condition(
-        condition: int | None, sun_is_up: bool = True
+        condition: int | str | None, sun_is_up: bool = True
     ) -> str | None:
         """Translate ClimaCell condition into an HA condition."""
         if condition is None:
@@ -309,7 +309,7 @@ class ClimaCellWeatherEntity(BaseClimaCellWeatherEntity):
 
     @property
     def cloud_cover(self):
-        """Reteurn the cloud cover."""
+        """Return the cloud cover."""
         return self._get_current_property(CC_ATTR_CLOUD_COVER)
 
     @property
@@ -377,12 +377,13 @@ class ClimaCellWeatherEntity(BaseClimaCellWeatherEntity):
             precipitation_probability = values.get(CC_ATTR_PRECIPITATION_PROBABILITY)
 
             temp = values.get(CC_ATTR_TEMPERATURE_HIGH)
-            temp_low = values.get(CC_ATTR_TEMPERATURE_LOW)
+            temp_low = None
             wind_direction = values.get(CC_ATTR_WIND_DIRECTION)
             wind_speed = values.get(CC_ATTR_WIND_SPEED)
 
             if self.forecast_type == DAILY:
                 use_datetime = False
+                temp_low = values.get(CC_ATTR_TEMPERATURE_LOW)
                 if precipitation:
                     precipitation = precipitation * 24
             elif self.forecast_type == NOWCAST:
@@ -421,11 +422,12 @@ class ClimaCellV3WeatherEntity(BaseClimaCellWeatherEntity):
 
     @staticmethod
     def _translate_condition(
-        condition: str | None, sun_is_up: bool = True
+        condition: int | str | None, sun_is_up: bool = True
     ) -> str | None:
         """Translate ClimaCell condition into an HA condition."""
         if not condition:
             return None
+        condition = cast(str, condition)
         if "clear" in condition.lower():
             if sun_is_up:
                 return CLEAR_CONDITIONS["day"]
@@ -456,7 +458,7 @@ class ClimaCellV3WeatherEntity(BaseClimaCellWeatherEntity):
 
     @property
     def cloud_cover(self):
-        """Reteurn the cloud cover."""
+        """Return the cloud cover."""
         return self._get_cc_value(
             self.coordinator.data[CURRENT], CC_V3_ATTR_CLOUD_COVER
         )

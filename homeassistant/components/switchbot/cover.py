@@ -9,11 +9,11 @@ from switchbot import SwitchbotCurtain  # pylint: disable=import-error
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
-    DEVICE_CLASS_CURTAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     SUPPORT_STOP,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -60,7 +60,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
     """Representation of a Switchbot."""
 
     coordinator: SwitchbotDataUpdateCoordinator
-    _attr_device_class = DEVICE_CLASS_CURTAIN
+    _attr_device_class = CoverDeviceClass.CURTAIN
     _attr_supported_features = (
         SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION
     )

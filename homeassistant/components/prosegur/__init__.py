@@ -4,14 +4,14 @@ import logging
 from pyprosegur.auth import Auth
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
 from .const import CONF_COUNTRY, DOMAIN
 
-PLATFORMS = ["alarm_control_panel"]
+PLATFORMS = [Platform.ALARM_CONTROL_PANEL]
 
 _LOGGER = logging.getLogger(__name__)
 

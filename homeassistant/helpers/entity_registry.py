@@ -9,13 +9,15 @@ timer.
 """
 from __future__ import annotations
 
-from collections import OrderedDict
+from collections import UserDict
 from collections.abc import Callable, Iterable, Mapping
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
 import attr
+import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -36,30 +38,28 @@ from homeassistant.core import (
     valid_entity_id,
 )
 from homeassistant.exceptions import MaxLengthExceeded
-from homeassistant.helpers import device_registry as dr, storage
-from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.loader import bind_hass
-from homeassistant.util import slugify
+from homeassistant.util import slugify, uuid as uuid_util
 from homeassistant.util.yaml import load_yaml
 
+from . import device_registry as dr, storage
+from .device_registry import EVENT_DEVICE_REGISTRY_UPDATED
+from .frame import report
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
+
+    from .entity import EntityCategory
 
 PATH_REGISTRY = "entity_registry.yaml"
 DATA_REGISTRY = "entity_registry"
 EVENT_ENTITY_REGISTRY_UPDATED = "entity_registry_updated"
 SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
-DISABLED_CONFIG_ENTRY = "config_entry"
-DISABLED_DEVICE = "device"
-DISABLED_HASS = "hass"
-DISABLED_INTEGRATION = "integration"
-DISABLED_USER = "user"
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 2
+STORAGE_VERSION_MINOR = 5
 STORAGE_KEY = "core.entity_registry"
 
 # Attributes relevant to describing entity
@@ -75,6 +75,34 @@ ENTITY_DESCRIBING_ATTRIBUTES = {
 }
 
 
+class RegistryEntryDisabler(StrEnum):
+    """What disabled a registry entry."""
+
+    CONFIG_ENTRY = "config_entry"
+    DEVICE = "device"
+    HASS = "hass"
+    INTEGRATION = "integration"
+    USER = "user"
+
+
+# DISABLED_* are deprecated, to be removed in 2022.3
+DISABLED_CONFIG_ENTRY = RegistryEntryDisabler.CONFIG_ENTRY.value
+DISABLED_DEVICE = RegistryEntryDisabler.DEVICE.value
+DISABLED_HASS = RegistryEntryDisabler.HASS.value
+DISABLED_INTEGRATION = RegistryEntryDisabler.INTEGRATION.value
+DISABLED_USER = RegistryEntryDisabler.USER.value
+
+
+def _convert_to_entity_category(
+    value: EntityCategory | str | None, raise_report: bool = True
+) -> EntityCategory | None:
+    """Force incoming entity_category to be an enum."""
+    # pylint: disable=import-outside-toplevel
+    from .entity import convert_to_entity_category
+
+    return convert_to_entity_category(value, raise_report=raise_report)
+
+
 @attr.s(slots=True, frozen=True)
 class RegistryEntry:
     """Entity Registry Entry."""
@@ -88,23 +116,18 @@ class RegistryEntry:
     device_class: str | None = attr.ib(default=None)
     device_id: str | None = attr.ib(default=None)
     domain: str = attr.ib(init=False, repr=False)
-    disabled_by: str | None = attr.ib(
-        default=None,
-        validator=attr.validators.in_(
-            (
-                DISABLED_CONFIG_ENTRY,
-                DISABLED_DEVICE,
-                DISABLED_HASS,
-                DISABLED_INTEGRATION,
-                DISABLED_USER,
-                None,
-            )
-        ),
+    disabled_by: RegistryEntryDisabler | None = attr.ib(default=None)
+    entity_category: EntityCategory | None = attr.ib(
+        default=None, converter=_convert_to_entity_category
     )
-    entity_category: str | None = attr.ib(default=None)
     icon: str | None = attr.ib(default=None)
+    id: str = attr.ib(factory=uuid_util.random_uuid_hex)
     name: str | None = attr.ib(default=None)
+    options: Mapping[str, Mapping[str, Any]] = attr.ib(
+        default=None, converter=attr.converters.default_if_none(factory=dict)  # type: ignore[misc]
+    )
     # As set by integration
+    original_device_class: str | None = attr.ib(default=None)
     original_icon: str | None = attr.ib(default=None)
     original_name: str | None = attr.ib(default=None)
     supported_features: int = attr.ib(default=0)
@@ -128,8 +151,9 @@ class RegistryEntry:
         if self.capabilities is not None:
             attrs.update(self.capabilities)
 
-        if self.device_class is not None:
-            attrs[ATTR_DEVICE_CLASS] = self.device_class
+        device_class = self.device_class or self.original_device_class
+        if device_class is not None:
+            attrs[ATTR_DEVICE_CLASS] = device_class
 
         icon = self.icon or self.original_icon
         if icon is not None:
@@ -158,14 +182,54 @@ class EntityRegistryStore(storage.Store):
         return await _async_migrate(old_major_version, old_minor_version, old_data)
 
 
+class EntityRegistryItems(UserDict[str, "RegistryEntry"]):
+    """Container for entity registry items, maps entity_id -> entry.
+
+    Maintains two additional indexes:
+    - id -> entry
+    - (domain, platform, unique_id) -> entry
+    """
+
+    def __init__(self) -> None:
+        """Initialize the container."""
+        super().__init__()
+        self._entry_ids: dict[str, RegistryEntry] = {}
+        self._index: dict[tuple[str, str, str], str] = {}
+
+    def __setitem__(self, key: str, entry: RegistryEntry) -> None:
+        """Add an item."""
+        if key in self:
+            old_entry = self[key]
+            del self._entry_ids[old_entry.id]
+            del self._index[(old_entry.domain, old_entry.platform, old_entry.unique_id)]
+        super().__setitem__(key, entry)
+        self._entry_ids.__setitem__(entry.id, entry)
+        self._index[(entry.domain, entry.platform, entry.unique_id)] = entry.entity_id
+
+    def __delitem__(self, key: str) -> None:
+        """Remove an item."""
+        entry = self[key]
+        self._entry_ids.__delitem__(entry.id)
+        self._index.__delitem__((entry.domain, entry.platform, entry.unique_id))
+        super().__delitem__(key)
+
+    def get_entity_id(self, key: tuple[str, str, str]) -> str | None:
+        """Get entity_id from (domain, platform, unique_id)."""
+        return self._index.get(key)
+
+    def get_entry(self, key: str) -> RegistryEntry | None:
+        """Get entry from id."""
+        return self._entry_ids.get(key)
+
+
 class EntityRegistry:
     """Class to hold a registry of entities."""
+
+    entities: EntityRegistryItems
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the registry."""
         self.hass = hass
-        self.entities: dict[str, RegistryEntry]
-        self._index: dict[tuple[str, str, str], str] = {}
         self._store = EntityRegistryStore(
             hass,
             STORAGE_VERSION_MAJOR,
@@ -180,17 +244,18 @@ class EntityRegistry:
     @callback
     def async_get_device_class_lookup(
         self, domain_device_classes: set[tuple[str, str | None]]
-    ) -> dict:
+    ) -> dict[str, dict[tuple[str, str | None], str]]:
         """Return a lookup of entity ids for devices which have matching entities.
 
         Entities must match a set of (domain, device_class) tuples.
         The result is indexed by device_id, then by the matching (domain, device_class)
         """
-        lookup: dict[str, dict[tuple[Any, Any], str]] = {}
+        lookup: dict[str, dict[tuple[str, str | None], str]] = {}
         for entity in self.entities.values():
             if not entity.device_id:
                 continue
-            domain_device_class = (entity.domain, entity.device_class)
+            device_class = entity.device_class or entity.original_device_class
+            domain_device_class = (entity.domain, device_class)
             if domain_device_class not in domain_device_classes:
                 continue
             if entity.device_id not in lookup:
@@ -214,7 +279,7 @@ class EntityRegistry:
         self, domain: str, platform: str, unique_id: str
     ) -> str | None:
         """Check if an entity_id is currently registered."""
-        return self._index.get((domain, platform, unique_id))
+        return self.entities.get_entity_id((domain, platform, unique_id))
 
     @callback
     def async_generate_entity_id(
@@ -263,14 +328,15 @@ class EntityRegistry:
         known_object_ids: Iterable[str] | None = None,
         suggested_object_id: str | None = None,
         # To disable an entity if it gets created
-        disabled_by: str | None = None,
+        disabled_by: RegistryEntryDisabler | None = None,
         # Data that we want entry to have
         area_id: str | None = None,
         capabilities: Mapping[str, Any] | None = None,
         config_entry: ConfigEntry | None = None,
-        device_class: str | None = None,
         device_id: str | None = None,
-        entity_category: str | None = None,
+        # Type str (ENTITY_CATEG*) is deprecated as of 2021.12, use EntityCategory
+        entity_category: EntityCategory | str | None = None,
+        original_device_class: str | None = None,
         original_icon: str | None = None,
         original_name: str | None = None,
         supported_features: int | None = None,
@@ -284,14 +350,14 @@ class EntityRegistry:
         entity_id = self.async_get_entity_id(domain, platform, unique_id)
 
         if entity_id:
-            return self._async_update_entity(
+            return self.async_update_entity(
                 entity_id,
                 area_id=area_id or UNDEFINED,
                 capabilities=capabilities or UNDEFINED,
                 config_entry_id=config_entry_id or UNDEFINED,
-                device_class=device_class or UNDEFINED,
                 device_id=device_id or UNDEFINED,
                 entity_category=entity_category or UNDEFINED,
+                original_device_class=original_device_class or UNDEFINED,
                 original_icon=original_icon or UNDEFINED,
                 original_name=original_name or UNDEFINED,
                 supported_features=supported_features or UNDEFINED,
@@ -309,22 +375,32 @@ class EntityRegistry:
             domain, suggested_object_id or f"{platform}_{unique_id}", known_object_ids
         )
 
-        if (
+        if isinstance(disabled_by, str) and not isinstance(
+            disabled_by, RegistryEntryDisabler
+        ):
+            report(  # type: ignore[unreachable]
+                "uses str for entity registry disabled_by. This is deprecated and will "
+                "stop working in Home Assistant 2022.3, it should be updated to use "
+                "RegistryEntryDisabler instead",
+                error_if_core=False,
+            )
+            disabled_by = RegistryEntryDisabler(disabled_by)
+        elif (
             disabled_by is None
             and config_entry
             and config_entry.pref_disable_new_entities
         ):
-            disabled_by = DISABLED_INTEGRATION
+            disabled_by = RegistryEntryDisabler.INTEGRATION
 
-        entity = RegistryEntry(
+        entry = RegistryEntry(
             area_id=area_id,
             capabilities=capabilities,
             config_entry_id=config_entry_id,
-            device_class=device_class,
             device_id=device_id,
             disabled_by=disabled_by,
-            entity_category=entity_category,
+            entity_category=_convert_to_entity_category(entity_category),
             entity_id=entity_id,
+            original_device_class=original_device_class,
             original_icon=original_icon,
             original_name=original_name,
             platform=platform,
@@ -332,7 +408,7 @@ class EntityRegistry:
             unique_id=unique_id,
             unit_of_measurement=unit_of_measurement,
         )
-        self._register_entry(entity)
+        self.entities[entity_id] = entry
         _LOGGER.info("Registered new %s.%s entity: %s", domain, platform, entity_id)
         self.async_schedule_save()
 
@@ -340,12 +416,12 @@ class EntityRegistry:
             EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "entity_id": entity_id}
         )
 
-        return entity
+        return entry
 
     @callback
     def async_remove(self, entity_id: str) -> None:
         """Remove an entity from registry."""
-        self._unregister_entry(self.entities[entity_id])
+        self.entities.pop(entity_id)
         self.hass.bus.async_fire(
             EVENT_ENTITY_REGISTRY_UPDATED, {"action": "remove", "entity_id": entity_id}
         )
@@ -381,57 +457,24 @@ class EntityRegistry:
                 self, event.data["device_id"], include_disabled_entities=True
             )
             for entity in entities:
-                if entity.disabled_by != DISABLED_DEVICE:
+                if entity.disabled_by is not RegistryEntryDisabler.DEVICE:
                     continue
                 self.async_update_entity(entity.entity_id, disabled_by=None)
             return
 
-        if device.disabled_by == dr.DISABLED_CONFIG_ENTRY:
+        if device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY:
             # Handled by async_config_entry_disabled
             return
 
         # Fetch entities which are not already disabled
         entities = async_entries_for_device(self, event.data["device_id"])
         for entity in entities:
-            self.async_update_entity(entity.entity_id, disabled_by=DISABLED_DEVICE)
+            self.async_update_entity(
+                entity.entity_id, disabled_by=RegistryEntryDisabler.DEVICE
+            )
 
     @callback
     def async_update_entity(
-        self,
-        entity_id: str,
-        *,
-        area_id: str | None | UndefinedType = UNDEFINED,
-        config_entry_id: str | None | UndefinedType = UNDEFINED,
-        device_class: str | None | UndefinedType = UNDEFINED,
-        disabled_by: str | None | UndefinedType = UNDEFINED,
-        entity_category: str | None | UndefinedType = UNDEFINED,
-        icon: str | None | UndefinedType = UNDEFINED,
-        name: str | None | UndefinedType = UNDEFINED,
-        new_entity_id: str | UndefinedType = UNDEFINED,
-        new_unique_id: str | UndefinedType = UNDEFINED,
-        original_icon: str | None | UndefinedType = UNDEFINED,
-        original_name: str | None | UndefinedType = UNDEFINED,
-        unit_of_measurement: str | None | UndefinedType = UNDEFINED,
-    ) -> RegistryEntry:
-        """Update properties of an entity."""
-        return self._async_update_entity(
-            entity_id,
-            area_id=area_id,
-            config_entry_id=config_entry_id,
-            device_class=device_class,
-            disabled_by=disabled_by,
-            entity_category=entity_category,
-            icon=icon,
-            name=name,
-            new_entity_id=new_entity_id,
-            new_unique_id=new_unique_id,
-            original_icon=original_icon,
-            original_name=original_name,
-            unit_of_measurement=unit_of_measurement,
-        )
-
-    @callback
-    def _async_update_entity(
         self,
         entity_id: str,
         *,
@@ -440,12 +483,14 @@ class EntityRegistry:
         config_entry_id: str | None | UndefinedType = UNDEFINED,
         device_class: str | None | UndefinedType = UNDEFINED,
         device_id: str | None | UndefinedType = UNDEFINED,
-        disabled_by: str | None | UndefinedType = UNDEFINED,
-        entity_category: str | None | UndefinedType = UNDEFINED,
+        disabled_by: RegistryEntryDisabler | None | UndefinedType = UNDEFINED,
+        # Type str (ENTITY_CATEG*) is deprecated as of 2021.12, use EntityCategory
+        entity_category: EntityCategory | str | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
         new_entity_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
+        original_device_class: str | None | UndefinedType = UNDEFINED,
         original_icon: str | None | UndefinedType = UNDEFINED,
         original_name: str | None | UndefinedType = UNDEFINED,
         supported_features: int | UndefinedType = UNDEFINED,
@@ -454,8 +499,19 @@ class EntityRegistry:
         """Private facing update properties method."""
         old = self.entities[entity_id]
 
-        new_values = {}  # Dict with new key/value pairs
-        old_values = {}  # Dict with old key/value pairs
+        new_values: dict[str, Any] = {}  # Dict with new key/value pairs
+        old_values: dict[str, Any] = {}  # Dict with old key/value pairs
+
+        if isinstance(disabled_by, str) and not isinstance(
+            disabled_by, RegistryEntryDisabler
+        ):
+            report(  # type: ignore[unreachable]
+                "uses str for entity registry disabled_by. This is deprecated and will "
+                "stop working in Home Assistant 2022.3, it should be updated to use "
+                "RegistryEntryDisabler instead",
+                error_if_core=False,
+            )
+            disabled_by = RegistryEntryDisabler(disabled_by)
 
         for attr_name, value in (
             ("area_id", area_id),
@@ -467,6 +523,7 @@ class EntityRegistry:
             ("entity_category", entity_category),
             ("icon", icon),
             ("name", name),
+            ("original_device_class", original_device_class),
             ("original_icon", original_icon),
             ("original_name", original_name),
             ("supported_features", supported_features),
@@ -505,13 +562,15 @@ class EntityRegistry:
         if not new_values:
             return old
 
-        self._remove_index(old)
-        new = attr.evolve(old, **new_values)
-        self._register_entry(new)
+        new = self.entities[entity_id] = attr.evolve(old, **new_values)
 
         self.async_schedule_save()
 
-        data = {"action": "update", "entity_id": entity_id, "changes": old_values}
+        data: dict[str, str | dict[str, Any]] = {
+            "action": "update",
+            "entity_id": entity_id,
+            "changes": old_values,
+        }
 
         if old.entity_id != entity_id:
             data["old_entity_id"] = old.entity_id
@@ -519,6 +578,25 @@ class EntityRegistry:
         self.hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, data)
 
         return new
+
+    @callback
+    def async_update_entity_options(
+        self, entity_id: str, domain: str, options: dict[str, Any]
+    ) -> None:
+        """Update entity options."""
+        old = self.entities[entity_id]
+        new_options: Mapping[str, Mapping[str, Any]] = {**old.options, domain: options}
+        self.entities[entity_id] = attr.evolve(old, options=new_options)
+
+        self.async_schedule_save()
+
+        data: dict[str, str | dict[str, Any]] = {
+            "action": "update",
+            "entity_id": entity_id,
+            "changes": {"options": old.options},
+        }
+
+        self.hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, data)
 
     async def async_load(self) -> None:
         """Load the entity registry."""
@@ -531,7 +609,7 @@ class EntityRegistry:
             old_conf_load_func=load_yaml,
             old_conf_migrate_func=_async_migrate_yaml_to_json,
         )
-        entities: dict[str, RegistryEntry] = OrderedDict()
+        entities = EntityRegistryItems()
 
         if data is not None:
             for entity in data["entities"]:
@@ -547,11 +625,18 @@ class EntityRegistry:
                     config_entry_id=entity["config_entry_id"],
                     device_class=entity["device_class"],
                     device_id=entity["device_id"],
-                    disabled_by=entity["disabled_by"],
-                    entity_category=entity["entity_category"],
+                    disabled_by=RegistryEntryDisabler(entity["disabled_by"])
+                    if entity["disabled_by"]
+                    else None,
+                    entity_category=_convert_to_entity_category(
+                        entity["entity_category"], raise_report=False
+                    ),
                     entity_id=entity["entity_id"],
                     icon=entity["icon"],
+                    id=entity["id"],
                     name=entity["name"],
+                    options=entity["options"],
+                    original_device_class=entity["original_device_class"],
                     original_icon=entity["original_icon"],
                     original_name=entity["original_name"],
                     platform=entity["platform"],
@@ -561,7 +646,6 @@ class EntityRegistry:
                 )
 
         self.entities = entities
-        self._rebuild_index()
 
     @callback
     def async_schedule_save(self) -> None:
@@ -571,7 +655,7 @@ class EntityRegistry:
     @callback
     def _data_to_save(self) -> dict[str, Any]:
         """Return data of entity registry to store in a file."""
-        data = {}
+        data: dict[str, Any] = {}
 
         data["entities"] = [
             {
@@ -584,7 +668,10 @@ class EntityRegistry:
                 "entity_category": entry.entity_category,
                 "entity_id": entry.entity_id,
                 "icon": entry.icon,
+                "id": entry.id,
                 "name": entry.name,
+                "options": entry.options,
+                "original_device_class": entry.original_device_class,
                 "original_icon": entry.original_icon,
                 "original_name": entry.original_name,
                 "platform": entry.platform,
@@ -612,26 +699,7 @@ class EntityRegistry:
         """Clear area id from registry entries."""
         for entity_id, entry in self.entities.items():
             if area_id == entry.area_id:
-                self._async_update_entity(entity_id, area_id=None)
-
-    def _register_entry(self, entry: RegistryEntry) -> None:
-        self.entities[entry.entity_id] = entry
-        self._add_index(entry)
-
-    def _add_index(self, entry: RegistryEntry) -> None:
-        self._index[(entry.domain, entry.platform, entry.unique_id)] = entry.entity_id
-
-    def _unregister_entry(self, entry: RegistryEntry) -> None:
-        self._remove_index(entry)
-        del self.entities[entry.entity_id]
-
-    def _remove_index(self, entry: RegistryEntry) -> None:
-        del self._index[(entry.domain, entry.platform, entry.unique_id)]
-
-    def _rebuild_index(self) -> None:
-        self._index = {}
-        for entry in self.entities.values():
-            self._add_index(entry)
+                self.async_update_entity(entity_id, area_id=None)
 
 
 @callback
@@ -705,7 +773,7 @@ def async_config_entry_disabled_by_changed(
 
     if not config_entry.disabled_by:
         for entity in entities:
-            if entity.disabled_by != DISABLED_CONFIG_ENTRY:
+            if entity.disabled_by is not RegistryEntryDisabler.CONFIG_ENTRY:
                 continue
             registry.async_update_entity(entity.entity_id, disabled_by=None)
         return
@@ -715,7 +783,7 @@ def async_config_entry_disabled_by_changed(
             # Entity already disabled, do not overwrite
             continue
         registry.async_update_entity(
-            entity.entity_id, disabled_by=DISABLED_CONFIG_ENTRY
+            entity.entity_id, disabled_by=RegistryEntryDisabler.CONFIG_ENTRY
         )
 
 
@@ -723,7 +791,7 @@ async def _async_migrate(
     old_major_version: int, old_minor_version: int, data: dict
 ) -> dict:
     """Migrate to the new version."""
-    if old_major_version < 2 and old_minor_version < 2:
+    if old_major_version == 1 and old_minor_version < 2:
         # From version 1.1
         for entity in data["entities"]:
             # Populate all keys
@@ -741,6 +809,24 @@ async def _async_migrate(
             entity["platform"] = entity["platform"]
             entity["supported_features"] = entity.get("supported_features", 0)
             entity["unit_of_measurement"] = entity.get("unit_of_measurement")
+
+    if old_major_version == 1 and old_minor_version < 3:
+        # Version 1.3 adds original_device_class
+        for entity in data["entities"]:
+            # Move device_class to original_device_class
+            entity["original_device_class"] = entity["device_class"]
+            entity["device_class"] = None
+
+    if old_major_version == 1 and old_minor_version < 4:
+        # Version 1.4 adds id
+        for entity in data["entities"]:
+            entity["id"] = uuid_util.random_uuid_hex()
+
+    if old_major_version == 1 and old_minor_version < 5:
+        # Version 1.5 adds entity options
+        for entity in data["entities"]:
+            entity["options"] = {}
+
     if old_major_version > 1:
         raise NotImplementedError
     return data
@@ -803,7 +889,7 @@ def async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) ->
 async def async_migrate_entries(
     hass: HomeAssistant,
     config_entry_id: str,
-    entry_callback: Callable[[RegistryEntry], dict | None],
+    entry_callback: Callable[[RegistryEntry], dict[str, Any] | None],
 ) -> None:
     """Migrator of unique IDs."""
     ent_reg = await async_get_registry(hass)
@@ -816,3 +902,25 @@ async def async_migrate_entries(
 
         if updates is not None:
             ent_reg.async_update_entity(entry.entity_id, **updates)
+
+
+@callback
+def async_resolve_entity_ids(
+    registry: EntityRegistry, entity_ids_or_uuids: list[str]
+) -> list[str]:
+    """Resolve a list of entity ids or UUIDs to a list of entity ids."""
+
+    def resolve_entity(entity_id_or_uuid: str) -> str | None:
+        """Resolve an entity id or UUID to an entity id or None."""
+        if valid_entity_id(entity_id_or_uuid):
+            return entity_id_or_uuid
+        if (entry := registry.entities.get_entry(entity_id_or_uuid)) is None:
+            raise vol.Invalid(f"Unknown entity registry entry {entity_id_or_uuid}")
+        return entry.entity_id
+
+    tmp = [
+        resolved_item
+        for item in entity_ids_or_uuids
+        if (resolved_item := resolve_entity(item)) is not None
+    ]
+    return tmp
