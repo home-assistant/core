@@ -38,7 +38,7 @@ async def async_get_config_entry_diagnostics(
         "disabled": hass_device.disabled,
         "disabled_by": hass_device.disabled_by,
         "device_info": async_redact_data(dict(router.device_info), {"identifiers"}),
-        "entities": [],
+        "entities": {},
         "tracked_devices": [],
     }
 
@@ -53,22 +53,24 @@ async def async_get_config_entry_diagnostics(
         state_dict = None
         if state:
             state_dict = dict(state.as_dict())
+            # The entity_id is already provided at root level.
+            state_dict.pop("entity_id", None)
             # The context doesn't provide useful information in this case.
             state_dict.pop("context", None)
 
-        data["device"]["entities"].append(
-            {
-                "disabled": entity_entry.disabled,
-                "disabled_by": entity_entry.disabled_by,
-                "entity_category": entity_entry.entity_category,
-                "device_class": entity_entry.device_class,
-                "original_device_class": entity_entry.original_device_class,
-                "icon": entity_entry.icon,
-                "original_icon": entity_entry.original_icon,
-                "unit_of_measurement": entity_entry.unit_of_measurement,
-                "state": state_dict,
-            }
-        )
+        data["device"]["entities"][entity_entry.entity_id] = {
+            "name": entity_entry.name,
+            "original_name": entity_entry.original_name,
+            "disabled": entity_entry.disabled,
+            "disabled_by": entity_entry.disabled_by,
+            "entity_category": entity_entry.entity_category,
+            "device_class": entity_entry.device_class,
+            "original_device_class": entity_entry.original_device_class,
+            "icon": entity_entry.icon,
+            "original_icon": entity_entry.original_icon,
+            "unit_of_measurement": entity_entry.unit_of_measurement,
+            "state": state_dict,
+        }
 
     for device in router.devices.values():
         data["device"]["tracked_devices"].append(
