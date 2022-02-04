@@ -18,15 +18,15 @@ async def test_container_installationtype(hass):
     """Test container installation type."""
     with patch("platform.system", return_value="Linux"), patch(
         "os.path.isfile", return_value=True
-    ):
+    ), patch("homeassistant.helpers.system_info.getuser", return_value="root"):
         info = await hass.helpers.system_info.async_get_system_info()
         assert info["installation_type"] == "Home Assistant Container"
 
     with patch("platform.system", return_value="Linux"), patch(
-        "os.path.isfile", return_value=True
+        "os.path.isfile", side_effect=lambda file: file == "/.dockerenv"
     ), patch("homeassistant.helpers.system_info.getuser", return_value="user"):
         info = await hass.helpers.system_info.async_get_system_info()
-        assert info["installation_type"] == "Unknown"
+        assert info["installation_type"] == "Unsupported Third Party Container"
 
 
 async def test_getuser_keyerror(hass):
