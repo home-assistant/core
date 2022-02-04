@@ -26,7 +26,6 @@ from .gateway import DeconzGateway, get_gateway_from_config_entry
 class DeconzButtonDescriptionMixin:
     """Required values when describing deCONZ button entities."""
 
-    device_property: str
     suffix: str
     button_fn: str
 
@@ -41,7 +40,6 @@ ENTITY_DESCRIPTIONS = {
         DeconzButtonDescription(
             key="store",
             button_fn="store",
-            device_property="store",
             suffix="Store Current Scene",
             icon="mdi:inbox-arrow-down",
             entity_category=EntityCategory.CONFIG,
