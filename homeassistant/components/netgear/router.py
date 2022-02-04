@@ -87,8 +87,6 @@ class NetgearRouter:
 
         self.devices = {}
 
-        self.traffic_data = None
-
     def _setup(self) -> None:
         """Set up a Netgear router sync portion."""
         self._api = get_api(
@@ -200,7 +198,7 @@ class NetgearRouter:
     async def async_get_traffic_meter(self) -> None:
         """Get the traffic meter data of the router."""
         with self._api_lock:
-            self.traffic_data = await self.hass.async_add_executor_job(
+            return await self.hass.async_add_executor_job(
                 self._api.get_traffic_meter
             )
 

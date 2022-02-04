@@ -65,12 +65,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_devices() -> bool:
         """Fetch data from the router."""
-        data = await router.async_update_device_trackers()
-        return data
+        return await router.async_update_device_trackers()
 
-    async def async_update_traffic_meter() -> None:
+    async def async_update_traffic_meter() -> dict:
         """Fetch data from the router."""
-        await router.async_get_traffic_meter()
+        return await router.async_get_traffic_meter()
 
     # Create update coordinators
     coordinator = DataUpdateCoordinator(

@@ -316,6 +316,6 @@ class NetgearRouterSensorEntity(NetgearRouterEntity, SensorEntity):
     @callback
     def async_update_device(self) -> None:
         """Update the Netgear device."""
-        if self._router.traffic_data is not None:
-            data = self._router.traffic_data.get(self.entity_description.key)
+        if self.coordinator.data is not None:
+            data = self.coordinator.data.get(self.entity_description.key)
             self._value = self.entity_description.value(data)
