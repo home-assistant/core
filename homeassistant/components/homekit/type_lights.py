@@ -237,10 +237,10 @@ class Light(HomeAccessory):
             _LOGGER.debug("%s: Set hs_color to %s", self.entity_id, hue_sat)
             events.append(f"set color at {hue_sat}")
             # HomeKit doesn't support RGBW/RGBWW so we need to remove any white values
-            if state and state.attributes.get(ATTR_COLOR_MODE) == COLOR_MODE_RGBWW:
+            if self.rgbww_supported:
                 val = brightness_pct or self.char_brightness.value
                 params[ATTR_RGBWW_COLOR] = (*color_hsv_to_RGB(*hue_sat, val), 0, 0)
-            if state and state.attributes.get(ATTR_COLOR_MODE) == COLOR_MODE_RGBW:
+            if self.rgbw_supported:
                 val = brightness_pct or self.char_brightness.value
                 params[ATTR_RGBW_COLOR] = (*color_hsv_to_RGB(*hue_sat, val), 0)
             else:
