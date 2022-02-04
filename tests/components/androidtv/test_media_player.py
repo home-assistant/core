@@ -67,6 +67,8 @@ from tests.components.androidtv import patchers
 
 CONF_OPTIONS = "options"
 
+MAC_ADDRESS_RESPONSE = "    link/ether ab:cd:ef:gh:ij:kl brd ff:ff:ff:ff:ff:ff"
+
 PATCH_ACCESS = patch("homeassistant.components.androidtv.os.access", return_value=True)
 PATCH_ISFILE = patch(
     "homeassistant.components.androidtv.os.path.isfile", patchers.isfile
@@ -185,7 +187,7 @@ async def test_reconnect(hass, caplog, config):
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[
+    ], patchers.patch_shell(MAC_ADDRESS_RESPONSE)[
         patch_key
     ], patchers.PATCH_KEYGEN, patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -253,7 +255,7 @@ async def test_adb_shell_returns_none(hass, config):
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[
+    ], patchers.patch_shell(MAC_ADDRESS_RESPONSE)[
         patch_key
     ], patchers.PATCH_KEYGEN, patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -281,7 +283,7 @@ async def test_setup_with_adbkey(hass):
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[
+    ], patchers.patch_shell(MAC_ADDRESS_RESPONSE)[
         patch_key
     ], patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER, PATCH_ISFILE, PATCH_ACCESS:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
