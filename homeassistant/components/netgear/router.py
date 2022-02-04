@@ -1,5 +1,6 @@
 """Represent the Netgear router and its devices."""
 from __future__ import annotations
+import asyncio
 
 from abc import abstractmethod
 from datetime import timedelta
@@ -82,7 +83,7 @@ class NetgearRouter:
         self._consider_home = timedelta(seconds=consider_home_int)
 
         self._api: Netgear = None
-        self._attrs = {}
+        self._api_lock = asyncio.Lock()
 
         self.devices = {}
 
@@ -155,11 +156,13 @@ class NetgearRouter:
     async def async_get_attached_devices(self) -> list:
         """Get the devices connected to the router."""
         if self.method_version == 1:
-            return await self.hass.async_add_executor_job(
-                self._api.get_attached_devices
-            )
+            with self._api_lock:
+                return await self.hass.async_add_executor_job(
+                    self._api.get_attached_devices
+                )
 
-        return await self.hass.async_add_executor_job(self._api.get_attached_devices_2)
+        with self._api_lock:
+            return await self.hass.async_add_executor_job(self._api.get_attached_devices_2)
 
     async def async_update_device_trackers(self, now=None) -> None:
         """Update Netgear devices."""
@@ -194,9 +197,10 @@ class NetgearRouter:
 
     async def async_get_traffic_meter(self) -> None:
         """Get the traffic meter data of the router."""
-        self.traffic_data = await self.hass.async_add_executor_job(
-            self._api.get_traffic_meter
-        )
+        with self._api_lock:
+            self.traffic_data = await self.hass.async_add_executor_job(
+                self._api.get_traffic_meter
+            )
 
     @property
     def port(self) -> int:

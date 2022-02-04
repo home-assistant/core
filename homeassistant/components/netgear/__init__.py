@@ -1,5 +1,4 @@
 """Support for Netgear routers."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -64,19 +63,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         configuration_url=f"http://{entry.data[CONF_HOST]}/",
     )
 
-    # create lock for all coordinators
-    coordinator_lock = asyncio.Lock()
-
     async def async_update_devices() -> bool:
         """Fetch data from the router."""
-        with coordinator_lock:
-            data = await router.async_update_device_trackers()
-            return data
+        data = await router.async_update_device_trackers()
+        return data
 
     async def async_update_traffic_meter() -> None:
         """Fetch data from the router."""
-        with coordinator_lock:
-            await router.async_get_traffic_meter()
+        await router.async_get_traffic_meter()
 
     # Create update coordinators
     coordinator = DataUpdateCoordinator(
