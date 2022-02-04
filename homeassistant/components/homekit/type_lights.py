@@ -313,10 +313,10 @@ class Light(HomeAccessory):
                         brightness = min(255, rgbww[3] + rgbww[4])
                     if rgbw := new_state.attributes.get(ATTR_RGBW_COLOR):
                         brightness = rgbw[3]
-                else:
-                    # HomeKit doesn't support RGBW/RGBWW so we need to
-                    # give it the color brightness only
+                elif _has_no_white_values(new_state):
                     brightness = max(attributes[ATTR_RGB_COLOR])
+                else:
+                    brightness = attributes.get(ATTR_BRIGHTNESS)
             else:
                 brightness = attributes.get(ATTR_BRIGHTNESS)
             if isinstance(brightness, (int, float)):
