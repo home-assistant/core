@@ -220,8 +220,8 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         """Update FritzboxTools data."""
         try:
             await self.async_scan_devices()
-        except (FritzSecurityError, FritzConnectionException) as ex:
-            raise update_coordinator.UpdateFailed from ex
+        except FRITZ_EXCEPTIONS as ex:
+            raise update_coordinator.UpdateFailed(ex) from ex
 
     @property
     def unique_id(self) -> str:
@@ -294,11 +294,19 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
 
     def _get_wan_access(self, ip_address: str) -> bool | None:
         """Get WAN access rule for given IP address."""
-        return not self.connection.call_action(
-            "X_AVM-DE_HostFilter:1",
-            "GetWANAccessByIP",
-            NewIPv4Address=ip_address,
-        ).get("NewDisallow")
+        try:
+            return not self.connection.call_action(
+                "X_AVM-DE_HostFilter:1",
+                "GetWANAccessByIP",
+                NewIPv4Address=ip_address,
+            ).get("NewDisallow")
+        except FRITZ_EXCEPTIONS as ex:
+            _LOGGER.debug(
+                "could not get WAN access rule for client device with IP '%s', error: %s",
+                ip_address,
+                ex,
+            )
+            return None
 
     async def async_scan_devices(self, now: datetime | None = None) -> None:
         """Wrap up FritzboxTools class scan."""
@@ -566,6 +574,13 @@ class AvmWrapper(FritzBoxTools):
             partial(self.get_wan_dsl_interface_config)
         )
 
+    async def async_get_wan_link_properties(self) -> dict[str, Any]:
+        """Call WANCommonInterfaceConfig service."""
+
+        return await self.hass.async_add_executor_job(
+            partial(self.get_wan_link_properties)
+        )
+
     async def async_get_port_mapping(self, con_type: str, index: int) -> dict[str, Any]:
         """Call GetGenericPortMappingEntry action."""
 
@@ -667,6 +682,13 @@ class AvmWrapper(FritzBoxTools):
         """Call WANDSLInterfaceConfig service."""
 
         return self._service_call_action("WANDSLInterfaceConfig", "1", "GetInfo")
+
+    def get_wan_link_properties(self) -> dict[str, Any]:
+        """Call WANCommonInterfaceConfig service."""
+
+        return self._service_call_action(
+            "WANCommonInterfaceConfig", "1", "GetCommonLinkProperties"
+        )
 
     def set_wlan_configuration(self, index: int, turn_on: bool) -> dict[str, Any]:
         """Call SetEnable action from WLANConfiguration service."""
