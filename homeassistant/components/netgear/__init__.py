@@ -53,12 +53,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name=router.device_name,
         model=router.model,
         sw_version=router.firmware_version,
+        hw_version=router.hardware_version,
         configuration_url=f"http://{entry.data[CONF_HOST]}/",
     )
 
     async def async_update_data() -> bool:
         """Fetch data from the router."""
         data = await router.async_update_device_trackers()
+        await router.async_get_traffic_meter()
         return data
 
     # Create update coordinator

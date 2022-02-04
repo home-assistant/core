@@ -72,6 +72,8 @@ class NetgearRouter:
         self.model = None
         self.device_name = None
         self.firmware_version = None
+        self.hardware_version = None
+        self.serial_number = None
 
         self.method_version = 1
         consider_home_int = entry.options.get(
@@ -79,14 +81,17 @@ class NetgearRouter:
         )
         self._consider_home = timedelta(seconds=consider_home_int)
 
-        self._api: Netgear = None
+        self.api: Netgear = None
         self._attrs = {}
 
         self.devices = {}
 
+        self.traffic_meter_entities = 0
+        self.traffic_data = None
+
     def _setup(self) -> None:
         """Set up a Netgear router sync portion."""
-        self._api = get_api(
+        self.api = get_api(
             self._password,
             self._host,
             self._username,
@@ -94,20 +99,22 @@ class NetgearRouter:
             self._ssl,
         )
 
-        self._info = self._api.get_info()
+        self._info = self.api.get_info()
         if self._info is None:
             return False
 
         self.device_name = self._info.get("DeviceName", DEFAULT_NAME)
         self.model = self._info.get("ModelName")
         self.firmware_version = self._info.get("Firmwareversion")
+        self.hardware_version = self._info.get("Hardwareversion")
+        self.serial_number = self._info["SerialNumber"]
 
         for model in MODELS_V2:
             if self.model.startswith(model):
                 self.method_version = 2
 
         if self.method_version == 2:
-            if not self._api.get_attached_devices_2():
+            if not self.api.get_attached_devices_2():
                 _LOGGER.error(
                     "Netgear Model '%s' in MODELS_V2 list, but failed to get attached devices using V2",
                     self.model,
@@ -142,6 +149,7 @@ class NetgearRouter:
                 "ip": None,
                 "ssid": None,
                 "conn_ap_mac": None,
+                "allow_or_block": "Allow",
             }
 
         return True
@@ -149,11 +157,9 @@ class NetgearRouter:
     async def async_get_attached_devices(self) -> list:
         """Get the devices connected to the router."""
         if self.method_version == 1:
-            return await self.hass.async_add_executor_job(
-                self._api.get_attached_devices
-            )
+            return await self.hass.async_add_executor_job(self.api.get_attached_devices)
 
-        return await self.hass.async_add_executor_job(self._api.get_attached_devices_2)
+        return await self.hass.async_add_executor_job(self.api.get_attached_devices_2)
 
     async def async_update_device_trackers(self, now=None) -> None:
         """Update Netgear devices."""
@@ -186,15 +192,22 @@ class NetgearRouter:
 
         return new_device
 
+    async def async_get_traffic_meter(self) -> None:
+        """Get the traffic meter data of the router."""
+        if self.traffic_meter_entities > 0:
+            self.traffic_data = await self.hass.async_add_executor_job(
+                self.api.get_traffic_meter
+            )
+
     @property
     def port(self) -> int:
         """Port used by the API."""
-        return self._api.port
+        return self.api.port
 
     @property
     def ssl(self) -> bool:
         """SSL used by the API."""
-        return self._api.ssl
+        return self.api.ssl
 
 
 class NetgearBaseEntity(CoordinatorEntity):
@@ -260,4 +273,45 @@ class NetgearDeviceEntity(NetgearBaseEntity):
             default_name=self._device_name,
             default_model=self._device["device_model"],
             via_device=(DOMAIN, self._router.unique_id),
+        )
+
+
+class NetgearRouterEntity(CoordinatorEntity):
+    """Base class for a Netgear router entity."""
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, router: NetgearRouter
+    ) -> None:
+        """Initialize a Netgear device."""
+        super().__init__(coordinator)
+        self._router = router
+        self._name = router.device_name
+        self._unique_id = router.serial_number
+
+    @abstractmethod
+    @callback
+    def async_update_device(self) -> None:
+        """Update the Netgear device."""
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.async_update_device()
+        super()._handle_coordinator_update()
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._unique_id
+
+    @property
+    def name(self) -> str:
+        """Return the name."""
+        return self._name
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device information."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._router.unique_id)},
         )
