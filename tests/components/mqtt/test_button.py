@@ -18,6 +18,7 @@ from .test_common import (
     help_test_discovery_update,
     help_test_discovery_update_attr,
     help_test_discovery_update_unchanged,
+    help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
     help_test_entity_device_info_with_connection,
@@ -299,6 +300,19 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
         hass, mqtt_mock, button.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_entity_debug_info_message(hass, mqtt_mock):
+    """Test MQTT debug info."""
+    await help_test_entity_debug_info_message(
+        hass,
+        mqtt_mock,
+        button.DOMAIN,
+        DEFAULT_CONFIG,
+        button.SERVICE_PRESS,
+        command_payload="PRESS",
+        state_topic=None,
     )
 
 
