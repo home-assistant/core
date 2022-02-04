@@ -552,7 +552,7 @@ homeassistant-pyozw==0.1.10
 homeconnect==0.6.3
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.0.1
+homematicip==1.0.2
 
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5
