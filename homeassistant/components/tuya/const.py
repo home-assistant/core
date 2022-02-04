@@ -91,7 +91,7 @@ class TuyaDeviceClass(StrEnum):
     CURTAIN_MOTOR_MODE = "tuya__curtain_motor_mode"
     BASIC_ANTI_FLICKR = "tuya__basic_anti_flickr"
     BASIC_NIGHTVISION = "tuya__basic_nightvision"
-    COUNTDOWN_HOURS = "tuya__countdown_hours"
+    COUNTDOWN = "tuya__countdown"
     DECIBEL_SENSITIVITY = "tuya__decibel_sensitivity"
     DEHUMIDIFIER_FAN_SPEED = "tuya__dehumidifier_fan_speed"
     FAN_ANGLE = "tuya__fan_angle"
