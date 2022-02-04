@@ -50,8 +50,9 @@ class RokuRemote(RokuEntity, RemoteEntity):
     @roku_exception_handler
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the device off."""
-        await self.coordinator.roku.remote("poweroff")
-        await self.coordinator.async_request_refresh()
+        if self.is_on:
+            await self.coordinator.roku.remote("poweroff")
+            await self.coordinator.async_request_refresh()
 
     @roku_exception_handler
     async def async_send_command(self, command: list, **kwargs) -> None:

@@ -1,6 +1,8 @@
 """The tests for the Roku remote platform."""
 from unittest.mock import MagicMock
 
+import pytest
+
 from homeassistant.components.remote import (
     ATTR_COMMAND,
     DOMAIN as REMOTE_DOMAIN,
@@ -31,6 +33,23 @@ async def test_unique_id(
 
     main = entity_registry.async_get(MAIN_ENTITY_ID)
     assert main.unique_id == UPNP_SERIAL
+
+
+@pytest.mark.parametrize("mock_roku", ["roku/roku3-idle.json"], indirect=True)
+async def test_poweroff_from_standby(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_roku: MagicMock,
+) -> None:
+    """Test poweroff aborted when already off."""
+    await hass.services.async_call(
+        REMOTE_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: MAIN_ENTITY_ID},
+        blocking=True,
+    )
+    assert mock_roku.remote.call_count == 0
+    mock_roku.remote.assert_not_called()
 
 
 async def test_main_services(
