@@ -269,7 +269,7 @@ class Light(HomeAccessory):
                             self.max_mireds,
                         )
                     elif ATTR_RGBW_COLOR in state.attributes:
-                        params[ATTR_RGBWW_COLOR] = (
+                        params[ATTR_RGBW_COLOR] = (
                             *(0,) * 3,
                             min(255, round(brightness_pct * 2.55)),
                         )
