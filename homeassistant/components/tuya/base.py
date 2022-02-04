@@ -98,12 +98,16 @@ class IntegerTypeData:
         if value == 0:
             return None
         if self.unit is not None:
-            if unit == "ms":
+            if self.unit in ("ms", "millisecond", "milliseconds"):
                 return dt_util.as_local(now) + datetime.timedelta(milliseconds=value)
-            if self.unit == "s":
+            if self.unit in ("s", "second", "seconds"):
                 return dt_util.as_local(now) + datetime.timedelta(seconds=value)
-            if self.unit == "min":
+            if self.unit in ("min", "minute", "minutes"):
                 return dt_util.as_local(now) + datetime.timedelta(minutes=value)
+            if self.unit in ("h", "hour", "hours"):
+                return dt_util.as_local(now) + datetime.timedelta(hours=value)
+            if self.unit in ("day", "days"):
+                return dt_util.as_local(now) + datetime.timedelta(days=value)
             return None
         return None
 
