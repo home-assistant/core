@@ -289,6 +289,7 @@ class Light(HomeAccessory):
             if ATTR_RGBWW_COLOR not in params and ATTR_RGBW_COLOR not in params:
                 params[ATTR_BRIGHTNESS_PCT] = brightness_pct
 
+        _LOGGER.warning("Calling light service with params: %s", params)
         self.async_call_service(DOMAIN, service, params, ", ".join(events))
 
     @callback
