@@ -119,8 +119,6 @@ QUERY_STATISTIC_META_ID = [
     StatisticsMeta.statistic_id,
 ]
 
-MAX_DUPLICATES = 1000000
-
 STATISTICS_BAKERY = "recorder_statistics_bakery"
 STATISTICS_META_BAKERY = "recorder_statistics_meta_bakery"
 STATISTICS_SHORT_TERM_BAKERY = "recorder_statistics_short_term_bakery"
@@ -351,8 +349,6 @@ def _delete_duplicates_from_table(
             .delete(synchronize_session=False)
         )
         total_deleted_rows += deleted_rows
-        if total_deleted_rows >= MAX_DUPLICATES:
-            break
     return (total_deleted_rows, all_non_identical_duplicates)
 
 
@@ -387,13 +383,6 @@ def delete_duplicates(instance: Recorder, session: scoped_session) -> None:
             len(non_identical_duplicates),
             Statistics.__tablename__,
             backup_path,
-        )
-
-    if deleted_statistics_rows >= MAX_DUPLICATES:
-        _LOGGER.warning(
-            "Found more than %s duplicated statistic rows, please report at "
-            'https://github.com/home-assistant/core/issues?q=is%%3Aissue+label%%3A"integration%%3A+recorder"+',
-            MAX_DUPLICATES - 1,
         )
 
     deleted_short_term_statistics_rows, _ = _delete_duplicates_from_table(
