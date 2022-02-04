@@ -39,6 +39,7 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin,
     color_temperature_to_hs,
     color_temperature_to_rgbww,
+    rgbww_to_color_temperature,
     while_levels_to_color_temperature,
 )
 
@@ -345,6 +346,21 @@ class Light(HomeAccessory):
                         new_state.attributes[ATTR_COLOR_TEMP]
                     )
                 )
+            elif (
+                color_mode
+                and color_mode in COLOR_MODES_WITH_WHITES
+                and _has_no_color_values(new_state)
+            ):
+                if rgbww := new_state.attributes.get(ATTR_RGBWW_COLOR):
+                    hue, saturation = color_temperature_to_hs(
+                        color_temperature_mired_to_kelvin(
+                            rgbww_to_color_temperature(
+                                rgbww, self.min_mireds, self.max_mireds
+                            )
+                        )
+                    )
+                else:
+                    hue, saturation = 0, 0
             else:
                 hue, saturation = attributes.get(ATTR_HS_COLOR, (None, None))
             if isinstance(hue, (int, float)) and isinstance(saturation, (int, float)):
