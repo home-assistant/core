@@ -906,7 +906,7 @@ async def test_entity_debug_info_max_messages(hass, mqtt_mock):
 async def test_entity_debug_info_message(hass, mqtt_mock):
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
-        hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG, None
     )
 
 
