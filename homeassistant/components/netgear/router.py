@@ -1,8 +1,8 @@
 """Represent the Netgear router and its devices."""
 from __future__ import annotations
-import asyncio
 
 from abc import abstractmethod
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -162,7 +162,9 @@ class NetgearRouter:
                 )
 
         with self._api_lock:
-            return await self.hass.async_add_executor_job(self._api.get_attached_devices_2)
+            return await self.hass.async_add_executor_job(
+                self._api.get_attached_devices_2
+            )
 
     async def async_update_device_trackers(self, now=None) -> None:
         """Update Netgear devices."""
