@@ -388,8 +388,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         if self.supported_features & SUPPORT_TURN_ON == 0:
             return
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._command_topic,
             self._payloads[CONF_PAYLOAD_TURN_ON],
             self._qos,
@@ -404,8 +403,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         if self.supported_features & SUPPORT_TURN_OFF == 0:
             return None
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._command_topic,
             self._payloads[CONF_PAYLOAD_TURN_OFF],
             self._qos,
@@ -420,8 +418,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         if self.supported_features & SUPPORT_STOP == 0:
             return None
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._command_topic,
             self._payloads[CONF_PAYLOAD_STOP],
             self._qos,
@@ -436,8 +433,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         if self.supported_features & SUPPORT_CLEAN_SPOT == 0:
             return None
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._command_topic,
             self._payloads[CONF_PAYLOAD_CLEAN_SPOT],
             self._qos,
@@ -452,8 +448,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         if self.supported_features & SUPPORT_LOCATE == 0:
             return None
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._command_topic,
             self._payloads[CONF_PAYLOAD_LOCATE],
             self._qos,
@@ -468,8 +463,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         if self.supported_features & SUPPORT_PAUSE == 0:
             return None
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._command_topic,
             self._payloads[CONF_PAYLOAD_START_PAUSE],
             self._qos,
@@ -484,8 +478,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         if self.supported_features & SUPPORT_RETURN_HOME == 0:
             return None
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._command_topic,
             self._payloads[CONF_PAYLOAD_RETURN_TO_BASE],
             self._qos,
@@ -502,8 +495,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         ) or fan_speed not in self._fan_speed_list:
             return None
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._set_fan_speed_topic,
             fan_speed,
             self._qos,
@@ -523,8 +515,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
             message = json.dumps(message)
         else:
             message = command
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._send_command_topic,
             message,
             self._qos,
