@@ -713,7 +713,7 @@ async def test_light_rgb_with_white(
                 ATTR_COLOR_MODE: COLOR_MODE_RGBW,
             },
             {ATTR_RGBW_COLOR: (31, 127, 71, 0)},
-            {ATTR_COLOR_TEMP: 2700},
+            {ATTR_COLOR_TEMP: 500},
         ],
         [
             [COLOR_MODE_COLOR_TEMP, COLOR_MODE_RGBWW],
@@ -725,7 +725,7 @@ async def test_light_rgb_with_white(
                 ATTR_COLOR_MODE: COLOR_MODE_RGBWW,
             },
             {ATTR_RGBWW_COLOR: (31, 127, 71, 0, 0)},
-            {ATTR_COLOR_TEMP: 2700},
+            {ATTR_COLOR_TEMP: 500},
         ],
     ],
 )
@@ -798,7 +798,7 @@ async def test_light_rgb_with_white_switch_to_temp(
                 {
                     HAP_REPR_AID: acc.aid,
                     HAP_REPR_IID: char_color_temp_iid,
-                    HAP_REPR_VALUE: 2700,
+                    HAP_REPR_VALUE: 500,
                 },
             ]
         },
@@ -810,7 +810,7 @@ async def test_light_rgb_with_white_switch_to_temp(
     for k, v in turn_on_props_with_brightness.items():
         assert call_turn_on[-1].data[k] == v
     assert len(events) == 2
-    assert events[-1].data[ATTR_VALUE] == "color temperature at 2700"
+    assert events[-1].data[ATTR_VALUE] == "color temperature at 500"
     assert acc.char_brightness.value == 50
 
 
@@ -886,7 +886,7 @@ async def test_light_rgbww_with_color_temp_conversion(
                 {
                     HAP_REPR_AID: acc.aid,
                     HAP_REPR_IID: char_color_temp_iid,
-                    HAP_REPR_VALUE: 2700,
+                    HAP_REPR_VALUE: 200,
                 },
             ]
         },
@@ -895,10 +895,9 @@ async def test_light_rgbww_with_color_temp_conversion(
     await _wait_for_light_coalesce(hass)
     assert call_turn_on
     assert call_turn_on[-1].data[ATTR_ENTITY_ID] == entity_id
-    for k, v in {ATTR_COLOR_TEMP: 2700}.items():
-        assert call_turn_on[-1].data[k] == v
+    assert call_turn_on[-1].data[ATTR_RGBWW_COLOR] == (0, 0, 0, 111, 17)
     assert len(events) == 2
-    assert events[-1].data[ATTR_VALUE] == "color temperature at 2700"
+    assert events[-1].data[ATTR_VALUE] == "color temperature at 200"
     assert acc.char_brightness.value == 50
 
 
@@ -977,7 +976,7 @@ async def test_light_rgbw_with_color_temp_conversion(
                 {
                     HAP_REPR_AID: acc.aid,
                     HAP_REPR_IID: char_color_temp_iid,
-                    HAP_REPR_VALUE: 2700,
+                    HAP_REPR_VALUE: 153,
                 },
             ]
         },
@@ -988,7 +987,7 @@ async def test_light_rgbw_with_color_temp_conversion(
     assert call_turn_on[-1].data[ATTR_ENTITY_ID] == entity_id
     assert call_turn_on[-1].data[ATTR_RGBW_COLOR] == (0, 0, 0, 128)
     assert len(events) == 2
-    assert events[-1].data[ATTR_VALUE] == "color temperature at 2700"
+    assert events[-1].data[ATTR_VALUE] == "color temperature at 153"
     assert acc.char_brightness.value == 50
 
 
