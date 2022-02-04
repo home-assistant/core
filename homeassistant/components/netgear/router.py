@@ -154,12 +154,12 @@ class NetgearRouter:
     async def async_get_attached_devices(self) -> list:
         """Get the devices connected to the router."""
         if self.method_version == 1:
-            with self._api_lock:
+            async with self._api_lock:
                 return await self.hass.async_add_executor_job(
                     self._api.get_attached_devices
                 )
 
-        with self._api_lock:
+        async with self._api_lock:
             return await self.hass.async_add_executor_job(
                 self._api.get_attached_devices_2
             )
@@ -197,7 +197,7 @@ class NetgearRouter:
 
     async def async_get_traffic_meter(self) -> None:
         """Get the traffic meter data of the router."""
-        with self._api_lock:
+        async with self._api_lock:
             return await self.hass.async_add_executor_job(self._api.get_traffic_meter)
 
     @property
