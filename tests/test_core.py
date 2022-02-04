@@ -384,11 +384,11 @@ def test_state_as_dict():
     assert state.as_dict() is as_dict_1
 
     # Verify it's immutable
-    with pytest.raises(AttributeError):
+    with pytest.raises(RuntimeError):
         as_dict_1.pop("state")
-    with pytest.raises(TypeError):
+    with pytest.raises(RuntimeError):
         as_dict_1["state"] = "yo"
-    with pytest.raises(TypeError):
+    with pytest.raises(RuntimeError):
         as_dict_1["context"]["user_id"] = None
 
 
