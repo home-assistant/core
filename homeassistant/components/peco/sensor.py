@@ -115,17 +115,9 @@ class PecoSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = f"{county.capitalize()} {description.name}"
         self._attr_unique_id = f"{self._county}_{description.key}"
         self._key = description.key
-        self._unit_of_measurement = description.native_unit_of_measurement
+        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
 
     @property
     def native_value(self) -> int:
         """Return the value of the sensor."""
         return self.coordinator.data[self._key]
-
-    @property
-    def native_unit_of_measurement(self) -> Any:
-        """Return the unit of measurement."""
-        if self._unit_of_measurement is not None:
-            return self._unit_of_measurement
-        else:
-            return None
