@@ -19,5 +19,16 @@
                 "title": "Connect to UPB PIM"
             }
         }
+    },
+    "options": {
+	"step": {
+	    "init": {
+		"title": "UPB Options",
+		"description": "Setting the Transmission Count to 2 may be required for networks with a Three-Phase repeater.",
+		"data": {
+		    "tx_count": "Transmission Count"
+		}
+	    }
+	}
     }
 }

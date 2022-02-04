@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         "UPStartExportFile": file,
     }
 
-    if tx_count := config_entry.options.get(CONF_TX_COUNT, None):
+    if tx_count := config_entry.options.get(CONF_TX_COUNT):
         pim_config["tx_count"] = tx_count
 
     upb = upb_lib.UpbPim(pim_config)
@@ -85,8 +85,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 async def _async_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
     """Handle options update."""
     upb = hass.data[DOMAIN][config_entry.entry_id]["upb"]
-    tx_count = config_entry.options.get(CONF_TX_COUNT, None)
-    if tx_count:
+    if tx_count := config_entry.options.get(CONF_TX_COUNT):
         _LOGGER.debug("Setting tx_count = %d", tx_count)
         upb.encoder.tx_count = tx_count
 
