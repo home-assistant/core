@@ -47,6 +47,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=county_name + " Outage Count", data=user_input
         )
 
-    async def async_step_reauth(self, user_input: dict[str, Any] = None) -> FlowResult:
+    async def async_step_reauth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle re-auth step."""
         return await self.async_step_user(user_input)

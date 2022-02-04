@@ -46,11 +46,11 @@ async def async_setup_entry(
     websession = hass.data[DOMAIN][config_entry.entry_id]["websession"]
     conf: MappingProxyType[str, Any] = config_entry.data
 
-    async def async_update_data():
+    async def async_update_data() -> dict:
         """Fetch data from API."""
         if conf["county"] == "TOTAL":
             try:
-                data = await api.get_outage_totals(websession)
+                data: dict = await api.get_outage_totals(websession)
             except HttpError as err:
                 raise UpdateFailed(f"Error fetching data: {err}") from err
             except BadJSONError as err:
@@ -61,17 +61,19 @@ async def async_setup_entry(
                 data["percent_customers_out"] = "Less than 5%"
             return data
         try:
-            data = await api.get_outage_count(conf["county"], websession)
+            county_data: dict = await api.get_outage_count(conf["county"], websession)
         except HttpError as err:
             raise UpdateFailed(f"Error fetching data: {err}") from err
         except BadJSONError as err:
             raise UpdateFailed(f"Error parsing data: {err}") from err
         except asyncio.TimeoutError as err:
             raise UpdateFailed(f"Timeout fetching data: {err}") from err
-        if data["percent_customers_out"] < 5:
-            percent_out = data["customers_out"] / data["customers_served"] * 100
-            data["percent_customers_out"] = percent_out
-        return data
+        if county_data["percent_customers_out"] < 5:
+            percent_out = (
+                county_data["customers_out"] / county_data["customers_served"] * 100
+            )
+            county_data["percent_customers_out"] = percent_out
+        return county_data
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -120,4 +122,5 @@ class PecoSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> int:
         """Return the value of the sensor."""
-        return self.coordinator.data[self._key]
+        data: int = self.coordinator.data[self._key]
+        return data
