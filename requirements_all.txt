@@ -175,7 +175,7 @@ aioflo==2021.11.0
 aioftp==0.12.0
 
 # homeassistant.components.github
-aiogithubapi==22.1.0
+aiogithubapi==22.2.0
 
 # homeassistant.components.guardian
 aioguardian==2021.11.0
@@ -311,7 +311,7 @@ ambiclimate==0.2.1
 amcrest==1.9.3
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.61
+androidtv[async]==0.0.63
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -438,7 +438,7 @@ blockchain==1.4.4
 bond-api==0.1.16
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.2.28
+boschshcpy==0.2.29
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
@@ -681,7 +681,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.28.17
+flux_led==0.28.20
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -851,7 +851,7 @@ homeassistant-pyozw==0.1.10
 homeconnect==0.6.3
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.0.1
+homematicip==1.0.2
 
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5
@@ -2087,7 +2087,7 @@ raspyrfm-client==1.2.8
 regenmaschine==2022.01.0
 
 # homeassistant.components.renault
-renault-api==0.1.7
+renault-api==0.1.8
 
 # homeassistant.components.python_script
 restrictedpython==5.2
