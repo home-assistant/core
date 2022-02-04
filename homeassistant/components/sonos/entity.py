@@ -4,10 +4,10 @@ from __future__ import annotations
 from abc import abstractmethod
 import datetime
 import logging
+from typing import Any
 
 import soco.config as soco_config
 from soco.core import SoCo
-from soco.exceptions import SoCoException
 
 from homeassistant.components import persistent_notification
 import homeassistant.helpers.device_registry as dr
@@ -17,10 +17,11 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 from .const import (
     DATA_SONOS,
     DOMAIN,
+    SONOS_FALLBACK_POLL,
     SONOS_FAVORITES_UPDATED,
-    SONOS_POLL_UPDATE,
     SONOS_STATE_UPDATED,
 )
+from .exception import SonosUpdateError, SpeakerUnavailable
 from .speaker import SonosSpeaker
 
 SUB_FAIL_URL = "https://www.home-assistant.io/integrations/sonos/#network-requirements"
@@ -43,8 +44,8 @@ class SonosEntity(Entity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SONOS_POLL_UPDATE}-{self.soco.uid}",
-                self.async_poll,
+                f"{SONOS_FALLBACK_POLL}-{self.soco.uid}",
+                self.async_fallback_poll,
             )
         )
         self.async_on_remove(
@@ -66,7 +67,7 @@ class SonosEntity(Entity):
         """Clean up when entity is removed."""
         del self.hass.data[DATA_SONOS].entity_id_mappings[self.entity_id]
 
-    async def async_poll(self, now: datetime.datetime) -> None:
+    async def async_fallback_poll(self, now: datetime.datetime) -> None:
         """Poll the entity if subscriptions fail."""
         if not self.speaker.subscriptions_failed:
             if soco_config.EVENT_ADVERTISE_IP:
@@ -86,13 +87,20 @@ class SonosEntity(Entity):
             self.speaker.subscriptions_failed = True
             await self.speaker.async_unsubscribe()
         try:
-            await self._async_poll()
-        except (OSError, SoCoException) as ex:
-            _LOGGER.debug("Error connecting to %s: %s", self.entity_id, ex)
+            await self._async_fallback_poll()
+        except SonosUpdateError:
+            _LOGGER.debug(
+                "Could not fallback poll %s on %s",
+                self.entity_id,
+                self.speaker.zone_name,
+            )
 
     @abstractmethod
-    async def _async_poll(self) -> None:
-        """Poll the specific functionality. Should be implemented by platforms if needed."""
+    async def _async_fallback_poll(self) -> None:
+        """Poll the specific functionality if subscriptions fail.
+
+        Should be implemented by platforms if needed.
+        """
 
     @property
     def soco(self) -> SoCo:
@@ -120,3 +128,22 @@ class SonosEntity(Entity):
     def available(self) -> bool:
         """Return whether this device is available."""
         return self.speaker.available
+
+
+class SonosPollingEntity(SonosEntity):
+    """Representation of a Sonos entity which may not support updating by subscriptions."""
+
+    @abstractmethod
+    def poll_state(self) -> Any:
+        """Poll the device for the current state."""
+
+    def update(self) -> None:
+        """Update the state using the built-in entity poller."""
+        try:
+            self.poll_state()
+        except SpeakerUnavailable:
+            return
+        except SonosUpdateError:
+            _LOGGER.debug(
+                "Could not poll %s on %s", self.entity_id, self.speaker.zone_name
+            )
