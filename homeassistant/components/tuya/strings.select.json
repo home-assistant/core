@@ -104,7 +104,7 @@
         "5": "180 minutes",
         "6": "240 minutes"
     },
-    "tuya__countdown_hours": {
+    "tuya__countdown": {
         "cancel": "Cancel",
         "1h": "1 hour",
         "2h": "2 hours",
