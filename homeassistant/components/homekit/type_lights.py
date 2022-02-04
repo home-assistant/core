@@ -177,7 +177,7 @@ class Light(HomeAccessory):
             else:
                 params[ATTR_RGBW_COLOR] = (
                     *(0,) * 3,
-                    brightness_pct or self.char_brightness.value,
+                    round(((brightness_pct or self.char_brightness.value) * 255) / 100),
                 )
 
         elif (
