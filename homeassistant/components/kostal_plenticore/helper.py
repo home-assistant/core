@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 from aiohttp.client_exceptions import ClientError
 from kostal.plenticore import (
@@ -332,7 +333,7 @@ class PlenticoreDataFormatter:
     }
 
     @classmethod
-    def get_method(cls, name: str) -> callable:
+    def get_method(cls, name: str) -> Callable[[Any], Any]:
         """Return a callable formatter of the given name."""
         return getattr(cls, name)
 

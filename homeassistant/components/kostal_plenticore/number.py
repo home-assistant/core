@@ -78,10 +78,11 @@ class PlenticoreDataNumber(CoordinatorEntity, NumberEntity, ABC):
     """Representation of a Kostal Plenticore Number entity."""
 
     entity_description: PlenticoreNumberEntityDescription
+    coordinator: SettingDataUpdateCoordinator
 
     def __init__(
         self,
-        coordinator,
+        coordinator: SettingDataUpdateCoordinator,
         entry_id: str,
         platform_name: str,
         device_info: DeviceInfo,

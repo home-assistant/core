@@ -795,13 +795,20 @@ SENSOR_PROCESS_DATA = [
 
 
 @dataclass
-class PlenticoreNumberEntityDescription(NumberEntityDescription):
-    """Describes a Plenticore number entity."""
+class PlenticoreNumberEntityDescriptionMixin:
+    """Define an entity description mixin for number entities."""
 
-    module_id: str = None
-    data_id: str = None
-    fmt_from: str = None
-    fmt_to: str = None
+    module_id: str
+    data_id: str
+    fmt_from: str
+    fmt_to: str
+
+
+@dataclass
+class PlenticoreNumberEntityDescription(
+    NumberEntityDescription, PlenticoreNumberEntityDescriptionMixin
+):
+    """Describes a Plenticore number entity."""
 
 
 NUMBER_SETTINGS_DATA = [
