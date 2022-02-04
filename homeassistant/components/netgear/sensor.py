@@ -12,11 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER
-from .router import (
-    NetgearDeviceEntity,
-    NetgearRouter,
-    NetgearRouterEntity,
-)
+from .router import NetgearDeviceEntity, NetgearRouter, NetgearRouterEntity
 
 SENSOR_TYPES = {
     "type": SensorEntityDescription(
@@ -133,12 +129,14 @@ async def async_setup_entry(
     """Set up device tracker for Netgear component."""
     router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]
     coordinator = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR]
-    
+
     # Router entities
     router_entities = []
 
     for attribute in SENSOR_TRAFFIC_TYPES:
-        router_entities.append(NetgearRouterTrafficEntity(coordinator, router, attribute))
+        router_entities.append(
+            NetgearRouterTrafficEntity(coordinator, router, attribute)
+        )
 
     async_add_entities(router_entities)
 
