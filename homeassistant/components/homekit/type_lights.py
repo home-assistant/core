@@ -67,6 +67,7 @@ COLOR_MODES_WITH_WHITES = {COLOR_MODE_RGBW, COLOR_MODE_RGBWW}
 
 
 def _has_no_white_values(state: State | None) -> bool:
+    """Check if all the whites are off."""
     if state is None:
         return False
     attributes = state.attributes
@@ -80,6 +81,7 @@ def _has_no_white_values(state: State | None) -> bool:
 
 
 def _has_no_color_values(state: State | None) -> bool:
+    """Check if all the colors are off."""
     if state is None:
         return False
     attributes = state.attributes
