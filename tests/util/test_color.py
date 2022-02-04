@@ -441,6 +441,11 @@ def test_color_rgbww_to_rgb():
         161,
         128,
     )
+    assert color_util.color_rgbww_to_rgb(255, 255, 255, 255, 255, 0, 370) == (
+        255,
+        245,
+        237,
+    )
 
 
 def test_color_temperature_to_rgbww():
