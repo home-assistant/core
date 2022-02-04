@@ -842,7 +842,7 @@ hole==0.7.0
 holidays==0.12
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220202.0
+home-assistant-frontend==20220203.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1310,7 +1310,7 @@ pushbullet.py==0.11.0
 pushover_complete==1.1.1
 
 # homeassistant.components.pvoutput
-pvo==0.2.0
+pvo==0.2.1
 
 # homeassistant.components.rpi_gpio_pwm
 pwmled==1.6.7
@@ -1999,7 +1999,7 @@ python_opendata_transport==0.3.0
 pythonegardia==1.0.40
 
 # homeassistant.components.tile
-pytile==2022.01.0
+pytile==2022.02.0
 
 # homeassistant.components.touchline
 pytouchline==0.7
