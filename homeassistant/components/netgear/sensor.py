@@ -292,6 +292,7 @@ class NetgearRouterSensorEntity(NetgearRouterEntity, SensorEntity):
     """Representation of a device connected to a Netgear router."""
 
     _attr_entity_registry_enabled_default = False
+    entity_description: NetgearSensorEntityDescription
 
     def __init__(
         self,
@@ -301,7 +302,7 @@ class NetgearRouterSensorEntity(NetgearRouterEntity, SensorEntity):
     ) -> None:
         """Initialize a Netgear device."""
         super().__init__(coordinator, router)
-        self.entity_description: NetgearSensorEntityDescription = entity_description
+        self.entity_description = entity_description
         self._name = f"{router.device_name} {entity_description.name}"
         self._unique_id = f"{router.serial_number}-{entity_description.key}-{entity_description.index}"
 
