@@ -546,7 +546,7 @@ class KNXModule:
                 replaced_exposure.device.name,
             )
             replaced_exposure.shutdown()
-        exposure = create_knx_exposure(self.hass, self.xknx, call.data)  # type: ignore[arg-type]
+        exposure = create_knx_exposure(self.hass, self.xknx, call.data)
         self.service_exposures[group_address] = exposure
         _LOGGER.debug(
             "Service exposure_register registered exposure for '%s' - %s",
