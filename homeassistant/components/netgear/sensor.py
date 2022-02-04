@@ -302,8 +302,8 @@ class NetgearRouterSensorEntity(NetgearRouterEntity, SensorEntity):
         """Initialize a Netgear device."""
         super().__init__(coordinator, router)
         self.entity_description = entity_description
-        self._name = f"{router.device_name} {self.entity_description.name}"
-        self._unique_id = f"{router.serial_number}-{self.entity_description.key}-{self.entity_description.index}"
+        self._name = f"{router.device_name} {entity_description.name}"
+        self._unique_id = f"{router.serial_number}-{entity_description.key}-{entity_description.index}"
 
         self._value = None
         self.async_update_device()
