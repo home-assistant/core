@@ -260,8 +260,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         """Start the vacuum."""
         if self.supported_features & SUPPORT_START == 0:
             return None
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._command_topic,
             self._config[CONF_PAYLOAD_START],
             self._config[CONF_QOS],
@@ -273,8 +272,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         """Pause the vacuum."""
         if self.supported_features & SUPPORT_PAUSE == 0:
             return None
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._command_topic,
             self._config[CONF_PAYLOAD_PAUSE],
             self._config[CONF_QOS],
@@ -286,8 +284,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         """Stop the vacuum."""
         if self.supported_features & SUPPORT_STOP == 0:
             return None
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._command_topic,
             self._config[CONF_PAYLOAD_STOP],
             self._config[CONF_QOS],
@@ -301,8 +298,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             fan_speed not in self._fan_speed_list
         ):
             return None
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._set_fan_speed_topic,
             fan_speed,
             self._config[CONF_QOS],
@@ -314,8 +310,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         """Tell the vacuum to return to its dock."""
         if self.supported_features & SUPPORT_RETURN_HOME == 0:
             return None
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._command_topic,
             self._config[CONF_PAYLOAD_RETURN_TO_BASE],
             self._config[CONF_QOS],
@@ -327,8 +322,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         """Perform a spot clean-up."""
         if self.supported_features & SUPPORT_CLEAN_SPOT == 0:
             return None
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._command_topic,
             self._config[CONF_PAYLOAD_CLEAN_SPOT],
             self._config[CONF_QOS],
@@ -340,8 +334,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         """Locate the vacuum (usually by playing a song)."""
         if self.supported_features & SUPPORT_LOCATE == 0:
             return None
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._command_topic,
             self._config[CONF_PAYLOAD_LOCATE],
             self._config[CONF_QOS],
@@ -359,8 +352,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             message = json.dumps(message)
         else:
             message = command
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._send_command_topic,
             message,
             self._config[CONF_QOS],
