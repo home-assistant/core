@@ -377,10 +377,19 @@ def test_state_as_dict():
         "last_updated": last_time.isoformat(),
         "state": "on",
     }
-    assert state.as_dict() == expected
+    as_dict_1 = state.as_dict()
+    assert as_dict_1 == expected
     # 2nd time to verify cache
     assert state.as_dict() == expected
-    assert state.as_dict() is state.as_dict()
+    assert state.as_dict() is as_dict_1
+
+    # Verify it's immutable
+    with pytest.raises(RuntimeError):
+        as_dict_1.pop("state")
+    with pytest.raises(RuntimeError):
+        as_dict_1["state"] = "yo"
+    with pytest.raises(RuntimeError):
+        as_dict_1["context"]["user_id"] = None
 
 
 async def test_eventbus_add_remove_listener(hass):
@@ -505,40 +514,6 @@ async def test_eventbus_listen_once_event_with_thread(hass):
 
     await hass.async_block_till_done()
     assert len(runs) == 1
-
-
-async def test_eventbus_listen_once_remove_multiple(hass, caplog):
-    """Test removing an listen_once_event multiple times."""
-    runs = []
-
-    class SomeIntergration:
-        def bound_integration_method(self, event):
-            runs.append(event)
-
-    integration = SomeIntergration()
-
-    remove = hass.bus.async_listen_once(
-        "test_event", integration.bound_integration_method
-    )
-
-    hass.bus.async_fire("test_event")
-    assert "Unable to remove unknown job listener" not in caplog.text
-    # Second time it should not increase runs
-    hass.bus.async_fire("test_event")
-    assert "Unable to remove unknown job listener" not in caplog.text
-
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-
-    remove()
-    assert "Unable to remove unknown job listener" in caplog.text
-    assert "SomeIntergration" in caplog.text
-    assert "bound_integration_method" in caplog.text
-    assert "test_eventbus_listen_once_remove_multiple" in caplog.text
-
-    caplog.clear()
-    remove()
-    assert "Unable to remove unknown job listener" in caplog.text
 
 
 async def test_eventbus_thread_event_listener(hass):
