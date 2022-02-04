@@ -49,76 +49,155 @@ SENSOR_TYPES = {
     ),
 }
 
+
+@dataclass
+class NetgearSensorEntityDescription(SensorEntityDescription):
+    """Class describing Netgear sensor entities."""
+
+    value: Callable = value
+    index: int = 0
+
+
 SENSOR_TRAFFIC_TYPES = [
-    SensorEntityDescription(
+    NetgearSensorEntityDescription(
         key="NewTodayUpload",
         name="Upload today",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:upload",
+        value=lambda router, key: router.traffic_data.get(key) if router.traffic_data is not None else None,
     ),
-    SensorEntityDescription(
+    NetgearSensorEntityDescription(
         key="NewTodayDownload",
         name="Download today",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:download",
+        value=lambda router, key: router.traffic_data.get(key) if router.traffic_data is not None else None,
     ),
-    SensorEntityDescription(
+    NetgearSensorEntityDescription(
         key="NewYesterdayUpload",
         name="Upload yesterday",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:upload",
+        value=lambda router, key: router.traffic_data.get(key) if router.traffic_data is not None else None,
     ),
-    SensorEntityDescription(
+    NetgearSensorEntityDescription(
         key="NewYesterdayDownload",
         name="Download yesterday",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:download",
+        value=lambda router, key: router.traffic_data.get(key) if router.traffic_data is not None else None,
     ),
-    SensorEntityDescription(
+    NetgearSensorEntityDescription(
         key="NewWeekUpload",
         name="Upload week",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:upload",
+        index = 0,
+        value=lambda router, key: router.traffic_data.get(key, [None, None])[0] if router.traffic_data is not None else None
     ),
-    SensorEntityDescription(
+    NetgearSensorEntityDescription(
+        key="NewWeekUpload",
+        name="Upload week average",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:upload",
+        index = 1,
+        value=lambda router, key: router.traffic_data.get(key, [None, None])[1] if router.traffic_data is not None else None
+    ),
+    NetgearSensorEntityDescription(
         key="NewWeekDownload",
         name="Download week",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:download",
+        index = 0,
+        value=lambda router, key: router.traffic_data.get(key, [None, None])[0] if router.traffic_data is not None else None
     ),
-    SensorEntityDescription(
+    NetgearSensorEntityDescription(
+        key="NewWeekDownload",
+        name="Download week average",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:download",
+        index = 1,
+        value=lambda router, key: router.traffic_data.get(key, [None, None])[1] if router.traffic_data is not None else None
+    ),
+    NetgearSensorEntityDescription(
         key="NewMonthUpload",
         name="Upload month",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:upload",
+        index = 0,
+        value=lambda router, key: router.traffic_data.get(key, [None, None])[0] if router.traffic_data is not None else None
     ),
-    SensorEntityDescription(
+    NetgearSensorEntityDescription(
+        key="NewMonthUpload",
+        name="Upload month average",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:upload",
+        index = 1,
+        value=lambda router, key: router.traffic_data.get(key, [None, None])[1] if router.traffic_data is not None else None
+    ),
+    NetgearSensorEntityDescription(
         key="NewMonthDownload",
         name="Download month",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:download",
+        index = 0,
+        value=lambda router, key: router.traffic_data.get(key, [None, None])[0] if router.traffic_data is not None else None
     ),
-    SensorEntityDescription(
+    NetgearSensorEntityDescription(
+        key="NewMonthDownload",
+        name="Download month average",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:download",
+        index = 1,
+        value=lambda router, key: router.traffic_data.get(key, [None, None])[1] if router.traffic_data is not None else None
+    ),
+    NetgearSensorEntityDescription(
         key="NewLastMonthUpload",
         name="Upload last month",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:upload",
+        index = 0,
+        value=lambda router, key: router.traffic_data.get(key, [None, None])[0] if router.traffic_data is not None else None
     ),
-    SensorEntityDescription(
+        NetgearSensorEntityDescription(
+        key="NewLastMonthUpload",
+        name="Upload last month average",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:upload",
+        index = 1,
+        value=lambda router, key: router.traffic_data.get(key, [None, None])[1] if router.traffic_data is not None else None
+    ),
+    NetgearSensorEntityDescription(
         key="NewLastMonthDownload",
         name="Download last month",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:download",
+        index = 0,
+        value=lambda router, key: router.traffic_data.get(key, [None, None])[0] if router.traffic_data is not None else None
+    ),
+    NetgearSensorEntityDescription(
+        key="NewLastMonthDownload",
+        name="Download last month average",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:download",
+        index = 1,
+        value=lambda router, key: router.traffic_data.get(key, [None, None])[1] if router.traffic_data is not None else None
     ),
 ]
 
@@ -135,7 +214,7 @@ async def async_setup_entry(
 
     for entity_des in SENSOR_TRAFFIC_TYPES:
         router_entities.append(
-            NetgearRouterTrafficEntity(coordinator, router, entity_des)
+            NetgearRouterSensorEntity(coordinator, router, entity_des)
         )
 
     async_add_entities(router_entities)
@@ -209,7 +288,7 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
             self._state = self._device[self._attribute]
 
 
-class NetgearRouterTrafficEntity(NetgearRouterEntity, SensorEntity):
+class NetgearRouterSensorEntity(NetgearRouterEntity, SensorEntity):
     """Representation of a device connected to a Netgear router."""
 
     _attr_entity_registry_enabled_default = False
@@ -218,48 +297,25 @@ class NetgearRouterTrafficEntity(NetgearRouterEntity, SensorEntity):
         self,
         coordinator: DataUpdateCoordinator,
         router: NetgearRouter,
-        entity_description: SensorEntityDescription,
+        entity_description: NetgearSensorEntityDescription,
     ) -> None:
         """Initialize a Netgear device."""
         super().__init__(coordinator, router)
         self.entity_description = entity_description
+        self._key = self.entity_description.key
         self._name = f"{router.device_name} {self.entity_description.name}"
-        self._unique_id = f"{router.serial_number}-{self.entity_description.key}"
-        self._traffic = None
-        self._traffic_avg = None
-        self._traffic_avg_attr = f"{self.entity_description.name} average"
+        self._unique_id = f"{router.serial_number}-{self._key}-{self.entity_description.index}"
+        
+        self._value = None
         self.async_update_device()
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return self._traffic
-
-    @property
-    def extra_state_attributes(self):
-        """Return device specific state attributes."""
-        extra_attr = {}
-        if self._traffic_avg is not None:
-            extra_attr[self._traffic_avg_attr] = self._traffic_avg
-        return extra_attr
+        return self._value
 
     @callback
     def async_update_device(self) -> None:
         """Update the Netgear device."""
         if self._router.traffic_data is not None:
-            data = self._router.traffic_data.get(self.entity_description.key)
-            if isinstance(data, float):
-                self._traffic = data
-            elif isinstance(data, tuple):
-                self._traffic = data[0]
-                self._traffic_avg = data[1]
-
-    async def async_added_to_hass(self):
-        """Entity added to hass."""
-        self._router.traffic_meter_entities = self._router.traffic_meter_entities + 1
-        await super().async_added_to_hass()
-
-    async def async_will_remove_from_hass(self):
-        """Entity removed from hass."""
-        self._router.traffic_meter_entities = self._router.traffic_meter_entities - 1
-        await super().async_will_remove_from_hass()
+            self._value = self.entity_description.value(self._router, self._key)
