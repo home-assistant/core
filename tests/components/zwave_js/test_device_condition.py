@@ -596,6 +596,7 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
         == INVALID_CONFIG
     )
 
+    # Test invalid device ID fails validation
     with pytest.raises(InvalidDeviceAutomationConfig):
         await device_condition.async_validate_condition_config(
             hass,
