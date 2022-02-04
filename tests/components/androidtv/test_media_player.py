@@ -187,16 +187,16 @@ async def test_reconnect(hass, caplog, config):
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell(MAC_ADDRESS_RESPONSE)[
-        patch_key
     ], patchers.PATCH_KEYGEN, patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        with patchers.patch_shell(MAC_ADDRESS_RESPONSE)[patch_key]:
+            assert await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
 
-        await hass.helpers.entity_component.async_update_entity(entity_id)
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == STATE_OFF
+        with patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
+            await hass.helpers.entity_component.async_update_entity(entity_id)
+            state = hass.states.get(entity_id)
+            assert state is not None
+            assert state.state == STATE_OFF
 
     caplog.clear()
     caplog.set_level(logging.WARNING)
@@ -255,15 +255,16 @@ async def test_adb_shell_returns_none(hass, config):
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell(MAC_ADDRESS_RESPONSE)[
-        patch_key
     ], patchers.PATCH_KEYGEN, patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        await hass.helpers.entity_component.async_update_entity(entity_id)
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state != STATE_UNAVAILABLE
+        with patchers.patch_shell(MAC_ADDRESS_RESPONSE)[patch_key]:
+            assert await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+
+        with patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
+            await hass.helpers.entity_component.async_update_entity(entity_id)
+            state = hass.states.get(entity_id)
+            assert state is not None
+            assert state.state != STATE_UNAVAILABLE
 
     with patchers.patch_shell(None)[patch_key], patchers.patch_shell(error=True)[
         patch_key
@@ -283,15 +284,15 @@ async def test_setup_with_adbkey(hass):
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell(MAC_ADDRESS_RESPONSE)[
-        patch_key
     ], patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER, PATCH_ISFILE, PATCH_ACCESS:
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        await hass.helpers.entity_component.async_update_entity(entity_id)
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == STATE_OFF
+        with patchers.patch_shell(MAC_ADDRESS_RESPONSE)[patch_key]:
+            assert await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+        with patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
+            await hass.helpers.entity_component.async_update_entity(entity_id)
+            state = hass.states.get(entity_id)
+            assert state is not None
+            assert state.state == STATE_OFF
 
 
 @pytest.mark.parametrize(
