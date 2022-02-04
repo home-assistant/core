@@ -817,7 +817,7 @@ pure-python-adb[async]==0.3.0.dev0
 pushbullet.py==0.11.0
 
 # homeassistant.components.pvoutput
-pvo==0.2.0
+pvo==0.2.1
 
 # homeassistant.components.canary
 py-canary==0.5.1
@@ -1233,7 +1233,7 @@ python-twitch-client==0.6.0
 python_awair==0.2.1
 
 # homeassistant.components.tile
-pytile==2022.01.0
+pytile==2022.02.0
 
 # homeassistant.components.traccar
 pytraccar==0.10.0

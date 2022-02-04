@@ -236,7 +236,7 @@ class MqttSensor(MqttEntity, SensorEntity, RestoreEntity):
                     self.hass, self._value_is_expired, expiration_at
                 )
 
-            payload = self._template(msg.payload)
+            payload = self._template(msg.payload, default=self._state)
 
             if payload is not None and self.device_class in (
                 SensorDeviceClass.DATE,
