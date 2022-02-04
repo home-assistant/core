@@ -198,9 +198,7 @@ class NetgearRouter:
     async def async_get_traffic_meter(self) -> None:
         """Get the traffic meter data of the router."""
         with self._api_lock:
-            return await self.hass.async_add_executor_job(
-                self._api.get_traffic_meter
-            )
+            return await self.hass.async_add_executor_job(self._api.get_traffic_meter)
 
     @property
     def port(self) -> int:
