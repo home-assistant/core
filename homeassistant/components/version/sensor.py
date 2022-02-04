@@ -122,6 +122,6 @@ class VersionSensorEntity(CoordinatorEntity, SensorEntity):
         return self.coordinator.version
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return extra state attributes of this sensor."""
         return self.coordinator.version_data

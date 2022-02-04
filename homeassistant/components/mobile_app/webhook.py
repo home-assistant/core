@@ -10,7 +10,7 @@ from aiohttp.web import HTTPBadRequest, Request, Response, json_response
 from nacl.secret import SecretBox
 import voluptuous as vol
 
-from homeassistant.components import cloud, notify as hass_notify, tag
+from homeassistant.components import camera, cloud, notify as hass_notify, tag
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES as BINARY_SENSOR_CLASSES,
 )
@@ -265,19 +265,19 @@ async def webhook_fire_event(hass, config_entry, data):
 @validate_schema({vol.Required(ATTR_CAMERA_ENTITY_ID): cv.string})
 async def webhook_stream_camera(hass, config_entry, data):
     """Handle a request to HLS-stream a camera."""
-    if (camera := hass.states.get(data[ATTR_CAMERA_ENTITY_ID])) is None:
+    if (camera_state := hass.states.get(data[ATTR_CAMERA_ENTITY_ID])) is None:
         return webhook_response(
             {"success": False},
             registration=config_entry.data,
             status=HTTPStatus.BAD_REQUEST,
         )
 
-    resp = {"mjpeg_path": f"/api/camera_proxy_stream/{camera.entity_id}"}
+    resp = {"mjpeg_path": f"/api/camera_proxy_stream/{camera_state.entity_id}"}
 
-    if camera.attributes[ATTR_SUPPORTED_FEATURES] & CAMERA_SUPPORT_STREAM:
+    if camera_state.attributes[ATTR_SUPPORTED_FEATURES] & CAMERA_SUPPORT_STREAM:
         try:
-            resp["hls_path"] = await hass.components.camera.async_request_stream(
-                camera.entity_id, "hls"
+            resp["hls_path"] = await camera.async_request_stream(
+                hass, camera_state.entity_id, "hls"
             )
         except HomeAssistantError:
             resp["hls_path"] = None

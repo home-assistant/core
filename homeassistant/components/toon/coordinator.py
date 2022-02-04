@@ -6,7 +6,7 @@ import secrets
 
 from toonapi import Status, Toon, ToonError
 
-from homeassistant.components import cloud
+from homeassistant.components import cloud, webhook
 from homeassistant.components.webhook import (
     async_register as webhook_register,
     async_unregister as webhook_unregister,
@@ -61,16 +61,22 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
         if cloud.async_active_subscription(self.hass):
 
             if CONF_CLOUDHOOK_URL not in self.entry.data:
-                webhook_url = await cloud.async_create_cloudhook(
-                    self.hass, self.entry.data[CONF_WEBHOOK_ID]
-                )
-                data = {**self.entry.data, CONF_CLOUDHOOK_URL: webhook_url}
-                self.hass.config_entries.async_update_entry(self.entry, data=data)
+                try:
+                    webhook_url = await cloud.async_create_cloudhook(
+                        self.hass, self.entry.data[CONF_WEBHOOK_ID]
+                    )
+                except cloud.CloudNotConnected:
+                    webhook_url = webhook.async_generate_url(
+                        self.hass, self.entry.data[CONF_WEBHOOK_ID]
+                    )
+                else:
+                    data = {**self.entry.data, CONF_CLOUDHOOK_URL: webhook_url}
+                    self.hass.config_entries.async_update_entry(self.entry, data=data)
             else:
                 webhook_url = self.entry.data[CONF_CLOUDHOOK_URL]
         else:
-            webhook_url = self.hass.components.webhook.async_generate_url(
-                self.entry.data[CONF_WEBHOOK_ID]
+            webhook_url = webhook.async_generate_url(
+                self.hass, self.entry.data[CONF_WEBHOOK_ID]
             )
 
         # Ensure the webhook is not registered already

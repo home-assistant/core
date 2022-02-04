@@ -36,6 +36,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
+    API,
     COORDINATOR,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
@@ -144,12 +145,15 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
-    coordinator.update_interval = timedelta(
-        seconds=entry.options.get(CONF_SCAN_INTERVAL)
-    )
+    update_interval = entry.options.get(CONF_SCAN_INTERVAL)
+    if update_interval is None:
+        api = hass.data[DOMAIN][entry.entry_id][API]
+        update_interval = DEFAULT_SCAN_INTERVAL[api.smile_type]
+
+    coordinator.update_interval = timedelta(seconds=update_interval)
 
 
 async def async_unload_entry_gw(hass: HomeAssistant, entry: ConfigEntry):

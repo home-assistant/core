@@ -4,7 +4,7 @@
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "api_not_enabled": "L'API non \u00e8 abilitata. Abilita API nell'applicazione HomeWizard Energy sotto impostazioni",
             "device_not_supported": "Questo dispositivo non \u00e8 supportato",
-            "invalid_discovery_parameters": "versione_api_non_supportata",
+            "invalid_discovery_parameters": "Rilevata versione API non supportata",
             "unknown_error": "Errore imprevisto"
         },
         "step": {

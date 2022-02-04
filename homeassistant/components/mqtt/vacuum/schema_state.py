@@ -197,7 +197,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             )
         }
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
         topics = {}
 
@@ -206,8 +206,12 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         def state_message_received(msg):
             """Handle state MQTT message."""
             payload = json.loads(msg.payload)
-            if STATE in payload and payload[STATE] in POSSIBLE_STATES:
-                self._state = POSSIBLE_STATES[payload[STATE]]
+            if STATE in payload and (
+                payload[STATE] in POSSIBLE_STATES or payload[STATE] is None
+            ):
+                self._state = (
+                    POSSIBLE_STATES[payload[STATE]] if payload[STATE] else None
+                )
                 del payload[STATE]
             self._state_attrs.update(payload)
             self.async_write_ha_state()
@@ -219,9 +223,13 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
                 "qos": self._config[CONF_QOS],
                 "encoding": self._config[CONF_ENCODING] or None,
             }
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics
         )
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
     def state(self):

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Final
 
 from ovoenergy import OVODailyUsage
@@ -37,7 +37,7 @@ KEY_LAST_GAS_COST: Final = "last_gas_cost"
 class OVOEnergySensorEntityDescription(SensorEntityDescription):
     """Class describing System Bridge sensor entities."""
 
-    value: Callable[[OVODailyUsage], StateType] = round
+    value: Callable[[OVODailyUsage], StateType | datetime] = round
 
 
 SENSOR_TYPES_ELECTRICITY: tuple[OVOEnergySensorEntityDescription, ...] = (
@@ -158,7 +158,7 @@ class OVOEnergySensor(OVOEnergyDeviceEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state."""
         usage: OVODailyUsage = self.coordinator.data
         return self.entity_description.value(usage)

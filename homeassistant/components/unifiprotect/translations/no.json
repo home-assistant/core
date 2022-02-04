@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Enheten er allerede konfigurert"
+            "already_configured": "Enheten er allerede konfigurert",
+            "discovery_started": "Oppdagelsen startet"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
@@ -9,7 +10,17 @@
             "protect_version": "Minimum p\u00e5krevd versjon er v1.20.0. Vennligst oppgrader UniFi Protect og pr\u00f8v deretter p\u00e5 nytt.",
             "unknown": "Uventet feil"
         },
+        "flow_title": "{name} ( {ip_address} )",
         "step": {
+            "discovery_confirm": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn",
+                    "verify_ssl": "Verifisere SSL-sertifikat"
+                },
+                "description": "Vil du konfigurere {name} ( {ip_address} )? Du trenger en lokal bruker opprettet i UniFi OS-konsollen for \u00e5 logge p\u00e5. Ubiquiti Cloud-brukere vil ikke fungere. For mer informasjon: {local_user_documentation_url}",
+                "title": "UniFi Protect oppdaget"
+            },
             "reauth_confirm": {
                 "data": {
                     "host": "IP/vert for UniFi Protect Server",
@@ -27,6 +38,7 @@
                     "username": "Brukernavn",
                     "verify_ssl": "Verifisere SSL-sertifikat"
                 },
+                "description": "Du trenger en lokal bruker opprettet i UniFi OS-konsollen for \u00e5 logge p\u00e5. Ubiquiti Cloud-brukere vil ikke fungere. For mer informasjon: {local_user_documentation_url}",
                 "title": "UniFi Protect-oppsett"
             }
         }

@@ -7,5 +7,6 @@
   "codeowners": [
     "@davet2001"
   ],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["aurorapy"]
 }

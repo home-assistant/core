@@ -20,6 +20,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import PLATFORMS, MqttCommandTemplate, MqttValueTemplate, subscription
 from .. import mqtt
 from .const import (
+    CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
     CONF_QOS,
@@ -29,8 +30,6 @@ from .const import (
 )
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
-
-CONF_COMMAND_TEMPLATE = "command_template"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -129,7 +128,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
             ).async_render_with_possible_json_value,
         }
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
         @callback
@@ -157,7 +156,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
             # Force into optimistic mode.
             self._optimistic = True
         else:
-            self._sub_state = await subscription.async_subscribe_topics(
+            self._sub_state = subscription.async_prepare_subscribe_topics(
                 self.hass,
                 self._sub_state,
                 {
@@ -169,6 +168,10 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
                     }
                 },
             )
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
         if self._optimistic and (last_state := await self.async_get_last_state()):
             self._attr_current_option = last_state.state

@@ -7,5 +7,6 @@
   "zeroconf": ["_dvl-deviceapi._tcp.local."],
   "codeowners": ["@2Fake", "@Shutgun"],
   "quality_scale": "platinum",
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["devolo_plc_api"]
 }

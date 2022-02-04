@@ -19,10 +19,12 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.loader import async_get_integration
+from homeassistant.util.network import is_ip_address
 
 from .const import (
     CONF_ALL_UPDATES,
@@ -35,9 +37,15 @@ from .const import (
     OUTDATED_LOG_MESSAGE,
 )
 from .discovery import async_start_discovery
-from .utils import _async_short_mac, _async_unifi_mac_from_hass
+from .utils import _async_resolve, _async_short_mac, _async_unifi_mac_from_hass
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_local_user_documentation_url(hass: HomeAssistant) -> str:
+    """Get the documentation url for creating a local user."""
+    integration = await async_get_integration(hass, DOMAIN)
+    return f"{integration.documentation}#local-user"
 
 
 def _host_is_direct_connect(host: str) -> bool:
@@ -81,32 +89,43 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_device = discovery_info
         mac = _async_unifi_mac_from_hass(discovery_info["hw_addr"])
         await self.async_set_unique_id(mac)
-        for entry in self._async_current_entries(include_ignore=False):
-            if entry.unique_id != mac:
+        source_ip = discovery_info["source_ip"]
+        direct_connect_domain = discovery_info["direct_connect_domain"]
+        for entry in self._async_current_entries():
+            if entry.source == config_entries.SOURCE_IGNORE:
+                if entry.unique_id == mac:
+                    return self.async_abort(reason="already_configured")
                 continue
-            new_host = None
-            if (
-                _host_is_direct_connect(entry.data[CONF_HOST])
-                and discovery_info["direct_connect_domain"]
-                and entry.data[CONF_HOST] != discovery_info["direct_connect_domain"]
+            entry_host = entry.data[CONF_HOST]
+            entry_has_direct_connect = _host_is_direct_connect(entry_host)
+            if entry.unique_id == mac:
+                new_host = None
+                if (
+                    entry_has_direct_connect
+                    and direct_connect_domain
+                    and entry_host != direct_connect_domain
+                ):
+                    new_host = direct_connect_domain
+                elif (
+                    not entry_has_direct_connect
+                    and is_ip_address(entry_host)
+                    and entry_host != source_ip
+                ):
+                    new_host = source_ip
+                if new_host:
+                    self.hass.config_entries.async_update_entry(
+                        entry, data={**entry.data, CONF_HOST: new_host}
+                    )
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(entry.entry_id)
+                    )
+                return self.async_abort(reason="already_configured")
+            if entry_host in (direct_connect_domain, source_ip) or (
+                entry_has_direct_connect
+                and (ip := await _async_resolve(self.hass, entry_host))
+                and ip == source_ip
             ):
-                new_host = discovery_info["direct_connect_domain"]
-            elif (
-                not _host_is_direct_connect(entry.data[CONF_HOST])
-                and entry.data[CONF_HOST] != discovery_info["source_ip"]
-            ):
-                new_host = discovery_info["source_ip"]
-            if new_host:
-                self.hass.config_entries.async_update_entry(
-                    entry, data={**entry.data, CONF_HOST: new_host}
-                )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(entry.entry_id)
-                )
-            return self.async_abort(reason="already_configured")
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: discovery_info["source_ip"]}
-        )
+                return self.async_abort(reason="already_configured")
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(
@@ -139,7 +158,12 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         return self.async_show_form(
             step_id="discovery_confirm",
-            description_placeholders=placeholders,
+            description_placeholders={
+                **placeholders,
+                "local_user_documentation_url": await async_local_user_documentation_url(
+                    self.hass
+                ),
+            },
             data_schema=vol.Schema(
                 {
                     vol.Required(
@@ -269,6 +293,11 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
+            description_placeholders={
+                "local_user_documentation_url": await async_local_user_documentation_url(
+                    self.hass
+                )
+            },
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST, default=user_input.get(CONF_HOST)): str,

@@ -224,6 +224,7 @@ class TrackerEntity(BaseTrackerEntity):
         """Return the device state attributes."""
         attr: dict[str, StateType] = {}
         attr.update(super().state_attributes)
+
         if self.latitude is not None and self.longitude is not None:
             attr[ATTR_LATITUDE] = self.latitude
             attr[ATTR_LONGITUDE] = self.longitude

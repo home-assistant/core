@@ -41,6 +41,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import PLATFORMS, MqttCommandTemplate, MqttValueTemplate, subscription
 from .. import mqtt
 from .const import (
+    CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
     CONF_QOS,
@@ -63,7 +64,6 @@ CONF_PAYLOAD_ARM_NIGHT = "payload_arm_night"
 CONF_PAYLOAD_ARM_VACATION = "payload_arm_vacation"
 CONF_PAYLOAD_ARM_CUSTOM_BYPASS = "payload_arm_custom_bypass"
 CONF_PAYLOAD_TRIGGER = "payload_trigger"
-CONF_COMMAND_TEMPLATE = "command_template"
 
 MQTT_ALARM_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -173,7 +173,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             self._config[CONF_COMMAND_TEMPLATE], entity=self
         ).async_render
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
         @callback
@@ -198,7 +198,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             self._state = payload
             self.async_write_ha_state()
 
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
             self._sub_state,
             {
@@ -210,6 +210,10 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
                 }
             },
         )
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
     def state(self):

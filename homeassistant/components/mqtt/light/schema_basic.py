@@ -109,6 +109,8 @@ CONF_WHITE_VALUE_STATE_TOPIC = "white_value_state_topic"
 CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 CONF_ON_COMMAND_TYPE = "on_command_type"
 
+PAYLOAD_NONE = "None"
+
 MQTT_LIGHT_ATTRIBUTES_BLOCKED = frozenset(
     {
         ATTR_COLOR_MODE,
@@ -257,7 +259,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         self._rgb_color = None
         self._rgbw_color = None
         self._rgbww_color = None
-        self._state = False
+        self._state = None
         self._supported_color_modes = None
         self._white_value = None
         self._xy_color = None
@@ -417,11 +419,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         """Return True if the attribute is optimistically updated."""
         return getattr(self, f"_optimistic_{attribute}")
 
-    async def _subscribe_topics(self):  # noqa: C901
+    def _prepare_subscribe_topics(self):  # noqa: C901
         """(Re)Subscribe to topics."""
         topics = {}
-
-        last_state = await self.async_get_last_state()
 
         def add_topic(topic, msg_callback):
             """Add a topic."""
@@ -433,21 +433,11 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                     "encoding": self._config[CONF_ENCODING] or None,
                 }
 
-        def restore_state(attribute, condition_attribute=None):
-            """Restore a state attribute."""
-            if condition_attribute is None:
-                condition_attribute = attribute
-            optimistic = self._is_optimistic(condition_attribute)
-            if optimistic and last_state and last_state.attributes.get(attribute):
-                setattr(self, f"_{attribute}", last_state.attributes[attribute])
-
         @callback
         @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new MQTT messages."""
-            payload = self._value_templates[CONF_STATE_VALUE_TEMPLATE](
-                msg.payload, None
-            )
+            payload = self._value_templates[CONF_STATE_VALUE_TEMPLATE](msg.payload)
             if not payload:
                 _LOGGER.debug("Ignoring empty state message from '%s'", msg.topic)
                 return
@@ -456,6 +446,8 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 self._state = True
             elif payload == self._payload["off"]:
                 self._state = False
+            elif payload == PAYLOAD_NONE:
+                self._state = None
             self.async_write_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
@@ -465,8 +457,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 "qos": self._config[CONF_QOS],
                 "encoding": self._config[CONF_ENCODING] or None,
             }
-        elif self._optimistic and last_state:
-            self._state = last_state.state == STATE_ON
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -485,7 +475,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             self.async_write_ha_state()
 
         add_topic(CONF_BRIGHTNESS_STATE_TOPIC, brightness_received)
-        restore_state(ATTR_BRIGHTNESS)
 
         def _rgbx_received(msg, template, color_mode, convert_color):
             """Handle new MQTT messages for RGBW and RGBWW."""
@@ -520,8 +509,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             self.async_write_ha_state()
 
         add_topic(CONF_RGB_STATE_TOPIC, rgb_received)
-        restore_state(ATTR_RGB_COLOR)
-        restore_state(ATTR_HS_COLOR, ATTR_RGB_COLOR)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -539,7 +526,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             self.async_write_ha_state()
 
         add_topic(CONF_RGBW_STATE_TOPIC, rgbw_received)
-        restore_state(ATTR_RGBW_COLOR)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -557,7 +543,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             self.async_write_ha_state()
 
         add_topic(CONF_RGBWW_STATE_TOPIC, rgbww_received)
-        restore_state(ATTR_RGBWW_COLOR)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -574,7 +559,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             self.async_write_ha_state()
 
         add_topic(CONF_COLOR_MODE_STATE_TOPIC, color_mode_received)
-        restore_state(ATTR_COLOR_MODE)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -593,7 +577,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             self.async_write_ha_state()
 
         add_topic(CONF_COLOR_TEMP_STATE_TOPIC, color_temp_received)
-        restore_state(ATTR_COLOR_TEMP)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -610,7 +593,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             self.async_write_ha_state()
 
         add_topic(CONF_EFFECT_STATE_TOPIC, effect_received)
-        restore_state(ATTR_EFFECT)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -630,7 +612,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 _LOGGER.debug("Failed to parse hs state update: '%s'", payload)
 
         add_topic(CONF_HS_STATE_TOPIC, hs_received)
-        restore_state(ATTR_HS_COLOR)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -649,7 +630,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             self.async_write_ha_state()
 
         add_topic(CONF_WHITE_VALUE_STATE_TOPIC, white_value_received)
-        restore_state(ATTR_WHITE_VALUE)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -670,12 +650,38 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             self.async_write_ha_state()
 
         add_topic(CONF_XY_STATE_TOPIC, xy_received)
-        restore_state(ATTR_XY_COLOR)
-        restore_state(ATTR_HS_COLOR, ATTR_XY_COLOR)
 
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics
         )
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        last_state = await self.async_get_last_state()
+
+        def restore_state(attribute, condition_attribute=None):
+            """Restore a state attribute."""
+            if condition_attribute is None:
+                condition_attribute = attribute
+            optimistic = self._is_optimistic(condition_attribute)
+            if optimistic and last_state and last_state.attributes.get(attribute):
+                setattr(self, f"_{attribute}", last_state.attributes[attribute])
+
+        if self._topic[CONF_STATE_TOPIC] is None and self._optimistic and last_state:
+            self._state = last_state.state == STATE_ON
+        restore_state(ATTR_BRIGHTNESS)
+        restore_state(ATTR_RGB_COLOR)
+        restore_state(ATTR_HS_COLOR, ATTR_RGB_COLOR)
+        restore_state(ATTR_RGBW_COLOR)
+        restore_state(ATTR_RGBWW_COLOR)
+        restore_state(ATTR_COLOR_MODE)
+        restore_state(ATTR_COLOR_TEMP)
+        restore_state(ATTR_EFFECT)
+        restore_state(ATTR_HS_COLOR)
+        restore_state(ATTR_WHITE_VALUE)
+        restore_state(ATTR_XY_COLOR)
+        restore_state(ATTR_HS_COLOR, ATTR_XY_COLOR)
 
     @property
     def brightness(self):

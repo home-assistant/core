@@ -1,13 +1,16 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "O servi\u00e7o j\u00e1 est\u00e1 configurado"
+        },
         "error": {
-            "invalid_key": "Chave de API e / ou chave de aplicativo inv\u00e1lidas",
+            "invalid_key": "Chave de API inv\u00e1lida",
             "no_devices": "Nenhum dispositivo encontrado na conta"
         },
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Chave API",
+                    "api_key": "Chave da API",
                     "app_key": "Chave de aplicativo"
                 },
                 "title": "Preencha suas informa\u00e7\u00f5es"

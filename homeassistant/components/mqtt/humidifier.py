@@ -33,6 +33,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import PLATFORMS, MqttCommandTemplate, MqttValueTemplate, subscription
 from .. import mqtt
 from .const import (
+    CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
     CONF_QOS,
@@ -44,7 +45,6 @@ from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
 CONF_AVAILABLE_MODES_LIST = "modes"
-CONF_COMMAND_TEMPLATE = "command_template"
 CONF_DEVICE_CLASS = "device_class"
 CONF_MODE_COMMAND_TEMPLATE = "mode_command_template"
 CONF_MODE_COMMAND_TOPIC = "mode_command_topic"
@@ -65,6 +65,8 @@ DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_PAYLOAD_RESET = "None"
+
+PAYLOAD_NONE = "None"
 
 MQTT_HUMIDIFIER_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -187,7 +189,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT humidifier."""
-        self._state = False
+        self._state = None
         self._target_humidity = None
         self._mode = None
         self._supported_features = 0
@@ -267,7 +269,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 entity=self,
             ).async_render_with_possible_json_value
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
         topics = {}
 
@@ -283,6 +285,8 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 self._state = True
             elif payload == self._payload["STATE_OFF"]:
                 self._state = False
+            elif payload == PAYLOAD_NONE:
+                self._state = None
             self.async_write_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
@@ -373,9 +377,13 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             }
             self._mode = None
 
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics
         )
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
     def assumed_state(self):
@@ -388,7 +396,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         return self._available_modes
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._state
 

@@ -57,8 +57,8 @@ async def test_version_sensor(hass: HomeAssistant):
 
     state = hass.states.get("sensor.local_installation")
     assert state.state == MOCK_VERSION
-    assert state.attributes["source"] == "local"
-    assert state.attributes["channel"] == "stable"
+    assert "source" not in state.attributes
+    assert "channel" not in state.attributes
 
 
 async def test_update(hass: HomeAssistant, caplog: pytest.LogCaptureFixture):

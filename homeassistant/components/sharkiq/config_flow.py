@@ -12,7 +12,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 
 SHARKIQ_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
@@ -29,7 +29,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     try:
         async with async_timeout.timeout(10):
-            _LOGGER.debug("Initialize connection to Ayla networks API")
+            LOGGER.debug("Initialize connection to Ayla networks API")
             await ayla_api.async_sign_in()
     except (asyncio.TimeoutError, aiohttp.ClientError) as errors:
         raise CannotConnect from errors
@@ -58,7 +58,7 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except InvalidAuth:
             errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
+            LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         return info, errors
 
@@ -84,10 +84,10 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _, errors = await self._async_validate_input(user_input)
 
             if not errors:
-                entry = await self.async_set_unique_id(self.unique_id)
-                self.hass.config_entries.async_update_entry(entry, data=user_input)
-
-                return self.async_abort(reason="reauth_successful")
+                errors = {"base": "unknown"}
+                if entry := await self.async_set_unique_id(self.unique_id):
+                    self.hass.config_entries.async_update_entry(entry, data=user_input)
+                    return self.async_abort(reason="reauth_successful")
 
             if errors["base"] != "invalid_auth":
                 return self.async_abort(reason=errors["base"])

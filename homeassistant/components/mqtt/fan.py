@@ -43,6 +43,7 @@ from homeassistant.util.percentage import (
 from . import PLATFORMS, MqttCommandTemplate, MqttValueTemplate, subscription
 from .. import mqtt
 from .const import (
+    CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
     CONF_QOS,
@@ -54,7 +55,6 @@ from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
 CONF_STATE_VALUE_TEMPLATE = "state_value_template"
-CONF_COMMAND_TEMPLATE = "command_template"
 CONF_PERCENTAGE_STATE_TOPIC = "percentage_state_topic"
 CONF_PERCENTAGE_COMMAND_TOPIC = "percentage_command_topic"
 CONF_PERCENTAGE_VALUE_TEMPLATE = "percentage_value_template"
@@ -93,6 +93,8 @@ DEFAULT_SPEED_RANGE_MAX = 100
 
 OSCILLATE_ON_PAYLOAD = "oscillate_on"
 OSCILLATE_OFF_PAYLOAD = "oscillate_off"
+
+PAYLOAD_NONE = "None"
 
 MQTT_FAN_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -243,7 +245,7 @@ class MqttFan(MqttEntity, FanEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT fan."""
-        self._state = False
+        self._state = None
         self._percentage = None
         self._preset_mode = None
         self._oscillation = None
@@ -351,7 +353,7 @@ class MqttFan(MqttEntity, FanEntity):
                 entity=self,
             ).async_render_with_possible_json_value
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
         topics = {}
 
@@ -367,6 +369,8 @@ class MqttFan(MqttEntity, FanEntity):
                 self._state = True
             elif payload == self._payload["STATE_OFF"]:
                 self._state = False
+            elif payload == PAYLOAD_NONE:
+                self._state = None
             self.async_write_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
@@ -479,9 +483,13 @@ class MqttFan(MqttEntity, FanEntity):
             }
             self._oscillation = False
 
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics
         )
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
     def assumed_state(self):
@@ -489,7 +497,7 @@ class MqttFan(MqttEntity, FanEntity):
         return self._optimistic
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._state
 

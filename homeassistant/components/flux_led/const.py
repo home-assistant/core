@@ -20,6 +20,8 @@ from homeassistant.components.light import (
 
 DOMAIN: Final = "flux_led"
 
+MIN_RGB_BRIGHTNESS: Final = 1
+MIN_CCT_BRIGHTNESS: Final = 2
 
 FLUX_COLOR_MODE_TO_HASS: Final = {
     FLUX_COLOR_MODE_RGB: COLOR_MODE_RGB,
@@ -49,6 +51,7 @@ FLUX_LED_EXCEPTIONS: Final = (
 
 STARTUP_SCAN_TIMEOUT: Final = 5
 DISCOVER_SCAN_TIMEOUT: Final = 10
+DIRECTED_DISCOVERY_TIMEOUT: Final = 15
 
 CONF_MODEL: Final = "model"
 CONF_MODEL_NUM: Final = "model_num"
