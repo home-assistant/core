@@ -212,7 +212,7 @@ async def async_setup_entry(
     # Router entities
     router_entities = []
 
-    for entity_des in SENSOR_TRAFFIC_TYPES:
+    for description in SENSOR_TRAFFIC_TYPES:
         router_entities.append(
             NetgearRouterSensorEntity(coordinator_traffic, router, entity_des)
         )
