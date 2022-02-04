@@ -253,8 +253,9 @@ class Light(HomeAccessory):
         ):
             # HomeKit assumes RGB and WHITE values are interlocked
             # similar to esphome's color_interlock: true
-            if state and COLOR_MODES_WITH_WHITES.intersection(
-                {state.attributes.get(ATTR_COLOR_MODE)}
+            if (
+                state
+                and state.attributes.get(ATTR_COLOR_MODE) in COLOR_MODES_WITH_WHITES
             ):
                 assert isinstance(state, State)
                 if _has_no_color_values(state):
@@ -305,7 +306,7 @@ class Light(HomeAccessory):
 
         # Handle Brightness
         if self.brightness_supported:
-            if color_mode and COLOR_MODES_WITH_WHITES.intersection({color_mode}):
+            if color_mode and color_mode in COLOR_MODES_WITH_WHITES:
                 # HomeKit assumes RGB and WHITE values are interlocked
                 # similar to esphome's color_interlock: true
                 if _has_no_color_values(new_state):
