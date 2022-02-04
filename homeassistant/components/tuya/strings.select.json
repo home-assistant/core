@@ -95,7 +95,8 @@
         "back": "Back"
     },
     "tuya__countdown_minutes": {
-        "cancel": "[%key:component::tuya::platform::select::state::tuya__countdown_set::cancel%]",
+        "cancel": "[%key:component::tuya::platform::select::state::tuya__countdown_hours::cancel%]",
+        "0": "[%key:component::tuya::platform::select::state::tuya__countdown_hours::cancel%]",
         "1": "30 minutes",
         "2": "60 minutes",
         "3": "90 minutes",
