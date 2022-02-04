@@ -1,7 +1,7 @@
 """Support for Netgear routers."""
+import asyncio
 from datetime import timedelta
 import logging
-import asyncio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
@@ -10,7 +10,13 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, KEY_COORDINATOR, KEY_COORDINATOR_TRAFFIC, KEY_ROUTER, PLATFORMS
+from .const import (
+    DOMAIN,
+    KEY_COORDINATOR,
+    KEY_COORDINATOR_TRAFFIC,
+    KEY_ROUTER,
+    PLATFORMS,
+)
 from .errors import CannotLoginException
 from .router import NetgearRouter
 
