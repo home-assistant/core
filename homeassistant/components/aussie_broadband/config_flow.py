@@ -61,15 +61,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if not self.services:
                     return self.async_abort(reason="no_services_found")
 
-                if len(self.services) == 1:
-                    return self.async_create_entry(
-                        title=self.data[CONF_USERNAME],
-                        data=self.data,
-                        options={CONF_SERVICES: [str(self.services[0][SERVICE_ID])]},
-                    )
-
-                # Account has more than one service, select service to add
-                return await self.async_step_service()
+                return self.async_create_entry(
+                    title=self.data[CONF_USERNAME],
+                    data=self.data,
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -80,28 +75,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-        )
-
-    async def async_step_service(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle the optional service selection step."""
-        if user_input is not None:
-            return self.async_create_entry(
-                title=self.data[CONF_USERNAME], data=self.data, options=user_input
-            )
-
-        service_options = {str(s[SERVICE_ID]): s["description"] for s in self.services}
-        return self.async_show_form(
-            step_id="service",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_SERVICES, default=list(service_options.keys())
-                    ): cv.multi_select(service_options)
-                }
-            ),
-            errors=None,
         )
 
     async def async_step_reauth(

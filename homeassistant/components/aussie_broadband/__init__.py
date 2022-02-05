@@ -15,7 +15,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_SERVICES, DEFAULT_UPDATE_INTERVAL, DOMAIN, SERVICE_ID
+from .const import DEFAULT_UPDATE_INTERVAL, DOMAIN, SERVICE_ID
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
@@ -31,16 +31,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     try:
         await client.login()
-        all_services = await client.get_services()
+        services = await client.get_services()
     except AuthenticationException as exc:
         raise ConfigEntryAuthFailed() from exc
     except ClientError as exc:
         raise ConfigEntryNotReady() from exc
-
-    # Filter the service list to those that are enabled in options
-    services = [
-        s for s in all_services if str(s["service_id"]) in entry.options[CONF_SERVICES]
-    ]
 
     # Create an appropriate refresh function
     def update_data_factory(service_id):
