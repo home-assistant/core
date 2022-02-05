@@ -27,9 +27,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Get bulb with IP: %s", ip_address)
     bulb = wizlight(ip_address)
     try:
-        scenes = await bulb.getSupportedScenes()
         await bulb.getMac()
-    except WIZ_EXCEPTIONS as err:
+        scenes = await bulb.getSupportedScenes()
+        # ValueError gets thrown if the bulb type
+        # cannot be determined on the first try.
+        # This is likely because way the library
+        # processes responses and can be cleaned up
+        # in the future.
+    except (ValueError, *WIZ_EXCEPTIONS) as err:
         raise ConfigEntryNotReady from err
 
     async def _async_update() -> None:
