@@ -35,7 +35,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the HomeWizard config flow."""
         self.config: dict[str, str | int] = {}
 
-    async def async_step_import(self, import_config: dict) -> FlowResult:
+    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Handle a flow initiated by older `homewizard_energy` component."""
         _LOGGER.debug("config_flow async_step_import")
 
