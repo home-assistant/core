@@ -906,7 +906,6 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             # If we still have a device class, we should not use an icon.
             if self.device_class:
                 self._attr_icon = None
-                return
 
             # Found unit of measurement, use the standardized Unit
             # Use the target conversion unit (if set)
