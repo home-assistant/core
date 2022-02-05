@@ -48,7 +48,7 @@ def _patch_wizlight():
             return_value=FAKE_EXTENDED_WHITE_RANGE,
         ), patch(
             "homeassistant.components.wiz.wizlight.getMac",
-            return_value="ABCABCABCABC",
+            return_value=FAKE_MAC,
         ):
             yield
 
