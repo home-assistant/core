@@ -51,7 +51,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 name = f"{DEFAULT_NAME} {bulb_type} {_short_mac(mac)}"
                 return self.async_create_entry(
                     title=name,
-                    data={**user_input, CONF_NAME: name},
+                    data=user_input,
                 )
 
         return self.async_show_form(
