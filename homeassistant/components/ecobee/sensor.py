@@ -146,7 +146,7 @@ class EcobeeSensor(SensorEntity):
 
         if self.entity_description.key == "temperature":
             return display_temp(
-                self.hass, (float(self._state) / 10.0), TEMP_FAHRENHEIT, precision
+                self.hass, (float(self._state) / 10.0), self.temperature_unit, self.precision
             )
 
         return self._state
