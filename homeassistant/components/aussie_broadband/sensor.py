@@ -157,5 +157,8 @@ class AussieBroadandSensorEntity(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        state = self.coordinator.data[self.entity_description.key]
-        return cast(StateType, self.entity_description.value(state))
+        parent = self.coordinator.data[self.entity_description.key]
+        try:
+            return cast(StateType, self.entity_description.value(parent))
+        except KeyError:
+            return None
