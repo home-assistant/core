@@ -8,7 +8,7 @@ import json
 import struct
 from typing import Any, Literal, overload
 
-from construct import Timestamp
+import DateTime
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -90,11 +90,11 @@ class IntegerTypeData:
             type=parsed.get("type"),
         )
 
-    def int_to_timestamp(
+    def int_to_datetime(
         self,
         value: float,
         unit: str | None = None,
-    ) -> Timestamp:
+    ) -> DateTime:
         """Convert countdown value to timestamp."""
         now = dt_util.utcnow()
         if value == 0:

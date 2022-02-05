@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 from tuya_iot.device import TuyaDeviceStatusRange
@@ -43,7 +44,7 @@ class TuyaSensorEntityDescription(SensorEntityDescription):
     """Describes Tuya sensor entity."""
 
     subkey: str | None = None
-    value_to_timestamp: bool | None = False
+    value_to_datetime: bool | None = False
 
 
 # Commonly used battery sensors, that are re-used in the sensors down below.
@@ -810,7 +811,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.COUNTDOWN_LEFT,
             name="Remaining Time of Countdown",
-            value_to_timestamp=True,
+            value_to_datetime=True,
             device_class=SensorDeviceClass.TIMESTAMP,
             icon="mdi:timer-outline",
             entity_category=EntityCategory.CONFIG,
@@ -885,7 +886,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             self._type = DPType.INTEGER
             if (
                 description.native_unit_of_measurement is None
-                and not self.entity_description.value_to_timestamp
+                and not self.entity_description.value_to_datetime
             ):
                 self._attr_native_unit_of_measurement = int_type.unit
         elif enum_type := self.find_dpcode(
@@ -907,7 +908,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             # device class cannot be found in the validation mapping.
             if (
                 self.native_unit_of_measurement is None
-                and not self.entity_description.value_to_timestamp
+                and not self.entity_description.value_to_datetime
             ) or self.device_class not in DEVICE_CLASS_UNITS:
                 self._attr_device_class = None
                 return
@@ -919,7 +920,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
                 )
 
             # Unknown unit of measurement, device class should not be used.
-            if self._uom is None and not self.entity_description.value_to_timestamp:
+            if self._uom is None and not self.entity_description.value_to_datetime:
                 self._attr_device_class = None
                 return
 
@@ -957,10 +958,14 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             scaled_value = self._type_data.scale_value(value)
             if self._uom and self._uom.conversion_fn is not None:
                 return self._uom.conversion_fn(scaled_value)
-            if self.entity_description.value_to_timestamp:
-                return self._type_data.int_to_timestamp(
+            if self.entity_description.value_to_datetime:
+                value = self._type_data.int_to_datetime(
                     scaled_value, self._type_data.unit
                 )
+                if value is not None:
+                    if self.device_class == SensorDeviceClass.DATE:
+                        value = datetime.date(value)
+                return value
             return scaled_value
 
         # Unexpected enum value
