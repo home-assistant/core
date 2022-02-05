@@ -1315,6 +1315,9 @@ omit =
     homeassistant/components/waze_travel_time/sensor.py
     homeassistant/components/wiffi/*
     homeassistant/components/wirelesstag/*
+    homeassistant/components/wiz/__init__.py
+    homeassistant/components/wiz/const.py
+    homeassistant/components/wiz/light.py
     homeassistant/components/wolflink/__init__.py
     homeassistant/components/wolflink/sensor.py
     homeassistant/components/wolflink/const.py
