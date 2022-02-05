@@ -5,6 +5,7 @@ DOMAIN = "wiz"
 DEFAULT_NAME = "WiZ"
 
 WIZ_EXCEPTIONS = (
+    OSError,
     WizLightTimeOutError,
     TimeoutError,
     WizLightConnectionError,
