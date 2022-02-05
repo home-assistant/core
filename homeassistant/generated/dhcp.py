@@ -609,6 +609,10 @@ DHCP = [
         "macaddress": "B87424*"
     },
     {
+        "domain": "wiz",
+        "macaddress": "A8BB50*"
+    },
+    {
         "domain": "yeelight",
         "hostname": "yeelink-*"
     }
