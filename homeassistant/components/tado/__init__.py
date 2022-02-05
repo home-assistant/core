@@ -17,8 +17,10 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import Throttle
 
-from .const import (
+from .const import ( 
     CONF_FALLBACK,
+    CONST_OVERLAY_MANUAL,
+    CONST_OVERLAY_TADO_OPTIONS,
     DATA,
     DOMAIN,
     INSIDE_TEMPERATURE_MEASUREMENT,
@@ -51,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
-    fallback = entry.options.get(CONF_FALLBACK, True)
+    fallback = entry.options.get(CONF_FALLBACK, CONST_OVERLAY_MANUAL)
 
     tadoconnector = TadoConnector(hass, username, password, fallback)
 
@@ -99,7 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: ConfigEntry):
     options = dict(entry.options)
     if CONF_FALLBACK not in options:
-        options[CONF_FALLBACK] = entry.data.get(CONF_FALLBACK, True)
+        options[CONF_FALLBACK] = entry.data.get(CONF_FALLBACK, CONST_OVERLAY_MANUAL)
         hass.config_entries.async_update_entry(entry, options=options)
 
 
@@ -216,15 +218,15 @@ class TadoConnector:
         for zone in self.zones:
             zone_id = zone["id"]
             _LOGGER.debug("Updating zone %s", zone_id)
-            zone_state = TadoZone(zone_states[str(zone_id)], zone_id)
-
-            self.data["zone"][zone_id] = zone_state
+            #zone_state = TadoZone(zone_states[str(zone_id)], zone_id)
+            #self.data["zone"][zone_id] = zone_state
+            self.update_zone(zone_id)
 
             _LOGGER.debug(
                 "Dispatching update to %s zone %s: %s",
                 self.home_id,
                 zone_id,
-                zone_state,
+                self.data["zone"][zone_id],
             )
             dispatcher_send(
                 self.hass,
@@ -284,7 +286,7 @@ class TadoConnector:
         swing=None,
     ):
         """Set a zone overlay."""
-        _LOGGER.debug(
+        _LOGGER.info(
             "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s, type=%s, mode=%s fan_speed=%s swing=%s",
             zone_id,
             overlay_mode,
