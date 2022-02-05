@@ -8,7 +8,7 @@
 -c homeassistant/package_constraints.txt
 -r requirements_test_pre_commit.txt
 codecov==2.1.12
-coverage==6.2.0
+coverage==6.3.1
 freezegun==1.1.0
 jsonpickle==1.4.1
 mock-open==1.4.0
