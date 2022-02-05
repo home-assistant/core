@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
 import logging
 
 import async_timeout
@@ -21,7 +20,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -36,7 +34,6 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
-    API,
     COORDINATOR,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
@@ -47,7 +44,6 @@ from .const import (
     PLATFORMS_GATEWAY,
     PW_TYPE,
     SENSOR_PLATFORMS,
-    UNDO_UPDATE_LISTENER,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,12 +81,6 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Timeout while connecting to Smile %s", api.smile_name)
         raise ConfigEntryNotReady from err
 
-    update_interval = timedelta(
-        seconds=entry.options.get(
-            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL[api.smile_type]
-        )
-    )
-
     async def async_update_data():
         """Update data via API endpoint."""
         try:
@@ -105,7 +95,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER,
         name=f"Smile {api.smile_name}",
         update_method=async_update_data,
-        update_interval=update_interval,
+        update_interval=DEFAULT_SCAN_INTERVAL[api.smile_type],
     )
 
     await coordinator.async_config_entry_first_refresh()
@@ -115,13 +105,10 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.unique_id is None and api.smile_version[0] != "1.8.0":
         hass.config_entries.async_update_entry(entry, unique_id=api.smile_hostname)
 
-    undo_listener = entry.add_update_listener(_update_listener)
-
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "api": api,
         COORDINATOR: coordinator,
         PW_TYPE: GATEWAY,
-        UNDO_UPDATE_LISTENER: undo_listener,
     }
 
     device_registry = dr.async_get(hass)
@@ -145,28 +132,12 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
-    update_interval = entry.options.get(CONF_SCAN_INTERVAL)
-    if update_interval is None:
-        api = hass.data[DOMAIN][entry.entry_id][API]
-        update_interval = DEFAULT_SCAN_INTERVAL[api.smile_type]
-
-    coordinator.update_interval = timedelta(seconds=update_interval)
-
-
 async def async_unload_entry_gw(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
+    if unload_ok := await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS_GATEWAY
-    )
-
-    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
-
-    if unload_ok:
+    ):
         hass.data[DOMAIN].pop(entry.entry_id)
-
     return unload_ok
 
 
