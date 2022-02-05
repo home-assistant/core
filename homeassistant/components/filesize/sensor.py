@@ -18,7 +18,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import slugify
 
 from . import DOMAIN, PLATFORMS
 
@@ -75,7 +74,7 @@ class Filesize(SensorEntity):
     def __init__(self, path: str) -> None:
         """Initialize the data object."""
         self._path = path  # Need to check its a valid path
-        self._attr_name = slugify(path.split("/")[-1]).strip().capitalize()
+        self._attr_name = path.split("/")[-1]
 
     def update(self) -> None:
         """Update the sensor."""
