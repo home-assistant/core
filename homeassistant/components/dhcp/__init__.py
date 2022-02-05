@@ -179,6 +179,7 @@ class WatcherBase:
             lowercase_hostname,
         )
 
+        matched_domains = set()
         for entry in self._integration_matchers:
             if MAC_ADDRESS in entry and not fnmatch.fnmatch(
                 uppercase_mac, entry[MAC_ADDRESS]
@@ -191,6 +192,11 @@ class WatcherBase:
                 continue
 
             _LOGGER.debug("Matched %s against %s", data, entry)
+            if entry["domain"] in matched_domains:
+                # Only match once per domain
+                continue
+
+            matched_domains.add(entry["domain"])
             discovery_flow.async_create_flow(
                 self.hass,
                 entry["domain"],
