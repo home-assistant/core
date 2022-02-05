@@ -10,7 +10,7 @@ from homeassistant.components.wiz.config_flow import (
     WizLightTimeOutError,
 )
 from homeassistant.components.wiz.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
 
