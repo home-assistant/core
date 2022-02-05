@@ -1,11 +1,15 @@
 {
   "config": {
+    "flow_title": "{name} ({host})",
     "step": {
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
         "description": "Enter the IP address of the device."
+      },
+      "discovery_confirm": {
+        "description": "Do you want to setup {name} ({host})?"
       }
     },
     "error": {
