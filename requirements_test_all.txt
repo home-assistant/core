@@ -1423,7 +1423,7 @@ sunwatcher==0.2.1
 surepy==0.7.2
 
 # homeassistant.components.system_bridge
-systembridge==2.2.3
+systembridge==2.3.1
 
 # homeassistant.components.tailscale
 tailscale==0.2.0
