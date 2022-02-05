@@ -79,6 +79,12 @@ CLIMATE_DESCRIPTIONS: dict[str, TuyaClimateEntityDescription] = {
         key="wk",
         switch_only_hvac_mode=HVAC_MODE_HEAT_COOL,
     ),
+    # Thermostatic Radiator Valve
+    # Not documented
+    "wkf": TuyaClimateEntityDescription(
+        key="wkf",
+        switch_only_hvac_mode=HVAC_MODE_HEAT,
+    ),
 }
 
 
@@ -223,7 +229,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
         # Determine fan modes
         if enum_type := self.find_dpcode(
-            DPCode.FAN_SPEED_ENUM, dptype=DPType.ENUM, prefer_function=True
+            (DPCode.FAN_SPEED_ENUM, DPCode.WINDSPEED),
+            dptype=DPType.ENUM,
+            prefer_function=True,
         ):
             self._attr_supported_features |= SUPPORT_FAN_MODE
             self._attr_fan_modes = enum_type.range

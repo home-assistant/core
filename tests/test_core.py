@@ -39,6 +39,7 @@ from homeassistant.exceptions import (
     ServiceNotFound,
 )
 import homeassistant.util.dt as dt_util
+from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from tests.common import async_capture_events, async_mock_service
@@ -377,10 +378,14 @@ def test_state_as_dict():
         "last_updated": last_time.isoformat(),
         "state": "on",
     }
-    assert state.as_dict() == expected
+    as_dict_1 = state.as_dict()
+    assert isinstance(as_dict_1, ReadOnlyDict)
+    assert isinstance(as_dict_1["attributes"], ReadOnlyDict)
+    assert isinstance(as_dict_1["context"], ReadOnlyDict)
+    assert as_dict_1 == expected
     # 2nd time to verify cache
     assert state.as_dict() == expected
-    assert state.as_dict() is state.as_dict()
+    assert state.as_dict() is as_dict_1
 
 
 async def test_eventbus_add_remove_listener(hass):

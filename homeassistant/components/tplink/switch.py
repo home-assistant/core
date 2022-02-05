@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
-from kasa import SmartDevice
+from kasa import SmartDevice, SmartPlug
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -27,7 +27,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches."""
     coordinator: TPLinkDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    device = coordinator.device
+    device = cast(SmartPlug, coordinator.device)
     if not device.is_plug and not device.is_strip:
         return
     entities: list = []
@@ -48,11 +48,12 @@ class SmartPlugLedSwitch(CoordinatedTPLinkEntity, SwitchEntity):
     """Representation of switch for the LED of a TPLink Smart Plug."""
 
     coordinator: TPLinkDataUpdateCoordinator
+    device: SmartPlug
 
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
-        self, device: SmartDevice, coordinator: TPLinkDataUpdateCoordinator
+        self, device: SmartPlug, coordinator: TPLinkDataUpdateCoordinator
     ) -> None:
         """Initialize the LED switch."""
         super().__init__(device, coordinator)

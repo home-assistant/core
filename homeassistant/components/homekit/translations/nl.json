@@ -67,10 +67,11 @@
                 "data": {
                     "domains": "Domeinen om op te nemen",
                     "include_domains": "Domeinen om op te nemen",
-                    "mode": "modus"
+                    "include_exclude_mode": "Inclusiemodus",
+                    "mode": "HomeKit-modus"
                 },
                 "description": "HomeKit kan worden geconfigureerd om een brug of een enkel accessoire te tonen. In de accessoiremodus kan slechts \u00e9\u00e9n entiteit worden gebruikt. De accessoiremodus is vereist om mediaspelers met de tv-apparaatklasse correct te laten werken. Entiteiten in de \"Op te nemen domeinen\" zullen worden blootgesteld aan HomeKit. U kunt op het volgende scherm selecteren welke entiteiten u wilt opnemen of uitsluiten van deze lijst.",
-                "title": "Selecteer domeinen om zichtbaar te maken."
+                "title": "Selecteer modus en domeinen."
             },
             "yaml": {
                 "description": "Deze invoer wordt beheerd via YAML",

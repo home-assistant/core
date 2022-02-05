@@ -1,6 +1,7 @@
 {
     "state": {
         "climacell__health_concern": {
+            "good": "Goed",
             "hazardous": "Gevaarlijk",
             "moderate": "Gematigd",
             "unhealthy": "Ongezond",
@@ -8,6 +9,9 @@
             "very_unhealthy": "Heel ongezond"
         },
         "climacell__pollen_index": {
+            "high": "Hoog",
+            "low": "Laag",
+            "medium": "Medium",
             "none": "Geen",
             "very_high": "Zeer Hoog",
             "very_low": "Zeer Laag"

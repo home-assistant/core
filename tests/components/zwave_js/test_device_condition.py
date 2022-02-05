@@ -596,6 +596,23 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
         == INVALID_CONFIG
     )
 
+    # Test invalid device ID fails validation
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await device_condition.async_validate_condition_config(
+            hass,
+            {
+                "condition": "device",
+                "domain": DOMAIN,
+                "type": "value",
+                "device_id": "invalid_device_id",
+                "command_class": CommandClass.DOOR_LOCK.value,
+                "property": 9999,
+                "property_key": 9999,
+                "endpoint": 9999,
+                "value": 9999,
+            },
+        )
+
 
 async def test_get_value_from_config_failure(
     hass, client, hank_binary_switch, integration

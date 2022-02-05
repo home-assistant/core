@@ -1,12 +1,15 @@
 """The Tesla Powerwall integration."""
+import contextlib
 from datetime import timedelta
 import logging
 
 import requests
 from tesla_powerwall import (
     AccessDeniedError,
+    APIError,
     MissingAttributeError,
     Powerwall,
+    PowerwallError,
     PowerwallUnreachableError,
 )
 
@@ -18,12 +21,14 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.network import is_ip_address
 
 from .const import (
     DOMAIN,
     POWERWALL_API_CHANGED,
     POWERWALL_API_CHARGE,
     POWERWALL_API_DEVICE_TYPE,
+    POWERWALL_API_GATEWAY_DIN,
     POWERWALL_API_GRID_SERVICES_ACTIVE,
     POWERWALL_API_GRID_STATUS,
     POWERWALL_API_METERS,
@@ -116,6 +121,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryAuthFailed from err
 
     await _migrate_old_unique_ids(hass, entry_id, powerwall_data)
+
+    gateway_din = powerwall_data[POWERWALL_API_GATEWAY_DIN]
+    if gateway_din and entry.unique_id is not None and is_ip_address(entry.unique_id):
+        hass.config_entries.async_update_entry(entry, unique_id=gateway_din)
+
     login_failed_count = 0
 
     runtime_data = hass.data[DOMAIN][entry.entry_id] = {
@@ -131,7 +141,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         power_wall = Powerwall(ip_address, http_session=http_session)
         runtime_data[POWERWALL_OBJECT] = power_wall
         runtime_data[POWERWALL_HTTP_SESSION] = http_session
-        power_wall.login("", password)
+        power_wall.login(password)
+
+    async def _async_login_and_retry_update_data():
+        """Retry the update after a failed login."""
+        nonlocal login_failed_count
+        # If the session expired, recreate, relogin, and try again
+        _LOGGER.debug("Retrying login and updating data")
+        try:
+            await hass.async_add_executor_job(_recreate_powerwall_login)
+            data = await _async_update_powerwall_data(hass, entry, power_wall)
+        except AccessDeniedError as err:
+            login_failed_count += 1
+            if login_failed_count == MAX_LOGIN_FAILURES:
+                raise ConfigEntryAuthFailed from err
+            raise UpdateFailed(
+                f"Login attempt {login_failed_count}/{MAX_LOGIN_FAILURES} failed, will retry: {err}"
+            ) from err
+        except APIError as err:
+            raise UpdateFailed(f"Updated failed due to {err}, will retry") from err
+        else:
+            login_failed_count = 0
+            return data
 
     async def async_update_data():
         """Fetch data from API endpoint."""
@@ -147,18 +178,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except AccessDeniedError as err:
             if password is None:
                 raise ConfigEntryAuthFailed from err
-
-            # If the session expired, recreate, relogin, and try again
-            try:
-                await hass.async_add_executor_job(_recreate_powerwall_login)
-                return await _async_update_powerwall_data(hass, entry, power_wall)
-            except AccessDeniedError as ex:
-                login_failed_count += 1
-                if login_failed_count == MAX_LOGIN_FAILURES:
-                    raise ConfigEntryAuthFailed from ex
-                raise UpdateFailed(
-                    f"Login attempt {login_failed_count}/{MAX_LOGIN_FAILURES} failed, will retry"
-                ) from ex
+            return await _async_login_and_retry_update_data()
+        except APIError as err:
+            raise UpdateFailed(f"Updated failed due to {err}, will retry") from err
         else:
             login_failed_count = 0
             return data
@@ -211,14 +233,16 @@ def _login_and_fetch_base_info(power_wall: Powerwall, password: str):
 
 def call_base_info(power_wall):
     """Wrap powerwall properties to be a callable."""
-    serial_numbers = power_wall.get_serial_numbers()
     # Make sure the serial numbers always have the same order
-    serial_numbers.sort()
+    gateway_din = None
+    with contextlib.suppress((AssertionError, PowerwallError)):
+        gateway_din = power_wall.get_gateway_din().upper()
     return {
         POWERWALL_API_SITE_INFO: power_wall.get_site_info(),
         POWERWALL_API_STATUS: power_wall.get_status(),
         POWERWALL_API_DEVICE_TYPE: power_wall.get_device_type(),
-        POWERWALL_API_SERIAL_NUMBERS: serial_numbers,
+        POWERWALL_API_SERIAL_NUMBERS: sorted(power_wall.get_serial_numbers()),
+        POWERWALL_API_GATEWAY_DIN: gateway_din,
     }
 
 

@@ -281,6 +281,15 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             key=DPCode.FAN_SPEED_ENUM,
             name="Fan Speed",
             device_class=TuyaDeviceClass.DEHUMIDIFIER_FAN_SPEED,
+        ),
+    ),
+    # Air Purifier
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46h2s6dzm
+    "kj": (
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN,
+            name="Countdown",
+            device_class=TuyaDeviceClass.COUNTDOWN,
             entity_category=EntityCategory.CONFIG,
             icon="mdi:timer-cog-outline",
         ),

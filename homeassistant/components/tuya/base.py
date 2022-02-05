@@ -72,9 +72,11 @@ class IntegerTypeData:
         return remap_value(value, from_min, from_max, self.min, self.max, reverse)
 
     @classmethod
-    def from_json(cls, dpcode: DPCode, data: str) -> IntegerTypeData:
+    def from_json(cls, dpcode: DPCode, data: str) -> IntegerTypeData | None:
         """Load JSON string and return a IntegerTypeData object."""
-        parsed = json.loads(data)
+        if not (parsed := json.loads(data)):
+            return None
+
         return cls(
             dpcode,
             min=int(parsed["min"]),
@@ -94,9 +96,11 @@ class EnumTypeData:
     range: list[str]
 
     @classmethod
-    def from_json(cls, dpcode: DPCode, data: str) -> EnumTypeData:
+    def from_json(cls, dpcode: DPCode, data: str) -> EnumTypeData | None:
         """Load JSON string and return a EnumTypeData object."""
-        return cls(dpcode, **json.loads(data))
+        if not (parsed := json.loads(data)):
+            return None
+        return cls(dpcode, **parsed)
 
 
 @dataclass
@@ -222,17 +226,25 @@ class TuyaEntity(Entity):
                     dptype == DPType.ENUM
                     and getattr(self.device, key)[dpcode].type == DPType.ENUM
                 ):
-                    return EnumTypeData.from_json(
-                        dpcode, getattr(self.device, key)[dpcode].values
-                    )
+                    if not (
+                        enum_type := EnumTypeData.from_json(
+                            dpcode, getattr(self.device, key)[dpcode].values
+                        )
+                    ):
+                        continue
+                    return enum_type
 
                 if (
                     dptype == DPType.INTEGER
                     and getattr(self.device, key)[dpcode].type == DPType.INTEGER
                 ):
-                    return IntegerTypeData.from_json(
-                        dpcode, getattr(self.device, key)[dpcode].values
-                    )
+                    if not (
+                        integer_type := IntegerTypeData.from_json(
+                            dpcode, getattr(self.device, key)[dpcode].values
+                        )
+                    ):
+                        continue
+                    return integer_type
 
                 if dptype not in (DPType.ENUM, DPType.INTEGER):
                     return dpcode
