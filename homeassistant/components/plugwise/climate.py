@@ -184,9 +184,9 @@ class PwThermostat(SmileGateway, ClimateEntity):
         # Determine current hvac action
         self._attr_hvac_action = CURRENT_HVAC_IDLE
         if self._single_thermostat:
-            if heater_central_data.get("heating_state") is not None:
+            if heater_central_data.get("heating_state"):
                 self._attr_hvac_action = CURRENT_HVAC_HEAT
-            elif heater_central_data.get("cooling_state") is not None:
+            elif heater_central_data.get("cooling_state"):
                 self._attr_hvac_action = CURRENT_HVAC_COOL
         elif (
             self.target_temperature is not None
