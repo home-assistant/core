@@ -242,7 +242,7 @@ class AppleTVManager:
                 backoff = min(
                     max(
                         BACKOFF_TIME_LOWER_LIMIT,
-                        randrange(2 ** self._connection_attempts),
+                        randrange(2**self._connection_attempts),
                     ),
                     BACKOFF_TIME_UPPER_LIMIT,
                 )
