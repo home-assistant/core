@@ -116,7 +116,6 @@ async def test_form_updates_unique_id(hass):
         unique_id=TEST_SYSTEM_INFO["id"],
         data={
             CONF_HOST: "dummy",
-            CONF_NAME: TEST_SYSTEM_INFO["name"],
         },
     )
 
