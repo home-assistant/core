@@ -434,12 +434,11 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             (
                 app
                 for app in self.coordinator.data.apps
-                if app.app_id is not None and source in (app.name, app.app_id)
+                if source in (app.name, app.app_id)
             ),
             None,
         )
 
-        if appl is not None:
+        if appl is not None and appl.app_id is not None:
             await self.coordinator.roku.launch(appl.app_id)
-
             await self.coordinator.async_request_refresh()
