@@ -56,7 +56,7 @@ class RokuRemote(RokuEntity, RemoteEntity):
         await self.coordinator.async_request_refresh()
 
     @roku_exception_handler
-    async def async_send_command(self, command: list, **kwargs) -> None:
+    async def async_send_command(self, command: list, **kwargs: Any) -> None:
         """Send a command to one device."""
         num_repeats = kwargs[ATTR_NUM_REPEATS]
 
