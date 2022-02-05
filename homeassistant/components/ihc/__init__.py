@@ -155,7 +155,7 @@ def get_manual_configuration(
     config: ConfigType,
     controller_conf,
     controller_id: str,
-):
+) -> None:
     """Get manual configuration for IHC devices."""
     for platform in IHC_PLATFORMS:
         discovery_info = {}
