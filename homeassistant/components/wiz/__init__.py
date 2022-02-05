@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.LIGHT]
 
-REQUEST_REFRESH_DELAY = 0.40
+REQUEST_REFRESH_DELAY = 0.45
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
