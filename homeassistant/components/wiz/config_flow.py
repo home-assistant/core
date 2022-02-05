@@ -93,7 +93,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the step to pick discovered device."""
-        errors = {}
         if user_input is not None:
             device = self._discovered_devices[user_input[CONF_DEVICE]]
             await self.async_set_unique_id(device.mac_address, raise_on_progress=False)
@@ -101,7 +100,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 bulbtype = await bulb.get_bulbtype()
             except WIZ_EXCEPTIONS:
-                errors["base"] = "cannot_connect"
+                return self.async_abort(reason="cannot_connect")
             else:
                 return self.async_create_entry(
                     title=name_from_bulb_type_and_mac(bulbtype, device.mac_address),
@@ -129,7 +128,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
         return self.async_show_form(
             step_id="pick_device",
-            errors=errors,
             data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
         )
 
