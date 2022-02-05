@@ -16,6 +16,7 @@ from homeassistant.data_entry_flow import AbortFlow, FlowResult
 
 from .const import (
     CONF_API_ENABLED,
+    CONF_PATH,
     CONF_PRODUCT_NAME,
     CONF_PRODUCT_TYPE,
     CONF_SERIAL,
@@ -103,33 +104,33 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Validate doscovery entry
         if (
-            "api_enabled" not in discovery_info.properties
-            or "path" not in discovery_info.properties
-            or "product_name" not in discovery_info.properties
-            or "product_type" not in discovery_info.properties
-            or "serial" not in discovery_info.properties
+            CONF_API_ENABLED not in discovery_info.properties
+            or CONF_PATH not in discovery_info.properties
+            or CONF_PRODUCT_NAME not in discovery_info.properties
+            or CONF_PRODUCT_TYPE not in discovery_info.properties
+            or CONF_SERIAL not in discovery_info.properties
         ):
             return self.async_abort(reason="invalid_discovery_parameters")
 
-        if (discovery_info.properties["path"]) != "/api/v1":
+        if (discovery_info.properties[CONF_PATH]) != "/api/v1":
             return self.async_abort(reason="unsupported_api_version")
 
         # Sets unique ID and aborts if it is already exists
         await self._async_set_and_check_unique_id(
             {
                 CONF_IP_ADDRESS: discovery_info.host,
-                CONF_PRODUCT_TYPE: discovery_info.properties["product_type"],
-                CONF_SERIAL: discovery_info.properties["serial"],
+                CONF_PRODUCT_TYPE: discovery_info.properties[CONF_PRODUCT_TYPE],
+                CONF_SERIAL: discovery_info.properties[CONF_SERIAL],
             }
         )
 
         # Pass parameters
         self.config = {
-            CONF_API_ENABLED: discovery_info.properties["api_enabled"],
+            CONF_API_ENABLED: discovery_info.properties[CONF_API_ENABLED],
             CONF_IP_ADDRESS: discovery_info.host,
-            CONF_PRODUCT_TYPE: discovery_info.properties["product_type"],
-            CONF_PRODUCT_NAME: discovery_info.properties["product_name"],
-            CONF_SERIAL: discovery_info.properties["serial"],
+            CONF_PRODUCT_TYPE: discovery_info.properties[CONF_PRODUCT_TYPE],
+            CONF_PRODUCT_NAME: discovery_info.properties[CONF_PRODUCT_NAME],
+            CONF_SERIAL: discovery_info.properties[CONF_SERIAL],
         }
         return await self.async_step_discovery_confirm()
 
