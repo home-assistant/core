@@ -19,7 +19,7 @@ from .const import (
     NO_NOTIFICATION_ICON,
     NOTIFICATION_ICON,
 )
-from .gateway import SmileGateway
+from .entity import PlugwiseEntity
 
 BINARY_SENSOR_MAP = {
     "dhw_state": ["Domestic Hot Water State", None],
@@ -77,7 +77,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class SmileBinarySensor(SmileGateway, BinarySensorEntity):
+class SmileBinarySensor(PlugwiseEntity, BinarySensorEntity):
     """Represent Smile Binary Sensors."""
 
     def __init__(

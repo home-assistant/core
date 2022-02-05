@@ -37,7 +37,7 @@ from .const import (
     SENSOR_MAP_UOM,
     UNIT_LUMEN,
 )
-from .gateway import SmileGateway
+from .entity import PlugwiseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -300,7 +300,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class SmileSensor(SmileGateway, SensorEntity):
+class SmileSensor(PlugwiseEntity, SensorEntity):
     """Represent Smile Sensors."""
 
     def __init__(

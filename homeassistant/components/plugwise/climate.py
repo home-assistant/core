@@ -30,7 +30,7 @@ from .const import (
     SCHEDULE_OFF,
     SCHEDULE_ON,
 )
-from .gateway import SmileGateway
+from .entity import PlugwiseEntity
 
 HVAC_MODES_HEAT_ONLY = [HVAC_MODE_HEAT, HVAC_MODE_AUTO]
 HVAC_MODES_HEAT_COOL = [HVAC_MODE_HEAT_COOL, HVAC_MODE_AUTO]
@@ -74,7 +74,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class PwThermostat(SmileGateway, ClimateEntity):
+class PwThermostat(PlugwiseEntity, ClimateEntity):
     """Representation of an Plugwise thermostat."""
 
     _attr_hvac_mode = HVAC_MODE_HEAT
