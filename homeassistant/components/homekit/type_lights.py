@@ -152,7 +152,7 @@ class Light(HomeAccessory):
                 attributes.get(ATTR_MAX_MIREDS, DEFAULT_MAX_MIREDS)
             )
             if not self.color_temp_supported and not self.rgbww_supported:
-                self.max_mireds = self.min_mireds
+                self.min_mireds = self.max_mireds
             self.char_color_temp = serv_light.configure_char(
                 CHAR_COLOR_TEMPERATURE,
                 value=self.min_mireds,
@@ -395,7 +395,7 @@ class Light(HomeAccessory):
                         )[0]
                     )
                 else:
-                    color_temp = self.min_mireds
+                    color_temp = self.max_mireds
             if isinstance(color_temp, (int, float)):
                 self.char_color_temp.set_value(round(color_temp, 0))
                 if color_mode_changed:
