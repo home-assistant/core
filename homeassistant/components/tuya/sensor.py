@@ -79,6 +79,114 @@ BATTERY_SENSORS: tuple[TuyaSensorEntityDescription, ...] = (
     ),
 )
 
+# Commonly used countdown sensors, that are re-used in the sensors down below.
+COUNTDOWN_SENSORS: tuple[TuyaSensorEntityDescription, ...] = (
+    TuyaSensorEntityDescription(
+        key=DPCode.COUNTDOWN_LEFT,
+        name="Remaining Time",
+        value_to_datetime=True,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:timer-outline",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    TuyaSensorEntityDescription(
+        key=DPCode.COUNTDOWN_1,
+        name="Remaining Time S1",
+        value_to_datetime=True,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:timer-outline",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    TuyaSensorEntityDescription(
+        key=DPCode.COUNTDOWN_2,
+        name="Remaining Time S2",
+        value_to_datetime=True,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:timer-outline",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    TuyaSensorEntityDescription(
+        key=DPCode.COUNTDOWN_3,
+        name="Remaining Time S3",
+        value_to_datetime=True,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:timer-outline",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    TuyaSensorEntityDescription(
+        key=DPCode.COUNTDOWN_4,
+        name="Remaining Time S4",
+        value_to_datetime=True,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:timer-outline",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    TuyaSensorEntityDescription(
+        key=DPCode.COUNTDOWN_5,
+        name="Remaining Time S5",
+        value_to_datetime=True,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:timer-outline",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    TuyaSensorEntityDescription(
+        key=DPCode.COUNTDOWN_6,
+        name="Remaining Time S6",
+        value_to_datetime=True,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:timer-outline",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    TuyaSensorEntityDescription(
+        key=DPCode.COUNTDOWN_USB1,
+        name="Remaining Time USB1",
+        value_to_datetime=True,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:timer-outline",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    TuyaSensorEntityDescription(
+        key=DPCode.COUNTDOWN_USB2,
+        name="Remaining Time USB2",
+        value_to_datetime=True,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:timer-outline",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    TuyaSensorEntityDescription(
+        key=DPCode.COUNTDOWN_USB3,
+        name="Remaining Time USB3",
+        value_to_datetime=True,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:timer-outline",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    TuyaSensorEntityDescription(
+        key=DPCode.COUNTDOWN_USB4,
+        name="Remaining Time USB4",
+        value_to_datetime=True,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:timer-outline",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    TuyaSensorEntityDescription(
+        key=DPCode.COUNTDOWN_USB5,
+        name="Remaining Time USB5",
+        value_to_datetime=True,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:timer-outline",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    TuyaSensorEntityDescription(
+        key=DPCode.COUNTDOWN_USB6,
+        name="Remaining Time USB6",
+        value_to_datetime=True,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:timer-outline",
+        entity_category=EntityCategory.CONFIG,
+    ),
+)
+
 # All descriptions can be found here. Mostly the Integer data types in the
 # default status set of each category (that don't have a set instruction)
 # end up being a sensor.
@@ -104,6 +212,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Status",
             device_class=TuyaDeviceClass.STATUS,
         ),
+        *COUNTDOWN_SENSORS,
     ),
     # CO2 Detector
     # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
@@ -262,6 +371,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
             entity_registry_enabled_default=False,
         ),
+        *COUNTDOWN_SENSORS,
     ),
     # Luminance Sensor
     # https://developer.tuya.com/en/docs/iot/categoryldcg?id=Kaiuz3n7u69l8
@@ -364,6 +474,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
         ),
+        *COUNTDOWN_SENSORS,
     ),
     # Gas Detector
     # https://developer.tuya.com/en/docs/iot/categoryrqbj?id=Kaiuz3d162ubw
@@ -408,7 +519,10 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     "szjqr": BATTERY_SENSORS,
     # Solar Light
     # https://developer.tuya.com/en/docs/iot/tynd?id=Kaof8j02e1t98
-    "tyndj": BATTERY_SENSORS,
+    "tyndj": (
+        *BATTERY_SENSORS,
+        *COUNTDOWN_SENSORS,
+    ),
     # Volatile Organic Compound Sensor
     # Note: Undocumented in cloud API docs, based on test device
     "voc": (
@@ -451,7 +565,10 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     ),
     # Thermostatic Radiator Valve
     # Not documented
-    "wkf": BATTERY_SENSORS,
+    "wkf": (
+        *BATTERY_SENSORS,
+        *COUNTDOWN_SENSORS,
+    ),
     # Temperature and Humidity Sensor
     # https://developer.tuya.com/en/docs/iot/categorywsdcg?id=Kaiuz3hinij34
     "wsdcg": (
@@ -743,6 +860,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             icon="mdi:progress-clock",
         ),
+        *COUNTDOWN_SENSORS,
     ),
     # Humidifier
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48qwjz0i3
@@ -771,6 +889,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             icon="mdi:waves-arrow-up",
         ),
+        *COUNTDOWN_SENSORS,
     ),
     # Air Purifier
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r41mn81
@@ -832,6 +951,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             icon="mdi:air-filter",
             device_class=TuyaDeviceClass.AIR_QUALITY,
         ),
+        *COUNTDOWN_SENSORS,
     ),
     # Fan
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48quojr54
@@ -850,6 +970,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
+        *COUNTDOWN_SENSORS,
     ),
 }
 
