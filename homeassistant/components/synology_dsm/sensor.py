@@ -105,7 +105,7 @@ class SynoDSMUtilSensor(SynoDSMSensor):
 
         # Data (RAM)
         if self.native_unit_of_measurement == DATA_MEGABYTES:
-            return round(attr / 1024.0 ** 2, 1)
+            return round(attr / 1024.0**2, 1)
 
         # Network
         if self.native_unit_of_measurement == DATA_RATE_KILOBYTES_PER_SECOND:
@@ -147,7 +147,7 @@ class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
 
         # Data (disk space)
         if self.native_unit_of_measurement == DATA_TERABYTES:
-            return round(attr / 1024.0 ** 4, 2)
+            return round(attr / 1024.0**4, 2)
 
         return attr
 

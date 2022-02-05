@@ -1919,7 +1919,7 @@ def _async_create_timer(hass: HomeAssistant) -> None:
         """Schedule a timer tick when the next second rolls around."""
         nonlocal handle
 
-        slp_seconds = 1 - (now.microsecond / 10 ** 6)
+        slp_seconds = 1 - (now.microsecond / 10**6)
         target = monotonic() + slp_seconds
         handle = hass.loop.call_later(slp_seconds, fire_time_event, target)
 

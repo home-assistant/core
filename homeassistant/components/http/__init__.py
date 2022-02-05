@@ -59,7 +59,7 @@ DEFAULT_DEVELOPMENT: Final = "0"
 DEFAULT_CORS: Final[list[str]] = ["https://cast.home-assistant.io"]
 NO_LOGIN_ATTEMPT_THRESHOLD: Final = -1
 
-MAX_CLIENT_SIZE: Final = 1024 ** 2 * 16
+MAX_CLIENT_SIZE: Final = 1024**2 * 16
 
 STORAGE_KEY: Final = DOMAIN
 STORAGE_VERSION: Final = 1
