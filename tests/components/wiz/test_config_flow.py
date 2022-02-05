@@ -152,6 +152,7 @@ async def test_form_updates_unique_id(hass):
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == FAKE_IP
 
 
 @pytest.mark.parametrize(
