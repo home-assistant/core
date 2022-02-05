@@ -1065,6 +1065,8 @@ tests/components/wilight/* @leofig-rj
 homeassistant/components/wirelesstag/* @sergeymaysak
 homeassistant/components/withings/* @vangorra
 tests/components/withings/* @vangorra
+homeassistant/components/wiz/* @sbidy
+tests/components/wiz/* @sbidy
 homeassistant/components/wled/* @frenck
 tests/components/wled/* @frenck
 homeassistant/components/wolflink/* @adamkrol93
