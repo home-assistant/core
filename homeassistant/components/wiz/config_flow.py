@@ -4,13 +4,13 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from pywizlight import wizlight
+from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
-from pywizlight import wizlight
-from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
 
 from .const import DEFAULT_NAME, DOMAIN
 from .utils import _short_mac
