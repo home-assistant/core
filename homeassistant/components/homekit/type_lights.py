@@ -363,7 +363,7 @@ class Light(HomeAccessory):
             elif (
                 color_mode
                 and color_mode in COLOR_MODES_WITH_WHITES
-                and _has_no_color_values(new_state)
+                and (_has_no_color_values(new_state) or color_mode == COLOR_MODE_WHITE)
             ):
                 if rgbww := new_state.attributes.get(ATTR_RGBWW_COLOR):
                     hue, saturation = color_temperature_to_hs(
