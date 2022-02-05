@@ -90,6 +90,14 @@ COUNTDOWN_SENSORS: tuple[TuyaSensorEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
     ),
     TuyaSensorEntityDescription(
+        key=DPCode.COUNTDOWN,
+        name="Remaining Time",
+        value_to_datetime=True,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:timer-outline",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    TuyaSensorEntityDescription(
         key=DPCode.COUNTDOWN_1,
         name="Remaining Time S1",
         value_to_datetime=True,
@@ -1113,7 +1121,10 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             scaled_value = self._type_data.scale_value(value)
             if self._uom and self._uom.conversion_fn is not None:
                 return self._uom.conversion_fn(scaled_value)
-            if self.entity_description.value_to_datetime:
+            if self.entity_description.value_to_datetime and self.device_class in (
+                SensorDeviceClass.DATE,
+                SensorDeviceClass.TIMESTAMP,
+            ):
                 value = self._type_data.int_to_datetime(
                     scaled_value, self._type_data.unit
                 )
@@ -1122,6 +1133,11 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
                         value = datetime.date(value)
                 return value
             return scaled_value
+
+        if self.entity_description.value_to_datetime and not isinstance(
+            self._type_data, IntegerTypeData
+        ):
+            return None
 
         # Unexpected enum value
         if (
