@@ -12,5 +12,6 @@
         "macaddress": "30AEA4*"
       }
   ],
-  "loggers": ["simplipy"]
+  "loggers": ["simplipy"],
+  "version": "1.0.0"
 }
