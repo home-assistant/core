@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 
 import async_timeout
 from plugwise.exceptions import (
@@ -28,12 +27,11 @@ from .const import (
     DEFAULT_USERNAME,
     DOMAIN,
     GATEWAY,
+    LOGGER,
     PLATFORMS_GATEWAY,
     PW_TYPE,
     SENSOR_PLATFORMS,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -51,7 +49,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         connected = await api.connect()
     except InvalidAuthentication:
-        _LOGGER.error("Invalid username or Smile ID")
+        LOGGER.error("Invalid username or Smile ID")
         return False
     except PlugwiseException as err:
         raise ConfigEntryNotReady(
@@ -76,7 +74,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = DataUpdateCoordinator(
         hass,
-        _LOGGER,
+        LOGGER,
         name=f"Smile {api.smile_name}",
         update_method=async_update_data,
         update_interval=DEFAULT_SCAN_INTERVAL[api.smile_type],

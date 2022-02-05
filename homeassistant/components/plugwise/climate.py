@@ -1,5 +1,4 @@
 """Plugwise Climate component for Home Assistant."""
-import logging
 from typing import Any
 
 from plugwise.exceptions import PlugwiseException
@@ -27,6 +26,7 @@ from .const import (
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     DOMAIN,
+    LOGGER,
     SCHEDULE_OFF,
     SCHEDULE_ON,
 )
@@ -34,8 +34,6 @@ from .entity import PlugwiseEntity
 
 HVAC_MODES_HEAT_ONLY = [HVAC_MODE_HEAT, HVAC_MODE_AUTO]
 HVAC_MODES_HEAT_COOL = [HVAC_MODE_HEAT_COOL, HVAC_MODE_AUTO]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -119,9 +117,9 @@ class PwThermostat(PlugwiseEntity, ClimateEntity):
                 self._attr_target_temperature = temperature
                 self.async_write_ha_state()
             except PlugwiseException:
-                _LOGGER.error("Error while communicating to device")
+                LOGGER.error("Error while communicating to device")
         else:
-            _LOGGER.error("Invalid temperature requested")
+            LOGGER.error("Invalid temperature requested")
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set the hvac mode."""
@@ -136,7 +134,7 @@ class PwThermostat(PlugwiseEntity, ClimateEntity):
                 )
                 self._attr_target_temperature = climate_data.get("schedule_temperature")
             except PlugwiseException:
-                _LOGGER.error("Error while communicating to device")
+                LOGGER.error("Error while communicating to device")
 
         try:
             await self._api.set_schedule_state(
@@ -145,7 +143,7 @@ class PwThermostat(PlugwiseEntity, ClimateEntity):
             self._attr_hvac_mode = hvac_mode
             self.async_write_ha_state()
         except PlugwiseException:
-            _LOGGER.error("Error while communicating to device")
+            LOGGER.error("Error while communicating to device")
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
@@ -158,7 +156,7 @@ class PwThermostat(PlugwiseEntity, ClimateEntity):
             self._attr_target_temperature = self._presets.get(preset_mode, "none")[0]
             self.async_write_ha_state()
         except PlugwiseException:
-            _LOGGER.error("Error while communicating to device")
+            LOGGER.error("Error while communicating to device")
 
     @callback
     def _async_process_data(self) -> None:
