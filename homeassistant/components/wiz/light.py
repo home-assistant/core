@@ -5,12 +5,6 @@ import contextlib
 import logging
 from typing import Any
 
-from pywizlight import PilotBuilder
-from pywizlight.bulblibrary import BulbClass, BulbType
-from pywizlight.exceptions import WizLightNotKnownBulb
-from pywizlight.rgbcw import convertHSfromRGBCW
-from pywizlight.scenes import get_id_from_scene_name
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -31,6 +25,11 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.color as color_utils
+from pywizlight import PilotBuilder
+from pywizlight.bulblibrary import BulbClass, BulbType
+from pywizlight.exceptions import WizLightNotKnownBulb
+from pywizlight.rgbcw import convertHSfromRGBCW
+from pywizlight.scenes import get_id_from_scene_name
 
 from .const import DOMAIN
 from .models import WizData
@@ -92,14 +91,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the WiZ Platform from config_flow."""
-    # Assign configuration variables.
     wiz_data: WizData = hass.data[DOMAIN][entry.entry_id]
-    wizbulb = WizBulbEntity(
-        wiz_data,
-        entry.data[CONF_NAME],
-    )
-    # Add devices with defined name
-    async_add_entities([wizbulb], update_before_add=True)
+    async_add_entities([WizBulbEntity(wiz_data, entry.data[CONF_NAME])])
 
 
 class WizBulbEntity(CoordinatorEntity, LightEntity):
@@ -111,7 +104,6 @@ class WizBulbEntity(CoordinatorEntity, LightEntity):
         self._light = wiz_data.bulb
         bulb_type: BulbType = self._light.bulbtype
         self._attr_unique_id = self._light.mac
-        # new init states
         self._attr_name = name
         self._attr_effect_list = wiz_data.scenes
         self._attr_min_mireds, self._attr_max_mireds = get_min_max_mireds(bulb_type)
