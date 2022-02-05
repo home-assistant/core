@@ -9,7 +9,7 @@ import yaml
 from homeassistant import config as hass_config
 from homeassistant.components import notify
 from homeassistant.components.mqtt import DOMAIN
-from homeassistant.const import CONF_NAME, SERVICE_RELOAD
+from homeassistant.const import CONF_NAME, SERVICE_RELOAD, STATE_UNKNOWN
 from homeassistant.exceptions import ServiceNotFound
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
@@ -546,39 +546,51 @@ async def test_discovery_without_device(hass, mqtt_mock, caplog):
 
 async def test_discovery_with_device(hass, mqtt_mock, caplog, device_reg):
     """Test discovery, update and removal of notify service with a device config."""
-    data = '{ "command_topic": "test_topic", "name": "My notify service", "targets": ["target1", "target2"], "device":{"identifiers":["LCD_61236812_ADBA"], "name": "Name" } }'
-    data_device_update = '{ "command_topic": "test_topic", "name": "My notify service", "targets": ["target1", "target2"], "device":{"identifiers":["LCD_61236812_ADBA"], "name": "Name update" } }'
-    async_fire_mqtt_message(hass, f"homeassistant/{notify.DOMAIN}/bla/config", data)
-    await hass.async_block_till_done()
-    device_entry = device_reg.async_get_device({("mqtt", "LCD_61236812_ADBA")})
-    assert device_entry is not None
-    device_id = device_entry.id
-    assert (
-        f"<Event device_registry_updated[L]: action=create, device_id={device_id}>"
-        in caplog.text
+
+    async def async_setup_notifify_service_with_auto_discovery(
+        hass, mqtt_mock, caplog, device_reg
+    ):
+        """Test setup notify service with a device config."""
+        data = '{ "command_topic": "test_topic", "name": "My notify service", "targets": ["target1", "target2"], "device":{"identifiers":["LCD_61236812_ADBA"], "name": "Test123" } }'
+        async_fire_mqtt_message(hass, f"homeassistant/{notify.DOMAIN}/bla/config", data)
+        await hass.async_block_till_done()
+        device_entry = device_reg.async_get_device({("mqtt", "LCD_61236812_ADBA")})
+        assert device_entry is not None
+        device_id = device_entry.id
+        assert (
+            f"<Event device_registry_updated[L]: action=create, device_id={device_id}>"
+            in caplog.text
+        )
+        assert (
+            "<Event service_registered[L]: domain=notify, service=my_notify_service>"
+            in caplog.text
+        )
+        assert (
+            "<Event service_registered[L]: domain=notify, service=my_notify_service_target1>"
+            in caplog.text
+        )
+        assert (
+            "<Event service_registered[L]: domain=notify, service=my_notify_service_target2>"
+            in caplog.text
+        )
+        caplog.clear()
+
+    # Initial setup
+    await async_setup_notifify_service_with_auto_discovery(
+        hass, mqtt_mock, caplog, device_reg
     )
-    assert (
-        "<Event service_registered[L]: domain=notify, service=my_notify_service>"
-        in caplog.text
-    )
-    assert (
-        "<Event service_registered[L]: domain=notify, service=my_notify_service_target1>"
-        in caplog.text
-    )
-    assert (
-        "<Event service_registered[L]: domain=notify, service=my_notify_service_target2>"
-        in caplog.text
-    )
-    caplog.clear()
 
     # Test device update
+    data_device_update = '{ "command_topic": "test_topic", "name": "My notify service", "targets": ["target1", "target2"], "device":{"identifiers":["LCD_61236812_ADBA"], "name": "Name update" } }'
     async_fire_mqtt_message(
         hass, f"homeassistant/{notify.DOMAIN}/bla/config", data_device_update
     )
     await hass.async_block_till_done()
     device_entry = device_reg.async_get_device({("mqtt", "LCD_61236812_ADBA")})
     assert device_entry is not None
+    device_id = device_entry.id
     assert device_id == device_entry.id
+    assert device_entry.name == "Name update"
     assert (
         f"<Event device_registry_updated[L]: action=update, device_id={device_id}>"
         in caplog.text
@@ -609,28 +621,9 @@ async def test_discovery_with_device(hass, mqtt_mock, caplog, device_reg):
     caplog.clear()
 
     # Re-create the device again
-    async_fire_mqtt_message(hass, f"homeassistant/{notify.DOMAIN}/bla/config", data)
-    await hass.async_block_till_done()
-    device_entry = device_reg.async_get_device({("mqtt", "LCD_61236812_ADBA")})
-    assert device_entry is not None
-    device_id = device_entry.id
-    assert (
-        f"<Event device_registry_updated[L]: action=create, device_id={device_id}>"
-        in caplog.text
+    await async_setup_notifify_service_with_auto_discovery(
+        hass, mqtt_mock, caplog, device_reg
     )
-    assert (
-        "<Event service_registered[L]: domain=notify, service=my_notify_service>"
-        in caplog.text
-    )
-    assert (
-        "<Event service_registered[L]: domain=notify, service=my_notify_service_target1>"
-        in caplog.text
-    )
-    assert (
-        "<Event service_registered[L]: domain=notify, service=my_notify_service_target2>"
-        in caplog.text
-    )
-    caplog.clear()
 
     # Remove the device from the device registry
     device_reg.async_remove_device(device_id)
@@ -656,7 +649,53 @@ async def test_discovery_with_device(hass, mqtt_mock, caplog, device_reg):
         in caplog.text
     )
     assert "Notify service ('notify', 'bla') has been removed" in caplog.text
+
+    # Add the notify service
+    await async_setup_notifify_service_with_auto_discovery(
+        hass, mqtt_mock, caplog, device_reg
+    )
+    device_entry = device_reg.async_get_device({("mqtt", "LCD_61236812_ADBA")})
+    assert device_entry is not None
+
+    # Setup a switch entity with a same device
+    data = '{ "command_topic": "test_topic", "name": "test", "device":{"identifiers":["LCD_61236812_ADBA"], "name": "Test123" } }'
+    async_fire_mqtt_message(hass, "homeassistant/switch/bla/config", data)
+    await hass.async_block_till_done()
+    state = hass.states.get("switch.test")
+    assert state.state == STATE_UNKNOWN
+
+    # Remove the switch service, the device should not be removed
+    # since there is a notify service registered
+
+    # Test removal device from device registry
+    async_fire_mqtt_message(hass, "homeassistant/switch/bla/config", "{}")
+    await hass.async_block_till_done()
+    device_entry = device_reg.async_get_device({("mqtt", "LCD_61236812_ADBA")})
+    assert device_entry is not None
+    device_id = device_entry.id
+    assert device_id == device_entry.id
+
+    # Test removal of the notify service, the device should be removed now
     caplog.clear()
+    async_fire_mqtt_message(hass, f"homeassistant/{notify.DOMAIN}/bla/config", "{}")
+    await hass.async_block_till_done()
+    assert (
+        "<Event service_removed[L]: domain=notify, service=my_notify_service>"
+        in caplog.text
+    )
+    assert (
+        "<Event service_removed[L]: domain=notify, service=my_notify_service_target1>"
+        in caplog.text
+    )
+    assert (
+        "<Event service_removed[L]: domain=notify, service=my_notify_service_target2>"
+        in caplog.text
+    )
+    assert (
+        f"<Event device_registry_updated[L]: action=remove, device_id={device_id}>"
+        in caplog.text
+    )
+    assert "Notify service ('notify', 'bla') has been removed" in caplog.text
 
 
 async def test_publishing_with_custom_encoding(hass, mqtt_mock, caplog):

@@ -90,10 +90,10 @@ async def _async_setup_notify(
     """Set up the MQTT notify service with auto discovery."""
     config = DISCOVERY_SCHEMA(discovery_data[ATTR_DISCOVERY_PAYLOAD])
     service_name = slugify(config.get(CONF_NAME) or DOMAIN)
-    services = hass.data.setdefault(MQTT_NOTIFY_SERVICES_SETUP, set())
+    services = hass.data.setdefault(MQTT_NOTIFY_SERVICES_SETUP, {})
     has_services = hass.services.has_service(notify.DOMAIN, service_name)
     discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
-    if service_name in services or has_services:
+    if service_name in services.keys() or has_services:
         _LOGGER.error(
             "Notify service '%s' already exists, cannot register service(s)",
             service_name,
@@ -101,7 +101,6 @@ async def _async_setup_notify(
         async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
         clear_discovery_hash(hass, discovery_hash)
         return
-    services.add(service_name)
     device_id = None
     if CONF_DEVICE in config:
         await _update_device(hass, config_entry, config)
@@ -128,8 +127,19 @@ async def _async_setup_notify(
         device_id=device_id,
         config_entry=config_entry,
     )
+    services[service_name] = service
+
     await service.async_setup(hass, service_name, service_name)
     await service.async_register_services()
+
+
+def has_notify_services(hass: HomeAssistant, device_id: str) -> bool:
+    """Return a list of registered notify services."""
+    services = hass.data.setdefault(MQTT_NOTIFY_SERVICES_SETUP, {})
+    for key, service in services.items():  # pylint: disable=unused-variable
+        if service.device_id == device_id:
+            return True
+    return False
 
 
 async def async_get_service(
@@ -142,17 +152,16 @@ async def async_get_service(
     if CONF_NAME not in config:
         config[CONF_NAME] = DOMAIN
     service_name = slugify(name or DOMAIN)
-    services = hass.data.setdefault(MQTT_NOTIFY_SERVICES_SETUP, set())
     has_services = hass.services.has_service(notify.DOMAIN, service_name)
-    if service_name in services or has_services:
+    services = hass.data.setdefault(MQTT_NOTIFY_SERVICES_SETUP, {})
+    if service_name in services.keys() or has_services:
         _LOGGER.error(
             "Notify service '%s' is not unique, cannot register service(s)",
             service_name,
         )
         return None
-    services.add(service_name)
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    return MqttNotificationService(
+    services[service_name] = MqttNotificationService(
         hass,
         config[CONF_COMMAND_TOPIC],
         MqttCommandTemplate(config.get(CONF_COMMAND_TEMPLATE), hass=hass),
@@ -163,6 +172,7 @@ async def async_get_service(
         config[CONF_TARGETS],
         config[CONF_TITLE],
     )
+    return services[service_name]
 
 
 class MqttNotificationServiceUpdater:
@@ -204,9 +214,9 @@ class MqttNotificationServiceUpdater:
 
         async def async_tear_down_service():
             """Handle the removal of the service."""
-            services = hass.data.setdefault(MQTT_NOTIFY_SERVICES_SETUP, set())
-            if self._service.service_name in services:
-                services.remove(self._service.service_name)
+            services = hass.data.setdefault(MQTT_NOTIFY_SERVICES_SETUP, {})
+            if self._service.service_name in services.keys():
+                del services[self._service.service_name]
             if not self._device_removed and service.device_id:
                 self._device_removed = True
                 await cleanup_device_registry(hass, service.device_id)
@@ -319,14 +329,14 @@ class MqttNotificationService(notify.BaseNotificationService):
             new_service_name != self._service_name
             or config[CONF_TARGETS] != self._targets
         ):
-            services = self.hass.data.setdefault(MQTT_NOTIFY_SERVICES_SETUP, set())
+            services = self.hass.data.setdefault(MQTT_NOTIFY_SERVICES_SETUP, {})
             await self.async_unregister_services()
             if self._service_name in services:
-                services.remove(self._service_name)
+                del services[self._service_name]
             self._targets = config[CONF_TARGETS]
             self._service_name = new_service_name
             await self.async_register_services()
-            services.add(new_service_name)
+            services[new_service_name] = self
         if self.device_id:
             await _update_device(self.hass, self._config_entry, config)
 

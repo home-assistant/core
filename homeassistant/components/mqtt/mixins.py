@@ -23,7 +23,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -453,11 +453,11 @@ class MqttAvailability(Entity):
         return self._available_latest
 
 
-async def cleanup_device_registry(hass, device_id):
-    """Remove device registry entry if there are no remaining entities or triggers."""
+async def cleanup_device_registry(hass: HomeAssistant, device_id: str | None) -> None:
+    """Remove device registry entry if there are no remaining entities, triggers or notify services."""
     # Local import to avoid circular dependencies
     # pylint: disable=import-outside-toplevel
-    from . import device_trigger, tag
+    from . import device_trigger, notify, tag
 
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
@@ -468,6 +468,7 @@ async def cleanup_device_registry(hass, device_id):
         )
         and not await device_trigger.async_get_triggers(hass, device_id)
         and not tag.async_has_tags(hass, device_id)
+        and not notify.has_notify_services(hass, device_id)
     ):
         device_registry.async_remove_device(device_id)
 
