@@ -1,13 +1,17 @@
 """Constants for Plugwise component."""
 from datetime import timedelta
+import logging
 
 from homeassistant.const import Platform
+
+DOMAIN = "plugwise"
+
+LOGGER = logging.getLogger(__package__)
 
 API = "api"
 ATTR_ILLUMINANCE = "illuminance"
 COORDINATOR = "coordinator"
 DEVICE_STATE = "device_state"
-DOMAIN = "plugwise"
 FLOW_SMILE = "smile (Adam/Anna/P1)"
 FLOW_STRETCH = "stretch (Stretch)"
 FLOW_TYPE = "flow_type"
