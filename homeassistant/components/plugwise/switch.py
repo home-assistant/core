@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import COORDINATOR, DOMAIN, SWITCH_ICON
-from .gateway import SmileGateway
+from .entity import PlugwiseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ async def async_setup_entry_gateway(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class GwSwitch(SmileGateway, SwitchEntity):
+class GwSwitch(PlugwiseEntity, SwitchEntity):
     """Representation of a Plugwise plug."""
 
     def __init__(self, api, coordinator, name, dev_id, members, model):
