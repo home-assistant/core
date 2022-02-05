@@ -903,7 +903,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
                 self._attr_device_class = None
                 return
 
-            # If we still have a device class, we should not use an icon.
+            # If we still have a device class, we should not use an icon
             if self.device_class:
                 self._attr_icon = None
 
