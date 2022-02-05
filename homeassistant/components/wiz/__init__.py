@@ -7,7 +7,7 @@ from typing import Any
 from pywizlight import wizlight
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, Platform
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.debounce import Debouncer
@@ -65,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass=hass,
         logger=_LOGGER,
-        name=entry.data[CONF_NAME],
+        name=entry.title,
         update_interval=timedelta(seconds=15),
         update_method=_async_update,
         # We don't want an immediate refresh since the device

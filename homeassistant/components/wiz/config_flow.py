@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -75,7 +75,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self.async_create_entry(
                 title=self._name,
-                data={CONF_HOST: ip_address, CONF_NAME: self._name},
+                data={CONF_HOST: ip_address},
             )
 
         self._set_confirm_only()
@@ -115,7 +115,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 name = f"{DEFAULT_NAME} {bulb_type} {_short_mac(mac)}"
                 return self.async_create_entry(
                     title=name,
-                    data={**user_input, CONF_NAME: name},
+                    data=user_input,
                 )
 
         return self.async_show_form(

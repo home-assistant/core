@@ -77,7 +77,6 @@ async def test_form(hass):
     assert result2["title"] == "WiZ Dimmable White ABCABC"
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
-        CONF_NAME: "WiZ Dimmable White ABCABC",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -117,7 +116,6 @@ async def test_form_updates_unique_id(hass):
         unique_id=TEST_SYSTEM_INFO["id"],
         data={
             CONF_HOST: "dummy",
-            CONF_NAME: TEST_SYSTEM_INFO["name"],
         },
     )
 

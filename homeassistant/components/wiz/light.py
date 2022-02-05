@@ -24,7 +24,6 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
@@ -93,7 +92,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the WiZ Platform from config_flow."""
     wiz_data: WizData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([WizBulbEntity(wiz_data, entry.data[CONF_NAME])])
+    async_add_entities([WizBulbEntity(wiz_data, entry.title)])
 
 
 class WizBulbEntity(CoordinatorEntity, LightEntity):
