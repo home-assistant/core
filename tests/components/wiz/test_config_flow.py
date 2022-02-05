@@ -5,15 +5,18 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components import dhcp
 from homeassistant.components.wiz.config_flow import (
     WizLightConnectionError,
     WizLightTimeOutError,
 )
 from homeassistant.components.wiz.const import DOMAIN
 from homeassistant.const import CONF_HOST
+from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
 
 from tests.common import MockConfigEntry
 
+FAKE_IP = "1.1.1.1"
 FAKE_MAC = "ABCABCABCABC"
 FAKE_BULB_CONFIG = {
     "method": "getSystemConfig",
@@ -35,6 +38,19 @@ FAKE_EXTENDED_WHITE_RANGE = [2200, 2700, 6500, 6500]
 TEST_SYSTEM_INFO = {"id": FAKE_MAC, "name": "Test Bulb"}
 TEST_CONNECTION = {CONF_HOST: "1.1.1.1"}
 TEST_NO_IP = {CONF_HOST: "this is no IP input"}
+
+
+DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
+    hostname="wiz_abcabc",
+    ip=FAKE_IP,
+    macaddress=FAKE_MAC,
+)
+
+
+INTEGRATION_DISCOVERY = {
+    "ip_address": FAKE_IP,
+    "mac_address": FAKE_MAC,
+}
 
 
 def _patch_wizlight():
@@ -114,11 +130,8 @@ async def test_form_updates_unique_id(hass):
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_SYSTEM_INFO["id"],
-        data={
-            CONF_HOST: "dummy",
-        },
+        data={CONF_HOST: "dummy"},
     )
-
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -136,3 +149,68 @@ async def test_form_updates_unique_id(hass):
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    "source, data",
+    [
+        (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
+        (config_entries.SOURCE_INTEGRATION_DISCOVERY, INTEGRATION_DISCOVERY),
+    ],
+)
+async def test_discovered_by_dhcp_or_integration_discovery(hass, source, data):
+    """Test we can configure when discovered from dhcp or discovery."""
+    with _patch_wizlight():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source}, data=data
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    with patch(
+        "homeassistant.components.wiz.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "WiZ Dimmable White ABCABC"
+    assert result2["data"] == {
+        CONF_HOST: "1.1.1.1",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "source, data",
+    [
+        (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
+        (config_entries.SOURCE_INTEGRATION_DISCOVERY, INTEGRATION_DISCOVERY),
+    ],
+)
+async def test_discovered_by_dhcp_or_integration_discovery_updates_host(
+    hass, source, data
+):
+    """Test dhcp or discovery updates existing host."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_SYSTEM_INFO["id"],
+        data={CONF_HOST: "dummy"},
+    )
+    entry.add_to_hass(hass)
+
+    with _patch_wizlight():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source}, data=data
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == FAKE_IP
