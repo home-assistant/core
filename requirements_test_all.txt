@@ -70,7 +70,7 @@ adext==0.4.2
 adguardhome==0.5.1
 
 # homeassistant.components.advantage_air
-advantage_air==0.2.5
+advantage_air==0.2.6
 
 # homeassistant.components.agent_dvr
 agent-py==0.0.23
