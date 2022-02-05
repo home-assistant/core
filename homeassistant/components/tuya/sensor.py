@@ -899,7 +899,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
             # Unknown unit of measurement, device class should not be used.
             if self._uom is None:
-                self._attr_device_class = None
+                self._attr_icon = None
                 return
 
             # Found unit of measurement, use the standardized Unit
