@@ -66,7 +66,9 @@ CHANGE_COALESCE_TIME_WINDOW = 0.01
 DEFAULT_MIN_MIREDS = 153
 DEFAULT_MAX_MIREDS = 500
 
-COLOR_MODES_WITH_WHITES = {COLOR_MODE_RGBW, COLOR_MODE_RGBWW, COLOR_MODE_WHITE}
+COLOR_MODES_WITH_COLORS_AND_WHITE = {COLOR_MODE_RGBW, COLOR_MODE_RGBWW}
+COLOR_MODES_WITH_WHITES = {*COLOR_MODES_WITH_COLORS_AND_WHITE, COLOR_MODE_WHITE}
+ATTRS_WITH_WHITE = {ATTR_RGBWW_COLOR, ATTR_RGBW_COLOR, ATTR_WHITE}
 
 
 def _has_no_white_values(state: State | None) -> bool:
@@ -197,6 +199,7 @@ class Light(HomeAccessory):
         service = SERVICE_TURN_ON
         params = {ATTR_ENTITY_ID: self.entity_id}
         state = self.hass.states.get(self.entity_id)
+        color_mode = state.attributes.get(ATTR_COLOR_MODE) if state else None
 
         if CHAR_ON in char_values:
             if not char_values[CHAR_ON]:
@@ -218,6 +221,7 @@ class Light(HomeAccessory):
             )
             return
 
+        # Handle white channels
         if CHAR_COLOR_TEMPERATURE in char_values:
             temp = char_values[CHAR_COLOR_TEMPERATURE]
             events.append(f"color temperature at {temp}")
@@ -244,26 +248,27 @@ class Light(HomeAccessory):
             events.append(f"set color at {hue_sat}")
             # HomeKit doesn't support RGBW/RGBWW so we need to remove any white values
             if self.rgbww_supported:
-                val = brightness_pct or self.char_brightness.value
-                params[ATTR_RGBWW_COLOR] = (*color_hsv_to_RGB(*hue_sat, val), 0, 0)
+                params[ATTR_RGBWW_COLOR] = (
+                    *color_hsv_to_RGB(
+                        *hue_sat, brightness_pct or self.char_brightness.value
+                    ),
+                    0,
+                    0,
+                )
             elif self.rgbw_supported:
-                val = brightness_pct or self.char_brightness.value
-                params[ATTR_RGBW_COLOR] = (*color_hsv_to_RGB(*hue_sat, val), 0)
+                params[ATTR_RGBW_COLOR] = (
+                    *color_hsv_to_RGB(
+                        *hue_sat, brightness_pct or self.char_brightness.value
+                    ),
+                    0,
+                )
             else:
                 params[ATTR_HS_COLOR] = hue_sat
 
-        if (
-            brightness_pct
-            and ATTR_RGBWW_COLOR not in params
-            and ATTR_RGBW_COLOR not in params
-            and ATTR_WHITE not in params
-        ):
-            # HomeKit assumes RGB and WHITE values are interlocked
+        if brightness_pct and not ATTRS_WITH_WHITE.intersection(params):
+            # HomeKit only supports RGB and WHITE values being interlocked
             # similar to esphome's color_interlock: true
-            if (
-                state
-                and state.attributes.get(ATTR_COLOR_MODE) in COLOR_MODES_WITH_WHITES
-            ):
+            if color_mode in COLOR_MODES_WITH_COLORS_AND_WHITE:
                 assert isinstance(state, State)
                 if _has_no_color_values(state):
                     if rgbww := state.attributes.get(ATTR_RGBWW_COLOR):
@@ -311,18 +316,13 @@ class Light(HomeAccessory):
         color_mode = attributes.get(ATTR_COLOR_MODE)
         self.char_on.set_value(int(state == STATE_ON))
         color_mode_changed = self._previous_color_mode != color_mode
-        _LOGGER.warning(
-            "Previous Color Mode: %s Color mode: %s Force Notify: %s",
-            self._previous_color_mode,
-            color_mode,
-            color_mode_changed,
-        )
         self._previous_color_mode = color_mode
 
         # Handle Brightness
         if self.brightness_supported:
-            if color_mode and color_mode in COLOR_MODES_WITH_WHITES:
-                # HomeKit assumes RGB and WHITE values are interlocked
+            brightness = None
+            if color_mode in COLOR_MODES_WITH_COLORS_AND_WHITE:
+                # HomeKit only supports RGB and WHITE values being interlocked
                 # similar to esphome's color_interlock: true
                 if _has_no_color_values(new_state):
                     if rgbww := attributes.get(ATTR_RGBWW_COLOR):
@@ -331,9 +331,7 @@ class Light(HomeAccessory):
                         brightness = rgbw[3]
                 elif _has_no_white_values(new_state):
                     brightness = max(attributes[ATTR_RGB_COLOR])
-                else:
-                    brightness = attributes.get(ATTR_BRIGHTNESS)
-            else:
+            if brightness is None:
                 brightness = attributes.get(ATTR_BRIGHTNESS)
             if isinstance(brightness, (int, float)):
                 brightness = round(brightness / 255 * 100, 0)
@@ -358,8 +356,9 @@ class Light(HomeAccessory):
                 hue, saturation = color_temperature_to_hs(
                     color_temperature_mired_to_kelvin(attributes[ATTR_COLOR_TEMP])
                 )
-            elif color_mode in COLOR_MODES_WITH_WHITES and (
-                _has_no_color_values(new_state) or color_mode == COLOR_MODE_WHITE
+            elif color_mode == COLOR_MODE_WHITE or (
+                color_mode in COLOR_MODES_WITH_COLORS_AND_WHITE
+                and _has_no_color_values(new_state)
             ):
                 if rgbww := attributes.get(ATTR_RGBWW_COLOR):
                     hue, saturation = color_temperature_to_hs(
@@ -381,13 +380,14 @@ class Light(HomeAccessory):
                     self.char_hue.notify()
                     self.char_saturation.notify()
 
-        # Handle color temperature
+        # Handle white channels
         if CHAR_COLOR_TEMPERATURE in self.chars:
             color_temp = None
             if self.color_temp_supported:
                 color_temp = attributes.get(ATTR_COLOR_TEMP)
-            elif color_mode in COLOR_MODES_WITH_WHITES and (
-                _has_no_color_values(new_state) or color_mode == COLOR_MODE_WHITE
+            elif color_mode == COLOR_MODE_WHITE or (
+                color_mode in COLOR_MODES_WITH_COLORS_AND_WHITE
+                and _has_no_color_values(new_state)
             ):
                 if rgbww := attributes.get(ATTR_RGBWW_COLOR):
                     color_temp = rgbww_to_color_temperature(
