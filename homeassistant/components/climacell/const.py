@@ -260,7 +260,7 @@ CC_SENSOR_TYPES = (
         name="Particulate Matter < 2.5 μm",
         unit_imperial=CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
         unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        metric_conversion=3.2808399 ** 3,
+        metric_conversion=3.2808399**3,
         is_metric_check=True,
     ),
     ClimaCellSensorEntityDescription(
@@ -268,7 +268,7 @@ CC_SENSOR_TYPES = (
         name="Particulate Matter < 10 μm",
         unit_imperial=CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
         unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        metric_conversion=3.2808399 ** 3,
+        metric_conversion=3.2808399**3,
         is_metric_check=True,
     ),
     ClimaCellSensorEntityDescription(
@@ -424,7 +424,7 @@ CC_V3_SENSOR_TYPES = (
         name="Particulate Matter < 2.5 μm",
         unit_imperial=CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
         unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        metric_conversion=3.2808399 ** 3,
+        metric_conversion=3.2808399**3,
         is_metric_check=False,
     ),
     ClimaCellSensorEntityDescription(
@@ -432,7 +432,7 @@ CC_V3_SENSOR_TYPES = (
         name="Particulate Matter < 10 μm",
         unit_imperial=CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
         unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        metric_conversion=3.2808399 ** 3,
+        metric_conversion=3.2808399**3,
         is_metric_check=False,
     ),
     ClimaCellSensorEntityDescription(

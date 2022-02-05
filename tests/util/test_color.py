@@ -461,20 +461,17 @@ def test_rgbww_to_color_temperature():
     Temperature values must be in mireds
     Home Assistant uses rgbcw for rgbww
     """
-    assert (
-        color_util.rgbww_to_color_temperature(
-            (
-                0,
-                0,
-                0,
-                255,
-                0,
-            ),
-            153,
-            500,
-        )
-        == (153, 255)
-    )
+    assert color_util.rgbww_to_color_temperature(
+        (
+            0,
+            0,
+            0,
+            255,
+            0,
+        ),
+        153,
+        500,
+    ) == (153, 255)
     assert color_util.rgbww_to_color_temperature((0, 0, 0, 128, 0), 153, 500) == (
         153,
         128,
@@ -507,15 +504,12 @@ def test_white_levels_to_color_temperature():
     Temperature values must be in mireds
     Home Assistant uses rgbcw for rgbww
     """
-    assert (
-        color_util.while_levels_to_color_temperature(
-            255,
-            0,
-            153,
-            500,
-        )
-        == (153, 255)
-    )
+    assert color_util.while_levels_to_color_temperature(
+        255,
+        0,
+        153,
+        500,
+    ) == (153, 255)
     assert color_util.while_levels_to_color_temperature(128, 0, 153, 500) == (
         153,
         128,

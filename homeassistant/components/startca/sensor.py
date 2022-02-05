@@ -194,7 +194,7 @@ class StartcaData:
         :param value: The value in bytes to convert to GB.
         :return: Converted GB value
         """
-        return float(value) * 10 ** -9
+        return float(value) * 10**-9
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
