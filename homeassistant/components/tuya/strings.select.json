@@ -93,6 +93,15 @@
     "tuya__curtain_motor_mode": {
         "forward": "Forward",
         "back": "Back"
+    },
+    "tuya__countdown": {
+        "cancel": "Cancel",
+        "1h": "1 hour",
+        "2h": "2 hours",
+        "3h": "3 hours",
+        "4h": "4 hours",
+        "5h": "5 hours",
+        "6h": "6 hours"
     }
   }
 }
