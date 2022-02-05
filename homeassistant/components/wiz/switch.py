@@ -32,7 +32,7 @@ class WizSocketEntity(WizToggleEntity, SwitchEntity):
     def __init__(self, wiz_data: WizData, name: str) -> None:
         """Initialize a WiZ socket."""
         super().__init__(wiz_data, name)
-        self._async_update_state()
+        self._async_update_attrs()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the socket to turn on."""
