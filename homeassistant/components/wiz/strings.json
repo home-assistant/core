@@ -3,13 +3,9 @@
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "name": "[%key:common::config_flow::data::name%]"
+          "host": "[%key:common::config_flow::data::host%]"
         },
-        "description": "Please enter a hostname or IP address and name to add a new bulb:"
-      },
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
+        "description": "Enter the IP address of the device."
       }
     },
     "error": {
