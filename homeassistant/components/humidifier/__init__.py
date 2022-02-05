@@ -33,6 +33,7 @@ from .const import (  # noqa: F401
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
+    ATTR_OPERATING_STATE,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     DEVICE_CLASS_DEHUMIDIFIER,
@@ -41,6 +42,7 @@ from .const import (  # noqa: F401
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
     SUPPORT_MODES,
+    SUPPORT_OPERATING_STATE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -132,6 +134,7 @@ class HumidifierEntity(ToggleEntity):
     _attr_min_humidity: int = DEFAULT_MIN_HUMIDITY
     _attr_mode: str | None
     _attr_target_humidity: int | None = None
+    _attr_operating_state: str | None = None
 
     @property
     def capability_attributes(self) -> dict[str, Any]:
@@ -169,6 +172,9 @@ class HumidifierEntity(ToggleEntity):
         if supported_features & SUPPORT_MODES:
             data[ATTR_MODE] = self.mode
 
+        if supported_features & SUPPORT_OPERATING_STATE:
+            data[ATTR_OPERATING_STATE] = self.operating_state
+
         return data
 
     @property
@@ -191,6 +197,14 @@ class HumidifierEntity(ToggleEntity):
         Requires SUPPORT_MODES.
         """
         return self._attr_available_modes
+
+    @property
+    def operating_state(self) -> str | None:
+        """Return the operating state.
+
+        Requires ATTR_OPERATING_STATE.
+        """
+        return self._attr_operating_state
 
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""

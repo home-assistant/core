@@ -10,6 +10,7 @@ MODE_AUTO = "auto"
 MODE_BABY = "baby"
 
 ATTR_AVAILABLE_MODES = "available_modes"
+ATTR_OPERATING_STATE = "operating_state"
 ATTR_HUMIDITY = "humidity"
 ATTR_MAX_HUMIDITY = "max_humidity"
 ATTR_MIN_HUMIDITY = "min_humidity"
@@ -28,3 +29,4 @@ SERVICE_SET_MODE = "set_mode"
 SERVICE_SET_HUMIDITY = "set_humidity"
 
 SUPPORT_MODES = 1
+SUPPORT_OPERATING_STATE = 1 << 1
