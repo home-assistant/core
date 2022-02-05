@@ -7,8 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import IHC_CONTROLLER, IHC_INFO
-from .const import CONF_INVERTING
+from .const import CONF_INVERTING, DOMAIN, IHC_CONTROLLER
 from .ihcdevice import IHCDevice
 
 
@@ -27,16 +26,13 @@ def setup_platform(
         product_cfg = device["product_cfg"]
         product = device["product"]
         # Find controller that corresponds with device id
-        ctrl_id = device["ctrl_id"]
-        ihc_key = f"ihc{ctrl_id}"
-        info = hass.data[ihc_key][IHC_INFO]
-        ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
-
+        controller_id = device["ctrl_id"]
+        ihc_controller = hass.data[DOMAIN][controller_id][IHC_CONTROLLER]
         sensor = IHCBinarySensor(
             ihc_controller,
+            controller_id,
             name,
             ihc_id,
-            info,
             product_cfg.get(CONF_TYPE),
             product_cfg[CONF_INVERTING],
             product,
@@ -55,15 +51,15 @@ class IHCBinarySensor(IHCDevice, BinarySensorEntity):
     def __init__(
         self,
         ihc_controller,
-        name,
+        controller_id: str,
+        name: str,
         ihc_id: int,
-        info: bool,
         sensor_type: str,
         inverting: bool,
         product=None,
     ) -> None:
         """Initialize the IHC binary sensor."""
-        super().__init__(ihc_controller, name, ihc_id, info, product)
+        super().__init__(ihc_controller, controller_id, name, ihc_id, product)
         self._state = None
         self._sensor_type = sensor_type
         self.inverting = inverting

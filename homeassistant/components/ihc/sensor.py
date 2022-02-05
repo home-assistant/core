@@ -8,7 +8,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_system import TEMPERATURE_UNITS
 
-from . import IHC_CONTROLLER, IHC_INFO
+from .const import DOMAIN, IHC_CONTROLLER
 from .ihcdevice import IHCDevice
 
 
@@ -27,12 +27,10 @@ def setup_platform(
         product_cfg = device["product_cfg"]
         product = device["product"]
         # Find controller that corresponds with device id
-        ctrl_id = device["ctrl_id"]
-        ihc_key = f"ihc{ctrl_id}"
-        info = hass.data[ihc_key][IHC_INFO]
-        ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
+        controller_id = device["ctrl_id"]
+        ihc_controller = hass.data[DOMAIN][controller_id][IHC_CONTROLLER]
         unit = product_cfg[CONF_UNIT_OF_MEASUREMENT]
-        sensor = IHCSensor(ihc_controller, name, ihc_id, info, unit, product)
+        sensor = IHCSensor(ihc_controller, controller_id, name, ihc_id, unit, product)
         devices.append(sensor)
     add_entities(devices)
 
@@ -41,10 +39,16 @@ class IHCSensor(IHCDevice, SensorEntity):
     """Implementation of the IHC sensor."""
 
     def __init__(
-        self, ihc_controller, name, ihc_id: int, info: bool, unit, product=None
+        self,
+        ihc_controller,
+        controller_id: str,
+        name: str,
+        ihc_id: int,
+        unit: str,
+        product=None,
     ) -> None:
         """Initialize the IHC sensor."""
-        super().__init__(ihc_controller, name, ihc_id, info, product)
+        super().__init__(ihc_controller, controller_id, name, ihc_id, product)
         self._state = None
         self._unit_of_measurement = unit
 

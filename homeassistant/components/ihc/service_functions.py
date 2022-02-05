@@ -12,6 +12,7 @@ from .const import (
     ATTR_VALUE,
     DOMAIN,
     IHC_CONTROLLER,
+    IHC_CONTROLLER_INDEX,
     SERVICE_PULSE,
     SERVICE_SET_RUNTIME_VALUE_BOOL,
     SERVICE_SET_RUNTIME_VALUE_FLOAT,
@@ -58,9 +59,13 @@ def setup_service_functions(hass: HomeAssistant):
     """Set up the IHC service functions."""
 
     def _get_controller(call):
-        controller_id = call.data[ATTR_CONTROLLER_ID]
-        ihc_key = f"ihc{controller_id}"
-        return hass.data[ihc_key][IHC_CONTROLLER]
+        controller_index = call.data[ATTR_CONTROLLER_ID]
+        for controller_id in hass.data[DOMAIN]:
+            controller_conf = hass.data[DOMAIN][controller_id]
+            if controller_conf[IHC_CONTROLLER_INDEX] == controller_index:
+                return controller_conf[IHC_CONTROLLER]
+        # if not found the controller_index is ouf of range
+        _LOGGER.error("The controller index is of of range")
 
     async def async_set_runtime_value_bool(call):
         """Set a IHC runtime bool value service function."""
