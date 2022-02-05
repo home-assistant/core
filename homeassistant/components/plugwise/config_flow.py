@@ -1,7 +1,6 @@
 """Config flow for Plugwise integration."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from plugwise.exceptions import InvalidAuthentication, PlugwiseException
@@ -29,14 +28,13 @@ from .const import (
     DOMAIN,
     FLOW_SMILE,
     FLOW_STRETCH,
+    LOGGER,
     PW_TYPE,
     SMILE,
     STRETCH,
     STRETCH_USERNAME,
     ZEROCONF_MAP,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def _base_gw_schema(discovery_info):
@@ -126,7 +124,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
             except PlugwiseException:
                 errors[CONF_BASE] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+                LOGGER.exception("Unexpected exception")
                 errors[CONF_BASE] = "unknown"
             else:
                 await self.async_set_unique_id(

@@ -1,6 +1,4 @@
 """Plugwise Switch component for HomeAssistant."""
-import logging
-
 from plugwise.exceptions import PlugwiseException
 
 from homeassistant.components.switch import SwitchEntity
@@ -8,10 +6,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import COORDINATOR, DOMAIN, SWITCH_ICON
+from .const import COORDINATOR, DOMAIN, LOGGER, SWITCH_ICON
 from .entity import PlugwiseEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -90,7 +86,7 @@ class GwSwitch(PlugwiseEntity, SwitchEntity):
                 self._is_on = True
                 self.async_write_ha_state()
         except PlugwiseException:
-            _LOGGER.error("Error while communicating to device")
+            LOGGER.error("Error while communicating to device")
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
@@ -102,13 +98,13 @@ class GwSwitch(PlugwiseEntity, SwitchEntity):
                 self._is_on = False
                 self.async_write_ha_state()
         except PlugwiseException:
-            _LOGGER.error("Error while communicating to device")
+            LOGGER.error("Error while communicating to device")
 
     @callback
     def _async_process_data(self):
         """Update the data from the Plugs."""
         if not (data := self._api.get_device_data(self._dev_id)):
-            _LOGGER.error("Received no data for device %s", self._name)
+            LOGGER.error("Received no data for device %s", self._name)
             self.async_write_ha_state()
             return
 
