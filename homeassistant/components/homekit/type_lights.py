@@ -66,7 +66,7 @@ CHANGE_COALESCE_TIME_WINDOW = 0.01
 DEFAULT_MIN_MIREDS = 153
 DEFAULT_MAX_MIREDS = 500
 
-COLOR_MODES_WITH_WHITES = {COLOR_MODE_RGBW, COLOR_MODE_RGBWW}
+COLOR_MODES_WITH_WHITES = {COLOR_MODE_RGBW, COLOR_MODE_RGBWW, COLOR_MODE_WHITE}
 
 
 def _has_no_white_values(state: State | None) -> bool:
@@ -130,10 +130,8 @@ class Light(HomeAccessory):
         if self.color_supported:
             self.chars.extend([CHAR_HUE, CHAR_SATURATION])
 
-        if (
-            self.color_temp_supported
-            or COLOR_MODES_WITH_WHITES.intersection(self.color_modes)
-            or COLOR_MODE_WHITE in self.color_modes
+        if self.color_temp_supported or COLOR_MODES_WITH_WHITES.intersection(
+            self.color_modes
         ):
             self.chars.append(CHAR_COLOR_TEMPERATURE)
 
