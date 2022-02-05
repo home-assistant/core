@@ -9,7 +9,7 @@ from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_NAME, DOMAIN
