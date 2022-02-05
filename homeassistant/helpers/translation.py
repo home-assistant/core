@@ -220,6 +220,16 @@ class _TranslationCache:
         if components_to_load:
             await self._async_load(language, components_to_load)
 
+        return self.get_cached(language, category, components)
+
+    def get_cached(
+            self,
+            language: str,
+            category: str,
+            components: set[str],
+    ) -> list[dict[str, dict[str, Any]]]:
+        """Return resources from the cache."""
+
         cached = self.cache.get(language, {})
 
         return [cached.get(component, {}).get(category, {}) for component in components]
@@ -289,7 +299,7 @@ async def async_get_translations(
     """Return all backend translations.
 
     If integration specified, load it for that one.
-    Otherwise default to loaded intgrations combined with config flow
+    Otherwise default to loaded integrations combined with config flow
     integrations if config_flow is true.
     """
     lock = hass.data.setdefault(TRANSLATION_LOAD_LOCK, asyncio.Lock())
@@ -311,3 +321,47 @@ async def async_get_translations(
         cached = await cache.async_fetch(language, category, components)
 
     return dict(ChainMap(*cached))
+
+
+@bind_hass
+async def load_translations_to_cache(
+    hass: HomeAssistant,
+    language: str,
+) -> None:
+    """Load all state backend translations to cache."""
+
+    lock = hass.data.setdefault(TRANSLATION_LOAD_LOCK, asyncio.Lock())
+
+    async with lock:
+        cache = hass.data.setdefault(TRANSLATION_FLATTEN_CACHE, _TranslationCache(hass))
+        await cache.async_fetch(language, "states", set(hass.config.components))
+
+
+@bind_hass
+def get_cached_translations(
+    hass: HomeAssistant,
+    language: str,
+    category: str,
+    integration: str | None = None,
+) -> dict[str, Any]:
+    """Return cached backend translations (without ones for config_flow).
+
+    If integration specified, return them for that one.
+    Otherwise default to loaded integrations.
+    """
+
+    if integration is not None:
+        components = {integration}
+    elif category == "state":
+        components = set(hass.config.components)
+    else:
+        # Only 'state' supports merging, so remove platforms from selection
+        components = {
+            component for component in hass.config.components if "." not in component
+        }
+
+    cache = hass.data.setdefault(TRANSLATION_FLATTEN_CACHE, _TranslationCache(hass))
+    cached = cache.get_cached(language, category, components)
+
+    return dict(ChainMap(*cached))
+

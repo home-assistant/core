@@ -40,16 +40,18 @@ from .const import (
     CONF_MEDIA_DIRS,
     CONF_NAME,
     CONF_PACKAGES,
+    CONF_PRELOAD_TRANSLATIONS,
     CONF_TEMPERATURE_UNIT,
     CONF_TIME_ZONE,
     CONF_TYPE,
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
+    EVENT_HOMEASSISTANT_STARTED,
     LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
     TEMP_CELSIUS,
     __version__,
 )
-from .core import DOMAIN as CONF_CORE, ConfigSource, HomeAssistant, callback
+from .core import DOMAIN as CONF_CORE, ConfigSource, Event, HomeAssistant, callback
 from .exceptions import HomeAssistantError
 from .helpers import (
     config_per_platform,
@@ -57,6 +59,7 @@ from .helpers import (
     extract_domain_configs,
 )
 from .helpers.entity_values import EntityValues
+from .helpers.translation import load_translations_to_cache
 from .helpers.typing import ConfigType
 from .loader import Integration, IntegrationNotFound
 from .requirements import RequirementsNotFound, async_get_integration_with_requirements
@@ -211,6 +214,9 @@ CORE_CONFIG_SCHEMA = vol.All(
             vol.Optional(CONF_EXTERNAL_URL): cv.url,
             vol.Optional(CONF_ALLOWLIST_EXTERNAL_DIRS): vol.All(
                 cv.ensure_list, [vol.IsDir()]  # pylint: disable=no-value-for-parameter
+            ),
+            vol.Optional(CONF_PRELOAD_TRANSLATIONS): vol.All(
+                cv.ensure_list, [cv.string]
             ),
             vol.Optional(LEGACY_CONF_WHITELIST_EXTERNAL_DIRS): vol.All(
                 cv.ensure_list, [vol.IsDir()]  # pylint: disable=no-value-for-parameter
@@ -619,6 +625,18 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             hac.units.name,
         )
 
+    if CONF_PRELOAD_TRANSLATIONS in config:
+        languages = config[CONF_PRELOAD_TRANSLATIONS]
+        _LOGGER.info("Languages to preload: %s", languages)
+
+        async def load_translations(_event: Event) -> None:
+            for language in languages:
+                await load_translations_to_cache(hass, language)
+                _LOGGER.info("Loading state translations for language: %s", language)
+
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STARTED, load_translations
+        )
 
 def _log_pkg_error(package: str, component: str, config: dict, message: str) -> None:
     """Log an error while merging packages."""

@@ -56,6 +56,7 @@ from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.thread import ThreadWithException
 
 from . import area_registry, device_registry, entity_registry, location as loc_helper
+from .translation import get_cached_translations
 from .typing import TemplateVarsType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -674,6 +675,42 @@ class AllStates:
     def __repr__(self) -> str:
         """Representation of All States."""
         return "<template AllStates>"
+
+
+class StateTranslated:
+    """Class to represent a translated state in a template."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize all states."""
+        self._hass = hass
+
+    def __call__(self, entity_id, language):
+        state = None
+        """Retrieve translated state if available."""
+        if "." in entity_id:
+            state = _get_state_if_valid(self._hass, entity_id)
+
+        else:
+            if entity_id in _RESERVED_NAMES:
+                return None
+
+            if not valid_entity_id(f"{entity_id}.entity"):
+                raise TemplateError(f"Invalid domain name '{entity_id}'")
+
+        if state is None:
+            return STATE_UNKNOWN
+        domain = state.domain
+        device_class = "_"
+        if "device_class" in state.attributes:
+            device_class = state.attributes["device_class"]
+        translations = get_cached_translations(self._hass, language, "state", domain)
+        key = f"component.{domain}.state.{device_class}.{state.state}"
+        if len(translations) > 0 and key in translations:
+            return translations[key]
+        return state.state
+
+    def __repr__(self) -> str:
+        return "<template StateTranslated>"
 
 
 class DomainStates:
@@ -2028,6 +2065,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["is_state_attr"] = hassfunction(is_state_attr)
         self.globals["state_attr"] = hassfunction(state_attr)
         self.globals["states"] = AllStates(hass)
+        self.globals["state_translated"] = StateTranslated(hass)
         self.globals["utcnow"] = hassfunction(utcnow)
         self.globals["now"] = hassfunction(now)
 
