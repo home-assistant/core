@@ -215,7 +215,7 @@ class Alert(ToggleEntity):
     @property
     def state(self):  # pylint: disable=overridden-final-method
         """Return the alert status."""
-        if self._firing:
+        if self._firing and self._notification_sent:
             if self._ack:
                 return STATE_OFF
             return STATE_ON
@@ -272,6 +272,7 @@ class Alert(ToggleEntity):
         if not self._ack:
             _LOGGER.info("Alerting: %s", self._attr_name)
             self._notification_sent = True
+            self.async_write_ha_state()
 
             if self._message_template is not None:
                 message = self._message_template.async_render(parse_result=False)
