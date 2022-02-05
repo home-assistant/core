@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from pywizlight import PilotBuilder
-from pywizlight.bulblibrary import BulbClass, BulbType
+from pywizlight.bulblibrary import BulbClass, BulbType, Features
 from pywizlight.rgbcw import convertHSfromRGBCW
 from pywizlight.scenes import get_id_from_scene_name
 
@@ -34,34 +34,6 @@ from .models import WizData
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_COLOR_MODES = {COLOR_MODE_HS, COLOR_MODE_COLOR_TEMP}
-DEFAULT_MIN_MIREDS = 153
-DEFAULT_MAX_MIREDS = 454
-
-
-def get_supported_color_modes(bulb_type: BulbType) -> set[str]:
-    """Flag supported features."""
-    color_modes = set()
-    features = bulb_type.features
-    if features.color:
-        color_modes.add(COLOR_MODE_HS)
-    if features.color_tmp:
-        color_modes.add(COLOR_MODE_COLOR_TEMP)
-    if not color_modes and features.brightness:
-        color_modes.add(COLOR_MODE_BRIGHTNESS)
-    return color_modes
-
-
-def get_min_max_mireds(bulb_type: BulbType) -> tuple[int, int]:
-    """Return the coldest and warmest color_temp that this light supports."""
-    # DW bulbs have no kelvin
-    if bulb_type.bulb_type == BulbClass.DW:
-        return 0, 0
-    # If bulbtype is TW or RGB then return the kelvin value
-    return color_temperature_kelvin_to_mired(
-        bulb_type.kelvin_range.max
-    ), color_temperature_kelvin_to_mired(bulb_type.kelvin_range.min)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -81,20 +53,35 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         """Initialize an WiZLight."""
         super().__init__(wiz_data, name)
         bulb_type: BulbType = self._device.bulbtype
+        features: Features = bulb_type.features
+        color_modes = set()
+        if features.color:
+            color_modes.add(COLOR_MODE_HS)
+        if features.color_tmp:
+            color_modes.add(COLOR_MODE_COLOR_TEMP)
+        if not color_modes and features.brightness:
+            color_modes.add(COLOR_MODE_BRIGHTNESS)
+        self._attr_supported_color_modes = color_modes
         self._attr_effect_list = wiz_data.scenes
-        self._attr_min_mireds, self._attr_max_mireds = get_min_max_mireds(bulb_type)
-        self._attr_supported_color_modes = get_supported_color_modes(bulb_type)
+        if bulb_type.bulb_type != BulbClass.DW:
+            self._attr_min_mireds = color_temperature_kelvin_to_mired(
+                bulb_type.kelvin_range.max
+            )
+            self._attr_max_mireds = color_temperature_kelvin_to_mired(
+                bulb_type.kelvin_range.min
+            )
         if bulb_type.features.effect:
             self._attr_supported_features = SUPPORT_EFFECT
+        self._async_update_attrs()
 
     @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _async_update_attrs(self) -> None:
+        """Handle updating _attr values."""
         state = self._device.state
-        if (brightness := state.get_brightness()) is not None:
-            self._attr_brightness = max(0, min(255, brightness))
         color_modes = self.supported_color_modes
         assert color_modes is not None
+        if (brightness := state.get_brightness()) is not None:
+            self._attr_brightness = max(0, min(255, brightness))
         if COLOR_MODE_COLOR_TEMP in color_modes and state.get_colortemp() is not None:
             self._attr_color_mode = COLOR_MODE_COLOR_TEMP
             if color_temp := state.get_colortemp():
@@ -110,7 +97,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         else:
             self._attr_color_mode = COLOR_MODE_BRIGHTNESS
         self._attr_effect = state.get_scene()
-        super()._handle_coordinator_update()
+        super()._async_update_attrs()
 
     @callback
     def _async_pilot_builder(self, **kwargs: Any) -> PilotBuilder:
