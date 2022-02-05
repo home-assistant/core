@@ -28,6 +28,12 @@ FAKE_SERVICES = [
         "type": "VOIP",
         "name": "VOIP",
     },
+    {
+        "service_id": "98765432",
+        "description": "Invalid ABB Service Type",
+        "type": "Starlink",
+        "name": "Starlink",
+    },
 ]
 
 FAKE_DATA = {
@@ -42,7 +48,7 @@ async def setup_platform(hass, platforms=[], side_effect=None, usage={}):
         domain=AUSSIE_BROADBAND_DOMAIN,
         data=FAKE_DATA,
         options={
-            CONF_SERVICES: ["12345678", "87654321", "23456789"],
+            CONF_SERVICES: ["12345678", "87654321", "23456789", "98765432"],
         },
     )
     mock_entry.add_to_hass(hass)
