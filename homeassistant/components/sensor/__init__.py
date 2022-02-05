@@ -9,7 +9,6 @@ import inspect
 import logging
 from typing import Any, Final, cast, final
 
-import ciso8601
 import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
@@ -371,44 +370,6 @@ class SensorEntity(Entity):
         value = self.native_value
         device_class = self.device_class
 
-        # We have an old non-datetime value, warn about it and convert it during
-        # the deprecation period.
-        if (
-            value is not None
-            and device_class in (DEVICE_CLASS_DATE, DEVICE_CLASS_TIMESTAMP)
-            and not isinstance(value, (date, datetime))
-        ):
-            # Deprecation warning for date/timestamp device classes
-            if not self.__datetime_as_string_deprecation_logged:
-                report_issue = self._suggest_report_issue()
-                _LOGGER.warning(
-                    "%s is providing a string for its state, while the device "
-                    "class is '%s', this is not valid and will be unsupported "
-                    "from Home Assistant 2022.2. Please %s",
-                    self.entity_id,
-                    device_class,
-                    report_issue,
-                )
-                self.__datetime_as_string_deprecation_logged = True
-
-            # Anyways, lets validate the date at least..
-            try:
-                value = ciso8601.parse_datetime(str(value))
-            except (ValueError, IndexError) as error:
-                raise ValueError(
-                    f"Invalid date/datetime: {self.entity_id} provide state '{value}', "
-                    f"while it has device class '{device_class}'"
-                ) from error
-
-            if value.tzinfo is not None and value.tzinfo != timezone.utc:
-                value = value.astimezone(timezone.utc)
-
-            # Convert the date object to a standardized state string.
-            if device_class == DEVICE_CLASS_DATE:
-                return value.date().isoformat()
-
-            return value.isoformat(timespec="seconds")
-
         # Received a datetime
         if value is not None and device_class == DEVICE_CLASS_TIMESTAMP:
             try:
@@ -427,7 +388,7 @@ class SensorEntity(Entity):
                 return value.isoformat(timespec="seconds")
             except (AttributeError, TypeError) as err:
                 raise ValueError(
-                    f"Invalid datetime: {self.entity_id} has a timestamp device class"
+                    f"Invalid datetime: {self.entity_id} has a timestamp device class "
                     f"but does not provide a datetime state but {type(value)}"
                 ) from err
 
@@ -437,7 +398,7 @@ class SensorEntity(Entity):
                 return value.isoformat()  # type: ignore
             except (AttributeError, TypeError) as err:
                 raise ValueError(
-                    f"Invalid date: {self.entity_id} has a date device class"
+                    f"Invalid date: {self.entity_id} has a date device class "
                     f"but does not provide a date state but {type(value)}"
                 ) from err
 
