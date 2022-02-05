@@ -15,14 +15,13 @@ from homeassistant.const import (
     PRECISION_HALVES,
     PRECISION_TENTHS,
     TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.temperature import display_temp
 
-from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
+from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, ECOBEE_TEMPERATURE_UNIT, MANUFACTURER
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -146,10 +145,22 @@ class EcobeeSensor(SensorEntity):
 
         if self.entity_description.key == "temperature":
             return display_temp(
-                self.hass, (float(self._state) / 10.0), self.temperature_unit, self.precision
+                self.hass,
+                (float(self._state) / 10.0),
+                ECOBEE_TEMPERATURE_UNIT,
+                self.precision,
             )
 
         return self._state
+
+    @property
+    def precision(self):
+        """Return the precision of the sensor."""
+        if self.entity_description.key == "temperature":
+            if self.native_unit_of_measurement == TEMP_CELSIUS:
+                return PRECISION_HALVES
+            return PRECISION_TENTHS
+        return None
 
     async def async_update(self):
         """Get the latest state of the sensor."""

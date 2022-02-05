@@ -14,7 +14,7 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_CONDITION_WINDY,
 )
-from homeassistant.const import Platform
+from homeassistant.const import TEMP_FAHRENHEIT, Platform
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -47,6 +47,8 @@ PLATFORMS = [
 ]
 
 MANUFACTURER = "ecobee"
+
+ECOBEE_TEMPERATURE_UNIT = TEMP_FAHRENHEIT
 
 # Translates ecobee API weatherSymbol to Home Assistant usable names
 # https://www.ecobee.com/home/developer/api/documentation/v1/objects/WeatherForecast.shtml

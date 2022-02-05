@@ -46,7 +46,13 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.temperature import convert
 
-from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
+from .const import (
+    _LOGGER,
+    DOMAIN,
+    ECOBEE_MODEL_TO_NAME,
+    ECOBEE_TEMPERATURE_UNIT,
+    MANUFACTURER,
+)
 from .util import ecobee_date, ecobee_time
 
 ATTR_COOL_TEMP = "cool_temp"
@@ -395,7 +401,7 @@ class Thermostat(ClimateEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return TEMP_FAHRENHEIT
+        return ECOBEE_TEMPERATURE_UNIT
 
     @property
     def precision(self) -> float:
