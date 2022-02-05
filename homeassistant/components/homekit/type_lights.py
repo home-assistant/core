@@ -390,11 +390,9 @@ class Light(HomeAccessory):
                 _has_no_color_values(new_state) or color_mode == COLOR_MODE_WHITE
             ):
                 if rgbww := attributes.get(ATTR_RGBWW_COLOR):
-                    color_temp = color_temperature_mired_to_kelvin(
-                        rgbww_to_color_temperature(
-                            rgbww, self.min_mireds, self.max_mireds
-                        )[0]
-                    )
+                    color_temp = rgbww_to_color_temperature(
+                        rgbww, self.min_mireds, self.max_mireds
+                    )[0]
                 else:
                     color_temp = self.max_mireds
             if isinstance(color_temp, (int, float)):
