@@ -99,6 +99,7 @@ class PwThermostat(PlugwiseEntity, ClimateEntity):
         """Set up the Plugwise API."""
         super().__init__(api, coordinator, name, dev_id)
         self._attr_extra_state_attributes = {}
+        self._attr_unique_id = f"{dev_id}-climate"
 
         self._api = api
         self._loc_id = loc_id
@@ -106,7 +107,6 @@ class PwThermostat(PlugwiseEntity, ClimateEntity):
 
         self._presets = None
         self._single_thermostat = self._api.single_master_thermostat()
-        self._unique_id = f"{dev_id}-climate"
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
