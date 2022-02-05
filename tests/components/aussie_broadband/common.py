@@ -28,12 +28,6 @@ FAKE_SERVICES = [
         "type": "VOIP",
         "name": "VOIP",
     },
-    {
-        "service_id": "98765432",
-        "description": "Invalid ABB Service Type",
-        "type": "Starlink",
-        "name": "Starlink",
-    },
 ]
 
 FAKE_DATA = {
