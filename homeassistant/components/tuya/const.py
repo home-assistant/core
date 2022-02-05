@@ -96,6 +96,9 @@ class TuyaDeviceClass(StrEnum):
     DECIBEL_SENSITIVITY = "tuya__decibel_sensitivity"
     FAN_ANGLE = "tuya__fan_angle"
     FINGERBOT_MODE = "tuya__fingerbot_mode"
+    HUMIDIFIER_SPRAY_MODE = "tuya__humidifier_spray_mode"
+    HUMIDIFIER_LEVEL = "tuya__humidifier_level"
+    HUMIDIFIER_MOODLIGHTING = "tuya__humidifier_moodlighting"
     IPC_WORK_MODE = "tuya__ipc_work_mode"
     LED_TYPE = "tuya__led_type"
     LIGHT_MODE = "tuya__light_mode"
@@ -245,6 +248,7 @@ class DPCode(StrEnum):
     LED_TYPE_2 = "led_type_2"
     LED_TYPE_3 = "led_type_3"
     LEVEL = "level"
+    LEVEL_CURRENT = "level_current"
     LIGHT = "light"  # Light
     LIGHT_MODE = "light_mode"
     LOCK = "lock"  # Lock / Child lock
@@ -253,6 +257,7 @@ class DPCode(StrEnum):
     MANUAL_FEED = "manual_feed"
     MATERIAL = "material"  # Material
     MODE = "mode"  # Working mode / Mode
+    MOODLIGHTING = "moodlighting"  # Mood light
     MOTION_RECORD = "motion_record"
     MOTION_SENSITIVITY = "motion_sensitivity"
     MOTION_SWITCH = "motion_switch"  # Motion switch
@@ -303,6 +308,7 @@ class DPCode(StrEnum):
     SHOCK_STATE = "shock_state"  # Vibration status
     SIREN_SWITCH = "siren_switch"
     SITUATION_SET = "situation_set"
+    SLEEP = "sleep"  # Sleep function
     SLOW_FEED = "slow_feed"
     SMOKE_SENSOR_STATE = "smoke_sensor_state"
     SMOKE_SENSOR_STATUS = "smoke_sensor_status"
@@ -310,8 +316,10 @@ class DPCode(StrEnum):
     SOS = "sos"  # Emergency State
     SOS_STATE = "sos_state"  # Emergency mode
     SPEED = "speed"  # Speed level
+    SPRAY_MODE = "spray_mode"  # Spraying mode
     START = "start"  # Start
     STATUS = "status"
+    STERILIZATION = "sterilization"  # Sterilization
     SUCTION = "suction"
     SWING = "swing"  # Swing mode
     SWITCH = "switch"  # Switch
@@ -333,6 +341,7 @@ class DPCode(StrEnum):
     SWITCH_LED_3 = "switch_led_3"
     SWITCH_NIGHT_LIGHT = "switch_night_light"
     SWITCH_SAVE_ENERGY = "switch_save_energy"
+    SWITCH_SOUND = "switch_sound"  # Voice switch
     SWITCH_SPRAY = "switch_spray"  # Spraying switch
     SWITCH_USB1 = "switch_usb1"  # USB 1
     SWITCH_USB2 = "switch_usb2"  # USB 2
