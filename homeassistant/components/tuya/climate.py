@@ -85,6 +85,12 @@ CLIMATE_DESCRIPTIONS: dict[str, TuyaClimateEntityDescription] = {
         key="wkf",
         switch_only_hvac_mode=HVAC_MODE_HEAT,
     ),
+    # Dehumidifier
+    # https://developer.tuya.com/en/docs/iot/categorycs?id=Kaiuz1vcz4dha
+    "cs": TuyaClimateEntityDescription(
+        key="cs",
+        switch_only_hvac_mode=DPCode.HEAT,
+    ),
 }
 
 
@@ -161,7 +167,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         self._attr_temperature_unit = TEMP_CELSIUS
 
         # Figure out current temperature, use preferred unit or what is available
-        celsius_type = self.find_dpcode(DPCode.TEMP_CURRENT, dptype=DPType.INTEGER)
+        celsius_type = self.find_dpcode(
+            (DPCode.TEMP_CURRENT, DPCode.TEMP_INDOOR), dptype=DPType.INTEGER
+        )
         farhenheit_type = self.find_dpcode(DPCode.TEMP_CURRENT_F, dptype=DPType.INTEGER)
         if farhenheit_type and (
             prefered_temperature_unit == TEMP_FAHRENHEIT
@@ -215,7 +223,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
         # Determine dpcode to use for setting the humidity
         if int_type := self.find_dpcode(
-            DPCode.HUMIDITY_SET, dptype=DPType.INTEGER, prefer_function=True
+            (DPCode.HUMIDITY_SET, DPCode.DEHUMIDITY_SET_VALUE),
+            dptype=DPType.INTEGER,
+            prefer_function=True,
         ):
             self._attr_supported_features |= SUPPORT_TARGET_HUMIDITY
             self._set_humidity = int_type
@@ -224,7 +234,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
         # Determine dpcode to use for getting the current humidity
         self._current_humidity = self.find_dpcode(
-            DPCode.HUMIDITY_CURRENT, dptype=DPType.INTEGER
+            (DPCode.HUMIDITY_CURRENT, DPCode.HUMIDITY_INDOOR), dptype=DPType.INTEGER
         )
 
         # Determine fan modes
