@@ -145,8 +145,5 @@ class AussieBroadandSensorEntity(CoordinatorEntity, SensorEntity):
         if self.entity_description.key == "internet":
             return self.coordinator.data[self.entity_description.key].get("kbytes")
         if self.entity_description.key in ("national", "mobile", "sms"):
-            try:
-                return self.coordinator.data[self.entity_description.key]["calls"]
-            except KeyError:
-                return None
+            return self.coordinator.data[self.entity_description.key].get("calls")
         return self.coordinator.data[self.entity_description.key]
