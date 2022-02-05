@@ -1,9 +1,11 @@
 """Setup mocks for the Plugwise integration tests."""
+from __future__ import annotations
 
+from collections.abc import Generator
 from functools import partial
 from http import HTTPStatus
 import re
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import jsonpickle
 from plugwise.exceptions import (
@@ -24,16 +26,27 @@ def _read_json(environment, call):
     return jsonpickle.decode(fixture)
 
 
-@pytest.fixture(name="mock_smile")
-def mock_smile():
-    """Create a Mock Smile for testing exceptions."""
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.plugwise.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup
+
+
+@pytest.fixture()
+def mock_smile_config_flow() -> Generator[None, MagicMock, None]:
+    """Return a mocked Smile client."""
     with patch(
         "homeassistant.components.plugwise.config_flow.Smile",
+        autospec=True,
     ) as smile_mock:
-        smile_mock.InvalidAuthentication = InvalidAuthentication
-        smile_mock.ConnectionFailedError = ConnectionFailedError
-        smile_mock.return_value.connect.return_value = True
-        yield smile_mock.return_value
+        smile = smile_mock.return_value
+        smile.smile_hostname = "smile12345"
+        smile.smile_name = "Test Smile Name"
+        smile.connect.return_value = True
+        yield smile
 
 
 @pytest.fixture(name="mock_smile_unauth")
