@@ -93,7 +93,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the WiZ Platform from config_flow."""
     wiz_data: WizData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([WizBulbEntity(wiz_data, entry.data[CONF_NAME])])
+    async_add_entities([WizBulbEntity(wiz_data, entry.title])
 
 
 class WizBulbEntity(CoordinatorEntity, LightEntity):
