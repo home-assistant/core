@@ -1,4 +1,5 @@
 """Test the WiZ Platform config flow."""
+from contextlib import contextmanager
 from unittest.mock import patch
 
 import pytest
@@ -9,27 +10,49 @@ from homeassistant.components.wiz.config_flow import (
     WizLightTimeOutError,
 )
 from homeassistant.components.wiz.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
 
-FAKE_BULB_CONFIG = '{"method":"getSystemConfig","env":"pro","result":\
-    {"mac":"ABCABCABCABC",\
-    "homeId":653906,\
-    "roomId":989983,\
-    "moduleName":"ESP_0711_STR",\
-    "fwVersion":"1.21.0",\
-    "groupId":0,"drvConf":[20,2],\
-    "ewf":[255,0,255,255,0,0,0],\
-    "ewfHex":"ff00ffff000000",\
-    "ping":0}}'
+FAKE_MAC = "ABCABCABCABC"
+FAKE_BULB_CONFIG = {
+    "method": "getSystemConfig",
+    "env": "pro",
+    "result": {
+        "mac": FAKE_MAC,
+        "homeId": 653906,
+        "roomId": 989983,
+        "moduleName": "ESP_0711_STR",
+        "fwVersion": "1.21.0",
+        "groupId": 0,
+        "drvConf": [20, 2],
+        "ewf": [255, 0, 255, 255, 0, 0, 0],
+        "ewfHex": "ff00ffff000000",
+        "ping": 0,
+    },
+}
+FAKE_EXTENDED_WHITE_RANGE = [2200, 2700, 6500, 6500]
+TEST_SYSTEM_INFO = {"id": FAKE_MAC, "name": "Test Bulb"}
+TEST_CONNECTION = {CONF_HOST: "1.1.1.1"}
+TEST_NO_IP = {CONF_HOST: "this is no IP input"}
 
-TEST_SYSTEM_INFO = {"id": "ABCABCABCABC", "name": "Test Bulb"}
 
+def _patch_wizlight():
+    @contextmanager
+    def _patcher():
+        with patch(
+            "homeassistant.components.wiz.wizlight.getBulbConfig",
+            return_value=FAKE_BULB_CONFIG,
+        ), patch(
+            "homeassistant.components.wiz.wizlight.getExtendedWhiteRange",
+            return_value=FAKE_EXTENDED_WHITE_RANGE,
+        ), patch(
+            "homeassistant.components.wiz.wizlight.getMac",
+            return_value=FAKE_MAC,
+        ):
+            yield
 
-TEST_CONNECTION = {CONF_HOST: "1.1.1.1", CONF_NAME: "Test Bulb"}
-
-TEST_NO_IP = {CONF_HOST: "this is no IP input", CONF_NAME: "Test Bulb"}
+    return _patcher()
 
 
 async def test_form(hass):
@@ -40,13 +63,7 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
     # Patch functions
-    with patch(
-        "homeassistant.components.wiz.wizlight.getBulbConfig",
-        return_value=FAKE_BULB_CONFIG,
-    ), patch(
-        "homeassistant.components.wiz.wizlight.getMac",
-        return_value="ABCABCABCABC",
-    ) as mock_setup, patch(
+    with _patch_wizlight(), patch(
         "homeassistant.components.wiz.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -57,9 +74,10 @@ async def test_form(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Test Bulb"
-    assert result2["data"] == TEST_CONNECTION
-    assert len(mock_setup.mock_calls) == 1
+    assert result2["title"] == "WiZ Dimmable White ABCABC"
+    assert result2["data"] == {
+        CONF_HOST: "1.1.1.1",
+    }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -98,8 +116,6 @@ async def test_form_updates_unique_id(hass):
         unique_id=TEST_SYSTEM_INFO["id"],
         data={
             CONF_HOST: "dummy",
-            CONF_NAME: TEST_SYSTEM_INFO["name"],
-            "id": TEST_SYSTEM_INFO["id"],
         },
     )
 
@@ -108,13 +124,7 @@ async def test_form_updates_unique_id(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    with patch(
-        "homeassistant.components.wiz.wizlight.getBulbConfig",
-        return_value=FAKE_BULB_CONFIG,
-    ), patch(
-        "homeassistant.components.wiz.wizlight.getMac",
-        return_value="ABCABCABCABC",
-    ), patch(
+    with _patch_wizlight(), patch(
         "homeassistant.components.wiz.async_setup_entry",
         return_value=True,
     ):
