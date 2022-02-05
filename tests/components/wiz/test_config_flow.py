@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.wiz.config_flow import (
     WizLightConnectionError,
     WizLightTimeOutError,
