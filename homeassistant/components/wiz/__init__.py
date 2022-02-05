@@ -22,7 +22,7 @@ from .models import WizData
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.LIGHT]
+PLATFORMS = [Platform.LIGHT, Platform.SWITCH]
 
 REQUEST_REFRESH_DELAY = 0.35
 
