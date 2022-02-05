@@ -150,10 +150,6 @@ class EcobeeSensor(SensorEntity):
             else:
                 precision = PRECISION_TENTHS
 
-            # When displaying temp in C, we want to set the precision to halves
-            # to match the rounding of temperatures on the thermostat. We tell
-            # HA the native temp unit is the current config temperature_unit, and
-            # do our own conversion and rounding here.
             return display_temp(
                 self.hass, (float(self._state) / 10.0), TEMP_FAHRENHEIT, precision
             )
