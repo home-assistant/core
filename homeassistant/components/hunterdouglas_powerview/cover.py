@@ -45,7 +45,9 @@ from .const import (
     ROOM_NAME_UNICODE,
     SHADE_RESPONSE,
     STATE_ATTRIBUTE_ROOM_NAME,
-    TOPDOWN_SHADES,
+    TOPDOWN_SHADE_CLASSNAME,
+    TOPDOWN_SHADE_MOTOR_BOTTOM,
+    TOPDOWN_SHADE_MOTOR_TOP,
 )
 from .entity import ShadeEntity
 
@@ -58,7 +60,14 @@ TRANSITION_COMPLETE_DURATION = 30
 PARALLEL_UPDATES = 1
 
 # this equates to 0.75/100 in terms of blind position
+# found blinds that were closed reporting less that 655.35 (1%) even though clearly closed
+# so we find 1 percent of the maximum position, add that to the minimum to calculate 1%
+# then we find 75% of that number (currently 491.51) to use as the bottom of the blind
+# this has more effect on top/down shades, but also works fine with normal shades
 SHADE_CLOSED_POSITION = ((MIN_POSITION + (MAX_POSITION / 100)) / 100) * 75
+
+# minutes between forced refresh of data - only used when a shade is moved
+FORCED_REFRESH_TIMEFRAME = 5
 
 
 async def async_setup_entry(
@@ -73,11 +82,10 @@ async def async_setup_entry(
     coordinator = pv_data[COORDINATOR]
     device_info = pv_data[DEVICE_INFO]
 
-    entities = []
+    entities: list[PowerViewShade] = []
     for raw_shade in shade_data.values():
-        # The shade may be out of sync with the hub
-        # so we force a refresh when we add it if
-        # possible
+        # The shade may be out of sync with the hub so we force a refresh
+        # when we add it if possible
         shade = PvShade(raw_shade, pv_request)
         name_before_refresh = shade.name
         with suppress(asyncio.TimeoutError):
@@ -93,27 +101,21 @@ async def async_setup_entry(
         room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
         room_name = room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
 
-        if shade.shade_type.shade_type in TOPDOWN_SHADES:
-            entities.append(
-                PowerViewShade(
-                    coordinator,
-                    device_info,
-                    room_name,
-                    shade,
-                    name_before_refresh,
-                    "Top",
+        shade_class = shade.__class__.__name__
+
+        if shade_class == TOPDOWN_SHADE_CLASSNAME:
+            _LOGGER.debug("Using %s for blind %s", shade_class, shade.name)
+            for motor in [TOPDOWN_SHADE_MOTOR_TOP, TOPDOWN_SHADE_MOTOR_BOTTOM]:
+                entities.append(
+                    PowerViewTDBUShade(
+                        coordinator,
+                        device_info,
+                        room_name,
+                        shade,
+                        name_before_refresh,
+                        motor,
+                    )
                 )
-            )
-            entities.append(
-                PowerViewShade(
-                    coordinator,
-                    device_info,
-                    room_name,
-                    shade,
-                    name_before_refresh,
-                    "Bottom",
-                )
-            )
         else:
             entities.append(
                 PowerViewShade(
@@ -122,10 +124,10 @@ async def async_setup_entry(
                     room_name,
                     shade,
                     name_before_refresh,
-                    "Standard",
                 )
             )
-    async_add_entities(entities)
+    if entities:
+        async_add_entities(entities)
 
 
 def hd_position_to_hass(hd_position):
@@ -141,20 +143,18 @@ def hass_position_to_hd(hass_position):
 class PowerViewShade(ShadeEntity, CoverEntity):
     """Representation of a powerview shade."""
 
-    def __init__(self, coordinator, device_info, room_name, shade, name, motor):
+    _attr_device_class = CoverDeviceClass.SHADE
+
+    def __init__(self, coordinator, device_info, room_name, shade, name):
         """Initialize the shade."""
         super().__init__(coordinator, device_info, room_name, shade, name)
         self._shade = shade
-        self._motor = motor
         self._is_opening = False
         self._is_closing = False
         self._last_action_timestamp = 0
         self._scheduled_transition_update = None
         self._current_cover_position_bottom = MIN_POSITION
-        self._current_cover_position_top = MIN_POSITION
         self._last_forced_refresh = None
-        if self._motor in ["Top", "Bottom"]:
-            self._unique_id = f"{self._shade.id}-{self._motor}"
 
     @property
     def extra_state_attributes(self):
@@ -173,13 +173,7 @@ class PowerViewShade(ShadeEntity, CoverEntity):
     def is_closed(self):
         """Return if the cover is closed."""
         # treat anything below 75% of 1% of total position as closed due to conversion of powerview to hass
-        # found blinds that were closed reporting less that 655.35 (1%) even though clearly closed
-        # so we find 1 percent of the maximum position, add that to the minimum in case of future change
-        # then we find 75% of that number (491.51) to use as the bottom of the blind
-        # this has more effect on top/down shades, but also works fine with normal shades
         cover_position = self._current_cover_position_bottom
-        if self._motor in ["Top"]:
-            cover_position = self._current_cover_position_top
         return cover_position <= SHADE_CLOSED_POSITION
 
     @property
@@ -195,23 +189,12 @@ class PowerViewShade(ShadeEntity, CoverEntity):
     @property
     def current_cover_position(self):
         """Return the current position of cover."""
-        position = self._current_cover_position_bottom
-        if self._motor in ["Top"]:
-            position = self._current_cover_position_top
-        return hd_position_to_hass(position)
-
-    @property
-    def device_class(self):
-        """Return device class."""
-        return CoverDeviceClass.SHADE
+        return hd_position_to_hass(self._current_cover_position_bottom)
 
     @property
     def name(self):
         """Return the name of the shade."""
-        name = self._shade_name
-        if self._motor != "Standard":
-            name = f"{self._shade_name} {self._motor}"
-        return name
+        return self._shade_name
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
@@ -236,74 +219,36 @@ class PowerViewShade(ShadeEntity, CoverEntity):
 
     async def _async_move(self, target_hass_position):
         """Move the shade to a position."""
-        time_delta = datetime.now(tz=None) - timedelta(minutes=5)
+
         # we will limit force update to 5 minutes to prevent spamming hub
+        time_delta = datetime.now(tz=None) - timedelta(minutes=FORCED_REFRESH_TIMEFRAME)
         force_refresh = False
         if self._last_forced_refresh is not None:
             force_refresh = self._last_forced_refresh < time_delta
 
-        if self._motor in ["Top", "Bottom"]:
-            # force a refresh to ensure we dont push a blind past the limit of its counter part
-            # this does result in a slightly slower response from tdbu but protects the motor
-            if force_refresh is True:
-                _LOGGER.debug("Cover %s - Force refresh on move", self.name)
-                await self._async_force_refresh_state()
-
-            cover_bottom = hd_position_to_hass(self._current_cover_position_bottom)
-            cover_top = 100 - hd_position_to_hass(self._current_cover_position_top)
-            # dont allow a cover to go past the position of the opposite motor
-            if self._motor in ["Top"] and (100 - target_hass_position) < cover_bottom:
-                target_hass_position = (100 - cover_bottom) - 1
-            if self._motor in ["Bottom"] and target_hass_position > cover_top:
-                target_hass_position = cover_top - 1
-
         current_hass_position = self.current_cover_position
         steps_to_move = abs(current_hass_position - target_hass_position)
 
-        if not steps_to_move:
+        if not steps_to_move and force_refresh is True:
             # force a refresh in case hass was out of date and a move is needed
-            # dont refresh if top/down as we already refreshed above
-            if self._motor not in ["Top", "Bottom"] and force_refresh is True:
-                _LOGGER.debug("Cover %s - Force refresh on move", self.name)
-                await self._async_force_refresh_state()
-                current_hass_position = self.current_cover_position
-                steps_to_move = abs(current_hass_position - target_hass_position)
-            if not steps_to_move:
-                return
+            _LOGGER.debug("Cover %s - Force refresh on move", self.name)
+            await self._async_force_refresh_state()
+            current_hass_position = self.current_cover_position
+            steps_to_move = abs(current_hass_position - target_hass_position)
+
+        if not steps_to_move:
+            return
 
         self._async_schedule_update_for_transition(steps_to_move)
 
-        if self._motor == "Top":
-            self._async_update_from_command(
-                await self._shade.move(
-                    {
-                        ATTR_POSITION1: self._current_cover_position_bottom,
-                        ATTR_POSITION2: hass_position_to_hd(target_hass_position),
-                        ATTR_POSKIND1: 1,
-                        ATTR_POSKIND2: 2,
-                    }
-                )
+        self._async_update_from_command(
+            await self._shade.move(
+                {
+                    ATTR_POSITION1: hass_position_to_hd(target_hass_position),
+                    ATTR_POSKIND1: 1,
+                }
             )
-        elif self._motor == "Bottom":
-            self._async_update_from_command(
-                await self._shade.move(
-                    {
-                        ATTR_POSITION1: hass_position_to_hd(target_hass_position),
-                        ATTR_POSITION2: self._current_cover_position_top,
-                        ATTR_POSKIND1: 1,
-                        ATTR_POSKIND2: 2,
-                    }
-                )
-            )
-        else:
-            self._async_update_from_command(
-                await self._shade.move(
-                    {
-                        ATTR_POSITION1: hass_position_to_hd(target_hass_position),
-                        ATTR_POSKIND1: 1,
-                    }
-                )
-            )
+        )
 
         self._is_opening = False
         self._is_closing = False
@@ -333,8 +278,6 @@ class PowerViewShade(ShadeEntity, CoverEntity):
         position_data = self._shade.raw_data.get(ATTR_POSITION_DATA, {})
         if ATTR_POSITION1 in position_data:
             self._current_cover_position_bottom = int(position_data[ATTR_POSITION1])
-        if self._motor in ["Top", "Bottom"] and ATTR_POSITION2 in position_data:
-            self._current_cover_position_top = int(position_data[ATTR_POSITION2])
         self._is_opening = False
         self._is_closing = False
 
@@ -401,3 +344,111 @@ class PowerViewShade(ShadeEntity, CoverEntity):
             return
         self._async_process_new_shade_data(self.coordinator.data[self._shade.id])
         self.async_write_ha_state()
+
+
+class PowerViewTDBUShade(PowerViewShade):
+    """Representation of a top down bottom up powerview shade."""
+
+    def __init__(self, coordinator, device_info, room_name, shade, name, motor):
+        """Initialize the shade."""
+        super().__init__(coordinator, device_info, room_name, shade, name)
+        self._motor = motor
+        self._current_cover_position_bottom = MIN_POSITION
+        self._current_cover_position_top = MIN_POSITION
+        self._unique_id = f"{self._shade.id}-{self._motor}"
+
+    @property
+    def name(self):
+        """Return the name of the shade."""
+        name = f"{self._shade_name} {self._motor}"
+        return name
+
+    @property
+    def is_closed(self):
+        """Return if the cover is closed."""
+        # treat anything below 75% of 1% of total position as closed due to conversion of powerview to hass
+        cover_position = self._current_cover_position_bottom
+        if self._motor == TOPDOWN_SHADE_MOTOR_TOP:
+            cover_position = self._current_cover_position_top
+        return cover_position <= SHADE_CLOSED_POSITION
+
+    @property
+    def current_cover_position(self):
+        """Return the current position of cover."""
+        position = self._current_cover_position_bottom
+        if self._motor == TOPDOWN_SHADE_MOTOR_TOP:
+            position = self._current_cover_position_top
+        return hd_position_to_hass(position)
+
+    async def _async_move(self, target_hass_position):
+        """Move the shade to a position."""
+
+        # we will limit force update to 5 minutes to prevent spamming hub
+        time_delta = datetime.now(tz=None) - timedelta(minutes=FORCED_REFRESH_TIMEFRAME)
+        force_refresh = False
+        if self._last_forced_refresh is not None:
+            force_refresh = self._last_forced_refresh < time_delta
+
+        # force a refresh to ensure we dont push a blind past the limit of its counter part
+        # this does result in a slightly slower response from tdbu but protects the motor
+        if force_refresh is True:
+            _LOGGER.debug("Cover %s - Force refresh on move", self.name)
+            await self._async_force_refresh_state()
+
+        # get position of top and bottom rails independently
+        cover_bottom = hd_position_to_hass(self._current_cover_position_bottom)
+        cover_top = 100 - hd_position_to_hass(self._current_cover_position_top)
+
+        # dont allow a cover to go past the position of the opposite motor
+        if self._motor == TOPDOWN_SHADE_MOTOR_TOP:
+            if (100 - target_hass_position) < cover_bottom:
+                target_hass_position = (100 - cover_bottom) - 1
+        if self._motor == TOPDOWN_SHADE_MOTOR_BOTTOM:
+            if target_hass_position > cover_top:
+                target_hass_position = cover_top - 1
+
+        current_hass_position = self.current_cover_position
+        steps_to_move = abs(current_hass_position - target_hass_position)
+
+        if not steps_to_move:
+            return
+
+        self._async_schedule_update_for_transition(steps_to_move)
+
+        if self._motor == TOPDOWN_SHADE_MOTOR_TOP:
+            position_bottom = self._current_cover_position_bottom
+            postion_top = hass_position_to_hd(target_hass_position)
+        else:
+            position_bottom = hass_position_to_hd(target_hass_position)
+            postion_top = self._current_cover_position_top
+
+        self._async_update_from_command(
+            await self._shade.move(
+                {
+                    ATTR_POSITION1: position_bottom,
+                    ATTR_POSITION2: postion_top,
+                    ATTR_POSKIND1: 1,
+                    ATTR_POSKIND2: 2,
+                }
+            )
+        )
+
+        self._is_opening = False
+        self._is_closing = False
+        if target_hass_position > current_hass_position:
+            self._is_opening = True
+        elif target_hass_position < current_hass_position:
+            self._is_closing = True
+        self.async_write_ha_state()
+
+    @callback
+    def _async_update_current_cover_position(self):
+        """Update the current cover position from the data."""
+        _LOGGER.debug("Raw data update: %s", self._shade.raw_data)
+        position_data = self._shade.raw_data.get(ATTR_POSITION_DATA, {})
+        if ATTR_POSITION1 in position_data:
+            self._current_cover_position_bottom = int(position_data[ATTR_POSITION1])
+        if ATTR_POSITION2 in position_data:
+            self._current_cover_position_top = int(position_data[ATTR_POSITION2])
+        self._is_opening = False
+        self._is_closing = False
