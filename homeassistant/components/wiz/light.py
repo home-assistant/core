@@ -250,7 +250,7 @@ class WizBulbEntity(LightEntity):
             "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
             "name": self._attr_name,
             "manufacturer": "WiZ Light Platform",
-            "model": self._bulbtype.name",
+            "model": self._bulbtype.name,
         }
 
     def update_state_available(self):
