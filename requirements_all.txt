@@ -114,7 +114,7 @@ adext==0.4.2
 adguardhome==0.5.1
 
 # homeassistant.components.advantage_air
-advantage_air==0.2.5
+advantage_air==0.2.6
 
 # homeassistant.components.frontier_silicon
 afsapi==0.0.4
