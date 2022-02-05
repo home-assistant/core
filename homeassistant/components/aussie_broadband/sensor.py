@@ -58,14 +58,14 @@ SENSOR_DESCRIPTIONS: tuple[SensorValueEntityDescription, ...] = (
         name="National Calls",
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:phone",
-        value=lambda x: x["calls"],
+        value=lambda x: x.get("calls"),
     ),
     SensorValueEntityDescription(
         key="mobile",
         name="Mobile Calls",
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:phone",
-        value=lambda x: x["calls"],
+        value=lambda x: x.get("calls"),
     ),
     SensorValueEntityDescription(
         key="international",
@@ -79,7 +79,7 @@ SENSOR_DESCRIPTIONS: tuple[SensorValueEntityDescription, ...] = (
         name="SMS Sent",
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:message-processing",
-        value=lambda value: value["calls"],
+        value=lambda x: x.get("calls"),
     ),
     SensorValueEntityDescription(
         key="internet",
@@ -87,7 +87,7 @@ SENSOR_DESCRIPTIONS: tuple[SensorValueEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=DATA_KILOBYTES,
         icon="mdi:network",
-        value=lambda x: x["kbytes"],
+        value=lambda x: x.get("kbytes"),
     ),
     SensorValueEntityDescription(
         key="voicemail",
@@ -158,7 +158,4 @@ class AussieBroadandSensorEntity(CoordinatorEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         parent = self.coordinator.data[self.entity_description.key]
-        try:
-            return cast(StateType, self.entity_description.value(parent))
-        except KeyError:
-            return None
+        return cast(StateType, self.entity_description.value(parent))
