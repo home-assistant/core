@@ -39,7 +39,6 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Plugwise Smiles from a config entry."""
     websession = async_get_clientsession(hass, verify_ssl=False)
-
     api = Smile(
         host=entry.data[CONF_HOST],
         username=entry.data.get(CONF_USERNAME, DEFAULT_USERNAME),
@@ -51,22 +50,20 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         connected = await api.connect()
-
-        if not connected:
-            _LOGGER.error("Unable to connect to Smile")
-            raise ConfigEntryNotReady
-
     except InvalidAuthentication:
         _LOGGER.error("Invalid username or Smile ID")
         return False
-
     except PlugwiseException as err:
-        _LOGGER.error("Error while communicating to device %s", api.smile_name)
-        raise ConfigEntryNotReady from err
-
+        raise ConfigEntryNotReady(
+            f"Error while communicating to device {api.smile_name}"
+        ) from err
     except asyncio.TimeoutError as err:
-        _LOGGER.error("Timeout while connecting to Smile %s", api.smile_name)
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            f"Timeout while connecting to Smile {api.smile_name}"
+        ) from err
+
+    if not connected:
+        raise ConfigEntryNotReady("Unable to connect to Smile")
 
     async def async_update_data():
         """Update data via API endpoint."""
@@ -84,7 +81,6 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_method=async_update_data,
         update_interval=DEFAULT_SCAN_INTERVAL[api.smile_type],
     )
-
     await coordinator.async_config_entry_first_refresh()
 
     api.get_all_devices()
@@ -101,7 +97,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, api.gateway_id)},
+        identifiers={(DOMAIN, str(api.gateway_id))},
         manufacturer="Plugwise",
         name=entry.title,
         model=f"Smile {api.smile_name}",
