@@ -4,13 +4,13 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pywizlight import wizlight
-from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
+from pywizlight import wizlight
+from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
 
 from .const import DEFAULT_NAME, DOMAIN
 from .utils import _short_mac
@@ -32,6 +32,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             bulb = wizlight(user_input[CONF_HOST])
             try:
                 mac = await bulb.getMac()
+                bulbtype = await bulb.get_bulbtype()
             except WizLightTimeOutError:
                 errors["base"] = "bulb_time_out"
             except ConnectionRefusedError:
@@ -43,10 +44,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(mac)
-                self._abort_if_unique_id_configured()
-                name = f"{DEFAULT_NAME} {_short_mac(mac)}"
+                self._abort_if_unique_id_configured(
+                    updates={CONF_HOST: user_input[CONF_HOST]}
+                )
+                bulb_type = bulbtype.bulb_type.value if bulbtype else "Unknown"
+                name = f"{DEFAULT_NAME} {bulb_type} {_short_mac(mac)}"
                 return self.async_create_entry(
-                    title=f"{DEFAULT_NAME} {_short_mac(mac)}",
+                    title=name,
                     data={**user_input, CONF_NAME: name},
                 )
 
