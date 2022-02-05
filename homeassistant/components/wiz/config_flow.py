@@ -13,7 +13,6 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN, WIZ_EXCEPTIONS
 from .utils import name_from_bulb_type_and_mac
@@ -38,10 +37,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return await self._async_handle_discovery()
 
-    async def async_step_discovery(
-        self, discovery_info: DiscoveryInfoType
+    async def async_step_integration_discovery(
+        self, discovery_info: dict[str, str]
     ) -> FlowResult:
-        """Handle discovery."""
+        """Handle integration discovery."""
         self._discovered_device = DiscoveredBulb(
             discovery_info["ip_address"], discovery_info["mac_address"]
         )
