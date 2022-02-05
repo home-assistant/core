@@ -83,7 +83,8 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         bulb_type: BulbType = self._device.bulbtype
         self._attr_effect_list = wiz_data.scenes
         self._attr_min_mireds, self._attr_max_mireds = get_min_max_mireds(bulb_type)
-        self._attr_supported_color_modes = get_supported_color_modes(bulb_type)
+        self._supported_color_modes = get_supported_color_modes(bulb_type)
+        self._attr_supported_color_modes = self._supported_color_modes
         if bulb_type.features.effect:
             self._attr_supported_features = SUPPORT_EFFECT
 
@@ -93,14 +94,15 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         state = self._device.state
         if (brightness := state.get_brightness()) is not None:
             self._attr_brightness = max(0, min(255, brightness))
-        color_modes = self.supported_color_modes
-        assert color_modes is not None
-        if COLOR_MODE_COLOR_TEMP in color_modes and state.get_colortemp() is not None:
+        if (
+            COLOR_MODE_COLOR_TEMP in self._supported_color_modes
+            and state.get_colortemp() is not None
+        ):
             self._attr_color_mode = COLOR_MODE_COLOR_TEMP
             if color_temp := state.get_colortemp():
                 self._attr_color_temp = color_temperature_kelvin_to_mired(color_temp)
         elif (
-            COLOR_MODE_HS in color_modes
+            COLOR_MODE_HS in self._supported_color_modes
             and (rgb := state.get_rgb()) is not None
             and rgb[0] is not None
         ):
