@@ -8,6 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, WIZ_EXCEPTIONS
@@ -16,6 +17,8 @@ from .models import WizData
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.LIGHT]
+
+REQUEST_REFRESH_DELAY = 0.35
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -42,6 +45,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name=entry.data[CONF_NAME],
         update_interval=timedelta(seconds=15),
         update_method=_async_update,
+        # We don't want an immediate refresh since the device
+        # takes a moment to reflect the state change
+        request_refresh_debouncer=Debouncer(
+            hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
+        ),
     )
     await coordinator.async_config_entry_first_refresh()
 
