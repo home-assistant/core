@@ -733,24 +733,6 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
-    # Fan
-    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48quojr54
-    "fs": (
-        TuyaSensorEntityDescription(
-            key=DPCode.TEMP_CURRENT,
-            name="Temperature",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.COUNTDOWN_LEFT,
-            name="Remaining Time of Countdown",
-            value_to_timestamp=True,
-            device_class=SensorDeviceClass.TIMESTAMP,
-            icon="mdi:timer-outline",
-            entity_category=EntityCategory.CONFIG,
-        ),
-    ),
     # Curtain
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48qy7wkre
     "cl": (
@@ -820,6 +802,18 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Air quality",
             icon="mdi:air-filter",
             device_class=TuyaDeviceClass.AIR_QUALITY,
+        ),
+    ),
+    # Fan
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48quojr54
+    "fs": (
+        TuyaSensorEntityDescription(
+            key=DPCode.COUNTDOWN_LEFT,
+            name="Remaining Time of Countdown",
+            value_to_timestamp=True,
+            device_class=SensorDeviceClass.TIMESTAMP,
+            icon="mdi:timer-outline",
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
 }
