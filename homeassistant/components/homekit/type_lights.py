@@ -325,9 +325,9 @@ class Light(HomeAccessory):
                 # HomeKit assumes RGB and WHITE values are interlocked
                 # similar to esphome's color_interlock: true
                 if _has_no_color_values(new_state):
-                    if rgbww := new_state.attributes.get(ATTR_RGBWW_COLOR):
+                    if rgbww := attributes.get(ATTR_RGBWW_COLOR):
                         brightness = min(255, rgbww[3] + rgbww[4])
-                    if rgbw := new_state.attributes.get(ATTR_RGBW_COLOR):
+                    if rgbw := attributes.get(ATTR_RGBW_COLOR):
                         brightness = rgbw[3]
                 elif _has_no_white_values(new_state):
                     brightness = max(attributes[ATTR_RGB_COLOR])
@@ -356,16 +356,12 @@ class Light(HomeAccessory):
         if self.color_supported:
             if ATTR_COLOR_TEMP in attributes:
                 hue, saturation = color_temperature_to_hs(
-                    color_temperature_mired_to_kelvin(
-                        new_state.attributes[ATTR_COLOR_TEMP]
-                    )
+                    color_temperature_mired_to_kelvin(attributes[ATTR_COLOR_TEMP])
                 )
-            elif (
-                color_mode
-                and color_mode in COLOR_MODES_WITH_WHITES
-                and (_has_no_color_values(new_state) or color_mode == COLOR_MODE_WHITE)
+            elif color_mode in COLOR_MODES_WITH_WHITES and (
+                _has_no_color_values(new_state) or color_mode == COLOR_MODE_WHITE
             ):
-                if rgbww := new_state.attributes.get(ATTR_RGBWW_COLOR):
+                if rgbww := attributes.get(ATTR_RGBWW_COLOR):
                     hue, saturation = color_temperature_to_hs(
                         color_temperature_mired_to_kelvin(
                             rgbww_to_color_temperature(
@@ -389,12 +385,10 @@ class Light(HomeAccessory):
         if CHAR_COLOR_TEMPERATURE in self.chars:
             if self.color_temp_supported:
                 color_temp = attributes.get(ATTR_COLOR_TEMP)
-            elif (
-                color_mode
-                and color_mode in COLOR_MODES_WITH_WHITES
-                and (_has_no_color_values(new_state) or color_mode == COLOR_MODE_WHITE)
+            elif color_mode in COLOR_MODES_WITH_WHITES and (
+                _has_no_color_values(new_state) or color_mode == COLOR_MODE_WHITE
             ):
-                if rgbww := new_state.attributes.get(ATTR_RGBWW_COLOR):
+                if rgbww := attributes.get(ATTR_RGBWW_COLOR):
                     color_temp = color_temperature_mired_to_kelvin(
                         rgbww_to_color_temperature(
                             rgbww, self.min_mireds, self.max_mireds
