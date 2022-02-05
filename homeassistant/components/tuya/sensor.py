@@ -759,7 +759,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT_F,
-            name="Temperature Fahrenheit",
+            name="Temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
             entity_registry_enabled_default=False,
