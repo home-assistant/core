@@ -92,6 +92,7 @@ class SmileBinarySensor(PlugwiseEntity, BinarySensorEntity):
         super().__init__(api, coordinator, name, dev_id)
         self._binary_sensor = binary_sensor
         self._attr_is_on = False
+        self._attr_unique_id = f"{dev_id}-{binary_sensor}"
 
         if dev_id == self._api.heater_id:
             self._entity_name = "Auxiliary"
@@ -101,8 +102,6 @@ class SmileBinarySensor(PlugwiseEntity, BinarySensorEntity):
 
         if dev_id == self._api.gateway_id:
             self._entity_name = f"Smile {self._entity_name}"
-
-        self._unique_id = f"{dev_id}-{binary_sensor}"
 
     @callback
     def _async_process_data(self) -> None:
