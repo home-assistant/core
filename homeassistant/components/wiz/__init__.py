@@ -29,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except WIZ_EXCEPTIONS as err:
         raise ConfigEntryNotReady from err
 
-    async def _async_update():
+    async def _async_update() -> None:
         """Update the WiZ device."""
         try:
             await bulb.updateState()
