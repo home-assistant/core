@@ -22,14 +22,12 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.color as color_utils
 
 from .const import DOMAIN
+from .entity import WizToggleEntity
 from .models import WizData
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,97 +78,43 @@ async def async_setup_entry(
     async_add_entities([WizBulbEntity(wiz_data, entry.title)])
 
 
-class WizBulbEntity(CoordinatorEntity, LightEntity):
+class WizBulbEntity(WizToggleEntity, LightEntity):
     """Representation of WiZ Light bulb."""
 
     def __init__(self, wiz_data: WizData, name: str) -> None:
         """Initialize an WiZLight."""
-        super().__init__(wiz_data.coordinator)
-        self._light = wiz_data.bulb
-        bulb_type: BulbType = self._light.bulbtype
-        self._attr_unique_id = self._light.mac
-        self._attr_name = name
+        super().__init__(wiz_data, name)
+        bulb_type: BulbType = self._device.bulbtype
         self._attr_effect_list = wiz_data.scenes
         self._attr_min_mireds, self._attr_max_mireds = get_min_max_mireds(bulb_type)
         self._attr_supported_color_modes = get_supported_color_modes(bulb_type)
         if supports_effects(bulb_type):
             self._attr_supported_features = SUPPORT_EFFECT
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._light.mac)},
-            name=name,
-            manufacturer="WiZ",
-            model=bulb_type.name,
-        )
 
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if light is on."""
-        is_on: bool | None = self._light.status
-        return is_on
-
-    @property
-    def brightness(self) -> int | None:
-        """Return the brightness of the light."""
-        if (brightness := self._light.state.get_brightness()) is None:
-            return None
-        if 0 <= int(brightness) <= 255:
-            return int(brightness)
-        _LOGGER.error("Received invalid brightness : %s. Expected: 0-255", brightness)
-        return None
-
-    @property
-    def color_mode(self) -> str:
-        """Return the current color mode."""
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        state = self._device.state
+        if (brightness := state.get_brightness()) is not None:
+            self._attr_brightness = max(0, min(255, brightness))
         color_modes = self.supported_color_modes
         assert color_modes is not None
-        if (
-            COLOR_MODE_COLOR_TEMP in color_modes
-            and self._light.state.get_colortemp() is not None
-        ):
-            return COLOR_MODE_COLOR_TEMP
-        if (
+        if COLOR_MODE_COLOR_TEMP in color_modes and state.get_colortemp() is not None:
+            self._attr_color_mode = COLOR_MODE_COLOR_TEMP
+            if color_temp := state.get_colortemp():
+                self._attr_color_temp = color_temp
+        elif (
             COLOR_MODE_HS in color_modes
-            and (rgb := self._light.state.get_rgb()) is not None
+            and (rgb := state.get_rgb()) is not None
             and rgb[0] is not None
         ):
-            return COLOR_MODE_HS
-        return COLOR_MODE_BRIGHTNESS
-
-    @property
-    def hs_color(self) -> tuple[float, float] | None:
-        """Return the hs color value."""
-        colortemp = self._light.state.get_colortemp()
-        if colortemp is not None and colortemp != 0:
-            return None
-        if (rgb := self._light.state.get_rgb()) is None:
-            return None
-        if rgb[0] is None:
-            # this is the case if the temperature was changed
-            # do nothing until the RGB color was changed
-            return None
-        if (warmwhite := self._light.state.get_warm_white()) is None:
-            return None
-        hue_sat = convertHSfromRGBCW(rgb, warmwhite)
-        hue: float = hue_sat[0]
-        sat: float = hue_sat[1]
-        return hue, sat
-
-    @property
-    def color_temp(self) -> int | None:
-        """Return the CT color value in mireds."""
-        colortemp = self._light.state.get_colortemp()
-        if colortemp is None or colortemp == 0:
-            return None
-        _LOGGER.debug(
-            "[wizlight %s] kelvin from the bulb: %s", self._light.ip, colortemp
-        )
-        return color_utils.color_temperature_kelvin_to_mired(colortemp)
-
-    @property
-    def effect(self) -> str | None:
-        """Return the current effect."""
-        effect: str | None = self._light.state.get_scene()
-        return effect
+            if (warm_white := state.get_warm_white()) is not None:
+                self._attr_hs_color = convertHSfromRGBCW(rgb, warm_white)
+            self._attr_color_mode = COLOR_MODE_HS
+        else:
+            self._attr_color_mode = COLOR_MODE_BRIGHTNESS
+        self._attr_effect = state.get_scene()
+        super()._handle_coordinator_update()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
@@ -196,7 +140,7 @@ class WizBulbEntity(CoordinatorEntity, LightEntity):
                 colortemp = kelvin
                 _LOGGER.debug(
                     "[wizlight %s] kelvin changed and send to bulb: %s",
-                    self._light.ip,
+                    self._device.ip,
                     colortemp,
                 )
 
@@ -212,7 +156,7 @@ class WizBulbEntity(CoordinatorEntity, LightEntity):
                 )
                 _LOGGER.debug(
                     "[wizlight %s] Pilot will be send with brightness=%s, colortemp=%s, scene=%s",
-                    self._light.ip,
+                    self._device.ip,
                     brightness,
                     colortemp,
                     sceneid,
@@ -229,10 +173,10 @@ class WizBulbEntity(CoordinatorEntity, LightEntity):
                     brightness=brightness, colortemp=colortemp, scene=sceneid
                 )
 
-        await self._light.turn_on(pilot)
+        await self._device.turn_on(pilot)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        await self._light.turn_off()
+        await self._device.turn_off()
         await self.coordinator.async_request_refresh()
