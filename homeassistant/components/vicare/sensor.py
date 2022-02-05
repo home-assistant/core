@@ -233,7 +233,7 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getStarts(),
     ),
     ViCareSensorEntityDescription(
-        key="compressor_starts",
+        key="compressor_hours",
         name="Compressor Hours",
         icon="mdi:counter",
         native_unit_of_measurement=TIME_HOURS,
