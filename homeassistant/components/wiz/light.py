@@ -24,7 +24,10 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.color as color_utils
+from homeassistant.util.color import (
+    color_temperature_kelvin_to_mired,
+    color_temperature_mired_to_kelvin,
+)
 
 from .const import DOMAIN
 from .entity import WizToggleEntity
@@ -57,15 +60,13 @@ def supports_effects(bulb_type: BulbType) -> bool:
 
 def get_min_max_mireds(bulb_type: BulbType) -> tuple[int, int]:
     """Return the coldest and warmest color_temp that this light supports."""
-    if bulb_type is None:
-        return DEFAULT_MIN_MIREDS, DEFAULT_MAX_MIREDS
     # DW bulbs have no kelvin
     if bulb_type.bulb_type == BulbClass.DW:
         return 0, 0
     # If bulbtype is TW or RGB then return the kelvin value
-    return color_utils.color_temperature_kelvin_to_mired(
+    return color_temperature_kelvin_to_mired(
         bulb_type.kelvin_range.max
-    ), color_utils.color_temperature_kelvin_to_mired(bulb_type.kelvin_range.min)
+    ), color_temperature_kelvin_to_mired(bulb_type.kelvin_range.min)
 
 
 async def async_setup_entry(
@@ -102,7 +103,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         if COLOR_MODE_COLOR_TEMP in color_modes and state.get_colortemp() is not None:
             self._attr_color_mode = COLOR_MODE_COLOR_TEMP
             if color_temp := state.get_colortemp():
-                self._attr_color_temp = color_temp
+                self._attr_color_temp = color_temperature_kelvin_to_mired(color_temp)
         elif (
             COLOR_MODE_HS in color_modes
             and (rgb := state.get_rgb()) is not None
@@ -116,64 +117,42 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         self._attr_effect = state.get_scene()
         super()._handle_coordinator_update()
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Instruct the light to turn on."""
-        brightness = None
-
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs.get(ATTR_BRIGHTNESS)
+    def _async_pilot_builder(self, **kwargs: Any) -> PilotBuilder:
+        """Create the PilotBuilder for turn on."""
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
 
         if ATTR_RGB_COLOR in kwargs:
-            pilot = PilotBuilder(rgb=kwargs.get(ATTR_RGB_COLOR), brightness=brightness)
+            return PilotBuilder(rgb=kwargs[ATTR_RGB_COLOR], brightness=brightness)
 
         if ATTR_HS_COLOR in kwargs:
-            pilot = PilotBuilder(
+            return PilotBuilder(
                 hucolor=(kwargs[ATTR_HS_COLOR][0], kwargs[ATTR_HS_COLOR][1]),
                 brightness=brightness,
             )
-        else:
-            colortemp = None
-            if ATTR_COLOR_TEMP in kwargs:
-                kelvin = color_utils.color_temperature_mired_to_kelvin(
-                    kwargs[ATTR_COLOR_TEMP]
-                )
-                colortemp = kelvin
-                _LOGGER.debug(
-                    "[wizlight %s] kelvin changed and send to bulb: %s",
-                    self._device.ip,
-                    colortemp,
-                )
 
-            sceneid = None
-            if ATTR_EFFECT in kwargs:
-                sceneid = get_id_from_scene_name(kwargs[ATTR_EFFECT])
+        colortemp = None
+        if ATTR_COLOR_TEMP in kwargs:
+            colortemp = color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
 
-            if sceneid == 1000:  # rhythm
-                pilot = PilotBuilder()
-            else:
-                pilot = PilotBuilder(
-                    brightness=brightness, colortemp=colortemp, scene=sceneid
-                )
-                _LOGGER.debug(
-                    "[wizlight %s] Pilot will be send with brightness=%s, colortemp=%s, scene=%s",
-                    self._device.ip,
-                    brightness,
-                    colortemp,
-                    sceneid,
-                )
+        sceneid = None
+        if ATTR_EFFECT in kwargs:
+            sceneid = get_id_from_scene_name(kwargs[ATTR_EFFECT])
 
-            sceneid = None
-            if ATTR_EFFECT in kwargs:
-                sceneid = get_id_from_scene_name(kwargs[ATTR_EFFECT])
+        if sceneid == 1000:  # rhythm
+            return PilotBuilder()
 
-            if sceneid == 1000:  # rhythm
-                pilot = PilotBuilder()
-            else:
-                pilot = PilotBuilder(
-                    brightness=brightness, colortemp=colortemp, scene=sceneid
-                )
+        _LOGGER.debug(
+            "[wizlight %s] Pilot will be send with brightness=%s, colortemp=%s, scene=%s",
+            self._device.ip,
+            brightness,
+            colortemp,
+            sceneid,
+        )
+        return PilotBuilder(brightness=brightness, colortemp=colortemp, scene=sceneid)
 
-        await self._device.turn_on(pilot)
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Instruct the light to turn on."""
+        await self._device.turn_on(self._async_pilot_builder(**kwargs))
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
