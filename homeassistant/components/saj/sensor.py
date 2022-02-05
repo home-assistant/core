@@ -20,7 +20,6 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_USERNAME,
     ENERGY_KILO_WATT_HOUR,
-    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     MASS_KILOGRAMS,
     POWER_WATT,
@@ -33,8 +32,8 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.start import async_at_start
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
