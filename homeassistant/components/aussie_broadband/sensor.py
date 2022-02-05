@@ -149,7 +149,7 @@ class AussieBroadandSensorEntity(CoordinatorEntity, SensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, service[SERVICE_ID])},
             manufacturer="Aussie Broadband",
-            configuration_url=f"https://my.aussiebroadband.com.au/#/{service['name']}/{service[SERVICE_ID]}/",
+            configuration_url=f"https://my.aussiebroadband.com.au/#/{service['name'].lower()}/{service[SERVICE_ID]}/",
             name=service["description"],
             model=service["name"],
         )
