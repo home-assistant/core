@@ -1,8 +1,6 @@
 """Plugwise Sensor component for Home Assistant."""
 from __future__ import annotations
 
-import logging
-
 from plugwise.smile import Smile
 
 from homeassistant.components.sensor import (
@@ -31,6 +29,7 @@ from .const import (
     DOMAIN,
     FLAME_ICON,
     IDLE_ICON,
+    LOGGER,
     SENSOR_MAP_DEVICE_CLASS,
     SENSOR_MAP_MODEL,
     SENSOR_MAP_STATE_CLASS,
@@ -38,8 +37,6 @@ from .const import (
     UNIT_LUMEN,
 )
 from .entity import PlugwiseEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_TEMPERATURE = [
     "Temperature",
@@ -350,7 +347,7 @@ class PwThermostatSensor(SmileSensor):
     def _async_process_data(self) -> None:
         """Update the entity."""
         if not (data := self._api.get_device_data(self._dev_id)):
-            _LOGGER.error("Received no data for device %s", self._entity_name)
+            LOGGER.error("Received no data for device %s", self._entity_name)
             self.async_write_ha_state()
             return
 
@@ -382,7 +379,7 @@ class PwAuxDeviceSensor(SmileSensor):
     def _async_process_data(self) -> None:
         """Update the entity."""
         if not (data := self._api.get_device_data(self._dev_id)):
-            _LOGGER.error("Received no data for device %s", self._entity_name)
+            LOGGER.error("Received no data for device %s", self._entity_name)
             self.async_write_ha_state()
             return
 
@@ -434,7 +431,7 @@ class PwPowerSensor(SmileSensor):
     def _async_process_data(self) -> None:
         """Update the entity."""
         if not (data := self._api.get_device_data(self._dev_id)):
-            _LOGGER.error("Received no data for device %s", self._entity_name)
+            LOGGER.error("Received no data for device %s", self._entity_name)
             self.async_write_ha_state()
             return
 
