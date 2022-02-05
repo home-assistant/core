@@ -51,6 +51,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle any discovery."""
         device = self._discovered_device
         assert device is not None
+        _LOGGER.debug("Discovered debug: %s", device)
         ip_address = device.ip_address
         mac = device.mac_address
         await self.async_set_unique_id(mac)
