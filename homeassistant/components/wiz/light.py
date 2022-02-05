@@ -1,6 +1,7 @@
 """WiZ integration."""
 from __future__ import annotations
 
+import contextlib
 import logging
 from typing import Any
 
@@ -16,9 +17,9 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_RGB_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_HS,
     SUPPORT_EFFECT,
     LightEntity,
 )
@@ -33,31 +34,34 @@ from .models import WizData
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_SUPPORTED_FEATURES = (
-    SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT
-)
+DEFAULT_COLOR_MODES = {COLOR_MODE_HS, COLOR_MODE_COLOR_TEMP}
 
 
-def get_supported_features(bulb_type: BulbType) -> int:
+def get_supported_color_modes(bulb_type: BulbType) -> set[str]:
     """Flag supported features."""
     if not bulb_type:
         # fallback
-        return DEFAULT_SUPPORTED_FEATURES
-    features = 0
+        return DEFAULT_COLOR_MODES
+    color_modes = set()
     try:
-        # Map features for better reading
-        if bulb_type.features.brightness:
-            features |= SUPPORT_BRIGHTNESS
-        if bulb_type.features.color:
-            features |= SUPPORT_COLOR
-        if bulb_type.features.effect:
-            features |= SUPPORT_EFFECT
-        if bulb_type.features.color_tmp:
-            features |= SUPPORT_COLOR_TEMP
-        return features
+        features = bulb_type.features
+        if features.color:
+            color_modes.add(COLOR_MODE_HS)
+        if features.color_tmp:
+            color_modes.add(COLOR_MODE_COLOR_TEMP)
+        if not color_modes and features.brightness:
+            color_modes.add(COLOR_MODE_BRIGHTNESS)
+        return color_modes
     except WizLightNotKnownBulb:
         _LOGGER.warning("Bulb is not present in the library. Fallback to full feature")
-        return DEFAULT_SUPPORTED_FEATURES
+        return DEFAULT_COLOR_MODES
+
+
+def supports_effects(bulb_type: BulbType) -> bool:
+    """Check if a bulb supports effects."""
+    with contextlib.suppress(WizLightNotKnownBulb):
+        return bool(bulb_type.features.effect)
+    return True  # default is true
 
 
 def get_min_max_mireds(bulb_type: BulbType) -> tuple[int, int]:
@@ -106,7 +110,9 @@ class WizBulbEntity(CoordinatorEntity, LightEntity):
         self._attr_name = name
         self._attr_effect_list = wiz_data.scenes
         self._attr_min_mireds, self._attr_max_mireds = get_min_max_mireds(bulb_type)
-        self._attr_supported_features = get_supported_features(bulb_type)
+        self._attr_supported_color_modes = get_supported_color_modes(bulb_type)
+        if supports_effects(bulb_type):
+            self._attr_supported_features = SUPPORT_EFFECT
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, self._light.mac)},
             name=name,
@@ -130,22 +136,33 @@ class WizBulbEntity(CoordinatorEntity, LightEntity):
         return None
 
     @property
-    def hs_color(self):
+    def color_mode(self):
+        """Return the current color mode."""
+        color_modes = self.supported_color_modes
+        if (
+            COLOR_MODE_COLOR_TEMP in color_modes
+            and self._light.state.get_colortemp() is not None
+        ):
+            return COLOR_MODE_COLOR_TEMP
+        if COLOR_MODE_HS in color_modes and self._light.state.get_rgb()[0] is not None:
+            return COLOR_MODE_HS
+        return COLOR_MODE_BRIGHTNESS
+
+    @property
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the hs color value."""
         colortemp = self._light.state.get_colortemp()
         if colortemp is not None and colortemp != 0:
             return None
         if self._light.state.get_rgb() is None:
-            return
-
+            return None
         rgb = self._light.state.get_rgb()
         if rgb[0] is None:
             # this is the case if the temperature was changed
             # do nothing until the RGB color was changed
-            return
-        warmwhite = self._light.state.get_warm_white()
-        if warmwhite is None:
-            return
+            return None
+        if (warmwhite := self._light.state.get_warm_white()) is None:
+            return None
         return convertHSfromRGBCW(rgb, warmwhite)
 
     @property
