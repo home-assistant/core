@@ -101,7 +101,7 @@ async def async_setup_entry(
     return
 
 
-class PecoSensor(CoordinatorEntity, SensorEntity):
+class PecoSensor(CoordinatorEntity[dict[str, float]], SensorEntity):
     """PECO outage counter sensor."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -112,7 +112,7 @@ class PecoSensor(CoordinatorEntity, SensorEntity):
         hass: HomeAssistant,
         description: SensorEntityDescription,
         county: str,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[str, float]],
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -124,7 +124,6 @@ class PecoSensor(CoordinatorEntity, SensorEntity):
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> float:
         """Return the value of the sensor."""
-        data: int = self.coordinator.data[self._key]
-        return data
+        return self.coordinator.data[self._key]
