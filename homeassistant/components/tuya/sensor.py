@@ -803,6 +803,16 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=TuyaDeviceClass.AIR_QUALITY,
         ),
     ),
+    # Fan
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48quojr54
+    "fs": (
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            name="Temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)
