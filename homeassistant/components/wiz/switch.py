@@ -29,6 +29,11 @@ async def async_setup_entry(
 class WizSocketEntity(WizToggleEntity, SwitchEntity):
     """Representation of a WiZ socket."""
 
+    def __init__(self, wiz_data: WizData, name: str) -> None:
+        """Initialize a WiZ socket."""
+        super().__init__(wiz_data, name)
+        self._async_update_attrs()
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the socket to turn on."""
         await self._device.turn_on(PilotBuilder())

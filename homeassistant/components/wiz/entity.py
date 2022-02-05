@@ -33,8 +33,13 @@ class WizToggleEntity(CoordinatorEntity, ToggleEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_is_on = self._device.status
+        self._async_update_attrs()
         super()._handle_coordinator_update()
+
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Handle updating _attr values."""
+        self._attr_is_on = self._device.status
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the device to turn off."""

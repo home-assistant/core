@@ -14,10 +14,13 @@ from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN, WIZ_EXCEPTIONS
-from .utils import name_from_bulb_type_and_mac
+from .const import DEFAULT_NAME, DISCOVER_SCAN_TIMEOUT, DOMAIN, WIZ_EXCEPTIONS
+from .discovery import async_discover_devices
+from .utils import _short_mac, name_from_bulb_type_and_mac
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_DEVICE = "device"
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -28,6 +31,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovered_device: DiscoveredBulb | None = None
+        self._discovered_devices: dict[str, DiscoveredBulb] = {}
         self._name: str | None = None
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
@@ -85,13 +89,57 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({}),
         )
 
+    async def async_step_pick_device(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the step to pick discovered device."""
+        if user_input is not None:
+            device = self._discovered_devices[user_input[CONF_DEVICE]]
+            await self.async_set_unique_id(device.mac_address, raise_on_progress=False)
+            bulb = wizlight(device.ip_address)
+            try:
+                bulbtype = await bulb.get_bulbtype()
+            except WIZ_EXCEPTIONS:
+                return self.async_abort(reason="cannot_connect")
+            else:
+                return self.async_create_entry(
+                    title=name_from_bulb_type_and_mac(bulbtype, device.mac_address),
+                    data={CONF_HOST: device.ip_address},
+                )
+
+        current_unique_ids = self._async_current_ids()
+        current_hosts = {
+            entry.data[CONF_HOST]
+            for entry in self._async_current_entries(include_ignore=False)
+        }
+        discovered_devices = await async_discover_devices(
+            self.hass, DISCOVER_SCAN_TIMEOUT
+        )
+        self._discovered_devices = {
+            device.mac_address: device for device in discovered_devices
+        }
+        devices_name = {
+            mac: f"{DEFAULT_NAME} {_short_mac(mac)} ({device.ip_address})"
+            for mac, device in self._discovered_devices.items()
+            if mac not in current_unique_ids and device.ip_address not in current_hosts
+        }
+        # Check if there is at least one device
+        if not devices_name:
+            return self.async_abort(reason="no_devices_found")
+        return self.async_show_form(
+            step_id="pick_device",
+            data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
-            bulb = wizlight(user_input[CONF_HOST])
+            if not (host := user_input[CONF_HOST]):
+                return await self.async_step_pick_device()
+            bulb = wizlight(host)
             try:
                 mac = await bulb.getMac()
                 bulbtype = await bulb.get_bulbtype()
@@ -117,6 +165,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=vol.Schema({vol.Optional(CONF_HOST, default=""): str}),
             errors=errors,
         )
