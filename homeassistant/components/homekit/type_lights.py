@@ -386,11 +386,23 @@ class Light(HomeAccessory):
                     self.char_saturation.notify()
 
         # Handle color temperature
-        if (
-            self.color_temp_supported
-            and (color_temp := attributes.get(ATTR_COLOR_TEMP))
-            and isinstance(color_temp, (int, float))
-        ):
-            self.char_color_temp.set_value(round(color_temp, 0))
-            if color_mode_changed:
-                self.char_color_temp.notify()
+        if CHAR_COLOR_TEMPERATURE in self.chars:
+            if self.color_temp_supported:
+                color_temp = attributes.get(ATTR_COLOR_TEMP)
+            elif (
+                color_mode
+                and color_mode in COLOR_MODES_WITH_WHITES
+                and (_has_no_color_values(new_state) or color_mode == COLOR_MODE_WHITE)
+            ):
+                if rgbww := new_state.attributes.get(ATTR_RGBWW_COLOR):
+                    color_temp = color_temperature_mired_to_kelvin(
+                        rgbww_to_color_temperature(
+                            rgbww, self.min_mireds, self.max_mireds
+                        )[0]
+                    )
+                else:
+                    color_temp = self.min_mireds
+            if isinstance(color_temp, (int, float)):
+                self.char_color_temp.set_value(round(color_temp, 0))
+                if color_mode_changed:
+                    self.char_color_temp.notify()
