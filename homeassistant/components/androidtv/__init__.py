@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
@@ -33,14 +34,30 @@ from .const import (
     DEVICE_ANDROIDTV,
     DEVICE_FIRETV,
     DOMAIN,
+    PROP_ETHMAC,
     PROP_SERIALNO,
+    PROP_WIFIMAC,
     SIGNAL_CONFIG_ENTITY,
 )
 
+INVALID_MACS = ["ff:ff:ff:ff:ff:ff"]
 PLATFORMS = [Platform.MEDIA_PLAYER]
 RELOAD_OPTIONS = [CONF_STATE_DETECTION_RULES]
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def get_androidtv_mac(dev_props):
+    """Return formatted mac from device properties."""
+    if eth_mac := dev_props.get(PROP_ETHMAC):
+        mac = format_mac(eth_mac)
+        if mac not in INVALID_MACS:
+            return mac
+    if wifi_mac := dev_props.get(PROP_WIFIMAC):
+        mac = format_mac(wifi_mac)
+        if mac not in INVALID_MACS:
+            return mac
+    return None
 
 
 def _setup_androidtv(hass, config):
