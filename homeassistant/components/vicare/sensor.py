@@ -58,6 +58,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         native_unit_of_measurement=TEMP_CELSIUS,
         value_getter=lambda api: api.getOutsideTemperature(),
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
         key="return_temperature",
@@ -65,6 +66,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         native_unit_of_measurement=TEMP_CELSIUS,
         value_getter=lambda api: api.getReturnTemperature(),
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
         key="boiler_temperature",
@@ -72,6 +74,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         native_unit_of_measurement=TEMP_CELSIUS,
         value_getter=lambda api: api.getBoilerTemperature(),
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
         key="hotwater_gas_consumption_today",
@@ -175,6 +178,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         native_unit_of_measurement=TEMP_CELSIUS,
         value_getter=lambda api: api.getSolarStorageTemperature(),
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
         key="collector temperature",
@@ -182,6 +186,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         native_unit_of_measurement=TEMP_CELSIUS,
         value_getter=lambda api: api.getSolarCollectorTemperature(),
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
         key="solar power production",
@@ -199,6 +204,8 @@ CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         name="Supply Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         value_getter=lambda api: api.getSupplyTemperature(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -208,6 +215,7 @@ BURNER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         name="Burner Starts",
         icon="mdi:counter",
         value_getter=lambda api: api.getStarts(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ViCareSensorEntityDescription(
         key="burner_hours",
@@ -215,6 +223,7 @@ BURNER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         icon="mdi:counter",
         native_unit_of_measurement=TIME_HOURS,
         value_getter=lambda api: api.getHours(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ViCareSensorEntityDescription(
         key="burner_modulation",
@@ -222,6 +231,7 @@ BURNER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         icon="mdi:percent",
         native_unit_of_measurement=PERCENTAGE,
         value_getter=lambda api: api.getModulation(),
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -231,6 +241,7 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         name="Compressor Starts",
         icon="mdi:counter",
         value_getter=lambda api: api.getStarts(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ViCareSensorEntityDescription(
         key="compressor_hours",
@@ -238,6 +249,7 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         icon="mdi:counter",
         native_unit_of_measurement=TIME_HOURS,
         value_getter=lambda api: api.getHours(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ViCareSensorEntityDescription(
         key="compressor_hours_loadclass1",
@@ -245,6 +257,7 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         icon="mdi:counter",
         native_unit_of_measurement=TIME_HOURS,
         value_getter=lambda api: api.getHoursLoadClass1(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ViCareSensorEntityDescription(
         key="compressor_hours_loadclass2",
@@ -252,6 +265,7 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         icon="mdi:counter",
         native_unit_of_measurement=TIME_HOURS,
         value_getter=lambda api: api.getHoursLoadClass2(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ViCareSensorEntityDescription(
         key="compressor_hours_loadclass3",
@@ -259,6 +273,7 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         icon="mdi:counter",
         native_unit_of_measurement=TIME_HOURS,
         value_getter=lambda api: api.getHoursLoadClass3(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ViCareSensorEntityDescription(
         key="compressor_hours_loadclass4",
@@ -266,6 +281,7 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         icon="mdi:counter",
         native_unit_of_measurement=TIME_HOURS,
         value_getter=lambda api: api.getHoursLoadClass4(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ViCareSensorEntityDescription(
         key="compressor_hours_loadclass5",
@@ -273,6 +289,7 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         icon="mdi:counter",
         native_unit_of_measurement=TIME_HOURS,
         value_getter=lambda api: api.getHoursLoadClass5(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
 
