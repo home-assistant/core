@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "address": "Cybro 2/3 SPS NAD"
+                },
+                "description": "Richte deine Cybro SPS f\u00fcr die Integration mit Home Assistant ein."
+            },
+            "zeroconf_confirm": {
+                "description": "M\u00f6chtest du die Cybro SPS mit dem Namen `{name}` zu Home Assistant hinzuf\u00fcgen?",
+                "title": "Cybro SPS entdeckt"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "unique_id": "Variablenname zum hinzufügen (eg: c1000.cybro_ix00)",
+                    "platform": "binary_sensor, light, sensor"
+                }
+            }
+        }
+    }
+}

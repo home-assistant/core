@@ -63,6 +63,7 @@ FLOWS = [
     "coronavirus",
     "cpuspeed",
     "crownstone",
+    "cybro",
     "daikin",
     "deconz",
     "denonavr",

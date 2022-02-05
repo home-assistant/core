@@ -182,6 +182,7 @@ tests/components/cpuspeed/* @fabaff @frenck
 homeassistant/components/crownstone/* @Crownstone @RicArch97
 tests/components/crownstone/* @Crownstone @RicArch97
 homeassistant/components/cups/* @fabaff
+homeassistant/components/cybro/* @killer0071234
 homeassistant/components/daikin/* @fredrike
 tests/components/daikin/* @fredrike
 homeassistant/components/darksky/* @fabaff
