@@ -5,14 +5,15 @@ from datetime import timedelta
 import logging
 
 from aiohttp import ClientError
-from aussiebb.asyncio import AussieBB, AuthenticationException
+from aussiebb.asyncio import AussieBB
+from aussiebb.exceptions import AuthenticationException, UnrecognisedServiceType
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_SERVICES, DEFAULT_UPDATE_INTERVAL, DOMAIN, SERVICE_ID
 
@@ -44,7 +45,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Create an appropriate refresh function
     def update_data_factory(service_id):
         async def async_update_data():
-            return await client.get_usage(service_id)
+            try:
+                return await client.get_usage(service_id)
+            except UnrecognisedServiceType as err:
+                raise UpdateFailed from err
 
         return async_update_data
 
