@@ -79,7 +79,6 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
 
     def __init__(self, wiz_data: WizData, name: str) -> None:
         """Initialize an WiZLight."""
-        super().__init__(wiz_data, name)
         bulb_type: BulbType = self._device.bulbtype
         self._supported_color_modes = get_supported_color_modes(bulb_type)
         self._attr_effect_list = wiz_data.scenes
@@ -87,6 +86,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         self._attr_supported_color_modes = self._supported_color_modes
         if bulb_type.features.effect:
             self._attr_supported_features = SUPPORT_EFFECT
+        super().__init__(wiz_data, name)
 
     @callback
     def _async_update_state(self) -> None:
