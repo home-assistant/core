@@ -11,15 +11,11 @@
             "unknown": "Unexpected error"
         },
         "step": {
-            "confirm": {
-                "description": "Do you want to add a new Bulb?"
-            },
             "user": {
                 "data": {
-                    "host": "Hostname or IP",
-                    "name": "Name"
+                    "host": "Host"
                 },
-                "description": "Please enter a hostname or IP address and name to add a new bulb:"
+                "description": "Enter the IP address of the device."
             }
         }
     }

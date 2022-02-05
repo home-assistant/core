@@ -1,5 +1,8 @@
 """Config flow for WiZ Platform."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from pywizlight import wizlight
 from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
@@ -7,17 +10,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_NAME, DOMAIN
+from .utils import _short_mac
 
 _LOGGER = logging.getLogger(__name__)
-
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-    }
-)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -25,7 +23,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
@@ -44,9 +44,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(mac)
                 self._abort_if_unique_id_configured()
+                name = f"{DEFAULT_NAME} {_short_mac(mac)}"
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+                    title=f"{DEFAULT_NAME} {_short_mac(mac)}",
+                    data={**user_input, CONF_NAME: name},
                 )
+
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            errors=errors,
         )

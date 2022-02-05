@@ -23,9 +23,12 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.color as color_utils
 
@@ -35,6 +38,8 @@ from .models import WizData
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_COLOR_MODES = {COLOR_MODE_HS, COLOR_MODE_COLOR_TEMP}
+DEFAULT_MIN_MIREDS = 153
+DEFAULT_MAX_MIREDS = 454
 
 
 def get_supported_color_modes(bulb_type: BulbType) -> set[str]:
@@ -67,9 +72,7 @@ def supports_effects(bulb_type: BulbType) -> bool:
 def get_min_max_mireds(bulb_type: BulbType) -> tuple[int, int]:
     """Return the coldest and warmest color_temp that this light supports."""
     if bulb_type is None:
-        return color_utils.color_temperature_kelvin_to_mired(
-            6500
-        ), color_utils.color_temperature_kelvin_to_mired(2200)
+        return DEFAULT_MIN_MIREDS, DEFAULT_MAX_MIREDS
     # DW bulbs have no kelvin
     if bulb_type.bulb_type == BulbClass.DW:
         return 0, 0
@@ -80,12 +83,14 @@ def get_min_max_mireds(bulb_type: BulbType) -> tuple[int, int]:
         ), color_utils.color_temperature_kelvin_to_mired(bulb_type.kelvin_range.min)
     except WizLightNotKnownBulb:
         _LOGGER.debug("Kelvin is not present in the library. Fallback to 6500")
-        return color_utils.color_temperature_kelvin_to_mired(
-            6500
-        ), color_utils.color_temperature_kelvin_to_mired(2200)
+        return DEFAULT_MIN_MIREDS, DEFAULT_MAX_MIREDS
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the WiZ Platform from config_flow."""
     # Assign configuration variables.
     wiz_data: WizData = hass.data[DOMAIN][entry.entry_id]
@@ -123,7 +128,8 @@ class WizBulbEntity(CoordinatorEntity, LightEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if light is on."""
-        return self._light.status
+        is_on: bool | None = self._light.status
+        return is_on
 
     @property
     def brightness(self) -> int | None:
@@ -136,9 +142,10 @@ class WizBulbEntity(CoordinatorEntity, LightEntity):
         return None
 
     @property
-    def color_mode(self):
+    def color_mode(self) -> str:
         """Return the current color mode."""
         color_modes = self.supported_color_modes
+        assert color_modes is not None
         if (
             COLOR_MODE_COLOR_TEMP in color_modes
             and self._light.state.get_colortemp() is not None
@@ -166,7 +173,10 @@ class WizBulbEntity(CoordinatorEntity, LightEntity):
             return None
         if (warmwhite := self._light.state.get_warm_white()) is None:
             return None
-        return convertHSfromRGBCW(rgb, warmwhite)
+        hue_sat = convertHSfromRGBCW(rgb, warmwhite)
+        hue: float = hue_sat[0]
+        sat: float = hue_sat[1]
+        return hue, sat
 
     @property
     def color_temp(self) -> int | None:
@@ -182,7 +192,8 @@ class WizBulbEntity(CoordinatorEntity, LightEntity):
     @property
     def effect(self) -> str | None:
         """Return the current effect."""
-        return self._light.state.get_scene()
+        effect: str | None = self._light.state.get_scene()
+        return effect
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
@@ -242,7 +253,9 @@ class WizBulbEntity(CoordinatorEntity, LightEntity):
                 )
 
         await self._light.turn_on(pilot)
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self._light.turn_off()
+        await self.coordinator.async_request_refresh()
