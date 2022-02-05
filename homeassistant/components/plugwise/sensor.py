@@ -313,7 +313,9 @@ class SmileSensor(PlugwiseEntity, SensorEntity):
     ) -> None:
         """Initialise the sensor."""
         super().__init__(api, coordinator, name, dev_id)
+        self._attr_unique_id = f"{dev_id}-{sensor}"
         self._sensor = sensor
+
         if dev_id == self._api.heater_id:
             self._entity_name = "Auxiliary"
 
@@ -322,8 +324,6 @@ class SmileSensor(PlugwiseEntity, SensorEntity):
 
         if dev_id == self._api.gateway_id:
             self._entity_name = f"Smile {self._entity_name}"
-
-        self._unique_id = f"{dev_id}-{sensor}"
 
 
 class PwThermostatSensor(SmileSensor):

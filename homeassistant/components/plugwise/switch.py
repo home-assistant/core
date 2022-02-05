@@ -62,14 +62,13 @@ class GwSwitch(PlugwiseEntity, SwitchEntity):
     def __init__(self, api, coordinator, name, dev_id, members, model):
         """Set up the Plugwise API."""
         super().__init__(api, coordinator, name, dev_id)
+        self._attr_unique_id = f"{dev_id}-plug"
 
         self._members = members
         self._model = model
 
         self._is_on = False
         self._icon = SWITCH_ICON
-
-        self._unique_id = f"{dev_id}-plug"
 
     @property
     def is_on(self):
