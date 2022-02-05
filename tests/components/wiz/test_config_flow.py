@@ -26,10 +26,9 @@ FAKE_BULB_CONFIG = '{"method":"getSystemConfig","env":"pro","result":\
 
 TEST_SYSTEM_INFO = {"id": "ABCABCABCABC", "name": "Test Bulb"}
 
+TEST_CONNECTION = {CONF_HOST: "1.1.1.1"}
 
-TEST_CONNECTION = {CONF_HOST: "1.1.1.1", CONF_NAME: "Test Bulb"}
-
-TEST_NO_IP = {CONF_HOST: "this is no IP input", CONF_NAME: "Test Bulb"}
+TEST_NO_IP = {CONF_HOST: "this is no IP input"}
 
 
 async def test_form(hass):
@@ -57,8 +56,8 @@ async def test_form(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Test Bulb"
-    assert result2["data"] == TEST_CONNECTION
+    assert result2["title"] == "WiZ ABCABC"
+    assert result2["data"] == {CONF_HOST: "1.1.1.1", CONF_NAME: "WiZ ABCABC"}
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
