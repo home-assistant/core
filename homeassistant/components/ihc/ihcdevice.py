@@ -110,6 +110,5 @@ class IHCDevice(Entity):
             "manufacturer": "Schneider Electric",
             "suggested_area": self.suggested_area,
             "model": self.device_model,
-            "sw_version": "",
             "via_device": (DOMAIN, self.controller_id),
         }
