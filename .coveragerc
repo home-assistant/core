@@ -1317,7 +1317,9 @@ omit =
     homeassistant/components/wiz/__init__.py
     homeassistant/components/wiz/const.py
     homeassistant/components/wiz/discovery.py
+    homeassistant/components/wiz/entity.py
     homeassistant/components/wiz/light.py
+    homeassistant/components/wiz/switch.py
     homeassistant/components/wolflink/__init__.py
     homeassistant/components/wolflink/sensor.py
     homeassistant/components/wolflink/const.py

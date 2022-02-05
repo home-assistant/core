@@ -1,0 +1,35 @@
+"""WiZ integration switch platform."""
+from __future__ import annotations
+
+from typing import Any
+
+from pywizlight import PilotBuilder
+
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .const import DOMAIN, SOCKET_DEVICE_STR
+from .entity import WizToggleEntity
+from .models import WizData
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the WiZ switch platform."""
+    wiz_data: WizData = hass.data[DOMAIN][entry.entry_id]
+    if SOCKET_DEVICE_STR in wiz_data.bulb.bulbtype.name:
+        async_add_entities([WizSocketEntity(wiz_data, entry.title)])
+
+
+class WizSocketEntity(WizToggleEntity, SwitchEntity):
+    """Representation of a WiZ socket."""
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Instruct the socket to turn on."""
+        await self._device.turn_on(PilotBuilder())
+        await self.coordinator.async_request_refresh()
