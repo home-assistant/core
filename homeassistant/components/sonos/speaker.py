@@ -12,6 +12,7 @@ from typing import Any
 import urllib.parse
 
 import async_timeout
+import defusedxml.ElementTree as ET
 from soco.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
 from soco.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
 from soco.events_base import Event as SonosEvent, SubscriptionBase
@@ -56,13 +57,14 @@ from .const import (
     SONOS_STATE_PLAYING,
     SONOS_STATE_TRANSITIONING,
     SONOS_STATE_UPDATED,
+    SONOS_VANISHED,
     SOURCE_LINEIN,
     SOURCE_TV,
     SUBSCRIPTION_TIMEOUT,
 )
 from .favorites import SonosFavorites
 from .helpers import soco_error
-from .statistics import EventStatistics
+from .statistics import ActivityStatistics, EventStatistics
 
 NEVER_TIME = -1200.0
 EVENT_CHARGING = {
@@ -177,6 +179,7 @@ class SonosSpeaker:
         self._event_dispatchers: dict[str, Callable] = {}
         self._last_activity: float = NEVER_TIME
         self._last_event_cache: dict[str, Any] = {}
+        self.activity_stats: ActivityStatistics = ActivityStatistics(self.zone_name)
         self.event_stats: EventStatistics = EventStatistics(self.zone_name)
 
         # Scheduled callback handles
@@ -224,6 +227,7 @@ class SonosSpeaker:
             (SONOS_SPEAKER_ADDED, self.update_group_for_uid),
             (f"{SONOS_REBOOTED}-{self.soco.uid}", self.async_rebooted),
             (f"{SONOS_SPEAKER_ACTIVITY}-{self.soco.uid}", self.speaker_activity),
+            (f"{SONOS_VANISHED}-{self.soco.uid}", self.async_vanished),
         )
 
         for (signal, target) in dispatch_pairs:
@@ -387,6 +391,8 @@ class SonosSpeaker:
 
     async def async_unsubscribe(self) -> None:
         """Cancel all subscriptions."""
+        if not self._subscriptions:
+            return
         _LOGGER.debug("Unsubscribing from events for %s", self.zone_name)
         results = await asyncio.gather(
             *(subscription.unsubscribe() for subscription in self._subscriptions),
@@ -394,7 +400,12 @@ class SonosSpeaker:
         )
         for result in results:
             if isinstance(result, Exception):
-                _LOGGER.debug("Unsubscribe failed for %s: %s", self.zone_name, result)
+                _LOGGER.debug(
+                    "Unsubscribe failed for %s: %s",
+                    self.zone_name,
+                    result,
+                    exc_info=result,
+                )
         self._subscriptions = []
 
     @callback
@@ -528,6 +539,7 @@ class SonosSpeaker:
         """Track the last activity on this speaker, set availability and resubscribe."""
         _LOGGER.debug("Activity on %s from %s", self.zone_name, source)
         self._last_activity = time.monotonic()
+        self.activity_stats.activity(source, self._last_activity)
         was_available = self.available
         self.available = True
         if not was_available:
@@ -569,6 +581,15 @@ class SonosSpeaker:
 
         self.hass.data[DATA_SONOS].discovery_known.discard(self.soco.uid)
         self.async_write_entity_states()
+
+    async def async_vanished(self, reason: str) -> None:
+        """Handle removal of speaker when marked as vanished."""
+        if not self.available:
+            return
+        _LOGGER.debug(
+            "%s has vanished (%s), marking unavailable", self.zone_name, reason
+        )
+        await self.async_offline()
 
     async def async_rebooted(self, soco: SoCo) -> None:
         """Handle a detected speaker reboot."""
@@ -683,7 +704,25 @@ class SonosSpeaker:
     @callback
     def async_update_groups(self, event: SonosEvent) -> None:
         """Handle callback for topology change event."""
-        if not hasattr(event, "zone_player_uui_ds_in_group"):
+        if xml := event.variables.get("zone_group_state"):
+            zgs = ET.fromstring(xml)
+            for vanished_device in zgs.find("VanishedDevices") or []:
+                if (reason := vanished_device.get("Reason")) != "sleeping":
+                    _LOGGER.debug(
+                        "Ignoring %s marked %s as vanished with reason: %s",
+                        self.zone_name,
+                        vanished_device.get("ZoneName"),
+                        reason,
+                    )
+                    continue
+                uid = vanished_device.get("UUID")
+                async_dispatcher_send(
+                    self.hass,
+                    f"{SONOS_VANISHED}-{uid}",
+                    reason,
+                )
+
+        if "zone_player_uui_ds_in_group" not in event.variables:
             return
         self.event_stats.process(event)
         self.hass.async_create_task(self.create_update_groups_coro(event))

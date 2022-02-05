@@ -1,9 +1,9 @@
 """Support for Renault services."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime
 import logging
-from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -126,7 +126,7 @@ def setup_services(hass: HomeAssistant) -> None:
         result = await proxy.vehicle.set_charge_start()
         LOGGER.debug("Charge start result: %s", result)
 
-    def get_vehicle_proxy(service_call_data: MappingProxyType) -> RenaultVehicleProxy:
+    def get_vehicle_proxy(service_call_data: Mapping) -> RenaultVehicleProxy:
         """Get vehicle from service_call data."""
         device_registry = dr.async_get(hass)
         device_id = service_call_data[ATTR_VEHICLE]

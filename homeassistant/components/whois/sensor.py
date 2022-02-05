@@ -87,7 +87,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:account-star",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: domain.admin if domain.admin else None,
+        value_fn=lambda domain: getattr(domain, "admin", None),
     ),
     WhoisSensorEntityDescription(
         key="creation_date",
@@ -123,7 +123,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:account",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: domain.owner if domain.owner else None,
+        value_fn=lambda domain: getattr(domain, "owner", None),
     ),
     WhoisSensorEntityDescription(
         key="registrant",
@@ -131,7 +131,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:account-edit",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: domain.registrant if domain.registrant else None,
+        value_fn=lambda domain: getattr(domain, "registrant", None),
     ),
     WhoisSensorEntityDescription(
         key="registrar",
@@ -147,7 +147,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:store",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: domain.reseller if domain.reseller else None,
+        value_fn=lambda domain: getattr(domain, "reseller", None),
     ),
 )
 
@@ -190,7 +190,6 @@ async def async_setup_entry(
             )
             for description in SENSORS
         ],
-        update_before_add=True,
     )
 
 
@@ -234,17 +233,20 @@ class WhoisSensorEntity(CoordinatorEntity, SensorEntity):
         if self.coordinator.data is None:
             return None
 
-        attrs = {
-            ATTR_EXPIRES: self.coordinator.data.expiration_date.isoformat(),
-        }
+        attrs = {}
+        if expiration_date := self.coordinator.data.expiration_date:
+            attrs[ATTR_EXPIRES] = expiration_date.isoformat()
 
-        if self.coordinator.data.name_servers:
-            attrs[ATTR_NAME_SERVERS] = " ".join(self.coordinator.data.name_servers)
+        if name_servers := self.coordinator.data.name_servers:
+            attrs[ATTR_NAME_SERVERS] = " ".join(name_servers)
 
-        if self.coordinator.data.last_updated:
-            attrs[ATTR_UPDATED] = self.coordinator.data.last_updated.isoformat()
+        if last_updated := self.coordinator.data.last_updated:
+            attrs[ATTR_UPDATED] = last_updated.isoformat()
 
-        if self.coordinator.data.registrar:
-            attrs[ATTR_REGISTRAR] = self.coordinator.data.registrar
+        if registrar := self.coordinator.data.registrar:
+            attrs[ATTR_REGISTRAR] = registrar
+
+        if not attrs:
+            return None
 
         return attrs

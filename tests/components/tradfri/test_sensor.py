@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, Mock
 
 from .common import setup_integration
+from .test_fan import mock_fan
 
 
 def mock_sensor(test_state: list, device_number=0):
@@ -63,6 +64,20 @@ async def test_cover_battery_sensor(hass, mock_gateway, mock_api_factory):
     assert sensor_1.state == "42"
     assert sensor_1.attributes["unit_of_measurement"] == "%"
     assert sensor_1.attributes["device_class"] == "battery"
+
+
+async def test_air_quality_sensor(hass, mock_gateway, mock_api_factory):
+    """Test that a battery sensor is correctly added."""
+    mock_gateway.mock_devices.append(
+        mock_fan(test_state={"fan_speed": 10, "air_quality": 42})
+    )
+    await setup_integration(hass)
+
+    sensor_1 = hass.states.get("sensor.tradfri_fan_0")
+    assert sensor_1 is not None
+    assert sensor_1.state == "42"
+    assert sensor_1.attributes["unit_of_measurement"] == "µg/m³"
+    assert sensor_1.attributes["device_class"] == "aqi"
 
 
 async def test_sensor_observed(hass, mock_gateway, mock_api_factory):

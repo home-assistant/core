@@ -94,6 +94,8 @@ DEFAULT_SPEED_RANGE_MAX = 100
 OSCILLATE_ON_PAYLOAD = "oscillate_on"
 OSCILLATE_OFF_PAYLOAD = "oscillate_off"
 
+PAYLOAD_NONE = "None"
+
 MQTT_FAN_ATTRIBUTES_BLOCKED = frozenset(
     {
         fan.ATTR_DIRECTION,
@@ -243,7 +245,7 @@ class MqttFan(MqttEntity, FanEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT fan."""
-        self._state = False
+        self._state = None
         self._percentage = None
         self._preset_mode = None
         self._oscillation = None
@@ -351,7 +353,7 @@ class MqttFan(MqttEntity, FanEntity):
                 entity=self,
             ).async_render_with_possible_json_value
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
         topics = {}
 
@@ -367,6 +369,8 @@ class MqttFan(MqttEntity, FanEntity):
                 self._state = True
             elif payload == self._payload["STATE_OFF"]:
                 self._state = False
+            elif payload == PAYLOAD_NONE:
+                self._state = None
             self.async_write_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
@@ -479,9 +483,13 @@ class MqttFan(MqttEntity, FanEntity):
             }
             self._oscillation = False
 
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics
         )
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
     def assumed_state(self):
@@ -489,7 +497,7 @@ class MqttFan(MqttEntity, FanEntity):
         return self._optimistic
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._state
 
@@ -536,8 +544,7 @@ class MqttFan(MqttEntity, FanEntity):
         This method is a coroutine.
         """
         mqtt_payload = self._command_templates[CONF_STATE](self._payload["STATE_ON"])
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_COMMAND_TOPIC],
             mqtt_payload,
             self._config[CONF_QOS],
@@ -558,8 +565,7 @@ class MqttFan(MqttEntity, FanEntity):
         This method is a coroutine.
         """
         mqtt_payload = self._command_templates[CONF_STATE](self._payload["STATE_OFF"])
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_COMMAND_TOPIC],
             mqtt_payload,
             self._config[CONF_QOS],
@@ -579,8 +585,7 @@ class MqttFan(MqttEntity, FanEntity):
             percentage_to_ranged_value(self._speed_range, percentage)
         )
         mqtt_payload = self._command_templates[ATTR_PERCENTAGE](percentage_payload)
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_PERCENTAGE_COMMAND_TOPIC],
             mqtt_payload,
             self._config[CONF_QOS],
@@ -603,8 +608,7 @@ class MqttFan(MqttEntity, FanEntity):
 
         mqtt_payload = self._command_templates[ATTR_PRESET_MODE](preset_mode)
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_PRESET_MODE_COMMAND_TOPIC],
             mqtt_payload,
             self._config[CONF_QOS],
@@ -630,8 +634,7 @@ class MqttFan(MqttEntity, FanEntity):
                 self._payload["OSCILLATE_OFF_PAYLOAD"]
             )
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_OSCILLATION_COMMAND_TOPIC],
             mqtt_payload,
             self._config[CONF_QOS],

@@ -615,3 +615,22 @@ async def test_validation(hass):
     """Test we raise if invalid domain passed in."""
     with pytest.raises(ValueError):
         await loader.async_get_integration(hass, "some.thing")
+
+
+async def test_loggers(hass):
+    """Test we can fetch the loggers from the integration."""
+    name = "dummy"
+    integration = loader.Integration(
+        hass,
+        f"homeassistant.components.{name}",
+        None,
+        {
+            "name": name,
+            "domain": name,
+            "config_flow": True,
+            "dependencies": [],
+            "requirements": [],
+            "loggers": ["name1", "name2"],
+        },
+    )
+    assert integration.loggers == ["name1", "name2"]

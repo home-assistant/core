@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Layanan sudah dikonfigurasi"
+            "already_configured": "Layanan sudah dikonfigurasi",
+            "could_not_register": "Tidak dapat mendaftarkan integrasi dengan GitHub"
         },
         "step": {
             "repositories": {

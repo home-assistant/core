@@ -51,9 +51,10 @@ class OverkizGenericCover(OverkizEntity, CoverEntity):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        if position := self.executor.select_state(
+        position = self.executor.select_state(
             OverkizState.CORE_SLATS_ORIENTATION, OverkizState.CORE_SLATE_ORIENTATION
-        ):
+        )
+        if position is not None:
             return 100 - cast(int, position)
 
         return None

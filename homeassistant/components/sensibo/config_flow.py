@@ -16,7 +16,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import _INITIAL_FETCH_FIELDS, DEFAULT_NAME, DOMAIN, TIMEOUT
+from .const import DEFAULT_NAME, DOMAIN, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ async def async_validate_api(hass: HomeAssistant, api_key: str) -> bool:
 
     try:
         async with async_timeout.timeout(TIMEOUT):
-            if await client.async_get_devices(_INITIAL_FETCH_FIELDS):
+            if await client.async_get_devices():
                 return True
     except (
         aiohttp.ClientConnectionError,
