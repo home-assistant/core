@@ -1050,23 +1050,20 @@ async def test_component_config_exceptions(hass, caplog):
 
     # component.PLATFORM_SCHEMA
     caplog.clear()
-    assert (
-        await config_util.async_process_component_config(
-            hass,
-            {"test_domain": {"platform": "test_platform"}},
-            integration=Mock(
-                domain="test_domain",
-                get_platform=Mock(return_value=None),
-                get_component=Mock(
-                    return_value=Mock(
-                        spec=["PLATFORM_SCHEMA_BASE"],
-                        PLATFORM_SCHEMA_BASE=Mock(side_effect=ValueError("broken")),
-                    )
-                ),
+    assert await config_util.async_process_component_config(
+        hass,
+        {"test_domain": {"platform": "test_platform"}},
+        integration=Mock(
+            domain="test_domain",
+            get_platform=Mock(return_value=None),
+            get_component=Mock(
+                return_value=Mock(
+                    spec=["PLATFORM_SCHEMA_BASE"],
+                    PLATFORM_SCHEMA_BASE=Mock(side_effect=ValueError("broken")),
+                )
             ),
-        )
-        == {"test_domain": []}
-    )
+        ),
+    ) == {"test_domain": []}
     assert "ValueError: broken" in caplog.text
     assert (
         "Unknown error validating test_platform platform config with test_domain component platform schema"
@@ -1085,20 +1082,15 @@ async def test_component_config_exceptions(hass, caplog):
             )
         ),
     ):
-        assert (
-            await config_util.async_process_component_config(
-                hass,
-                {"test_domain": {"platform": "test_platform"}},
-                integration=Mock(
-                    domain="test_domain",
-                    get_platform=Mock(return_value=None),
-                    get_component=Mock(
-                        return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])
-                    ),
-                ),
-            )
-            == {"test_domain": []}
-        )
+        assert await config_util.async_process_component_config(
+            hass,
+            {"test_domain": {"platform": "test_platform"}},
+            integration=Mock(
+                domain="test_domain",
+                get_platform=Mock(return_value=None),
+                get_component=Mock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
+            ),
+        ) == {"test_domain": []}
         assert "ValueError: broken" in caplog.text
         assert (
             "Unknown error validating config for test_platform platform for test_domain component with PLATFORM_SCHEMA"

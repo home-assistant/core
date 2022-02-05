@@ -198,6 +198,12 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             icon="mdi:water-percent",
             entity_category=EntityCategory.CONFIG,
         ),
+        SwitchEntityDescription(
+            key=DPCode.UV,
+            name="UV Sterilization",
+            icon="mdi:minus-circle-outline",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     # Air conditioner
     # https://developer.tuya.com/en/docs/iot/categorykt?id=Kaiuz0z71ov2n

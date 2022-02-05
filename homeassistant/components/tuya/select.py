@@ -247,12 +247,14 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         SelectEntityDescription(
             key=DPCode.COUNTDOWN,
             name="Countdown",
+            device_class=TuyaDeviceClass.COUNTDOWN,
             entity_category=EntityCategory.CONFIG,
             icon="mdi:timer-cog-outline",
         ),
         SelectEntityDescription(
             key=DPCode.COUNTDOWN_SET,
-            name="Countdown Setting",
+            name="Countdown",
+            device_class=TuyaDeviceClass.COUNTDOWN,
             entity_category=EntityCategory.CONFIG,
             icon="mdi:timer-cog-outline",
         ),
@@ -272,6 +274,24 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             name="Mode",
             device_class=TuyaDeviceClass.CURTAIN_MODE,
             entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Air Purifier
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46h2s6dzm
+    "kj": (
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN,
+            name="Countdown",
+            device_class=TuyaDeviceClass.COUNTDOWN,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:timer-cog-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN_SET,
+            name="Countdown",
+            device_class=TuyaDeviceClass.COUNTDOWN,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:timer-cog-outline",
         ),
     ),
 }

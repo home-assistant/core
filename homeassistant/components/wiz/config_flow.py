@@ -13,10 +13,9 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import DEFAULT_NAME, DOMAIN, WIZ_EXCEPTIONS
-from .utils import _short_mac
+from .const import DOMAIN, WIZ_EXCEPTIONS
+from .utils import name_from_bulb_type_and_mac
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,10 +37,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return await self._async_handle_discovery()
 
-    async def async_step_discovery(
-        self, discovery_info: DiscoveryInfoType
+    async def async_step_integration_discovery(
+        self, discovery_info: dict[str, str]
     ) -> FlowResult:
-        """Handle discovery."""
+        """Handle integration discovery."""
         self._discovered_device = DiscoveredBulb(
             discovery_info["ip_address"], discovery_info["mac_address"]
         )
@@ -61,8 +60,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             bulbtype = await bulb.get_bulbtype()
         except WIZ_EXCEPTIONS:
             return self.async_abort(reason="cannot_connect")
-        bulb_type = bulbtype.bulb_type.value if bulbtype else "Unknown"
-        self._name = f"{DEFAULT_NAME} {bulb_type} {_short_mac(mac)}"
+        self._name = name_from_bulb_type_and_mac(bulbtype, mac)
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(
@@ -111,8 +109,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured(
                     updates={CONF_HOST: user_input[CONF_HOST]}
                 )
-                bulb_type = bulbtype.bulb_type.value if bulbtype else "Unknown"
-                name = f"{DEFAULT_NAME} {bulb_type} {_short_mac(mac)}"
+                name = name_from_bulb_type_and_mac(bulbtype, mac)
                 return self.async_create_entry(
                     title=name,
                     data=user_input,

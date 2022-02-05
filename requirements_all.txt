@@ -326,7 +326,7 @@ apcaccess==0.0.13
 apns2==0.3.0
 
 # homeassistant.components.apprise
-apprise==0.9.6
+apprise==0.9.7
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -744,9 +744,6 @@ gitterpy==0.1.7
 
 # homeassistant.components.glances
 glances_api==0.3.4
-
-# homeassistant.components.gntp
-gntp==1.0.3
 
 # homeassistant.components.goalzero
 goalzero==0.2.1
@@ -1249,7 +1246,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==9.0.0
+pillow==9.0.1
 
 # homeassistant.components.dominos
 pizzapi==0.0.3
@@ -1467,7 +1464,7 @@ pydanfossair==0.1.0
 pydeconz==86
 
 # homeassistant.components.delijn
-pydelijn==0.6.1
+pydelijn==1.0.0
 
 # homeassistant.components.dexcom
 pydexcom==0.2.2
@@ -1539,7 +1536,7 @@ pyforked-daapd==0.1.11
 pyfreedompro==1.1.0
 
 # homeassistant.components.fritzbox
-pyfritzhome==0.6.2
+pyfritzhome==0.6.4
 
 # homeassistant.components.fronius
 pyfronius==0.7.1
@@ -2005,7 +2002,7 @@ pytouchline==0.7
 pytraccar==0.10.0
 
 # homeassistant.components.tradfri
-pytradfri[async]==8.0.1
+pytradfri[async]==9.0.0
 
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
@@ -2172,7 +2169,7 @@ sense-hat==2.2.0
 sense_energy==0.9.6
 
 # homeassistant.components.sentry
-sentry-sdk==1.5.3
+sentry-sdk==1.5.4
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
@@ -2190,7 +2187,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.01.0
+simplisafe-python==2022.02.0
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.1.2

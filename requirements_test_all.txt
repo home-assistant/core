@@ -243,7 +243,7 @@ androidtv[async]==0.0.63
 apns2==0.3.0
 
 # homeassistant.components.apprise
-apprise==0.9.6
+apprise==0.9.7
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -771,7 +771,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==9.0.0
+pillow==9.0.1
 
 # homeassistant.components.plex
 plexapi==4.9.1
@@ -953,7 +953,7 @@ pyforked-daapd==0.1.11
 pyfreedompro==1.1.0
 
 # homeassistant.components.fritzbox
-pyfritzhome==0.6.2
+pyfritzhome==0.6.4
 
 # homeassistant.components.fronius
 pyfronius==0.7.1
@@ -1236,7 +1236,7 @@ pytile==2022.02.0
 pytraccar==0.10.0
 
 # homeassistant.components.tradfri
-pytradfri[async]==8.0.1
+pytradfri[async]==9.0.0
 
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
@@ -1331,7 +1331,7 @@ screenlogicpy==0.5.4
 sense_energy==0.9.6
 
 # homeassistant.components.sentry
-sentry-sdk==1.5.3
+sentry-sdk==1.5.4
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
@@ -1340,7 +1340,7 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.01.0
+simplisafe-python==2022.02.0
 
 # homeassistant.components.slack
 slackclient==2.5.0

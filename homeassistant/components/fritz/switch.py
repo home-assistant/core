@@ -158,12 +158,9 @@ def wifi_entities_list(
         if network_info:
             ssid = network_info["NewSSID"]
             _LOGGER.debug("SSID from device: <%s>", ssid)
-            if (
-                slugify(
-                    ssid,
-                )
-                in [slugify(v) for v in networks.values()]
-            ):
+            if slugify(
+                ssid,
+            ) in [slugify(v) for v in networks.values()]:
                 _LOGGER.debug("SSID duplicated, adding suffix")
                 networks[i] = f'{ssid} {std_table[network_info["NewStandard"]]}'
             else:
