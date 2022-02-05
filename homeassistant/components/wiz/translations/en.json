@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured",
-            "no_devices_found": "No devices found on the network"
+            "already_configured": "Device is already configured"
         },
         "error": {
             "bulb_time_out": "Can not connect to the bulb. Maybe the bulb is offline or a wrong IP/host was entered. Please turn on the light and try again!",
@@ -10,16 +9,16 @@
             "no_wiz_light": "The bulb can not be connected via WiZ Platform integration.",
             "unknown": "Unexpected error"
         },
+        "flow_title": "{name} ({host})",
         "step": {
-            "confirm": {
-                "description": "Do you want to add a new Bulb?"
+            "discovery_confirm": {
+                "description": "Do you want to setup {name} ({host})?"
             },
             "user": {
                 "data": {
-                    "host": "Hostname or IP",
-                    "name": "Name"
+                    "host": "Host"
                 },
-                "description": "Please enter a hostname or IP address and name to add a new bulb:"
+                "description": "Enter the IP address of the device."
             }
         }
     }

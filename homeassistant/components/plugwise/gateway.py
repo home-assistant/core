@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
 import logging
 
 import async_timeout
@@ -14,29 +13,14 @@ from plugwise.exceptions import (
 from plugwise.smile import Smile
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_CONFIGURATION_URL,
-    ATTR_MODEL,
-    ATTR_VIA_DEVICE,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-)
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    API,
     COORDINATOR,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
@@ -47,7 +31,6 @@ from .const import (
     PLATFORMS_GATEWAY,
     PW_TYPE,
     SENSOR_PLATFORMS,
-    UNDO_UPDATE_LISTENER,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,12 +68,6 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Timeout while connecting to Smile %s", api.smile_name)
         raise ConfigEntryNotReady from err
 
-    update_interval = timedelta(
-        seconds=entry.options.get(
-            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL[api.smile_type]
-        )
-    )
-
     async def async_update_data():
         """Update data via API endpoint."""
         try:
@@ -105,7 +82,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER,
         name=f"Smile {api.smile_name}",
         update_method=async_update_data,
-        update_interval=update_interval,
+        update_interval=DEFAULT_SCAN_INTERVAL[api.smile_type],
     )
 
     await coordinator.async_config_entry_first_refresh()
@@ -115,13 +92,10 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.unique_id is None and api.smile_version[0] != "1.8.0":
         hass.config_entries.async_update_entry(entry, unique_id=api.smile_hostname)
 
-    undo_listener = entry.add_update_listener(_update_listener)
-
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "api": api,
         COORDINATOR: coordinator,
         PW_TYPE: GATEWAY,
-        UNDO_UPDATE_LISTENER: undo_listener,
     }
 
     device_registry = dr.async_get(hass)
@@ -145,87 +119,10 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
-    update_interval = entry.options.get(CONF_SCAN_INTERVAL)
-    if update_interval is None:
-        api = hass.data[DOMAIN][entry.entry_id][API]
-        update_interval = DEFAULT_SCAN_INTERVAL[api.smile_type]
-
-    coordinator.update_interval = timedelta(seconds=update_interval)
-
-
 async def async_unload_entry_gw(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
+    if unload_ok := await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS_GATEWAY
-    )
-
-    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
-
-    if unload_ok:
+    ):
         hass.data[DOMAIN].pop(entry.entry_id)
-
     return unload_ok
-
-
-class SmileGateway(CoordinatorEntity):
-    """Represent Smile Gateway."""
-
-    def __init__(self, api, coordinator, name, dev_id):
-        """Initialise the gateway."""
-        super().__init__(coordinator)
-
-        self._api = api
-        self._name = name
-        self._dev_id = dev_id
-
-        self._unique_id = None
-        self._model = None
-
-        self._entity_name = self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the entity, if any."""
-        return self._name
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        device_information = DeviceInfo(
-            identifiers={(DOMAIN, self._dev_id)},
-            name=self._entity_name,
-            manufacturer="Plugwise",
-        )
-
-        if entry := self.coordinator.config_entry:
-            device_information[
-                ATTR_CONFIGURATION_URL
-            ] = f"http://{entry.data[CONF_HOST]}"
-
-        if self._model is not None:
-            device_information[ATTR_MODEL] = self._model.replace("_", " ").title()
-
-        if self._dev_id != self._api.gateway_id:
-            device_information[ATTR_VIA_DEVICE] = (DOMAIN, self._api.gateway_id)
-
-        return device_information
-
-    async def async_added_to_hass(self):
-        """Subscribe to updates."""
-        self._async_process_data()
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._async_process_data)
-        )
-
-    @callback
-    def _async_process_data(self):
-        """Interpret and process API data."""
-        raise NotImplementedError

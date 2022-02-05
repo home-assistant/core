@@ -73,6 +73,12 @@ CLIMATE_DESCRIPTIONS: dict[str, TuyaClimateEntityDescription] = {
         key="qn",
         switch_only_hvac_mode=HVAC_MODE_HEAT,
     ),
+    # Heater
+    # https://developer.tuya.com/en/docs/iot/categoryrs?id=Kaiuz0nfferyx
+    "rs": TuyaClimateEntityDescription(
+        key="rs",
+        switch_only_hvac_mode=HVAC_MODE_HEAT,
+    ),
     # Thermostat
     # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
     "wk": TuyaClimateEntityDescription(

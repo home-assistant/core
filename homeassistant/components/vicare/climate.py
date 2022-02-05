@@ -95,12 +95,6 @@ HA_TO_VICARE_PRESET_HEATING = {
 }
 
 
-def _build_entity(name, vicare_api, circuit, device_config, heating_type):
-    """Create a ViCare climate entity."""
-    _LOGGER.debug("Found device %s", name)
-    return ViCareClimate(name, vicare_api, device_config, circuit, heating_type)
-
-
 def _get_circuits(vicare_api):
     """Return the list of circuits."""
     try:
@@ -126,11 +120,11 @@ async def async_setup_entry(
         if len(circuits) > 1:
             suffix = f" {circuit.id}"
 
-        entity = _build_entity(
+        entity = ViCareClimate(
             f"{name} Heating{suffix}",
             api,
-            hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
             circuit,
+            hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
             config_entry.data[CONF_HEATING_TYPE],
         )
         entities.append(entity)

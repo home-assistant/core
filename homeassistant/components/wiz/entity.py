@@ -1,0 +1,42 @@
+"""WiZ integration entities."""
+from __future__ import annotations
+
+from typing import Any
+
+from pywizlight.bulblibrary import BulbType
+
+from homeassistant.core import callback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.entity import DeviceInfo, ToggleEntity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .models import WizData
+
+
+class WizToggleEntity(CoordinatorEntity, ToggleEntity):
+    """Representation of WiZ toggle entity."""
+
+    def __init__(self, wiz_data: WizData, name: str) -> None:
+        """Initialize an WiZ device."""
+        super().__init__(wiz_data.coordinator)
+        self._device = wiz_data.bulb
+        bulb_type: BulbType = self._device.bulbtype
+        self._attr_unique_id = self._device.mac
+        self._attr_name = name
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._device.mac)},
+            name=name,
+            manufacturer="WiZ",
+            model=bulb_type.name,
+        )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_is_on = self._device.status
+        super()._handle_coordinator_update()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Instruct the device to turn off."""
+        await self._device.turn_off()
+        await self.coordinator.async_request_refresh()

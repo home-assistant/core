@@ -401,7 +401,6 @@ omit =
     homeassistant/components/glances/__init__.py
     homeassistant/components/glances/const.py
     homeassistant/components/glances/sensor.py
-    homeassistant/components/gntp/notify.py
     homeassistant/components/goalfeed/*
     homeassistant/components/goodwe/__init__.py
     homeassistant/components/goodwe/const.py
@@ -1317,7 +1316,10 @@ omit =
     homeassistant/components/wirelesstag/*
     homeassistant/components/wiz/__init__.py
     homeassistant/components/wiz/const.py
+    homeassistant/components/wiz/discovery.py
+    homeassistant/components/wiz/entity.py
     homeassistant/components/wiz/light.py
+    homeassistant/components/wiz/switch.py
     homeassistant/components/wolflink/__init__.py
     homeassistant/components/wolflink/sensor.py
     homeassistant/components/wolflink/const.py

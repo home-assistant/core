@@ -1,15 +1,15 @@
 {
   "config": {
+    "flow_title": "{name} ({host})",
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "name": "[%key:common::config_flow::data::name%]"
+          "host": "[%key:common::config_flow::data::host%]"
         },
-        "description": "Please enter a hostname or IP address and name to add a new bulb:"
+        "description": "Enter the IP address of the device."
       },
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      "discovery_confirm": {
+        "description": "Do you want to setup {name} ({host})?"
       }
     },
     "error": {
@@ -19,7 +19,6 @@
       "no_wiz_light": "The bulb can not be connected via WiZ Platform integration."
     },
     "abort": {
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }
