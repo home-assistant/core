@@ -18,8 +18,10 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
+    ATTR_WHITE,
     COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW,
+    COLOR_MODE_WHITE,
     DOMAIN,
     brightness_supported,
     color_supported,
@@ -127,8 +129,10 @@ class Light(HomeAccessory):
         if self.color_supported:
             self.chars.extend([CHAR_HUE, CHAR_SATURATION])
 
-        if self.color_temp_supported or COLOR_MODES_WITH_WHITES.intersection(
-            self.color_modes
+        if (
+            self.color_temp_supported
+            or COLOR_MODES_WITH_WHITES.intersection(self.color_modes)
+            or COLOR_MODE_WHITE in self.color_modes
         ):
             self.chars.append(CHAR_COLOR_TEMPERATURE)
 
@@ -227,8 +231,10 @@ class Light(HomeAccessory):
                 params[ATTR_RGBWW_COLOR] = color_temperature_to_rgbww(
                     temp, bright_val, self.min_mireds, self.max_mireds
                 )
-            else:
+            elif self.rgbw_supported:
                 params[ATTR_RGBW_COLOR] = (*(0,) * 3, bright_val)
+            else:
+                params[ATTR_WHITE] = bright_val
 
         elif CHAR_HUE in char_values or CHAR_SATURATION in char_values:
             hue_sat = (
@@ -251,6 +257,7 @@ class Light(HomeAccessory):
             brightness_pct
             and ATTR_RGBWW_COLOR not in params
             and ATTR_RGBW_COLOR not in params
+            and ATTR_WHITE not in params
         ):
             # HomeKit assumes RGB and WHITE values are interlocked
             # similar to esphome's color_interlock: true
