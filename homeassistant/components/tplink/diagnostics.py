@@ -7,7 +7,6 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 
@@ -40,6 +39,6 @@ async def async_get_config_entry_diagnostics(
 
     data = {}
     data["entry"] = entry.as_dict()
-    data["device_last_response"] = device._last_update
+    data["device_last_response"] = device._last_update  # noqa: W0212
 
     return async_redact_data(data, TO_REDACT)
