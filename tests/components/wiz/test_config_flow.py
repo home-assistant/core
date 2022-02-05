@@ -77,7 +77,6 @@ async def test_form(hass):
     assert result2["title"] == "WiZ Dimmable White ABCABC"
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
-        CONF_NAME: "WiZ Dimmable White ABCABC",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
