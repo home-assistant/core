@@ -36,14 +36,14 @@ SENSOR_TYPES: Final[tuple[SpeedtestSensorEntityDescription, ...]] = (
         name="Download",
         native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
-        value=lambda value: round(value / 10 ** 6, 2),
+        value=lambda value: round(value / 10**6, 2),
     ),
     SpeedtestSensorEntityDescription(
         key="upload",
         name="Upload",
         native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
-        value=lambda value: round(value / 10 ** 6, 2),
+        value=lambda value: round(value / 10**6, 2),
     ),
 )
 

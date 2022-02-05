@@ -51,7 +51,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_ARG = "arg"
 
-if sys.maxsize > 2 ** 32:
+if sys.maxsize > 2**32:
     CPU_ICON = "mdi:cpu-64-bit"
 else:
     CPU_ICON = "mdi:cpu-32-bit"
@@ -473,22 +473,22 @@ def _update(  # noqa: C901
     if type_ == "disk_use_percent":
         state = _disk_usage(data.argument).percent
     elif type_ == "disk_use":
-        state = round(_disk_usage(data.argument).used / 1024 ** 3, 1)
+        state = round(_disk_usage(data.argument).used / 1024**3, 1)
     elif type_ == "disk_free":
-        state = round(_disk_usage(data.argument).free / 1024 ** 3, 1)
+        state = round(_disk_usage(data.argument).free / 1024**3, 1)
     elif type_ == "memory_use_percent":
         state = _virtual_memory().percent
     elif type_ == "memory_use":
         virtual_memory = _virtual_memory()
-        state = round((virtual_memory.total - virtual_memory.available) / 1024 ** 2, 1)
+        state = round((virtual_memory.total - virtual_memory.available) / 1024**2, 1)
     elif type_ == "memory_free":
-        state = round(_virtual_memory().available / 1024 ** 2, 1)
+        state = round(_virtual_memory().available / 1024**2, 1)
     elif type_ == "swap_use_percent":
         state = _swap_memory().percent
     elif type_ == "swap_use":
-        state = round(_swap_memory().used / 1024 ** 2, 1)
+        state = round(_swap_memory().used / 1024**2, 1)
     elif type_ == "swap_free":
-        state = round(_swap_memory().free / 1024 ** 2, 1)
+        state = round(_swap_memory().free / 1024**2, 1)
     elif type_ == "processor_use":
         state = round(psutil.cpu_percent(interval=None))
     elif type_ == "processor_temperature":
@@ -510,7 +510,7 @@ def _update(  # noqa: C901
         counters = _net_io_counters()
         if data.argument in counters:
             counter = counters[data.argument][IO_COUNTER[type_]]
-            state = round(counter / 1024 ** 2, 1)
+            state = round(counter / 1024**2, 1)
         else:
             state = None
     elif type_ in ("packets_out", "packets_in"):
@@ -527,7 +527,7 @@ def _update(  # noqa: C901
             if data.value and data.value < counter:
                 state = round(
                     (counter - data.value)
-                    / 1000 ** 2
+                    / 1000**2
                     / (now - (data.update_time or now)).total_seconds(),
                     3,
                 )

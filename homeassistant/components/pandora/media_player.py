@@ -253,7 +253,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         try:
             match_idx = self._pianobar.expect(
                 [
-                    br"(\d\d):(\d\d)/(\d\d):(\d\d)",
+                    rb"(\d\d):(\d\d)/(\d\d):(\d\d)",
                     "No song playing",
                     "Select station",
                     "Receiving new playlist",
