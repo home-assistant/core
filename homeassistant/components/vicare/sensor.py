@@ -271,7 +271,6 @@ BURNER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         icon="mdi:percent",
         native_unit_of_measurement=PERCENTAGE,
         value_getter=lambda api: api.getModulation(),
-        device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
