@@ -81,9 +81,9 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         """Initialize an WiZLight."""
         super().__init__(wiz_data, name)
         bulb_type: BulbType = self._device.bulbtype
+        self._supported_color_modes = get_supported_color_modes(bulb_type)
         self._attr_effect_list = wiz_data.scenes
         self._attr_min_mireds, self._attr_max_mireds = get_min_max_mireds(bulb_type)
-        self._supported_color_modes = get_supported_color_modes(bulb_type)
         self._attr_supported_color_modes = self._supported_color_modes
         if bulb_type.features.effect:
             self._attr_supported_features = SUPPORT_EFFECT
