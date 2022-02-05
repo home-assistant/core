@@ -144,7 +144,11 @@ class WizBulbEntity(CoordinatorEntity, LightEntity):
             and self._light.state.get_colortemp() is not None
         ):
             return COLOR_MODE_COLOR_TEMP
-        if COLOR_MODE_HS in color_modes and self._light.state.get_rgb()[0] is not None:
+        if (
+            COLOR_MODE_HS in color_modes
+            and (rgb := self._light.state.get_rgb()) is not None
+            and rgb[0] is not None
+        ):
             return COLOR_MODE_HS
         return COLOR_MODE_BRIGHTNESS
 
@@ -154,9 +158,8 @@ class WizBulbEntity(CoordinatorEntity, LightEntity):
         colortemp = self._light.state.get_colortemp()
         if colortemp is not None and colortemp != 0:
             return None
-        if self._light.state.get_rgb() is None:
+        if (rgb := self._light.state.get_rgb()) is None:
             return None
-        rgb = self._light.state.get_rgb()
         if rgb[0] is None:
             # this is the case if the temperature was changed
             # do nothing until the RGB color was changed
