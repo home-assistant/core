@@ -313,6 +313,12 @@ class Light(HomeAccessory):
         color_mode = attributes.get(ATTR_COLOR_MODE)
         self.char_on.set_value(int(state == STATE_ON))
         force_notify = self._previous_color_mode != color_mode
+        _LOGGER.warning(
+            "Previous Color Mode: %s Color mode: %s Force Notify: %s",
+            self._previous_color_mode,
+            color_mode,
+            force_notify,
+        )
         self._previous_color_mode = color_mode
 
         # Handle Brightness
