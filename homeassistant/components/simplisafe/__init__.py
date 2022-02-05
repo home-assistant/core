@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Iterable
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 from simplipy import API
 from simplipy.device import Device, DeviceTypes
@@ -235,8 +235,7 @@ def _async_get_system_for_service_call(
     ) is None:
         raise vol.Invalid("Invalid device ID specified")
 
-    if TYPE_CHECKING:
-        assert alarm_control_panel_device_entry.via_device_id
+    assert alarm_control_panel_device_entry.via_device_id
 
     if (
         base_station_device_entry := device_registry.async_get(
@@ -494,8 +493,7 @@ class SimpliSafe:
 
     async def _async_start_websocket_loop(self) -> None:
         """Start a websocket reconnection loop."""
-        if TYPE_CHECKING:
-            assert self._api.websocket
+        assert self._api.websocket
 
         should_reconnect = True
 
@@ -527,8 +525,7 @@ class SimpliSafe:
                 LOGGER.debug("Websocket reconnection task successfully canceled")
                 self._websocket_reconnect_task = None
 
-            if TYPE_CHECKING:
-                assert self._api.websocket
+            assert self._api.websocket
             await self._api.websocket.async_disconnect()
 
     @callback
@@ -565,9 +562,8 @@ class SimpliSafe:
 
     async def async_init(self) -> None:
         """Initialize the SimpliSafe "manager" class."""
-        if TYPE_CHECKING:
-            assert self._api.refresh_token
-            assert self._api.websocket
+        assert self._api.refresh_token
+        assert self._api.websocket
 
         self._api.websocket.add_event_callback(self._async_websocket_on_event)
         self._websocket_reconnect_task = asyncio.create_task(
@@ -576,9 +572,7 @@ class SimpliSafe:
 
         async def async_websocket_disconnect_listener(_: Event) -> None:
             """Define an event handler to disconnect from the websocket."""
-            if TYPE_CHECKING:
-                assert self._api.websocket
-
+            assert self._api.websocket
             await self._async_cancel_websocket_loop()
 
         self.entry.async_on_unload(
@@ -625,10 +619,8 @@ class SimpliSafe:
             """Handle a new refresh token."""
             async_save_refresh_token(token)
 
-            if TYPE_CHECKING:
-                assert self._api.websocket
-
             # Open a new websocket connection with the fresh token:
+            assert self._api.websocket
             await self._async_cancel_websocket_loop()
             self._websocket_reconnect_task = self._hass.async_create_task(
                 self._async_start_websocket_loop()
