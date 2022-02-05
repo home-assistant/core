@@ -10,7 +10,11 @@
             "no_wiz_light": "The bulb can not be connected via WiZ Platform integration.",
             "unknown": "Unexpected error"
         },
+        "flow_title": "{name} ({host})",
         "step": {
+            "discovery_confirm": {
+                "description": "Do you want to setup {name} ({host})?"
+            },
             "user": {
                 "data": {
                     "host": "Host"
