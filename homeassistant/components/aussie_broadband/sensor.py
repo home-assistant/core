@@ -143,10 +143,7 @@ class AussieBroadandSensorEntity(CoordinatorEntity, SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         if self.entity_description.key == "internet":
-            try:
-                return self.coordinator.data[self.entity_description.key]["kbytes"]
-            except KeyError:
-                return None
+            return self.coordinator.data[self.entity_description.key].get("kbytes")
         if self.entity_description.key in ("national", "mobile", "sms"):
             try:
                 return self.coordinator.data[self.entity_description.key]["calls"]
