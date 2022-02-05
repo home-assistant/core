@@ -262,7 +262,6 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             key=DPCode.TEMP_SET_F,
             name="Temperature",
             icon="mdi:thermometer-lines",
-            entity_registry_enabled_default=False,
         ),
     ),
 }
