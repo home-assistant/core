@@ -205,7 +205,7 @@ class Alert(ToggleEntity):
         self._firing = False
         self._ack = False
         self._cancel = None
-        self._send_done_message = False
+        self._notification_sent = False
         self.entity_id = f"{DOMAIN}.{entity_id}"
 
         event.async_track_state_change_event(
@@ -251,7 +251,7 @@ class Alert(ToggleEntity):
         self._cancel()
         self._ack = False
         self._firing = False
-        if self._send_done_message:
+        if self._notification_sent:
             await self._notify_done_message()
         self.async_write_ha_state()
 
@@ -271,7 +271,7 @@ class Alert(ToggleEntity):
 
         if not self._ack:
             _LOGGER.info("Alerting: %s", self._attr_name)
-            self._send_done_message = True
+            self._notification_sent = True
 
             if self._message_template is not None:
                 message = self._message_template.async_render(parse_result=False)
@@ -284,7 +284,7 @@ class Alert(ToggleEntity):
     async def _notify_done_message(self, *args):
         """Send notification of complete alert."""
         _LOGGER.info("Alerting: %s", self._done_message_template)
-        self._send_done_message = False
+        self._notification_sent = False
 
         if self._done_message_template is None:
             return
