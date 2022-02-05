@@ -1,5 +1,6 @@
 """Test the WiZ Platform config flow."""
 from contextlib import contextmanager
+from copy import deepcopy
 from unittest.mock import patch
 
 import pytest
@@ -34,6 +35,8 @@ FAKE_BULB_CONFIG = {
         "ping": 0,
     },
 }
+FAKE_SOCKET_CONFIG = deepcopy(FAKE_BULB_CONFIG)
+FAKE_SOCKET_CONFIG["result"]["moduleName"] = "ESP10_SOCKET_06"
 FAKE_EXTENDED_WHITE_RANGE = [2200, 2700, 6500, 6500]
 TEST_SYSTEM_INFO = {"id": FAKE_MAC, "name": "Test Bulb"}
 TEST_CONNECTION = {CONF_HOST: "1.1.1.1"}
@@ -53,15 +56,15 @@ INTEGRATION_DISCOVERY = {
 }
 
 
-def _patch_wizlight():
+def _patch_wizlight(device=None, extended_white_range=None):
     @contextmanager
     def _patcher():
         with patch(
             "homeassistant.components.wiz.wizlight.getBulbConfig",
-            return_value=FAKE_BULB_CONFIG,
+            return_value=device or FAKE_BULB_CONFIG,
         ), patch(
             "homeassistant.components.wiz.wizlight.getExtendedWhiteRange",
-            return_value=FAKE_EXTENDED_WHITE_RANGE,
+            return_value=extended_white_range or FAKE_EXTENDED_WHITE_RANGE,
         ), patch(
             "homeassistant.components.wiz.wizlight.getMac",
             return_value=FAKE_MAC,
@@ -158,9 +161,59 @@ async def test_form_updates_unique_id(hass):
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, INTEGRATION_DISCOVERY),
     ],
 )
-async def test_discovered_by_dhcp_or_integration_discovery(hass, source, data):
+async def test_discovered_by_dhcp_connection_fails(hass, source, data):
+    """Test we abort on connection failure."""
+    with patch(
+        "homeassistant.components.wiz.wizlight.getBulbConfig",
+        side_effect=WizLightTimeOutError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source}, data=data
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+@pytest.mark.parametrize(
+    "source, data, device, extended_white_range, name",
+    [
+        (
+            config_entries.SOURCE_DHCP,
+            DHCP_DISCOVERY,
+            FAKE_BULB_CONFIG,
+            FAKE_EXTENDED_WHITE_RANGE,
+            "WiZ Dimmable White ABCABC",
+        ),
+        (
+            config_entries.SOURCE_INTEGRATION_DISCOVERY,
+            INTEGRATION_DISCOVERY,
+            FAKE_BULB_CONFIG,
+            FAKE_EXTENDED_WHITE_RANGE,
+            "WiZ Dimmable White ABCABC",
+        ),
+        (
+            config_entries.SOURCE_DHCP,
+            DHCP_DISCOVERY,
+            FAKE_SOCKET_CONFIG,
+            None,
+            "WiZ Socket ABCABC",
+        ),
+        (
+            config_entries.SOURCE_INTEGRATION_DISCOVERY,
+            INTEGRATION_DISCOVERY,
+            FAKE_SOCKET_CONFIG,
+            None,
+            "WiZ Socket ABCABC",
+        ),
+    ],
+)
+async def test_discovered_by_dhcp_or_integration_discovery(
+    hass, source, data, device, extended_white_range, name
+):
     """Test we can configure when discovered from dhcp or discovery."""
-    with _patch_wizlight():
+    with _patch_wizlight(device=device, extended_white_range=extended_white_range):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": source}, data=data
         )
@@ -180,7 +233,7 @@ async def test_discovered_by_dhcp_or_integration_discovery(hass, source, data):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "WiZ Dimmable White ABCABC"
+    assert result2["title"] == name
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
     }

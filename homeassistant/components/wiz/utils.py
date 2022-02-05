@@ -13,11 +13,8 @@ def _short_mac(mac: str) -> str:
 
 def name_from_bulb_type_and_mac(bulb_type: BulbType, mac: str) -> str:
     """Generate a name from bulb_type and mac."""
-    if bulb_type:
-        if SOCKET_DEVICE_STR in bulb_type.name:
-            description = "Socket"
-        else:
-            description = bulb_type.bulb_type.value
+    if SOCKET_DEVICE_STR in bulb_type.name:
+        description = "Socket"
     else:
-        description = "Unknown"
+        description = bulb_type.bulb_type.value
     return f"{DEFAULT_NAME} {description} {_short_mac(mac)}"

@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 from pywizlight import wizlight
+from pywizlight.exceptions import WizLightNotKnownBulb
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
@@ -52,6 +53,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # This is likely because way the library
         # processes responses and can be cleaned up
         # in the future.
+    except WizLightNotKnownBulb:
+        # This is only thrown on IndexError when the
+        # bulb responds with invalid data? It may
+        # not actually be possible anymore
+        _LOGGER.warning("The WiZ bulb type could not be determined for %s", ip_address)
+        return False
     except (ValueError, *WIZ_EXCEPTIONS) as err:
         raise ConfigEntryNotReady from err
 
