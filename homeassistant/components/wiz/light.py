@@ -88,7 +88,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
             self._attr_supported_features = SUPPORT_EFFECT
 
     @callback
-    def _handle_coordinator_update(self) -> None:
+    def _async_update_state(self) -> None:
         """Handle updated data from the coordinator."""
         state = self._device.state
         if (brightness := state.get_brightness()) is not None:
@@ -110,7 +110,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         else:
             self._attr_color_mode = COLOR_MODE_BRIGHTNESS
         self._attr_effect = state.get_scene()
-        super()._handle_coordinator_update()
+        super()._async_update_state()
 
     @callback
     def _async_pilot_builder(self, **kwargs: Any) -> PilotBuilder:

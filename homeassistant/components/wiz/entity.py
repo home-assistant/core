@@ -29,12 +29,18 @@ class WizToggleEntity(CoordinatorEntity, ToggleEntity):
             manufacturer="WiZ",
             model=bulb_type.name,
         )
+        self._async_update_state()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_is_on = self._device.status
+        self._async_update_state()
         super()._handle_coordinator_update()
+
+    @callback
+    def _async_update_state(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_is_on = self._device.status
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the device to turn off."""
