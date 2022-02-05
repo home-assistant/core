@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from pywizlight import PilotBuilder
-from pywizlight.bulblibrary import BulbClass, BulbType
+from pywizlight.bulblibrary import BulbClass, BulbType, Features
 from pywizlight.rgbcw import convertHSfromRGBCW
 from pywizlight.scenes import get_id_from_scene_name
 
@@ -53,8 +53,8 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         """Initialize an WiZLight."""
         super().__init__(wiz_data, name)
         bulb_type: BulbType = self._device.bulbtype
+        features: Features = bulb_type.features
         color_modes = set()
-        features = bulb_type.features
         if features.color:
             color_modes.add(COLOR_MODE_HS)
         if features.color_tmp:
