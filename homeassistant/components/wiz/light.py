@@ -134,7 +134,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
                 return PilotBuilder()
 
         _LOGGER.debug(
-            "[wizlight %s] Pilot will be send with brightness=%s, color_temp=%s, scene_id=%s",
+            "[wizlight %s] Pilot will be sent with brightness=%s, color_temp=%s, scene_id=%s",
             self._device.ip,
             brightness,
             color_temp,
