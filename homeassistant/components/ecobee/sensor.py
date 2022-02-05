@@ -126,17 +126,13 @@ class EcobeeSensor(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the appropriate unit of measurement."""
-
-        unit = None
         if self.entity_description.key == "temperature":
             # Tell HA that the entity's native unit is the same
             # as HA config's temperature unit. Then we will do
             # the needed conversion and rounding in native_value.
-            unit = self.hass.config.units.temperature_unit
-        elif self.entity_description.key == "humidity":
-            unit = PERCENTAGE
+            return self.hass.config.units.temperature_unit
 
-        return unit
+        return self.entity_description.native_unit_of_measurement
 
     @property
     def native_value(self):
