@@ -267,7 +267,7 @@ class WizBulbEntity(LightEntity):
         """Update the state."""
         try:
             await self._light.updateState()
-        except (TimeoutError, WizLightTimeOutError) as ex:
+        except (ConnectionRefusedError, TimeoutError, WizLightTimeOutError) as ex:
             _LOGGER.debug(ex)
             self.update_state_unavailable()
         else:
