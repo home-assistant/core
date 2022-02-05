@@ -255,6 +255,33 @@ async def test_dhcp_match_macaddress(hass):
     )
 
 
+async def test_dhcp_multiple_match_only_one_flow(hass):
+    """Test matching the domain multiple times only generates one flow."""
+    integration_matchers = [
+        {"domain": "mock-domain", "macaddress": "B8B7F1*"},
+        {"domain": "mock-domain", "hostname": "connect"},
+    ]
+
+    packet = Ether(RAW_DHCP_REQUEST)
+
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
+        hass, integration_matchers
+    )
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
+        await async_handle_dhcp_packet(packet)
+
+    assert len(mock_init.mock_calls) == 1
+    assert mock_init.mock_calls[0][1][0] == "mock-domain"
+    assert mock_init.mock_calls[0][2]["context"] == {
+        "source": config_entries.SOURCE_DHCP
+    }
+    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.210.56",
+        hostname="connect",
+        macaddress="b8b7f16db533",
+    )
+
+
 async def test_dhcp_match_macaddress_without_hostname(hass):
     """Test matching based on macaddress only."""
     integration_matchers = [{"domain": "mock-domain", "macaddress": "606BBD*"}]
