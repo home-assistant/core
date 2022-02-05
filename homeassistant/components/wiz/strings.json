@@ -6,10 +6,15 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
-        "description": "Enter the IP address of the device."
+        "description": "If you leave the host empty, discovery will be used to find devices."
       },
       "discovery_confirm": {
         "description": "Do you want to setup {name} ({host})?"
+      },
+      "pick_device": {
+        "data": {
+          "device": "Device"
+        }
       }
     },
     "error": {
