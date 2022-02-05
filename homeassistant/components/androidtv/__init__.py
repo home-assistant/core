@@ -40,9 +40,10 @@ from .const import (
     SIGNAL_CONFIG_ENTITY,
 )
 
-INVALID_MACS = ["ff:ff:ff:ff:ff:ff"]
 PLATFORMS = [Platform.MEDIA_PLAYER]
 RELOAD_OPTIONS = [CONF_STATE_DETECTION_RULES]
+
+_INVALID_MACS = {"ff:ff:ff:ff:ff:ff"}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,11 +52,11 @@ def get_androidtv_mac(dev_props):
     """Return formatted mac from device properties."""
     if eth_mac := dev_props.get(PROP_ETHMAC):
         mac = format_mac(eth_mac)
-        if mac not in INVALID_MACS:
+        if mac not in _INVALID_MACS:
             return mac
     if wifi_mac := dev_props.get(PROP_WIFIMAC):
         mac = format_mac(wifi_mac)
-        if mac not in INVALID_MACS:
+        if mac not in _INVALID_MACS:
             return mac
     return None
 
