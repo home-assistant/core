@@ -167,8 +167,8 @@ class SonarrSensor(SonarrEntity, SensorEntity):
 
         if key == "diskspace":
             for disk in self.sonarr.app.disks:
-                free = disk.free / 1024 ** 3
-                total = disk.total / 1024 ** 3
+                free = disk.free / 1024**3
+                total = disk.total / 1024**3
                 usage = free / total * 100
 
                 attrs[
@@ -203,7 +203,7 @@ class SonarrSensor(SonarrEntity, SensorEntity):
 
         if key == "diskspace":
             total_free = sum(disk.free for disk in self.sonarr.app.disks)
-            free = total_free / 1024 ** 3
+            free = total_free / 1024**3
             return f"{free:.2f}"
 
         if key == "commands" and self.data.get(key) is not None:

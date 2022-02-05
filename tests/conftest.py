@@ -503,25 +503,18 @@ def hass_ws_client(aiohttp_client, hass_access_token, hass, socket_enabled):
     async def create_client(hass=hass, access_token=hass_access_token):
         """Create a websocket client."""
         assert await async_setup_component(hass, "websocket_api", {})
-
         client = await aiohttp_client(hass.http.app)
+        websocket = await client.ws_connect(URL)
+        auth_resp = await websocket.receive_json()
+        assert auth_resp["type"] == TYPE_AUTH_REQUIRED
 
-        with patch("homeassistant.components.http.auth.setup_auth"):
-            websocket = await client.ws_connect(URL)
-            auth_resp = await websocket.receive_json()
-            assert auth_resp["type"] == TYPE_AUTH_REQUIRED
+        if access_token is None:
+            await websocket.send_json({"type": TYPE_AUTH, "access_token": "incorrect"})
+        else:
+            await websocket.send_json({"type": TYPE_AUTH, "access_token": access_token})
 
-            if access_token is None:
-                await websocket.send_json(
-                    {"type": TYPE_AUTH, "access_token": "incorrect"}
-                )
-            else:
-                await websocket.send_json(
-                    {"type": TYPE_AUTH, "access_token": access_token}
-                )
-
-            auth_ok = await websocket.receive_json()
-            assert auth_ok["type"] == TYPE_AUTH_OK
+        auth_ok = await websocket.receive_json()
+        assert auth_ok["type"] == TYPE_AUTH_OK
 
         # wrap in client
         websocket.client = client

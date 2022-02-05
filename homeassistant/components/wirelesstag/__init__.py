@@ -6,6 +6,7 @@ import voluptuous as vol
 from wirelesstagpy import WirelessTags
 from wirelesstagpy.exceptions import WirelessTagsException
 
+from homeassistant.components import persistent_notification
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_VOLTAGE,
@@ -141,7 +142,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.data[DOMAIN] = platform
     except (ConnectTimeout, HTTPError, WirelessTagsException) as ex:
         _LOGGER.error("Unable to connect to wirelesstag.net service: %s", str(ex))
-        hass.components.persistent_notification.create(
+        persistent_notification.create(
+            hass,
             f"Error: {ex}<br />Please restart hass after fixing this.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,

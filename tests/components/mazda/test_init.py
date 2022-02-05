@@ -158,6 +158,19 @@ async def test_unload_config_entry(hass: HomeAssistant) -> None:
     assert entries[0].state is ConfigEntryState.NOT_LOADED
 
 
+async def test_init_electric_vehicle(hass):
+    """Test initialization of the integration with an electric vehicle."""
+    client_mock = await init_integration(hass, electric_vehicle=True)
+
+    client_mock.get_vehicles.assert_called_once()
+    client_mock.get_vehicle_status.assert_called_once()
+    client_mock.get_ev_vehicle_status.assert_called_once()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+
+
 async def test_device_nickname(hass):
     """Test creation of the device when vehicle has a nickname."""
     await init_integration(hass, use_nickname=True)

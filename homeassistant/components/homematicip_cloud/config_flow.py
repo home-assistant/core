@@ -6,19 +6,11 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import (
-    _LOGGER,
-    DOMAIN as HMIPC_DOMAIN,
-    HMIPC_AUTHTOKEN,
-    HMIPC_HAPID,
-    HMIPC_NAME,
-    HMIPC_PIN,
-)
+from .const import _LOGGER, DOMAIN, HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME, HMIPC_PIN
 from .hap import HomematicipAuth
 
 
-@config_entries.HANDLERS.register(HMIPC_DOMAIN)
-class HomematicipCloudFlowHandler(config_entries.ConfigFlow):
+class HomematicipCloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for the HomematicIP Cloud component."""
 
     VERSION = 1

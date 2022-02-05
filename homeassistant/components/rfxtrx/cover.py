@@ -14,8 +14,10 @@ from homeassistant.components.cover import (
     SUPPORT_STOP_TILT,
     CoverEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OPEN
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import (
     DEFAULT_SIGNAL_REPETITIONS,
@@ -41,15 +43,15 @@ def supported(event: rfxtrxmod.RFXtrxEvent):
 
 
 async def async_setup_entry(
-    hass,
-    config_entry,
-    async_add_entities,
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up config entry."""
 
     def _constructor(
         event: rfxtrxmod.RFXtrxEvent,
-        auto: bool,
+        auto: rfxtrxmod.RFXtrxEvent | None,
         device_id: DeviceTuple,
         entity_info: dict,
     ):

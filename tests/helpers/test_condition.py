@@ -1810,54 +1810,51 @@ async def test_extract_entities():
 
 async def test_extract_devices():
     """Test extracting devices."""
-    assert (
-        condition.async_extract_devices(
-            {
-                "condition": "and",
-                "conditions": [
-                    {"condition": "device", "device_id": "abcd", "domain": "light"},
-                    {"condition": "device", "device_id": "qwer", "domain": "switch"},
-                    {
-                        "condition": "state",
-                        "entity_id": "sensor.not_a_device",
-                        "state": "100",
-                    },
-                    {
-                        "condition": "not",
-                        "conditions": [
-                            {
-                                "condition": "device",
-                                "device_id": "abcd_not",
-                                "domain": "light",
-                            },
-                            {
-                                "condition": "device",
-                                "device_id": "qwer_not",
-                                "domain": "switch",
-                            },
-                        ],
-                    },
-                    {
-                        "condition": "or",
-                        "conditions": [
-                            {
-                                "condition": "device",
-                                "device_id": "abcd_or",
-                                "domain": "light",
-                            },
-                            {
-                                "condition": "device",
-                                "device_id": "qwer_or",
-                                "domain": "switch",
-                            },
-                        ],
-                    },
-                    Template("{{ is_state('light.example', 'on') }}"),
-                ],
-            }
-        )
-        == {"abcd", "qwer", "abcd_not", "qwer_not", "abcd_or", "qwer_or"}
-    )
+    assert condition.async_extract_devices(
+        {
+            "condition": "and",
+            "conditions": [
+                {"condition": "device", "device_id": "abcd", "domain": "light"},
+                {"condition": "device", "device_id": "qwer", "domain": "switch"},
+                {
+                    "condition": "state",
+                    "entity_id": "sensor.not_a_device",
+                    "state": "100",
+                },
+                {
+                    "condition": "not",
+                    "conditions": [
+                        {
+                            "condition": "device",
+                            "device_id": "abcd_not",
+                            "domain": "light",
+                        },
+                        {
+                            "condition": "device",
+                            "device_id": "qwer_not",
+                            "domain": "switch",
+                        },
+                    ],
+                },
+                {
+                    "condition": "or",
+                    "conditions": [
+                        {
+                            "condition": "device",
+                            "device_id": "abcd_or",
+                            "domain": "light",
+                        },
+                        {
+                            "condition": "device",
+                            "device_id": "qwer_or",
+                            "domain": "switch",
+                        },
+                    ],
+                },
+                Template("{{ is_state('light.example', 'on') }}"),
+            ],
+        }
+    ) == {"abcd", "qwer", "abcd_not", "qwer_not", "abcd_or", "qwer_or"}
 
 
 async def test_condition_template_error(hass):

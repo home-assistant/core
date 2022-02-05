@@ -2,7 +2,8 @@
 from unittest.mock import patch
 
 from homeassistant import data_entry_flow
-from homeassistant.components.launch_library.const import DEFAULT_NAME, DOMAIN
+from homeassistant.components.launch_library.const import DOMAIN
+from homeassistant.components.launch_library.sensor import DEFAULT_NEXT_LAUNCH_NAME
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_NAME
 
@@ -12,7 +13,7 @@ from tests.common import MockConfigEntry
 async def test_import(hass):
     """Test entry will be imported."""
 
-    imported_config = {CONF_NAME: DEFAULT_NAME}
+    imported_config = {CONF_NAME: DEFAULT_NEXT_LAUNCH_NAME}
 
     with patch(
         "homeassistant.components.launch_library.async_setup_entry", return_value=True

@@ -1,4 +1,5 @@
 """Configuration for Sonos tests."""
+from copy import copy
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
@@ -36,6 +37,7 @@ class SonosMockEvent:
 
         Assumes value has a format of <str>:<int>.
         """
+        self.variables = copy(self.variables)
         base, count = self.variables[var_name].split(":")
         newcount = int(count) + 1
         self.variables[var_name] = ":".join([base, str(newcount)])
@@ -101,6 +103,7 @@ def soco_fixture(music_library, speaker_info, battery_info, alarm_clock):
         mock_soco.night_mode = True
         mock_soco.dialog_level = True
         mock_soco.volume = 19
+        mock_soco.audio_delay = 2
         mock_soco.bass = 1
         mock_soco.treble = -1
         mock_soco.sub_enabled = False
@@ -205,6 +208,8 @@ def speaker_info_fixture():
         "zone_name": "Zone A",
         "uid": "RINCON_test",
         "model_name": "Model Name",
+        "model_number": "S12",
+        "hardware_version": "1.20.1.6-1.1",
         "software_version": "49.2-64250",
         "mac_address": "00-11-22-33-44-55",
         "display_version": "13.1",

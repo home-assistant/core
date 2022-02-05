@@ -46,17 +46,22 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
         self._attr_unique_id = f"{self._device_id:s}_lock"
         self._update_from_data()
 
+    @property
+    def _hyper_bridge(self):
+        """Check if the lock has a paired hyper bridge."""
+        return bool(self._detail.bridge and self._detail.bridge.hyper_bridge)
+
     async def async_lock(self, **kwargs):
         """Lock the device."""
         if self._data.activity_stream.pubnub.connected:
-            await self._data.async_lock_async(self._device_id)
+            await self._data.async_lock_async(self._device_id, self._hyper_bridge)
             return
         await self._call_lock_operation(self._data.async_lock)
 
     async def async_unlock(self, **kwargs):
         """Unlock the device."""
         if self._data.activity_stream.pubnub.connected:
-            await self._data.async_unlock_async(self._device_id)
+            await self._data.async_unlock_async(self._device_id, self._hyper_bridge)
             return
         await self._call_lock_operation(self._data.async_unlock)
 

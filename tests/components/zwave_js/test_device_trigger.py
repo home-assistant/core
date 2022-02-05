@@ -1370,3 +1370,19 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
         await device_trigger.async_validate_trigger_config(hass, INVALID_CONFIG)
         == INVALID_CONFIG
     )
+
+    # Test invalid device ID fails validation
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await device_trigger.async_validate_trigger_config(
+            hass,
+            {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": "invalid_device_id",
+                "type": "zwave_js.value_updated.value",
+                "command_class": CommandClass.DOOR_LOCK.value,
+                "property": 9999,
+                "property_key": 9999,
+                "endpoint": 9999,
+            },
+        )

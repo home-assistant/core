@@ -1,5 +1,8 @@
 """Support for LaMetric notifications."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from lmnotify import Model, SimpleFrame, Sound
 from oauthlib.oauth2 import TokenExpiredError
@@ -13,9 +16,11 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import CONF_ICON
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as LAMETRIC_DOMAIN
+from . import DOMAIN, HassLaMetricManager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,11 +43,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> LaMetricNotificationService:
     """Get the LaMetric notification service."""
-    hlmn = hass.data.get(LAMETRIC_DOMAIN)
     return LaMetricNotificationService(
-        hlmn,
+        hass.data[DOMAIN],
         config[CONF_ICON],
         config[CONF_LIFETIME] * 1000,
         config[CONF_CYCLES],
@@ -55,8 +63,14 @@ class LaMetricNotificationService(BaseNotificationService):
     """Implement the notification service for LaMetric."""
 
     def __init__(
-        self, hasslametricmanager, icon, lifetime, cycles, priority, icon_type
-    ):
+        self,
+        hasslametricmanager: HassLaMetricManager,
+        icon: str,
+        lifetime: int,
+        cycles: int,
+        priority: str,
+        icon_type: str,
+    ) -> None:
         """Initialize the service."""
         self.hasslametricmanager = hasslametricmanager
         self._icon = icon
@@ -64,9 +78,9 @@ class LaMetricNotificationService(BaseNotificationService):
         self._cycles = cycles
         self._priority = priority
         self._icon_type = icon_type
-        self._devices = []
+        self._devices: list[dict[str, Any]] = []
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to some LaMetric device."""
 
         targets = kwargs.get(ATTR_TARGET)

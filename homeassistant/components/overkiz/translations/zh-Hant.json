@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f",
+            "reauth_wrong_account": "\u50c5\u80fd\u4f7f\u7528\u76f8\u540c\u7684 Overkiz. \u5e33\u865f\u8207\u96c6\u7dda\u5668\u91cd\u65b0\u8a8d\u8b49\u6b64\u5be6\u9ad4"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",

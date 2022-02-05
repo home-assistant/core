@@ -15,6 +15,7 @@ from broadlink.exceptions import (
 )
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.remote import (
     ATTR_ALTERNATIVE,
     ATTR_COMMAND_TYPE,
@@ -317,7 +318,8 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             _LOGGER.debug("Failed to enter learning mode: %s", err)
             raise
 
-        self.hass.components.persistent_notification.async_create(
+        persistent_notification.async_create(
+            self.hass,
             f"Press the '{command}' button.",
             title="Learn command",
             notification_id="learn_command",
@@ -339,8 +341,8 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             )
 
         finally:
-            self.hass.components.persistent_notification.async_dismiss(
-                notification_id="learn_command"
+            persistent_notification.async_dismiss(
+                self.hass, notification_id="learn_command"
             )
 
     async def _async_learn_rf_command(self, command):
@@ -354,7 +356,8 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             _LOGGER.debug("Failed to sweep frequency: %s", err)
             raise
 
-        self.hass.components.persistent_notification.async_create(
+        persistent_notification.async_create(
+            self.hass,
             f"Press and hold the '{command}' button.",
             title="Sweep frequency",
             notification_id="sweep_frequency",
@@ -375,8 +378,8 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 )
 
         finally:
-            self.hass.components.persistent_notification.async_dismiss(
-                notification_id="sweep_frequency"
+            persistent_notification.async_dismiss(
+                self.hass, notification_id="sweep_frequency"
             )
 
         await asyncio.sleep(1)
@@ -388,7 +391,8 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             _LOGGER.debug("Failed to enter learning mode: %s", err)
             raise
 
-        self.hass.components.persistent_notification.async_create(
+        persistent_notification.async_create(
+            self.hass,
             f"Press the '{command}' button again.",
             title="Learn command",
             notification_id="learn_command",
@@ -410,8 +414,8 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             )
 
         finally:
-            self.hass.components.persistent_notification.async_dismiss(
-                notification_id="learn_command"
+            persistent_notification.async_dismiss(
+                self.hass, notification_id="learn_command"
             )
 
     async def async_delete_command(self, **kwargs):

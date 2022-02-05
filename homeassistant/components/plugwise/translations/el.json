@@ -1,4 +1,12 @@
 {
+    "config": {
+        "step": {
+            "user": {
+                "description": "\u03a0\u03c1\u03bf\u03ca\u03cc\u03bd:",
+                "title": "\u03a4\u03cd\u03c0\u03bf\u03c2 \u03b2\u03cd\u03c3\u03bc\u03b1\u03c4\u03bf\u03c2"
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

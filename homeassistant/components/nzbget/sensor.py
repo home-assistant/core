@@ -126,7 +126,7 @@ class NZBGetSensor(NZBGetEntity, SensorEntity):
 
         if "DownloadRate" in sensor_type and value > 0:
             # Convert download rate from Bytes/s to MBytes/s
-            return round(value / 2 ** 20, 2)
+            return round(value / 2**20, 2)
 
         if "UpTimeSec" in sensor_type and value > 0:
             uptime = utcnow() - timedelta(seconds=value)

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "discovery_started": "Tuvastamine algas"
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
@@ -9,7 +10,17 @@
             "protect_version": "Minimaalne n\u00f5utav versioon on v1.20.0. Uuenda UniFi Protecti ja proovi seej\u00e4rel uuesti.",
             "unknown": "Ootamatu t\u00f5rge"
         },
+        "flow_title": "{name} ( {ip_address} )",
         "step": {
+            "discovery_confirm": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi",
+                    "verify_ssl": "Kontrolli SSL \u00fchendust"
+                },
+                "description": "Kas soovid seadistada kasutaja {name} ( {ip_address} )? Sisselogimiseks on vaja UniFi OS-i konsoolis loodud kohalikku kasutajat. Ubiquiti pilve kasutajad ei t\u00f6\u00f6ta. Lisateabe saamiseks: {local_user_documentation_url}",
+                "title": "Avastati UniFi Protect"
+            },
             "reauth_confirm": {
                 "data": {
                     "host": "UniFi Protect serveri IP aadress/host",
@@ -27,6 +38,7 @@
                     "username": "Kasutajanimi",
                     "verify_ssl": "Kontrolli SSL sertifikaati"
                 },
+                "description": "Sisselogimiseks on vaja UniFi OS-i konsoolis loodud kohalikku kasutajat. Ubiquiti pilve kasutajad ei t\u00f6\u00f6ta. Lisateabe saamiseks: {local_user_documentation_url}",
                 "title": "UniFi Protect seadistamine"
             }
         }

@@ -10,5 +10,6 @@
     "advantage_air==0.2.5"
   ],
   "quality_scale": "platinum",
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["advantage_air"]
 }

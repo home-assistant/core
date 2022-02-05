@@ -50,7 +50,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class HassLaMetricManager:
     """A class that encapsulated requests to the LaMetric manager."""
 
-    def __init__(self, client_id, client_secret):
+    def __init__(self, client_id: str, client_secret: str) -> None:
         """Initialize HassLaMetricManager and connect to LaMetric."""
 
         _LOGGER.debug("Connecting to LaMetric")

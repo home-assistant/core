@@ -560,20 +560,3 @@ async def test_api_call_service_bad_data(hass, mock_api_client):
         "/api/services/test_domain/test_service", json={"hello": 5}
     )
     assert resp.status == HTTPStatus.BAD_REQUEST
-
-
-async def test_api_get_discovery_info(hass, mock_api_client):
-    """Test the return of discovery info."""
-    resp = await mock_api_client.get(const.URL_API_DISCOVERY_INFO)
-    result = await resp.json()
-
-    assert result == {
-        "base_url": "",
-        "external_url": "",
-        "installation_type": "",
-        "internal_url": "",
-        "location_name": "",
-        "requires_api_password": True,
-        "uuid": "",
-        "version": "",
-    }

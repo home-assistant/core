@@ -29,6 +29,18 @@ SEGMENT_DURATION = 10
 TEST_TIMEOUT = 5.0  # Lower than 9s home assistant timeout
 MAX_ABORT_SEGMENTS = 20  # Abort test to avoid looping forever
 
+HLS_CONFIG = {
+    "stream": {
+        "ll_hls": False,
+    }
+}
+
+
+@pytest.fixture
+async def setup_component(hass) -> None:
+    """Test fixture to setup the stream component."""
+    await async_setup_component(hass, "stream", HLS_CONFIG)
+
 
 class HlsClient:
     """Test fixture for fetching the hls stream."""
@@ -114,14 +126,15 @@ def make_playlist(
     return "\n".join(response)
 
 
-async def test_hls_stream(hass, hls_stream, stream_worker_sync, h264_video):
+async def test_hls_stream(
+    hass, setup_component, hls_stream, stream_worker_sync, h264_video
+):
     """
     Test hls stream.
 
     Purposefully not mocking anything here to test full
     integration with the stream component.
     """
-    await async_setup_component(hass, "stream", {"stream": {}})
 
     stream_worker_sync.pause()
 
@@ -164,10 +177,10 @@ async def test_hls_stream(hass, hls_stream, stream_worker_sync, h264_video):
     assert fail_response.status == HTTPStatus.NOT_FOUND
 
 
-async def test_stream_timeout(hass, hass_client, stream_worker_sync, h264_video):
+async def test_stream_timeout(
+    hass, hass_client, setup_component, stream_worker_sync, h264_video
+):
     """Test hls stream timeout."""
-    await async_setup_component(hass, "stream", {"stream": {}})
-
     stream_worker_sync.pause()
 
     # Setup demo HLS track
@@ -217,11 +230,9 @@ async def test_stream_timeout(hass, hass_client, stream_worker_sync, h264_video)
 
 
 async def test_stream_timeout_after_stop(
-    hass, hass_client, stream_worker_sync, h264_video
+    hass, hass_client, setup_component, stream_worker_sync, h264_video
 ):
     """Test hls stream timeout after the stream has been stopped already."""
-    await async_setup_component(hass, "stream", {"stream": {}})
-
     stream_worker_sync.pause()
 
     # Setup demo HLS track
@@ -241,10 +252,8 @@ async def test_stream_timeout_after_stop(
     await hass.async_block_till_done()
 
 
-async def test_stream_keepalive(hass):
+async def test_stream_keepalive(hass, setup_component):
     """Test hls stream retries the stream when keepalive=True."""
-    await async_setup_component(hass, "stream", {"stream": {}})
-
     # Setup demo HLS track
     source = "test_stream_keepalive_source"
     stream = create_stream(hass, source, {})
@@ -291,10 +300,8 @@ async def test_stream_keepalive(hass):
     assert available_states == [True, False, True]
 
 
-async def test_hls_playlist_view_no_output(hass, hls_stream):
+async def test_hls_playlist_view_no_output(hass, setup_component, hls_stream):
     """Test rendering the hls playlist with no output segments."""
-    await async_setup_component(hass, "stream", {"stream": {}})
-
     stream = create_stream(hass, STREAM_SOURCE, {})
     stream.add_provider(HLS_PROVIDER)
 
@@ -305,10 +312,8 @@ async def test_hls_playlist_view_no_output(hass, hls_stream):
     assert resp.status == HTTPStatus.NOT_FOUND
 
 
-async def test_hls_playlist_view(hass, hls_stream, stream_worker_sync):
+async def test_hls_playlist_view(hass, setup_component, hls_stream, stream_worker_sync):
     """Test rendering the hls playlist with 1 and 2 output segments."""
-    await async_setup_component(hass, "stream", {"stream": {}})
-
     stream = create_stream(hass, STREAM_SOURCE, {})
     stream_worker_sync.pause()
     hls = stream.add_provider(HLS_PROVIDER)
@@ -338,10 +343,8 @@ async def test_hls_playlist_view(hass, hls_stream, stream_worker_sync):
     stream.stop()
 
 
-async def test_hls_max_segments(hass, hls_stream, stream_worker_sync):
+async def test_hls_max_segments(hass, setup_component, hls_stream, stream_worker_sync):
     """Test rendering the hls playlist with more segments than the segment deque can hold."""
-    await async_setup_component(hass, "stream", {"stream": {}})
-
     stream = create_stream(hass, STREAM_SOURCE, {})
     stream_worker_sync.pause()
     hls = stream.add_provider(HLS_PROVIDER)
@@ -389,9 +392,10 @@ async def test_hls_max_segments(hass, hls_stream, stream_worker_sync):
     stream.stop()
 
 
-async def test_hls_playlist_view_discontinuity(hass, hls_stream, stream_worker_sync):
+async def test_hls_playlist_view_discontinuity(
+    hass, setup_component, hls_stream, stream_worker_sync
+):
     """Test a discontinuity across segments in the stream with 3 segments."""
-    await async_setup_component(hass, "stream", {"stream": {}})
 
     stream = create_stream(hass, STREAM_SOURCE, {})
     stream_worker_sync.pause()
@@ -426,10 +430,10 @@ async def test_hls_playlist_view_discontinuity(hass, hls_stream, stream_worker_s
     stream.stop()
 
 
-async def test_hls_max_segments_discontinuity(hass, hls_stream, stream_worker_sync):
+async def test_hls_max_segments_discontinuity(
+    hass, setup_component, hls_stream, stream_worker_sync
+):
     """Test a discontinuity with more segments than the segment deque can hold."""
-    await async_setup_component(hass, "stream", {"stream": {}})
-
     stream = create_stream(hass, STREAM_SOURCE, {})
     stream_worker_sync.pause()
     hls = stream.add_provider(HLS_PROVIDER)
@@ -469,10 +473,10 @@ async def test_hls_max_segments_discontinuity(hass, hls_stream, stream_worker_sy
     stream.stop()
 
 
-async def test_remove_incomplete_segment_on_exit(hass, stream_worker_sync):
+async def test_remove_incomplete_segment_on_exit(
+    hass, setup_component, stream_worker_sync
+):
     """Test that the incomplete segment gets removed when the worker thread quits."""
-    await async_setup_component(hass, "stream", {"stream": {}})
-
     stream = create_stream(hass, STREAM_SOURCE, {})
     stream_worker_sync.pause()
     stream.start()

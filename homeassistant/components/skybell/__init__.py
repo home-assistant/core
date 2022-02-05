@@ -3,16 +3,26 @@ from __future__ import annotations
 
 import logging
 
+from aioskybell import Skybell
+from aioskybell.device import SkybellDevice
+from aioskybell.exceptions import SkybellAuthenticationException
 from requests.exceptions import ConnectTimeout, HTTPError
-from skybellpy import Skybell
-from skybellpy.device import SkybellDevice
-from skybellpy.exceptions import SkybellAuthenticationException
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.camera import DOMAIN as CAMERA
 from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.sensor import DOMAIN as SENSOR
+from homeassistant.components.skybell.const import (
+    AGENT_IDENTIFIER,
+    ATTRIBUTION,
+    DATA_COORDINATOR,
+    DATA_DEVICES,
+    DEFAULT_CACHEDB,
+    DEFAULT_NAME,
+    DOMAIN,
+    MIN_TIME_BETWEEN_UPDATES,
+)
 from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -20,6 +30,7 @@ from homeassistant.const import (
     CONF_EMAIL,
     CONF_PASSWORD,
     CONF_USERNAME,
+    __version__,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -32,22 +43,9 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import (
-    AGENT_IDENTIFIER,
-    ATTRIBUTION,
-    DATA_COORDINATOR,
-    DATA_DEVICES,
-    DEFAULT_CACHEDB,
-    DEFAULT_NAME,
-    DOMAIN,
-    MIN_TIME_BETWEEN_UPDATES,
-)
-
-PLATFORMS = [BINARY_SENSOR, CAMERA, LIGHT, SENSOR, SWITCH]
-
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
-        # Deprecated in Home Assistant 2022.2
+        # Deprecated in Home Assistant 2022.3
         cv.deprecated(DOMAIN),
         {
             DOMAIN: vol.Schema(
@@ -60,6 +58,8 @@ CONFIG_SCHEMA = vol.Schema(
     ),
     extra=vol.ALLOW_EXTRA,
 )
+
+PLATFORMS = [BINARY_SENSOR, CAMERA, LIGHT, SENSOR, SWITCH]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -127,8 +127,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_COORDINATOR: coordinator,
         DATA_DEVICES: devices,
     }
-
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 

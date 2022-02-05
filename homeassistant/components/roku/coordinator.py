@@ -14,7 +14,7 @@ from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
 
-SCAN_INTERVAL = timedelta(seconds=15)
+SCAN_INTERVAL = timedelta(seconds=10)
 _LOGGER = logging.getLogger(__name__)
 
 

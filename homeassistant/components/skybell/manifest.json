@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/skybell",
   "requirements": ["skybellpy==0.6.3"],
   "codeowners": ["@tkdrob"],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["skybellpy"]
 }

@@ -1,9 +1,13 @@
 """Config flow to configure homekit_controller."""
+from __future__ import annotations
+
 import logging
 import re
+from typing import Any
 
 import aiohomekit
 from aiohomekit.exceptions import AuthenticationError
+from aiohomekit.model import Accessories, CharacteristicsTypes, ServicesTypes
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -15,7 +19,6 @@ from homeassistant.helpers.device_registry import (
     async_get_registry as async_get_device_registry,
 )
 
-from .connection import get_accessory_name, get_bridge_information
 from .const import DOMAIN, KNOWN_DEVICES
 
 HOMEKIT_DIR = ".homekit"
@@ -55,20 +58,21 @@ INSECURE_CODES = {
 }
 
 
-def normalize_hkid(hkid):
+def normalize_hkid(hkid: str) -> str:
     """Normalize a hkid so that it is safe to compare with other normalized hkids."""
     return hkid.lower()
 
 
 @callback
-def find_existing_host(hass, serial):
+def find_existing_host(hass, serial: str) -> config_entries.ConfigEntry | None:
     """Return a set of the configured hosts."""
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.data.get("AccessoryPairingID") == serial:
             return entry
+    return None
 
 
-def ensure_pin_format(pin, allow_insecure_setup_codes=None):
+def ensure_pin_format(pin: str, allow_insecure_setup_codes: Any = None) -> str:
     """
     Ensure a pin code is correctly formatted.
 
@@ -280,9 +284,13 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if self.controller is None:
                 await self._async_setup_controller()
 
+            # mypy can't see that self._async_setup_controller() always sets self.controller or throws
+            assert self.controller
+
             pairing = self.controller.load_pairing(
                 existing.data["AccessoryPairingID"], dict(existing.data)
             )
+
             try:
                 await pairing.list_accessories_and_characteristics()
             except AuthenticationError:
@@ -489,8 +497,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not (accessories := pairing_data.pop("accessories", None)):
             accessories = await pairing.list_accessories_and_characteristics()
 
-        bridge_info = get_bridge_information(accessories)
-        name = get_accessory_name(bridge_info)
+        parsed = Accessories.from_list(accessories)
+        accessory_info = parsed.aid(1).services.first(
+            service_type=ServicesTypes.ACCESSORY_INFORMATION
+        )
+        name = accessory_info.value(CharacteristicsTypes.NAME, "")
 
         return self.async_create_entry(title=name, data=pairing_data)
 

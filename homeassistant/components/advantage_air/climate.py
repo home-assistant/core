@@ -1,6 +1,8 @@
 """Climate platform for Advantage Air integration."""
 from __future__ import annotations
 
+import logging
+
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
@@ -62,6 +64,8 @@ ADVANTAGE_AIR_SERVICE_SET_MYZONE = "set_myzone"
 ZONE_HVAC_MODES = [HVAC_MODE_OFF, HVAC_MODE_HEAT_COOL]
 
 PARALLEL_UPDATES = 0
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -220,6 +224,9 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
 
     async def set_myzone(self, **kwargs):
         """Set this zone as the 'MyZone'."""
+        _LOGGER.warning(
+            "The advantage_air.set_myzone service has been deprecated and will be removed in a future version, please use the select.select_option service on the MyZone entity"
+        )
         await self.async_change(
             {self.ac_key: {"info": {"myZone": self._zone["number"]}}}
         )

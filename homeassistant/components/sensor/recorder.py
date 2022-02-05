@@ -65,16 +65,6 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEVICE_CLASS_STATISTICS: dict[str, dict[str, set[str]]] = {
-    STATE_CLASS_MEASUREMENT: {
-        # Deprecated, support will be removed in Home Assistant 2021.11
-        SensorDeviceClass.ENERGY: {"sum"},
-        SensorDeviceClass.GAS: {"sum"},
-        SensorDeviceClass.MONETARY: {"sum"},
-    },
-    STATE_CLASS_TOTAL: {},
-    STATE_CLASS_TOTAL_INCREASING: {},
-}
 DEFAULT_STATISTICS = {
     STATE_CLASS_MEASUREMENT: {"mean", "min", "max"},
     STATE_CLASS_TOTAL: {"sum"},
@@ -375,13 +365,7 @@ def _wanted_statistics(sensor_states: list[State]) -> dict[str, set[str]]:
     wanted_statistics = {}
     for state in sensor_states:
         state_class = state.attributes[ATTR_STATE_CLASS]
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-        if device_class in DEVICE_CLASS_STATISTICS[state_class]:
-            wanted_statistics[state.entity_id] = DEVICE_CLASS_STATISTICS[state_class][
-                device_class
-            ]
-        else:
-            wanted_statistics[state.entity_id] = DEFAULT_STATISTICS[state_class]
+        wanted_statistics[state.entity_id] = DEFAULT_STATISTICS[state_class]
     return wanted_statistics
 
 
@@ -532,14 +516,6 @@ def _compile_statistics(  # noqa: C901
                 _sum = last_stats[entity_id][0]["sum"] or 0.0
 
             for fstate, state in fstates:
-
-                # Deprecated, will be removed in Home Assistant 2021.11
-                if (
-                    "last_reset" not in state.attributes
-                    and state_class == STATE_CLASS_MEASUREMENT
-                ):
-                    continue
-
                 reset = False
                 if (
                     state_class != STATE_CLASS_TOTAL_INCREASING
@@ -604,11 +580,6 @@ def _compile_statistics(  # noqa: C901
                 else:
                     new_state = fstate
 
-            # Deprecated, will be removed in Home Assistant 2021.11
-            if last_reset is None and state_class == STATE_CLASS_MEASUREMENT:
-                # No valid updates
-                continue
-
             if new_state is None or old_state is None:
                 # No valid updates
                 continue
@@ -636,11 +607,7 @@ def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         native_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
-        if device_class in DEVICE_CLASS_STATISTICS[state_class]:
-            provided_statistics = DEVICE_CLASS_STATISTICS[state_class][device_class]
-        else:
-            provided_statistics = DEFAULT_STATISTICS[state_class]
-
+        provided_statistics = DEFAULT_STATISTICS[state_class]
         if statistic_type is not None and statistic_type not in provided_statistics:
             continue
 

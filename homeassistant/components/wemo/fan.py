@@ -6,6 +6,7 @@ from datetime import timedelta
 import math
 from typing import Any
 
+from pywemo.ouimeaux_device.humidifier import DesiredHumidity, FanMode, Humidifier
 import voluptuous as vol
 
 from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
@@ -38,22 +39,7 @@ ATTR_FILTER_LIFE = "filter_life"
 ATTR_FILTER_EXPIRED = "filter_expired"
 ATTR_WATER_LEVEL = "water_level"
 
-WEMO_HUMIDITY_45 = 0
-WEMO_HUMIDITY_50 = 1
-WEMO_HUMIDITY_55 = 2
-WEMO_HUMIDITY_60 = 3
-WEMO_HUMIDITY_100 = 4
-
-WEMO_FAN_OFF = 0
-WEMO_FAN_MINIMUM = 1
-WEMO_FAN_MEDIUM = 4
-WEMO_FAN_MAXIMUM = 5
-
-SPEED_RANGE = (WEMO_FAN_MINIMUM, WEMO_FAN_MAXIMUM)  # off is not included
-
-WEMO_WATER_EMPTY = 0
-WEMO_WATER_LOW = 1
-WEMO_WATER_GOOD = 2
+SPEED_RANGE = (FanMode.Minimum, FanMode.Maximum)  # off is not included
 
 SUPPORTED_FEATURES = SUPPORT_SET_SPEED
 
@@ -101,13 +87,15 @@ async def async_setup_entry(
 class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
     """Representation of a WeMo humidifier."""
 
+    wemo: Humidifier
+
     def __init__(self, coordinator: DeviceCoordinator) -> None:
         """Initialize the WeMo switch."""
         super().__init__(coordinator)
-        if self.wemo.fan_mode != WEMO_FAN_OFF:
+        if self.wemo.fan_mode != FanMode.Off:
             self._last_fan_on_mode = self.wemo.fan_mode
         else:
-            self._last_fan_on_mode = WEMO_FAN_MEDIUM
+            self._last_fan_on_mode = FanMode.High
 
     @property
     def icon(self) -> str:
@@ -144,7 +132,7 @@ class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if self.wemo.fan_mode != WEMO_FAN_OFF:
+        if self.wemo.fan_mode != FanMode.Off:
             self._last_fan_on_mode = self.wemo.fan_mode
         super()._handle_coordinator_update()
 
@@ -160,46 +148,40 @@ class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        with self._wemo_exception_handler("turn off"):
-            self.wemo.set_state(WEMO_FAN_OFF)
-
-        self.schedule_update_ha_state()
+        with self._wemo_call_wrapper("turn off"):
+            self.wemo.set_state(FanMode.Off)
 
     def set_percentage(self, percentage: int | None) -> None:
         """Set the fan_mode of the Humidifier."""
         if percentage is None:
             named_speed = self._last_fan_on_mode
         elif percentage == 0:
-            named_speed = WEMO_FAN_OFF
+            named_speed = FanMode.Off
         else:
-            named_speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
+            named_speed = FanMode(
+                math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
+            )
 
-        with self._wemo_exception_handler("set speed"):
+        with self._wemo_call_wrapper("set speed"):
             self.wemo.set_state(named_speed)
-
-        self.schedule_update_ha_state()
 
     def set_humidity(self, target_humidity: float) -> None:
         """Set the target humidity level for the Humidifier."""
         if target_humidity < 50:
-            pywemo_humidity = WEMO_HUMIDITY_45
+            pywemo_humidity = DesiredHumidity.FortyFivePercent
         elif 50 <= target_humidity < 55:
-            pywemo_humidity = WEMO_HUMIDITY_50
+            pywemo_humidity = DesiredHumidity.FiftyPercent
         elif 55 <= target_humidity < 60:
-            pywemo_humidity = WEMO_HUMIDITY_55
+            pywemo_humidity = DesiredHumidity.FiftyFivePercent
         elif 60 <= target_humidity < 100:
-            pywemo_humidity = WEMO_HUMIDITY_60
+            pywemo_humidity = DesiredHumidity.SixtyPercent
         elif target_humidity >= 100:
-            pywemo_humidity = WEMO_HUMIDITY_100
+            pywemo_humidity = DesiredHumidity.OneHundredPercent
 
-        with self._wemo_exception_handler("set humidity"):
+        with self._wemo_call_wrapper("set humidity"):
             self.wemo.set_humidity(pywemo_humidity)
-
-        self.schedule_update_ha_state()
 
     def reset_filter_life(self) -> None:
         """Reset the filter life to 100%."""
-        with self._wemo_exception_handler("reset filter life"):
+        with self._wemo_call_wrapper("reset filter life"):
             self.wemo.reset_filter_life()
-
-        self.schedule_update_ha_state()

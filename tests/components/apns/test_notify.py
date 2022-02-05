@@ -25,7 +25,7 @@ CONFIG = {
 
 @pytest.fixture(scope="module", autouse=True)
 def mock_apns_notify_open():
-    """Mock builtins.open for apns.notfiy."""
+    """Mock builtins.open for apns.notify."""
     with patch("homeassistant.components.apns.notify.open", mock_open(), create=True):
         yield
 

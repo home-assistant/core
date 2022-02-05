@@ -93,9 +93,11 @@ async def camera_fixture(
     camera_obj.channels[2]._api = mock_entry.api
     camera_obj.name = "Test Camera"
     camera_obj.feature_flags.has_lcd_screen = True
+    camera_obj.feature_flags.has_chime = True
     camera_obj.recording_settings.mode = RecordingMode.ALWAYS
     camera_obj.isp_settings.ir_led_mode = IRLEDMode.AUTO
     camera_obj.lcd_message = None
+    camera_obj.chime_duration = 0
 
     mock_entry.api.bootstrap.reset_objects()
     mock_entry.api.bootstrap.cameras = {
@@ -105,7 +107,7 @@ async def camera_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.SELECT, 3, 3)
+    assert_entity_counts(hass, Platform.SELECT, 4, 4)
 
     yield camera_obj
 
@@ -140,7 +142,7 @@ async def light_fixture(
     await hass.config_entries.async_reload(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.SELECT, 5, 5)
+    assert_entity_counts(hass, Platform.SELECT, 6, 6)
 
     yield light_obj
 
@@ -163,6 +165,7 @@ async def camera_none_fixture(
     camera_obj.channels[2]._api = mock_entry.api
     camera_obj.name = "Test Camera"
     camera_obj.feature_flags.has_lcd_screen = False
+    camera_obj.feature_flags.has_chime = False
     camera_obj.recording_settings.mode = RecordingMode.ALWAYS
     camera_obj.isp_settings.ir_led_mode = IRLEDMode.AUTO
 
@@ -235,7 +238,7 @@ async def test_select_setup_camera_all(
     """Test select entity setup for camera devices (all features)."""
 
     entity_registry = er.async_get(hass)
-    expected_values = ("Always", "Auto", "Default Message (Welcome)")
+    expected_values = ("Always", "Auto", "Default Message (Welcome)", "None")
 
     for index, description in enumerate(CAMERA_SELECTS):
         unique_id, entity_id = ids_from_device_description(
@@ -507,6 +510,10 @@ async def test_select_set_option_camera_doorbell_custom(
         "select_option",
         {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Test"},
         blocking=True,
+    )
+
+    camera.set_lcd_text.assert_called_once_with(
+        DoorbellMessageType.CUSTOM_MESSAGE, text="Test"
     )
 
 

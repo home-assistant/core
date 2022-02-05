@@ -10,9 +10,22 @@
             "1": "OFF",
             "2": "ON"
         },
+        "tuya__curtain_mode": {
+            "morning": "Mat\u00ed",
+            "night": "Nit"
+        },
+        "tuya__curtain_motor_mode": {
+            "back": "Enrere",
+            "forward": "Endavant"
+        },
         "tuya__decibel_sensitivity": {
             "0": "Sensibilitat baixa",
             "1": "Sensibilitat alta"
+        },
+        "tuya__fan_angle": {
+            "30": "30\u00b0",
+            "60": "60\u00b0",
+            "90": "90\u00b0"
         },
         "tuya__fingerbot_mode": {
             "click": "Polsador",
@@ -48,6 +61,38 @@
             "on": "ON",
             "power_off": "OFF",
             "power_on": "ON"
+        },
+        "tuya__vacuum_cistern": {
+            "closed": "Tancada",
+            "high": "Alt",
+            "low": "Baix",
+            "middle": "Mig"
+        },
+        "tuya__vacuum_collection": {
+            "large": "Gran",
+            "middle": "Mitj\u00e0",
+            "small": "Petit"
+        },
+        "tuya__vacuum_mode": {
+            "bow": "Arc",
+            "chargego": "Retornar a la base",
+            "left_bow": "Arc a esquerra",
+            "left_spiral": "Espiral a esquerra",
+            "mop": "Fregar",
+            "part": "Surt",
+            "partial_bow": "Arc parcial",
+            "pick_zone": "Tria zona",
+            "point": "Punt",
+            "pose": "Posa",
+            "random": "Aleatori",
+            "right_bow": "Arc a dreta",
+            "right_spiral": "Espiral a dreta",
+            "single": "Individual",
+            "smart": "Intel\u00b7ligent",
+            "spiral": "Espiral",
+            "standby": "En espera",
+            "wall_follow": "Segueix paret",
+            "zone": "Zona"
         }
     }
 }

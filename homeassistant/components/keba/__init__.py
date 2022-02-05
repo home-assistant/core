@@ -5,7 +5,7 @@ import logging
 from keba_kecontact.connection import KebaKeContact
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
@@ -14,7 +14,7 @@ from homeassistant.helpers.typing import ConfigType
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "keba"
-SUPPORTED_COMPONENTS = ["binary_sensor", "sensor", "lock", "notify"]
+PLATFORMS = (Platform.BINARY_SENSOR, Platform.SENSOR, Platform.LOCK, Platform.NOTIFY)
 
 CONF_RFID = "rfid"
 CONF_FS = "failsafe"
@@ -93,9 +93,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.services.async_register(DOMAIN, service, execute_service)
 
     # Load components
-    for domain in SUPPORTED_COMPONENTS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            discovery.async_load_platform(hass, domain, DOMAIN, {}, config)
+            discovery.async_load_platform(hass, platform, DOMAIN, {}, config)
         )
 
     # Start periodic polling of charging station data

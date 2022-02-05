@@ -9,7 +9,7 @@ from functools import partial
 import itertools
 import logging
 from types import MappingProxyType
-from typing import Any, Dict, TypedDict, Union, cast
+from typing import Any, TypedDict, Union, cast
 
 import async_timeout
 import voluptuous as vol
@@ -742,7 +742,7 @@ class _ScriptRun:
         if saved_repeat_vars:
             self._variables["repeat"] = saved_repeat_vars
         else:
-            del self._variables["repeat"]
+            self._variables.pop("repeat", None)  # Not set if count = 0
 
     async def _async_choose_step(self) -> None:
         """Choose a sequence."""
@@ -915,7 +915,7 @@ async def _async_stop_scripts_at_shutdown(hass, event):
         )
 
 
-_VarsType = Union[Dict[str, Any], MappingProxyType]
+_VarsType = Union[dict[str, Any], MappingProxyType]
 
 
 def _referenced_extract_ids(data: dict[str, Any], key: str, found: set[str]) -> None:

@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Voulez-vous configurer la biblioth\u00e8que de lancement\u00a0?"
+            }
+        }
+    }
+}
