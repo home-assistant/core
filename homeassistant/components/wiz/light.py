@@ -123,24 +123,24 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
                 brightness=brightness,
             )
 
-        colortemp = None
+        color_temp = None
         if ATTR_COLOR_TEMP in kwargs:
-            colortemp = color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
+            color_temp = color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
 
-        sceneid = None
+        scene_id = None
         if ATTR_EFFECT in kwargs:
-            sceneid = get_id_from_scene_name(kwargs[ATTR_EFFECT])
-            if sceneid == 1000:  # rhythm
+            scene_id = get_id_from_scene_name(kwargs[ATTR_EFFECT])
+            if scene_id == 1000:  # rhythm
                 return PilotBuilder()
 
         _LOGGER.debug(
-            "[wizlight %s] Pilot will be send with brightness=%s, colortemp=%s, scene=%s",
+            "[wizlight %s] Pilot will be send with brightness=%s, color_temp=%s, scene_id=%s",
             self._device.ip,
             brightness,
-            colortemp,
-            sceneid,
+            color_temp,
+            scene_id,
         )
-        return PilotBuilder(brightness=brightness, colortemp=colortemp, scene=sceneid)
+        return PilotBuilder(brightness=brightness, colortemp=color_temp, scene=scene_id)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
