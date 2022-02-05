@@ -117,6 +117,7 @@ class Light(HomeAccessory):
         self.color_modes = color_modes = (
             attributes.get(ATTR_SUPPORTED_COLOR_MODES) or []
         )
+        self._previous_color_mode = attributes.get(ATTR_COLOR_MODE)
         self.color_supported = color_supported(color_modes)
         self.color_temp_supported = color_temp_supported(color_modes)
         self.rgbw_supported = COLOR_MODE_RGBW in color_modes
@@ -311,6 +312,8 @@ class Light(HomeAccessory):
         attributes = new_state.attributes
         color_mode = attributes.get(ATTR_COLOR_MODE)
         self.char_on.set_value(int(state == STATE_ON))
+        force_notify = self._previous_color_mode != color_mode
+        self._previous_color_mode = color_mode
 
         # Handle Brightness
         if self.brightness_supported:
@@ -343,6 +346,8 @@ class Light(HomeAccessory):
                 if brightness == 0 and state == STATE_ON:
                     brightness = 1
                 self.char_brightness.set_value(brightness)
+                if force_notify:
+                    self.char_brightness.notify()
 
         # Handle Color - color must always be set before color temperature
         # or the iOS UI will not display it correctly.
@@ -373,6 +378,10 @@ class Light(HomeAccessory):
             if isinstance(hue, (int, float)) and isinstance(saturation, (int, float)):
                 self.char_hue.set_value(round(hue, 0))
                 self.char_saturation.set_value(round(saturation, 0))
+                if force_notify:
+                    # If the color temp changed, be sure to force the color to update
+                    self.char_hue.notify()
+                    self.char_saturation.notify()
 
         # Handle color temperature
         if (
@@ -381,3 +390,5 @@ class Light(HomeAccessory):
             and isinstance(color_temp, (int, float))
         ):
             self.char_color_temp.set_value(round(color_temp, 0))
+            if force_notify:
+                self.char_color_temp.notify()
