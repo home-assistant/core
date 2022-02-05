@@ -37,6 +37,6 @@ class WizToggleEntity(CoordinatorEntity, ToggleEntity):
         super()._handle_coordinator_update()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Instruct the light to turn off."""
+        """Instruct the device to turn off."""
         await self._device.turn_off()
         await self.coordinator.async_request_refresh()

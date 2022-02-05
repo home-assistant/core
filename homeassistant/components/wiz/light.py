@@ -1,4 +1,4 @@
-"""WiZ integration."""
+"""WiZ integration light platform."""
 from __future__ import annotations
 
 import logging
@@ -14,7 +14,6 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
-    ATTR_RGB_COLOR,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_HS,
@@ -29,7 +28,7 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, SOCKET_DEVICE_STR
 from .entity import WizToggleEntity
 from .models import WizData
 
@@ -53,11 +52,6 @@ def get_supported_color_modes(bulb_type: BulbType) -> set[str]:
     return color_modes
 
 
-def supports_effects(bulb_type: BulbType) -> bool:
-    """Check if a bulb supports effects."""
-    return bool(bulb_type.features.effect)
-
-
 def get_min_max_mireds(bulb_type: BulbType) -> tuple[int, int]:
     """Return the coldest and warmest color_temp that this light supports."""
     # DW bulbs have no kelvin
@@ -76,7 +70,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the WiZ Platform from config_flow."""
     wiz_data: WizData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([WizBulbEntity(wiz_data, entry.title)])
+    if SOCKET_DEVICE_STR not in wiz_data.bulb.bulbtype.name:
+        async_add_entities([WizBulbEntity(wiz_data, entry.title)])
 
 
 class WizBulbEntity(WizToggleEntity, LightEntity):
@@ -89,7 +84,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         self._attr_effect_list = wiz_data.scenes
         self._attr_min_mireds, self._attr_max_mireds = get_min_max_mireds(bulb_type)
         self._attr_supported_color_modes = get_supported_color_modes(bulb_type)
-        if supports_effects(bulb_type):
+        if bulb_type.features.effect:
             self._attr_supported_features = SUPPORT_EFFECT
 
     @callback
@@ -117,12 +112,10 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         self._attr_effect = state.get_scene()
         super()._handle_coordinator_update()
 
+    @callback
     def _async_pilot_builder(self, **kwargs: Any) -> PilotBuilder:
         """Create the PilotBuilder for turn on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
-
-        if ATTR_RGB_COLOR in kwargs:
-            return PilotBuilder(rgb=kwargs[ATTR_RGB_COLOR], brightness=brightness)
 
         if ATTR_HS_COLOR in kwargs:
             return PilotBuilder(
@@ -130,32 +123,26 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
                 brightness=brightness,
             )
 
-        colortemp = None
+        color_temp = None
         if ATTR_COLOR_TEMP in kwargs:
-            colortemp = color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
+            color_temp = color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
 
-        sceneid = None
+        scene_id = None
         if ATTR_EFFECT in kwargs:
-            sceneid = get_id_from_scene_name(kwargs[ATTR_EFFECT])
-
-        if sceneid == 1000:  # rhythm
-            return PilotBuilder()
+            scene_id = get_id_from_scene_name(kwargs[ATTR_EFFECT])
+            if scene_id == 1000:  # rhythm
+                return PilotBuilder()
 
         _LOGGER.debug(
-            "[wizlight %s] Pilot will be send with brightness=%s, colortemp=%s, scene=%s",
+            "[wizlight %s] Pilot will be sent with brightness=%s, color_temp=%s, scene_id=%s",
             self._device.ip,
             brightness,
-            colortemp,
-            sceneid,
+            color_temp,
+            scene_id,
         )
-        return PilotBuilder(brightness=brightness, colortemp=colortemp, scene=sceneid)
+        return PilotBuilder(brightness=brightness, colortemp=color_temp, scene=scene_id)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         await self._device.turn_on(self._async_pilot_builder(**kwargs))
-        await self.coordinator.async_request_refresh()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Instruct the light to turn off."""
-        await self._device.turn_off()
         await self.coordinator.async_request_refresh()
