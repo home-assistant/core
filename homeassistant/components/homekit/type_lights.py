@@ -383,6 +383,7 @@ class Light(HomeAccessory):
 
         # Handle color temperature
         if CHAR_COLOR_TEMPERATURE in self.chars:
+            color_temp = None
             if self.color_temp_supported:
                 color_temp = attributes.get(ATTR_COLOR_TEMP)
             elif color_mode in COLOR_MODES_WITH_WHITES and (
