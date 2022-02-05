@@ -2,13 +2,14 @@
 from datetime import timedelta
 import logging
 
+from pywizlight import wizlight
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from pywizlight import wizlight
 
 from .const import DOMAIN, WIZ_EXCEPTIONS
 from .models import WizData
