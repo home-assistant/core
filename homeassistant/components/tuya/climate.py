@@ -89,7 +89,7 @@ CLIMATE_DESCRIPTIONS: dict[str, TuyaClimateEntityDescription] = {
     # https://developer.tuya.com/en/docs/iot/categorycs?id=Kaiuz1vcz4dha
     "cs": TuyaClimateEntityDescription(
         key="cs",
-        switch_only_hvac_mode=DPCode.HEAT,
+        switch_only_hvac_mode=HVAC_MODE_HEAT,
     ),
 }
 
