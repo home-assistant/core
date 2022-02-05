@@ -87,10 +87,12 @@ PLATFORMS = [
 class TuyaDeviceClass(StrEnum):
     """Tuya specific device classes, used for translations."""
 
+    AIR_QUALITY = "tuya__air_quality"
     CURTAIN_MODE = "tuya__curtain_mode"
     CURTAIN_MOTOR_MODE = "tuya__curtain_motor_mode"
     BASIC_ANTI_FLICKR = "tuya__basic_anti_flickr"
     BASIC_NIGHTVISION = "tuya__basic_nightvision"
+    COUNTDOWN = "tuya__countdown"
     DECIBEL_SENSITIVITY = "tuya__decibel_sensitivity"
     FAN_ANGLE = "tuya__fan_angle"
     FINGERBOT_MODE = "tuya__fingerbot_mode"
@@ -132,6 +134,7 @@ class DPCode(StrEnum):
     https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
     """
 
+    AIR_QUALITY = "air_quality"
     ALARM_SWITCH = "alarm_switch"  # Alarm switch
     ALARM_TIME = "alarm_time"  # Alarm time
     ALARM_VOLUME = "alarm_volume"  # Alarm volume
@@ -207,6 +210,7 @@ class DPCode(StrEnum):
     DOORCONTACT_STATE_2 = "doorcontact_state_2"
     DOORCONTACT_STATE_3 = "doorcontact_state_3"
     DUSTER_CLOTH = "duster_cloth"
+    ECO2 = "eco2"
     EDGE_BRUSH = "edge_brush"
     ELECTRICITY_LEFT = "electricity_left"
     FAN_BEEP = "fan_beep"  # Sound
@@ -222,6 +226,7 @@ class DPCode(StrEnum):
     FAULT = "fault"
     FEED_REPORT = "feed_report"
     FEED_STATE = "feed_state"
+    FILTER = "filter"
     FILTER_LIFE = "filter"
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
     FLOODLIGHT_LIGHTNESS = "floodlight_lightness"
@@ -231,6 +236,7 @@ class DPCode(StrEnum):
     GAS_SENSOR_STATUS = "gas_sensor_status"
     GAS_SENSOR_VALUE = "gas_sensor_value"
     HUMIDIFIER = "humidifier"  # Humidification
+    HUMIDITY = "humidity"  # Humidity
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
@@ -269,6 +275,7 @@ class DPCode(StrEnum):
     PIR = "pir"  # Motion sensor
     PM1 = "pm1"
     PM10 = "pm10"
+    PM25 = "pm25"
     PM25_STATE = "pm25_state"
     PM25_VALUE = "pm25_value"
     POWDER_SET = "powder_set"  # Powder
@@ -352,6 +359,9 @@ class DPCode(StrEnum):
     TOTAL_CLEAN_COUNT = "total_clean_count"
     TOTAL_CLEAN_TIME = "total_clean_time"
     TOTAL_FORWARD_ENERGY = "total_forward_energy"
+    TOTAL_TIME = "total_time"
+    TOTAL_PM = "total_pm"
+    TVOC = "tvoc"
     UV = "uv"  # UV sterilization
     VA_BATTERY = "va_battery"
     VA_HUMIDITY = "va_humidity"
