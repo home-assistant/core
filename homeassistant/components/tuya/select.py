@@ -276,6 +276,45 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Humidifier
+    # https://developer.tuya.com/en/docs/iot/categoryjsq?id=Kaiuz1smr440b
+    "jsq": (
+        SelectEntityDescription(
+            key=DPCode.SPRAY_MODE,
+            name="Spray Mode",
+            device_class=TuyaDeviceClass.HUMIDIFIER_SPRAY_MODE,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:spray",
+        ),
+        SelectEntityDescription(
+            key=DPCode.LEVEL,
+            name="Spraying Level",
+            device_class=TuyaDeviceClass.HUMIDIFIER_LEVEL,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:spray",
+        ),
+        SelectEntityDescription(
+            key=DPCode.MOODLIGHTING,
+            name="Moodlighting",
+            device_class=TuyaDeviceClass.HUMIDIFIER_MOODLIGHTING,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:lightbulb-multiple",
+        ),
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN,
+            name="Countdown",
+            device_class=TuyaDeviceClass.COUNTDOWN,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:timer-cog-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN_SET,
+            name="Countdown",
+            device_class=TuyaDeviceClass.COUNTDOWN,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:timer-cog-outline",
+        ),
+    ),
     # Air Purifier
     # https://developer.tuya.com/en/docs/iot/f?id=K9gf46h2s6dzm
     "kj": (
