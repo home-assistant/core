@@ -80,13 +80,6 @@ def _ensure_timezone(timestamp: datetime | None) -> datetime | None:
     return timestamp
 
 
-def _fetch_attr_if_exists(domain: Domain, attr: str) -> str | None:
-    """Fetch an attribute if it exists and is truthy or return None."""
-    if hasattr(domain, attr) and (value := getattr(domain, attr)):
-        return cast(str, value)
-    return None
-
-
 SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
     WhoisSensorEntityDescription(
         key="admin",
@@ -94,7 +87,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:account-star",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: _fetch_attr_if_exists(domain, "admin"),
+        value_fn=lambda domain: getattr(domain, "admin", None),
     ),
     WhoisSensorEntityDescription(
         key="creation_date",
@@ -130,7 +123,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:account",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: _fetch_attr_if_exists(domain, "owner"),
+        value_fn=lambda domain: getattr(domain, "owner", None),
     ),
     WhoisSensorEntityDescription(
         key="registrant",
@@ -138,7 +131,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:account-edit",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: _fetch_attr_if_exists(domain, "registrant"),
+        value_fn=lambda domain: getattr(domain, "registrant", None),
     ),
     WhoisSensorEntityDescription(
         key="registrar",
@@ -154,7 +147,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:store",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: _fetch_attr_if_exists(domain, "reseller"),
+        value_fn=lambda domain: getattr(domain, "reseller", None),
     ),
 )
 
@@ -240,17 +233,20 @@ class WhoisSensorEntity(CoordinatorEntity, SensorEntity):
         if self.coordinator.data is None:
             return None
 
-        attrs = {
-            ATTR_EXPIRES: self.coordinator.data.expiration_date.isoformat(),
-        }
+        attrs = {}
+        if expiration_date := self.coordinator.data.expiration_date:
+            attrs[ATTR_EXPIRES] = expiration_date.isoformat()
 
-        if self.coordinator.data.name_servers:
-            attrs[ATTR_NAME_SERVERS] = " ".join(self.coordinator.data.name_servers)
+        if name_servers := self.coordinator.data.name_servers:
+            attrs[ATTR_NAME_SERVERS] = " ".join(name_servers)
 
-        if self.coordinator.data.last_updated:
-            attrs[ATTR_UPDATED] = self.coordinator.data.last_updated.isoformat()
+        if last_updated := self.coordinator.data.last_updated:
+            attrs[ATTR_UPDATED] = last_updated.isoformat()
 
-        if self.coordinator.data.registrar:
-            attrs[ATTR_REGISTRAR] = self.coordinator.data.registrar
+        if registrar := self.coordinator.data.registrar:
+            attrs[ATTR_REGISTRAR] = registrar
+
+        if not attrs:
+            return None
 
         return attrs

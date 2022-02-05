@@ -198,6 +198,12 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             icon="mdi:water-percent",
             entity_category=EntityCategory.CONFIG,
         ),
+        SwitchEntityDescription(
+            key=DPCode.UV,
+            name="UV Sterilization",
+            icon="mdi:minus-circle-outline",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     # Air conditioner
     # https://developer.tuya.com/en/docs/iot/categorykt?id=Kaiuz0z71ov2n
@@ -443,6 +449,22 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Thermostatic Radiator Valve
+    # Not documented
+    "wkf": (
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            name="Child Lock",
+            icon="mdi:account-lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.WINDOW_CHECK,
+            name="Open Window Detection",
+            icon="mdi:window-open",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Ceiling Light
     # https://developer.tuya.com/en/docs/iot/ceiling-light?id=Kaiuz03xxfc4r
     "xdd": (
@@ -499,6 +521,12 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.OXYGEN,
             name="Oxygen Bar",
             icon="mdi:molecule",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.FAN_COOL,
+            name="Natural Wind",
+            icon="mdi:weather-windy",
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(

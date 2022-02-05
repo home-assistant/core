@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "description": "Please enter a hostname or IP address and name to add a new bulb:"
+      },
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "bulb_time_out": "Can not connect to the bulb. Maybe the bulb is offline or a wrong IP/host was entered. Please turn on the light and try again!",
+      "no_wiz_light": "The bulb can not be connected via WiZ Platform integration."
+    },
+    "abort": {
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

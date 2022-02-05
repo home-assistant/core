@@ -5,6 +5,7 @@
             "already_in_progress": "O fluxo de configura\u00e7\u00e3o j\u00e1 est\u00e1 em andamento"
         },
         "error": {
+            "cannot_authenticate": "N\u00e3o \u00e9 poss\u00edvel autenticar, o Gateway est\u00e1 emparelhado com outro servidor como, por exemplo, Homekit?",
             "cannot_connect": "Falha ao conectar",
             "invalid_key": "Falha ao registrar-se com a chave fornecida. Se isso continuar acontecendo, tente reiniciar o gateway.",
             "timeout": "Excedido tempo limite para validar c\u00f3digo"

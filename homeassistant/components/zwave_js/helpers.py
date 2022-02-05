@@ -298,7 +298,8 @@ def async_is_device_config_entry_not_loaded(
     """Return whether device's config entries are not loaded."""
     dev_reg = dr.async_get(hass)
     device = dev_reg.async_get(device_id)
-    assert device
+    if device is None:
+        raise ValueError(f"Device {device_id} not found")
     return any(
         (entry := hass.config_entries.async_get_entry(entry_id))
         and entry.state != ConfigEntryState.LOADED

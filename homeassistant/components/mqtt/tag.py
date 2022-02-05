@@ -175,7 +175,7 @@ class MQTTTagScanner:
 
             await self.hass.components.tag.async_scan_tag(tag_id, self.device_id)
 
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
             self._sub_state,
             {
@@ -186,6 +186,7 @@ class MQTTTagScanner:
                 }
             },
         )
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     async def device_removed(self, event):
         """Handle the removal of a device."""
@@ -207,7 +208,7 @@ class MQTTTagScanner:
         self._remove_discovery()
 
         mqtt.publish(self.hass, discovery_topic, "", retain=True)
-        self._sub_state = await subscription.async_unsubscribe_topics(
+        self._sub_state = subscription.async_unsubscribe_topics(
             self.hass, self._sub_state
         )
         if self.device_id:

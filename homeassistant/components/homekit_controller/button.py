@@ -19,8 +19,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 
 from . import KNOWN_DEVICES, CharacteristicEntity
+from .connection import HKDevice
 
 
 @dataclass
@@ -31,15 +33,15 @@ class HomeKitButtonEntityDescription(ButtonEntityDescription):
 
 
 BUTTON_ENTITIES: dict[str, HomeKitButtonEntityDescription] = {
-    CharacteristicsTypes.Vendor.HAA_SETUP: HomeKitButtonEntityDescription(
-        key=CharacteristicsTypes.Vendor.HAA_SETUP,
+    CharacteristicsTypes.VENDOR_HAA_SETUP: HomeKitButtonEntityDescription(
+        key=CharacteristicsTypes.VENDOR_HAA_SETUP,
         name="Setup",
         icon="mdi:cog",
         entity_category=EntityCategory.CONFIG,
         write_value="#HAA@trcmd",
     ),
-    CharacteristicsTypes.Vendor.HAA_UPDATE: HomeKitButtonEntityDescription(
-        key=CharacteristicsTypes.Vendor.HAA_UPDATE,
+    CharacteristicsTypes.VENDOR_HAA_UPDATE: HomeKitButtonEntityDescription(
+        key=CharacteristicsTypes.VENDOR_HAA_UPDATE,
         name="Update",
         device_class=ButtonDeviceClass.UPDATE,
         entity_category=EntityCategory.CONFIG,
@@ -54,16 +56,6 @@ BUTTON_ENTITIES: dict[str, HomeKitButtonEntityDescription] = {
 }
 
 
-# For legacy reasons, "built-in" characteristic types are in their short form
-# And vendor types don't have a short form
-# This means long and short forms get mixed up in this dict, and comparisons
-# don't work!
-# We call get_uuid on *every* type to normalise them to the long form
-# Eventually aiohomekit will use the long form exclusively amd this can be removed.
-for k, v in list(BUTTON_ENTITIES.items()):
-    BUTTON_ENTITIES[CharacteristicsTypes.get_uuid(k)] = BUTTON_ENTITIES.pop(k)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -74,7 +66,7 @@ async def async_setup_entry(
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_characteristic(char: Characteristic):
+    def async_add_characteristic(char: Characteristic) -> bool:
         entities = []
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
 
@@ -98,16 +90,16 @@ class HomeKitButton(CharacteristicEntity, ButtonEntity):
 
     def __init__(
         self,
-        conn,
-        info,
-        char,
+        conn: HKDevice,
+        info: ConfigType,
+        char: Characteristic,
         description: HomeKitButtonEntityDescription,
-    ):
+    ) -> None:
         """Initialise a HomeKit button control."""
         self.entity_description = description
         super().__init__(conn, info, char)
 
-    def get_characteristic_types(self):
+    def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [self._char.type]
 
@@ -122,13 +114,13 @@ class HomeKitButton(CharacteristicEntity, ButtonEntity):
         """Press the button."""
         key = self.entity_description.key
         val = self.entity_description.write_value
-        return await self.async_put_characteristics({key: val})
+        await self.async_put_characteristics({key: val})
 
 
 class HomeKitEcobeeClearHoldButton(CharacteristicEntity, ButtonEntity):
     """Representation of a Button control for Ecobee clear hold request."""
 
-    def get_characteristic_types(self):
+    def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return []
 
@@ -155,5 +147,5 @@ class HomeKitEcobeeClearHoldButton(CharacteristicEntity, ButtonEntity):
 
 
 BUTTON_ENTITY_CLASSES: dict[str, type] = {
-    CharacteristicsTypes.Vendor.ECOBEE_CLEAR_HOLD: HomeKitEcobeeClearHoldButton,
+    CharacteristicsTypes.VENDOR_ECOBEE_CLEAR_HOLD: HomeKitEcobeeClearHoldButton,
 }

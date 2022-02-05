@@ -11,6 +11,7 @@
         "step": {
             "user": {
                 "data": {
+                    "email": "Email",
                     "password": "Senha"
                 }
             }

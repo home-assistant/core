@@ -95,6 +95,9 @@ class MqttButton(MqttEntity, ButtonEntity):
             config.get(CONF_COMMAND_TEMPLATE), entity=self
         ).async_render
 
+    def _prepare_subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
@@ -109,8 +112,7 @@ class MqttButton(MqttEntity, ButtonEntity):
         This method is a coroutine.
         """
         payload = self._command_template(self._config[CONF_PAYLOAD_PRESS])
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._config[CONF_COMMAND_TOPIC],
             payload,
             self._config[CONF_QOS],

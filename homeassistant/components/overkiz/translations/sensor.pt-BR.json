@@ -1,6 +1,7 @@
 {
     "state": {
         "overkiz__battery": {
+            "full": "Completa",
             "low": "Baixo",
             "normal": "Normal",
             "verylow": "Muito baixo"
@@ -12,11 +13,14 @@
             "verylow": "Muito baixo"
         },
         "overkiz__priority_lock_originator": {
+            "external_gateway": "Gateway externo",
             "local_user": "Usu\u00e1rio local",
             "lsc": "LSC",
             "myself": "Eu mesmo",
             "rain": "Chuva",
+            "saac": "SAAC",
             "security": "Seguran\u00e7a",
+            "sfc": "SFC",
             "temperature": "Temperatura",
             "timer": "Temporizador",
             "ups": "UPS",
