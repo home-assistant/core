@@ -375,7 +375,9 @@ class Light(HomeAccessory):
                 self.char_saturation.set_value(round(saturation, 0))
 
         # Handle color temperature
-        if self.color_temp_supported:
-            color_temp = attributes.get(ATTR_COLOR_TEMP)
-            if isinstance(color_temp, (int, float)):
-                self.char_color_temp.set_value(round(color_temp, 0))
+        if (
+            self.color_temp_supported
+            and (color_temp := attributes.get(ATTR_COLOR_TEMP))
+            and isinstance(color_temp, (int, float))
+        ):
+            self.char_color_temp.set_value(round(color_temp, 0))
