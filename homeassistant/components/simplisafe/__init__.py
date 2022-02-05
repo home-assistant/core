@@ -449,6 +449,7 @@ class SimpliSafe:
         self._websocket_reconnect_task: asyncio.Task | None = None
         self.entry = entry
         self.initial_event_to_use: dict[int, dict[str, Any]] = {}
+        self.subscription_data: dict[int, Any] = api.subscription_data
         self.systems: dict[int, SystemType] = {}
 
         # This will get filled in by async_init:
