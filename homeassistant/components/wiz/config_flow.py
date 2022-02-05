@@ -34,7 +34,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle discovery via dhcp."""
         self._discovered_device = DiscoveredBulb(
-            discovery_info.macaddress, discovery_info.ip
+            discovery_info.ip, discovery_info.macaddress
         )
         return await self._async_handle_discovery()
 
@@ -51,7 +51,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle any discovery."""
         device = self._discovered_device
         assert device is not None
-        _LOGGER.debug("Discovered debug: %s", device)
+        _LOGGER.debug("Discovered device: %s", device)
         ip_address = device.ip_address
         mac = device.mac_address
         await self.async_set_unique_id(mac)
