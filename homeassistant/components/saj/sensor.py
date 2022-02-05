@@ -131,11 +131,13 @@ async def async_setup_platform(
 
         return values
 
+    @callback
     def start_update_interval(event):
         """Start the update interval scheduling."""
         nonlocal remove_interval_update
         remove_interval_update = async_track_time_interval_backoff(hass, async_saj)
 
+    @callback
     def stop_update_interval(event):
         """Properly cancel the scheduled update."""
         remove_interval_update()  # pylint: disable=not-callable
