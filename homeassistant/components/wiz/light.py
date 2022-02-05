@@ -72,11 +72,11 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
             )
         if bulb_type.features.effect:
             self._attr_supported_features = SUPPORT_EFFECT
-        self._async_update_state()
+        self._async_update_attrs()
 
     @callback
-    def _async_update_state(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _async_update_attrs(self) -> None:
+        """Handle updating _attr values."""
         state = self._device.state
         color_modes = self.supported_color_modes
         assert color_modes is not None
@@ -97,7 +97,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         else:
             self._attr_color_mode = COLOR_MODE_BRIGHTNESS
         self._attr_effect = state.get_scene()
-        super()._async_update_state()
+        super()._async_update_attrs()
 
     @callback
     def _async_pilot_builder(self, **kwargs: Any) -> PilotBuilder:
