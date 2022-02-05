@@ -3,11 +3,7 @@
   "name": "WiZ",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wiz",
-  "requirements": [
-    "pywizlight==0.4.15"
-  ],
+  "requirements": ["pywizlight==0.4.16"],
   "iot_class": "local_polling",
-  "codeowners": [
-    "@sbidy"
-  ]
+  "codeowners": ["@sbidy"]
 }
