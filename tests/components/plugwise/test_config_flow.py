@@ -1,5 +1,5 @@
 """Test the Plugwise config flow."""
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from plugwise.exceptions import (
     ConnectionFailedError,
@@ -12,7 +12,6 @@ from homeassistant.components import zeroconf
 from homeassistant.components.plugwise.const import (
     API,
     DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     FLOW_NET,
     FLOW_TYPE,
@@ -24,7 +23,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_SOURCE,
     CONF_USERNAME,
 )
@@ -375,68 +373,3 @@ async def test_form_other_problem(hass, mock_smile):
 
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "unknown"}
-
-
-async def test_options_flow_power(hass, mock_smile) -> None:
-    """Test config flow options DSMR environments."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=CONF_NAME,
-        data={CONF_HOST: TEST_HOST, CONF_PASSWORD: TEST_PASSWORD},
-        options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
-    )
-
-    hass.data[DOMAIN] = {entry.entry_id: {"api": MagicMock(smile_type="power")}}
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.plugwise.async_setup_entry", return_value=True
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        result = await hass.config_entries.options.async_init(entry.entry_id)
-
-        assert result["type"] == RESULT_TYPE_FORM
-        assert result["step_id"] == "init"
-
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_SCAN_INTERVAL: 10}
-        )
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["data"] == {
-            CONF_SCAN_INTERVAL: 10,
-        }
-
-
-async def test_options_flow_thermo(hass, mock_smile) -> None:
-    """Test config flow options for thermostatic environments."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=CONF_NAME,
-        data={CONF_HOST: TEST_HOST, CONF_PASSWORD: TEST_PASSWORD},
-        options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
-    )
-
-    hass.data[DOMAIN] = {entry.entry_id: {"api": MagicMock(smile_type="thermostat")}}
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.plugwise.async_setup_entry", return_value=True
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        result = await hass.config_entries.options.async_init(entry.entry_id)
-
-        assert result["type"] == RESULT_TYPE_FORM
-        assert result["step_id"] == "init"
-
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_SCAN_INTERVAL: 60}
-        )
-
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["data"] == {
-            CONF_SCAN_INTERVAL: 60,
-        }
