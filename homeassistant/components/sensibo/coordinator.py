@@ -107,5 +107,6 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 "model": model,
                 "calibration_temp": calibration_temp,
                 "calibration_hum": calibration_hum,
+                "full_capabilities": capabilities,
             }
         return device_data
