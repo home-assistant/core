@@ -14,7 +14,6 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
-    ATTR_RGB_COLOR,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_HS,
@@ -117,9 +116,6 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
     def _async_pilot_builder(self, **kwargs: Any) -> PilotBuilder:
         """Create the PilotBuilder for turn on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
-
-        if ATTR_RGB_COLOR in kwargs:
-            return PilotBuilder(rgb=kwargs[ATTR_RGB_COLOR], brightness=brightness)
 
         if ATTR_HS_COLOR in kwargs:
             return PilotBuilder(
