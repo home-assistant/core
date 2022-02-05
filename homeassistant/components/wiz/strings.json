@@ -19,7 +19,6 @@
       "no_wiz_light": "The bulb can not be connected via WiZ Platform integration."
     },
     "abort": {
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }
