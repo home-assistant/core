@@ -1,13 +1,11 @@
 """WiZ integration."""
 from __future__ import annotations
 
-import contextlib
 import logging
 from typing import Any
 
 from pywizlight import PilotBuilder
 from pywizlight.bulblibrary import BulbClass, BulbType
-from pywizlight.exceptions import WizLightNotKnownBulb
 from pywizlight.rgbcw import convertHSfromRGBCW
 from pywizlight.scenes import get_id_from_scene_name
 
@@ -43,29 +41,20 @@ DEFAULT_MAX_MIREDS = 454
 
 def get_supported_color_modes(bulb_type: BulbType) -> set[str]:
     """Flag supported features."""
-    if not bulb_type:
-        # fallback
-        return DEFAULT_COLOR_MODES
     color_modes = set()
-    try:
-        features = bulb_type.features
-        if features.color:
-            color_modes.add(COLOR_MODE_HS)
-        if features.color_tmp:
-            color_modes.add(COLOR_MODE_COLOR_TEMP)
-        if not color_modes and features.brightness:
-            color_modes.add(COLOR_MODE_BRIGHTNESS)
-        return color_modes
-    except WizLightNotKnownBulb:
-        _LOGGER.warning("Bulb is not present in the library. Fallback to full feature")
-        return DEFAULT_COLOR_MODES
+    features = bulb_type.features
+    if features.color:
+        color_modes.add(COLOR_MODE_HS)
+    if features.color_tmp:
+        color_modes.add(COLOR_MODE_COLOR_TEMP)
+    if not color_modes and features.brightness:
+        color_modes.add(COLOR_MODE_BRIGHTNESS)
+    return color_modes
 
 
 def supports_effects(bulb_type: BulbType) -> bool:
     """Check if a bulb supports effects."""
-    with contextlib.suppress(WizLightNotKnownBulb):
-        return bool(bulb_type.features.effect)
-    return True  # default is true
+    return bool(bulb_type.features.effect)
 
 
 def get_min_max_mireds(bulb_type: BulbType) -> tuple[int, int]:
@@ -76,13 +65,9 @@ def get_min_max_mireds(bulb_type: BulbType) -> tuple[int, int]:
     if bulb_type.bulb_type == BulbClass.DW:
         return 0, 0
     # If bulbtype is TW or RGB then return the kelvin value
-    try:
-        return color_utils.color_temperature_kelvin_to_mired(
-            bulb_type.kelvin_range.max
-        ), color_utils.color_temperature_kelvin_to_mired(bulb_type.kelvin_range.min)
-    except WizLightNotKnownBulb:
-        _LOGGER.debug("Kelvin is not present in the library. Fallback to 6500")
-        return DEFAULT_MIN_MIREDS, DEFAULT_MAX_MIREDS
+    return color_utils.color_temperature_kelvin_to_mired(
+        bulb_type.kelvin_range.max
+    ), color_utils.color_temperature_kelvin_to_mired(bulb_type.kelvin_range.min)
 
 
 async def async_setup_entry(
