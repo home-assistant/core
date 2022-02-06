@@ -30,11 +30,8 @@ from homeassistant.helpers.update_coordinator import (
 PLATFORMS = [Platform.BINARY_SENSOR]
 DOMAIN = "proxmoxve"
 PROXMOX_CLIENTS = "proxmox_clients"
+PROXMOX_HOSTS = "proxmox_hosts"
 CONF_REALM = "realm"
-CONF_NODE = "node"
-CONF_NODES = "nodes"
-CONF_VMS = "vms"
-CONF_CONTAINERS = "containers"
 
 COORDINATORS = "coordinators"
 API_DATA = "api_data"
@@ -63,22 +60,6 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Optional(
                             CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
                         ): cv.boolean,
-                        vol.Required(CONF_NODES): vol.All(
-                            cv.ensure_list,
-                            [
-                                vol.Schema(
-                                    {
-                                        vol.Required(CONF_NODE): cv.string,
-                                        vol.Optional(CONF_VMS, default=[]): [
-                                            cv.positive_int
-                                        ],
-                                        vol.Optional(CONF_CONTAINERS, default=[]): [
-                                            cv.positive_int
-                                        ],
-                                    }
-                                )
-                            ],
-                        ),
                     }
                 )
             ],
@@ -152,29 +133,35 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         proxmox = proxmox_client.get_api_client()
 
-        for node_config in host_config["nodes"]:
-            node_name = node_config["node"]
+        await get_nodes(hass, config)
+
+        for node in hass.data[PROXMOX_HOSTS][host_name]["nodes"]:
+            node_name = node["node"]
             node_coordinators = coordinators[host_name][node_name] = {}
 
-            for vm_id in node_config["vms"]:
-                coordinator = create_coordinator_container_vm(
-                    hass, proxmox, host_name, node_name, vm_id, TYPE_VM
-                )
+        await get_node_vms(hass)
 
-                # Fetch initial data
-                await coordinator.async_refresh()
+        for node_vm in hass.data[PROXMOX_HOSTS][host_name]["vms"]:
+            coordinator = create_coordinator_container_vm(
+                hass, proxmox, host_name, node_name, node_vm["vmid"], TYPE_VM
+            )
 
-                node_coordinators[vm_id] = coordinator
+            # Fetch initial data
+            await coordinator.async_refresh()
 
-            for container_id in node_config["containers"]:
-                coordinator = create_coordinator_container_vm(
-                    hass, proxmox, host_name, node_name, container_id, TYPE_CONTAINER
-                )
+            node_coordinators[node_vm["vmid"]] = coordinator
 
-                # Fetch initial data
-                await coordinator.async_refresh()
+        await get_node_containers(hass)
 
-                node_coordinators[container_id] = coordinator
+        for container_id in hass.data[PROXMOX_HOSTS][host_name]["containers"]:
+            coordinator = create_coordinator_container_vm(
+                hass, proxmox, host_name, node_name, container_id, TYPE_CONTAINER
+            )
+
+            # Fetch initial data
+            await coordinator.async_refresh()
+
+            node_coordinators[container_id] = coordinator
 
     for component in PLATFORMS:
         await hass.async_create_task(
@@ -184,6 +171,65 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
     return True
+
+
+async def get_nodes(hass, config):
+    """Get Proxmox cluster nodes."""
+    hass.data[PROXMOX_HOSTS] = {}
+
+    def get_nodes_call():
+        nodes = proxmox.nodes.get()
+        return nodes
+
+    for entry in config[DOMAIN]:
+        host = entry[CONF_HOST]
+        hass.data[PROXMOX_HOSTS][host] = {}
+        proxmox_client = hass.data[PROXMOX_CLIENTS][host]
+        proxmox = proxmox_client.get_api_client()
+        nodes = await hass.async_add_executor_job(get_nodes_call)
+        hass.data[PROXMOX_HOSTS][host]["nodes"] = nodes
+
+
+async def get_node_vms(hass):
+    """Get Proxmox node VMs."""
+    node = ""
+
+    def get_node_vms_call():
+        node_vms = proxmox.nodes(node["node"]).qemu.get()
+        return node_vms
+
+    for host in hass.data[PROXMOX_HOSTS]:
+        proxmox_client = hass.data[PROXMOX_CLIENTS][host]
+        proxmox = proxmox_client.get_api_client()
+
+        for node in hass.data[PROXMOX_HOSTS][host]["nodes"]:
+            try:
+                vms = await hass.async_add_executor_job(get_node_vms_call)
+            except (ResourceException, requests.exceptions.ConnectionError):
+                return None
+
+            hass.data[PROXMOX_HOSTS][host]["vms"] = vms
+
+
+async def get_node_containers(hass):
+    """Get Proxmox node containers."""
+    node = ""
+
+    def get_node_containers_call():
+        node_containers = proxmox.nodes(node["node"]).lxc.get()
+        return node_containers
+
+    for host in hass.data[PROXMOX_HOSTS]:
+        proxmox_client = hass.data[PROXMOX_CLIENTS][host]
+        proxmox = proxmox_client.get_api_client()
+
+        for node in hass.data[PROXMOX_HOSTS][host]["nodes"]:
+            try:
+                containers = await hass.async_add_executor_job(get_node_containers_call)
+            except (ResourceException, requests.exceptions.ConnectionError):
+                return None
+
+            hass.data[PROXMOX_HOSTS][host]["containers"] = containers
 
 
 def create_coordinator_container_vm(

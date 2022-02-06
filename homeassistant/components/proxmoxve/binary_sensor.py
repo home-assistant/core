@@ -7,7 +7,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import COORDINATORS, DOMAIN, PROXMOX_CLIENTS, ProxmoxEntity
+from . import COORDINATORS, DOMAIN, PROXMOX_CLIENTS, PROXMOX_HOSTS, ProxmoxEntity
 
 
 async def async_setup_platform(
@@ -29,10 +29,11 @@ async def async_setup_platform(
         if hass.data[PROXMOX_CLIENTS][host_name] is None:
             continue
 
-        for node_config in host_config["nodes"]:
-            node_name = node_config["node"]
+        for node in hass.data[PROXMOX_HOSTS][host_name]["nodes"]:
+            node_name = node["node"]
 
-            for vm_id in node_config["vms"]:
+            for node_vm in hass.data[PROXMOX_HOSTS][host_name]["vms"]:
+                vm_id = node_vm["vmid"]
                 coordinator = host_name_coordinators[node_name][vm_id]
 
                 # unfound vm case
@@ -45,7 +46,8 @@ async def async_setup_platform(
                 )
                 sensors.append(vm_sensor)
 
-            for container_id in node_config["containers"]:
+            for node_container in hass.data[PROXMOX_HOSTS][host_name]["containers"]:
+                container_id = node_container["vmid"]
                 coordinator = host_name_coordinators[node_name][container_id]
 
                 # unfound container case
