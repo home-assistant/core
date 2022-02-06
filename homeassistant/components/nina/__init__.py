@@ -1,6 +1,8 @@
 """The Nina integration."""
 from __future__ import annotations
 
+import datetime as dt
+from types import MappingProxyType
 from typing import Any
 
 from async_timeout import timeout
@@ -42,11 +44,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    config = dict(entry.data)
+    if entry.options:
+        config.update(entry.options)
+        entry.data = MappingProxyType(config)
+
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 class NINADataUpdateCoordinator(DataUpdateCoordinator):
