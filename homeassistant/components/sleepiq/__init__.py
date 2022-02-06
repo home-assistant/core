@@ -1,26 +1,26 @@
 """Support for SleepIQ from SleepNumber."""
-from datetime import timedelta
 import asyncio
+from datetime import timedelta
 import logging
+
+import voluptuous as vol
 
 from asyncsleepiq import (
     AsyncSleepIQ,
+    SleepIQAPIException,
     SleepIQLoginException,
     SleepIQTimeoutException,
-    SleepIQAPIException,
 )
-import voluptuous as vol
-
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, SLEEPIQ_DATA, SLEEPIQ_STATUS_COORDINATOR
-
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the SleepIQ component."""
     hass.data.setdefault(DOMAIN, {})
     conf = config.get(DOMAIN)
@@ -109,6 +109,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
     return True
 
 

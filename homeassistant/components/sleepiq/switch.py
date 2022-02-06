@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -33,6 +34,7 @@ class SleepNumberPrivateSwitch(SleepNumberEntity, SwitchEntity):
     """Representation of an SleepIQ privacy mode."""
 
     def __init__(self, bed):
+        """Initialize the switch."""
         super().__init__(bed)
         self._attr_name = f"{bed.name} Pause Mode"
         self._attr_unique_id = f"{bed.id}-PauseMode"

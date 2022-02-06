@@ -30,6 +30,7 @@ class SleepNumberCalibrateButton(SleepNumberEntity, ButtonEntity):
     """Representation of an SleepIQ privacy mode."""
 
     def __init__(self, bed):
+        """Initialize the Button."""
         super().__init__(bed)
         self._attr_name = f"{bed.name} Calibrate"
         self._attr_unique_id = f"{bed.id}-Calibrate"
@@ -43,6 +44,7 @@ class SleepNumberStopPumpButton(SleepNumberEntity, ButtonEntity):
     """Representation of an SleepIQ privacy mode."""
 
     def __init__(self, bed):
+        """Initialize the Button."""
         super().__init__(bed)
         self._attr_name = f"{bed.name} Stop Pump"
         self._attr_unique_id = f"{bed.id}-StopPump"

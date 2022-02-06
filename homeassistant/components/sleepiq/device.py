@@ -1,9 +1,8 @@
 """Representation of an SleepIQ device."""
 
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers import device_registry
+from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 
@@ -12,6 +11,7 @@ class SleepNumberEntity(Entity):
     """Representation of an SleepIQ Entity."""
 
     def __init__(self, bed):
+        """Initialize the SleepIQ Entity."""
         self._bed = bed
 
     @property
@@ -31,6 +31,7 @@ class SleepNumberCoordinatorEntity(CoordinatorEntity, SleepNumberEntity):
     """Representation of an SleepIQ Entity with CoordinatorEntity."""
 
     def __init__(self, bed, status_coordinator=None):
+        """Initialize the SleepIQ Entity."""
         super().__init__(status_coordinator)
         self._attr_should_poll = False
         self._bed = bed

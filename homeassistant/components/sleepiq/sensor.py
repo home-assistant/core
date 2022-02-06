@@ -35,9 +35,10 @@ class SleepNumberSensorEntity(SleepNumberCoordinatorEntity, SensorEntity):
     _attr_icon = "mdi:gauge"
 
     def __init__(self, sleeper, bed, status_coordinator):
+        """Initialize the sensor."""
         super().__init__(bed, status_coordinator)
         self._sleeper = sleeper
-        self._attr_name = f"{sleeper.name} Sleep Number"
+        self._attr_name = f"SleepNumber {bed.name} {sleeper.name} SleepNumber"
         self._attr_unique_id = f"{bed.id}-{sleeper.side}-SN"
 
     @property

@@ -1,9 +1,9 @@
 """Config flow for SleepIQ integration."""
 import logging
 
-from asyncsleepiq import AsyncSleepIQ, SleepIQTimeoutException, SleepIQLoginException
 import voluptuous as vol
 
+from asyncsleepiq import AsyncSleepIQ, SleepIQLoginException, SleepIQTimeoutException
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -42,6 +42,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
+
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)

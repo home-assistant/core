@@ -21,6 +21,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SleepIQ binary sensor."""
+
     data = hass.data[DOMAIN][config_entry.entry_id][SLEEPIQ_DATA]
     status_coordinator = hass.data[DOMAIN][config_entry.entry_id][
         SLEEPIQ_STATUS_COORDINATOR
