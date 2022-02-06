@@ -254,6 +254,8 @@ class Light(HomeAccessory):
             if brightness == 0 and state == STATE_ON:
                 brightness = 1
             self.char_brightness.set_value(brightness)
+            if color_mode_changed:
+                self.char_brightness.notify()
 
         # Handle Color - color must always be set before color temperature
         # or the iOS UI will not display it correctly.
