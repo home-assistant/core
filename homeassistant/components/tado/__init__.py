@@ -20,6 +20,7 @@ from homeassistant.util import Throttle
 from .const import ( 
     CONF_FALLBACK,
     CONST_OVERLAY_MANUAL,
+    CONST_OVERLAY_TADO_MODE,
     CONST_OVERLAY_TADO_OPTIONS,
     DATA,
     DOMAIN,
@@ -53,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
-    fallback = entry.options.get(CONF_FALLBACK, CONST_OVERLAY_MANUAL)
+    fallback = entry.options.get(CONF_FALLBACK, CONST_OVERLAY_TADO_MODE)
 
     tadoconnector = TadoConnector(hass, username, password, fallback)
 
@@ -101,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: ConfigEntry):
     options = dict(entry.options)
     if CONF_FALLBACK not in options:
-        options[CONF_FALLBACK] = entry.data.get(CONF_FALLBACK, CONST_OVERLAY_MANUAL)
+        options[CONF_FALLBACK] = entry.data.get(CONF_FALLBACK, CONST_OVERLAY_TADO_MODE)
         hass.config_entries.async_update_entry(entry, options=options)
 
 
@@ -121,6 +122,25 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+    
+async def async_migrate_entry(hass, config_entry: ConfigEntry):
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s for %s", config_entry.version, DOMAIN)
+    
+    if config_entry.version == 1:
+        options = {**config_entry.options}
+        if options[CONF_FALLBACK] not in CONST_OVERLAY_TADO_OPTIONS:
+            if options[CONF_FALLBACK]: # If was True set to next time block
+                options[CONF_FALLBACK] = CONST_OVERLAY_TADO_MODE
+            else: # Otherwise set to manual
+                options[CONF_FALLBACK] = CONST_OVERLAY_MANUAL
+            config_entry.options = {**options}
+
+        config_entry.version = 2
+
+    _LOGGER.info("Migration to version %s for %s successful", config_entry.version, DOMAIN)
+
+    return True
 
 
 class TadoConnector:
