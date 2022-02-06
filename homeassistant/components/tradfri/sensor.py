@@ -105,11 +105,13 @@ SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
 def _migrate_old_unique_ids(hass: HomeAssistant, old_unique_id: str, key: str) -> None:
     """Migrate unique IDs to the new format."""
     ent_reg = entity_registry.async_get(hass)
+    _update_successful = False
 
     if entity_id := ent_reg.async_get_entity_id(Platform.SENSOR, DOMAIN, old_unique_id):
         new_unique_id = f"{old_unique_id}-{key}"
         try:
             ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
+            _update_successful = True
         except ValueError:
             _LOGGER.warning(
                 "Skip migration of id [%s] to [%s] because it already exists",
@@ -117,11 +119,12 @@ def _migrate_old_unique_ids(hass: HomeAssistant, old_unique_id: str, key: str) -
                 new_unique_id,
             )
 
-        _LOGGER.debug(
-            "Migrating unique_id from [%s] to [%s]",
-            old_unique_id,
-            new_unique_id,
-        )
+        if _update_successful:
+            _LOGGER.debug(
+                "Migrating unique_id from [%s] to [%s]",
+                old_unique_id,
+                new_unique_id,
+            )
 
 
 async def async_setup_entry(
@@ -150,6 +153,7 @@ async def async_setup_entry(
             continue
 
         for description in descriptions:
+            # Added in Home assistant 2022.3
             _migrate_old_unique_ids(
                 hass=hass,
                 old_unique_id=f"{gateway_id}-{device_coordinator.device.id}",
