@@ -4,15 +4,16 @@ from __future__ import annotations
 from typing import Any
 
 from requests.exceptions import ConnectTimeout, HTTPError
-from skybellpy import Skybell, exceptions
+from aioskybell import Skybell, exceptions
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import AGENT_IDENTIFIER, DEFAULT_CACHEDB, DOMAIN
+from .const import DEFAULT_CACHEDB, DOMAIN
 
 
 class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -34,10 +35,11 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             email = user_input[CONF_EMAIL].lower()
             password = user_input[CONF_PASSWORD]
 
-            self._async_abort_entries_match({CONF_EMAIL: email})
-            device_json, error = await self._async_validate_input(email, password)
+            if self.context["source"] != config_entries.SOURCE_REAUTH:
+                self._async_abort_entries_match({CONF_EMAIL: email})
+            user_id, error = await self._async_validate_input(email, password)
             if error is None:
-                entry = await self.async_set_unique_id(device_json["user"])
+                entry = await self.async_set_unique_id(user_id)
                 if entry:
                     self.hass.config_entries.async_update_entry(entry, data=user_input)
                     await self.hass.config_entries.async_reload(entry.entry_id)
@@ -63,27 +65,22 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_validate_input(self, email: str, password: str) -> tuple:
         """Validate login credentials."""
+        skybell = Skybell(
+            email,
+            password,
+            cache_path=self.hass.config.path(DEFAULT_CACHEDB),
+            disable_cache=True,
+            session=async_get_clientsession(self.hass),
+        )
         try:
-            skybell = await self.hass.async_add_executor_job(
-                Skybell,
-                email,
-                password,
-                True,
-                True,
-                self.hass.config.path(DEFAULT_CACHEDB),
-                False,
-                AGENT_IDENTIFIER,
-                False,
-            )
-            devs = list(skybell._devices.values())  # pylint: disable=protected-access
-            device_json = devs[0]._device_json  # pylint: disable=protected-access
+            devices = await skybell.async_get_devices()
         except exceptions.SkybellAuthenticationException:
             return None, "invalid_auth"
-        except (ConnectTimeout, HTTPError):
+        except exceptions.SkybellException:
             return None, "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             return None, "unknown"
-        return device_json, None
+        return devices[0].user_id, None
 
     async def async_step_reauth(self, config: dict[str, Any]) -> FlowResult:
         """Handle a reauthorization flow request."""

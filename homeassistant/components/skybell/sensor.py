@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from skybellpy.device import SkybellDevice
+from aioskybell.device import SkybellDevice
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -31,7 +31,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
-# Deprecated in Home Assistant 2022.2
+# Deprecated in Home Assistant 2022.3
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_ENTITY_NAMESPACE, default=DOMAIN): cv.string,

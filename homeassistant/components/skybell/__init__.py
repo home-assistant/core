@@ -5,8 +5,7 @@ import logging
 
 from aioskybell import Skybell
 from aioskybell.device import SkybellDevice
-from aioskybell.exceptions import SkybellAuthenticationException
-from requests.exceptions import ConnectTimeout, HTTPError
+from aioskybell.exceptions import SkybellAuthenticationException, SkybellException
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
@@ -14,7 +13,6 @@ from homeassistant.components.camera import DOMAIN as CAMERA
 from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.skybell.const import (
-    AGENT_IDENTIFIER,
     ATTRIBUTION,
     DATA_COORDINATOR,
     DATA_DEVICES,
@@ -35,6 +33,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
@@ -42,6 +41,8 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
@@ -91,29 +92,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     password = entry.data[CONF_PASSWORD]
 
     api = Skybell(
+        username=email,
+        password=password,
+        get_devices=True,
         cache_path=hass.config.path(DEFAULT_CACHEDB),
-        agent_identifier=AGENT_IDENTIFIER,
+        session=async_get_clientsession(hass),
     )
     try:
-        await hass.async_add_executor_job(api.login, email, password, False)
-        devices = await hass.async_add_executor_job(api.get_devices)
-    except (ConnectTimeout, HTTPError) as ex:
-        raise ConfigEntryNotReady(f"Unable to connect to Skybell service: {ex}") from ex
+        devices = await api.async_initialize()
     except SkybellAuthenticationException as ex:
         raise ConfigEntryAuthFailed(
             f"Authentication Error: please check credentials: {ex}"
         ) from ex
+    except SkybellException as ex:
+        raise ConfigEntryNotReady(f"Unable to connect to Skybell service: {ex}") from ex
 
     async def async_update_data() -> None:
         """Fetch data from API endpoint."""
         try:
-
-            if len(devices) == 1:
-                await hass.async_add_executor_job(devices[0].refresh)
-            else:
-                for device in devices:
-                    await hass.async_add_executor_job(device.refresh)
-        except (ConnectTimeout, HTTPError) as err:
+            [await device.async_update() for device in devices]
+        except SkybellException as err:
             raise UpdateFailed(f"Failed to communicate with device: {err}") from err
 
     coordinator = DataUpdateCoordinator(
@@ -123,10 +121,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_method=async_update_data,
         update_interval=MIN_TIME_BETWEEN_UPDATES,
     )
+    await coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_COORDINATOR: coordinator,
         DATA_DEVICES: devices,
     }
+
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -152,14 +153,14 @@ class SkybellEntity(CoordinatorEntity):
         super().__init__(coordinator)
         self._device = device
         self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, device._info_json.get("mac"))},
+            connections={(dr.CONNECTION_NETWORK_MAC, device.mac)},
             identifiers={
-                (DOMAIN, f"{server_unique_id}-{device._info_json.get('serialNo')}")
+                (DOMAIN, f"{server_unique_id}-{device.serial_no}")
             },
             manufacturer=DEFAULT_NAME,
             model=device.type,
             name=device.name,
-            sw_version=device._info_json.get("firmwareVersion"),
+            sw_version=device.firmware_ver,
         )
 
     @property

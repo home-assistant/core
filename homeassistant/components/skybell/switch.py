@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from skybellpy.device import SkybellDevice
+from aioskybell.device import SkybellDevice
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -85,13 +85,13 @@ class SkybellSwitch(SkybellEntity, SwitchEntity):
         self._attr_name = f"{device.name} {description.name}"
         self._attr_unique_id = f"{server_unique_id}/{description.key}"
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
-        setattr(self._device, self.entity_description.key, True)
+        await self._device.async_set_setting(self.entity_description.key, True)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
-        setattr(self._device, self.entity_description.key, False)
+        await self._device.async_set_setting(self.entity_description.key, False)
 
     @property
     def is_on(self) -> bool:

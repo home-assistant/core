@@ -1346,7 +1346,7 @@ simplehound==0.3
 simplisafe-python==2022.02.0
 
 # homeassistant.components.skybell
-skybellpy==0.6.3
+aioskybell==22.2.2
 
 # homeassistant.components.slack
 slackclient==2.5.0

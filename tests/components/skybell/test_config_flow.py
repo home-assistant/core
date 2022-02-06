@@ -1,9 +1,7 @@
 """Test SkyBell config flow."""
 from unittest.mock import patch
 
-from requests.exceptions import ConnectTimeout, HTTPError
-from skybellpy import exceptions
-from skybellpy.helpers.errors import LOGIN_FAILED
+from aioskybell import exceptions
 
 from homeassistant.components.skybell.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
@@ -29,7 +27,7 @@ def _patch_setup():
 
 async def test_flow_user(hass: HomeAssistant):
     """Test that the user step works."""
-    with patch("skybellpy.UTILS"), _patch_skybell():
+    with patch("aioskybell.UTILS"), _patch_skybell():
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -67,7 +65,7 @@ async def test_flow_user_already_configured(hass: HomeAssistant):
 async def test_flow_user_cannot_connect(hass: HomeAssistant):
     """Test user initialized flow with unreachable server."""
     with _patch_skybell() as skybellmock:
-        skybellmock.side_effect = (ConnectTimeout, HTTPError)
+        skybellmock.side_effect = exceptions.SkybellException(hass)
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW
         )
@@ -78,12 +76,10 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant):
 
 async def test_invalid_credentials(hass: HomeAssistant):
     """Test that invalid credentials throws an error."""
-    with patch("homeassistant.components.skybell.Skybell.login") as skybellmock, patch(
-        "skybellpy.UTILS"
+    with patch("homeassistant.components.skybell.Skybell.async_login") as skybellmock, patch(
+        "aioskybell.UTILS"
     ):
-        skybellmock.side_effect = exceptions.SkybellAuthenticationException(
-            LOGIN_FAILED
-        )
+        skybellmock.side_effect = exceptions.SkybellAuthenticationException(hass)
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW
         )
@@ -145,7 +141,7 @@ async def test_step_reauth(hass: HomeAssistant):
 
     entry.add_to_hass(hass)
 
-    with patch("skybellpy.UTILS"), _patch_skybell():
+    with patch("aioskybell.UTILS"), _patch_skybell():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_REAUTH},
