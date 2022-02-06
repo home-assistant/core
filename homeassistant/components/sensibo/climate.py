@@ -19,9 +19,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -53,11 +50,6 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     }
 )
 
-FIELD_TO_FLAG = {
-    "fanLevel": SUPPORT_FAN_MODE,
-    "swing": SUPPORT_SWING_MODE,
-    "targetTemperature": SUPPORT_TARGET_TEMPERATURE,
-}
 
 SENSIBO_TO_HA = {
     "cool": HVAC_MODE_COOL,
@@ -142,7 +134,6 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
             if coordinator.data[device_id]["temp_unit"] == "C"
             else TEMP_FAHRENHEIT
         )
-        self._attr_supported_features = self.get_features()
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data[device_id]["id"])},
             name=coordinator.data[device_id]["name"],
@@ -154,13 +145,10 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
             suggested_area=coordinator.data[device_id]["name"],
         )
 
-    def get_features(self) -> int:
-        """Get supported features."""
-        features = 0
-        for key in self.coordinator.data[self.unique_id]["features"]:
-            if key in FIELD_TO_FLAG:
-                features |= FIELD_TO_FLAG[key]
-        return features
+    @property
+    def supported_features(self) -> int:
+        """Return supported features."""
+        return self.coordinator.data[self.unique_id]["features"]
 
     @property
     def current_humidity(self) -> int:
