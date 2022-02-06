@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, SLEEPIQ_DATA, SLEEPIQ_STATUS_COORDINATOR
+from .const import DOMAIN, SLEEPIQ_DATA
 from .device import SleepNumberEntity
 
 
@@ -17,13 +17,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sleep number switches."""
     data = hass.data[DOMAIN][config_entry.entry_id][SLEEPIQ_DATA]
-    status_coordinator = hass.data[DOMAIN][config_entry.entry_id][
-        SLEEPIQ_STATUS_COORDINATOR
-    ]
 
     entities: list[SleepNumberEntity] = []
     for bed in data.beds.values():
-        entities.append(SleepNumberCalibrateButton(bed, status_coordinator))
+        entities.append(SleepNumberCalibrateButton(bed))
+        entities.append(SleepNumberStopPumpButton(bed))
 
     async_add_entities(entities)
 
@@ -31,11 +29,24 @@ async def async_setup_entry(
 class SleepNumberCalibrateButton(SleepNumberEntity, ButtonEntity):
     """Representation of an SleepIQ privacy mode."""
 
-    def __init__(self, bed, status_coordinator):
-        super().__init__(bed, status_coordinator)
+    def __init__(self, bed):
+        super().__init__(bed)
         self._attr_name = f"{bed.name} Calibrate"
         self._attr_unique_id = f"{bed.id}-Calibrate"
 
     async def async_press(self) -> None:
         """Press the button."""
         await self._bed.calibrate()
+
+
+class SleepNumberStopPumpButton(SleepNumberEntity, ButtonEntity):
+    """Representation of an SleepIQ privacy mode."""
+
+    def __init__(self, bed):
+        super().__init__(bed)
+        self._attr_name = f"{bed.name} Stop Pump"
+        self._attr_unique_id = f"{bed.id}-StopPump"
+
+    async def async_press(self) -> None:
+        """Press the button."""
+        await self._bed.stop_pump()

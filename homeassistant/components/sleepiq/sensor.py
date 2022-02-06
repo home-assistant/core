@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, SLEEPIQ_DATA, SLEEPIQ_STATUS_COORDINATOR
-from .device import SleepNumberEntity
+from .device import SleepNumberCoordinatorEntity
 
 
 async def async_setup_entry(
@@ -21,7 +21,7 @@ async def async_setup_entry(
         SLEEPIQ_STATUS_COORDINATOR
     ]
 
-    entities: list[SleepNumberEntity] = []
+    entities: list[SleepNumberSensorEntity] = []
     for bed in data.beds.values():
         for sleeper in bed.sleepers:
             entities.append(SleepNumberSensorEntity(sleeper, bed, status_coordinator))
@@ -29,7 +29,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SleepNumberSensorEntity(SleepNumberEntity, SensorEntity):
+class SleepNumberSensorEntity(SleepNumberCoordinatorEntity, SensorEntity):
     """Representation of a sleep number."""
 
     _attr_icon = "mdi:gauge"
@@ -37,7 +37,7 @@ class SleepNumberSensorEntity(SleepNumberEntity, SensorEntity):
     def __init__(self, sleeper, bed, status_coordinator):
         super().__init__(bed, status_coordinator)
         self._sleeper = sleeper
-        self._attr_name = f"{bed.name} Sleep Number"
+        self._attr_name = f"{sleeper.name} Sleep Number"
         self._attr_unique_id = f"{bed.id}-{sleeper.side}-SN"
 
     @property

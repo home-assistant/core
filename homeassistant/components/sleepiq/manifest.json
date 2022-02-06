@@ -10,5 +10,6 @@
       "macaddress": "64DBA0*"
     }
   ],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["asyncsleepiq"]
 }

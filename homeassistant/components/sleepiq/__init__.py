@@ -3,7 +3,12 @@ from datetime import timedelta
 import asyncio
 import logging
 
-from asyncsleepiq import AsyncSleepIQ, SleepIQLoginException, SleepIQTimeoutException
+from asyncsleepiq import (
+    AsyncSleepIQ,
+    SleepIQLoginException,
+    SleepIQTimeoutException,
+    SleepIQAPIException,
+)
 import voluptuous as vol
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_USERNAME, Platform
@@ -19,7 +24,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH, Platform.BUTTON]
 
 CONFIG_SCHEMA = vol.Schema(
@@ -78,16 +83,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await gateway.init_beds()
+        await gateway.fetch_bed_statuses()
     except SleepIQTimeoutException as err:
         raise ConfigEntryNotReady(
-            str(err) or "Timed out during realtime update"
+            str(err) or "Timed out during initialization"
         ) from err
+    except SleepIQAPIException as err:
+        raise ConfigEntryNotReady(str(err) or "Error reading from SleepIQ API") from err
 
     status_coordinator: DataUpdateCoordinator[None] = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"SleepIQ Bed Statuses - {email}",
-        update_method=gateway.update_bed_statuses,
+        update_method=gateway.fetch_bed_statuses,
         update_interval=MIN_TIME_BETWEEN_UPDATES,
     )
     # Start out as unavailable so we do not report 0 data
@@ -101,6 +109,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

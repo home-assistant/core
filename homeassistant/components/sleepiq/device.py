@@ -8,11 +8,10 @@ from homeassistant.helpers import device_registry
 from .const import DOMAIN
 
 
-class SleepNumberEntity(CoordinatorEntity, Entity):
-    """Representation of an SleepIQ privacy mode."""
+class SleepNumberEntity(Entity):
+    """Representation of an SleepIQ Entity."""
 
-    def __init__(self, bed, status_coordinator):
-        super().__init__(status_coordinator)
+    def __init__(self, bed):
         self._bed = bed
 
     @property
@@ -26,3 +25,12 @@ class SleepNumberEntity(CoordinatorEntity, Entity):
             name=self._bed.name,
             model=self._bed.model,
         )
+
+
+class SleepNumberCoordinatorEntity(CoordinatorEntity, SleepNumberEntity):
+    """Representation of an SleepIQ Entity with CoordinatorEntity."""
+
+    def __init__(self, bed, status_coordinator=None):
+        super().__init__(status_coordinator)
+        self._attr_should_poll = False
+        self._bed = bed
