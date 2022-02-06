@@ -7,8 +7,6 @@ from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.thermostat import (
     THERMOSTAT_CURRENT_TEMP_PROPERTY,
-    THERMOSTAT_FAN_MODE_PROPERTY,
-    THERMOSTAT_FAN_STATE_PROPERTY,
     THERMOSTAT_HUMIDITY_PROPERTY,
     THERMOSTAT_MODE_PROPERTY,
     THERMOSTAT_MODE_SETPOINT_MAP,
@@ -183,13 +181,13 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             check_all_endpoints=True,
         )
         self._fan_mode = self.get_zwave_value(
-            THERMOSTAT_FAN_MODE_PROPERTY,
+            THERMOSTAT_MODE_PROPERTY,
             CommandClass.THERMOSTAT_FAN_MODE,
             add_to_watched_value_ids=True,
             check_all_endpoints=True,
         )
         self._fan_state = self.get_zwave_value(
-            THERMOSTAT_FAN_STATE_PROPERTY,
+            THERMOSTAT_OPERATING_STATE_PROPERTY,
             CommandClass.THERMOSTAT_FAN_STATE,
             add_to_watched_value_ids=True,
             check_all_endpoints=True,
