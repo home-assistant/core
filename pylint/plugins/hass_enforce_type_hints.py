@@ -10,7 +10,8 @@ from pylint.interfaces import IAstroidChecker
 from pylint.lint import PyLinter
 
 from homeassistant.const import Platform
-from homeassistant.helpers.typing import UNDEFINED
+
+UNDEFINED = object()
 
 
 @dataclass
