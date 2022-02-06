@@ -12,15 +12,6 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.camera import DOMAIN as CAMERA
 from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.sensor import DOMAIN as SENSOR
-from homeassistant.components.skybell.const import (
-    ATTRIBUTION,
-    DATA_COORDINATOR,
-    DATA_DEVICES,
-    DEFAULT_CACHEDB,
-    DEFAULT_NAME,
-    DOMAIN,
-    MIN_TIME_BETWEEN_UPDATES,
-)
 from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -28,7 +19,6 @@ from homeassistant.const import (
     CONF_EMAIL,
     CONF_PASSWORD,
     CONF_USERNAME,
-    __version__,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -42,7 +32,15 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    ATTRIBUTION,
+    DATA_COORDINATOR,
+    DATA_DEVICES,
+    DEFAULT_CACHEDB,
+    DEFAULT_NAME,
+    DOMAIN,
+    MIN_TIME_BETWEEN_UPDATES,
+)
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
@@ -154,9 +152,7 @@ class SkybellEntity(CoordinatorEntity):
         self._device = device
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, device.mac)},
-            identifiers={
-                (DOMAIN, f"{server_unique_id}-{device.serial_no}")
-            },
+            identifiers={(DOMAIN, f"{server_unique_id}-{device.serial_no}")},
             manufacturer=DEFAULT_NAME,
             model=device.type,
             name=device.name,

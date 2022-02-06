@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import logging
 
+from aioskybell.device import SkybellDevice
 import requests
 from requests.models import Response
-from aioskybell.device import SkybellDevice
 import voluptuous as vol
 
 from homeassistant.components.camera import (

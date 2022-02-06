@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from requests.exceptions import ConnectTimeout, HTTPError
 from aioskybell import Skybell, exceptions
 import voluptuous as vol
 
