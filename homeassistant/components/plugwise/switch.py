@@ -1,10 +1,16 @@
 """Plugwise Switch component for HomeAssistant."""
+from __future__ import annotations
+
+from typing import Any
+
+from plugwise import Smile
 from plugwise.exceptions import PlugwiseException
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import COORDINATOR, DOMAIN, LOGGER, SWITCH_ICON
 from .entity import PlugwiseEntity
@@ -15,12 +21,6 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Smile switches from a config entry."""
-    # PLACEHOLDER USB entry setup
-    return await async_setup_entry_gateway(hass, config_entry, async_add_entities)
-
-
-async def async_setup_entry_gateway(hass, config_entry, async_add_entities):
     """Set up the Smile switches from a config entry."""
     api = hass.data[DOMAIN][config_entry.entry_id]["api"]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
@@ -55,7 +55,17 @@ async def async_setup_entry_gateway(hass, config_entry, async_add_entities):
 class GwSwitch(PlugwiseEntity, SwitchEntity):
     """Representation of a Plugwise plug."""
 
-    def __init__(self, api, coordinator, name, dev_id, members, model):
+    _attr_icon = SWITCH_ICON
+
+    def __init__(
+        self,
+        api: Smile,
+        coordinator: DataUpdateCoordinator,
+        name: str,
+        dev_id: str,
+        members: list[str] | None,
+        model: str | None,
+    ) -> None:
         """Set up the Plugwise API."""
         super().__init__(api, coordinator, name, dev_id)
         self._attr_unique_id = f"{dev_id}-plug"
@@ -63,45 +73,36 @@ class GwSwitch(PlugwiseEntity, SwitchEntity):
         self._members = members
         self._model = model
 
-        self._is_on = False
-        self._icon = SWITCH_ICON
+        self._attr_is_on = False
 
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._is_on
-
-    @property
-    def icon(self):
-        """Return the icon of this entity."""
-        return self._icon
-
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         try:
             state_on = await self._api.set_relay_state(
                 self._dev_id, self._members, "on"
             )
-            if state_on:
-                self._is_on = True
-                self.async_write_ha_state()
         except PlugwiseException:
             LOGGER.error("Error while communicating to device")
+        else:
+            if state_on:
+                self._attr_is_on = True
+                self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         try:
             state_off = await self._api.set_relay_state(
                 self._dev_id, self._members, "off"
             )
-            if state_off:
-                self._is_on = False
-                self.async_write_ha_state()
         except PlugwiseException:
             LOGGER.error("Error while communicating to device")
+        else:
+            if state_off:
+                self._attr_is_on = False
+                self.async_write_ha_state()
 
     @callback
-    def _async_process_data(self):
+    def _async_process_data(self) -> None:
         """Update the data from the Plugs."""
         if not (data := self._api.get_device_data(self._dev_id)):
             LOGGER.error("Received no data for device %s", self._name)
@@ -109,6 +110,6 @@ class GwSwitch(PlugwiseEntity, SwitchEntity):
             return
 
         if "relay" in data:
-            self._is_on = data["relay"]
+            self._attr_is_on = data["relay"]
 
         self.async_write_ha_state()
