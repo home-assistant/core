@@ -406,46 +406,137 @@ def test_color_rgb_to_rgbww():
 
 
 def test_color_temperature_to_rgbww():
-    """Test color temp to warm, cold conversion."""
+    """Test color temp to warm, cold conversion.
+
+    Temperature values must be in mireds
+    Home Assistant uses rgbcw for rgbww
+    """
     assert color_util.color_temperature_to_rgbww(153, 255, 153, 500) == (
         0,
         0,
         0,
-        0,
         255,
+        0,
     )
     assert color_util.color_temperature_to_rgbww(153, 128, 153, 500) == (
         0,
         0,
         0,
-        0,
         128,
+        0,
     )
     assert color_util.color_temperature_to_rgbww(500, 255, 153, 500) == (
         0,
         0,
         0,
-        255,
         0,
+        255,
     )
     assert color_util.color_temperature_to_rgbww(500, 128, 153, 500) == (
         0,
         0,
         0,
-        128,
         0,
+        128,
     )
     assert color_util.color_temperature_to_rgbww(347, 255, 153, 500) == (
         0,
         0,
         0,
-        143,
         112,
+        143,
     )
     assert color_util.color_temperature_to_rgbww(347, 128, 153, 500) == (
         0,
         0,
         0,
-        72,
         56,
+        72,
+    )
+
+
+def test_rgbww_to_color_temperature():
+    """Test rgbww conversion to color temp.
+
+    Temperature values must be in mireds
+    Home Assistant uses rgbcw for rgbww
+    """
+    assert (
+        color_util.rgbww_to_color_temperature(
+            (
+                0,
+                0,
+                0,
+                255,
+                0,
+            ),
+            153,
+            500,
+        )
+        == (153, 255)
+    )
+    assert color_util.rgbww_to_color_temperature((0, 0, 0, 128, 0), 153, 500) == (
+        153,
+        128,
+    )
+    assert color_util.rgbww_to_color_temperature((0, 0, 0, 0, 255), 153, 500) == (
+        500,
+        255,
+    )
+    assert color_util.rgbww_to_color_temperature((0, 0, 0, 0, 128), 153, 500) == (
+        500,
+        128,
+    )
+    assert color_util.rgbww_to_color_temperature((0, 0, 0, 112, 143), 153, 500) == (
+        348,
+        255,
+    )
+    assert color_util.rgbww_to_color_temperature((0, 0, 0, 56, 72), 153, 500) == (
+        348,
+        128,
+    )
+    assert color_util.rgbww_to_color_temperature((0, 0, 0, 0, 0), 153, 500) == (
+        500,
+        0,
+    )
+
+
+def test_white_levels_to_color_temperature():
+    """Test warm, cold conversion to color temp.
+
+    Temperature values must be in mireds
+    Home Assistant uses rgbcw for rgbww
+    """
+    assert (
+        color_util.while_levels_to_color_temperature(
+            255,
+            0,
+            153,
+            500,
+        )
+        == (153, 255)
+    )
+    assert color_util.while_levels_to_color_temperature(128, 0, 153, 500) == (
+        153,
+        128,
+    )
+    assert color_util.while_levels_to_color_temperature(0, 255, 153, 500) == (
+        500,
+        255,
+    )
+    assert color_util.while_levels_to_color_temperature(0, 128, 153, 500) == (
+        500,
+        128,
+    )
+    assert color_util.while_levels_to_color_temperature(112, 143, 153, 500) == (
+        348,
+        255,
+    )
+    assert color_util.while_levels_to_color_temperature(56, 72, 153, 500) == (
+        348,
+        128,
+    )
+    assert color_util.while_levels_to_color_temperature(0, 0, 153, 500) == (
+        500,
+        0,
     )
