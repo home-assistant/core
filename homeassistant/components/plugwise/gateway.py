@@ -41,6 +41,9 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         connected = await api.connect()
+        if not connected:
+            raise ConfigEntryNotReady("Unable to connect to Smile")
+        api.get_all_devices()
     except InvalidAuthentication:
         LOGGER.error("Invalid username or Smile ID")
         return False
@@ -53,16 +56,11 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Timeout while connecting to Smile {api.smile_name}"
         ) from err
 
-    if not connected:
-        raise ConfigEntryNotReady("Unable to connect to Smile")
+    if entry.unique_id is None and api.smile_version[0] != "1.8.0":
+        hass.config_entries.async_update_entry(entry, unique_id=api.smile_hostname)
 
     coordinator = PlugwiseDataUpdateCoordinator(hass, api)
     await coordinator.async_config_entry_first_refresh()
-
-    api.get_all_devices()
-
-    if entry.unique_id is None and api.smile_version[0] != "1.8.0":
-        hass.config_entries.async_update_entry(entry, unique_id=api.smile_hostname)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "api": api,
