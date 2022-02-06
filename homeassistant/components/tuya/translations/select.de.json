@@ -10,6 +10,15 @@
             "1": "Aus",
             "2": "An"
         },
+        "tuya__countdown": {
+            "1h": "1 Stunde",
+            "2h": "2 Stunden",
+            "3h": "3 Stunden",
+            "4h": "4 Stunden",
+            "5h": "5 Stunden",
+            "6h": "6 Stunden",
+            "cancel": "Abbrechen"
+        },
         "tuya__curtain_mode": {
             "morning": "Morgen",
             "night": "Nacht"

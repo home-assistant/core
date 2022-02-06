@@ -68,7 +68,7 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
             temperatures_list = (
                 current_capabilities["temperatures"]
                 .get(temperature_unit_key, {})
-                .get("values", [0])
+                .get("values", [0, 1])
             )
             if temperatures_list:
                 temperature_step = temperatures_list[1] - temperatures_list[0]
@@ -107,5 +107,6 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 "model": model,
                 "calibration_temp": calibration_temp,
                 "calibration_hum": calibration_hum,
+                "full_capabilities": capabilities,
             }
         return device_data

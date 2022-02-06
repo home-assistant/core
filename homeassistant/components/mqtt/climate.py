@@ -708,8 +708,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
     async def _publish(self, topic, payload):
         if self._topic[topic] is not None:
-            await mqtt.async_publish(
-                self.hass,
+            await self.async_publish(
                 self._topic[topic],
                 payload,
                 self._config[CONF_QOS],

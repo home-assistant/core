@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "address_already_configured": "Um ElkM1 com este endere\u00e7o j\u00e1 est\u00e1 configurado",
-            "already_configured": "Um ElkM1 com este prefixo j\u00e1 est\u00e1 configurado"
+            "already_configured": "A conta j\u00e1 foi configurada"
         },
         "error": {
             "cannot_connect": "Falha ao conectar",

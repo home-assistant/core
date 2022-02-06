@@ -39,7 +39,7 @@ def test_get_device_detects_dimmer(mock_openzwave):
     device = light.get_device(node=node, values=values, node_config={})
     assert isinstance(device, light.ZwaveDimmer)
     assert device.color_mode == COLOR_MODE_BRIGHTNESS
-    assert device.supported_features is None
+    assert device.supported_features == 0
     assert device.supported_color_modes == {COLOR_MODE_BRIGHTNESS}
 
 
@@ -52,7 +52,7 @@ def test_get_device_detects_colorlight(mock_openzwave):
     device = light.get_device(node=node, values=values, node_config={})
     assert isinstance(device, light.ZwaveColorLight)
     assert device.color_mode == COLOR_MODE_RGB
-    assert device.supported_features is None
+    assert device.supported_features == 0
     assert device.supported_color_modes == {COLOR_MODE_RGB}
 
 
@@ -68,7 +68,7 @@ def test_get_device_detects_zw098(mock_openzwave):
     device = light.get_device(node=node, values=values, node_config={})
     assert isinstance(device, light.ZwaveColorLight)
     assert device.color_mode == COLOR_MODE_RGB
-    assert device.supported_features is None
+    assert device.supported_features == 0
     assert device.supported_color_modes == {COLOR_MODE_COLOR_TEMP, COLOR_MODE_RGB}
 
 
@@ -84,7 +84,7 @@ def test_get_device_detects_rgbw_light(mock_openzwave):
     device.value_added()
     assert isinstance(device, light.ZwaveColorLight)
     assert device.color_mode == COLOR_MODE_RGBW
-    assert device.supported_features is None
+    assert device.supported_features == 0
     assert device.supported_color_modes == {COLOR_MODE_RGBW}
 
 

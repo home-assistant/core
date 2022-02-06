@@ -42,7 +42,7 @@ from homeassistant.helpers.entity import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from . import DATA_MQTT, MqttValueTemplate, debug_info, publish, subscription
+from . import DATA_MQTT, MqttValueTemplate, async_publish, debug_info, subscription
 from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
@@ -51,13 +51,14 @@ from .const import (
     CONF_ENCODING,
     CONF_QOS,
     CONF_TOPIC,
+    DEFAULT_ENCODING,
     DEFAULT_PAYLOAD_AVAILABLE,
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
     DOMAIN,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
 )
-from .debug_info import log_messages
+from .debug_info import log_message, log_messages
 from .discovery import (
     MQTT_DISCOVERY_DONE,
     MQTT_DISCOVERY_NEW,
@@ -65,7 +66,7 @@ from .discovery import (
     clear_discovery_hash,
     set_discovery_hash,
 )
-from .models import ReceiveMessage
+from .models import PublishPayloadType, ReceiveMessage
 from .subscription import (
     async_prepare_subscribe_topics,
     async_subscribe_topics,
@@ -552,7 +553,7 @@ class MqttDiscoveryUpdate(Entity):
 
             # Clear the discovery topic so the entity is not rediscovered after a restart
             discovery_topic = self._discovery_data[ATTR_DISCOVERY_TOPIC]
-            publish(self.hass, discovery_topic, "", retain=True)
+            await async_publish(self.hass, discovery_topic, "", retain=True)
 
     @callback
     def add_to_platform_abort(self) -> None:
@@ -708,6 +709,25 @@ class MqttEntity(
         await MqttAttributes.async_will_remove_from_hass(self)
         await MqttAvailability.async_will_remove_from_hass(self)
         await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
+
+    async def async_publish(
+        self,
+        topic: str,
+        payload: PublishPayloadType,
+        qos: int = 0,
+        retain: bool = False,
+        encoding: str = DEFAULT_ENCODING,
+    ):
+        """Publish message to an MQTT topic."""
+        log_message(self.hass, self.entity_id, topic, payload, qos, retain)
+        await async_publish(
+            self.hass,
+            topic,
+            payload,
+            qos,
+            retain,
+            encoding,
+        )
 
     @staticmethod
     @abstractmethod

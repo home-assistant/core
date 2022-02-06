@@ -419,8 +419,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         This method is a coroutine.
         """
         mqtt_payload = self._command_templates[CONF_STATE](self._payload["STATE_ON"])
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_COMMAND_TOPIC],
             mqtt_payload,
             self._config[CONF_QOS],
@@ -437,8 +436,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         This method is a coroutine.
         """
         mqtt_payload = self._command_templates[CONF_STATE](self._payload["STATE_OFF"])
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_COMMAND_TOPIC],
             mqtt_payload,
             self._config[CONF_QOS],
@@ -455,8 +453,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         This method is a coroutine.
         """
         mqtt_payload = self._command_templates[ATTR_HUMIDITY](humidity)
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_TARGET_HUMIDITY_COMMAND_TOPIC],
             mqtt_payload,
             self._config[CONF_QOS],
@@ -479,8 +476,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
         mqtt_payload = self._command_templates[ATTR_MODE](mode)
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_MODE_COMMAND_TOPIC],
             mqtt_payload,
             self._config[CONF_QOS],

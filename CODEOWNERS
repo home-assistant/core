@@ -1032,8 +1032,8 @@ tests/components/vilfo/* @ManneW
 homeassistant/components/vivotek/* @HarlemSquirrel
 homeassistant/components/vizio/* @raman325
 tests/components/vizio/* @raman325
-homeassistant/components/vlc_telnet/* @rodripf @dmcc @MartinHjelmare
-tests/components/vlc_telnet/* @rodripf @dmcc @MartinHjelmare
+homeassistant/components/vlc_telnet/* @rodripf @MartinHjelmare
+tests/components/vlc_telnet/* @rodripf @MartinHjelmare
 homeassistant/components/volkszaehler/* @fabaff
 homeassistant/components/volumio/* @OnFreund
 tests/components/volumio/* @OnFreund
@@ -1065,6 +1065,8 @@ tests/components/wilight/* @leofig-rj
 homeassistant/components/wirelesstag/* @sergeymaysak
 homeassistant/components/withings/* @vangorra
 tests/components/withings/* @vangorra
+homeassistant/components/wiz/* @sbidy
+tests/components/wiz/* @sbidy
 homeassistant/components/wled/* @frenck
 tests/components/wled/* @frenck
 homeassistant/components/wolflink/* @adamkrol93
@@ -1088,8 +1090,8 @@ homeassistant/components/yamaha_musiccast/* @vigonotion @micha91
 tests/components/yamaha_musiccast/* @vigonotion @micha91
 homeassistant/components/yandex_transport/* @rishatik92 @devbis
 tests/components/yandex_transport/* @rishatik92 @devbis
-homeassistant/components/yeelight/* @zewelor @shenxn @starkillerOG
-tests/components/yeelight/* @zewelor @shenxn @starkillerOG
+homeassistant/components/yeelight/* @zewelor @shenxn @starkillerOG @alexyao2015
+tests/components/yeelight/* @zewelor @shenxn @starkillerOG @alexyao2015
 homeassistant/components/yeelightsunflower/* @lindsaymarkward
 homeassistant/components/yi/* @bachya
 homeassistant/components/youless/* @gjong

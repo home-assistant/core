@@ -1894,7 +1894,13 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
 async def test_entity_debug_info_message(hass, mqtt_mock):
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
-        hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG, payload='{"state":"ON"}'
+        hass,
+        mqtt_mock,
+        light.DOMAIN,
+        DEFAULT_CONFIG,
+        light.SERVICE_TURN_ON,
+        command_payload='{"state": "ON"}',
+        state_payload='{"state":"ON"}',
     )
 
 

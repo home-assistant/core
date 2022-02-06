@@ -112,8 +112,7 @@ class MqttButton(MqttEntity, ButtonEntity):
         This method is a coroutine.
         """
         payload = self._command_template(self._config[CONF_PAYLOAD_PRESS])
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._config[CONF_COMMAND_TOPIC],
             payload,
             self._config[CONF_QOS],

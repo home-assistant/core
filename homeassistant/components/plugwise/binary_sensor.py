@@ -1,9 +1,13 @@
 """Plugwise Binary Sensor component for Home Assistant."""
-import logging
+from plugwise.smile import Smile
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -13,18 +17,26 @@ from .const import (
     FLOW_OFF_ICON,
     FLOW_ON_ICON,
     IDLE_ICON,
+    LOGGER,
     NO_NOTIFICATION_ICON,
     NOTIFICATION_ICON,
 )
-from .gateway import SmileGateway
+from .coordinator import PlugwiseDataUpdateCoordinator
+from .entity import PlugwiseEntity
 
-BINARY_SENSOR_MAP = {
-    "dhw_state": ["Domestic Hot Water State", None],
-    "slave_boiler_state": ["Secondary Heater Device State", None],
-}
 SEVERITIES = ["other", "info", "warning", "error"]
-
-_LOGGER = logging.getLogger(__name__)
+BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
+        key="dhw_state",
+        name="DHW State",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    BinarySensorEntityDescription(
+        key="slave_boiler_state",
+        name="Secondary Boiler State",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -33,8 +45,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Smile binary_sensors from a config entry."""
-    api = hass.data[DOMAIN][config_entry.entry_id]["api"]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
+    api: Smile = hass.data[DOMAIN][config_entry.entry_id]["api"]
+    coordinator: PlugwiseDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ][COORDINATOR]
 
     entities: list[BinarySensorEntity] = []
     is_thermostat = api.single_master_thermostat()
@@ -44,8 +58,8 @@ async def async_setup_entry(
 
         if device_properties["class"] == "heater_central":
             data = api.get_device_data(dev_id)
-            for binary_sensor in BINARY_SENSOR_MAP:
-                if binary_sensor not in data:
+            for description in BINARY_SENSORS:
+                if description.key not in data:
                     continue
 
                 entities.append(
@@ -54,7 +68,7 @@ async def async_setup_entry(
                         coordinator,
                         device_properties["name"],
                         dev_id,
-                        binary_sensor,
+                        description,
                     )
                 )
 
@@ -65,111 +79,110 @@ async def async_setup_entry(
                     coordinator,
                     device_properties["name"],
                     dev_id,
-                    "plugwise_notification",
+                    BinarySensorEntityDescription(
+                        key="plugwise_notification",
+                        name="Plugwise Notification",
+                    ),
                 )
             )
 
     async_add_entities(entities, True)
 
 
-class SmileBinarySensor(SmileGateway):
+class SmileBinarySensor(PlugwiseEntity, BinarySensorEntity):
     """Represent Smile Binary Sensors."""
 
-    def __init__(self, api, coordinator, name, dev_id, binary_sensor):
+    def __init__(
+        self,
+        api: Smile,
+        coordinator: PlugwiseDataUpdateCoordinator,
+        name: str,
+        dev_id: str,
+        description: BinarySensorEntityDescription,
+    ) -> None:
         """Initialise the binary_sensor."""
         super().__init__(api, coordinator, name, dev_id)
-
-        self._binary_sensor = binary_sensor
-
-        self._icon = None
-        self._is_on = False
+        self.entity_description = description
+        self._attr_is_on = False
+        self._attr_unique_id = f"{dev_id}-{description.key}"
 
         if dev_id == self._api.heater_id:
             self._entity_name = "Auxiliary"
 
-        sensorname = binary_sensor.replace("_", " ").title()
-        self._name = f"{self._entity_name} {sensorname}"
+        self._name = f"{self._entity_name} {description.name}"
 
         if dev_id == self._api.gateway_id:
             self._entity_name = f"Smile {self._entity_name}"
 
-        self._unique_id = f"{dev_id}-{binary_sensor}"
-
-    @property
-    def icon(self):
-        """Return the icon of this entity."""
-        return self._icon
-
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
-        return self._is_on
-
     @callback
-    def _async_process_data(self):
+    def _async_process_data(self) -> None:
         """Update the entity."""
         raise NotImplementedError
 
 
-class PwBinarySensor(SmileBinarySensor, BinarySensorEntity):
+class PwBinarySensor(SmileBinarySensor):
     """Representation of a Plugwise binary_sensor."""
 
     @callback
-    def _async_process_data(self):
+    def _async_process_data(self) -> None:
         """Update the entity."""
         if not (data := self._api.get_device_data(self._dev_id)):
-            _LOGGER.error("Received no data for device %s", self._binary_sensor)
+            LOGGER.error("Received no data for device %s", self._dev_id)
             self.async_write_ha_state()
             return
 
-        if self._binary_sensor not in data:
+        if self.entity_description.key not in data:
             self.async_write_ha_state()
             return
 
-        self._is_on = data[self._binary_sensor]
+        self._attr_is_on = data[self.entity_description.key]
 
-        if self._binary_sensor == "dhw_state":
-            self._icon = FLOW_ON_ICON if self._is_on else FLOW_OFF_ICON
-        if self._binary_sensor == "slave_boiler_state":
-            self._icon = FLAME_ICON if self._is_on else IDLE_ICON
+        if self.entity_description.key == "dhw_state":
+            self._attr_icon = FLOW_ON_ICON if self._attr_is_on else FLOW_OFF_ICON
+        if self.entity_description.key == "slave_boiler_state":
+            self._attr_icon = FLAME_ICON if self._attr_is_on else IDLE_ICON
 
         self.async_write_ha_state()
 
 
-class PwNotifySensor(SmileBinarySensor, BinarySensorEntity):
+class PwNotifySensor(SmileBinarySensor):
     """Representation of a Plugwise Notification binary_sensor."""
 
-    def __init__(self, api, coordinator, name, dev_id, binary_sensor):
+    def __init__(
+        self,
+        api: Smile,
+        coordinator: PlugwiseDataUpdateCoordinator,
+        name: str,
+        dev_id: str,
+        description: BinarySensorEntityDescription,
+    ) -> None:
         """Set up the Plugwise API."""
-        super().__init__(api, coordinator, name, dev_id, binary_sensor)
+        super().__init__(api, coordinator, name, dev_id, description)
 
-        self._attributes = {}
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
+        self._attr_extra_state_attributes = {}
 
     @callback
-    def _async_process_data(self):
+    def _async_process_data(self) -> None:
         """Update the entity."""
         notify = self._api.notifications
 
         for severity in SEVERITIES:
-            self._attributes[f"{severity}_msg"] = []
+            self._attr_extra_state_attributes[f"{severity}_msg"] = []
 
-        self._is_on = False
-        self._icon = NO_NOTIFICATION_ICON
+        self._attr_is_on = False
+        self._attr_icon = NO_NOTIFICATION_ICON
 
         if notify:
-            self._is_on = True
-            self._icon = NOTIFICATION_ICON
+            self._attr_is_on = True
+            self._attr_icon = NOTIFICATION_ICON
 
             for details in notify.values():
                 for msg_type, msg in details.items():
                     if msg_type not in SEVERITIES:
                         msg_type = "other"
 
-                    self._attributes[f"{msg_type.lower()}_msg"].append(msg)
+                    self._attr_extra_state_attributes[f"{msg_type.lower()}_msg"].append(
+                        msg
+                    )
 
         self.async_write_ha_state()

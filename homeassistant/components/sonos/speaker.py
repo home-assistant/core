@@ -400,7 +400,12 @@ class SonosSpeaker:
         )
         for result in results:
             if isinstance(result, Exception):
-                _LOGGER.debug("Unsubscribe failed for %s: %s", self.zone_name, result)
+                _LOGGER.debug(
+                    "Unsubscribe failed for %s: %s",
+                    self.zone_name,
+                    result,
+                    exc_info=result,
+                )
         self._subscriptions = []
 
     @callback

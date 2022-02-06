@@ -931,9 +931,12 @@ def mock_restore_cache(hass, states):
     last_states = {}
     for state in states:
         restored_state = state.as_dict()
-        restored_state["attributes"] = json.loads(
-            json.dumps(restored_state["attributes"], cls=JSONEncoder)
-        )
+        restored_state = {
+            **restored_state,
+            "attributes": json.loads(
+                json.dumps(restored_state["attributes"], cls=JSONEncoder)
+            ),
+        }
         last_states[state.entity_id] = restore_state.StoredState(
             State.from_dict(restored_state), now
         )

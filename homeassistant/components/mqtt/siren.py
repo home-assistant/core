@@ -328,8 +328,7 @@ class MqttSiren(MqttEntity, SirenEntity):
             else json.dumps(template_variables)
         )
         if payload and payload not in PAYLOAD_NONE:
-            await mqtt.async_publish(
-                self.hass,
+            await self.async_publish(
                 self._config[topic],
                 payload,
                 self._config[CONF_QOS],

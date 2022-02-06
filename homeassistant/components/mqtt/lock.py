@@ -179,8 +179,7 @@ class MqttLock(MqttEntity, LockEntity):
 
         This method is a coroutine.
         """
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._config[CONF_COMMAND_TOPIC],
             self._config[CONF_PAYLOAD_LOCK],
             self._config[CONF_QOS],
@@ -197,8 +196,7 @@ class MqttLock(MqttEntity, LockEntity):
 
         This method is a coroutine.
         """
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._config[CONF_COMMAND_TOPIC],
             self._config[CONF_PAYLOAD_UNLOCK],
             self._config[CONF_QOS],
@@ -215,8 +213,7 @@ class MqttLock(MqttEntity, LockEntity):
 
         This method is a coroutine.
         """
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._config[CONF_COMMAND_TOPIC],
             self._config[CONF_PAYLOAD_OPEN],
             self._config[CONF_QOS],

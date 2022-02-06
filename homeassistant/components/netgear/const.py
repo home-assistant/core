@@ -9,6 +9,7 @@ CONF_CONSIDER_HOME = "consider_home"
 
 KEY_ROUTER = "router"
 KEY_COORDINATOR = "coordinator"
+KEY_COORDINATOR_TRAFFIC = "coordinator_traffic"
 
 PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR]
 

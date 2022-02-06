@@ -10,7 +10,7 @@ import async_timeout
 from voluptuous import Required, Schema
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
+from homeassistant.components import persistent_notification, zeroconf
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 
@@ -27,6 +27,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the HomeWizard config flow."""
         self.config: dict[str, str | int] = {}
+
+    async def async_step_import(self, import_config: dict) -> FlowResult:
+        """Handle a flow initiated by older `homewizard_energy` component."""
+        _LOGGER.debug("config_flow async_step_import")
+
+        persistent_notification.async_create(
+            self.hass,
+            title="HomeWizard Energy",
+            message=(
+                "The custom integration of HomeWizard Energy has been migrated to core. "
+                "You can safely remove the custom integration from the custom_integrations folder."
+            ),
+            notification_id=f"homewizard_energy_to_{DOMAIN}",
+        )
+
+        return await self.async_step_user({CONF_IP_ADDRESS: import_config["host"]})
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -59,12 +75,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
+        data: dict[str, str] = {CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]}
+
+        if self.source == config_entries.SOURCE_IMPORT:
+            old_config_entry_id = self.context["old_config_entry_id"]
+            assert self.hass.config_entries.async_get_entry(old_config_entry_id)
+            data["old_config_entry_id"] = old_config_entry_id
+
         # Add entry
         return self.async_create_entry(
             title=f"{device_info[CONF_PRODUCT_NAME]} ({device_info[CONF_SERIAL]})",
-            data={
-                CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
-            },
+            data=data,
         )
 
     async def async_step_zeroconf(
