@@ -1074,7 +1074,7 @@ pymysensors==0.22.1
 pynetgear==0.9.1
 
 # homeassistant.components.nina
-pynina==0.1.4
+pynina==0.1.5
 
 # homeassistant.components.nuki
 pynuki==1.5.2
