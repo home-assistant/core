@@ -470,10 +470,6 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     @property
     def extra_state_attributes(self):
         """Return temperature offset."""
-        # return self._tado_zone_temp_offset
-        # state_attr = {}
-        # for key in self._tado_zone_temp_offset:
-            # state_attr[key] = self._tado_zone_temp_offset[key]
         state_attr = self._tado_zone_temp_offset
         state_attr[HA_TERMINATION_TYPE] = self._tado_zone_data.default_overlay_termination_type
         state_attr[HA_TERMINATION_DURATION] = self._tado_zone_data.default_overlay_termination_duration
@@ -589,7 +585,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
             
         _LOGGER.debug(
-            "Switching to %s for zone %s (%d) with temperature %s °C and duration %s",
+            "Switching to %s for zone %s (%d) with temperature %s °C and duration %s using overlay %s",
             self._current_tado_hvac_mode,
             self.zone_name,
             self.zone_id,

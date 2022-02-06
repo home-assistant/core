@@ -218,20 +218,7 @@ class TadoConnector:
         for zone in self.zones:
             zone_id = zone["id"]
             _LOGGER.debug("Updating zone %s", zone_id)
-            #zone_state = TadoZone(zone_states[str(zone_id)], zone_id)
-            #self.data["zone"][zone_id] = zone_state
             self.update_zone(zone_id)
-
-            _LOGGER.debug(
-                "Dispatching update to %s zone %s: %s",
-                self.home_id,
-                zone_id,
-                self.data["zone"][zone_id],
-            )
-            dispatcher_send(
-                self.hass,
-                SIGNAL_TADO_UPDATE_RECEIVED.format(self.home_id, "zone", zone["id"]),
-            )
 
     def update_zone(self, zone_id):
         """Update the internal data from Tado."""
@@ -286,7 +273,7 @@ class TadoConnector:
         swing=None,
     ):
         """Set a zone overlay."""
-        _LOGGER.info(
+        _LOGGER.debug(
             "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s, type=%s, mode=%s fan_speed=%s swing=%s",
             zone_id,
             overlay_mode,
