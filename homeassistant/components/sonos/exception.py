@@ -9,3 +9,7 @@ class UnknownMediaType(BrowseError):
 
 class SpeakerUnavailable(HomeAssistantError):
     """Speaker is unavailable."""
+
+
+class SonosUpdateError(HomeAssistantError):
+    """Update failed."""
