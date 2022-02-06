@@ -26,7 +26,6 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -184,14 +183,3 @@ class NanoleafLight(NanoleafEntity, LightEntity):
         """Instruct the light to turn off."""
         transition: float | None = kwargs.get(ATTR_TRANSITION)
         await self._nanoleaf.turn_off(None if transition is None else int(transition))
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity being added to Home Assistant."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{DOMAIN}_{self._nanoleaf.serial_no}_update_light",
-                self.async_write_ha_state,
-            )
-        )

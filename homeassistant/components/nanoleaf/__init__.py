@@ -13,7 +13,6 @@ from homeassistant.const import CONF_HOST, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -57,7 +56,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def update_light_state_callback(event: StateEvent | EffectsEvent) -> None:
         """Receive state and effect event."""
-        async_dispatcher_send(hass, f"{DOMAIN}_{nanoleaf.serial_no}_update_light")
         coordinator.async_set_updated_data(None)
 
     event_listener = asyncio.create_task(
