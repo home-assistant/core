@@ -2516,7 +2516,7 @@ yalesmartalarmclient==0.3.7
 yalexs==1.1.20
 
 # homeassistant.components.yeelight
-yeelight==0.7.8
+yeelight==0.7.9
 
 # homeassistant.components.yeelightsunflower
 yeelightsunflower==0.0.10
