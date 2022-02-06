@@ -173,6 +173,15 @@ def core_requirements():
     return parser["options"]["install_requires"].strip().split("\n")
 
 
+def default_config_requirements():
+    """Recursively gather requirements from default_config."""
+    seen = set()
+    seen.add("default_config")
+    integration = Integration(Path("homeassistant/components/default_config"))
+    integration.manifest = {"dependencies": integration.import_pkg().INTEGRATIONS}
+    return __gather_integration_requirements(integration, seen)
+
+
 def gather_recursive_requirements(domain, seen=None):
     """Recursively gather requirements from a module."""
     if seen is None:
@@ -181,6 +190,10 @@ def gather_recursive_requirements(domain, seen=None):
     seen.add(domain)
     integration = Integration(Path(f"homeassistant/components/{domain}"))
     integration.load_manifest()
+    return __gather_integration_requirements(integration, seen)
+
+
+def __gather_integration_requirements(integration, seen):
     reqs = {x for x in integration.requirements if x not in CONSTRAINT_BASE}
     for dep_domain in integration.dependencies:
         reqs.update(gather_recursive_requirements(dep_domain, seen))
@@ -361,7 +374,7 @@ def gather_constraints():
             sorted(
                 {
                     *core_requirements(),
-                    *gather_recursive_requirements("default_config"),
+                    *default_config_requirements(),
                     *gather_recursive_requirements("mqtt"),
                 }
             )
