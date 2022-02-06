@@ -256,6 +256,10 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
             add_to_watched_value_ids=True,
             check_all_endpoints=True,
         )
+
+        if not self._fan_mode:
+            raise ValueError("Thermostat fan mode is required")
+
         self._fan_off = self.get_zwave_value(
             THERMOSTAT_FAN_OFF_PROPERTY,
             CommandClass.THERMOSTAT_FAN_MODE,
@@ -277,15 +281,13 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn the device on."""
-        if self._fan_off is None:
-            return None
-        await self.info.node.async_set_value(self._fan_off, False)
+        if self._fan_off:
+            await self.info.node.async_set_value(self._fan_off, False)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        if self._fan_off is None:
-            return None
-        await self.info.node.async_set_value(self._fan_off, True)
+        if self._fan_off:
+            await self.info.node.async_set_value(self._fan_off, True)
 
     @property
     def is_on(self) -> bool:
@@ -298,8 +300,7 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., auto, smart, interval, favorite."""
         if (
-            self._fan_mode
-            and self._fan_mode.value is not None
+            self._fan_mode.value is not None
             and str(self._fan_mode.value) in self._fan_mode.metadata.states
         ):
             return cast(str, self._fan_mode.metadata.states[str(self._fan_mode.value)])
@@ -324,7 +325,7 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
     @property
     def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
-        if self._fan_mode and self._fan_mode.metadata.states:
+        if self._fan_mode.metadata.states:
             return list(self._fan_mode.metadata.states.values())
         return None
 
@@ -351,7 +352,7 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
         """Return the optional state attributes."""
         attrs = {}
 
-        if self.fan_state:
-            attrs[ATTR_FAN_STATE] = self.fan_state
+        if state := self.fan_state:
+            attrs[ATTR_FAN_STATE] = state
 
         return attrs

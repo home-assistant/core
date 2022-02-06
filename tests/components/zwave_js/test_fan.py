@@ -470,6 +470,31 @@ async def test_thermostat_fan(hass, client, climate_adc_t3000, integration):
 
     client.async_send_command.reset_mock()
 
+    # Test unknown fan state update from value updated event
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 68,
+            "args": {
+                "commandClassName": "Thermostat Fan State",
+                "commandClass": CommandClass.THERMOSTAT_FAN_STATE.value,
+                "endpoint": 0,
+                "property": "state",
+                "newValue": 99,
+                "prevValue": 0,
+                "propertyName": "state",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(entity_id)
+    assert not state.attributes.get(ATTR_FAN_STATE)
+
+    client.async_send_command.reset_mock()
+
     # Test fan mode update from value updated event
     event = Event(
         type="value updated",
@@ -517,3 +542,40 @@ async def test_thermostat_fan(hass, client, climate_adc_t3000, integration):
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
+
+
+async def test_thermostat_fan_without_off(
+    hass, client, climate_radio_thermostat_ct100_plus, integration
+):
+    """Test the fan entity for a z-wave fan without "off" property."""
+    entity_id = "fan.z_wave_thermostat"
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.state == STATE_ON
+
+    # Test turning off
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 0
+    assert state.state == STATE_ON
+
+    client.async_send_command.reset_mock()
+
+    # Test turning on
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 0
+    assert state.state == STATE_ON
+
+    client.async_send_command.reset_mock()
