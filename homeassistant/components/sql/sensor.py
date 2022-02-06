@@ -135,7 +135,6 @@ class SQLSensor(SensorEntity):
         self._template = value_template
         self._column_name = column
         self.sessionmaker = sessmaker
-        self._attr_unique_id = f"{db_url}, {query}, {column}, {value_template}"
         self._attr_extra_state_attributes = {}
 
     def update(self) -> None:
