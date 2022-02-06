@@ -107,24 +107,29 @@ def _migrate_old_unique_ids(hass: HomeAssistant, old_unique_id: str, key: str) -
     ent_reg = entity_registry.async_get(hass)
     _update_successful = False
 
-    if entity_id := ent_reg.async_get_entity_id(Platform.SENSOR, DOMAIN, old_unique_id):
-        new_unique_id = f"{old_unique_id}-{key}"
-        try:
-            ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
-            _update_successful = True
-        except ValueError:
-            _LOGGER.warning(
-                "Skip migration of id [%s] to [%s] because it already exists",
-                old_unique_id,
-                new_unique_id,
-            )
+    new_unique_id = f"{old_unique_id}-{key}"
 
-        if _update_successful:
-            _LOGGER.debug(
-                "Migrating unique_id from [%s] to [%s]",
-                old_unique_id,
-                new_unique_id,
-            )
+    entity_id = ent_reg.async_get_entity_id(Platform.SENSOR, DOMAIN, old_unique_id)
+
+    if not entity_id:
+        return
+
+    try:
+        ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
+        _update_successful = True
+    except ValueError:
+        _LOGGER.warning(
+            "Skip migration of id [%s] to [%s] because it already exists",
+            old_unique_id,
+            new_unique_id,
+        )
+
+    if _update_successful:
+        _LOGGER.debug(
+            "Migrating unique_id from [%s] to [%s]",
+            old_unique_id,
+            new_unique_id,
+        )
 
 
 async def async_setup_entry(
