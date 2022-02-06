@@ -70,10 +70,7 @@ async def async_setup_entry(
                     )
                 )
 
-        if (
-            device_properties["class"] == "gateway"
-            and coordinator.data.gateway["single_master_thermostat"] is not None
-        ):
+        if device_properties["class"] == "gateway":
             entities.append(
                 PlugwiseNotifyBinarySensorEntity(
                     api,
