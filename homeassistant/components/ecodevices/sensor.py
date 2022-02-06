@@ -204,6 +204,22 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             )
         )
         entities.append(
+            C1DailyEdDevice(
+                controller,
+                coordinator,
+                input_name="c1_daily",
+                name=DEFAULT_C1_NAME + " Daily",
+                unit=options.get(
+                    CONF_C1_UNIT_OF_MEASUREMENT, config.get(CONF_C1_UNIT_OF_MEASUREMENT)
+                ),
+                device_class=options.get(
+                    CONF_C1_DEVICE_CLASS, config.get(CONF_C1_DEVICE_CLASS)
+                ),
+                state_class=STATE_CLASS_MEASUREMENT,
+                icon="mdi:counter",
+            )
+        )
+        entities.append(
             C1TotalEdDevice(
                 controller,
                 coordinator,
@@ -232,6 +248,22 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 input_name="c2",
                 name=DEFAULT_C2_NAME,
                 unit=config.get(CONF_C2_UNIT_OF_MEASUREMENT),
+                device_class=options.get(
+                    CONF_C2_DEVICE_CLASS, config.get(CONF_C2_DEVICE_CLASS)
+                ),
+                state_class=STATE_CLASS_MEASUREMENT,
+                icon="mdi:counter",
+            )
+        )
+        entities.append(
+            C2DailyEdDevice(
+                controller,
+                coordinator,
+                input_name="c2_daily",
+                name=DEFAULT_C2_NAME + " Daily",
+                unit=options.get(
+                    CONF_C2_UNIT_OF_MEASUREMENT, config.get(CONF_C2_UNIT_OF_MEASUREMENT)
+                ),
                 device_class=options.get(
                     CONF_C2_DEVICE_CLASS, config.get(CONF_C2_DEVICE_CLASS)
                 ),
@@ -315,7 +347,7 @@ class T1EdDevice(EdDevice):
         return self.coordinator.data["T1_PAPP"]
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self.coordinator.data:
             return {
@@ -397,7 +429,7 @@ class T2EdDevice(EdDevice):
         return self.coordinator.data["T2_PAPP"]
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self.coordinator.data:
             return {
@@ -476,10 +508,10 @@ class C1EdDevice(EdDevice):
     @property
     def native_value(self):
         """Return the state."""
-        return self.coordinator.data["c0day"]
+        return self.coordinator.data["meter2"]
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self.coordinator.data:
             return {
@@ -488,8 +520,17 @@ class C1EdDevice(EdDevice):
             }
 
 
+class C1DailyEdDevice(EdDevice):
+    """Initialize the C1 daily sensor."""
+
+    @property
+    def native_value(self):
+        """Return the state."""
+        return self.coordinator.data["c0day"]
+
+
 class C1TotalEdDevice(EdDevice):
-    """Initialize the C1 sensor."""
+    """Initialize the C1 total sensor."""
 
     @property
     def native_value(self) -> float:
@@ -506,10 +547,10 @@ class C2EdDevice(EdDevice):
     @property
     def native_value(self):
         """Return the state."""
-        return self.coordinator.data["c1day"]
+        return self.coordinator.data["meter3"]
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self.coordinator.data:
             return {
@@ -518,8 +559,17 @@ class C2EdDevice(EdDevice):
             }
 
 
+class C2DailyEdDevice(EdDevice):
+    """Initialize the C2 daily sensor."""
+
+    @property
+    def native_value(self):
+        """Return the state."""
+        return self.coordinator.data["c1day"]
+
+
 class C2TotalEdDevice(EdDevice):
-    """Initialize the C1 sensor."""
+    """Initialize the C2 total sensor."""
 
     @property
     def native_value(self) -> float:
