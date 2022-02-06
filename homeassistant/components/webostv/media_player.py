@@ -144,7 +144,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         self._current_source = None
         self._source_list: dict = {}
 
-        self._supported_features = None
+        self._supported_features: int | None = None
 
     async def async_added_to_hass(self) -> None:
         """Connect and subscribe to dispatcher signals and state updates."""
