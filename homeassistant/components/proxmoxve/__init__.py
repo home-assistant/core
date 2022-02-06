@@ -188,7 +188,12 @@ async def get_nodes(hass, config):
         hass.data[PROXMOX_HOSTS][host] = {}
         proxmox_client = hass.data[PROXMOX_CLIENTS][host]
         proxmox = proxmox_client.get_api_client()
-        nodes = await hass.async_add_executor_job(get_nodes_call)
+
+        try:
+            nodes = await hass.async_add_executor_job(get_nodes_call)
+        except (ResourceException, requests.exceptions.ConnectionError):
+            return None
+
         hass.data[PROXMOX_HOSTS][host]["nodes"] = nodes
 
         for node in hass.data[PROXMOX_HOSTS][host]["nodes"]:
