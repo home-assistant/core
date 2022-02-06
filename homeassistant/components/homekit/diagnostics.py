@@ -24,12 +24,9 @@ async def async_get_config_entry_diagnostics(
         "config-entry": {
             "title": entry.title,
             "version": entry.version,
-            "data": entry.data,
+            "data": dict(entry.data),
         },
         "accessories": homekit.driver.get_accessories(),
-        "paired_clients": {
-            str(client): bytes.hex(key) for client, key in state.paired_clients.items()
-        },
         "client_properties": {
             str(client): props for client, props in state.client_properties.items()
         },
