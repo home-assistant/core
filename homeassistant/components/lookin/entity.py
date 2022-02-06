@@ -9,12 +9,10 @@ from aiolookin import POWER_CMD, POWER_OFF_CMD, POWER_ON_CMD, Climate, Remote
 from aiolookin.models import Device, UDPCommandType, UDPEvent
 
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MODEL_NAMES
+from .coordinator import LookinDataUpdateCoordinator
 from .models import LookinData
 
 LOGGER = logging.getLogger(__name__)
@@ -55,6 +53,8 @@ class LookinDeviceMixIn:
 class LookinDeviceCoordinatorEntity(LookinDeviceMixIn, CoordinatorEntity):
     """A lookin device entity on the device itself that uses the coordinator."""
 
+    coordinator: LookinDataUpdateCoordinator
+
     _attr_should_poll = False
 
     def __init__(self, lookin_data: LookinData) -> None:
@@ -85,12 +85,14 @@ class LookinEntityMixIn:
 class LookinCoordinatorEntity(LookinDeviceMixIn, LookinEntityMixIn, CoordinatorEntity):
     """A lookin device entity for an external device that uses the coordinator."""
 
+    coordinator: LookinDataUpdateCoordinator
+
     _attr_should_poll = False
     _attr_assumed_state = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: LookinDataUpdateCoordinator,
         uuid: str,
         device: Remote | Climate,
         lookin_data: LookinData,
@@ -117,7 +119,7 @@ class LookinPowerEntity(LookinCoordinatorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: LookinDataUpdateCoordinator,
         uuid: str,
         device: Remote | Climate,
         lookin_data: LookinData,
@@ -137,7 +139,7 @@ class LookinPowerPushRemoteEntity(LookinPowerEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: LookinDataUpdateCoordinator,
         uuid: str,
         device: Remote,
         lookin_data: LookinData,

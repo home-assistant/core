@@ -7,5 +7,6 @@
   "codeowners": ["@danielhiversen"],
   "quality_scale": "silver",
   "config_flow": true,
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["tibber"]
 }

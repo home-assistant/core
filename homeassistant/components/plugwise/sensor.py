@@ -1,5 +1,7 @@
 """Plugwise Sensor component for Home Assistant."""
-import logging
+from __future__ import annotations
+
+from plugwise.smile import Smile
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -18,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     COOL_ICON,
@@ -26,15 +29,14 @@ from .const import (
     DOMAIN,
     FLAME_ICON,
     IDLE_ICON,
+    LOGGER,
     SENSOR_MAP_DEVICE_CLASS,
     SENSOR_MAP_MODEL,
     SENSOR_MAP_STATE_CLASS,
     SENSOR_MAP_UOM,
     UNIT_LUMEN,
 )
-from .gateway import SmileGateway
-
-_LOGGER = logging.getLogger(__name__)
+from .entity import PlugwiseEntity
 
 ATTR_TEMPERATURE = [
     "Temperature",
@@ -295,20 +297,21 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class SmileSensor(SmileGateway, SensorEntity):
+class SmileSensor(PlugwiseEntity, SensorEntity):
     """Represent Smile Sensors."""
 
-    def __init__(self, api, coordinator, name, dev_id, sensor):
+    def __init__(
+        self,
+        api: Smile,
+        coordinator: DataUpdateCoordinator,
+        name: str,
+        dev_id: str,
+        sensor: str,
+    ) -> None:
         """Initialise the sensor."""
         super().__init__(api, coordinator, name, dev_id)
-
+        self._attr_unique_id = f"{dev_id}-{sensor}"
         self._sensor = sensor
-
-        self._dev_class = None
-        self._icon = None
-        self._state = None
-        self._state_class = None
-        self._unit_of_measurement = None
 
         if dev_id == self._api.heater_id:
             self._entity_name = "Auxiliary"
@@ -319,58 +322,38 @@ class SmileSensor(SmileGateway, SensorEntity):
         if dev_id == self._api.gateway_id:
             self._entity_name = f"Smile {self._entity_name}"
 
-        self._unique_id = f"{dev_id}-{sensor}"
-
-    @property
-    def device_class(self):
-        """Device class of this entity."""
-        return self._dev_class
-
-    @property
-    def icon(self):
-        """Return the icon of this entity."""
-        return self._icon
-
-    @property
-    def native_value(self):
-        """Return the state of this entity."""
-        return self._state
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def state_class(self):
-        """Return the state_class of this entity."""
-        return self._state_class
-
 
 class PwThermostatSensor(SmileSensor):
     """Thermostat (or generic) sensor devices."""
 
-    def __init__(self, api, coordinator, name, dev_id, sensor, sensor_type):
+    def __init__(
+        self,
+        api: Smile,
+        coordinator: DataUpdateCoordinator,
+        name: str,
+        dev_id: str,
+        sensor: str,
+        sensor_type: list[str],
+    ) -> None:
         """Set up the Plugwise API."""
         super().__init__(api, coordinator, name, dev_id, sensor)
 
-        self._icon = None
         self._model = sensor_type[SENSOR_MAP_MODEL]
-        self._unit_of_measurement = sensor_type[SENSOR_MAP_UOM]
-        self._dev_class = sensor_type[SENSOR_MAP_DEVICE_CLASS]
-        self._state_class = sensor_type[SENSOR_MAP_STATE_CLASS]
+        self._attr_native_unit_of_measurement = sensor_type[SENSOR_MAP_UOM]
+        self._attr_device_class = sensor_type[SENSOR_MAP_DEVICE_CLASS]
+        self._attr_state_class = sensor_type[SENSOR_MAP_STATE_CLASS]
 
     @callback
-    def _async_process_data(self):
+    def _async_process_data(self) -> None:
         """Update the entity."""
         if not (data := self._api.get_device_data(self._dev_id)):
-            _LOGGER.error("Received no data for device %s", self._entity_name)
+            LOGGER.error("Received no data for device %s", self._entity_name)
             self.async_write_ha_state()
             return
 
         if data.get(self._sensor) is not None:
-            self._state = data[self._sensor]
-            self._icon = CUSTOM_ICONS.get(self._sensor, self._icon)
+            self._attr_native_value = data[self._sensor]
+            self._attr_icon = CUSTOM_ICONS.get(self._sensor, self.icon)
 
         self.async_write_ha_state()
 
@@ -378,7 +361,14 @@ class PwThermostatSensor(SmileSensor):
 class PwAuxDeviceSensor(SmileSensor):
     """Auxiliary Device Sensors."""
 
-    def __init__(self, api, coordinator, name, dev_id, sensor):
+    def __init__(
+        self,
+        api: Smile,
+        coordinator: DataUpdateCoordinator,
+        name: str,
+        dev_id: str,
+        sensor: str,
+    ) -> None:
         """Set up the Plugwise API."""
         super().__init__(api, coordinator, name, dev_id, sensor)
 
@@ -386,10 +376,10 @@ class PwAuxDeviceSensor(SmileSensor):
         self._heating_state = False
 
     @callback
-    def _async_process_data(self):
+    def _async_process_data(self) -> None:
         """Update the entity."""
         if not (data := self._api.get_device_data(self._dev_id)):
-            _LOGGER.error("Received no data for device %s", self._entity_name)
+            LOGGER.error("Received no data for device %s", self._entity_name)
             self.async_write_ha_state()
             return
 
@@ -398,14 +388,14 @@ class PwAuxDeviceSensor(SmileSensor):
         if data.get("cooling_state") is not None:
             self._cooling_state = data["cooling_state"]
 
-        self._state = "idle"
-        self._icon = IDLE_ICON
+        self._attr_native_value = "idle"
+        self._attr_icon = IDLE_ICON
         if self._heating_state:
-            self._state = "heating"
-            self._icon = FLAME_ICON
+            self._attr_native_value = "heating"
+            self._attr_icon = FLAME_ICON
         if self._cooling_state:
-            self._state = "cooling"
-            self._icon = COOL_ICON
+            self._attr_native_value = "cooling"
+            self._attr_icon = COOL_ICON
 
         self.async_write_ha_state()
 
@@ -413,32 +403,40 @@ class PwAuxDeviceSensor(SmileSensor):
 class PwPowerSensor(SmileSensor):
     """Power sensor entities."""
 
-    def __init__(self, api, coordinator, name, dev_id, sensor, sensor_type, model):
+    def __init__(
+        self,
+        api: Smile,
+        coordinator: DataUpdateCoordinator,
+        name: str,
+        dev_id: str,
+        sensor: str,
+        sensor_type: list[str],
+        model: str | None,
+    ) -> None:
         """Set up the Plugwise API."""
         super().__init__(api, coordinator, name, dev_id, sensor)
 
-        self._icon = None
         self._model = model
         if model is None:
             self._model = sensor_type[SENSOR_MAP_MODEL]
 
-        self._unit_of_measurement = sensor_type[SENSOR_MAP_UOM]
-        self._dev_class = sensor_type[SENSOR_MAP_DEVICE_CLASS]
-        self._state_class = sensor_type[SENSOR_MAP_STATE_CLASS]
+        self._attr_native_unit_of_measurement = sensor_type[SENSOR_MAP_UOM]
+        self._attr_device_class = sensor_type[SENSOR_MAP_DEVICE_CLASS]
+        self._attr_state_class = sensor_type[SENSOR_MAP_STATE_CLASS]
 
         if dev_id == self._api.gateway_id:
             self._model = "P1 DSMR"
 
     @callback
-    def _async_process_data(self):
+    def _async_process_data(self) -> None:
         """Update the entity."""
         if not (data := self._api.get_device_data(self._dev_id)):
-            _LOGGER.error("Received no data for device %s", self._entity_name)
+            LOGGER.error("Received no data for device %s", self._entity_name)
             self.async_write_ha_state()
             return
 
         if data.get(self._sensor) is not None:
-            self._state = data[self._sensor]
-            self._icon = CUSTOM_ICONS.get(self._sensor, self._icon)
+            self._attr_native_value = data[self._sensor]
+            self._attr_icon = CUSTOM_ICONS.get(self._sensor, self.icon)
 
         self.async_write_ha_state()

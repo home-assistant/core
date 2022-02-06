@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 import logging
-from typing import Any
 
 from pytile.tile import Tile
 
@@ -13,7 +12,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -55,7 +54,7 @@ async def async_setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
     async_see: Callable[..., Awaitable[None]],
-    discovery_info: dict[str, Any] | None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Detect a legacy configuration and import it."""
     hass.async_create_task(

@@ -20,6 +20,37 @@
         "dim_mode": "steps200"
       }
     ],
+    "lights": [
+      {
+        "name": "Light_Output1",
+        "address": "pchk.s0.m7",
+        "output": "output1",
+        "dimmable": true,
+        "transition": 5
+      },
+      {
+        "name": "Light_Output2",
+        "address": "pchk.s0.m7",
+        "output": "output2",
+        "dimmable": false,
+        "transition": 0
+      },
+      {
+        "name": "Light_Relay1",
+        "address": "s0.m7",
+        "output": "relay1"
+      },
+      {
+        "name": "Light_Relay3",
+        "address": "myhome.s0.m7",
+        "output": "relay3"
+      },
+      {
+        "name": "Light_Relay4",
+        "address": "myhome.s0.m7",
+        "output": "relay4"
+      }
+    ],
     "switches": [
       {
         "name": "Switch_Output1",

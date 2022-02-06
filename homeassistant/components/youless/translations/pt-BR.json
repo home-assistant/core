@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Falha ao conectar"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nome do host",
+                    "name": "Nome"
+                }
+            }
+        }
+    }
+}

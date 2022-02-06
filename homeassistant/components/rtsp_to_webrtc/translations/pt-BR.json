@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "server_failure": "O servidor RTSPtoWebRTC retornou um erro. Verifique os logs para obter mais informa\u00e7\u00f5es.",
+            "server_unreachable": "N\u00e3o \u00e9 poss\u00edvel se comunicar com o servidor RTSPtoWebRTC. Verifique os logs para obter mais informa\u00e7\u00f5es.",
+            "single_instance_allowed": "J\u00e1 configurado. Apenas uma configura\u00e7\u00e3o \u00e9 poss\u00edvel."
+        },
+        "error": {
+            "invalid_url": "Deve ser um URL de servidor RTSPtoWebRTC v\u00e1lido, por exemplo, https://example.com",
+            "server_failure": "O servidor RTSPtoWebRTC retornou um erro. Verifique os logs para obter mais informa\u00e7\u00f5es.",
+            "server_unreachable": "N\u00e3o \u00e9 poss\u00edvel se comunicar com o servidor RTSPtoWebRTC. Verifique os logs para obter mais informa\u00e7\u00f5es."
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Deseja configurar o Home Assistant para se conectar ao servidor RTSPtoWebRTC fornecido pelo complemento: {addon} ?",
+                "title": "RTSPtoWebRTC via complemento do Home Assistant"
+            },
+            "user": {
+                "data": {
+                    "server_url": "URL do servidor RTSPtoWebRTC, por exemplo, https://example.com"
+                },
+                "description": "A integra\u00e7\u00e3o RTSPtoWebRTC requer um servidor para traduzir fluxos RTSP em WebRTC. Insira a URL para o servidor RTSPtoWebRTC.",
+                "title": "Configurar RTSPtoWebRTC"
+            }
+        }
+    }
+}

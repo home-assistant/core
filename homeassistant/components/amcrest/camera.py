@@ -185,7 +185,6 @@ class AmcrestCam(Camera):
         self._rtsp_url: str | None = None
         self._snapshot_task: asyncio.tasks.Task | None = None
         self._unsub_dispatcher: list[Callable[[], None]] = []
-        self._update_succeeded = False
 
     def _check_snapshot_ok(self) -> None:
         available = self.available
@@ -380,9 +379,7 @@ class AmcrestCam(Camera):
 
     async def async_update(self) -> None:
         """Update entity status."""
-        if not self.available or self._update_succeeded:
-            if not self.available:
-                self._update_succeeded = False
+        if not self.available:
             return
         _LOGGER.debug("Updating %s camera", self.name)
         try:
@@ -427,9 +424,6 @@ class AmcrestCam(Camera):
             )
         except AmcrestError as error:
             log_update_error(_LOGGER, "get", self.name, "camera attributes", error)
-            self._update_succeeded = False
-        else:
-            self._update_succeeded = True
 
     # Other Camera method overrides
 
@@ -539,7 +533,10 @@ class AmcrestCam(Camera):
                 return
 
     async def _async_get_video(self) -> bool:
-        return await self._api.async_video_enabled
+        stream = {0: "Main", 1: "Extra"}
+        return await self._api.async_is_video_enabled(
+            channel=0, stream=stream[self._resolution]
+        )
 
     async def _async_set_video(self, enable: bool) -> None:
         await self._api.async_set_video_enabled(enable, channel=0)

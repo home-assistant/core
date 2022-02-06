@@ -56,13 +56,21 @@ async def test_entry_diagnostics(hass, hass_client):
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "devices": [
             {
-                "traits": {
-                    "sdm.devices.traits.Humidity": {"ambientHumidityPercent": 35.0},
-                    "sdm.devices.traits.Temperature": {
-                        "ambientTemperatureCelsius": 25.1
+                "data": {
+                    "assignee": "**REDACTED**",
+                    "name": "**REDACTED**",
+                    "parentRelations": [
+                        {"displayName": "**REDACTED**", "parent": "**REDACTED**"}
+                    ],
+                    "traits": {
+                        "sdm.devices.traits.Info": {"customName": "**REDACTED**"},
+                        "sdm.devices.traits.Humidity": {"ambientHumidityPercent": 35.0},
+                        "sdm.devices.traits.Temperature": {
+                            "ambientTemperatureCelsius": 25.1
+                        },
                     },
-                },
-                "type": "sdm.devices.types.THERMOSTAT",
+                    "type": "sdm.devices.types.THERMOSTAT",
+                }
             }
         ],
     }
@@ -70,7 +78,8 @@ async def test_entry_diagnostics(hass, hass_client):
 
 async def test_setup_susbcriber_failure(hass, hass_client):
     """Test configuration error."""
-    config_entry = create_config_entry(hass)
+    config_entry = create_config_entry()
+    config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"
     ), patch(

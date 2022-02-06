@@ -160,6 +160,7 @@ SONOS_SPEAKER_ACTIVITY = "sonos_speaker_activity"
 SONOS_SPEAKER_ADDED = "sonos_speaker_added"
 SONOS_STATE_UPDATED = "sonos_state_updated"
 SONOS_REBOOTED = "sonos_rebooted"
+SONOS_VANISHED = "sonos_vanished"
 
 SOURCE_LINEIN = "Line-in"
 SOURCE_TV = "TV"

@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account is al geconfigureerd"
+            "already_configured": "Account is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie was succesvol",
+            "reauth_wrong_account": "U kunt deze invoer alleen opnieuw verifi\u00ebren met hetzelfde Overkiz account en hub"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",

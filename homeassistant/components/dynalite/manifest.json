@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/dynalite",
   "codeowners": ["@ziv1234"],
   "requirements": ["dynalite_devices==0.1.46"],
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "loggers": ["dynalite_devices_lib"]
 }

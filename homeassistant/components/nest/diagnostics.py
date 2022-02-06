@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from google_nest_sdm import diagnostics
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import InfoTrait
 from google_nest_sdm.exceptions import ApiException
@@ -30,22 +31,14 @@ async def async_get_config_entry_diagnostics(
         return {"error": str(err)}
 
     return {
+        **diagnostics.get_diagnostics(),
         "devices": [
             get_device_data(device) for device in device_manager.devices.values()
-        ]
+        ],
     }
 
 
 def get_device_data(device: Device) -> dict[str, Any]:
     """Return diagnostic information about a device."""
-    # Return a simplified view of the API object, but skipping any id fields or
-    # traits that include unique identifiers or personally identifiable information.
-    # See https://developers.google.com/nest/device-access/traits for API details
-    return {
-        "type": device.type,
-        "traits": {
-            trait: data
-            for trait, data in device.raw_data.get("traits", {}).items()
-            if trait not in REDACT_DEVICE_TRAITS
-        },
-    }
+    # Library performs its own redaction for device data
+    return device.get_diagnostics()

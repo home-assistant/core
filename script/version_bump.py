@@ -117,7 +117,18 @@ def write_version(version):
     )
 
     with open("homeassistant/const.py", "wt") as fil:
-        content = fil.write(content)
+        fil.write(content)
+
+
+def write_version_metadata(version: Version) -> None:
+    """Update setup.cfg file with new version."""
+    with open("setup.cfg") as fp:
+        content = fp.read()
+
+    content = re.sub(r"(version\W+=\W).+\n", f"\\g<1>{version}\n", content, count=1)
+
+    with open("setup.cfg", "w") as fp:
+        fp.write(content)
 
 
 def main():
@@ -142,6 +153,7 @@ def main():
     assert bumped > current, "BUG! New version is not newer than old version"
 
     write_version(bumped)
+    write_version_metadata(bumped)
 
     if not arguments.commit:
         return

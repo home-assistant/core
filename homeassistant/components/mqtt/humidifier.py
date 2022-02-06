@@ -66,6 +66,8 @@ DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_PAYLOAD_RESET = "None"
 
+PAYLOAD_NONE = "None"
+
 MQTT_HUMIDIFIER_ATTRIBUTES_BLOCKED = frozenset(
     {
         humidifier.ATTR_HUMIDITY,
@@ -187,7 +189,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT humidifier."""
-        self._state = False
+        self._state = None
         self._target_humidity = None
         self._mode = None
         self._supported_features = 0
@@ -267,7 +269,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 entity=self,
             ).async_render_with_possible_json_value
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
         topics = {}
 
@@ -283,6 +285,8 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 self._state = True
             elif payload == self._payload["STATE_OFF"]:
                 self._state = False
+            elif payload == PAYLOAD_NONE:
+                self._state = None
             self.async_write_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
@@ -373,9 +377,13 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             }
             self._mode = None
 
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics
         )
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
     def assumed_state(self):
@@ -388,7 +396,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         return self._available_modes
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._state
 
@@ -411,8 +419,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         This method is a coroutine.
         """
         mqtt_payload = self._command_templates[CONF_STATE](self._payload["STATE_ON"])
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_COMMAND_TOPIC],
             mqtt_payload,
             self._config[CONF_QOS],
@@ -429,8 +436,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         This method is a coroutine.
         """
         mqtt_payload = self._command_templates[CONF_STATE](self._payload["STATE_OFF"])
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_COMMAND_TOPIC],
             mqtt_payload,
             self._config[CONF_QOS],
@@ -447,8 +453,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         This method is a coroutine.
         """
         mqtt_payload = self._command_templates[ATTR_HUMIDITY](humidity)
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_TARGET_HUMIDITY_COMMAND_TOPIC],
             mqtt_payload,
             self._config[CONF_QOS],
@@ -471,8 +476,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
         mqtt_payload = self._command_templates[ATTR_MODE](mode)
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_MODE_COMMAND_TOPIC],
             mqtt_payload,
             self._config[CONF_QOS],

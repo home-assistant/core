@@ -90,7 +90,7 @@ class MqttCamera(MqttEntity, Camera):
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
         @callback
@@ -99,7 +99,7 @@ class MqttCamera(MqttEntity, Camera):
             """Handle new MQTT messages."""
             self._last_image = msg.payload
 
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
             self._sub_state,
             {
@@ -111,6 +111,10 @@ class MqttCamera(MqttEntity, Camera):
                 }
             },
         )
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None

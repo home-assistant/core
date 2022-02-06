@@ -9,6 +9,7 @@
             "protect_version": "Versi minimum yang diperlukan adalah v1.20.0. Tingkatkan UniFi Protect lalu coba lagi.",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
+        "flow_title": "{name} ({ip_address})",
         "step": {
             "discovery_confirm": {
                 "data": {

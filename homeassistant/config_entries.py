@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Awaitable, Callable, Iterable, Mapping
 from contextvars import ContextVar
 import dataclasses
 from enum import Enum
@@ -117,6 +117,7 @@ DISCOVERY_SOURCES = (
     SOURCE_DHCP,
     SOURCE_DISCOVERY,
     SOURCE_IMPORT,
+    SOURCE_INTEGRATION_DISCOVERY,
     SOURCE_UNIGNORE,
 )
 
@@ -159,7 +160,7 @@ class OperationNotAllowed(ConfigError):
     """Raised when a config entry operation is not allowed."""
 
 
-UpdateListenerType = Callable[[HomeAssistant, "ConfigEntry"], Any]
+UpdateListenerType = Callable[[HomeAssistant, "ConfigEntry"], Awaitable[None]]
 
 
 class ConfigEntry:

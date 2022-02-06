@@ -76,8 +76,10 @@ jobs:
       - name: Build package
         shell: bash
         run: |
-          pip install twine wheel
-          python setup.py sdist bdist_wheel
+          # Remove dist, build, and homeassistant.egg-info
+          # when build locally for testing!
+          pip install twine build
+          python -m build
 
       - name: Upload package
         shell: bash
@@ -133,7 +135,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2021.12.0
+        uses: home-assistant/builder@2022.01.0
         with:
           args: |
             $BUILD_ARGS \
@@ -198,7 +200,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2021.12.0
+        uses: home-assistant/builder@2022.01.0
         with:
           args: |
             $BUILD_ARGS \

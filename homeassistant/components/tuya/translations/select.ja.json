@@ -10,9 +10,22 @@
             "1": "\u30aa\u30d5",
             "2": "\u30aa\u30f3"
         },
+        "tuya__curtain_mode": {
+            "morning": "\u671d",
+            "night": "\u591c"
+        },
+        "tuya__curtain_motor_mode": {
+            "back": "\u623b\u308b",
+            "forward": "\u9032\u3080"
+        },
         "tuya__decibel_sensitivity": {
             "0": "\u4f4e\u611f\u5ea6",
             "1": "\u9ad8\u611f\u5ea6"
+        },
+        "tuya__fan_angle": {
+            "30": "30\u00b0",
+            "60": "60\u00b0",
+            "90": "90\u00b0"
         },
         "tuya__fingerbot_mode": {
             "click": "\u62bc\u3059",

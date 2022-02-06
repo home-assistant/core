@@ -140,12 +140,8 @@ class FibaroEnergySensor(FibaroDevice, SensorEntity):
         """Initialize the sensor."""
         super().__init__(fibaro_device)
         self.entity_id = f"{DOMAIN}.{self.ha_id}_energy"
-        self._name = f"{fibaro_device.friendly_name} Energy"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self.fibaro_device.unique_id_str}_energy"
+        self._attr_name = f"{fibaro_device.friendly_name} Energy"
+        self._attr_unique_id = f"{fibaro_device.unique_id_str}_energy"
 
     def update(self):
         """Update the state."""

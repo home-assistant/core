@@ -8,5 +8,6 @@
   "iot_class": "cloud_polling",
   "homekit": {
     "models": ["Sensibo"]
-  }
+  },
+  "loggers": ["pysensibo"]
 }

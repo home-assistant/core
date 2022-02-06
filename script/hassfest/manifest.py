@@ -244,6 +244,7 @@ MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("dependencies"): [str],
         vol.Optional("after_dependencies"): [str],
         vol.Required("codeowners"): [str],
+        vol.Optional("loggers"): [str],
         vol.Optional("disabled"): str,
         vol.Optional("iot_class"): vol.In(SUPPORTED_IOT_CLASSES),
     }

@@ -68,10 +68,10 @@
                     "domains": "Domain yang disertakan",
                     "include_domains": "Domain yang disertakan",
                     "include_exclude_mode": "Mode Penyertaan",
-                    "mode": "Mode"
+                    "mode": "Mode HomeKit"
                 },
                 "description": "HomeKit dapat dikonfigurasi untuk memaparkakan sebuah bridge atau sebuah aksesori. Dalam mode aksesori, hanya satu entitas yang dapat digunakan. Mode aksesori diperlukan agar pemutar media dengan kelas perangkat TV berfungsi dengan baik. Entitas di \"Domain yang akan disertakan\" akan disertakan ke HomeKit. Anda akan dapat memilih entitas mana yang akan disertakan atau dikecualikan dari daftar ini pada layar berikutnya.",
-                "title": "Pilih domain yang akan disertakan."
+                "title": "Pilih mode dan domain."
             },
             "yaml": {
                 "description": "Entri ini dikontrol melalui YAML",

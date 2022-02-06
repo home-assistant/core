@@ -62,6 +62,9 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
         """Initialize."""
         super().__init__(coordinator)
         self._unit_system = API_METRIC if coordinator.is_metric else API_IMPERIAL
+        self._attr_wind_speed_unit = self.coordinator.data["Wind"]["Speed"][
+            self._unit_system
+        ]["Unit"]
         self._attr_name = name
         self._attr_unique_id = coordinator.location_key
         self._attr_temperature_unit = (

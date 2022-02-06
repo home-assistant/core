@@ -11,8 +11,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .base_class import TradfriBaseDevice
-from .const import CONF_GATEWAY_ID, DEVICES, DOMAIN, KEY_API
+from .base_class import TradfriBaseEntity
+from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN, KEY_API
+from .coordinator import TradfriDeviceDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -22,35 +23,42 @@ async def async_setup_entry(
 ) -> None:
     """Load Tradfri switches based on a config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
-    tradfri_data = hass.data[DOMAIN][config_entry.entry_id]
-    api = tradfri_data[KEY_API]
-    devices = tradfri_data[DEVICES]
+    coordinator_data = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
+    api = coordinator_data[KEY_API]
 
     async_add_entities(
-        TradfriSwitch(dev, api, gateway_id) for dev in devices if dev.has_socket_control
+        TradfriSwitch(
+            device_coordinator,
+            api,
+            gateway_id,
+        )
+        for device_coordinator in coordinator_data[COORDINATOR_LIST]
+        if device_coordinator.device.has_socket_control
     )
 
 
-class TradfriSwitch(TradfriBaseDevice, SwitchEntity):
+class TradfriSwitch(TradfriBaseEntity, SwitchEntity):
     """The platform class required by Home Assistant."""
 
     def __init__(
         self,
-        device: Command,
+        device_coordinator: TradfriDeviceDataUpdateCoordinator,
         api: Callable[[Command | list[Command]], Any],
         gateway_id: str,
     ) -> None:
         """Initialize a switch."""
-        super().__init__(device, api, gateway_id)
-        self._attr_unique_id = f"{gateway_id}-{device.id}"
-        self._refresh(device, write_ha=False)
+        super().__init__(
+            device_coordinator=device_coordinator,
+            api=api,
+            gateway_id=gateway_id,
+        )
 
-    def _refresh(self, device: Command, write_ha: bool = True) -> None:
-        """Refresh the switch data."""
-        # Caching of switch control and switch object
-        self._device_control = device.socket_control
-        self._device_data = device.socket_control.sockets[0]
-        super()._refresh(device, write_ha=write_ha)
+        self._device_control = self._device.socket_control
+        self._device_data = self._device_control.sockets[0]
+
+    def _refresh(self) -> None:
+        """Refresh the device."""
+        self._device_data = self.coordinator.data.socket_control.sockets[0]
 
     @property
     def is_on(self) -> bool:

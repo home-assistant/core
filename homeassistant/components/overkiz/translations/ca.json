@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El compte ja est\u00e0 configurat"
+            "already_configured": "El compte ja est\u00e0 configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
+            "reauth_wrong_account": "Nom\u00e9s pots tornar a autenticar aquesta entrada amb el mateix compte i hub d'Overkiz"
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",

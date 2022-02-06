@@ -49,7 +49,7 @@ RIGHT_METHOD = "right"
 INTEGRATION_METHOD = [TRAPEZOIDAL_METHOD, LEFT_METHOD, RIGHT_METHOD]
 
 # SI Metric prefixes
-UNIT_PREFIXES = {None: 1, "k": 10 ** 3, "M": 10 ** 6, "G": 10 ** 9, "T": 10 ** 12}
+UNIT_PREFIXES = {None: 1, "k": 10**3, "M": 10**6, "G": 10**9, "T": 10**12}
 
 # SI Time prefixes
 UNIT_TIME = {
@@ -150,17 +150,27 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             old_state = event.data.get("old_state")
             new_state = event.data.get("new_state")
 
+            # We may want to update our state before an early return,
+            # based on the source sensor's unit_of_measurement
+            # or device_class.
+            update_state = False
+
             if self._unit_of_measurement is None:
                 unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-                self._unit_of_measurement = self._unit_template.format(
-                    "" if unit is None else unit
-                )
+                if unit is not None:
+                    self._unit_of_measurement = self._unit_template.format(unit)
+                    update_state = True
+
             if (
                 self.device_class is None
                 and new_state.attributes.get(ATTR_DEVICE_CLASS)
                 == SensorDeviceClass.POWER
             ):
                 self._attr_device_class = SensorDeviceClass.ENERGY
+                update_state = True
+
+            if update_state:
+                self.async_write_ha_state()
 
             if (
                 old_state is None
