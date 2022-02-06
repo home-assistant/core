@@ -1,6 +1,8 @@
 """Support for IHC lights."""
 from __future__ import annotations
 
+from ihcsdk.ihccontroller import IHCController
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     SUPPORT_BRIGHTNESS,
@@ -31,7 +33,7 @@ def setup_platform(
         product = device["product"]
         # Find controller that corresponds with device id
         controller_id = device["ctrl_id"]
-        ihc_controller = hass.data[DOMAIN][controller_id][IHC_CONTROLLER]
+        ihc_controller: IHCController = hass.data[DOMAIN][controller_id][IHC_CONTROLLER]
         ihc_off_id = product_cfg.get(CONF_OFF_ID)
         ihc_on_id = product_cfg.get(CONF_ON_ID)
         dimmable = product_cfg[CONF_DIMMABLE]
@@ -59,7 +61,7 @@ class IhcLight(IHCDevice, LightEntity):
 
     def __init__(
         self,
-        ihc_controller,
+        ihc_controller: IHCController,
         controller_id: str,
         name: str,
         ihc_id: int,

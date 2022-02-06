@@ -1,6 +1,8 @@
 """Support for IHC binary sensors."""
 from __future__ import annotations
 
+from ihcsdk.ihccontroller import IHCController
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
@@ -27,7 +29,7 @@ def setup_platform(
         product = device["product"]
         # Find controller that corresponds with device id
         controller_id = device["ctrl_id"]
-        ihc_controller = hass.data[DOMAIN][controller_id][IHC_CONTROLLER]
+        ihc_controller: IHCController = hass.data[DOMAIN][controller_id][IHC_CONTROLLER]
         sensor = IHCBinarySensor(
             ihc_controller,
             controller_id,
@@ -50,7 +52,7 @@ class IHCBinarySensor(IHCDevice, BinarySensorEntity):
 
     def __init__(
         self,
-        ihc_controller,
+        ihc_controller: IHCController,
         controller_id: str,
         name: str,
         ihc_id: int,

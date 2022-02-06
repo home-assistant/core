@@ -1,6 +1,8 @@
 """Implementation of a base class for all IHC devices."""
 import logging
 
+from ihcsdk.ihccontroller import IHCController
+
 from homeassistant.helpers.entity import Entity
 
 from .const import CONF_INFO, DOMAIN
@@ -18,7 +20,7 @@ class IHCDevice(Entity):
 
     def __init__(
         self,
-        ihc_controller,
+        ihc_controller: IHCController,
         controller_id: str,
         name: str,
         ihc_id: int,

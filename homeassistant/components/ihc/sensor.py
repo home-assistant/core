@@ -1,6 +1,8 @@
 """Support for IHC sensors."""
 from __future__ import annotations
 
+from ihcsdk.ihccontroller import IHCController
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
@@ -28,7 +30,7 @@ def setup_platform(
         product = device["product"]
         # Find controller that corresponds with device id
         controller_id = device["ctrl_id"]
-        ihc_controller = hass.data[DOMAIN][controller_id][IHC_CONTROLLER]
+        ihc_controller: IHCController = hass.data[DOMAIN][controller_id][IHC_CONTROLLER]
         unit = product_cfg[CONF_UNIT_OF_MEASUREMENT]
         sensor = IHCSensor(ihc_controller, controller_id, name, ihc_id, unit, product)
         devices.append(sensor)
@@ -40,7 +42,7 @@ class IHCSensor(IHCDevice, SensorEntity):
 
     def __init__(
         self,
-        ihc_controller,
+        ihc_controller: IHCController,
         controller_id: str,
         name: str,
         ihc_id: int,
