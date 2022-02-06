@@ -25,6 +25,7 @@ async def async_get_config_entry_diagnostics(
             "title": entry.title,
             "version": entry.version,
             "data": dict(entry.data),
+            "options": dict(entry.options),
         },
         "accessories": homekit.driver.get_accessories(),
         "client_properties": {
