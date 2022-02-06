@@ -349,6 +349,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
+# homeassistant.components.yeelight
 async-upnp-client==0.23.4
 
 # homeassistant.components.supla
@@ -2510,6 +2511,9 @@ yalesmartalarmclient==0.3.7
 
 # homeassistant.components.august
 yalexs==1.1.20
+
+# homeassistant.components.yeelight
+yeelight==0.7.9
 
 # homeassistant.components.yeelightsunflower
 yeelightsunflower==0.0.10
