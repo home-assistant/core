@@ -57,7 +57,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-RGB_COLOR = "rgb_color"
 
 CHANGE_COALESCE_TIME_WINDOW = 0.01
 
