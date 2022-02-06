@@ -86,6 +86,7 @@ async def test_sensors(
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:television"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Episodes"
+    assert state.attributes.get("Bob's Burgers") == "S04E11"
     assert state.state == "1"
 
     state = hass.states.get("sensor.sonarr_wanted")
