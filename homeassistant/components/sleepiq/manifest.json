@@ -2,7 +2,7 @@
   "domain": "sleepiq",
   "name": "SleepIQ",
   "documentation": "https://www.home-assistant.io/integrations/sleepiq",
-  "requirements": ["asyncsleepiq==0.9.0"],
+  "requirements": ["asyncsleepiq==0.9.4"],
   "codeowners": ["@kbickar"],
   "config_flow": true,
   "dhcp": [
