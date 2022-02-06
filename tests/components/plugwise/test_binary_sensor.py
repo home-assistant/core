@@ -11,7 +11,7 @@ async def test_anna_climate_binary_sensor_entities(hass, mock_smile_anna):
     entry = await async_init_integration(hass, mock_smile_anna)
     assert entry.state is ConfigEntryState.LOADED
 
-    state = hass.states.get("binary_sensor.auxiliary_slave_boiler_state")
+    state = hass.states.get("binary_sensor.auxiliary_secondary_boiler_state")
     assert str(state.state) == STATE_OFF
 
     state = hass.states.get("binary_sensor.auxiliary_dhw_state")
