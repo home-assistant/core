@@ -30,7 +30,7 @@ async def async_get_config_entry_diagnostics(
     }
     if not driver:
         return data
-    data["accessories"] = driver.get_accessories()
+    data.update(driver.get_accessories())
     state: State = driver.state
     data.update(
         {
