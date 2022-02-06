@@ -731,6 +731,7 @@ async def test_light_rgb_or_w_lights(
     assert acc.char_hue.value == 23
     assert acc.char_saturation.value == 100
     assert acc.char_brightness.value == 100
+    assert acc.char_color_temp.value == 153
 
     # Set from HomeKit
     call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
@@ -789,6 +790,21 @@ async def test_light_rgb_or_w_lights(
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] == "brightness at 25%, color temperature at 153"
     assert acc.char_brightness.value == 25
+
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_RGB, COLOR_MODE_WHITE],
+            ATTR_BRIGHTNESS: 255,
+            ATTR_COLOR_MODE: COLOR_MODE_WHITE,
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_hue.value == 0
+    assert acc.char_saturation.value == 0
+    assert acc.char_brightness.value == 100
+    assert acc.char_color_temp.value == 153
 
 
 @pytest.mark.parametrize(
