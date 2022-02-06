@@ -2,9 +2,15 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from kasa import SmartBulb, SmartDimmer, SmartPlug, SmartStrip
+from kasa import SmartBulb, SmartDevice, SmartDimmer, SmartPlug, SmartStrip
 from kasa.exceptions import SmartDeviceException
 from kasa.protocol import TPLinkSmartHomeProtocol
+
+from homeassistant.components.tplink import CONF_HOST
+from homeassistant.components.tplink.const import DOMAIN
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 MODULE = "homeassistant.components.tplink"
 MODULE_CONFIG_FLOW = "homeassistant.components.tplink.config_flow"
@@ -146,3 +152,23 @@ def _patch_single_discovery(device=None, no_device=False):
     return patch(
         "homeassistant.components.tplink.Discover.discover_single", new=_discover_single
     )
+
+
+async def initialize_config_entry_for_device(
+    hass: HomeAssistant, dev: SmartDevice
+) -> MockConfigEntry:
+    """Create a mocked configuration entry for the given device.
+
+    Note, the rest of the tests should probably be converted over to use this
+    instead of repeating the initialization routine for each test separately
+    """
+    config_entry = MockConfigEntry(
+        title="TP-Link", domain=DOMAIN, unique_id=dev.mac, data={CONF_HOST: dev.host}
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(device=dev), _patch_single_discovery(device=dev):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return config_entry
