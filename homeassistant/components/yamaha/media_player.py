@@ -56,10 +56,15 @@ ATTR_PORT = "port"
 
 ATTR_SCENE = "scene"
 
+DEFAULT_MIN_VOLUME = -80
+DEFAULT_MAX_VOLUME = -20
+
 CONF_SOURCE_IGNORE = "source_ignore"
 CONF_SOURCE_NAMES = "source_names"
 CONF_ZONE_IGNORE = "zone_ignore"
 CONF_ZONE_NAMES = "zone_names"
+CONF_VOLUME_DB_MIN = "volume_db_min"
+CONF_VOLUME_DB_MAX = "volume_db_max"
 
 CURSOR_TYPE_MAP = {
     CURSOR_TYPE_DOWN: rxv.RXV.menu_down.__name__,
@@ -86,6 +91,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_HOST): cv.string,
+        vol.Optional(CONF_VOLUME_DB_MIN, default=DEFAULT_MIN_VOLUME): vol.Coerce(float),
+        vol.Optional(CONF_VOLUME_DB_MAX, default=DEFAULT_MAX_VOLUME): vol.Coerce(float),
         vol.Optional(CONF_SOURCE_IGNORE, default=[]): vol.All(
             cv.ensure_list, [cv.string]
         ),
@@ -94,6 +101,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_SOURCE_NAMES, default={}): {cv.string: cv.string},
         vol.Optional(CONF_ZONE_NAMES, default={}): {cv.string: cv.string},
+
     }
 )
 
@@ -112,6 +120,8 @@ class YamahaConfigInfo:
         self.source_names = config.get(CONF_SOURCE_NAMES)
         self.zone_ignore = config.get(CONF_ZONE_IGNORE)
         self.zone_names = config.get(CONF_ZONE_NAMES)
+        self.volume_db_min = config.get(CONF_VOLUME_DB_MIN)
+        self.volume_db_max = config.get(CONF_VOLUME_DB_MAX)
         self.from_discovery = False
         if discovery_info is not None:
             self.name = discovery_info.get("name")
@@ -170,6 +180,8 @@ async def async_setup_platform(
             config_info.source_ignore,
             config_info.source_names,
             config_info.zone_names,
+            config_info.volume_db_min,
+            config_info.volume_db_max,
         )
 
         # Only add device if it's not already added
@@ -205,11 +217,13 @@ async def async_setup_platform(
 class YamahaDevice(MediaPlayerEntity):
     """Representation of a Yamaha device."""
 
-    def __init__(self, name, receiver, source_ignore, source_names, zone_names):
+    def __init__(self, name, receiver, source_ignore, source_names, zone_names, volume_db_min, volume_db_max):
         """Initialize the Yamaha Receiver."""
         self.receiver = receiver
         self._muted = False
         self._volume = 0
+        self._volume_db_min = volume_db_min
+        self._volume_db_max = volume_db_max
         self._pwstate = STATE_OFF
         self._current_source = None
         self._sound_mode = None
@@ -244,7 +258,8 @@ class YamahaDevice(MediaPlayerEntity):
             self._pwstate = STATE_OFF
 
         self._muted = self.receiver.mute
-        self._volume = (self.receiver.volume / 100) + 1
+        #self._volume = (self.receiver.volume / 100) + 1
+        self._volume = self.get_volume_level(self.receiver.volume)
 
         if self.source_list is None:
             self.build_source_list()
@@ -349,9 +364,11 @@ class YamahaDevice(MediaPlayerEntity):
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        receiver_vol = 100 - (volume * 100)
-        negative_receiver_vol = -receiver_vol
-        self.receiver.volume = negative_receiver_vol
+        self.receiver.volume = round((self._volume_db_max - self._volume_db_min)*volume + self._volume_db_min,0)
+
+    def get_volume_level(self, receiver_volume):
+        """convert volume level from dB to range 0..1"""
+        return (receiver_volume - self._volume_db_min)/(self._volume_db_max - self._volume_db_min)
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
@@ -360,7 +377,7 @@ class YamahaDevice(MediaPlayerEntity):
     def turn_on(self):
         """Turn the media player on."""
         self.receiver.on = True
-        self._volume = (self.receiver.volume / 100) + 1
+        self._volume = self.get_volume_level(self.receiver.volume)
 
     def media_play(self):
         """Send play command."""
