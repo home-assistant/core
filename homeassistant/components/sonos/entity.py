@@ -88,12 +88,8 @@ class SonosEntity(Entity):
             await self.speaker.async_unsubscribe()
         try:
             await self._async_fallback_poll()
-        except SonosUpdateError:
-            _LOGGER.debug(
-                "Could not fallback poll %s on %s",
-                self.entity_id,
-                self.speaker.zone_name,
-            )
+        except SonosUpdateError as err:
+            _LOGGER.debug("Could not fallback poll: %s", err)
 
     @abstractmethod
     async def _async_fallback_poll(self) -> None:
@@ -143,7 +139,5 @@ class SonosPollingEntity(SonosEntity):
             self.poll_state()
         except SpeakerUnavailable:
             return
-        except SonosUpdateError:
-            _LOGGER.debug(
-                "Could not poll %s on %s", self.entity_id, self.speaker.zone_name
-            )
+        except SonosUpdateError as err:
+            _LOGGER.debug("Could not poll: %s", err)
