@@ -1,9 +1,10 @@
 """Test the Shark IQ vacuum entity."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from copy import deepcopy
 import enum
-from typing import Any, Iterable
+from typing import Any
 from unittest.mock import patch
 
 import pytest

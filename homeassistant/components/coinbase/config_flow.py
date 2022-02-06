@@ -85,12 +85,12 @@ async def validate_options(
     if CONF_CURRENCIES in options:
         for currency in options[CONF_CURRENCIES]:
             if currency not in accounts_currencies:
-                raise CurrencyUnavaliable
+                raise CurrencyUnavailable
 
     if CONF_EXCHANGE_RATES in options:
         for rate in options[CONF_EXCHANGE_RATES]:
             if rate not in available_rates[API_RATES]:
-                raise ExchangeRateUnavaliable
+                raise ExchangeRateUnavailable
 
     return True
 
@@ -191,10 +191,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
             try:
                 await validate_options(self.hass, self.config_entry, user_input)
-            except CurrencyUnavaliable:
-                errors["base"] = "currency_unavaliable"
-            except ExchangeRateUnavaliable:
-                errors["base"] = "exchange_rate_unavaliable"
+            except CurrencyUnavailable:
+                errors["base"] = "currency_unavailable"
+            except ExchangeRateUnavailable:
+                errors["base"] = "exchange_rate_unavailable"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -243,9 +243,9 @@ class AlreadyConfigured(exceptions.HomeAssistantError):
     """Error to indicate Coinbase API Key is already configured."""
 
 
-class CurrencyUnavaliable(exceptions.HomeAssistantError):
+class CurrencyUnavailable(exceptions.HomeAssistantError):
     """Error to indicate the requested currency resource is not provided by the API."""
 
 
-class ExchangeRateUnavaliable(exceptions.HomeAssistantError):
+class ExchangeRateUnavailable(exceptions.HomeAssistantError):
     """Error to indicate the requested exchange rate resource is not provided by the API."""

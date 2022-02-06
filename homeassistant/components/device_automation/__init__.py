@@ -96,23 +96,21 @@ async def async_get_device_automations(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up device automation."""
-    hass.components.websocket_api.async_register_command(
-        websocket_device_automation_list_actions
+    websocket_api.async_register_command(hass, websocket_device_automation_list_actions)
+    websocket_api.async_register_command(
+        hass, websocket_device_automation_list_conditions
     )
-    hass.components.websocket_api.async_register_command(
-        websocket_device_automation_list_conditions
+    websocket_api.async_register_command(
+        hass, websocket_device_automation_list_triggers
     )
-    hass.components.websocket_api.async_register_command(
-        websocket_device_automation_list_triggers
+    websocket_api.async_register_command(
+        hass, websocket_device_automation_get_action_capabilities
     )
-    hass.components.websocket_api.async_register_command(
-        websocket_device_automation_get_action_capabilities
+    websocket_api.async_register_command(
+        hass, websocket_device_automation_get_condition_capabilities
     )
-    hass.components.websocket_api.async_register_command(
-        websocket_device_automation_get_condition_capabilities
-    )
-    hass.components.websocket_api.async_register_command(
-        websocket_device_automation_get_trigger_capabilities
+    websocket_api.async_register_command(
+        hass, websocket_device_automation_get_trigger_capabilities
     )
     return True
 

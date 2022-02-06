@@ -6,12 +6,12 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, TypeVar, cast
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import ATTR_RESTORED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
 
-from . import entity_registry, start
+from . import start
 from .entity import Entity
 from .event import async_track_time_interval
 from .json import JSONEncoder
@@ -120,7 +120,7 @@ class RestoreStateData:
         current_entity_ids = {
             state.entity_id
             for state in all_states
-            if not state.attributes.get(entity_registry.ATTR_RESTORED)
+            if not state.attributes.get(ATTR_RESTORED)
         }
 
         # Start with the currently registered states
@@ -129,7 +129,7 @@ class RestoreStateData:
             for state in all_states
             if state.entity_id in self.entity_ids and
             # Ignore all states that are entity registry placeholders
-            not state.attributes.get(entity_registry.ATTR_RESTORED)
+            not state.attributes.get(ATTR_RESTORED)
         ]
         expiration_time = now - STATE_EXPIRATION
 

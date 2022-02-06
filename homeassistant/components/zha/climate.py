@@ -125,7 +125,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up the Zigbee Home Automation sensor from config entry."""
     entities_to_create = hass.data[DATA_ZHA][Platform.CLIMATE]
     unsub = async_dispatcher_connect(
@@ -431,14 +431,10 @@ class Thermostat(ZhaEntity, ClimateEntity):
             self.debug("preset mode '%s' is not supported", preset_mode)
             return
 
-        if (
-            self.preset_mode
-            not in (
-                preset_mode,
-                PRESET_NONE,
-            )
-            and not await self.async_preset_handler(self.preset_mode, enable=False)
-        ):
+        if self.preset_mode not in (
+            preset_mode,
+            PRESET_NONE,
+        ) and not await self.async_preset_handler(self.preset_mode, enable=False):
             self.debug("Couldn't turn off '%s' preset", self.preset_mode)
             return
 

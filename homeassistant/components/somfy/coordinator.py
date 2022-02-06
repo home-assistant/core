@@ -33,7 +33,7 @@ class SomfyDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self.data = {}
         self.client = client
-        self.site_device = {}
+        self.site_device: dict[str, list] = {}
         self.last_site_index = -1
 
     async def _async_update_data(self) -> dict[str, Device]:

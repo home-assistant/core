@@ -97,7 +97,14 @@ async def test_enumerate_remote(hass, utcnow):
             "entity_id": "sensor.testdevice_battery",
             "platform": "device",
             "type": "battery_level",
-        }
+        },
+        {
+            "device_id": device.id,
+            "domain": "button",
+            "entity_id": "button.testdevice_identify",
+            "platform": "device",
+            "type": "pressed",
+        },
     ]
 
     for button in ("button1", "button2", "button3", "button4"):
@@ -135,7 +142,14 @@ async def test_enumerate_button(hass, utcnow):
             "entity_id": "sensor.testdevice_battery",
             "platform": "device",
             "type": "battery_level",
-        }
+        },
+        {
+            "device_id": device.id,
+            "domain": "button",
+            "entity_id": "button.testdevice_identify",
+            "platform": "device",
+            "type": "pressed",
+        },
     ]
 
     for subtype in ("single_press", "double_press", "long_press"):
@@ -172,7 +186,14 @@ async def test_enumerate_doorbell(hass, utcnow):
             "entity_id": "sensor.testdevice_battery",
             "platform": "device",
             "type": "battery_level",
-        }
+        },
+        {
+            "device_id": device.id,
+            "domain": "button",
+            "entity_id": "button.testdevice_identify",
+            "platform": "device",
+            "type": "pressed",
+        },
     ]
 
     for subtype in ("single_press", "double_press", "long_press"):

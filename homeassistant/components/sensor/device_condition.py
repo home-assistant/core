@@ -6,7 +6,13 @@ import voluptuous as vol
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.const import CONF_ABOVE, CONF_BELOW, CONF_ENTITY_ID, CONF_TYPE
+from homeassistant.const import (
+    CONF_ABOVE,
+    CONF_BELOW,
+    CONF_CONDITION,
+    CONF_ENTITY_ID,
+    CONF_TYPE,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, config_validation as cv
@@ -169,13 +175,13 @@ def async_condition_from_config(
 ) -> condition.ConditionCheckerType:
     """Evaluate state based on configuration."""
     numeric_state_config = {
-        condition.CONF_CONDITION: "numeric_state",
-        condition.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+        CONF_CONDITION: "numeric_state",
+        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
     }
     if CONF_ABOVE in config:
-        numeric_state_config[condition.CONF_ABOVE] = config[CONF_ABOVE]
+        numeric_state_config[CONF_ABOVE] = config[CONF_ABOVE]
     if CONF_BELOW in config:
-        numeric_state_config[condition.CONF_BELOW] = config[CONF_BELOW]
+        numeric_state_config[CONF_BELOW] = config[CONF_BELOW]
 
     numeric_state_config = cv.NUMERIC_STATE_CONDITION_SCHEMA(numeric_state_config)
     numeric_state_config = condition.numeric_state_validate_config(

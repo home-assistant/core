@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Iterable
 from contextvars import ContextVar
 import logging
-from typing import Any, List, cast
+from typing import Any, Union, cast
 
 import voluptuous as vol
 
@@ -36,6 +36,7 @@ from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
 from homeassistant.helpers.reload import async_reload_integration_platforms
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
@@ -191,7 +192,7 @@ def get_entity_ids(
 
     entity_ids = group.attributes[ATTR_ENTITY_ID]
     if not domain_filter:
-        return cast(List[str], entity_ids)
+        return cast(list[str], entity_ids)
 
     domain_filter = f"{domain_filter.lower()}."
 
@@ -216,10 +217,12 @@ def groups_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     return groups
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up all groups found defined in the configuration."""
-    if (component := hass.data.get(DOMAIN)) is None:
-        component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    component: EntityComponent = hass.data[DOMAIN]
 
     hass.data[REG_KEY] = GroupIntegrationRegistry()
 
@@ -229,7 +232,11 @@ async def async_setup(hass, config):
 
     async def reload_service_handler(service: ServiceCall) -> None:
         """Remove all user-defined groups and load new ones from config."""
-        auto = list(filter(lambda e: not e.user_defined, component.entities))
+        auto = [
+            cast(Group, e)
+            for e in component.entities
+            if not cast(Group, e).user_defined
+        ]
 
         if (conf := await component.async_prepare_reload()) is None:
             return
@@ -254,7 +261,7 @@ async def async_setup(hass, config):
         """Handle dynamic group service functions."""
         object_id = service.data[ATTR_OBJECT_ID]
         entity_id = f"{DOMAIN}.{object_id}"
-        group = component.get_entity(entity_id)
+        group: Group | None = cast(Union[Group, None], component.get_entity(entity_id))
 
         # new group
         if service.service == SERVICE_SET and group is None:

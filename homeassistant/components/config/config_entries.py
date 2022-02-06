@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from http import HTTPStatus
 
+from aiohttp import web
 import aiohttp.web_exceptions
 import voluptuous as vol
 
@@ -11,7 +12,7 @@ from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import Unauthorized
+from homeassistant.exceptions import DependencyError, Unauthorized
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
     FlowManagerResourceView,
@@ -31,10 +32,10 @@ async def async_setup(hass):
     hass.http.register_view(OptionManagerFlowIndexView(hass.config_entries.options))
     hass.http.register_view(OptionManagerFlowResourceView(hass.config_entries.options))
 
-    hass.components.websocket_api.async_register_command(config_entry_disable)
-    hass.components.websocket_api.async_register_command(config_entry_update)
-    hass.components.websocket_api.async_register_command(config_entries_progress)
-    hass.components.websocket_api.async_register_command(ignore_config_flow)
+    websocket_api.async_register_command(hass, config_entry_disable)
+    websocket_api.async_register_command(hass, config_entry_update)
+    websocket_api.async_register_command(hass, config_entries_progress)
+    websocket_api.async_register_command(hass, ignore_config_flow)
 
     return True
 
@@ -127,7 +128,13 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
             raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
 
         # pylint: disable=no-value-for-parameter
-        return await super().post(request)
+        try:
+            return await super().post(request)
+        except DependencyError as exc:
+            return web.Response(
+                text=f"Failed dependencies {', '.join(exc.failed_dependencies)}",
+                status=HTTPStatus.BAD_REQUEST,
+            )
 
     def _prepare_result_json(self, result):
         """Convert result to JSON."""

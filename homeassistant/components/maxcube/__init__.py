@@ -7,6 +7,7 @@ import time
 from maxcube.cube import MaxCube
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -66,7 +67,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass.data[DATA_KEY][host] = MaxCubeHandle(cube, scan_interval)
         except timeout as ex:
             _LOGGER.error("Unable to connect to Max!Cube gateway: %s", str(ex))
-            hass.components.persistent_notification.create(
+            persistent_notification.create(
+                hass,
                 f"Error: {ex}<br />You will need to restart Home Assistant after fixing.",
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID,

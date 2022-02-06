@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-import platform
 import subprocess as sp
 
 import voluptuous as vol
@@ -158,24 +157,14 @@ class WolSwitch(SwitchEntity):
 
     def update(self):
         """Check if device is on and update the state. Only called if assumed state is false."""
-        if platform.system().lower() == "windows":
-            ping_cmd = [
-                "ping",
-                "-n",
-                "1",
-                "-w",
-                str(DEFAULT_PING_TIMEOUT * 1000),
-                str(self._host),
-            ]
-        else:
-            ping_cmd = [
-                "ping",
-                "-c",
-                "1",
-                "-W",
-                str(DEFAULT_PING_TIMEOUT),
-                str(self._host),
-            ]
+        ping_cmd = [
+            "ping",
+            "-c",
+            "1",
+            "-W",
+            str(DEFAULT_PING_TIMEOUT),
+            str(self._host),
+        ]
 
         status = sp.call(ping_cmd, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
         self._state = not bool(status)

@@ -7,7 +7,14 @@ of entities and react to changes.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Collection, Coroutine, Iterable, Mapping
+from collections.abc import (
+    Awaitable,
+    Callable,
+    Collection,
+    Coroutine,
+    Iterable,
+    Mapping,
+)
 import datetime
 import enum
 import functools
@@ -17,12 +24,9 @@ import pathlib
 import re
 import threading
 from time import monotonic
-from types import MappingProxyType
 from typing import (
     TYPE_CHECKING,
     Any,
-    Awaitable,
-    Callable,
     Generic,
     NamedTuple,
     Optional,
@@ -36,7 +40,7 @@ import attr
 import voluptuous as vol
 import yarl
 
-from . import async_timeout_backcompat, block_async_io, loader, util
+from . import block_async_io, loader, util
 from .backports.enum import StrEnum
 from .const import (
     ATTR_DOMAIN,
@@ -78,6 +82,7 @@ from .util.async_ import (
     run_callback_threadsafe,
     shutdown_run_callback_threadsafe,
 )
+from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
 from .util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
@@ -92,7 +97,6 @@ STAGE_1_SHUTDOWN_TIMEOUT = 100
 STAGE_2_SHUTDOWN_TIMEOUT = 60
 STAGE_3_SHUTDOWN_TIMEOUT = 30
 
-async_timeout_backcompat.enable()
 block_async_io.enable()
 
 T = TypeVar("T")
@@ -240,7 +244,6 @@ class HomeAssistant:
     def __init__(self) -> None:
         """Initialize new Home Assistant object."""
         self.loop = asyncio.get_running_loop()
-        # pylint: disable-next=unsubscriptable-object
         self._pending_tasks: list[asyncio.Future[Any]] = []
         self._track_task = True
         self.bus = EventBus(self)
@@ -363,21 +366,21 @@ class HomeAssistant:
     @callback
     def async_add_job(
         self, target: Callable[..., Awaitable[_R]], *args: Any
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_add_job(
         self, target: Callable[..., Awaitable[_R] | _R], *args: Any
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_add_job(
         self, target: Coroutine[Any, Any, _R], *args: Any
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         ...
 
     @callback
@@ -385,7 +388,7 @@ class HomeAssistant:
         self,
         target: Callable[..., Awaitable[_R] | _R] | Coroutine[Any, Any, _R],
         *args: Any,
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         """Add a job to be executed by the event loop or by an executor.
 
         If the job is either a coroutine or decorated with @callback, it will be
@@ -409,27 +412,27 @@ class HomeAssistant:
     @callback
     def async_add_hass_job(
         self, hassjob: HassJob[Awaitable[_R]], *args: Any
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_add_hass_job(
         self, hassjob: HassJob[Awaitable[_R] | _R], *args: Any
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         ...
 
     @callback
     def async_add_hass_job(
         self, hassjob: HassJob[Awaitable[_R] | _R], *args: Any
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         """Add a HassJob from within the event loop.
 
         This method must be run in the event loop.
         hassjob: HassJob to call.
         args: parameters for method to call.
         """
-        task: asyncio.Future[_R]  # pylint: disable=unsubscriptable-object
+        task: asyncio.Future[_R]
         if hassjob.job_type == HassJobType.Coroutinefunction:
             task = self.loop.create_task(
                 cast(Callable[..., Awaitable[_R]], hassjob.target)(*args)
@@ -473,7 +476,7 @@ class HomeAssistant:
     @callback
     def async_add_executor_job(
         self, target: Callable[..., T], *args: Any
-    ) -> asyncio.Future[T]:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[T]:
         """Add an executor job from within the event loop."""
         task = self.loop.run_in_executor(None, target, *args)
 
@@ -497,20 +500,20 @@ class HomeAssistant:
     @callback
     def async_run_hass_job(
         self, hassjob: HassJob[Awaitable[_R]], *args: Any
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_run_hass_job(
         self, hassjob: HassJob[Awaitable[_R] | _R], *args: Any
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         ...
 
     @callback
     def async_run_hass_job(
         self, hassjob: HassJob[Awaitable[_R] | _R], *args: Any
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         """Run a HassJob from within the event loop.
 
         This method must be run in the event loop.
@@ -528,21 +531,21 @@ class HomeAssistant:
     @callback
     def async_run_job(
         self, target: Callable[..., Awaitable[_R]], *args: Any
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_run_job(
         self, target: Callable[..., Awaitable[_R] | _R], *args: Any
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_run_job(
         self, target: Coroutine[Any, Any, _R], *args: Any
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         ...
 
     @callback
@@ -550,7 +553,7 @@ class HomeAssistant:
         self,
         target: Callable[..., Awaitable[_R] | _R] | Coroutine[Any, Any, _R],
         *args: Any,
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         """Run a job from within the event loop.
 
         This method must be run in the event loop.
@@ -1045,12 +1048,12 @@ class State:
 
         self.entity_id = entity_id.lower()
         self.state = state
-        self.attributes = MappingProxyType(attributes or {})
+        self.attributes = ReadOnlyDict(attributes or {})
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
         self.context = context or Context()
         self.domain, self.object_id = split_entity_id(self.entity_id)
-        self._as_dict: dict[str, Collection[Any]] | None = None
+        self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
 
     @property
     def name(self) -> str:
@@ -1059,7 +1062,7 @@ class State:
             "_", " "
         )
 
-    def as_dict(self) -> dict[str, Collection[Any]]:
+    def as_dict(self) -> ReadOnlyDict[str, Collection[Any]]:
         """Return a dict representation of the State.
 
         Async friendly.
@@ -1073,14 +1076,16 @@ class State:
                 last_updated_isoformat = last_changed_isoformat
             else:
                 last_updated_isoformat = self.last_updated.isoformat()
-            self._as_dict = {
-                "entity_id": self.entity_id,
-                "state": self.state,
-                "attributes": dict(self.attributes),
-                "last_changed": last_changed_isoformat,
-                "last_updated": last_updated_isoformat,
-                "context": self.context.as_dict(),
-            }
+            self._as_dict = ReadOnlyDict(
+                {
+                    "entity_id": self.entity_id,
+                    "state": self.state,
+                    "attributes": self.attributes,
+                    "last_changed": last_changed_isoformat,
+                    "last_updated": last_updated_isoformat,
+                    "context": ReadOnlyDict(self.context.as_dict()),
+                }
+            )
         return self._as_dict
 
     @classmethod
@@ -1339,7 +1344,7 @@ class StateMachine:
             last_changed = None
         else:
             same_state = old_state.state == new_state and not force_update
-            same_attr = old_state.attributes == MappingProxyType(attributes)
+            same_attr = old_state.attributes == attributes
             last_changed = old_state.last_changed if same_state else None
 
         if same_state and same_attr:
@@ -1400,7 +1405,7 @@ class ServiceCall:
         """Initialize a service call."""
         self.domain = domain.lower()
         self.service = service.lower()
-        self.data = MappingProxyType(data or {})
+        self.data = ReadOnlyDict(data or {})
         self.context = context or Context()
 
     def __repr__(self) -> str:
@@ -1914,7 +1919,7 @@ def _async_create_timer(hass: HomeAssistant) -> None:
         """Schedule a timer tick when the next second rolls around."""
         nonlocal handle
 
-        slp_seconds = 1 - (now.microsecond / 10 ** 6)
+        slp_seconds = 1 - (now.microsecond / 10**6)
         target = monotonic() + slp_seconds
         handle = hass.loop.call_later(slp_seconds, fire_time_event, target)
 

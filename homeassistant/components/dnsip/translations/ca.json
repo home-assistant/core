@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "invalid_hostname": "Nom d'amfitri\u00f3 inv\u00e0lid"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "hostname": "El nom d'amfitri\u00f3 al qual realitzar la consulta DNS",
+                    "resolver": "Resolutor de cerca IPV4",
+                    "resolver_ipv6": "Resolutor de cerca IPV6"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_resolver": "Adre\u00e7a IP del resolutor inv\u00e0lida"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "resolver": "Resolutor de cerca IPV4",
+                    "resolver_ipv6": "Resolutor de cerca IPV6"
+                }
+            }
+        }
+    }
+}

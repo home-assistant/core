@@ -34,8 +34,8 @@
     },
     "error": {
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "currency_unavaliable": "One or more of the requested currency balances is not provided by your Coinbase API.",
-      "exchange_rate_unavaliable": "One or more of the requested exchange rates is not provided by Coinbase."
+      "currency_unavailable": "One or more of the requested currency balances is not provided by your Coinbase API.",
+      "exchange_rate_unavailable": "One or more of the requested exchange rates is not provided by Coinbase."
     }
   }
 }

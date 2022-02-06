@@ -6,7 +6,7 @@ core: &core
   - homeassistant/helpers/*
   - homeassistant/package_constraints.txt
   - homeassistant/util/*
-  - pyproject.yaml
+  - pyproject.toml
   - requirements.txt
   - setup.cfg
 
@@ -21,6 +21,7 @@ base_platforms: &base_platforms
   - homeassistant/components/climate/*
   - homeassistant/components/cover/*
   - homeassistant/components/device_tracker/*
+  - homeassistant/components/diagnostics/*
   - homeassistant/components/fan/*
   - homeassistant/components/geo_location/*
   - homeassistant/components/humidifier/*
@@ -102,16 +103,28 @@ tests: &tests
   - codecov.yaml
   - requirements_test_pre_commit.txt
   - requirements_test.txt
+  - tests/auth/**
+  - tests/backports/*
   - tests/common.py
   - tests/conftest.py
+  - tests/hassfest/*
+  - tests/helpers/*
   - tests/ignore_uncaught_exceptions.py
   - tests/mock/*
+  - tests/scripts/*
   - tests/test_util/*
   - tests/testing_config/**
+  - tests/util/**
 
 other: &other
   - .github/workflows/*
   - homeassistant/scripts/**
+
+requirements:
+  - .github/workflows/*
+  - homeassistant/package_constraints.txt
+  - requirements*.txt
+  - setup.py
 
 any:
   - *base_platforms

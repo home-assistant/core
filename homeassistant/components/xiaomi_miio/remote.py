@@ -9,6 +9,7 @@ import time
 from miio import ChuangmiIr, DeviceException
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.remote import (
     ATTR_DELAY_SECS,
     ATTR_NUM_REPEATS,
@@ -138,8 +139,8 @@ async def async_setup_platform(
             if "code" in message and message["code"]:
                 log_msg = "Received command is: {}".format(message["code"])
                 _LOGGER.info(log_msg)
-                hass.components.persistent_notification.async_create(
-                    log_msg, title="Xiaomi Miio Remote"
+                persistent_notification.async_create(
+                    hass, log_msg, title="Xiaomi Miio Remote"
                 )
                 return
 
@@ -149,8 +150,8 @@ async def async_setup_platform(
             await asyncio.sleep(1)
 
         _LOGGER.error("Timeout. No infrared command captured")
-        hass.components.persistent_notification.async_create(
-            "Timeout. No infrared command captured", title="Xiaomi Miio Remote"
+        persistent_notification.async_create(
+            hass, "Timeout. No infrared command captured", title="Xiaomi Miio Remote"
         )
 
     platform = entity_platform.async_get_current_platform()

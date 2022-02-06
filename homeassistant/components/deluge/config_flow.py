@@ -74,7 +74,7 @@ class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
                 ): cv.string,
                 vol.Required(CONF_PASSWORD, default=""): cv.string,
                 vol.Optional(
-                    CONF_PORT, default=user_input.get(CONF_WEB_PORT, DEFAULT_RPC_PORT)
+                    CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_RPC_PORT)
                 ): int,
                 vol.Optional(
                     CONF_WEB_PORT,
@@ -113,10 +113,14 @@ class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
         )
         try:
             await self.hass.async_add_executor_job(api.connect)
-        except (ConnectionRefusedError, socket.timeout, SSLError):
+        except (
+            ConnectionRefusedError,
+            socket.timeout,  # pylint:disable=no-member
+            SSLError,
+        ):
             return "cannot_connect"
         except Exception as ex:  # pylint:disable=broad-except
             if type(ex).__name__ == "BadLoginError":
-                return "invalid_auth"
+                return "invalid_auth"  # pragma: no cover
             return "unknown"
         return None

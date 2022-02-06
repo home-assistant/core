@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O servi\u00e7o j\u00e1 est\u00e1 configurado",
+            "cannot_connect": "Falha na conex\u00e3o com as credenciais do configuration.yaml. Remova do yaml e use o fluxo de configura\u00e7\u00e3o.",
+            "single_instance_allowed": "J\u00e1 configurado. Apenas uma configura\u00e7\u00e3o \u00e9 poss\u00edvel.",
+            "unknown": "A conex\u00e3o com as credenciais do configuration.yaml falhou com um erro desconhecido. Remova do yaml e use o fluxo de configura\u00e7\u00e3o."
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "conn_string": {
+                "data": {
+                    "event_hub_connection_string": "Cadeia de Conex\u00e3o do Hub de Eventos"
+                },
+                "description": "Insira a string de conex\u00e3o para: {event_hub_instance_name}",
+                "title": "M\u00e9todo string de conex\u00e3o"
+            },
+            "sas": {
+                "data": {
+                    "event_hub_namespace": "Namespace do Hub de Eventos",
+                    "event_hub_sas_key": "Chave SAS do Hub de Eventos",
+                    "event_hub_sas_policy": "Pol\u00edtica SAS do Hub de Eventos"
+                },
+                "description": "Insira as credenciais SAS (assinatura de acesso compartilhado) para: {event_hub_instance_name}",
+                "title": "M\u00e9todo de credenciais SAS"
+            },
+            "user": {
+                "data": {
+                    "event_hub_instance_name": "Nome da inst\u00e2ncia do hub de eventos",
+                    "use_connection_string": "Use string de conex\u00e3o"
+                },
+                "title": "Configure sua integra\u00e7\u00e3o do Hub de Eventos do Azure"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "data": {
+                    "send_interval": "Intervalo entre o envio de comandos para o hub."
+                },
+                "title": "Op\u00e7\u00f5es para o Hub de Eventos do Azure."
+            }
+        }
+    }
+}

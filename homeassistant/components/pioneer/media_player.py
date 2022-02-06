@@ -37,7 +37,7 @@ CONF_SOURCES = "sources"
 DEFAULT_NAME = "Pioneer AVR"
 DEFAULT_PORT = 23  # telnet default. Some Pioneer AVRs use 8102
 DEFAULT_TIMEOUT = None
-DEFAULT_SOURCES = {}
+DEFAULT_SOURCES: dict[str, str] = {}
 
 SUPPORT_PIONEER = (
     SUPPORT_PAUSE

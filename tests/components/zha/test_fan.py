@@ -14,6 +14,7 @@ from homeassistant.components.fan import (
     ATTR_PERCENTAGE_STEP,
     ATTR_PRESET_MODE,
     ATTR_SPEED,
+    DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SPEED,
     SPEED_HIGH,
@@ -246,7 +247,7 @@ async def async_set_preset_mode(hass, entity_id, preset_mode=None):
     }
 
     await hass.services.async_call(
-        Platform.FAN, SERVICE_SET_PRESET_MODE, data, blocking=True
+        FAN_DOMAIN, SERVICE_SET_PRESET_MODE, data, blocking=True
     )
 
 

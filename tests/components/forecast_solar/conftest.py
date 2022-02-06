@@ -1,7 +1,7 @@
 """Fixtures for Forecast.Solar integration tests."""
 
+from collections.abc import Generator
 from datetime import datetime, timedelta
-from typing import Generator
 from unittest.mock import MagicMock, patch
 
 from forecast_solar import models

@@ -180,6 +180,7 @@ def setup_mock_accessory(controller):
         serial_number="12345",
         firmware_revision="1.1",
     )
+    accessory.aid = 1
 
     service = accessory.add_service(ServicesTypes.LIGHTBULB)
     on_char = service.add_char(CharacteristicsTypes.ON)

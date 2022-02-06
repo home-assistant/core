@@ -27,16 +27,6 @@ def mock_deluge_api():
         yield
 
 
-@pytest.fixture(name="auth_error")
-def mock_api_authentication_error():
-    """Mock an api."""
-    with patch(
-        "deluge_client.client.DelugeRPCClient.connect", side_effect=Exception
-    ) as client, patch("deluge_client.client.DelugeRPCClient._create_socket"):
-        client.side_effect.__name__ = "BadLoginError"
-        yield
-
-
 @pytest.fixture(name="conn_error")
 def mock_api_connection_error():
     """Mock an api."""
@@ -100,16 +90,6 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant, conn_error):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_flow_user_invalid_auth(hass: HomeAssistant, auth_error):
-    """Test user initialized flow with invalid authenticate."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=CONF_DATA
-    )
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "invalid_authentication"}
 
 
 async def test_flow_user_unknown_error(hass: HomeAssistant, unknown_error):

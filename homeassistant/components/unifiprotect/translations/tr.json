@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "discovery_started": "Ke\u015fif ba\u015flad\u0131"
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
@@ -9,7 +10,17 @@
             "protect_version": "Minimum gerekli s\u00fcr\u00fcm v1.20.0'd\u0131r. L\u00fctfen UniFi Protect'i y\u00fckseltin ve ard\u0131ndan yeniden deneyin.",
             "unknown": "Beklenmeyen hata"
         },
+        "flow_title": "{name} ({ip_address})",
         "step": {
+            "discovery_confirm": {
+                "data": {
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131",
+                    "verify_ssl": "SSL sertifikas\u0131n\u0131 do\u011frulay\u0131n"
+                },
+                "description": "{name} ( {ip_address} ) kurulumu yapmak istiyor musunuz? Oturum a\u00e7mak i\u00e7in UniFi OS Konsolunuzda olu\u015fturulmu\u015f yerel bir kullan\u0131c\u0131ya ihtiyac\u0131n\u0131z olacak. Ubiquiti Bulut Kullan\u0131c\u0131lar\u0131 \u00e7al\u0131\u015fmayacakt\u0131r. Daha fazla bilgi i\u00e7in: {local_user_documentation_url}",
+                "title": "UniFi Protect Ke\u015ffedildi"
+            },
             "reauth_confirm": {
                 "data": {
                     "host": "UniFi KorumaSunucusunun IP/Ana Bilgisayar\u0131",
@@ -27,6 +38,7 @@
                     "username": "Kullan\u0131c\u0131 Ad\u0131",
                     "verify_ssl": "SSL sertifikas\u0131n\u0131 do\u011frulay\u0131n"
                 },
+                "description": "Oturum a\u00e7mak i\u00e7in UniFi OS Konsolunuzda olu\u015fturulmu\u015f yerel bir kullan\u0131c\u0131ya ihtiyac\u0131n\u0131z olacak. Ubiquiti Bulut Kullan\u0131c\u0131lar\u0131 \u00e7al\u0131\u015fmayacakt\u0131r. Daha fazla bilgi i\u00e7in: {local_user_documentation_url}",
                 "title": "UniFi Koruma Kurulumu"
             }
         }

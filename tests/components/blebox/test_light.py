@@ -12,7 +12,13 @@ from homeassistant.components.light import (
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_RGBW,
 )
-from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN,
+)
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import async_setup_entity, mock_feature
@@ -226,7 +232,7 @@ async def test_wlightbox_s_init(wlightbox_s, hass, config):
     assert color_modes == [COLOR_MODE_BRIGHTNESS]
 
     assert ATTR_BRIGHTNESS not in state.attributes
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
@@ -327,7 +333,7 @@ async def test_wlightbox_init(wlightbox, hass, config):
 
     assert ATTR_BRIGHTNESS not in state.attributes
     assert ATTR_RGBW_COLOR not in state.attributes
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)

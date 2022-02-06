@@ -89,7 +89,7 @@
                     "api_host": "API host URL fel\u00fclb\u00edr\u00e1l\u00e1sa (opcion\u00e1lis)",
                     "blink": "A panel LED villog\u00e1sa \u00e1llapotv\u00e1ltoz\u00e1skor",
                     "discovery": "V\u00e1laszoljon a h\u00e1l\u00f3zaton \u00e9rkez\u0151 felder\u00edt\u00e9si k\u00e9r\u00e9sekre",
-                    "override_api_host": "Az alap\u00e9rtelmezett Home Assistant API gazdag\u00e9p-URL fel\u00fcl\u00edr\u00e1sa"
+                    "override_api_host": "Az alap\u00e9rtelmezett Home Assistant API host-URL fel\u00fcl\u00edr\u00e1sa"
                 },
                 "description": "K\u00e9rj\u00fck, v\u00e1lassza ki a k\u00edv\u00e1nt viselked\u00e9st a panelhez",
                 "title": "Egy\u00e9b be\u00e1ll\u00edt\u00e1sa"

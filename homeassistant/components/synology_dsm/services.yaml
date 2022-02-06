@@ -2,7 +2,7 @@
 
 reboot:
   name: Reboot
-  description: Reboot the NAS.
+  description: Reboot the NAS. This service is deprecated and will be removed in future release. Please use the corresponding button entity.
   fields:
     serial:
       name: Serial
@@ -13,7 +13,7 @@ reboot:
 
 shutdown:
   name: Shutdown
-  description: Shutdown the NAS.
+  description: Shutdown the NAS. This service is deprecated and will be removed in future release. Please use the corresponding button entity.
   fields:
     serial:
       name: Serial

@@ -185,3 +185,15 @@ PATCH_ANDROIDTV_UPDATE_EXCEPTION = patch(
     "androidtv.androidtv.androidtv_async.AndroidTVAsync.update",
     side_effect=ZeroDivisionError,
 )
+
+PATCH_DEVICE_PROPERTIES = patch(
+    "androidtv.basetv.basetv_async.BaseTVAsync.get_device_properties",
+    return_value={
+        "manufacturer": "a",
+        "model": "b",
+        "serialno": "c",
+        "sw_version": "d",
+        "wifimac": "ab:cd:ef:gh:ij:kl",
+        "ethmac": None,
+    },
+)

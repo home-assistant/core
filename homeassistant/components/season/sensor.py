@@ -1,14 +1,18 @@
 """Support for tracking which astronomical or meteorological season it is."""
+from __future__ import annotations
+
 from datetime import datetime
 import logging
 
 import ephem
 import voluptuous as vol
 
-from homeassistant import util
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_TYPE
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,27 +57,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Display the current season."""
-    if None in (hass.config.latitude, hass.config.longitude):
-        _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return False
-
-    latitude = util.convert(hass.config.latitude, float)
     _type = config.get(CONF_TYPE)
     name = config.get(CONF_NAME)
 
-    if latitude < 0:
+    if hass.config.latitude < 0:
         hemisphere = SOUTHERN
-    elif latitude > 0:
+    elif hass.config.latitude > 0:
         hemisphere = NORTHERN
     else:
         hemisphere = EQUATOR
 
     _LOGGER.debug(_type)
     add_entities([Season(hass, hemisphere, _type, name)], True)
-
-    return True
 
 
 def get_season(date, hemisphere, season_tracking_type):

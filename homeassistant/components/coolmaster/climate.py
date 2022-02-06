@@ -1,4 +1,4 @@
-"""CoolMasterNet platform to control of CoolMasteNet Climate Devices."""
+"""CoolMasterNet platform to control of CoolMasterNet Climate Devices."""
 import logging
 
 from homeassistant.components.climate import ClimateEntity

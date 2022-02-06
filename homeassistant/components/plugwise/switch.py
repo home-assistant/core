@@ -1,6 +1,4 @@
 """Plugwise Switch component for HomeAssistant."""
-import logging
-
 from plugwise.exceptions import PlugwiseException
 
 from homeassistant.components.switch import SwitchEntity
@@ -8,10 +6,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import COORDINATOR, DOMAIN, SWITCH_ICON
-from .gateway import SmileGateway
-
-_LOGGER = logging.getLogger(__name__)
+from .const import COORDINATOR, DOMAIN, LOGGER, SWITCH_ICON
+from .entity import PlugwiseEntity
 
 
 async def async_setup_entry(
@@ -56,20 +52,19 @@ async def async_setup_entry_gateway(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class GwSwitch(SmileGateway, SwitchEntity):
+class GwSwitch(PlugwiseEntity, SwitchEntity):
     """Representation of a Plugwise plug."""
 
     def __init__(self, api, coordinator, name, dev_id, members, model):
         """Set up the Plugwise API."""
         super().__init__(api, coordinator, name, dev_id)
+        self._attr_unique_id = f"{dev_id}-plug"
 
         self._members = members
         self._model = model
 
         self._is_on = False
         self._icon = SWITCH_ICON
-
-        self._unique_id = f"{dev_id}-plug"
 
     @property
     def is_on(self):
@@ -91,7 +86,7 @@ class GwSwitch(SmileGateway, SwitchEntity):
                 self._is_on = True
                 self.async_write_ha_state()
         except PlugwiseException:
-            _LOGGER.error("Error while communicating to device")
+            LOGGER.error("Error while communicating to device")
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
@@ -103,13 +98,13 @@ class GwSwitch(SmileGateway, SwitchEntity):
                 self._is_on = False
                 self.async_write_ha_state()
         except PlugwiseException:
-            _LOGGER.error("Error while communicating to device")
+            LOGGER.error("Error while communicating to device")
 
     @callback
     def _async_process_data(self):
         """Update the data from the Plugs."""
         if not (data := self._api.get_device_data(self._dev_id)):
-            _LOGGER.error("Received no data for device %s", self._name)
+            LOGGER.error("Received no data for device %s", self._name)
             self.async_write_ha_state()
             return
 

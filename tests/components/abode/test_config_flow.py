@@ -4,19 +4,19 @@ from unittest.mock import patch
 
 from abodepy.exceptions import AbodeAuthenticationException
 from abodepy.helpers.errors import MFA_CODE_REQUIRED
+from requests.exceptions import ConnectTimeout
 
 from homeassistant import data_entry_flow
 from homeassistant.components.abode import config_flow
-from homeassistant.components.abode.const import DOMAIN
+from homeassistant.components.abode.const import CONF_POLLING, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-CONF_POLLING = "polling"
 
-
-async def test_show_form(hass):
+async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
     flow = config_flow.AbodeFlowHandler()
     flow.hass = hass
@@ -27,7 +27,7 @@ async def test_show_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_one_config_allowed(hass):
+async def test_one_config_allowed(hass: HomeAssistant) -> None:
     """Test that only one Abode configuration is allowed."""
     flow = config_flow.AbodeFlowHandler()
     flow.hass = hass
@@ -43,7 +43,7 @@ async def test_one_config_allowed(hass):
     assert step_user_result["reason"] == "single_instance_allowed"
 
 
-async def test_invalid_credentials(hass):
+async def test_invalid_credentials(hass: HomeAssistant) -> None:
     """Test that invalid credentials throws an error."""
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
@@ -60,7 +60,7 @@ async def test_invalid_credentials(hass):
         assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_connection_error(hass):
+async def test_connection_auth_error(hass: HomeAssistant) -> None:
     """Test other than invalid credentials throws an error."""
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
@@ -77,7 +77,22 @@ async def test_connection_error(hass):
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_step_user(hass):
+async def test_connection_error(hass: HomeAssistant) -> None:
+    """Test login throws an error if connection times out."""
+    conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
+
+    flow = config_flow.AbodeFlowHandler()
+    flow.hass = hass
+
+    with patch(
+        "homeassistant.components.abode.config_flow.Abode",
+        side_effect=ConnectTimeout,
+    ):
+        result = await flow.async_step_user(user_input=conf)
+        assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_step_user(hass: HomeAssistant) -> None:
     """Test that the user step works."""
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
@@ -98,7 +113,7 @@ async def test_step_user(hass):
         }
 
 
-async def test_step_mfa(hass):
+async def test_step_mfa(hass: HomeAssistant) -> None:
     """Test that the MFA step works."""
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
@@ -141,7 +156,7 @@ async def test_step_mfa(hass):
         }
 
 
-async def test_step_reauth(hass):
+async def test_step_reauth(hass: HomeAssistant) -> None:
     """Test the reauth flow."""
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 

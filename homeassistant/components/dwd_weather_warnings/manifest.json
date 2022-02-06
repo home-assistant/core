@@ -3,6 +3,7 @@
   "name": "Deutscher Wetterdienst (DWD) Weather Warnings",
   "documentation": "https://www.home-assistant.io/integrations/dwd_weather_warnings",
   "codeowners": ["@runningman84", "@stephan192", "@Hummel95"],
-  "requirements": ["dwdwfsapi==1.0.4"],
-  "iot_class": "cloud_polling"
+  "requirements": ["dwdwfsapi==1.0.5"],
+  "iot_class": "cloud_polling",
+  "loggers": ["dwdwfsapi"]
 }

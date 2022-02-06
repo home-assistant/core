@@ -34,7 +34,7 @@
         "title": "AsusWRT Options",
         "data": {
           "consider_home": "Seconds to wait before considering a device away",
-          "track_unknown": "Track unknown / unamed devices",
+          "track_unknown": "Track unknown / unnamed devices",
           "interface": "The interface that you want statistics from (e.g. eth0,eth1 etc)",
           "dnsmasq": "The location in the router of the dnsmasq.leases files",
           "require_ip": "Devices must have IP (for access point mode)"

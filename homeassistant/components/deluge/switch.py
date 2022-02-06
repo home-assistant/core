@@ -6,7 +6,11 @@ from typing import Any
 from deluge_client import DelugeRPCClient
 import voluptuous as vol
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -18,14 +22,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import DelugeEntity
 from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DEFAULT_RPC_PORT, DOMAIN
 
-# Deprecated in Home Assistant 2022.2
+# Deprecated in Home Assistant 2022.3
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
@@ -39,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: ConfigType,
     async_add_entities: entity_platform.AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
@@ -69,7 +72,7 @@ async def async_setup_entry(
     )
 
 
-class DelugeSwitch(DelugeEntity, ToggleEntity):
+class DelugeSwitch(DelugeEntity, SwitchEntity):
     """Representation of a Deluge switch."""
 
     def __init__(

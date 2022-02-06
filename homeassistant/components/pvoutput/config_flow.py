@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_SYSTEM_ID, DOMAIN
+from .const import CONF_SYSTEM_ID, DOMAIN, LOGGER
 
 
 async def validate_input(hass: HomeAssistant, *, api_key: str, system_id: int) -> None:
@@ -50,6 +50,7 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
             except PVOutputAuthenticationError:
                 errors["base"] = "invalid_auth"
             except PVOutputError:
+                LOGGER.exception("Cannot connect to PVOutput")
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(str(user_input[CONF_SYSTEM_ID]))

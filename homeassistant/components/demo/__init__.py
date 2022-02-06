@@ -4,6 +4,7 @@ import datetime
 from random import random
 
 from homeassistant import bootstrap, config_entries
+from homeassistant.components import persistent_notification
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
@@ -163,8 +164,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return False
 
     # Set up example persistent notification
-    hass.components.persistent_notification.async_create(
-        "This is an example of a persistent notification.", title="Example Notification"
+    persistent_notification.async_create(
+        hass,
+        "This is an example of a persistent notification.",
+        title="Example Notification",
     )
 
     async def demo_start_listener(_event):

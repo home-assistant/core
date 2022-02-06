@@ -9,7 +9,10 @@ from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
 )
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
+    entity,
+)
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -32,12 +35,20 @@ from .const import DOMAIN
 
 TRIGGER_TYPES = {"turned_on", "turned_off", "idle", "paused", "playing"}
 
-TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
+MEDIA_PLAYER_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
         vol.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
+)
+
+TRIGGER_SCHEMA = vol.All(
+    vol.Any(
+        MEDIA_PLAYER_TRIGGER_SCHEMA,
+        entity.TRIGGER_SCHEMA,
+    ),
+    vol.Schema({vol.Required(CONF_DOMAIN): DOMAIN}, extra=vol.ALLOW_EXTRA),
 )
 
 
@@ -46,7 +57,7 @@ async def async_get_triggers(
 ) -> list[dict[str, Any]]:
     """List device triggers for Media player entities."""
     registry = await entity_registry.async_get_registry(hass)
-    triggers = []
+    triggers = await entity.async_get_triggers(hass, device_id, DOMAIN)
 
     # Get all the integration entities for this device
     for entry in entity_registry.async_entries_for_device(registry, device_id):
@@ -72,6 +83,8 @@ async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
+    if config[CONF_TYPE] not in TRIGGER_TYPES:
+        return await entity.async_get_trigger_capabilities(hass, config)
     return {
         "extra_fields": vol.Schema(
             {vol.Optional(CONF_FOR): cv.positive_time_period_dict}
@@ -86,6 +99,8 @@ async def async_attach_trigger(
     automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
+    if config[CONF_TYPE] not in TRIGGER_TYPES:
+        return await entity.async_attach_trigger(hass, config, action, automation_info)
     if config[CONF_TYPE] == "turned_on":
         to_state = STATE_ON
     elif config[CONF_TYPE] == "turned_off":

@@ -33,11 +33,11 @@ SCHEMA_WS_UPDATE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 
 async def async_setup(hass):
     """Enable the Device Registry views."""
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_LIST, websocket_list_devices, SCHEMA_WS_LIST
+    websocket_api.async_register_command(
+        hass, WS_TYPE_LIST, websocket_list_devices, SCHEMA_WS_LIST
     )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_UPDATE, websocket_update_device, SCHEMA_WS_UPDATE
+    websocket_api.async_register_command(
+        hass, WS_TYPE_UPDATE, websocket_update_device, SCHEMA_WS_UPDATE
     )
     return True
 
@@ -61,6 +61,9 @@ async def websocket_update_device(hass, connection, msg):
 
     msg.pop("type")
     msg_id = msg.pop("id")
+
+    if "disabled_by" in msg:
+        msg["disabled_by"] = DeviceEntryDisabler(msg["disabled_by"])
 
     entry = registry.async_update_device(**msg)
 

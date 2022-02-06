@@ -11,12 +11,12 @@ from pyalmond import AlmondLocalAuth, WebAlmondAPI
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant import config_entries, core, data_entry_flow
+from homeassistant import core, data_entry_flow
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
-from .const import DOMAIN as ALMOND_DOMAIN, TYPE_LOCAL, TYPE_OAUTH2
+from .const import DOMAIN, TYPE_LOCAL, TYPE_OAUTH2
 
 
 async def async_verify_local_connection(hass: core.HomeAssistant, host: str):
@@ -33,11 +33,12 @@ async def async_verify_local_connection(hass: core.HomeAssistant, host: str):
         return False
 
 
-@config_entries.HANDLERS.register(ALMOND_DOMAIN)
-class AlmondFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
+class AlmondFlowHandler(
+    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
+):
     """Implementation of the Almond OAuth2 config flow."""
 
-    DOMAIN = ALMOND_DOMAIN
+    DOMAIN = DOMAIN
 
     host = None
     hassio_discovery = None

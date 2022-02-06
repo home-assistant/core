@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "discovery_started": "La d\u00e9couverte a commenc\u00e9"
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
@@ -9,7 +10,15 @@
             "protect_version": "La version minimale requise est la v1.20.0. Veuillez mettre \u00e0 jour UniFi Protect, puis r\u00e9essayer.",
             "unknown": "Erreur inattendue"
         },
+        "flow_title": "{name} ( {ip_address} )",
         "step": {
+            "discovery_confirm": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                },
+                "description": "Voulez-vous configurer {name} ( {ip_address} )\u00a0?"
+            },
             "reauth_confirm": {
                 "data": {
                     "host": "IP/H\u00f4te du serveur UniFi Protect",

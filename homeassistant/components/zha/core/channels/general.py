@@ -18,6 +18,8 @@ from ..const import (
     REPORT_CONFIG_BATTERY_SAVE,
     REPORT_CONFIG_DEFAULT,
     REPORT_CONFIG_IMMEDIATE,
+    REPORT_CONFIG_MAX_INT,
+    REPORT_CONFIG_MIN_INT,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_MOVE_LEVEL,
     SIGNAL_SET_LEVEL,
@@ -169,6 +171,13 @@ class Commissioning(ZigbeeChannel):
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.DeviceTemperature.cluster_id)
 class DeviceTemperature(ZigbeeChannel):
     """Device Temperature channel."""
+
+    REPORT_CONFIG = [
+        {
+            "attr": "current_temperature",
+            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
+        }
+    ]
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.GreenPowerProxy.cluster_id)
