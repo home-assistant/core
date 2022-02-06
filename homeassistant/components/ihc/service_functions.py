@@ -60,7 +60,7 @@ def setup_service_functions(hass: HomeAssistant) -> None:
             if controller_conf[IHC_CONTROLLER_INDEX] == controller_index:
                 return controller_conf[IHC_CONTROLLER]
         # if not found the controller_index is ouf of range
-        raise ValueError()
+        raise ValueError("The controller index is out of range")
 
     async def async_set_runtime_value_bool(call):
         """Set a IHC runtime bool value service function."""
