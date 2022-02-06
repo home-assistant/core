@@ -344,8 +344,6 @@ class PlugwiseSensorEnity(PlugwiseEntity, SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{device_id}-{description.key}"
 
-        self._model = coordinator.data.devices[device_id]["model"]
-
         if device_id == coordinator.data.gateway["heater_id"]:
             self._entity_name = "Auxiliary"
 

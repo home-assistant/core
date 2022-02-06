@@ -32,27 +32,16 @@ async def async_setup_entry(
         if "switches" not in device_properties:
             continue
 
-        members = None
-        model = None
-
         if any(
             switch_class in device_properties["types"]
             for switch_class in switch_classes
         ):
-            if "plug" in device_properties["types"]:
-                model = "Metered Switch"
-            if "switch_group" in device_properties["types"]:
-                members = device_properties["members"]
-                model = "Switch Group"
-
             entities.append(
                 PlugwiseSwitchEntity(
                     api,
                     coordinator,
                     device_properties["name"],
                     device_id,
-                    members,
-                    model,
                 )
             )
 
@@ -70,16 +59,11 @@ class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
         coordinator: PlugwiseDataUpdateCoordinator,
         name: str,
         device_id: str,
-        members: list[str] | None,
-        model: str | None,
     ) -> None:
         """Set up the Plugwise API."""
         super().__init__(api, coordinator, name, device_id)
         self._attr_unique_id = f"{device_id}-plug"
-
-        self._members = members
-        self._model = model
-
+        self._members = coordinator.data.devices[device_id].get("members")
         self._attr_is_on = False
 
     async def async_turn_on(self, **kwargs: Any) -> None:

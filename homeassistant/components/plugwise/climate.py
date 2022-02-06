@@ -99,7 +99,6 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
 
         self._api = api
         self._loc_id = loc_id
-        self._model = model
 
         self._presets = None
 
