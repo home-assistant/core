@@ -32,7 +32,7 @@ async def async_setup_platform(
         for node in hass.data[PROXMOX_HOSTS][host_name]["nodes"]:
             node_name = node["node"]
 
-            for node_vm in hass.data[PROXMOX_HOSTS][host_name]["vms"]:
+            for node_vm in hass.data[PROXMOX_HOSTS][host_name][node_name]["vms"]:
                 vm_id = node_vm["vmid"]
                 coordinator = host_name_coordinators[node_name][vm_id]
 
@@ -46,7 +46,9 @@ async def async_setup_platform(
                 )
                 sensors.append(vm_sensor)
 
-            for node_container in hass.data[PROXMOX_HOSTS][host_name]["containers"]:
+            for node_container in hass.data[PROXMOX_HOSTS][host_name][node_name][
+                "containers"
+            ]:
                 container_id = node_container["vmid"]
                 coordinator = host_name_coordinators[node_name][container_id]
 
