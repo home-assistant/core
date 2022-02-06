@@ -286,7 +286,6 @@ async def async_setup_entry(
                 device_entry.id, new_identifiers={(TIBBER_DOMAIN, home.home_id)}
             )
 
-    print(entities)
     async_add_entities(entities, True)
 
 
@@ -548,7 +547,7 @@ class TibberDataCoordinator(update_coordinator.DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=f"Tibber {tibber_connection.name}",
-            update_interval=timedelta(hours=1),
+            update_interval=timedelta(minutes=20),
         )
         self._tibber_connection = tibber_connection
 
