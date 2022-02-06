@@ -11,21 +11,23 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import PlugwiseDataUpdateCoordinator
 
 
-class PlugwiseEntity(CoordinatorEntity):
+class PlugwiseEntity(CoordinatorEntity[bool]):
     """Represent a PlugWise Entity."""
 
     _model: str | None = None
 
     def __init__(
-        self, api: Smile, coordinator: DataUpdateCoordinator, name: str, dev_id: str
+        self,
+        api: Smile,
+        coordinator: PlugwiseDataUpdateCoordinator,
+        name: str,
+        dev_id: str,
     ) -> None:
         """Initialise the gateway."""
         super().__init__(coordinator)

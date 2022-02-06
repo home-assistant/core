@@ -3,12 +3,7 @@ from __future__ import annotations
 
 import asyncio
 
-import async_timeout
-from plugwise.exceptions import (
-    InvalidAuthentication,
-    PlugwiseException,
-    XMLDataMissingError,
-)
+from plugwise.exceptions import InvalidAuthentication, PlugwiseException
 from plugwise.smile import Smile
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,13 +12,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     COORDINATOR,
     DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
-    DEFAULT_TIMEOUT,
     DEFAULT_USERNAME,
     DOMAIN,
     GATEWAY,
@@ -32,6 +24,7 @@ from .const import (
     PW_TYPE,
     SENSOR_PLATFORMS,
 )
+from .coordinator import PlugwiseDataUpdateCoordinator
 
 
 async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -63,22 +56,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not connected:
         raise ConfigEntryNotReady("Unable to connect to Smile")
 
-    async def async_update_data():
-        """Update data via API endpoint."""
-        try:
-            async with async_timeout.timeout(DEFAULT_TIMEOUT):
-                await api.full_update_device()
-                return True
-        except XMLDataMissingError as err:
-            raise UpdateFailed("Smile update failed") from err
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        LOGGER,
-        name=f"Smile {api.smile_name}",
-        update_method=async_update_data,
-        update_interval=DEFAULT_SCAN_INTERVAL[api.smile_type],
-    )
+    coordinator = PlugwiseDataUpdateCoordinator(hass, api)
     await coordinator.async_config_entry_first_refresh()
 
     api.get_all_devices()
