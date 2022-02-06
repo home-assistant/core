@@ -1,6 +1,7 @@
 """Support for Sonarr sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
 import logging
 from typing import Any
@@ -82,14 +83,14 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-def sonarr_exception_handler(func):
+def sonarr_exception_handler(func: Callable) -> Callable:
     """Decorate Sonarr calls to handle Sonarr exceptions.
 
     A decorator that wraps the passed in function, catches Sonarr errors,
     and handles the availability of the entity.
     """
 
-    async def handler(self, *args, **kwargs):
+    async def handler(self, *args, **kwargs):  # type: ignore
         try:
             await func(self, *args, **kwargs)
             self.last_update_success = True
