@@ -102,6 +102,24 @@ TEST_CONFIG_HYBRID = NestTestConfig(
     },
 )
 
+TEST_CONFIG_LEGACY = NestTestConfig(
+    config={
+        "nest": {
+            "client_id": "some-client-id",
+            "client_secret": "some-client-secret",
+        },
+    },
+    config_entry_data={
+        "auth_implementation": "local",
+        "tokens": {
+            "expires_at": time.time() + 86400,
+            "access_token": {
+                "token": "some-token",
+            },
+        },
+    },
+)
+
 
 class FakeSubscriber(GoogleNestSubscriber):
     """Fake subscriber that supplies a FakeDeviceManager."""
