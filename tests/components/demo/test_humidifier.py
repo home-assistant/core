@@ -3,6 +3,7 @@
 import pytest
 import voluptuous as vol
 
+from homeassistant.components.humidifier import HumidifierDeviceClass
 from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
@@ -27,6 +28,7 @@ from homeassistant.setup import async_setup_component
 ENTITY_DEHUMIDIFIER = "humidifier.dehumidifier"
 ENTITY_HYGROSTAT = "humidifier.hygrostat"
 ENTITY_HUMIDIFIER = "humidifier.humidifier"
+ENTITY_COMBINED = "humidifier.combined_humidifier_dehumidifier"
 
 
 @pytest.fixture(autouse=True)
@@ -36,6 +38,18 @@ async def setup_demo_humidifier(hass):
         hass, DOMAIN, {"humidifier": {"platform": "demo"}}
     )
     await hass.async_block_till_done()
+
+
+def test_device_class(hass):
+    """Test the initial parameters."""
+    state = hass.states.get(ENTITY_HUMIDIFIER)
+    assert state.device_class == HumidifierDeviceClass.HUMIDIFIER
+    state = hass.states.get(ENTITY_DEHUMIDIFIER)
+    assert state.device_class == HumidifierDeviceClass.DEHUMIDIFIER
+    state = hass.states.get(ENTITY_HYGROSTAT)
+    assert state.device_class == HumidifierDeviceClass.HUMIDIFIER
+    state = hass.states.get(ENTITY_COMBINED)
+    assert state.device_class == HumidifierDeviceClass.HUMIDIFIER_AND_DEHUMIDIFIER
 
 
 def test_setup_params(hass):

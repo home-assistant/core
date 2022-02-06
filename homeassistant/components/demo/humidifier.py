@@ -33,6 +33,12 @@ async def async_setup_platform(
                 device_class=HumidifierDeviceClass.DEHUMIDIFIER,
             ),
             DemoHumidifier(
+                name="Combined Humidifier/Dehumidifier",
+                mode=None,
+                target_humidity=41,
+                device_class=HumidifierDeviceClass.HUMIDIFIER_AND_DEHUMIDIFIER,
+            ),
+            DemoHumidifier(
                 name="Hygrostat",
                 mode="home",
                 available_modes=["home", "eco"],

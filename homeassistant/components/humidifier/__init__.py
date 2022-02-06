@@ -56,6 +56,7 @@ class HumidifierDeviceClass(StrEnum):
 
     HUMIDIFIER = "humidifier"
     DEHUMIDIFIER = "dehumidifier"
+    HUMIDIFIER_AND_DEHUMIDIFIER = "humidifier_and_dehumidifier"
 
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(HumidifierDeviceClass))
