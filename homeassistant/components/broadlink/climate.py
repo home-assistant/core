@@ -34,10 +34,11 @@ class BroadlinkThermostat(ClimateEntity, RestoreEntity):
         """Initialize the climate entity."""
         self._device = device
         self._coordinator = device.update_manager.coordinator
-        self._hvac_mode = None
-        self._hvac_action = None
-        self._current_temperature = None
-        self._target_temperature = None
+        self._attr_hvac_action = None
+        self._attr_hvac_mode = None
+        self._attr_current_temperature = None
+        self._attr_target_temperature = None
+        self._attr_target_temperature_step = 0.5
 
     @property
     def name(self):
@@ -53,17 +54,19 @@ class BroadlinkThermostat(ClimateEntity, RestoreEntity):
         """Set new target temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
         device = self._device
+        self._attr_target_temperature = temperature
+        self.async_write_ha_state()
         await device.async_request(device.api.set_temp, temperature)
 
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
-        return 0.5
+        return self._attr_target_temperature_step
 
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self._current_temperature
+        return self._attr_current_temperature
 
     @property
     def temperature_unit(self):
@@ -73,17 +76,17 @@ class BroadlinkThermostat(ClimateEntity, RestoreEntity):
     @property
     def target_temperature(self):
         """Return the target temperature."""
-        return self._target_temperature
+        return self._attr_target_temperature
 
     @property
     def hvac_mode(self):
         """Return the current HVAC mode."""
-        return self._hvac_mode
+        return self._attr_hvac_mode
 
     @property
     def hvac_action(self):
         """Return the current HVAC action."""
-        return self._hvac_action
+        return self._attr_hvac_action
 
     @property
     def hvac_modes(self):
@@ -100,20 +103,20 @@ class BroadlinkThermostat(ClimateEntity, RestoreEntity):
             state = self._coordinator.data
             if state["power"]:
                 if state["auto_mode"]:
-                    self._hvac_mode = HVAC_MODE_AUTO
+                    self._attr_hvac_mode = HVAC_MODE_AUTO
                 else:
-                    self._hvac_mode = HVAC_MODE_HEAT
+                    self._attr_hvac_mode = HVAC_MODE_HEAT
 
                 if state["active"]:
-                    self._hvac_action = CURRENT_HVAC_HEAT
+                    self._attr_hvac_action = CURRENT_HVAC_HEAT
                 else:
-                    self._hvac_action = CURRENT_HVAC_IDLE
+                    self._attr_hvac_action = CURRENT_HVAC_IDLE
             else:
-                self._hvac_mode = HVAC_MODE_OFF
-                self._hvac_action = CURRENT_HVAC_OFF
+                self._attr_hvac_mode = HVAC_MODE_OFF
+                self._attr_hvac_action = CURRENT_HVAC_OFF
 
-            self._current_temperature = state["room_temp"]
-            self._target_temperature = state["thermostat_temp"]
+            self._attr_current_temperature = state["room_temp"]
+            self._attr_target_temperature = state["thermostat_temp"]
 
         self.async_write_ha_state()
 
@@ -121,11 +124,11 @@ class BroadlinkThermostat(ClimateEntity, RestoreEntity):
         """Call when the climate device is added to hass."""
         state = await self.async_get_last_state()
         if state is not None:
-            self._hvac_mode = state.state
-            self._hvac_action = state.attributes[ATTR_HVAC_ACTION]
-            self._current_temperature = state.attributes[ATTR_CURRENT_TEMPERATURE]
-            self._target_temperature = state.attributes[ATTR_TEMPERATURE]
-
+            self._attr_hvac_mode = state.state
+            self._attr_hvac_action = state.attributes[ATTR_HVAC_ACTION]
+            self._attr_current_temperature = state.attributes[ATTR_CURRENT_TEMPERATURE]
+            self._attr_target_temperature = state.attributes[ATTR_TEMPERATURE]
+        self.async_write_ha_state()
         self.async_on_remove(self._coordinator.async_add_listener(self.update_data))
 
     async def async_update(self):
@@ -135,7 +138,8 @@ class BroadlinkThermostat(ClimateEntity, RestoreEntity):
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         device = self._device
-
+        self._attr_hvac_mode = hvac_mode
+        self.async_write_ha_state()
         if hvac_mode == HVAC_MODE_OFF:
             await device.async_request(device.api.set_power, 0)
 
