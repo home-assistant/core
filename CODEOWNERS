@@ -17,7 +17,7 @@ Dockerfile @home-assistant/supervisor
 
 # Other code
 homeassistant/scripts/check_config.py @kellerza
-f
+
 # Integrations
 homeassistant/components/abode/* @shred86
 tests/components/abode/* @shred86
@@ -933,8 +933,8 @@ homeassistant/components/synology_srm/* @aerialls
 homeassistant/components/syslog/* @fabaff
 homeassistant/components/system_bridge/* @timmo001
 tests/components/system_bridge/* @timmo001
-homeassistant/components/tado/* @michaelarnauts @north3221
-tests/components/tado/* @michaelarnauts @north3221
+homeassistant/components/tado/* @michaelarnauts
+tests/components/tado/* @michaelarnauts
 homeassistant/components/tag/* @balloob @dmulcahey
 tests/components/tag/* @balloob @dmulcahey
 homeassistant/components/tailscale/* @frenck
