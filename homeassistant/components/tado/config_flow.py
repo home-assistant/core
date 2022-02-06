@@ -11,7 +11,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_FALLBACK, CONST_OVERLAY_MANUAL, CONST_OVERLAY_TADO_MODE, CONST_OVERLAY_TADO_OPTIONS, DOMAIN, UNIQUE_ID
+from .const import CONF_FALLBACK, CONST_OVERLAY_TADO_MODE, CONST_OVERLAY_TADO_OPTIONS, DOMAIN, UNIQUE_ID
 
 _LOGGER = logging.getLogger(__name__)
 
