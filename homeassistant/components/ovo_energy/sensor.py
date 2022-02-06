@@ -121,14 +121,22 @@ async def async_setup_entry(
     if coordinator.data:
         if coordinator.data.electricity:
             for description in SENSOR_TYPES_ELECTRICITY:
-                if description.key == KEY_LAST_ELECTRICITY_COST:
+                if (
+                    description.key == KEY_LAST_ELECTRICITY_COST
+                    and coordinator.data.electricity[-1] is not None
+                    and coordinator.data.electricity[-1].cost is not None
+                ):
                     description.native_unit_of_measurement = (
                         coordinator.data.electricity[-1].cost.currency_unit
                     )
                 entities.append(OVOEnergySensor(coordinator, description, client))
         if coordinator.data.gas:
             for description in SENSOR_TYPES_GAS:
-                if description.key == KEY_LAST_GAS_COST:
+                if (
+                    description.key == KEY_LAST_GAS_COST
+                    and coordinator.data.gas[-1] is not None
+                    and coordinator.data.gas[-1].cost is not None
+                ):
                     description.native_unit_of_measurement = coordinator.data.gas[
                         -1
                     ].cost.currency_unit

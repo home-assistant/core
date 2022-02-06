@@ -189,7 +189,7 @@ aioridwell==2021.12.2
 aiosenseme==0.6.1
 
 # homeassistant.components.shelly
-aioshelly==1.0.8
+aioshelly==1.0.9
 
 # homeassistant.components.steamist
 aiosteamist==0.3.1
@@ -427,7 +427,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.28.20
+flux_led==0.28.21
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -586,7 +586,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.intellifire
-intellifire4py==0.5
+intellifire4py==0.6
 
 # homeassistant.components.iotawatt
 iotawattpy==0.1.0
@@ -771,7 +771,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==9.0.0
+pillow==9.0.1
 
 # homeassistant.components.plex
 plexapi==4.9.1
@@ -1337,7 +1337,7 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.01.0
+simplisafe-python==2022.02.0
 
 # homeassistant.components.slack
 slackclient==2.5.0
@@ -1355,7 +1355,7 @@ smarthab==0.21
 smhi-pkg==1.0.15
 
 # homeassistant.components.sonos
-soco==0.26.0
+soco==0.26.2
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
@@ -1527,7 +1527,7 @@ wolf_smartset==0.1.11
 xbox-webapi==2.0.11
 
 # homeassistant.components.knx
-xknx==0.19.1
+xknx==0.19.2
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
