@@ -152,6 +152,7 @@ homeassistant.components.remote.*
 homeassistant.components.renault.*
 homeassistant.components.ridwell.*
 homeassistant.components.rituals_perfume_genie.*
+homeassistant.components.roku.*
 homeassistant.components.rpi_power.*
 homeassistant.components.rtsp_to_webrtc.*
 homeassistant.components.samsungtv.*

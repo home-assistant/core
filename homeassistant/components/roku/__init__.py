@@ -1,6 +1,7 @@
 """Support for Roku."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
 
 from rokuecp import RokuConnectionError, RokuError
@@ -46,10 +47,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def roku_exception_handler(func):
+def roku_exception_handler(func: Callable) -> Callable:
     """Decorate Roku calls to handle Roku exceptions."""
 
-    async def handler(self, *args, **kwargs):
+    async def handler(self, *args, **kwargs) -> None:  # type: ignore
         try:
             await func(self, *args, **kwargs)
         except RokuConnectionError as error:
