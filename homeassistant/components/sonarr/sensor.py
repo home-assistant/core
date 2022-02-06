@@ -94,11 +94,11 @@ def sonarr_exception_handler(func):
             await func(self, *args, **kwargs)
             self.last_update_success = True
         except SonarrConnectionError as error:
-            if self.available:
+            if self.last_update_success:
                 _LOGGER.error("Error communicating with API: %s", error)
             self.last_update_success = False
         except SonarrError as error:
-            if self.available:
+            if self.last_update_success:
                 _LOGGER.error("Invalid response from API: %s", error)
                 self.last_update_success = False
 
@@ -107,6 +107,11 @@ def sonarr_exception_handler(func):
 
 class SonarrSensor(SonarrEntity, SensorEntity):
     """Implementation of the Sonarr sensor."""
+
+    data: dict[str, Any]
+    last_update_success: bool
+    upcoming_days: int
+    wanted_max_items: int
 
     def __init__(
         self,
@@ -119,10 +124,10 @@ class SonarrSensor(SonarrEntity, SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{entry_id}_{description.key}"
 
-        self.data: dict[str, Any] = {}
-        self.last_update_success: bool = False
-        self.upcoming_days: int = options[CONF_UPCOMING_DAYS]
-        self.wanted_max_items: int = options[CONF_WANTED_MAX_ITEMS]
+        self.data = {}
+        self.last_update_success = True
+        self.upcoming_days = options[CONF_UPCOMING_DAYS]
+        self.wanted_max_items = options[CONF_WANTED_MAX_ITEMS]
 
         super().__init__(
             sonarr=sonarr,
