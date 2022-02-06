@@ -16,9 +16,6 @@ async def test_config_entry_not_running(
     """Test generating diagnostics for a config entry."""
     entry = await async_init_integration(hass)
     diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
-    import pprint
-
-    pprint.pprint(diag)
     assert diag == {
         "config-entry": {
             "data": {"name": "mock_name", "port": 12345},
