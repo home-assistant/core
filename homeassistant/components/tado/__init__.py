@@ -134,7 +134,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 options[CONF_FALLBACK] = CONST_OVERLAY_TADO_MODE
             else:  # Otherwise set to manual
                 options[CONF_FALLBACK] = CONST_OVERLAY_MANUAL
-            config_entry.options = {**options}
+
             hass.config_entries.async_update_entry(config_entry, options=options)
 
         config_entry.version = 2
