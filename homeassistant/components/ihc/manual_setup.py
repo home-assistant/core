@@ -108,13 +108,16 @@ IHC_SCHEMA = vol.Schema(
 
 
 def get_manual_configuration(
-    hass: HomeAssistant, config: ConfigType, conf, controller_id
-):
+    hass: HomeAssistant,
+    config: ConfigType,
+    controller_conf: ConfigType,
+    controller_id: int,
+) -> None:
     """Get manual configuration for IHC devices."""
     for platform in IHC_PLATFORMS:
         discovery_info = {}
-        if platform in conf:
-            platform_setup = conf.get(platform)
+        if platform in controller_conf:
+            platform_setup = controller_conf.get(platform, {})
             for sensor_cfg in platform_setup:
                 name = sensor_cfg[CONF_NAME]
                 device = {
