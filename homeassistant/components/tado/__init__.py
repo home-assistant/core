@@ -123,7 +123,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_migrate_entry(hass, config_entry: ConfigEntry):
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s for %s", config_entry.version, DOMAIN)
 
@@ -135,6 +135,7 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
             else:  # Otherwise set to manual
                 options[CONF_FALLBACK] = CONST_OVERLAY_MANUAL
             config_entry.options = {**options}
+            hass.config_entries.async_update_entry(config_entry, options=options)
 
         config_entry.version = 2
 
