@@ -67,8 +67,8 @@ def _get_air_quality(device: Device) -> int | None:
 
 def _get_filter_time_left(device: Device) -> int:
     """Fetch the filter's remaining life (in hours)."""
-    return cast(
-        int, device.air_purifier_control.air_purifiers[0].filter_lifetime_remaining
+    return round(
+        device.air_purifier_control.air_purifiers[0].filter_lifetime_remaining / 60
     )
 
 
