@@ -177,6 +177,26 @@ async def test_webhook_local_only(hass, mock_client):
     # No hook received
     assert len(hooks) == 1
 
+    # Request with Referer header set.
+    resp = await mock_client.post(
+        f"/api/webhook/{webhook_id}",
+        headers={"Referer": "https://home-assistant.io/"},
+        json={"data": True},
+    )
+    assert resp.status == HTTPStatus.OK
+    # No hook received
+    assert len(hooks) == 1
+
+    # Request with Origin header set.
+    resp = await mock_client.post(
+        f"/api/webhook/{webhook_id}",
+        headers={"Origin": "https://home-assistant.io/"},
+        json={"data": True},
+    )
+    assert resp.status == HTTPStatus.OK
+    # No hook received
+    assert len(hooks) == 1
+
 
 async def test_listing_webhook(
     hass, hass_ws_client, hass_access_token, enable_custom_integrations

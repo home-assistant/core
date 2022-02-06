@@ -7,6 +7,7 @@ from ipaddress import ip_address
 import logging
 import secrets
 
+from aiohttp.hdrs import ORIGIN, REFERER
 from aiohttp.web import Request, Response
 import voluptuous as vol
 
@@ -23,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "webhook"
 
+NON_LOCAL_HEADERS = (ORIGIN, REFERER)
 URL_WEBHOOK_PATH = "/api/webhook/{webhook_id}"
 
 
@@ -115,6 +117,20 @@ async def async_handle_webhook(
 
         if not network.is_local(remote):
             _LOGGER.warning("Received remote request for local webhook %s", webhook_id)
+            return Response(status=HTTPStatus.OK)
+
+        # The presence of NON_LOCAL_HEADERS could indicate a CSRF request from a
+        # local browser on behalf of a non-local website on the internet.
+        # (non-local website) <-> (local browser) -> (webhook)
+        non_local_headers = [
+            request.headers.get(non_local) for non_local in NON_LOCAL_HEADERS
+        ]
+        if any(non_local_headers):
+            _LOGGER.warning(
+                "Received likely CSRF request for local webhook %s (%r)",
+                webhook_id,
+                non_local_headers,
+            )
             return Response(status=HTTPStatus.OK)
 
     try:
