@@ -69,6 +69,7 @@ async def test_valid_path(hass: HomeAssistant) -> None:
 
 async def test_state_unknown(hass: HomeAssistant, tmpdir: str) -> None:
     """Verify we handle state unavailable."""
+    create_file(TEST_FILE)
     testfile = f"{tmpdir}/file"
     await hass.async_add_executor_job(create_file, testfile)
     with patch.object(hass.config, "is_allowed_path", return_value=True):
