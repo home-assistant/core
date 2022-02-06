@@ -83,7 +83,7 @@ class IHCDevice(Entity):
             "ihc_position": self.ihc_position,
         }
         if len(self.hass.data[DOMAIN]) > 1:
-        # We only want to show the controller id if we have more than one
+            # We only want to show the controller id if we have more than one
             attributes["ihc_controller"] = self.controller_id
         return attributes
 
