@@ -117,7 +117,9 @@ async def async_setup_entry(
 class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     """Representation of a Roku media player on the network."""
 
-    def __init__(self, unique_id: str, coordinator: RokuDataUpdateCoordinator) -> None:
+    def __init__(
+        self, unique_id: str | None, coordinator: RokuDataUpdateCoordinator
+    ) -> None:
         """Initialize the Roku device."""
         super().__init__(
             coordinator=coordinator,
@@ -231,7 +233,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @property
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
-        if self._media_playback_trackable():
+        if self.coordinator.data.media is not None and self._media_playback_trackable():
             return self.coordinator.data.media.duration
 
         return None
@@ -239,7 +241,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        if self._media_playback_trackable():
+        if self.coordinator.data.media is not None and self._media_playback_trackable():
             return self.coordinator.data.media.position
 
         return None
@@ -247,7 +249,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @property
     def media_position_updated_at(self) -> dt.datetime | None:
         """When was the position of the current playing media valid."""
-        if self._media_playback_trackable():
+        if self.coordinator.data.media is not None and self._media_playback_trackable():
             return self.coordinator.data.media.at
 
         return None
@@ -263,10 +265,12 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @property
     def source_list(self) -> list:
         """List of available input sources."""
-        return ["Home"] + sorted(app.name for app in self.coordinator.data.apps)
+        return ["Home"] + sorted(
+            app.name for app in self.coordinator.data.apps if app.name is not None
+        )
 
     @roku_exception_handler
-    async def search(self, keyword):
+    async def search(self, keyword: str) -> None:
         """Emulate opening the search screen and entering the search keyword."""
         await self.coordinator.roku.search(keyword)
 
@@ -343,7 +347,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         await self.coordinator.async_request_refresh()
 
     @roku_exception_handler
-    async def async_mute_volume(self, mute) -> None:
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         await self.coordinator.roku.remote("volume_mute")
         await self.coordinator.async_request_refresh()
@@ -359,7 +363,9 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         await self.coordinator.roku.remote("volume_down")
 
     @roku_exception_handler
-    async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play media from a URL or file, launch an application, or tune to a channel."""
         extra: dict[str, Any] = kwargs.get(ATTR_MEDIA_EXTRA) or {}
 
@@ -433,7 +439,6 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             None,
         )
 
-        if appl is not None:
+        if appl is not None and appl.app_id is not None:
             await self.coordinator.roku.launch(appl.app_id)
-
-        await self.coordinator.async_request_refresh()
+            await self.coordinator.async_request_refresh()

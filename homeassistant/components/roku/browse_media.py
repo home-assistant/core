@@ -69,12 +69,12 @@ def get_thumbnail_url_full(
 
 
 async def async_browse_media(
-    hass,
+    hass: HomeAssistant,
     coordinator: RokuDataUpdateCoordinator,
     get_browse_image_url: GetBrowseImageUrlType,
     media_content_id: str | None,
     media_content_type: str | None,
-):
+) -> BrowseMedia:
     """Browse media."""
     if media_content_id is None:
         return await root_payload(
@@ -113,7 +113,7 @@ async def root_payload(
     hass: HomeAssistant,
     coordinator: RokuDataUpdateCoordinator,
     get_browse_image_url: GetBrowseImageUrlType,
-):
+) -> BrowseMedia:
     """Return root payload for Roku."""
     device = coordinator.data
 
@@ -223,7 +223,7 @@ def item_payload(
     item: dict,
     coordinator: RokuDataUpdateCoordinator,
     get_browse_image_url: GetBrowseImageUrlType,
-):
+) -> BrowseMedia:
     """
     Create response payload for a single media item.
 
