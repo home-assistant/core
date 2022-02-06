@@ -7,7 +7,7 @@ import logging
 import hpilo
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import PLATFORM_SCHEMA, STATE_CLASSES, SensorEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
@@ -46,6 +46,8 @@ SENSOR_TYPES = {
     "network_settings": ["Network Settings", "get_network_settings"],
 }
 
+CONF_STATE_CLASS = "state_class"
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
@@ -62,6 +64,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                         ),
                         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
                         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+                        vol.Optional(CONF_STATE_CLASS): vol.All(
+                            cv.string, vol.In(STATE_CLASSES)
+                        ),
                     }
                 )
             ],
@@ -103,6 +108,7 @@ def setup_platform(
             sensor_type=monitored_variable[CONF_SENSOR_TYPE],
             sensor_value_template=monitored_variable.get(CONF_VALUE_TEMPLATE),
             unit_of_measurement=monitored_variable.get(CONF_UNIT_OF_MEASUREMENT),
+            state_class=monitored_variable.get(CONF_STATE_CLASS),
         )
         devices.append(new_device)
 
@@ -120,11 +126,13 @@ class HpIloSensor(SensorEntity):
         sensor_name,
         sensor_value_template,
         unit_of_measurement,
+        state_class,
     ):
         """Initialize the HP iLO sensor."""
         self._hass = hass
         self._name = sensor_name
         self._unit_of_measurement = unit_of_measurement
+        self._state_class = state_class
         self._ilo_function = SENSOR_TYPES[sensor_type][1]
         self.hp_ilo_data = hp_ilo_data
 
@@ -146,6 +154,11 @@ class HpIloSensor(SensorEntity):
     def native_unit_of_measurement(self):
         """Return the unit of measurement of the sensor."""
         return self._unit_of_measurement
+
+    @property
+    def native_state_class(self):
+        """Return the state class of the sensor."""
+        return self._state_class
 
     @property
     def native_value(self):
