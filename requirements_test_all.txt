@@ -70,7 +70,7 @@ adext==0.4.2
 adguardhome==0.5.1
 
 # homeassistant.components.advantage_air
-advantage_air==0.2.5
+advantage_air==0.2.6
 
 # homeassistant.components.agent_dvr
 agent-py==0.0.23
@@ -586,7 +586,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.intellifire
-intellifire4py==0.5
+intellifire4py==0.6
 
 # homeassistant.components.iotawatt
 iotawattpy==0.1.0
@@ -1297,7 +1297,7 @@ rflink==0.0.62
 ring_doorbell==0.7.2
 
 # homeassistant.components.roku
-rokuecp==0.12.0
+rokuecp==0.13.1
 
 # homeassistant.components.roomba
 roombapy==1.6.5

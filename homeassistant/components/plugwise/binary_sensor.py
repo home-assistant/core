@@ -1,6 +1,4 @@
 """Plugwise Binary Sensor component for Home Assistant."""
-import logging
-
 from plugwise.smile import Smile
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
@@ -16,6 +14,7 @@ from .const import (
     FLOW_OFF_ICON,
     FLOW_ON_ICON,
     IDLE_ICON,
+    LOGGER,
     NO_NOTIFICATION_ICON,
     NOTIFICATION_ICON,
 )
@@ -26,8 +25,6 @@ BINARY_SENSOR_MAP = {
     "slave_boiler_state": ["Secondary Heater Device State", None],
 }
 SEVERITIES = ["other", "info", "warning", "error"]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -92,6 +89,7 @@ class SmileBinarySensor(PlugwiseEntity, BinarySensorEntity):
         super().__init__(api, coordinator, name, dev_id)
         self._binary_sensor = binary_sensor
         self._attr_is_on = False
+        self._attr_unique_id = f"{dev_id}-{binary_sensor}"
 
         if dev_id == self._api.heater_id:
             self._entity_name = "Auxiliary"
@@ -101,8 +99,6 @@ class SmileBinarySensor(PlugwiseEntity, BinarySensorEntity):
 
         if dev_id == self._api.gateway_id:
             self._entity_name = f"Smile {self._entity_name}"
-
-        self._unique_id = f"{dev_id}-{binary_sensor}"
 
     @callback
     def _async_process_data(self) -> None:
@@ -117,7 +113,7 @@ class PwBinarySensor(SmileBinarySensor):
     def _async_process_data(self) -> None:
         """Update the entity."""
         if not (data := self._api.get_device_data(self._dev_id)):
-            _LOGGER.error("Received no data for device %s", self._binary_sensor)
+            LOGGER.error("Received no data for device %s", self._binary_sensor)
             self.async_write_ha_state()
             return
 

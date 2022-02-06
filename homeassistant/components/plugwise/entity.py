@@ -22,6 +22,8 @@ from .const import DOMAIN
 class PlugwiseEntity(CoordinatorEntity):
     """Represent a PlugWise Entity."""
 
+    _model: str | None = None
+
     def __init__(
         self, api: Smile, coordinator: DataUpdateCoordinator, name: str, dev_id: str
     ) -> None:
@@ -31,16 +33,7 @@ class PlugwiseEntity(CoordinatorEntity):
         self._api = api
         self._name = name
         self._dev_id = dev_id
-
-        self._unique_id: str | None = None
-        self._model: str | None = None
-
         self._entity_name = self._name
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return self._unique_id
 
     @property
     def name(self) -> str | None:
