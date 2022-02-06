@@ -50,14 +50,11 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_androidtv_mac(dev_props):
     """Return formatted mac from device properties."""
-    if eth_mac := dev_props.get(PROP_ETHMAC):
-        mac = format_mac(eth_mac)
-        if mac not in _INVALID_MACS:
-            return mac
-    if wifi_mac := dev_props.get(PROP_WIFIMAC):
-        mac = format_mac(wifi_mac)
-        if mac not in _INVALID_MACS:
-            return mac
+    for prop_mac in (PROP_ETHMAC, PROP_WIFIMAC):
+        if if_mac := dev_props.get(prop_mac):
+            mac = format_mac(if_mac)
+            if mac not in _INVALID_MACS:
+                return mac
     return None
 
 
