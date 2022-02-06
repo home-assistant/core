@@ -10,8 +10,9 @@ on:
   pull_request: ~
 
 env:
-  CACHE_VERSION: 5
+  CACHE_VERSION: 7
   PIP_CACHE_VERSION: 1
+  HA_SHORT_VERSION: 2022.3
   DEFAULT_PYTHON: 3.9
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   PIP_CACHE: /tmp/pip-cache
@@ -155,8 +156,8 @@ jobs:
       - name: Generate partial pip restore key
         id: generate-pip-key
         run: >-
-          echo "::set-output name=key::base-pip-${{ env.PIP_CACHE_VERSION }}-$(
-            date -u '+%Y-%m-%dT%H:%M:%s')"
+          echo "::set-output name=key::base-pip-${{ env.PIP_CACHE_VERSION }}-${{
+            env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')"
       - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache@v2.1.7
@@ -183,7 +184,7 @@ jobs:
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             steps.generate-pip-key.outputs.key }}
           restore-keys: |
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-base-pip-${{ env.PIP_CACHE_VERSION }}-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-base-pip-${{ env.PIP_CACHE_VERSION }}-${{ env.HA_SHORT_VERSION }}-
       - name: Create Python virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -543,8 +544,8 @@ jobs:
       - name: Generate partial pip restore key
         id: generate-pip-key
         run: >-
-          echo "::set-output name=key::pip-${{ env.PIP_CACHE_VERSION }}-$(
-            date -u '+%Y-%m-%dT%H:%M:%s')"
+          echo "::set-output name=key::pip-${{ env.PIP_CACHE_VERSION }}-${{
+            env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')"
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2.1.7
@@ -571,7 +572,7 @@ jobs:
             ${{ runner.os }}-${{ matrix.python-version }}-${{
             steps.generate-pip-key.outputs.key }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ env.PIP_CACHE_VERSION }}-
+            ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ env.PIP_CACHE_VERSION }}-${{ env.HA_SHORT_VERSION }}-
       - name: Create full Python ${{ matrix.python-version }} virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
