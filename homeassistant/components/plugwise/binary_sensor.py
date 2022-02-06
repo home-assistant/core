@@ -1,11 +1,14 @@
 """Plugwise Binary Sensor component for Home Assistant."""
 from plugwise.smile import Smile
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     COORDINATOR,
@@ -18,13 +21,22 @@ from .const import (
     NO_NOTIFICATION_ICON,
     NOTIFICATION_ICON,
 )
+from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
-BINARY_SENSOR_MAP = {
-    "dhw_state": ["Domestic Hot Water State", None],
-    "slave_boiler_state": ["Secondary Heater Device State", None],
-}
 SEVERITIES = ["other", "info", "warning", "error"]
+BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
+        key="dhw_state",
+        name="DHW State",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    BinarySensorEntityDescription(
+        key="slave_boiler_state",
+        name="Secondary Boiler State",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -34,9 +46,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Smile binary_sensors from a config entry."""
     api: Smile = hass.data[DOMAIN][config_entry.entry_id]["api"]
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id][
-        COORDINATOR
-    ]
+    coordinator: PlugwiseDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ][COORDINATOR]
 
     entities: list[BinarySensorEntity] = []
     is_thermostat = api.single_master_thermostat()
@@ -46,8 +58,8 @@ async def async_setup_entry(
 
         if device_properties["class"] == "heater_central":
             data = api.get_device_data(dev_id)
-            for binary_sensor in BINARY_SENSOR_MAP:
-                if binary_sensor not in data:
+            for description in BINARY_SENSORS:
+                if description.key not in data:
                     continue
 
                 entities.append(
@@ -56,7 +68,7 @@ async def async_setup_entry(
                         coordinator,
                         device_properties["name"],
                         dev_id,
-                        binary_sensor,
+                        description,
                     )
                 )
 
@@ -67,7 +79,10 @@ async def async_setup_entry(
                     coordinator,
                     device_properties["name"],
                     dev_id,
-                    "plugwise_notification",
+                    BinarySensorEntityDescription(
+                        key="plugwise_notification",
+                        name="Plugwise Notification",
+                    ),
                 )
             )
 
@@ -80,22 +95,21 @@ class SmileBinarySensor(PlugwiseEntity, BinarySensorEntity):
     def __init__(
         self,
         api: Smile,
-        coordinator: DataUpdateCoordinator,
+        coordinator: PlugwiseDataUpdateCoordinator,
         name: str,
         dev_id: str,
-        binary_sensor: str,
+        description: BinarySensorEntityDescription,
     ) -> None:
         """Initialise the binary_sensor."""
         super().__init__(api, coordinator, name, dev_id)
-        self._binary_sensor = binary_sensor
+        self.entity_description = description
         self._attr_is_on = False
-        self._attr_unique_id = f"{dev_id}-{binary_sensor}"
+        self._attr_unique_id = f"{dev_id}-{description.key}"
 
         if dev_id == self._api.heater_id:
             self._entity_name = "Auxiliary"
 
-        sensorname = binary_sensor.replace("_", " ").title()
-        self._name = f"{self._entity_name} {sensorname}"
+        self._name = f"{self._entity_name} {description.name}"
 
         if dev_id == self._api.gateway_id:
             self._entity_name = f"Smile {self._entity_name}"
@@ -113,19 +127,19 @@ class PwBinarySensor(SmileBinarySensor):
     def _async_process_data(self) -> None:
         """Update the entity."""
         if not (data := self._api.get_device_data(self._dev_id)):
-            LOGGER.error("Received no data for device %s", self._binary_sensor)
+            LOGGER.error("Received no data for device %s", self._dev_id)
             self.async_write_ha_state()
             return
 
-        if self._binary_sensor not in data:
+        if self.entity_description.key not in data:
             self.async_write_ha_state()
             return
 
-        self._attr_is_on = data[self._binary_sensor]
+        self._attr_is_on = data[self.entity_description.key]
 
-        if self._binary_sensor == "dhw_state":
+        if self.entity_description.key == "dhw_state":
             self._attr_icon = FLOW_ON_ICON if self._attr_is_on else FLOW_OFF_ICON
-        if self._binary_sensor == "slave_boiler_state":
+        if self.entity_description.key == "slave_boiler_state":
             self._attr_icon = FLAME_ICON if self._attr_is_on else IDLE_ICON
 
         self.async_write_ha_state()
@@ -137,13 +151,13 @@ class PwNotifySensor(SmileBinarySensor):
     def __init__(
         self,
         api: Smile,
-        coordinator: DataUpdateCoordinator,
+        coordinator: PlugwiseDataUpdateCoordinator,
         name: str,
         dev_id: str,
-        binary_sensor: str,
+        description: BinarySensorEntityDescription,
     ) -> None:
         """Set up the Plugwise API."""
-        super().__init__(api, coordinator, name, dev_id, binary_sensor)
+        super().__init__(api, coordinator, name, dev_id, description)
 
         self._attr_extra_state_attributes = {}
 

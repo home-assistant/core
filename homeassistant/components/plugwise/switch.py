@@ -10,9 +10,9 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import COORDINATOR, DOMAIN, LOGGER, SWITCH_ICON
+from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
 
@@ -60,7 +60,7 @@ class GwSwitch(PlugwiseEntity, SwitchEntity):
     def __init__(
         self,
         api: Smile,
-        coordinator: DataUpdateCoordinator,
+        coordinator: PlugwiseDataUpdateCoordinator,
         name: str,
         dev_id: str,
         members: list[str] | None,

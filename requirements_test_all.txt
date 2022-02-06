@@ -1358,7 +1358,7 @@ smarthab==0.21
 smhi-pkg==1.0.15
 
 # homeassistant.components.sonos
-soco==0.26.0
+soco==0.26.2
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
@@ -1530,7 +1530,7 @@ wolf_smartset==0.1.11
 xbox-webapi==2.0.11
 
 # homeassistant.components.knx
-xknx==0.19.1
+xknx==0.19.2
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz

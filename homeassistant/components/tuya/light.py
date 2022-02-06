@@ -170,6 +170,17 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Unknown light product
+    # Found as VECINO RGBW as provided by diagnostics
+    # Not documented
+    "mbd": (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            color_mode=DPCode.WORK_MODE,
+            brightness=DPCode.BRIGHT_VALUE,
+            color_data=DPCode.COLOUR_DATA,
+        ),
+    ),
     # Heater
     # https://developer.tuya.com/en/docs/iot/categoryqn?id=Kaiuz18kih0sm
     "qn": (
