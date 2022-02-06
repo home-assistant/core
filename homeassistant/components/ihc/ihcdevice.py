@@ -94,23 +94,3 @@ class IHCDevice(Entity):
         Derived classes must overwrite this to do device specific stuff.
         """
         raise NotImplementedError
-
-    @property
-    def device_info(self):
-        """Return the device info.
-
-        if the devide_id is not set we do not have a device setup by auto setup.
-        """
-        if not self.device_id:
-            return None
-        return {
-            "identifiers": {
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self.device_id)
-            },
-            "name": self.device_name,
-            "manufacturer": "Schneider Electric",
-            "suggested_area": self.suggested_area,
-            "model": self.device_model,
-            "via_device": (DOMAIN, self.controller_id),
-        }
