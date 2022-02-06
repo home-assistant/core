@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 from typing import Any, cast
 
 from pytradfri.command import Command
@@ -19,10 +20,11 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
     TIME_HOURS,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
 
 from .base_class import TradfriBaseEntity
 from .const import (
@@ -34,6 +36,8 @@ from .const import (
     KEY_API,
 )
 from .coordinator import TradfriDeviceDataUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -49,8 +53,6 @@ class TradfriSensorEntityDescription(
     TradfriSensorEntityDescriptionMixin,
 ):
     """Class describing Tradfri sensor entities."""
-
-    unique_id_suffix: str | None = None
 
 
 def _get_air_quality(device: Device) -> int | None:
@@ -72,9 +74,9 @@ def _get_filter_time_left(device: Device) -> int:
 
 SENSOR_DESCRIPTIONS_BATTERY: tuple[TradfriSensorEntityDescription, ...] = (
     TradfriSensorEntityDescription(
+        key="battery_level",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
-        key=SensorDeviceClass.BATTERY,
         value=lambda device: cast(int, device.device_info.battery_level),
     ),
 )
@@ -82,12 +84,11 @@ SENSOR_DESCRIPTIONS_BATTERY: tuple[TradfriSensorEntityDescription, ...] = (
 
 SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
     TradfriSensorEntityDescription(
-        key=SensorDeviceClass.AQI,
+        key="aqi",
         name="air quality",
         device_class=SensorDeviceClass.AQI,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         value=_get_air_quality,
-        unique_id_suffix="aqi",
     ),
     TradfriSensorEntityDescription(
         key=ATTR_FILTER_LIFE_REMAINING,
@@ -96,9 +97,30 @@ SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
         native_unit_of_measurement=TIME_HOURS,
         icon="mdi:clock-outline",
         value=_get_filter_time_left,
-        unique_id_suffix=slugify(ATTR_FILTER_LIFE_REMAINING),
     ),
 )
+
+
+def _migrate_old_unique_ids(hass: HomeAssistant, old_unique_id: str, key: str) -> None:
+    """Migrate unique IDs to the new format."""
+    ent_reg = entity_registry.async_get(hass)
+
+    if entity_id := ent_reg.async_get_entity_id(Platform.SENSOR, DOMAIN, old_unique_id):
+        new_unique_id = f"{old_unique_id}-{key}"
+        try:
+            ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
+        except ValueError:
+            _LOGGER.warning(
+                "Skip migration of id [%s] to [%s] because it already exists",
+                old_unique_id,
+                new_unique_id,
+            )
+
+        _LOGGER.info(
+            "Migrating unique_id from [%s] to [%s]",
+            old_unique_id,
+            new_unique_id,
+        )
 
 
 async def async_setup_entry(
@@ -127,6 +149,12 @@ async def async_setup_entry(
             continue
 
         for description in descriptions:
+            _migrate_old_unique_ids(
+                hass=hass,
+                old_unique_id=f"{gateway_id}-{device_coordinator.device.id}",
+                key=description.key,
+            )
+
             entities.append(
                 TradfriSensor(
                     device_coordinator,
@@ -160,10 +188,7 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
 
         self.entity_description = description
 
-        if description.unique_id_suffix:
-            self._attr_unique_id = (
-                f"{self._attr_unique_id}_{description.unique_id_suffix}"
-            )
+        self._attr_unique_id = f"{self._attr_unique_id}-{description.key}"
 
         if description.name:
             self._attr_name = f"{self._attr_name}: {description.name}"
