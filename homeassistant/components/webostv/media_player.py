@@ -144,6 +144,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         self._current_source = None
         self._source_list: dict = {}
 
+        self._supported_features = None
+
     async def async_added_to_hass(self) -> None:
         """Connect and subscribe to dispatcher signals and state updates."""
         self.async_on_remove(
@@ -313,15 +315,20 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     @property
     def supported_features(self) -> int:
         """Flag media player features that are supported."""
+        if self.state == STATE_OFF and self._supported_features is not None:
+            return self._supported_features
+
         supported = SUPPORT_WEBOSTV
 
-        if self._client.sound_output in ("external_arc", "external_speaker"):
+        if self._client.sound_output in (None, "external_arc", "external_speaker"):
             supported = supported | SUPPORT_WEBOSTV_VOLUME
         elif self._client.sound_output != "lineout":
             supported = supported | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
 
         if self._wrapper.turn_on:
             supported |= SUPPORT_TURN_ON
+
+        self._supported_features = supported
 
         return supported
 
