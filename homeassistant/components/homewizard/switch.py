@@ -10,7 +10,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import HWEnergyDeviceUpdateCoordinator
 
 
@@ -47,10 +47,10 @@ class HWEnergySwitchEntity(CoordinatorEntity, SwitchEntity):
         self._attr_unique_id = f"{entry.unique_id}_{key}"
         self._attr_device_info = {
             "name": entry.title,
-            "manufacturer": "HomeWizard",
-            "sw_version": coordinator.data["device"].firmware_version,
-            "model": coordinator.data["device"].product_type,
-            "identifiers": {(DOMAIN, coordinator.data["device"].serial)},
+            "manufacturer": MANUFACTURER,
+            "sw_version": coordinator.api.device.firmware_version,
+            "model": coordinator.api.device.product_type,
+            "identifiers": {(DOMAIN, coordinator.api.device.serial)},
         }
 
 

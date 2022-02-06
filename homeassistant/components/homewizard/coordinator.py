@@ -52,7 +52,6 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
                 ) from ex
 
             data: DeviceResponseEntry = {
-                "device": self.api.device,
                 "data": {},
             }
 
