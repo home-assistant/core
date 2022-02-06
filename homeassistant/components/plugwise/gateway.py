@@ -79,7 +79,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     platforms = PLATFORMS_GATEWAY
-    if not coordinator.data.gateway["single_master_thermostat"]:
+    if coordinator.data.gateway["single_master_thermostat"] is None:
         platforms = SENSOR_PLATFORMS
 
     hass.config_entries.async_setup_platforms(entry, platforms)
