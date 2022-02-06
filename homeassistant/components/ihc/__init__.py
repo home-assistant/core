@@ -121,7 +121,7 @@ def ihc_setup(
     config: ConfigType,
     controller_conf: ConfigType,
     controller_index: int,
-):
+) -> bool:
     """Set up the IHC integration."""
     url = controller_conf[CONF_URL]
     username = controller_conf[CONF_USERNAME]
