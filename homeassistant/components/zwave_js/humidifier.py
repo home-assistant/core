@@ -8,7 +8,6 @@ from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.humidity_control import (
     HUMIDITY_CONTROL_MODE_PROPERTY,
     HUMIDITY_CONTROL_MODE_SETPOINT_MAP,
-    HUMIDITY_CONTROL_OPERATING_STATE_PROPERTY,
     HUMIDITY_CONTROL_SETPOINT_PROPERTY,
     HumidityControlMode,
     HumidityControlSetpointType,
@@ -30,8 +29,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
-
-ATTR_OPERATING_STATE = "operating_state"
 
 
 async def async_setup_entry(
@@ -93,11 +90,6 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
                 self._attr_available_modes.append(
                     self._current_mode.metadata.states[mode]
                 )
-
-        self._operating_state = self.get_zwave_value(
-            HUMIDITY_CONTROL_OPERATING_STATE_PROPERTY,
-            command_class=CommandClass.HUMIDITY_CONTROL_OPERATING_STATE,
-        )
 
         self._setpoint_values: dict[HumidityControlSetpointType, ZwaveValue] = {}
 
@@ -231,23 +223,3 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
             pass
 
         return max_value
-
-    @property
-    def operating_state(self) -> str | None:
-        """Return the current humidity control operating state."""
-        if self._operating_state:
-            return cast(
-                str,
-                self._operating_state.metadata.states[str(self._operating_state.value)],
-            )
-        return None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, str] | None:
-        """Return the optional state attributes."""
-        attrs = {}
-
-        if state := self.operating_state:
-            attrs[ATTR_OPERATING_STATE] = state
-
-        return attrs

@@ -1,10 +1,7 @@
 """Test the Z-Wave JS climate platform."""
 import pytest
 from zwave_js_server.const import CommandClass
-from zwave_js_server.const.command_class.humidity_control import (
-    HumidityControlMode,
-    HumidityControlOperatingState,
-)
+from zwave_js_server.const.command_class.humidity_control import HumidityControlMode
 from zwave_js_server.event import Event
 
 from homeassistant.components.humidifier import HumidifierDeviceClass
@@ -20,7 +17,6 @@ from homeassistant.components.humidifier.const import (
     SERVICE_SET_MODE,
     SUPPORT_MODES,
 )
-from homeassistant.components.zwave_js.humidifier import ATTR_OPERATING_STATE
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -50,7 +46,6 @@ async def test_humidifier(hass, client, climate_adc_t3000, integration):
         "Auto",
     ]
     assert state.attributes[ATTR_DEVICE_CLASS] == HumidifierDeviceClass.HUMIDIFIER
-    assert state.attributes[ATTR_OPERATING_STATE] == "Idle"
     assert state.attributes[ATTR_MODE] == "Auto"
     assert state.attributes[ATTR_HUMIDITY] == 35
     assert state.attributes[ATTR_MIN_HUMIDITY] == 10
@@ -160,29 +155,6 @@ async def test_humidifier(hass, client, climate_adc_t3000, integration):
     assert state.attributes[ATTR_HUMIDITY] == 60
 
     client.async_send_command.reset_mock()
-
-    # Test operating state update from value updated event
-    event = Event(
-        type="value updated",
-        data={
-            "source": "node",
-            "event": "value updated",
-            "nodeId": 68,
-            "args": {
-                "commandClassName": "Humidity Control Operating State",
-                "commandClass": CommandClass.HUMIDITY_CONTROL_OPERATING_STATE,
-                "endpoint": 0,
-                "property": "state",
-                "propertyName": "state",
-                "newValue": int(HumidityControlOperatingState.HUMIDIFYING),
-                "prevValue": int(HumidityControlOperatingState.IDLE),
-            },
-        },
-    )
-    node.receive_event(event)
-
-    state = hass.states.get(HUMIDIFIER_ADC_T3000_ENTITY)
-    assert state.attributes[ATTR_OPERATING_STATE] == "Humidifying"
 
     client.async_send_command.reset_mock()
 
