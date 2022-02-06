@@ -107,12 +107,12 @@ def _migrate_old_unique_ids(hass: HomeAssistant, old_unique_id: str, key: str) -
     ent_reg = entity_registry.async_get(hass)
     _update_successful = False
 
-    new_unique_id = f"{old_unique_id}-{key}"
-
     entity_id = ent_reg.async_get_entity_id(Platform.SENSOR, DOMAIN, old_unique_id)
 
     if entity_id is None:
         return
+
+    new_unique_id = f"{old_unique_id}-{key}"
 
     try:
         ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
