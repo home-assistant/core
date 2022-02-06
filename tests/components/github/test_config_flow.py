@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiogithubapi import GitHubException
 
 from homeassistant import config_entries
-from homeassistant.components.github.config_flow import starred_repositories
+from homeassistant.components.github.config_flow import get_repositories
 from homeassistant.components.github.const import (
     CONF_ACCESS_TOKEN,
     CONF_REPOSITORIES,
@@ -161,11 +161,19 @@ async def test_starred_pagination_with_paginated_result(hass: HomeAssistant) -> 
                         last_page_number=2,
                         data=[MagicMock(full_name="home-assistant/core")],
                     )
-                )
+                ),
+                repos=AsyncMock(
+                    return_value=MagicMock(
+                        is_last_page=False,
+                        next_page_number=2,
+                        last_page_number=2,
+                        data=[MagicMock(full_name="awesome/reposiotry")],
+                    )
+                ),
             )
         ),
     ):
-        repos = await starred_repositories(hass, MOCK_ACCESS_TOKEN)
+        repos = await get_repositories(hass, MOCK_ACCESS_TOKEN)
 
     assert len(repos) == 2
     assert repos[-1] == DEFAULT_REPOSITORIES[0]
@@ -182,11 +190,17 @@ async def test_starred_pagination_with_no_starred(hass: HomeAssistant) -> None:
                         is_last_page=True,
                         data=[],
                     )
-                )
+                ),
+                repos=AsyncMock(
+                    return_value=MagicMock(
+                        is_last_page=True,
+                        data=[],
+                    )
+                ),
             )
         ),
     ):
-        repos = await starred_repositories(hass, MOCK_ACCESS_TOKEN)
+        repos = await get_repositories(hass, MOCK_ACCESS_TOKEN)
 
     assert len(repos) == 2
     assert repos == DEFAULT_REPOSITORIES
@@ -200,7 +214,7 @@ async def test_starred_pagination_with_exception(hass: HomeAssistant) -> None:
             user=MagicMock(starred=AsyncMock(side_effect=GitHubException("Error")))
         ),
     ):
-        repos = await starred_repositories(hass, MOCK_ACCESS_TOKEN)
+        repos = await get_repositories(hass, MOCK_ACCESS_TOKEN)
 
     assert len(repos) == 2
     assert repos == DEFAULT_REPOSITORIES
