@@ -19,7 +19,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     COORDINATOR,
@@ -30,6 +29,7 @@ from .const import (
     SCHEDULE_OFF,
     SCHEDULE_ON,
 )
+from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
 HVAC_MODES_HEAT_ONLY = [HVAC_MODE_HEAT, HVAC_MODE_AUTO]
@@ -88,7 +88,7 @@ class PwThermostat(PlugwiseEntity, ClimateEntity):
     def __init__(
         self,
         api: Smile,
-        coordinator: DataUpdateCoordinator,
+        coordinator: PlugwiseDataUpdateCoordinator,
         name: str,
         dev_id: str,
         loc_id: str,

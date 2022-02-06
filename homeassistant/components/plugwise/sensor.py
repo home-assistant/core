@@ -20,7 +20,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     COOL_ICON,
@@ -36,6 +35,7 @@ from .const import (
     SENSOR_MAP_UOM,
     UNIT_LUMEN,
 )
+from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
 ATTR_TEMPERATURE = [
@@ -303,7 +303,7 @@ class SmileSensor(PlugwiseEntity, SensorEntity):
     def __init__(
         self,
         api: Smile,
-        coordinator: DataUpdateCoordinator,
+        coordinator: PlugwiseDataUpdateCoordinator,
         name: str,
         dev_id: str,
         sensor: str,
@@ -329,7 +329,7 @@ class PwThermostatSensor(SmileSensor):
     def __init__(
         self,
         api: Smile,
-        coordinator: DataUpdateCoordinator,
+        coordinator: PlugwiseDataUpdateCoordinator,
         name: str,
         dev_id: str,
         sensor: str,
@@ -364,7 +364,7 @@ class PwAuxDeviceSensor(SmileSensor):
     def __init__(
         self,
         api: Smile,
-        coordinator: DataUpdateCoordinator,
+        coordinator: PlugwiseDataUpdateCoordinator,
         name: str,
         dev_id: str,
         sensor: str,
@@ -406,7 +406,7 @@ class PwPowerSensor(SmileSensor):
     def __init__(
         self,
         api: Smile,
-        coordinator: DataUpdateCoordinator,
+        coordinator: PlugwiseDataUpdateCoordinator,
         name: str,
         dev_id: str,
         sensor: str,
