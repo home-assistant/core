@@ -14,10 +14,10 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import PlugwiseDataUpdateCoordinator
+from .coordinator import PlugwiseData, PlugwiseDataUpdateCoordinator
 
 
-class PlugwiseEntity(CoordinatorEntity[bool]):
+class PlugwiseEntity(CoordinatorEntity[PlugwiseData]):
     """Represent a PlugWise Entity."""
 
     _model: str | None = None
