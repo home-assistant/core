@@ -7,7 +7,8 @@ import math
 
 import voluptuous as vol
 import yeelight
-from yeelight import Bulb, Flow, RGBTransition, SleepTransition, flows
+from yeelight import Flow, RGBTransition, SleepTransition, flows
+from yeelight.aio import AsyncBulb
 from yeelight.enums import BulbType, LightType, PowerMode, SceneClass
 from yeelight.main import BulbException
 
@@ -549,7 +550,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         return self._effect if self.device.is_color_flow_enabled else None
 
     @property
-    def _bulb(self) -> Bulb:
+    def _bulb(self) -> AsyncBulb:
         return self.device.bulb
 
     @property

@@ -153,7 +153,8 @@ def _mocked_bulb(cannot_connect=False):
     bulb.async_set_power_mode = AsyncMock()
     bulb.async_set_scene = AsyncMock()
     bulb.async_set_default = AsyncMock()
-    bulb.start_music = MagicMock()
+    bulb.async_start_music = AsyncMock()
+    bulb.async_stop_music = AsyncMock()
     return bulb
 
 
