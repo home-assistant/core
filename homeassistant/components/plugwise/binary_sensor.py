@@ -33,7 +33,7 @@ BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
     ),
     BinarySensorEntityDescription(
         key="slave_boiler_state",
-        name="Slave Boiler Stat",
+        name="Slave Boiler State",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
