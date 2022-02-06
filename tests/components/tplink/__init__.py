@@ -38,7 +38,7 @@ def _mocked_bulb() -> SmartBulb:
     bulb.device_id = MAC_ADDRESS
     bulb.valid_temperature_range.min = 4000
     bulb.valid_temperature_range.max = 9000
-    bulb.hw_info = {"sw_ver": "1.0.0"}
+    bulb.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
     bulb.turn_off = AsyncMock()
     bulb.turn_on = AsyncMock()
     bulb.set_brightness = AsyncMock()
@@ -65,7 +65,7 @@ def _mocked_dimmer() -> SmartDimmer:
     dimmer.device_id = MAC_ADDRESS
     dimmer.valid_temperature_range.min = 4000
     dimmer.valid_temperature_range.max = 9000
-    dimmer.hw_info = {"sw_ver": "1.0.0"}
+    dimmer.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
     dimmer.turn_off = AsyncMock()
     dimmer.turn_on = AsyncMock()
     dimmer.set_brightness = AsyncMock()
@@ -88,7 +88,7 @@ def _mocked_plug() -> SmartPlug:
     plug.is_strip = False
     plug.is_plug = True
     plug.device_id = MAC_ADDRESS
-    plug.hw_info = {"sw_ver": "1.0.0"}
+    plug.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
     plug.turn_off = AsyncMock()
     plug.turn_on = AsyncMock()
     plug.set_led = AsyncMock()
@@ -109,7 +109,7 @@ def _mocked_strip() -> SmartStrip:
     strip.is_strip = True
     strip.is_plug = True
     strip.device_id = MAC_ADDRESS
-    strip.hw_info = {"sw_ver": "1.0.0"}
+    strip.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
     strip.turn_off = AsyncMock()
     strip.turn_on = AsyncMock()
     strip.set_led = AsyncMock()
