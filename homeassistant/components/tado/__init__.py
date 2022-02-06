@@ -3,7 +3,6 @@ from datetime import timedelta
 import logging
 
 from PyTado.interface import Tado
-from PyTado.zone import TadoZone
 from requests import RequestException
 import requests.exceptions
 
@@ -17,7 +16,7 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import Throttle
 
-from .const import ( 
+from .const import (
     CONF_FALLBACK,
     CONST_OVERLAY_MANUAL,
     CONST_OVERLAY_TADO_MODE,
@@ -122,23 +121,26 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-    
+
+
 async def async_migrate_entry(hass, config_entry: ConfigEntry):
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s for %s", config_entry.version, DOMAIN)
-    
+
     if config_entry.version == 1:
         options = {**config_entry.options}
         if options[CONF_FALLBACK] not in CONST_OVERLAY_TADO_OPTIONS:
-            if options[CONF_FALLBACK]: # If was True set to next time block
+            if options[CONF_FALLBACK]:  # If was True set to next time block
                 options[CONF_FALLBACK] = CONST_OVERLAY_TADO_MODE
-            else: # Otherwise set to manual
+            else:  # Otherwise set to manual
                 options[CONF_FALLBACK] = CONST_OVERLAY_MANUAL
             config_entry.options = {**options}
 
         config_entry.version = 2
 
-    _LOGGER.info("Migration to version %s for %s successful", config_entry.version, DOMAIN)
+    _LOGGER.info(
+        "Migration to version %s for %s successful", config_entry.version, DOMAIN
+    )
 
     return True
 
@@ -235,10 +237,8 @@ class TadoConnector:
             _LOGGER.error("Unable to connect to Tado while updating zones")
             return
 
-        for zone in self.zones:
-            zone_id = zone["id"]
-            _LOGGER.debug("Updating zone %s", zone_id)
-            self.update_zone(zone_id)
+        for zone in zone_states:
+            self.update_zone(int(zone))
 
     def update_zone(self, zone_id):
         """Update the internal data from Tado."""

@@ -32,11 +32,14 @@ from .const import (
     CONST_MODE_OFF,
     CONST_MODE_SMART_SCHEDULE,
     CONST_OVERLAY_MANUAL,
-    CONST_OVERLAY_TADO_MODE,
     CONST_OVERLAY_TADO_DEFAULT,
+    CONST_OVERLAY_TADO_MODE,
+    CONST_OVERLAY_TADO_OPTIONS,
     CONST_OVERLAY_TIMER,
     DATA,
     DOMAIN,
+    HA_TERMINATION_DURATION,
+    HA_TERMINATION_TYPE,
     HA_TO_TADO_FAN_MODE_MAP,
     HA_TO_TADO_HVAC_MODE_MAP,
     ORDERED_KNOWN_TADO_MODES,
@@ -52,9 +55,6 @@ from .const import (
     TEMP_OFFSET,
     TYPE_AIR_CONDITIONING,
     TYPE_HEATING,
-    HA_TERMINATION_TYPE,
-    HA_TERMINATION_DURATION,
-    CONST_OVERLAY_TADO_OPTIONS,
 )
 from .entity import TadoZoneEntity
 
@@ -385,11 +385,14 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         # the device is switching states
         return self._tado_zone_data.target_temp or self._tado_zone_data.current_temp
 
-    def set_timer(self, temperature=None,  time_period=None, requested_overlay=None):
-        """Set the timer on the entity, and temperature if supported."""        
+    def set_timer(self, temperature=None, time_period=None, requested_overlay=None):
+        """Set the timer on the entity, and temperature if supported."""
 
         self._control_hvac(
-            hvac_mode=CONST_MODE_HEAT, target_temp=temperature, duration=time_period, overlay_mode=requested_overlay
+            hvac_mode=CONST_MODE_HEAT,
+            target_temp=temperature,
+            duration=time_period,
+            overlay_mode=requested_overlay,
         )
 
     def set_temp_offset(self, offset):
@@ -471,8 +474,12 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     def extra_state_attributes(self):
         """Return temperature offset."""
         state_attr = self._tado_zone_temp_offset
-        state_attr[HA_TERMINATION_TYPE] = self._tado_zone_data.default_overlay_termination_type
-        state_attr[HA_TERMINATION_DURATION] = self._tado_zone_data.default_overlay_termination_duration
+        state_attr[
+            HA_TERMINATION_TYPE
+        ] = self._tado_zone_data.default_overlay_termination_type
+        state_attr[
+            HA_TERMINATION_DURATION
+        ] = self._tado_zone_data.default_overlay_termination_duration
         return state_attr
 
     def set_swing_mode(self, swing_mode):
@@ -483,7 +490,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     def _async_update_zone_data(self):
         """Load tado data into zone."""
         self._tado_zone_data = self._tado.data["zone"][self.zone_id]
-        
+
         # Assign offset values to mapped attributes
         for offset_key, attr in TADO_TO_HA_OFFSET_MAP.items():
             if (
@@ -569,21 +576,32 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             )
             self._tado.reset_zone_overlay(self.zone_id)
             return
-        
+
         # If user gave duration then overlay mode needs to be timer
         if duration:
-            overlay_mode = CONST_OVERLAY_TIMER           
+            overlay_mode = CONST_OVERLAY_TIMER
         # If no duration or timer set to fallback setting
         if overlay_mode is None:
-            overlay_mode = self._tado.fallback if self._tado.fallback is not None else CONST_OVERLAY_TADO_MODE
+            overlay_mode = (
+                self._tado.fallback
+                if self._tado.fallback is not None
+                else CONST_OVERLAY_TADO_MODE
+            )
         # If default is Tado default then loop it up
-        if overlay_mode == CONST_OVERLAY_TADO_DEFAULT:    
-            overlay_mode = self._tado_zone_data.default_overlay_termination_type if self._tado_zone_data.default_overlay_termination_type is not None else CONST_OVERLAY_TADO_MODE                
+        if overlay_mode == CONST_OVERLAY_TADO_DEFAULT:
+            overlay_mode = (
+                self._tado_zone_data.default_overlay_termination_type
+                if self._tado_zone_data.default_overlay_termination_type is not None
+                else CONST_OVERLAY_TADO_MODE
+            )
         # If we ended up with a timer but no duration, set a default duration
         if overlay_mode == CONST_OVERLAY_TIMER and duration is None:
-            duration = self._tado_zone_data.default_overlay_termination_duration if self._tado_zone_data.default_overlay_termination_duration is not None else '3600'
+            duration = (
+                self._tado_zone_data.default_overlay_termination_duration
+                if self._tado_zone_data.default_overlay_termination_duration is not None
+                else "3600"
+            )
 
-            
         _LOGGER.debug(
             "Switching to %s for zone %s (%d) with temperature %s °C and duration %s using overlay %s",
             self._current_tado_hvac_mode,

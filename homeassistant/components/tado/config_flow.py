@@ -11,13 +11,26 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_FALLBACK, CONST_OVERLAY_TADO_MODE, CONST_OVERLAY_TADO_OPTIONS, DOMAIN, UNIQUE_ID
+from .const import (
+    CONF_FALLBACK,
+    CONST_OVERLAY_TADO_MODE,
+    CONST_OVERLAY_TADO_OPTIONS,
+    DOMAIN,
+    UNIQUE_ID,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str, vol.Optional(CONF_FALLBACK, default=CONST_OVERLAY_TADO_MODE): vol.In(CONST_OVERLAY_TADO_OPTIONS)}
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+        vol.Optional(CONF_FALLBACK, default=CONST_OVERLAY_TADO_MODE): vol.In(
+            CONST_OVERLAY_TADO_OPTIONS
+        ),
+    }
 )
+
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
