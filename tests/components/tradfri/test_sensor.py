@@ -72,12 +72,34 @@ async def test_air_quality_sensor(hass, mock_gateway, mock_api_factory):
         mock_fan(test_state={"fan_speed": 10, "air_quality": 42})
     )
     await setup_integration(hass)
+    from pprint import pprint
 
-    sensor_1 = hass.states.get("sensor.tradfri_fan_0")
+    pprint(hass.states._states)
+
+    sensor_1 = hass.states.get("sensor.tradfri_fan_0_air_quality")
     assert sensor_1 is not None
     assert sensor_1.state == "42"
     assert sensor_1.attributes["unit_of_measurement"] == "µg/m³"
     assert sensor_1.attributes["device_class"] == "aqi"
+
+
+async def test_filter_time_left_sensor(hass, mock_gateway, mock_api_factory):
+    """Test that a battery sensor is correctly added."""
+    mock_gateway.mock_devices.append(
+        mock_fan(
+            test_state={
+                "fan_speed": 10,
+                "air_quality": 42,
+                "filter_lifetime_remaining": 20,
+            }
+        )
+    )
+    await setup_integration(hass)
+
+    sensor_1 = hass.states.get("sensor.tradfri_fan_0_filter_time_left")
+    assert sensor_1 is not None
+    assert sensor_1.state == "20"
+    assert sensor_1.attributes["unit_of_measurement"] == "h"
 
 
 async def test_sensor_observed(hass, mock_gateway, mock_api_factory):

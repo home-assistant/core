@@ -12,14 +12,27 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, PERCENTAGE
+from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    PERCENTAGE,
+    TIME_HOURS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import slugify
 
 from .base_class import TradfriBaseEntity
-from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN, KEY_API
+from .const import (
+    ATTR_FILTER_LIFE_REMAINING,
+    CONF_GATEWAY_ID,
+    COORDINATOR,
+    COORDINATOR_LIST,
+    DOMAIN,
+    KEY_API,
+)
 from .coordinator import TradfriDeviceDataUpdateCoordinator
 
 
@@ -37,6 +50,8 @@ class TradfriSensorEntityDescription(
 ):
     """Class describing Tradfri sensor entities."""
 
+    unique_id_suffix: str | None = None
+
 
 def _get_air_quality(device: Device) -> int | None:
     """Fetch the air quality value."""
@@ -48,18 +63,41 @@ def _get_air_quality(device: Device) -> int | None:
     return cast(int, device.air_purifier_control.air_purifiers[0].air_quality)
 
 
-SENSOR_DESCRIPTION_AQI = TradfriSensorEntityDescription(
-    device_class=SensorDeviceClass.AQI,
-    native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    key=SensorDeviceClass.AQI,
-    value=_get_air_quality,
+def _get_filter_time_left(device: Device) -> int:
+    """Fetch the filter's remaining life (in hours)."""
+    return cast(
+        int, device.air_purifier_control.air_purifiers[0].filter_lifetime_remaining
+    )
+
+
+SENSOR_DESCRIPTIONS_BATTERY: tuple[TradfriSensorEntityDescription, ...] = (
+    TradfriSensorEntityDescription(
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        key=SensorDeviceClass.BATTERY,
+        value=lambda device: cast(int, device.device_info.battery_level),
+    ),
 )
 
-SENSOR_DESCRIPTION_BATTERY = TradfriSensorEntityDescription(
-    device_class=SensorDeviceClass.BATTERY,
-    native_unit_of_measurement=PERCENTAGE,
-    key=SensorDeviceClass.BATTERY,
-    value=lambda device: cast(int, device.device_info.battery_level),
+
+SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
+    TradfriSensorEntityDescription(
+        key=SensorDeviceClass.AQI,
+        name="air quality",
+        device_class=SensorDeviceClass.AQI,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        value=_get_air_quality,
+        unique_id_suffix="aqi",
+    ),
+    TradfriSensorEntityDescription(
+        key=ATTR_FILTER_LIFE_REMAINING,
+        name="filter time left",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=TIME_HOURS,
+        icon="mdi:clock-outline",
+        value=_get_filter_time_left,
+        unique_id_suffix=slugify(ATTR_FILTER_LIFE_REMAINING),
+    ),
 )
 
 
@@ -76,18 +114,19 @@ async def async_setup_entry(
     entities: list[TradfriSensor] = []
 
     for device_coordinator in coordinator_data[COORDINATOR_LIST]:
-        description = None
         if (
             not device_coordinator.device.has_light_control
             and not device_coordinator.device.has_socket_control
             and not device_coordinator.device.has_signal_repeater_control
             and not device_coordinator.device.has_air_purifier_control
         ):
-            description = SENSOR_DESCRIPTION_BATTERY
+            descriptions = SENSOR_DESCRIPTIONS_BATTERY
         elif device_coordinator.device.has_air_purifier_control:
-            description = SENSOR_DESCRIPTION_AQI
+            descriptions = SENSOR_DESCRIPTIONS_FAN
+        else:
+            continue
 
-        if description:
+        for description in descriptions:
             entities.append(
                 TradfriSensor(
                     device_coordinator,
@@ -120,6 +159,14 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
         )
 
         self.entity_description = description
+
+        if description.unique_id_suffix:
+            self._attr_unique_id = (
+                f"{self._attr_unique_id}_{description.unique_id_suffix}"
+            )
+
+        if description.name:
+            self._attr_name = f"{self._attr_name}: {description.name}"
 
         self._refresh()  # Set initial state
 
