@@ -14,6 +14,7 @@ TO_REDACT = {
     # Entry fields
     "unique_id",  # based on mac address
     # Device identifiers
+    "alias",
     "mac",
     "mic_mac",
     "host",
@@ -38,7 +39,6 @@ async def async_get_config_entry_diagnostics(
     device = coordinator.device
 
     data = {}
-    data["entry"] = entry.as_dict()
     data[
         "device_last_response"
     ] = device._last_update  # pylint: disable=protected-access
