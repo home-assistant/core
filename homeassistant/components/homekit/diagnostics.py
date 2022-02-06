@@ -1,10 +1,12 @@
 """Diagnostics support for HomeKit."""
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from pyhap.accessory_driver import AccessoryDriver
 from pyhap.state import State
+from pyhap.util import to_hap_json
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -26,7 +28,7 @@ async def async_get_config_entry_diagnostics(
             "version": entry.version,
             "data": entry.data,
         },
-        "accessories": homekit.driver.get_accessories(),
+        "accessories": json.loads(to_hap_json(homekit.driver.get_accessories())),
         "paired_clients": state.paired_clients,
         "client_properties": state.client_properties,
         "config_version": state.config_version,
