@@ -29,7 +29,7 @@ async def async_setup_entry(
     for device_id, device_properties in coordinator.data.devices.items():
         if (
             "switches" not in device_properties
-            and "relay" in device_properties["switches"]
+            or "relay" not in device_properties["switches"]
         ):
             continue
 
