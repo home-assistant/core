@@ -211,7 +211,11 @@ class Light(HomeAccessory):
             events.append(f"set color at {hue_sat}")
             params[ATTR_HS_COLOR] = hue_sat
 
-        if brightness_pct:
+        if (
+            brightness_pct
+            and ATTR_RGBWW_COLOR not in params
+            and ATTR_RGBW_COLOR not in params
+        ):
             params[ATTR_BRIGHTNESS_PCT] = brightness_pct
 
         _LOGGER.debug(
