@@ -35,7 +35,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.color import (
-    color_RGB_to_hs,
     color_temperature_mired_to_kelvin,
     color_temperature_to_hs,
     color_temperature_to_rgbww,
@@ -263,14 +262,6 @@ class Light(HomeAccessory):
                 )
             elif color_mode == COLOR_MODE_WHITE:
                 hue, saturation = 0, 0
-            #            elif color_mode == COLOR_MODE_RGBW and (
-            #                rgbw := attributes.get(ATTR_RGBW_COLOR)
-            #            ):
-            #                hue, saturation = color_RGB_to_hs(*rgbw[:3])
-            #            elif color_mode == COLOR_MODE_RGBWW and (
-            #                rgbww := attributes.get(ATTR_RGBWW_COLOR)
-            #            ):
-            #                hue, saturation = color_RGB_to_hs(*rgbww[:3])
             else:
                 hue, saturation = attributes.get(ATTR_HS_COLOR, (None, None))
             if isinstance(hue, (int, float)) and isinstance(saturation, (int, float)):
