@@ -26,24 +26,21 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
 
     entities: list[PlugwiseSwitchEntity] = []
-    switch_classes = ["plug", "switch_group"]
-
     for device_id, device_properties in coordinator.data.devices.items():
-        if "switches" not in device_properties:
+        if (
+            "switches" not in device_properties
+            and "relay" in device_properties["switches"]
+        ):
             continue
 
-        if any(
-            switch_class in device_properties["types"]
-            for switch_class in switch_classes
-        ):
-            entities.append(
-                PlugwiseSwitchEntity(
-                    api,
-                    coordinator,
-                    device_properties["name"],
-                    device_id,
-                )
+        entities.append(
+            PlugwiseSwitchEntity(
+                api,
+                coordinator,
+                device_properties["name"],
+                device_id,
             )
+        )
 
     async_add_entities(entities, True)
 
