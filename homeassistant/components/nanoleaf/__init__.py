@@ -58,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def update_light_state_callback(event: StateEvent | EffectsEvent) -> None:
         """Receive state and effect event."""
         async_dispatcher_send(hass, f"{DOMAIN}_{nanoleaf.serial_no}_update_light")
-        async_dispatcher_send(hass, f"{DOMAIN}_{nanoleaf.serial_no}_set_available")
+        coordinator.async_set_updated_data(None)
 
     event_listener = asyncio.create_task(
         nanoleaf.listen_events(
