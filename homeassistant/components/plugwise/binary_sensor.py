@@ -5,7 +5,6 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     COORDINATOR,
@@ -18,6 +17,7 @@ from .const import (
     NO_NOTIFICATION_ICON,
     NOTIFICATION_ICON,
 )
+from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
 BINARY_SENSOR_MAP = {
@@ -34,9 +34,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Smile binary_sensors from a config entry."""
     api: Smile = hass.data[DOMAIN][config_entry.entry_id]["api"]
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id][
-        COORDINATOR
-    ]
+    coordinator: PlugwiseDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ][COORDINATOR]
 
     entities: list[BinarySensorEntity] = []
     is_thermostat = api.single_master_thermostat()
@@ -80,7 +80,7 @@ class SmileBinarySensor(PlugwiseEntity, BinarySensorEntity):
     def __init__(
         self,
         api: Smile,
-        coordinator: DataUpdateCoordinator,
+        coordinator: PlugwiseDataUpdateCoordinator,
         name: str,
         dev_id: str,
         binary_sensor: str,
@@ -137,7 +137,7 @@ class PwNotifySensor(SmileBinarySensor):
     def __init__(
         self,
         api: Smile,
-        coordinator: DataUpdateCoordinator,
+        coordinator: PlugwiseDataUpdateCoordinator,
         name: str,
         dev_id: str,
         binary_sensor: str,
