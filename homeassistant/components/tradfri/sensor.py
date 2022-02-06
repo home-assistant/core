@@ -22,7 +22,7 @@ from homeassistant.const import (
     TIME_HOURS,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -101,6 +101,7 @@ SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
 )
 
 
+@callback
 def _migrate_old_unique_ids(hass: HomeAssistant, old_unique_id: str, key: str) -> None:
     """Migrate unique IDs to the new format."""
     ent_reg = entity_registry.async_get(hass)
@@ -116,7 +117,7 @@ def _migrate_old_unique_ids(hass: HomeAssistant, old_unique_id: str, key: str) -
                 new_unique_id,
             )
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "Migrating unique_id from [%s] to [%s]",
             old_unique_id,
             new_unique_id,
