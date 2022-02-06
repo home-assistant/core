@@ -18,11 +18,12 @@ USER_ID = "12345"
 
 
 @pytest.fixture(name="api")
-def api_fixture(system_v3, websocket):
+def api_fixture(data_subscription, system_v3, websocket):
     """Define a fixture for a simplisafe-python API object."""
     return Mock(
         async_get_systems=AsyncMock(return_value={SYSTEM_ID: system_v3}),
         refresh_token=REFRESH_TOKEN,
+        subscription_data=data_subscription,
         user_id=USER_ID,
         websocket=websocket,
     )
