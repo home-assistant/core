@@ -7,6 +7,7 @@ from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
+    ATTR_OPERATING_STATE,
     DOMAIN,
     MODE_AWAY,
     MODE_ECO,
@@ -113,6 +114,14 @@ async def test_set_hold_mode_eco(hass):
 
     state = hass.states.get(ENTITY_HYGROSTAT)
     assert state.attributes.get(ATTR_MODE) == MODE_ECO
+
+
+async def test_operating_state(hass):
+    """Test operating state attribute."""
+    state = hass.states.get(ENTITY_HYGROSTAT)
+    assert state.attributes.get(ATTR_OPERATING_STATE) == "Idle"
+    state = hass.states.get(ENTITY_HUMIDIFIER)
+    assert state.attributes.get(ATTR_OPERATING_STATE) is None
 
 
 async def test_turn_on(hass):

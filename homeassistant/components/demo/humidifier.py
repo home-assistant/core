@@ -2,7 +2,10 @@
 from __future__ import annotations
 
 from homeassistant.components.humidifier import HumidifierDeviceClass, HumidifierEntity
-from homeassistant.components.humidifier.const import SUPPORT_MODES
+from homeassistant.components.humidifier.const import (
+    SUPPORT_MODES,
+    SUPPORT_OPERATING_STATE,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -36,6 +39,7 @@ async def async_setup_platform(
                 name="Hygrostat",
                 mode="home",
                 available_modes=["home", "eco"],
+                operating_state="Idle",
                 target_humidity=50,
             ),
         ]
@@ -61,6 +65,7 @@ class DemoHumidifier(HumidifierEntity):
         name: str,
         mode: str | None,
         target_humidity: int,
+        operating_state: str | None = None,
         available_modes: list[str] | None = None,
         is_on: bool = True,
         device_class: HumidifierDeviceClass | None = None,
@@ -73,6 +78,9 @@ class DemoHumidifier(HumidifierEntity):
             self._attr_supported_features = (
                 self._attr_supported_features | SUPPORT_MODES
             )
+        if operating_state is not None:
+            self._attr_supported_features |= SUPPORT_OPERATING_STATE
+            self._attr_operating_state = operating_state
         self._attr_target_humidity = target_humidity
         self._attr_mode = mode
         self._attr_available_modes = available_modes
