@@ -72,9 +72,6 @@ async def test_air_quality_sensor(hass, mock_gateway, mock_api_factory):
         mock_fan(test_state={"fan_speed": 10, "air_quality": 42})
     )
     await setup_integration(hass)
-    from pprint import pprint
-
-    pprint(hass.states._states)
 
     sensor_1 = hass.states.get("sensor.tradfri_fan_0_air_quality")
     assert sensor_1 is not None
