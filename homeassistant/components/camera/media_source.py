@@ -18,7 +18,6 @@ from homeassistant.components.media_source.models import (
 from homeassistant.components.stream.const import FORMAT_CONTENT_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.network import get_url
 
 from . import Camera, _async_stream_endpoint_url
 from .const import DOMAIN, STREAM_TYPE_HLS
@@ -49,7 +48,7 @@ class CamereaMediaSource(MediaSource):
 
         fmt = "hls"
         url = await _async_stream_endpoint_url(self.hass, camera, fmt)
-        return PlayMedia(f"{get_url(self.hass)}{url}", FORMAT_CONTENT_TYPE[fmt])
+        return PlayMedia(url, FORMAT_CONTENT_TYPE[fmt])
 
     @callback
     @classmethod
