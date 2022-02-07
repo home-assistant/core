@@ -480,6 +480,12 @@ async def test_get_url(hass: HomeAssistant):
         get_url(hass, prefer_external=True, allow_external=False)
         == "http://example.local"
     )
+    # Prefer external defaults to True if use_ssl=True
+    hass.config.api = Mock(use_ssl=True)
+    assert get_url(hass) == "https://example.com"
+    hass.config.api = Mock(use_ssl=False)
+    assert get_url(hass) == "http://example.local"
+    hass.config.api = None
 
     with pytest.raises(NoURLAvailableError):
         get_url(hass, allow_external=False, require_ssl=True)

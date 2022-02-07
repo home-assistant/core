@@ -42,12 +42,15 @@ def get_url(
     allow_external: bool = True,
     allow_cloud: bool = True,
     allow_ip: bool = True,
-    prefer_external: bool = False,
+    prefer_external: bool | None = None,
     prefer_cloud: bool = False,
 ) -> str:
     """Get a URL to this instance."""
     if require_current_request and http.current_request.get() is None:
         raise NoURLAvailableError
+
+    if prefer_external is None:
+        prefer_external = hass.config.api is not None and hass.config.api.use_ssl
 
     order = [TYPE_URL_INTERNAL, TYPE_URL_EXTERNAL]
     if prefer_external:
