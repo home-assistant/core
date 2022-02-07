@@ -41,12 +41,12 @@ VERSION_SOURCE_VERSIONS: Final = "Home Assistant Versions"
 
 DEFAULT_BETA: Final = False
 DEFAULT_BOARD: Final = "OVA"
-DEFAULT_CHANNEL: Final[HaVersionChannel] = HaVersionChannel.STABLE
+DEFAULT_CHANNEL: Final = "stable"
 DEFAULT_IMAGE: Final = "default"
 DEFAULT_NAME_CURRENT: Final = "Current Version"
 DEFAULT_NAME_LATEST: Final = "Latest Version"
 DEFAULT_NAME: Final = ""
-DEFAULT_SOURCE: Final[HaVersionSource] = HaVersionSource.LOCAL
+DEFAULT_SOURCE: Final = "local"
 DEFAULT_CONFIGURATION: Final[dict[str, Any]] = {
     CONF_NAME: DEFAULT_NAME,
     CONF_CHANNEL: DEFAULT_CHANNEL,
@@ -81,22 +81,22 @@ BOARD_MAP: Final[dict[str, str]] = {
 
 VALID_BOARDS: Final[list[str]] = list(BOARD_MAP)
 
-VERSION_SOURCE_MAP: Final[dict[str, HaVersionSource]] = {
-    VERSION_SOURCE_LOCAL: HaVersionSource.LOCAL,
-    VERSION_SOURCE_VERSIONS: HaVersionSource.SUPERVISOR,
-    VERSION_SOURCE_HAIO: HaVersionSource.HAIO,
-    VERSION_SOURCE_DOCKER_HUB: HaVersionSource.CONTAINER,
-    VERSION_SOURCE_PYPI: HaVersionSource.PYPI,
+VERSION_SOURCE_MAP: Final[dict[str, str]] = {
+    VERSION_SOURCE_LOCAL: "local",
+    VERSION_SOURCE_VERSIONS: "supervisor",
+    VERSION_SOURCE_HAIO: "haio",
+    VERSION_SOURCE_DOCKER_HUB: "container",
+    VERSION_SOURCE_PYPI: "pypi",
 }
 
-VERSION_SOURCE_MAP_INVERTED: Final[dict[HaVersionSource, str]] = {
+VERSION_SOURCE_MAP_INVERTED: Final[dict[str, str]] = {
     value: key for key, value in VERSION_SOURCE_MAP.items()
 }
 
 
 VALID_SOURCES: Final[list[str]] = HA_VERSION_SOURCES + [
-    SOURCE_HASSIO,  # Kept to not break existing configurations
-    SOURCE_DOKCER,  # Kept to not break existing configurations
+    "hassio",  # Kept to not break existing configurations
+    "docker",  # Kept to not break existing configurations
 ]
 
 VALID_IMAGES: Final = [
