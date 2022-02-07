@@ -4,6 +4,8 @@ import json
 import logging
 import re
 
+import voluptuous as vol
+
 from homeassistant.components.binary_sensor import DEVICE_CLASS_PROBLEM
 from homeassistant.components.mqtt import CONF_QOS, CONF_STATE_TOPIC, subscription
 from homeassistant.components.mqtt.binary_sensor import (
@@ -70,7 +72,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIGS = ["kube", "flx", "sensor"]
 
-DATA_TYPE_MAP = {
+DATA_TYPE_MAP_FLM03 = {
     "electricity": {
         "gauge": {
             "pf": ["gauge"],
@@ -102,7 +104,22 @@ DATA_TYPE_MAP = {
     "vibration": {"counter": ["gauge"]},
 }
 
-UNIT_OF_MEASUREMENT_MAP = {
+DATA_TYPE_MAP_FLM02 = {
+    "electricity": {"counter": ["gauge", "counter"]},
+    "gas": {"counter": ["gauge", "counter"]},
+    "water": {"counter": ["gauge", "counter"]},
+    "temperature": {"gauge": ["gauge"]},
+    "pressure": {"gauge": ["gauge"]},
+    "battery": {"gauge": ["gauge"]},
+    "light": {"gauge": ["gauge"]},
+    "humidity": {"gauge": ["gauge"]},
+    "error": {"gauge": ["gauge"]},
+    "proximity": {"counter": ["gauge"]},
+    "movement": {"counter": ["gauge"]},
+    "vibration": {"counter": ["gauge"]},
+}
+
+UNIT_OF_MEASUREMENT_MAP_FLM03 = {
     "electricity": {
         "gauge": {
             "q1": "VAR",
@@ -132,7 +149,18 @@ UNIT_OF_MEASUREMENT_MAP = {
     "gas": VOLUME_CUBIC_METERS,
 }
 
-DEVICE_CLASS_MAP = {
+UNIT_OF_MEASUREMENT_MAP_FLM02 = {
+    "electricity": {"gauge": POWER_WATT, "counter": ENERGY_WATT_HOUR},
+    "temperature": TEMP_CELSIUS,
+    "pressure": PRESSURE_HPA,
+    "battery": PERCENTAGE,
+    "water": VOLUME_LITERS,
+    "light": LIGHT_LUX,
+    "humidity": PERCENTAGE,
+    "gas": VOLUME_CUBIC_METERS,
+}
+
+DEVICE_CLASS_MAP_FLM03 = {
     "electricity": {
         "gauge": {
             "pplus": DEVICE_CLASS_POWER,
@@ -141,6 +169,20 @@ DEVICE_CLASS_MAP = {
             "irms": DEVICE_CLASS_CURRENT,
         },
         "counter": {"pplus": DEVICE_CLASS_ENERGY, "pminus": DEVICE_CLASS_ENERGY},
+    },
+    "temperature": DEVICE_CLASS_TEMPERATURE,
+    "pressure": DEVICE_CLASS_PRESSURE,
+    "battery": DEVICE_CLASS_BATTERY,
+    "light": DEVICE_CLASS_ILLUMINANCE,
+    "humidity": DEVICE_CLASS_HUMIDITY,
+    "gas": DEVICE_CLASS_GAS,
+    "error": DEVICE_CLASS_PROBLEM,
+}
+
+DEVICE_CLASS_MAP_FLM02 = {
+    "electricity": {
+        "gauge": DEVICE_CLASS_POWER,
+        "counter": DEVICE_CLASS_ENERGY,
     },
     "temperature": DEVICE_CLASS_TEMPERATURE,
     "pressure": DEVICE_CLASS_PRESSURE,
@@ -205,7 +247,9 @@ def _get_sensor_name(sensor, entry_data):
             name = entry_data["kube"][str(sensor["kid"])]["name"]
     else:
         if "port" in sensor:
-            if (
+            if "function" in sensor:
+                name = sensor["function"]
+            elif (
                 "flx" in entry_data
                 and "name" in entry_data["flx"][str(sensor["port"][0])]
                 and entry_data["flx"][str(sensor["port"][0])]["name"]
@@ -215,8 +259,11 @@ def _get_sensor_name(sensor, entry_data):
     if "type" in sensor:
         name = f'{name} {sensor["type"]}'
         if "data_type" in sensor:
-            if sensor["type"] == "electricity" and "subtype" in sensor:
-                name = f'{name} {sensor["subtype"]} {sensor["data_type"]}'
+            if sensor["type"] == "electricity":
+                if "subtype" in sensor:
+                    name = f'{name} {sensor["subtype"]} {sensor["data_type"]}'
+                else:
+                    name = f'{name} {sensor["data_type"]}'
             elif sensor["type"] == "water":
                 name = f'{name} {sensor["data_type"]}'
             elif sensor["type"] == "gas":
@@ -257,13 +304,19 @@ def _get_binary_sensor_entities(entry_data, device_info):
             sensor["data_type"],
         )
         sensorconfig[CONF_UNIQUE_ID] = "_".join(discovery_hash)
-        device_class = _get_sensor_detail(sensor, DEVICE_CLASS_MAP)
+        if "subtype" in sensor:
+            device_class = _get_sensor_detail(sensor, DEVICE_CLASS_MAP_FLM03)
+        else:
+            device_class = _get_sensor_detail(sensor, DEVICE_CLASS_MAP_FLM02)
         if device_class:
             sensorconfig[CONF_DEVICE_CLASS] = device_class
         icon = _get_sensor_detail(sensor, ICON_MAP)
         if icon:
             sensorconfig[CONF_ICON] = icon
-        uom = _get_sensor_detail(sensor, UNIT_OF_MEASUREMENT_MAP)
+        if "subtype" in sensor:
+            uom = _get_sensor_detail(sensor, UNIT_OF_MEASUREMENT_MAP_FLM03)
+        else:
+            uom = _get_sensor_detail(sensor, UNIT_OF_MEASUREMENT_MAP_FLM02)
         if uom:
             sensorconfig[CONF_UNIT_OF_MEASUREMENT] = uom
         if device_class and (device_class == DEVICE_CLASS_PROBLEM):
@@ -286,7 +339,13 @@ def _get_binary_sensor_entities(entry_data, device_info):
                         OFF
                     {% endif %}"""
 
-        entities.append(MQTT_BINARY_SENSOR_PLATFORM_SCHEMA(sensorconfig))
+        try:
+            entities.append(MQTT_BINARY_SENSOR_PLATFORM_SCHEMA(sensorconfig))
+        except vol.Invalid:
+            _LOGGER.error(
+                f'Could not convert config to to MQTT binary sensor config for id  {sensor["id"]}'
+            )
+            _LOGGER.debug(sensorconfig)
 
     return entities
 
@@ -307,13 +366,19 @@ def _get_sensor_config(sensor, entry_data, device_info):
         sensor["data_type"],
     )
     sensorconfig[CONF_UNIQUE_ID] = "_".join(discovery_hash)
-    device_class = _get_sensor_detail(sensor, DEVICE_CLASS_MAP)
+    if "subtype" in sensor:
+        device_class = _get_sensor_detail(sensor, DEVICE_CLASS_MAP_FLM03)
+    else:
+        device_class = _get_sensor_detail(sensor, DEVICE_CLASS_MAP_FLM02)
     if device_class:
         sensorconfig[CONF_DEVICE_CLASS] = device_class
     icon = _get_sensor_detail(sensor, ICON_MAP)
     if icon:
         sensorconfig[CONF_ICON] = icon
-    uom = _get_sensor_detail(sensor, UNIT_OF_MEASUREMENT_MAP)
+    if "subtype" in sensor:
+        uom = _get_sensor_detail(sensor, UNIT_OF_MEASUREMENT_MAP_FLM03)
+    else:
+        uom = _get_sensor_detail(sensor, UNIT_OF_MEASUREMENT_MAP_FLM02)
     if uom:
         sensorconfig[CONF_UNIT_OF_MEASUREMENT] = uom
 
@@ -341,11 +406,22 @@ def _get_sensor_entities(entry_data, device_info):
         if _is_binary_sensor(sensor):
             continue
 
-        for dt in _get_sensor_detail(sensor, DATA_TYPE_MAP):
+        if "subtype" in sensor:
+            dts = _get_sensor_detail(sensor, DATA_TYPE_MAP_FLM03)
+        else:
+            dts = _get_sensor_detail(sensor, DATA_TYPE_MAP_FLM02)
+
+        for dt in dts:
             s = sensor.copy()
             s["data_type"] = dt
             config = _get_sensor_config(s, entry_data, device_info)
-            entities.append(MQTT_SENSOR_PLATFORM_SCHEMA(config))
+            try:
+                entities.append(MQTT_SENSOR_PLATFORM_SCHEMA(config))
+            except vol.Invalid:
+                _LOGGER.error(
+                    f'Could not convert config to to MQTT sensor config for id  {s["id"]}'
+                )
+                _LOGGER.debug(config)
 
     return entities
 
