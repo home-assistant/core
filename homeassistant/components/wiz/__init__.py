@@ -81,6 +81,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
         ),
     )
+
+    await bulb.start_push(lambda _: coordinator.async_set_updated_data(None))
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = WizData(
@@ -93,5 +95,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
+        data: WizData = hass.data[DOMAIN].pop(entry.entry_id)
+        await data.bulb.async_close()
     return unload_ok
