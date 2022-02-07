@@ -50,7 +50,7 @@ types-ujson==0.1.1
 
 # Add additional requirements which should be
 # synced with requirements_test_all.txt below.
-# These should only include once that are necessary
+# These should only include ones that are necessary
 # to run any test (eg. required for 'tests/conftest.py').
 # -- Start version sync --
 sqlalchemy==1.4.27
