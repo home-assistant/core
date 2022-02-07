@@ -1,4 +1,5 @@
 """The tests for the webhook automation trigger."""
+from ipaddress import ip_address
 from unittest.mock import patch
 
 import pytest
@@ -94,6 +95,64 @@ async def test_webhook_post(
 
     assert len(events) == 1
     assert events[0].data["hello"] == "yo world"
+
+    # Request from remote IP
+    with patch(
+        "homeassistant.components.webhook.ip_address",
+        return_value=ip_address("123.123.123.123"),
+    ):
+        await client.post("/api/webhook/post_webhook", data={"hello": "world"})
+    # No hook received
+    await hass.async_block_till_done()
+    assert len(events) == 1
+
+
+async def test_webhook_allow_methods_internet(hass, hass_client_no_auth):
+    """Test the webhook obeys allow_methods and allow_internet options."""
+    events = []
+
+    @callback
+    def store_event(event):
+        """Helepr to store events."""
+        events.append(event)
+
+    hass.bus.async_listen("test_success", store_event)
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "webhook",
+                    "webhook_id": "post_webhook",
+                    "allow_methods": "PUT",
+                    "allow_internet": True,
+                },
+                "action": {
+                    "event": "test_success",
+                    "event_data_template": {"hello": "yo {{ trigger.data.hello }}"},
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    client = await hass_client_no_auth()
+
+    await client.post("/api/webhook/post_webhook", data={"hello": "world"})
+    await hass.async_block_till_done()
+
+    assert len(events) == 0
+
+    # Request from remote IP
+    with patch(
+        "homeassistant.components.webhook.ip_address",
+        return_value=ip_address("123.123.123.123"),
+    ):
+        await client.put("/api/webhook/post_webhook", data={"hello": "world"})
+    await hass.async_block_till_done()
+    assert len(events) == 1
 
 
 async def test_webhook_query(

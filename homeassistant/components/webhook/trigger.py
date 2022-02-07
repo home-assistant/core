@@ -12,14 +12,21 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, async_register, async_unregister
+from . import ALLOWED_METHODS, DEFAULT_METHODS, DOMAIN, async_register, async_unregister
 
 DEPENDENCIES = ("webhook",)
+
+CONF_ALLOW_INTERNET = "allow_internet"
+CONF_ALLOW_METHODS = "allow_methods"
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "webhook",
         vol.Required(CONF_WEBHOOK_ID): cv.string,
+        vol.Optional(CONF_ALLOW_INTERNET): bool,
+        vol.Optional(CONF_ALLOW_METHODS): vol.All(
+            cv.ensure_list, [vol.In(ALLOWED_METHODS)], vol.Unique()
+        ),
     }
 )
 
@@ -62,6 +69,8 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Trigger based on incoming webhooks."""
     webhook_id: str = config[CONF_WEBHOOK_ID]
+    local_only = not config.get(CONF_ALLOW_INTERNET, False)
+    allowed_methods = config.get(CONF_ALLOW_METHODS, DEFAULT_METHODS)
     job = HassJob(action)
 
     triggers: dict[str, list[TriggerInstance]] = hass.data.setdefault(
@@ -75,6 +84,8 @@ async def async_attach_trigger(
             trigger_info["name"],
             webhook_id,
             _handle_webhook,
+            local_only=local_only,
+            allowed_methods=allowed_methods,
         )
         triggers[webhook_id] = []
 

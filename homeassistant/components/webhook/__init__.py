@@ -1,7 +1,7 @@
 """Webhooks for Home Assistant."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Iterable
 from http import HTTPStatus
 from ipaddress import ip_address
 import logging
@@ -9,6 +9,7 @@ import secrets
 from typing import TYPE_CHECKING, Any
 
 from aiohttp import StreamReader
+from aiohttp.hdrs import METH_GET, METH_HEAD, METH_POST, METH_PUT
 from aiohttp.web import Request, Response
 import voluptuous as vol
 
@@ -25,6 +26,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "webhook"
 
+ALLOWED_METHODS = (METH_GET, METH_HEAD, METH_POST, METH_PUT)
+DEFAULT_METHODS = (METH_POST, METH_PUT)
 URL_WEBHOOK_PATH = "/api/webhook/{webhook_id}"
 
 
@@ -37,7 +40,8 @@ def async_register(
     webhook_id: str,
     handler: Callable[[HomeAssistant, str, Request], Awaitable[Response | None]],
     *,
-    local_only=False,
+    local_only: bool = False,
+    allowed_methods: Iterable[str] | None = None,
 ) -> None:
     """Register a webhook."""
     handlers = hass.data.setdefault(DOMAIN, {})
@@ -45,11 +49,21 @@ def async_register(
     if webhook_id in handlers:
         raise ValueError("Handler is already defined!")
 
+    if allowed_methods is None:
+        allowed_methods = DEFAULT_METHODS
+    allowed_methods = frozenset(method.upper() for method in allowed_methods)
+
+    if not allowed_methods.issubset(ALLOWED_METHODS):
+        raise ValueError(
+            f"Unexpected method: {allowed_methods.difference(ALLOWED_METHODS)}"
+        )
+
     handlers[webhook_id] = {
         "domain": domain,
         "name": name,
         "handler": handler,
         "local_only": local_only,
+        "allowed_methods": allowed_methods,
     }
 
 
@@ -90,16 +104,18 @@ async def async_handle_webhook(
     """Handle a webhook."""
     handlers: dict[str, dict[str, Any]] = hass.data.setdefault(DOMAIN, {})
 
+    content_stream: StreamReader | MockStreamReader
+    if isinstance(request, MockRequest):
+        received_from = request.mock_source
+        content_stream = request.content
+        method_name = request.method
+    else:
+        received_from = request.remote
+        content_stream = request.content
+        method_name = request.method
+
     # Always respond successfully to not give away if a hook exists or not.
     if (webhook := handlers.get(webhook_id)) is None:
-        content_stream: StreamReader | MockStreamReader
-        if isinstance(request, MockRequest):
-            received_from = request.mock_source
-            content_stream = request.content
-        else:
-            received_from = request.remote
-            content_stream = request.content
-
         _LOGGER.info(
             "Received message for unregistered webhook %s from %s",
             webhook_id,
@@ -111,7 +127,17 @@ async def async_handle_webhook(
         _LOGGER.debug("%s", content)
         return Response(status=HTTPStatus.OK)
 
-    if webhook["local_only"]:
+    if method_name not in webhook["allowed_methods"]:
+        _LOGGER.warning(
+            "Webhook %s only supports %s methods but %s was received from %s",
+            webhook_id,
+            ",".join(webhook["allowed_methods"]),
+            method_name,
+            received_from,
+        )
+        return Response(status=HTTPStatus.OK)
+
+    if webhook["local_only"] and not isinstance(request, MockRequest):
         if TYPE_CHECKING:
             assert isinstance(request, Request)
             assert request.remote is not None
@@ -157,9 +183,10 @@ class WebhookView(HomeAssistantView):
         hass = request.app["hass"]
         return await async_handle_webhook(hass, webhook_id, request)
 
-    head = _handle
-    post = _handle
-    put = _handle
+
+for method in ALLOWED_METHODS:
+    # pylint: disable=protected-access
+    setattr(WebhookView, method.lower(), WebhookView._handle)
 
 
 @websocket_api.websocket_command(
