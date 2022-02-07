@@ -330,7 +330,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
 
         supported = SUPPORT_WEBOSTV
 
-        if self._client.sound_output in (None, "external_arc", "external_speaker"):
+        if self._client.sound_output in ("external_arc", "external_speaker"):
             supported = supported | SUPPORT_WEBOSTV_VOLUME
         elif self._client.sound_output != "lineout":
             supported = supported | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
