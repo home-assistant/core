@@ -5,9 +5,9 @@ from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 import logging
 from typing import Any, TypeVar
-from typing_extensions import Concatenate, ParamSpec
 
 from rokuecp import RokuConnectionError, RokuError
+from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
