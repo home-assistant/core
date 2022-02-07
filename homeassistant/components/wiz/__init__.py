@@ -82,7 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
     )
 
-    bulb.set_push_callback(lambda _: coordinator.async_set_updated_data(None))
+    await bulb.start_push(lambda _: coordinator.async_set_updated_data(None))
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = WizData(
