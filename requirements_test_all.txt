@@ -239,9 +239,6 @@ ambiclimate==0.2.1
 # homeassistant.components.androidtv
 androidtv[async]==0.0.63
 
-# homeassistant.components.apns
-apns2==0.3.0
-
 # homeassistant.components.apprise
 apprise==0.9.7
 
