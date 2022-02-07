@@ -201,7 +201,7 @@ class NetgearRouter:
         async with self._api_lock:
             return await self.hass.async_add_executor_job(self._api.get_traffic_meter)
 
-    async def async_allow_block_device(self, mac, allow_block) -> None:
+    async def async_allow_block_device(self, mac: str, allow_block: str) -> None:
         """Allow or block a device connected to the router."""
         async with self._api_lock:
             await self.hass.async_add_executor_job(
