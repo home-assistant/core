@@ -29,7 +29,7 @@ BUTTONS = [
         name="Reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
-        action=lambda router: router.async_reboot
+        action=lambda router: router.async_reboot,
     )
 ]
 
