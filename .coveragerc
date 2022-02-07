@@ -759,6 +759,7 @@ omit =
     homeassistant/components/nuki/const.py
     homeassistant/components/nuki/binary_sensor.py
     homeassistant/components/nuki/lock.py
+    homeassistant/components/nut/diagnostics.py
     homeassistant/components/nx584/alarm_control_panel.py
     homeassistant/components/nzbget/coordinator.py
     homeassistant/components/obihai/*

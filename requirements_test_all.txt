@@ -655,7 +655,7 @@ millheater==0.9.0
 minio==5.0.10
 
 # homeassistant.components.motion_blinds
-motionblinds==0.5.10
+motionblinds==0.5.11
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
@@ -774,7 +774,7 @@ pilight==0.1.1
 pillow==9.0.1
 
 # homeassistant.components.plex
-plexapi==4.9.1
+plexapi==4.9.2
 
 # homeassistant.components.plex
 plexauth==0.0.6
@@ -1361,7 +1361,7 @@ smarthab==0.21
 smhi-pkg==1.0.15
 
 # homeassistant.components.sonos
-soco==0.26.0
+soco==0.26.2
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
@@ -1533,7 +1533,7 @@ wolf_smartset==0.1.11
 xbox-webapi==2.0.11
 
 # homeassistant.components.knx
-xknx==0.19.1
+xknx==0.19.2
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
@@ -1550,7 +1550,7 @@ yalesmartalarmclient==0.3.7
 yalexs==1.1.20
 
 # homeassistant.components.yeelight
-yeelight==0.7.8
+yeelight==0.7.9
 
 # homeassistant.components.youless
 youless-api==0.16

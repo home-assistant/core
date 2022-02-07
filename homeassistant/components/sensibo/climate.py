@@ -106,7 +106,7 @@ async def async_setup_entry(
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities = [
-        SensiboClimate(coordinator, device_id, hass.config.units.temperature_unit)
+        SensiboClimate(coordinator, device_id)
         for device_id, device_data in coordinator.data.items()
         # Remove none climate devices
         if device_data["hvac_modes"] and device_data["temp"]
@@ -130,10 +130,7 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
     coordinator: SensiboDataUpdateCoordinator
 
     def __init__(
-        self,
-        coordinator: SensiboDataUpdateCoordinator,
-        device_id: str,
-        temp_unit: str,
+        self, coordinator: SensiboDataUpdateCoordinator, device_id: str
     ) -> None:
         """Initiate SensiboClimate."""
         super().__init__(coordinator)

@@ -586,13 +586,6 @@ class AvmWrapper(FritzBoxTools):
             )
         return {}
 
-    async def async_get_wan_dsl_interface_config(self) -> dict[str, Any]:
-        """Call WANDSLInterfaceConfig service."""
-
-        return await self.hass.async_add_executor_job(
-            partial(self.get_wan_dsl_interface_config)
-        )
-
     async def async_get_wan_link_properties(self) -> dict[str, Any]:
         """Call WANCommonInterfaceConfig service."""
 
@@ -696,11 +689,6 @@ class AvmWrapper(FritzBoxTools):
         """Call WLANConfiguration service."""
 
         return self._service_call_action("WLANConfiguration", str(index), "GetInfo")
-
-    def get_wan_dsl_interface_config(self) -> dict[str, Any]:
-        """Call WANDSLInterfaceConfig service."""
-
-        return self._service_call_action("WANDSLInterfaceConfig", "1", "GetInfo")
 
     def get_wan_link_properties(self) -> dict[str, Any]:
         """Call WANCommonInterfaceConfig service."""

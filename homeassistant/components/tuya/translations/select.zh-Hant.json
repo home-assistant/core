@@ -10,6 +10,15 @@
             "1": "\u95dc\u9589",
             "2": "\u958b\u555f"
         },
+        "tuya__countdown": {
+            "1h": "1 \u5c0f\u6642",
+            "2h": "2 \u5c0f\u6642",
+            "3h": "3 \u5c0f\u6642",
+            "4h": "4 \u5c0f\u6642",
+            "5h": "5 \u5c0f\u6642",
+            "6h": "6 \u5c0f\u6642",
+            "cancel": "\u53d6\u6d88"
+        },
         "tuya__curtain_mode": {
             "morning": "\u65e9\u6668",
             "night": "\u591c\u9593"
@@ -30,6 +39,32 @@
         "tuya__fingerbot_mode": {
             "click": "\u63a8",
             "switch": "\u958b\u95dc"
+        },
+        "tuya__humidifier_level": {
+            "level_1": "\u7b49\u7d1a 1",
+            "level_10": "\u7b49\u7d1a 10",
+            "level_2": "\u7b49\u7d1a 2",
+            "level_3": "\u7b49\u7d1a 3",
+            "level_4": "\u7b49\u7d1a 4",
+            "level_5": "\u7b49\u7d1a 5",
+            "level_6": "\u7b49\u7d1a 6",
+            "level_7": "\u7b49\u7d1a 7",
+            "level_8": "\u7b49\u7d1a 8",
+            "level_9": "\u7b49\u7d1a 9"
+        },
+        "tuya__humidifier_moodlighting": {
+            "1": "\u5fc3\u60c5\u60c5\u5883 1",
+            "2": "\u5fc3\u60c5\u60c5\u5883 2",
+            "3": "\u5fc3\u60c5\u60c5\u5883 3",
+            "4": "\u5fc3\u60c5\u60c5\u5883 4",
+            "5": "\u5fc3\u60c5\u60c5\u5883 5"
+        },
+        "tuya__humidifier_spray_mode": {
+            "auto": "\u81ea\u52d5",
+            "health": "\u5065\u5eb7",
+            "humidity": "\u6fd5\u5ea6",
+            "sleep": "\u7761\u7720",
+            "work": "\u5de5\u4f5c"
         },
         "tuya__ipc_work_mode": {
             "0": "\u4f4e\u529f\u8017\u6a21\u5f0f",
