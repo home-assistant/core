@@ -108,6 +108,13 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_temp=(DPCode.TEMP_VALUE_V2, DPCode.TEMP_VALUE),
             color_data=(DPCode.COLOUR_DATA_V2, DPCode.COLOUR_DATA),
         ),
+        # Not documented
+        # Based on multiple reports: manufacturer customized Dimmer 2 switches
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED_1,
+            name="Light",
+            brightness=DPCode.BRIGHT_VALUE_1,
+        ),
     ),
     # Ceiling Fan Light
     # https://developer.tuya.com/en/docs/iot/fsd?id=Kaof8eiei4c2v
