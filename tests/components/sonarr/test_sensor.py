@@ -68,30 +68,36 @@ async def test_sensors(
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:harddisk"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == DATA_GIGABYTES
+    assert state.attributes.get("C:\\") == "263.10/465.42GB (56.53%)"
     assert state.state == "263.10"
 
     state = hass.states.get("sensor.sonarr_queue")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:download"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Episodes"
+    assert state.attributes.get("The Andy Griffith Show S01E01") == "100.00%"
     assert state.state == "1"
 
     state = hass.states.get("sensor.sonarr_shows")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:television"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Series"
+    assert state.attributes.get("The Andy Griffith Show") == "0/0 Episodes"
     assert state.state == "1"
 
     state = hass.states.get("sensor.sonarr_upcoming")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:television"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Episodes"
+    assert state.attributes.get("Bob's Burgers") == "S04E11"
     assert state.state == "1"
 
     state = hass.states.get("sensor.sonarr_wanted")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:television"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Episodes"
+    assert state.attributes.get("Bob's Burgers S04E11") == "2014-01-26"
+    assert state.attributes.get("The Andy Griffith Show S01E01") == "1960-10-03"
     assert state.state == "2"
 
 
