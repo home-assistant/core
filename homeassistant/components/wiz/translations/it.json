@@ -1,0 +1,15 @@
+{
+    "config": {
+        "flow_title": "{name} ({host})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Vuoi configurare {name} ({host})?"
+            },
+            "pick_device": {
+                "data": {
+                    "device": "Dispositivo"
+                }
+            }
+        }
+    }
+}

@@ -15,7 +15,7 @@
                     "ssl": "Usar um certificado SSL",
                     "username": "Usu\u00e1rio (Opcional)"
                 },
-                "description": "Host padr\u00e3o: {host}\nPorta padr\u00e3o: {port}\nUsu\u00e1rio padr\u00e3o: {username}",
+                "description": "Host padr\u00e3o: {host}\n Nome de usu\u00e1rio padr\u00e3o: {username}",
                 "title": "Netgear"
             }
         }
