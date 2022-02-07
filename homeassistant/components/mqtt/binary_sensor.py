@@ -134,6 +134,10 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
             self._expired = False
             self._state = last_state.state
 
+            if self._expiration_trigger:
+                # We might have set up a trigger already after subscribing from
+                # super().async_added_to_hass()
+                self._expiration_trigger()
             self._expiration_trigger = async_track_point_in_utc_time(
                 self.hass, self._value_is_expired, expiration_at
             )
@@ -190,7 +194,6 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                 # Reset old trigger
                 if self._expiration_trigger:
                     self._expiration_trigger()
-                    self._expiration_trigger = None
 
                 # Set new trigger
                 expiration_at = dt_util.utcnow() + timedelta(seconds=expire_after)
