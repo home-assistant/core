@@ -525,7 +525,7 @@ crownstone-sse==2.0.3
 crownstone-uart==2.1.0
 
 # homeassistant.components.cybro
-cybro==0.0.2
+cybro==0.0.3
 
 # homeassistant.components.datadog
 datadog==0.15.0

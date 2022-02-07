@@ -3,7 +3,7 @@
   "name": "cybro",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/cybro",
-  "requirements": ["cybro==0.0.2"],
+  "requirements": ["cybro==0.0.3"],
   "codeowners": ["@killer0071234"],
   "quality_scale": "silver",
   "iot_class": "local_push"

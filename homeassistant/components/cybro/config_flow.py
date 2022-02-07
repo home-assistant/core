@@ -19,7 +19,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 # from homeassistant.components import zeroconf
-from . import PLATFORM_NAMES, binary_sensor
+from . import PLATFORM_NAMES
 from .const import DOMAIN, LOGGER
 from .coordinator import CybroDataUpdateCoordinator
 
@@ -150,12 +150,18 @@ class CybroOptionsFlowHandler(OptionsFlow):
         ]
         if user_input is not None:
             if user_input[CONF_PLATFORM] == "binary_sensor":
-                await binary_sensor.async_setup_entry(
-                    hass=self.hass,
-                    entry=self.config_entry,
-                    async_add_entities=binary_sensor.CybroUpdateBinarySensor,
-                    variable_name=user_input[CONF_UNIQUE_ID],
-                )
+                LOGGER.debug(self.config_entry.as_dict())
+                # self.hass.async_create_task(
+                #    self.hass.config_entries.async_forward_entry_setup(
+                #        self.config_entry, "binary_sensor"
+                #    )
+                # )
+                # await binary_sensor.async_setup_entry(
+                #    hass=self.hass,
+                #    entry=self.config_entry,
+                #    async_add_entities=binary_sensor.CybroUpdateBinarySensor,
+                #    variable_name=user_input[CONF_UNIQUE_ID],
+                # )
             # return self.async_create_entry(title="", data={})
             LOGGER.debug(user_input)
             return self.async_create_entry(title="", data=user_input)

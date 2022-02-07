@@ -11,7 +11,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     AREA_SYSTEM,
@@ -22,32 +21,6 @@ from .const import (
 )
 from .coordinator import CybroDataUpdateCoordinator
 from .models import CybroEntity
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up user configured entries."""
-    return
-
-
-#    pltf = config.get(CONF_PLATFORM)
-#    uid = config.get(CONF_UNIQUE_ID)
-#    LOGGER.debug(f"Platform={pltf}, unique_id={uid}")
-#    if pltf is None or pltf is not DOMAIN:
-#        return
-#    if uid is None:
-#        LOGGER.error(f"Key {CONF_UNIQUE_ID} in config missing")
-#        return
-#
-#    async_add_entities(
-#        [
-#            CybroUpdateBinarySensor(None, uid),
-#        ]
-#    )
 
 
 async def async_setup_entry(
