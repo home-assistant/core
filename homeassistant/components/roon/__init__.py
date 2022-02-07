@@ -12,11 +12,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a roonserver from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    name = (
-        entry.data[CONF_HOST]
-        if entry.data[CONF_ROON_NAME] is None
-        else entry.data[CONF_ROON_NAME]
-    )
+    # fallback to using host for compatibility with older configs
+    name = entry.data.get(CONF_ROON_NAME, entry.data[CONF_HOST])
 
     roonserver = RoonServer(hass, entry)
 
