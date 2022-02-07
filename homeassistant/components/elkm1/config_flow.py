@@ -18,10 +18,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PREFIX,
     CONF_PROTOCOL,
-    CONF_TEMPERATURE_UNIT,
     CONF_USERNAME,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
 )
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
@@ -55,9 +52,6 @@ VALIDATE_TIMEOUT = 35
 BASE_SCHEMA = {
     vol.Optional(CONF_USERNAME, default=""): str,
     vol.Optional(CONF_PASSWORD, default=""): str,
-    vol.Optional(CONF_TEMPERATURE_UNIT, default=TEMP_FAHRENHEIT): vol.In(
-        [TEMP_FAHRENHEIT, TEMP_CELSIUS]
-    ),
 }
 
 SECURE_PROTOCOLS = ["secure", "TLS 1.2"]
@@ -243,7 +237,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_USERNAME: user_input[CONF_USERNAME],
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
                 CONF_AUTO_CONFIGURE: True,
-                CONF_TEMPERATURE_UNIT: user_input[CONF_TEMPERATURE_UNIT],
                 CONF_PREFIX: info[CONF_PREFIX],
             },
         )

@@ -38,8 +38,6 @@ from .const import (
     ATTR_KEY,
     ATTR_KEY_NAME,
     ATTR_KEYPAD_ID,
-    BARE_TEMP_CELSIUS,
-    BARE_TEMP_FAHRENHEIT,
     CONF_AREA,
     CONF_AUTO_CONFIGURE,
     CONF_COUNTER,
@@ -139,28 +137,28 @@ DEVICE_SCHEMA_SUBDOMAIN = vol.Schema(
     }
 )
 
-DEVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PREFIX, default=""): vol.All(cv.string, vol.Lower),
-        vol.Optional(CONF_USERNAME, default=""): cv.string,
-        vol.Optional(CONF_PASSWORD, default=""): cv.string,
-        vol.Optional(CONF_AUTO_CONFIGURE, default=False): cv.boolean,
-        # cv.temperature_unit will mutate 'C' -> '°C' and 'F' -> '°F'
-        vol.Optional(
-            CONF_TEMPERATURE_UNIT, default=BARE_TEMP_FAHRENHEIT
-        ): cv.temperature_unit,
-        vol.Optional(CONF_AREA, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_COUNTER, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_KEYPAD, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_OUTPUT, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_PLC, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_SETTING, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_TASK, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_THERMOSTAT, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_ZONE, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-    },
-    _host_validator,
+DEVICE_SCHEMA = vol.All(
+    cv.deprecated(CONF_TEMPERATURE_UNIT),
+    vol.Schema(
+        {
+            vol.Required(CONF_HOST): cv.string,
+            vol.Optional(CONF_PREFIX, default=""): vol.All(cv.string, vol.Lower),
+            vol.Optional(CONF_USERNAME, default=""): cv.string,
+            vol.Optional(CONF_PASSWORD, default=""): cv.string,
+            vol.Optional(CONF_AUTO_CONFIGURE, default=False): cv.boolean,
+            vol.Optional(CONF_TEMPERATURE_UNIT, default="F"): cv.temperature_unit,
+            vol.Optional(CONF_AREA, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_COUNTER, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_KEYPAD, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_OUTPUT, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_PLC, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_SETTING, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_TASK, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_THERMOSTAT, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_ZONE, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+        },
+        _host_validator,
+    ),
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -232,11 +230,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if device := await async_discover_device(hass, host):
             async_update_entry_from_discovery(hass, entry, device)
 
-    temperature_unit = TEMP_FAHRENHEIT
-    if conf[CONF_TEMPERATURE_UNIT] in (BARE_TEMP_CELSIUS, TEMP_CELSIUS):
-        temperature_unit = TEMP_CELSIUS
-
-    config: dict[str, Any] = {"temperature_unit": temperature_unit}
+    config: dict[str, Any] = {}
 
     if not conf[CONF_AUTO_CONFIGURE]:
         # With elkm1-lib==0.7.16 and later auto configure is available
@@ -286,6 +280,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except asyncio.TimeoutError as exc:
         raise ConfigEntryNotReady(f"Timed out connecting to {conf[CONF_HOST]}") from exc
 
+    elk_temp_unit = elk.panel.temperature_unit  # pylint: disable=no-member
+    temperature_unit = TEMP_CELSIUS if elk_temp_unit == "C" else TEMP_FAHRENHEIT
+    config["temperature_unit"] = temperature_unit
     hass.data[DOMAIN][entry.entry_id] = {
         "elk": elk,
         "prefix": conf[CONF_PREFIX],
