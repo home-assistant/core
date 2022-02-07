@@ -55,7 +55,6 @@ async def test_form_user_with_secure_elk_no_discovery(hass):
                 "address": "1.2.3.4",
                 "username": "test-username",
                 "password": "test-password",
-                "temperature_unit": "°F",
                 "prefix": "",
             },
         )
@@ -68,7 +67,6 @@ async def test_form_user_with_secure_elk_no_discovery(hass):
         "host": "elks://1.2.3.4",
         "password": "test-password",
         "prefix": "",
-        "temperature_unit": "°F",
         "username": "test-username",
     }
     assert len(mock_setup.mock_calls) == 1
@@ -104,7 +102,6 @@ async def test_form_user_with_secure_elk_no_discovery_ip_already_configured(hass
                 "address": "127.0.0.1",
                 "username": "test-username",
                 "password": "test-password",
-                "temperature_unit": "°F",
                 "prefix": "",
             },
         )
@@ -147,7 +144,6 @@ async def test_form_user_with_secure_elk_with_discovery(hass):
             {
                 "username": "test-username",
                 "password": "test-password",
-                "temperature_unit": "°F",
             },
         )
         await hass.async_block_till_done()
@@ -159,7 +155,6 @@ async def test_form_user_with_secure_elk_with_discovery(hass):
         "host": "elks://127.0.0.1:2601",
         "password": "test-password",
         "prefix": "",
-        "temperature_unit": "°F",
         "username": "test-username",
     }
     assert result3["result"].unique_id == "aa:bb:cc:dd:ee:ff"
@@ -202,7 +197,6 @@ async def test_form_user_with_secure_elk_with_discovery_pick_manual(hass):
                 "address": "1.2.3.4",
                 "username": "test-username",
                 "password": "test-password",
-                "temperature_unit": "°F",
                 "prefix": "",
             },
         )
@@ -215,7 +209,6 @@ async def test_form_user_with_secure_elk_with_discovery_pick_manual(hass):
         "host": "elks://1.2.3.4",
         "password": "test-password",
         "prefix": "",
-        "temperature_unit": "°F",
         "username": "test-username",
     }
     assert result3["result"].unique_id is None
@@ -260,7 +253,6 @@ async def test_form_user_with_secure_elk_with_discovery_pick_manual_direct_disco
                 "address": "127.0.0.1",
                 "username": "test-username",
                 "password": "test-password",
-                "temperature_unit": "°F",
                 "prefix": "",
             },
         )
@@ -273,7 +265,6 @@ async def test_form_user_with_secure_elk_with_discovery_pick_manual_direct_disco
         "host": "elks://127.0.0.1:2601",
         "password": "test-password",
         "prefix": "",
-        "temperature_unit": "°F",
         "username": "test-username",
     }
     assert result3["result"].unique_id == MOCK_MAC
@@ -309,7 +300,6 @@ async def test_form_user_with_tls_elk_no_discovery(hass):
                 "address": "1.2.3.4",
                 "username": "test-username",
                 "password": "test-password",
-                "temperature_unit": "°F",
                 "prefix": "",
             },
         )
@@ -322,7 +312,6 @@ async def test_form_user_with_tls_elk_no_discovery(hass):
         "host": "elksv1_2://1.2.3.4",
         "password": "test-password",
         "prefix": "",
-        "temperature_unit": "°F",
         "username": "test-username",
     }
     assert len(mock_setup.mock_calls) == 1
@@ -355,7 +344,6 @@ async def test_form_user_with_non_secure_elk_no_discovery(hass):
             {
                 "protocol": "non-secure",
                 "address": "1.2.3.4",
-                "temperature_unit": "°F",
                 "prefix": "guest_house",
             },
         )
@@ -369,7 +357,6 @@ async def test_form_user_with_non_secure_elk_no_discovery(hass):
         "prefix": "guest_house",
         "username": "",
         "password": "",
-        "temperature_unit": "°F",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -401,7 +388,6 @@ async def test_form_user_with_serial_elk_no_discovery(hass):
             {
                 "protocol": "serial",
                 "address": "/dev/ttyS0:115200",
-                "temperature_unit": "°C",
                 "prefix": "",
             },
         )
@@ -415,7 +401,6 @@ async def test_form_user_with_serial_elk_no_discovery(hass):
         "prefix": "",
         "username": "",
         "password": "",
-        "temperature_unit": "°C",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -444,7 +429,6 @@ async def test_form_cannot_connect(hass):
                 "address": "1.2.3.4",
                 "username": "test-username",
                 "password": "test-password",
-                "temperature_unit": "°F",
                 "prefix": "",
             },
         )
@@ -476,7 +460,6 @@ async def test_unknown_exception(hass):
                 "address": "1.2.3.4",
                 "username": "test-username",
                 "password": "test-password",
-                "temperature_unit": "°F",
                 "prefix": "",
             },
         )
@@ -504,7 +487,6 @@ async def test_form_invalid_auth(hass):
                 "address": "1.2.3.4",
                 "username": "test-username",
                 "password": "test-password",
-                "temperature_unit": "°F",
                 "prefix": "",
             },
         )
@@ -532,7 +514,6 @@ async def test_form_invalid_auth_no_password(hass):
                 "address": "1.2.3.4",
                 "username": "test-username",
                 "password": "",
-                "temperature_unit": "°F",
                 "prefix": "",
             },
         )
@@ -796,7 +777,6 @@ async def test_discovered_by_discovery(hass):
             {
                 "username": "test-username",
                 "password": "test-password",
-                "temperature_unit": "°F",
             },
         )
         await hass.async_block_till_done()
@@ -808,7 +788,6 @@ async def test_discovered_by_discovery(hass):
         "host": "elks://127.0.0.1:2601",
         "password": "test-password",
         "prefix": "",
-        "temperature_unit": "°F",
         "username": "test-username",
     }
     assert len(mock_setup.mock_calls) == 1
@@ -862,7 +841,6 @@ async def test_discovered_by_dhcp_udp_responds(hass):
             {
                 "username": "test-username",
                 "password": "test-password",
-                "temperature_unit": "°F",
             },
         )
         await hass.async_block_till_done()
@@ -874,7 +852,6 @@ async def test_discovered_by_dhcp_udp_responds(hass):
         "host": "elks://127.0.0.1:2601",
         "password": "test-password",
         "prefix": "",
-        "temperature_unit": "°F",
         "username": "test-username",
     }
     assert len(mock_setup.mock_calls) == 1
@@ -909,7 +886,6 @@ async def test_discovered_by_dhcp_udp_responds_with_nonsecure_port(hass):
             {
                 "username": "test-username",
                 "password": "test-password",
-                "temperature_unit": "°F",
             },
         )
         await hass.async_block_till_done()
@@ -921,7 +897,6 @@ async def test_discovered_by_dhcp_udp_responds_with_nonsecure_port(hass):
         "host": "elk://127.0.0.1:2101",
         "password": "test-password",
         "prefix": "",
-        "temperature_unit": "°F",
         "username": "test-username",
     }
     assert len(mock_setup.mock_calls) == 1
@@ -960,7 +935,6 @@ async def test_discovered_by_dhcp_udp_responds_existing_config_entry(hass):
             {
                 "username": "test-username",
                 "password": "test-password",
-                "temperature_unit": "°F",
             },
         )
         await hass.async_block_till_done()
@@ -972,7 +946,6 @@ async def test_discovered_by_dhcp_udp_responds_existing_config_entry(hass):
         "host": "elks://127.0.0.1:2601",
         "password": "test-password",
         "prefix": "ddeeff",
-        "temperature_unit": "°F",
         "username": "test-username",
     }
     assert len(mock_setup.mock_calls) == 1
