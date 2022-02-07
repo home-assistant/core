@@ -43,54 +43,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_OUTSIDE_TEMPERATURE = "outside_temperature"
-SENSOR_SUPPLY_TEMPERATURE = "supply_temperature"
-SENSOR_RETURN_TEMPERATURE = "return_temperature"
-
-# gas sensors
-SENSOR_BOILER_TEMPERATURE = "boiler_temperature"
-SENSOR_BURNER_MODULATION = "burner_modulation"
-SENSOR_BURNER_STARTS = "burner_starts"
-SENSOR_BURNER_HOURS = "burner_hours"
-SENSOR_BURNER_POWER = "burner_power"
-SENSOR_DHW_GAS_CONSUMPTION_TODAY = "hotwater_gas_consumption_today"
-SENSOR_DHW_GAS_CONSUMPTION_THIS_WEEK = "hotwater_gas_consumption_heating_this_week"
-SENSOR_DHW_GAS_CONSUMPTION_THIS_MONTH = "hotwater_gas_consumption_heating_this_month"
-SENSOR_DHW_GAS_CONSUMPTION_THIS_YEAR = "hotwater_gas_consumption_heating_this_year"
-SENSOR_GAS_CONSUMPTION_TODAY = "gas_consumption_heating_today"
-SENSOR_GAS_CONSUMPTION_THIS_WEEK = "gas_consumption_heating_this_week"
-SENSOR_GAS_CONSUMPTION_THIS_MONTH = "gas_consumption_heating_this_month"
-SENSOR_GAS_CONSUMPTION_THIS_YEAR = "gas_consumption_heating_this_year"
-SENSOR_POWER_CONSUMPTION_TODAY = "power_consumption_today"
-SENSOR_POWER_CONSUMPTION_THIS_WEEK = "power_consumption_this_week"
-SENSOR_POWER_CONSUMPTION_THIS_MONTH = "power_consumption_this_month"
-SENSOR_POWER_CONSUMPTION_THIS_YEAR = "power_consumption_this_year"
-
-# heatpump sensors
-SENSOR_COMPRESSOR_STARTS = "compressor_starts"
-SENSOR_COMPRESSOR_HOURS = "compressor_hours"
-SENSOR_COMPRESSOR_HOURS_LOADCLASS1 = "compressor_hours_loadclass1"
-SENSOR_COMPRESSOR_HOURS_LOADCLASS2 = "compressor_hours_loadclass2"
-SENSOR_COMPRESSOR_HOURS_LOADCLASS3 = "compressor_hours_loadclass3"
-SENSOR_COMPRESSOR_HOURS_LOADCLASS4 = "compressor_hours_loadclass4"
-SENSOR_COMPRESSOR_HOURS_LOADCLASS5 = "compressor_hours_loadclass5"
-
-# fuelcell sensors
-SENSOR_POWER_PRODUCTION_CURRENT = "power_production_current"
-SENSOR_POWER_PRODUCTION_TODAY = "power_production_today"
-SENSOR_POWER_PRODUCTION_THIS_WEEK = "power_production_this_week"
-SENSOR_POWER_PRODUCTION_THIS_MONTH = "power_production_this_month"
-SENSOR_POWER_PRODUCTION_THIS_YEAR = "power_production_this_year"
-
-# solar sensors
-SENSOR_SOLAR_COLLECTOR_TEMPERATURE = "solar_collector_temperature"
-SENSOR_SOLAR_STORAGE_TEMPERATURE = "solar_storage_temperature"
-SENSOR_SOLAR_POWER_PRODUCTION = "solar_power_production"
-SENSOR_SOLAR_POWER_PRODUCTION_TODAY = "solar_power_production_today"
-SENSOR_SOLAR_POWER_PRODUCTION_THIS_WEEK = "solar_power_production_this_week"
-SENSOR_SOLAR_POWER_PRODUCTION_THIS_MONTH = "solar_power_production_this_month"
-SENSOR_SOLAR_POWER_PRODUCTION_THIS_YEAR = "solar_power_production_this_year"
-
 
 @dataclass
 class ViCareSensorEntityDescription(SensorEntityDescription, ViCareRequiredKeysMixin):
@@ -225,20 +177,11 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     ViCareSensorEntityDescription(
-        key=SENSOR_SOLAR_COLLECTOR_TEMPERATURE,
+        key="collector temperature",
         name="Solar Collector Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         value_getter=lambda api: api.getSolarCollectorTemperature(),
         device_class=SensorDeviceClass.TEMPERATURE,
-    ),
-    ViCareSensorEntityDescription(
-        key=SENSOR_SOLAR_POWER_PRODUCTION,
-        name="Solar power production",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        value_getter=lambda api: api.getSolarPowerProduction(),
-        unit_getter=lambda api: api.getSolarPowerProductionUnit(),
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ViCareSensorEntityDescription(
         key=SENSOR_SOLAR_POWER_PRODUCTION_TODAY,
