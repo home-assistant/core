@@ -28,7 +28,9 @@ class WizToggleEntity(CoordinatorEntity, ToggleEntity):
             name=name,
             manufacturer="WiZ",
             model=bulb_type.name,
-            sw_version=bulb_type.fw_version,
+            sw_version=bulb_type.fw_version
+            if hasattr(bulb_type, "fw_version")
+            else None,
         )
 
     @callback
