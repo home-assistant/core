@@ -46,8 +46,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Get bulb with IP: %s", ip_address)
     bulb = wizlight(ip_address)
     try:
-        await bulb.getMac()
         scenes = await bulb.getSupportedScenes()
+        await bulb.getMac()
         # ValueError gets thrown if the bulb type
         # cannot be determined on the first try.
         # This is likely because way the library
