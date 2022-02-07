@@ -112,7 +112,7 @@ jobs:
         shell: bash
         run: |
           python3 -m pip install packaging
-          python3 -m pip install .
+          python3 -m pip install --use-deprecated=legacy-resolver .
           python3 script/version_bump.py nightly
           version="$(python setup.py -V)"
 

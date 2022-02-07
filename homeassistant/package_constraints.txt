@@ -21,7 +21,7 @@ ifaddr==0.1.7
 jinja2==3.0.3
 paho-mqtt==1.6.1
 pillow==9.0.1
-pip>=8.0.3,<20.3
+pip>=21.0,<22.1
 pyserial==3.5
 python-slugify==4.0.1
 pyudev==0.22.0
