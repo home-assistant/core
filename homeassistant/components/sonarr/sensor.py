@@ -112,7 +112,7 @@ def sonarr_exception_handler(
                 _LOGGER.error("Invalid response from API: %s", error)
                 self.last_update_success = False
 
-    return handler
+    return wrapper
 
 
 class SonarrSensor(SonarrEntity, SensorEntity):
