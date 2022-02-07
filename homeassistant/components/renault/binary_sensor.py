@@ -64,10 +64,9 @@ class RenaultBinarySensor(
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return (
-            self._get_data_attr(self.entity_description.on_key)
-            == self.entity_description.on_value
-        )
+        if (data := self._get_data_attr(self.entity_description.on_key)) is None:
+            return None
+        return data == self.entity_description.on_value
 
 
 BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = (
