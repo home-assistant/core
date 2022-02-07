@@ -11,6 +11,7 @@ from homeassistant.util.dt import utcnow
 from .const import CONF_ROON_ID, ROON_APPINFO
 
 _LOGGER = logging.getLogger(__name__)
+INITIAL_SYNC_INTERVAL = 5
 FULL_SYNC_INTERVAL = 30
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
@@ -113,13 +114,14 @@ class RoonServer:
     async def async_do_loop(self):
         """Background work loop."""
         self._exit = False
+        await asyncio.sleep(INITIAL_SYNC_INTERVAL)
         while not self._exit:
             await self.async_update_players()
-            # await self.async_update_playlists()
             await asyncio.sleep(FULL_SYNC_INTERVAL)
 
     async def async_update_changed_players(self, changed_zones_ids):
         """Update the players which were reported as changed by the Roon API."""
+        _LOGGER.debug("async_update_changed_players %s", changed_zones_ids)
         for zone_id in changed_zones_ids:
             if zone_id not in self.roonapi.zones:
                 # device was removed ?
@@ -142,6 +144,7 @@ class RoonServer:
     async def async_update_players(self):
         """Periodic full scan of all devices."""
         zone_ids = self.roonapi.zones.keys()
+        _LOGGER.debug("async_update_players %s", zone_ids)
         await self.async_update_changed_players(zone_ids)
         # check for any removed devices
         all_devs = {}
