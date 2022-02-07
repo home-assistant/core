@@ -525,6 +525,19 @@ async def test_get_url(hass: HomeAssistant):
     ), pytest.raises(NoURLAvailableError):
         _get_internal_url(hass, require_current_request=True)
 
+    # Test allow_ip defaults when SSL specified
+    await async_process_ha_core_config(
+        hass,
+        {"external_url": "https://1.1.1.1"},
+    )
+    assert hass.config.external_url == "https://1.1.1.1"
+    assert get_url(hass, allow_internal=False) == "https://1.1.1.1"
+    hass.config.api = Mock(use_ssl=False)
+    assert get_url(hass, allow_internal=False) == "https://1.1.1.1"
+    hass.config.api = Mock(use_ssl=True)
+    with pytest.raises(NoURLAvailableError):
+        assert get_url(hass, allow_internal=False)
+
 
 async def test_get_request_host(hass: HomeAssistant):
     """Test getting the host of the current web request from the request context."""
