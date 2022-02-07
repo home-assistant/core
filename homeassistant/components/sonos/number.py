@@ -79,7 +79,7 @@ class SonosLevelEntity(SonosEntity, NumberEntity):
         await self.hass.async_add_executor_job(self.poll_state)
 
     @soco_error()
-    def poll_state(self) -> int:
+    def poll_state(self) -> None:
         """Poll the device for the current state."""
         state = getattr(self.soco, self.level_type)
         setattr(self.speaker, self.level_type, state)

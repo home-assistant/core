@@ -4,7 +4,6 @@ from __future__ import annotations
 from abc import abstractmethod
 import datetime
 import logging
-from typing import Any
 
 import soco.config as soco_config
 from soco.core import SoCo
@@ -130,7 +129,7 @@ class SonosPollingEntity(SonosEntity):
     """Representation of a Sonos entity which may not support updating by subscriptions."""
 
     @abstractmethod
-    def poll_state(self) -> Any:
+    def poll_state(self) -> None:
         """Poll the device for the current state."""
 
     def update(self) -> None:
