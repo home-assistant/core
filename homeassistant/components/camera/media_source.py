@@ -17,24 +17,25 @@ from homeassistant.components.media_source.models import (
 )
 from homeassistant.components.stream.const import FORMAT_CONTENT_TYPE, HLS_PROVIDER
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_component import EntityComponent
 
 from . import Camera, _async_stream_endpoint_url
 from .const import DOMAIN, STREAM_TYPE_HLS
 
 
-async def async_get_media_source(hass: HomeAssistant) -> CamereaMediaSource:
+async def async_get_media_source(hass: HomeAssistant) -> CameraMediaSource:
     """Set up camera media source."""
-    return CamereaMediaSource(hass)
+    return CameraMediaSource(hass)
 
 
-class CamereaMediaSource(MediaSource):
+class CameraMediaSource(MediaSource):
     """Provide camera feeds as media sources."""
 
     name: str = "Camera"
 
     def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize CamereaMediaSource."""
+        """Initialize CameraMediaSource."""
         super().__init__(DOMAIN)
         self.hass = hass
 
@@ -49,7 +50,10 @@ class CamereaMediaSource(MediaSource):
         if camera.frontend_stream_type != STREAM_TYPE_HLS:
             raise Unresolvable("Camera does not support HLS streaming.")
 
-        url = await _async_stream_endpoint_url(self.hass, camera, HLS_PROVIDER)
+        try:
+            url = await _async_stream_endpoint_url(self.hass, camera, HLS_PROVIDER)
+        except HomeAssistantError as err:
+            raise Unresolvable(str(err)) from err
 
         return PlayMedia(url, FORMAT_CONTENT_TYPE[HLS_PROVIDER])
 
@@ -60,6 +64,9 @@ class CamereaMediaSource(MediaSource):
         """Return media."""
         if item.identifier:
             raise BrowseError("Unknown item")
+
+        if "stream" not in self.hass.config.components:
+            raise BrowseError("Stream integration is not loaded")
 
         # Root. List cameras.
         component: EntityComponent = self.hass.data[DOMAIN]
