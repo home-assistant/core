@@ -51,7 +51,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import callback
+from homeassistant.core import State, callback
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -144,9 +144,10 @@ class Thermostat(HomeAccessory):
 
         # Add additional characteristics if auto mode is supported
         self.chars = []
-        state = self.hass.states.get(self.entity_id)
-        min_humidity = state.attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY)
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        state: State = self.hass.states.get(self.entity_id)
+        attributes = state.attributes
+        min_humidity = attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY)
+        features = attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if features & SUPPORT_TARGET_TEMPERATURE_RANGE:
             self.chars.extend(
