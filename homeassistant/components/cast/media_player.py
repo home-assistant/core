@@ -534,9 +534,21 @@ class CastDevice(MediaPlayerEntity):
             media_type = sourced_media.mime_type
             media_id = sourced_media.url
 
+        extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
+
         # If media ID is a relative URL, we serve it from HA.
         # Create a signed path.
         if media_id[0] == "/":
+            # Configure play command for when playing a HLS stream
+            if media_id.startswith("/api/hls/"):
+                extra = {
+                    **extra,
+                    "stream_type": "LIVE",
+                    "media_info": {
+                        "hlsVideoSegmentFormat": "fmp4",
+                    },
+                }
+
             media_id = async_sign_path(
                 self.hass,
                 quote(media_id),
@@ -547,7 +559,6 @@ class CastDevice(MediaPlayerEntity):
             hass_url = get_url(self.hass, prefer_external=True)
             media_id = f"{hass_url}{media_id}"
 
-        extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
         metadata = extra.get("metadata")
 
         # Handle media supported by a known cast app
@@ -593,15 +604,6 @@ class CastDevice(MediaPlayerEntity):
                 return
 
         # Default to play with the default media receiver
-        if media_type == "application/vnd.apple.mpegurl":
-            extra = {
-                **extra,
-                "stream_type": "LIVE",
-                "media_info": {
-                    "hlsVideoSegmentFormat": "fmp4",
-                },
-            }
-
         app_data = {"media_id": media_id, "media_type": media_type, **extra}
         await self.hass.async_add_executor_job(
             quick_play, self._chromecast, "default_media_receiver", app_data

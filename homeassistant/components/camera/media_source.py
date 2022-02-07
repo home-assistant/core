@@ -15,8 +15,8 @@ from homeassistant.components.media_source.models import (
     MediaSourceItem,
     PlayMedia,
 )
-from homeassistant.components.stream.const import FORMAT_CONTENT_TYPE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.components.stream.const import FORMAT_CONTENT_TYPE, HLS_PROVIDER
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import EntityComponent
 
 from . import Camera, _async_stream_endpoint_url
@@ -46,21 +46,12 @@ class CamereaMediaSource(MediaSource):
         if not camera:
             raise Unresolvable(f"Could not resolve media item: {item.identifier}")
 
-        fmt = "hls"
-        url = await _async_stream_endpoint_url(self.hass, camera, fmt)
-        return PlayMedia(url, FORMAT_CONTENT_TYPE[fmt])
+        if camera.frontend_stream_type != STREAM_TYPE_HLS:
+            raise Unresolvable("Camera does not support HLS streaming.")
 
-    @callback
-    @classmethod
-    def _parse_identifier(
-        cls, identifier: str
-    ) -> tuple[str | None, str | None, str | None, str | None]:
-        base = [None] * 4
-        data = identifier.split("#", 3)
-        return cast(
-            tuple[Optional[str], Optional[str], Optional[str], Optional[str]],
-            tuple(data + base)[:4],  # type: ignore[operator]
-        )
+        url = await _async_stream_endpoint_url(self.hass, camera, HLS_PROVIDER)
+
+        return PlayMedia(url, FORMAT_CONTENT_TYPE[HLS_PROVIDER])
 
     async def async_browse_media(
         self,
@@ -73,23 +64,22 @@ class CamereaMediaSource(MediaSource):
         # Root. List cameras.
         component: EntityComponent = self.hass.data[DOMAIN]
         children = []
-        for entity in component.entities:
-            entity = cast(Camera, entity)
+        for camera in component.entities:
+            camera = cast(Camera, camera)
 
-            if entity.frontend_stream_type != STREAM_TYPE_HLS:
+            if camera.frontend_stream_type != STREAM_TYPE_HLS:
                 continue
 
             children.append(
                 BrowseMediaSource(
                     domain=DOMAIN,
-                    identifier=entity.entity_id,
-                    media_class=MEDIA_CLASS_APP,
-                    media_content_type=FORMAT_CONTENT_TYPE["hls"],
-                    title=entity.name,
-                    thumbnail=f"/api/camera_proxy/{entity.entity_id}",
+                    identifier=camera.entity_id,
+                    media_class=MEDIA_CLASS_VIDEO,
+                    media_content_type=FORMAT_CONTENT_TYPE[HLS_PROVIDER],
+                    title=camera.name,
+                    thumbnail=f"/api/camera_proxy/{camera.entity_id}",
                     can_play=True,
                     can_expand=False,
-                    children_media_class=MEDIA_CLASS_VIDEO,
                 )
             )
 
