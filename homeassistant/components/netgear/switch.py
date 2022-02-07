@@ -79,7 +79,7 @@ class NetgearAllowBlock(NetgearDeviceEntity, SwitchEntity):
         self.entity_description = entity_description
         self._name = f"{self.get_device_name()} {self.entity_description.name}"
         self._unique_id = f"{self._mac}-{self.entity_description.key}"
-        self._state = True
+        self._state = None
         self.async_update_device()
 
     @property
