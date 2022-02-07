@@ -54,11 +54,13 @@ async def async_setup_entry(
 class NetgearRouterButtonEntity(NetgearRouterEntity, ButtonEntity):
     """Netgear Router button entity."""
 
+    entity_description: NetgearButtonEntityDescription
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
         router: NetgearRouter,
-        entity_description: ButtonEntityDescription,
+        entity_description: NetgearButtonEntityDescription,
     ) -> None:
         """Initialize a Netgear device."""
         super().__init__(coordinator, router)
