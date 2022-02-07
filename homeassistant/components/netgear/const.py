@@ -5,7 +5,7 @@ from homeassistant.const import Platform
 
 DOMAIN = "netgear"
 
-PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR, Platform.SWITCH], Platform.BUTTON
+PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR, Platform.SWITCH, Platform.BUTTON]
 
 CONF_CONSIDER_HOME = "consider_home"
 

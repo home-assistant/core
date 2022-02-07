@@ -57,8 +57,7 @@ class NetgearRebootButtonEntity(NetgearRouterEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Triggers the button press service."""
-        async with self._router.api_lock:
-            await self.hass.async_add_executor_job(self._router.api.reboot)
+        await self._router.async_reboot()
 
     @callback
     def async_update_device(self) -> None:
