@@ -20,7 +20,6 @@ async def test_version_sensor(
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
     )
-    print(diagnostics)
     assert diagnostics["entry"]["data"] == {
         "name": "",
         "channel": "stable",
