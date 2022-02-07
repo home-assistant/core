@@ -1,4 +1,7 @@
 """Support for Broadlink devices."""
+from __future__ import annotations
+
+from collections import defaultdict
 from contextlib import suppress
 from functools import partial
 import logging
@@ -17,9 +20,14 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CO
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.storage import Store
 
 from .const import DEFAULT_PORT, DOMAIN, DOMAINS_AND_TYPES
+from .helpers import data_packet
 from .updater import get_update_manager
+
+CODE_SAVE_DELAY = 15
+FLAG_SAVE_DELAY = 15
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +40,7 @@ def get_domains(device_type):
 class BroadlinkDevice:
     """Manages a Broadlink device."""
 
-    def __init__(self, hass, config):
+    def __init__(self, hass, config, codes_store, flags_store):
         """Initialize the device."""
         self.hass = hass
         self.config = config
@@ -41,6 +49,11 @@ class BroadlinkDevice:
         self.fw_version = None
         self.authorized = None
         self.reset_jobs = []
+        self._code_storage: Store = codes_store
+        self._flag_storage: Store = flags_store
+        self._codes: dict[str, dict[str, str | list[str]]] = {}
+        self._flags: dict[str, int] = defaultdict(int)
+        self._storage_loaded = False
 
     @property
     def name(self):
@@ -117,6 +130,9 @@ class BroadlinkDevice:
 
         self.authorized = True
 
+        self._codes.update(await self._code_storage.async_load() or {})
+        self._flags.update(await self._flag_storage.async_load() or {})
+
         update_manager = get_update_manager(self)
         coordinator = update_manager.coordinator
         await coordinator.async_config_entry_first_refresh()
@@ -190,3 +206,105 @@ class BroadlinkDevice:
                 data={CONF_NAME: self.name, **self.config.data},
             )
         )
+
+    def extract_devices_and_commands(self) -> dict[str, list[str]]:
+        """Return the set of devices and commands in storage."""
+        return {
+            device: list(subdevices.keys())
+            for device, subdevices in self._codes.items()
+        }
+
+    def extract_codes(self, commands, device=None):
+        """Extract a list of codes.
+
+        If the command starts with `b64:`, extract the code from it.
+        Otherwise, extract the code from storage, using the command and
+        device as keys.
+
+        The codes are returned in sublists. For toggle commands, the
+        sublist contains two codes that must be sent alternately with
+        each call.
+        """
+        code_list = []
+        for cmd in commands:
+            if cmd.startswith("b64:"):
+                codes = [cmd[4:]]
+
+            else:
+                if device is None:
+                    raise ValueError("You need to specify a device")
+
+                try:
+                    codes = self._codes[device][cmd]
+                except KeyError as err:
+                    raise ValueError(f"Command not found: {repr(cmd)}") from err
+
+                if isinstance(codes, list):
+                    codes = codes[:]
+                else:
+                    codes = [codes]
+
+            for idx, code in enumerate(codes):
+                try:
+                    codes[idx] = data_packet(code)
+                except ValueError as err:
+                    raise ValueError(f"Invalid code: {repr(code)}") from err
+
+            code_list.append(codes)
+        return code_list
+
+    def toggled_codes(self, code_list: list[list[str]], subdevice: str | None = None):
+        """Generate the list of codes we want and toggle as we go along."""
+        try:
+            for codes in code_list:
+                if len(codes) > 1 and subdevice:
+                    yield codes[self._flags[subdevice]]
+                    self._flags[subdevice] ^= 1
+                else:
+                    yield codes[0]
+        finally:
+            self._flag_storage.async_delay_save(lambda: self._flags, FLAG_SAVE_DELAY)
+
+    def add_commands(
+        self, commands: dict[str, str | list[str]], subdevice: str
+    ) -> None:
+        """Add a set of commands."""
+        self._codes.setdefault(subdevice, {}).update(commands)
+        self._code_storage.async_delay_save(lambda: self._codes, CODE_SAVE_DELAY)
+
+    def delete_commands(self, commands: list[str], subdevice: str) -> None:
+        """Delete commands from a subdevice."""
+
+        try:
+            codes = self._codes[subdevice]
+        except KeyError as err:
+            err_msg = f"Device not found: {repr(subdevice)}"
+            raise ValueError(err_msg) from err
+
+        cmds_not_found = []
+        for command in commands:
+            try:
+                del codes[command]
+            except KeyError:
+                cmds_not_found.append(command)
+
+        if cmds_not_found:
+            if len(cmds_not_found) == 1:
+                err_msg = f"Command not found: {repr(cmds_not_found[0])}"
+            else:
+                err_msg = f"Commands not found: {repr(cmds_not_found)}"
+
+            if len(cmds_not_found) == len(commands):
+                raise ValueError(err_msg)
+
+            _LOGGER.error("Error deleting: %s", err_msg)
+
+        # Clean up
+        if not codes:
+            del self._codes[subdevice]
+            if self._flags.pop(subdevice, None) is not None:
+                self._flag_storage.async_delay_save(
+                    lambda: self._flags, FLAG_SAVE_DELAY
+                )
+
+        self._code_storage.async_delay_save(lambda: self._codes, CODE_SAVE_DELAY)
