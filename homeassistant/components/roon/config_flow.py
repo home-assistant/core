@@ -81,7 +81,6 @@ class RoonHub:
                 core_id = auth_api[0].core_id
                 core_name = auth_api[0].core_name
                 token = auth_api[0].token
-                core_name = auth_api[0].core_name
                 break
 
             await asyncio.sleep(AUTHENTICATE_TIMEOUT)
