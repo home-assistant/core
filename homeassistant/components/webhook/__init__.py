@@ -6,6 +6,7 @@ from http import HTTPStatus
 from ipaddress import ip_address
 import logging
 import secrets
+from urllib.parse import urlparse
 
 from aiohttp.hdrs import ORIGIN, REFERER
 from aiohttp.web import Request, Response
@@ -24,7 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "webhook"
 
-NON_LOCAL_HEADERS = (ORIGIN, REFERER)
 URL_WEBHOOK_PATH = "/api/webhook/{webhook_id}"
 
 
@@ -108,6 +108,26 @@ async def async_handle_webhook(
         _LOGGER.debug("%s", content)
         return Response(status=HTTPStatus.OK)
 
+    # POST & HEAD are considered simple requests. They do not trigger a CORS preflight
+    # check. The presence of a "Referer" header likely indicates a CORS request. Verify
+    # that the referrer is from an allowed origin.
+    if request.headers.get(ORIGIN) is None and (
+        referrer := request.headers.get(REFERER)
+    ):
+        try:
+            url = urlparse(referrer)
+            referrer_origin = f"{url.scheme}://{url.netloc}"
+        except ValueError as err:
+            referrer_origin = f"{REFERER} header ({referrer[:16]}) does not contain a valid URL: {err}"
+
+        if referrer_origin not in hass.http.cors_origins:
+            _LOGGER.warning(
+                "Received likely CSRF request from non-trusted origin for webhook %s (%s)",
+                webhook_id,
+                referrer_origin[:80],
+            )
+            return Response(status=HTTPStatus.OK)
+
     if webhook["local_only"]:
         try:
             remote = ip_address(request.remote)
@@ -117,20 +137,6 @@ async def async_handle_webhook(
 
         if not network.is_local(remote):
             _LOGGER.warning("Received remote request for local webhook %s", webhook_id)
-            return Response(status=HTTPStatus.OK)
-
-        # The presence of NON_LOCAL_HEADERS could indicate a CSRF request from a
-        # local browser on behalf of a non-local website on the internet.
-        # (non-local website) <-> (local browser) -> (webhook)
-        non_local_headers = [
-            request.headers.get(non_local) for non_local in NON_LOCAL_HEADERS
-        ]
-        if any(non_local_headers):
-            _LOGGER.warning(
-                "Received likely CSRF request for local webhook %s (%r)",
-                webhook_id,
-                non_local_headers,
-            )
             return Response(status=HTTPStatus.OK)
 
     try:
@@ -157,7 +163,6 @@ class WebhookView(HomeAssistantView):
     url = URL_WEBHOOK_PATH
     name = "api:webhook"
     requires_auth = False
-    cors_allowed = True
 
     async def _handle(self, request: Request, webhook_id: str) -> Response:
         """Handle webhook call."""

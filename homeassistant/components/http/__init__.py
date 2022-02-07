@@ -167,6 +167,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ssl_key=ssl_key,
         trusted_proxies=trusted_proxies,
         ssl_profile=ssl_profile,
+        cors_origins=cors_origins,
     )
     await server.async_initialize(
         cors_origins=cors_origins,
@@ -218,6 +219,7 @@ class HomeAssistantHTTP:
         server_port: int,
         trusted_proxies: list[str],
         ssl_profile: str,
+        cors_origins: list[str],
     ) -> None:
         """Initialize the HTTP Home Assistant server."""
         self.app = web.Application(middlewares=[], client_max_size=MAX_CLIENT_SIZE)
@@ -229,6 +231,7 @@ class HomeAssistantHTTP:
         self.server_port = server_port
         self.trusted_proxies = trusted_proxies
         self.ssl_profile = ssl_profile
+        self.cors_origins = cors_origins
         self.runner: web.AppRunner | None = None
         self.site: HomeAssistantTCPSite | None = None
 

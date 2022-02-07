@@ -3,19 +3,28 @@ from http import HTTPStatus
 from ipaddress import ip_address
 from unittest.mock import patch
 
-from aiohttp import web
+from aiohttp import hdrs, web
 import pytest
 
 from homeassistant.components import webhook
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 
+TRUSTED_ORIGIN = "https://home-assistant.io"
+
 
 @pytest.fixture
-def mock_client(hass, hass_client):
+def mock_client(hass, hass_client_no_auth):
     """Create http client for webhooks."""
+    hass.loop.run_until_complete(
+        async_setup_component(
+            hass,
+            "http",
+            {"http": {"cors_allowed_origins": [TRUSTED_ORIGIN]}},
+        )
+    )
     hass.loop.run_until_complete(async_setup_component(hass, "webhook", {}))
-    return hass.loop.run_until_complete(hass_client())
+    return hass.loop.run_until_complete(hass_client_no_auth())
 
 
 async def test_unregistering_webhook(hass, mock_client):
@@ -147,6 +156,73 @@ async def test_webhook_head(hass, mock_client):
     assert hooks[0][2].method == "HEAD"
 
 
+async def test_webhook_cors(hass, mock_client):
+    """Test webhook with a cross-origin request."""
+    hooks = []
+    webhook_id = webhook.async_generate_id()
+
+    async def handle(*args):
+        """Handle webhook."""
+        hooks.append((args[0], args[1], await args[2].text()))
+
+    webhook.async_register(hass, "test", "Test hook", webhook_id, handle)
+
+    # Request with Referer header set from a trusted origin.
+    resp = await mock_client.post(
+        f"/api/webhook/{webhook_id}",
+        headers={"Referer": f"{TRUSTED_ORIGIN}/path?qs"},
+        json={"data": True},
+    )
+    assert resp.status == HTTPStatus.OK
+    # Should receive hook.
+    assert len(hooks) == 1
+    assert hooks[0][0] is hass
+    assert hooks[0][1] == webhook_id
+    assert hooks[0][2] == '{"data": true}'
+
+    # Request with Referer header set from a non-trusted origin.
+    resp = await mock_client.post(
+        f"/api/webhook/{webhook_id}",
+        headers={"Referer": "http://example.com/path?qs"},
+        json={"data": True},
+    )
+    assert resp.status == HTTPStatus.OK
+    # No hook received
+    assert len(hooks) == 1
+
+    # Request with invalid Referer header.
+    resp = await mock_client.post(
+        f"/api/webhook/{webhook_id}",
+        headers={"Referer": "http://[::1/128"},
+        json={"data": True},
+    )
+    assert resp.status == HTTPStatus.OK
+    # No hook received
+    assert len(hooks) == 1
+
+    # CORS preflight request for trusted origin.
+    resp = await mock_client.options(
+        f"/api/webhook/{webhook_id}",
+        headers={
+            hdrs.ORIGIN: TRUSTED_ORIGIN,
+            hdrs.ACCESS_CONTROL_REQUEST_METHOD: hdrs.METH_POST,
+        },
+        json={"data": True},
+    )
+    assert resp.status == HTTPStatus.OK
+
+    # CORS preflight request for non-trusted origin.
+    resp = await mock_client.options(
+        f"/api/webhook/{webhook_id}",
+        headers={
+            hdrs.ORIGIN: "http://example.com",
+            hdrs.ACCESS_CONTROL_REQUEST_METHOD: hdrs.METH_POST,
+        },
+        json={"data": True},
+    )
+    assert resp.status != HTTPStatus.OK
+
+
 async def test_webhook_local_only(hass, mock_client):
     """Test posting a webhook with local only."""
     hooks = []
@@ -173,26 +249,6 @@ async def test_webhook_local_only(hass, mock_client):
         return_value=ip_address("123.123.123.123"),
     ):
         resp = await mock_client.post(f"/api/webhook/{webhook_id}", json={"data": True})
-    assert resp.status == HTTPStatus.OK
-    # No hook received
-    assert len(hooks) == 1
-
-    # Request with Referer header set.
-    resp = await mock_client.post(
-        f"/api/webhook/{webhook_id}",
-        headers={"Referer": "https://home-assistant.io/"},
-        json={"data": True},
-    )
-    assert resp.status == HTTPStatus.OK
-    # No hook received
-    assert len(hooks) == 1
-
-    # Request with Origin header set.
-    resp = await mock_client.post(
-        f"/api/webhook/{webhook_id}",
-        headers={"Origin": "https://home-assistant.io/"},
-        json={"data": True},
-    )
     assert resp.status == HTTPStatus.OK
     # No hook received
     assert len(hooks) == 1
