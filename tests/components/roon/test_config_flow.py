@@ -18,8 +18,13 @@ class RoonApiMock:
         """Return the roon host."""
         return "core_id"
 
+    @property
+    def core_name(self):
+        """Return the roon core name."""
+        return "Roon Core"
+
     def stop(self):
-        """Stop socket and discovery."""
+        """Stop socket."""
         return
 
 
@@ -93,8 +98,10 @@ async def test_successful_discovery_and_auth(hass):
     assert result2["title"] == "Roon Labs Music Player"
     assert result2["data"] == {
         "host": None,
+        "port": None,
         "api_key": "good_token",
         "roon_server_id": "core_id",
+        "roon_server_name": "Roon Core",
     }
 
 
@@ -119,11 +126,11 @@ async def test_unsuccessful_discovery_user_form_and_auth(hass):
 
         # Should show the form if server was not discovered
         assert result["type"] == "form"
-        assert result["step_id"] == "user"
+        assert result["step_id"] == "fallback"
         assert result["errors"] == {}
 
         await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "1.1.1.1"}
+            result["flow_id"], {"host": "1.1.1.1", "port": 9331}
         )
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -134,7 +141,10 @@ async def test_unsuccessful_discovery_user_form_and_auth(hass):
     assert result2["data"] == {
         "host": "1.1.1.1",
         "api_key": "good_token",
+        "port": 9331,
+        "api_key": "good_token",
         "roon_server_id": "core_id",
+        "roon_server_name": "Roon Core",
     }
 
 
