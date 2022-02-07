@@ -13,7 +13,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import SONOS_CREATE_AUDIO_FORMAT_SENSOR, SONOS_CREATE_BATTERY
 from .entity import SonosEntity, SonosPollingEntity
-from .exception import SpeakerUnavailable
 from .helpers import soco_error
 from .speaker import SonosSpeaker
 
@@ -98,9 +97,6 @@ class SonosAudioInputFormatSensorEntity(SonosPollingEntity, SensorEntity):
     @soco_error()
     def poll_state(self) -> None:
         """Poll the device for the current state."""
-        if not self.available:
-            raise SpeakerUnavailable
-
         self._attr_native_value = self.soco.soundbar_audio_input_format
 
     async def _async_fallback_poll(self) -> None:
