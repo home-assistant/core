@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import collections
-from collections.abc import Awaitable, Callable, Iterable, Mapping
+from collections.abc import Awaitable, Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -26,7 +26,6 @@ from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_EXTRA,
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
@@ -974,10 +973,6 @@ async def async_handle_play_stream_service(
     url = await _async_stream_endpoint_url(camera.hass, camera, fmt)
 
     hass = camera.hass
-    data: Mapping[str, str] = {
-        ATTR_MEDIA_CONTENT_ID: f"{get_url(hass)}{url}",
-        ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[fmt],
-    }
 
     # It is required to send a different payload for cast media players
     entity_ids = service_call.data[ATTR_MEDIA_PLAYER]
@@ -991,31 +986,17 @@ async def async_handle_play_stream_service(
     ]
     other_entity_ids = list(set(entity_ids) - set(cast_entity_ids))
 
-    if cast_entity_ids:
+    for entities, url_prefix in (
+        (cast_entity_ids, ""),
+        (other_entity_ids, get_url(hass)),
+    ):
         await hass.services.async_call(
             DOMAIN_MP,
             SERVICE_PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: cast_entity_ids,
-                **data,
-                ATTR_MEDIA_EXTRA: {
-                    "stream_type": "LIVE",
-                    "media_info": {
-                        "hlsVideoSegmentFormat": "fmp4",
-                    },
-                },
-            },
-            blocking=True,
-            context=service_call.context,
-        )
-
-    if other_entity_ids:
-        await hass.services.async_call(
-            DOMAIN_MP,
-            SERVICE_PLAY_MEDIA,
-            {
-                ATTR_ENTITY_ID: other_entity_ids,
-                **data,
+                ATTR_ENTITY_ID: entities,
+                ATTR_MEDIA_CONTENT_ID: f"{url_prefix}{url}",
+                ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[fmt],
             },
             blocking=True,
             context=service_call.context,

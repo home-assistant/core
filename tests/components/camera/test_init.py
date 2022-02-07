@@ -20,9 +20,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
-from .common import EMPTY_8_6_JPEG, WEBRTC_ANSWER, mock_turbo_jpeg
-
-from tests.components.camera import common
+from .common import EMPTY_8_6_JPEG, WEBRTC_ANSWER, mock_camera_prefs, mock_turbo_jpeg
 
 STREAM_SOURCE = "rtsp://127.0.0.1/stream"
 HLS_STREAM_SOURCE = "http://127.0.0.1/example.m3u"
@@ -40,7 +38,7 @@ def mock_stream_fixture(hass):
 @pytest.fixture(name="setup_camera_prefs")
 def setup_camera_prefs_fixture(hass):
     """Initialize HTTP API."""
-    return common.mock_camera_prefs(hass, "camera.demo_camera")
+    return mock_camera_prefs(hass, "camera.demo_camera")
 
 
 @pytest.fixture(name="image_mock_url")
