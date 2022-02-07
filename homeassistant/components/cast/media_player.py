@@ -555,9 +555,8 @@ class CastDevice(MediaPlayerEntity):
                 timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
             )
 
-            # prepend external URL
-            hass_url = get_url(self.hass, prefer_external=self.hass.config.api.use_ssl)
-            media_id = f"{hass_url}{media_id}"
+            # prepend URL
+            media_id = f"{get_url(self.hass)}{media_id}"
 
         metadata = extra.get("metadata")
 
