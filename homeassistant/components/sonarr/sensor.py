@@ -90,7 +90,7 @@ def sonarr_exception_handler(func: Callable) -> Callable:
     and handles the availability of the entity.
     """
 
-    async def handler(self, *args, **kwargs):  # type: ignore
+    async def handler(self, *args, **kwargs):
         try:
             await func(self, *args, **kwargs)
             self.last_update_success = True
