@@ -1,13 +1,11 @@
 """Helpers for Waze Travel Time integration."""
+import re
+
 from WazeRouteCalculator import WazeRouteCalculator, WRCError
 
 from homeassistant.helpers.location import find_coordinates
 
-from .const import (
-    ENTITY_ID_PATTERN,
-)
-
-import re
+from .const import ENTITY_ID_PATTERN
 
 
 def is_valid_config_entry(hass, origin, destination, region):
