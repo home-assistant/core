@@ -29,7 +29,6 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 _T = TypeVar("_T", bound="RokuEntity")
-_R = TypeVar("_R")
 _P = ParamSpec("_P")
 
 
