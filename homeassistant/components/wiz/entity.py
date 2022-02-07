@@ -24,8 +24,9 @@ class WizToggleEntity(CoordinatorEntity, ToggleEntity):
         self._attr_unique_id = self._device.mac
         self._attr_name = name
         hw_data = bulb_type.name.split("_")
-        model = hw_data[1]
-        hw_version = f"{hw_data[0]} {hw_data[2]}" if len(hw_data) == 3 else hw_data[0]
+        board = hw_data.pop(0)
+        model = hw_data.pop(0)
+        hw_version = f"{board} {hw_data[0]}" if hw_data else board
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, self._device.mac)},
             name=name,
