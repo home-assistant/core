@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """Generate an updated requirements_all.txt."""
+from __future__ import annotations
+
 import configparser
 import difflib
 import importlib
@@ -354,6 +356,38 @@ def requirements_pre_commit_output():
     return "\n".join(output) + "\n"
 
 
+def requirements_test_output(reqs: dict[str, list[str]]) -> str | None:
+    """Sync additional requirements in requirements_test.txt with all requirements."""
+    source = "requirements_test.txt"
+    with open(source) as fp:
+        data = fp.read()
+
+    match_groups = re.match(
+        r"(.*# -- Start version sync --\n)(.*)(# --- End version sync ---\n.*)",
+        data,
+        re.DOTALL,
+    )
+
+    parsed_reqs: dict[str, str] = {
+        s[0]: s[2] for key in reqs if (s := key.partition("=="))
+    }
+    requirement_keys: list[str] = [
+        s[0]
+        for key in match_groups[2].strip().split("\n")
+        if (s := key.partition("=="))
+    ]
+    set_diff = set(requirement_keys).difference(parsed_reqs)
+    if set_diff:
+        print("******* ERROR")
+        print(f"Could not sync all reqs from requirements_test.txt: {sorted(set_diff)}")
+        return None
+
+    synced_requirements: list[str] = [
+        f"{key}=={version}" for key in requirement_keys if (version := parsed_reqs[key])
+    ]
+    return match_groups[1] + "\n".join(synced_requirements) + "\n" + match_groups[3]
+
+
 def gather_constraints():
     """Construct output for constraint file."""
     return (
@@ -390,8 +424,11 @@ def main(validate):
         return 1
 
     data = gather_modules()
-
     if data is None:
+        return 1
+
+    reqs_test_file = requirements_test_output(data)
+    if reqs_test_file is None:
         return 1
 
     reqs_file = requirements_output(data)
@@ -403,6 +440,7 @@ def main(validate):
     files = (
         ("requirements.txt", reqs_file),
         ("requirements_all.txt", reqs_all_file),
+        ("requirements_test.txt", reqs_test_file),
         ("requirements_test_pre_commit.txt", reqs_pre_commit_file),
         ("requirements_test_all.txt", reqs_test_all_file),
         ("homeassistant/package_constraints.txt", constraints),

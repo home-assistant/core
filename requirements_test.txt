@@ -6,6 +6,7 @@
 # contain hints for available should be kept in sync with them
 
 -c homeassistant/package_constraints.txt
+-r requirements.txt
 -r requirements_test_pre_commit.txt
 codecov==2.1.12
 coverage==6.3.1
@@ -46,3 +47,11 @@ types-PyYAML==5.4.6
 types-requests==2.25.1
 types-toml==0.1.5
 types-ujson==0.1.1
+
+# Add additional requirements which should be
+# synced with requirements_test_all.txt below.
+# These should only include once that are necessary
+# to run any test (eg. required for 'tests/conftest.py').
+# -- Start version sync --
+sqlalchemy==1.4.27
+# --- End version sync ---
