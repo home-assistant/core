@@ -43,7 +43,7 @@ def setup_platform(
     setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     sensors = []
-    pathlist = []
+    paths = set()
     for path in config[CONF_FILE_PATHS]:
         try:
             fullpath = str(pathlib.Path(path).absolute())
@@ -51,9 +51,9 @@ def setup_platform(
             _LOGGER.error("Can not access file %s, error %s", path, error)
             continue
 
-        if fullpath in pathlist:
+        if fullpath in paths:
             continue
-        pathlist.append(fullpath)
+        paths.add(fullpath)
 
         if not hass.config.is_allowed_path(path):
             _LOGGER.error("Filepath %s is not valid or allowed", path)
