@@ -10,10 +10,10 @@ from .common import MOCK_VERSION, setup_version_integration
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
-async def test_version_sensor(
+async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSession,
-):
+) -> None:
     """Test diagnostic information."""
     config_entry = await setup_version_integration(hass)
 
