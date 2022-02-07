@@ -58,9 +58,8 @@ class SonosHouseholdCoordinator:
                 await self.async_update_entities(speaker.soco)
             except SonosUpdateError as err:
                 _LOGGER.error(
-                    "Could not refresh %s using %s: %s",
+                    "Could not refresh %s: %s",
                     self.class_type,
-                    speaker.soco,
                     err,
                 )
             else:

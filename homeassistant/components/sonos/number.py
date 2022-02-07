@@ -12,7 +12,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import SONOS_CREATE_LEVELS
 from .entity import SonosEntity
-from .exception import SpeakerUnavailable
 from .helpers import soco_error
 from .speaker import SonosSpeaker
 
@@ -80,11 +79,8 @@ class SonosLevelEntity(SonosEntity, NumberEntity):
         await self.hass.async_add_executor_job(self.poll_state)
 
     @soco_error()
-    def poll_state(self) -> int:
+    def poll_state(self) -> None:
         """Poll the device for the current state."""
-        if not self.available:
-            raise SpeakerUnavailable
-
         state = getattr(self.soco, self.level_type)
         setattr(self.speaker, self.level_type, state)
 

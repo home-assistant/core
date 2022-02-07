@@ -4,7 +4,6 @@ from __future__ import annotations
 from abc import abstractmethod
 import datetime
 import logging
-from typing import Any
 
 import soco.config as soco_config
 from soco.core import SoCo
@@ -21,7 +20,7 @@ from .const import (
     SONOS_FAVORITES_UPDATED,
     SONOS_STATE_UPDATED,
 )
-from .exception import SonosUpdateError, SpeakerUnavailable
+from .exception import SonosUpdateError
 from .speaker import SonosSpeaker
 
 SUB_FAIL_URL = "https://www.home-assistant.io/integrations/sonos/#network-requirements"
@@ -88,12 +87,8 @@ class SonosEntity(Entity):
             await self.speaker.async_unsubscribe()
         try:
             await self._async_fallback_poll()
-        except SonosUpdateError:
-            _LOGGER.debug(
-                "Could not fallback poll %s on %s",
-                self.entity_id,
-                self.speaker.zone_name,
-            )
+        except SonosUpdateError as err:
+            _LOGGER.debug("Could not fallback poll: %s", err)
 
     @abstractmethod
     async def _async_fallback_poll(self) -> None:
@@ -134,16 +129,14 @@ class SonosPollingEntity(SonosEntity):
     """Representation of a Sonos entity which may not support updating by subscriptions."""
 
     @abstractmethod
-    def poll_state(self) -> Any:
+    def poll_state(self) -> None:
         """Poll the device for the current state."""
 
     def update(self) -> None:
         """Update the state using the built-in entity poller."""
+        if not self.available:
+            return
         try:
             self.poll_state()
-        except SpeakerUnavailable:
-            return
-        except SonosUpdateError:
-            _LOGGER.debug(
-                "Could not poll %s on %s", self.entity_id, self.speaker.zone_name
-            )
+        except SonosUpdateError as err:
+            _LOGGER.debug("Could not poll: %s", err)
