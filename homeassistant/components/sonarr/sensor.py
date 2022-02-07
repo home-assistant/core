@@ -68,7 +68,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 )
 
 _T = TypeVar("_T", bound="SonarrSensor")
-_R = TypeVar("_R")
 _P = ParamSpec("_P")
 
 
