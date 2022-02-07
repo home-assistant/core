@@ -18,6 +18,9 @@
             "click": "Naci\u015bni\u0119cie",
             "switch": "Prze\u0142\u0105cznik"
         },
+        "tuya__humidifier_spray_mode": {
+            "humidity": "Wilgotno\u015b\u0107"
+        },
         "tuya__ipc_work_mode": {
             "0": "Tryb niskiego poboru mocy",
             "1": "Tryb pracy ci\u0105g\u0142ej"

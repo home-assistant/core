@@ -1,11 +1,14 @@
 """Support for Sonarr sensors."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
+from functools import wraps
 import logging
-from typing import Any
+from typing import Any, TypeVar
 
 from sonarr import Sonarr, SonarrConnectionError, SonarrError
+from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -64,6 +67,9 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+_T = TypeVar("_T", bound="SonarrSensor")
+_P = ParamSpec("_P")
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -82,14 +88,17 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-def sonarr_exception_handler(func):
+def sonarr_exception_handler(
+    func: Callable[Concatenate[_T, _P], Awaitable[None]]  # type: ignore[misc]
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:  # type: ignore[misc]
     """Decorate Sonarr calls to handle Sonarr exceptions.
 
     A decorator that wraps the passed in function, catches Sonarr errors,
     and handles the availability of the entity.
     """
 
-    async def handler(self, *args, **kwargs):
+    @wraps(func)
+    async def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
         try:
             await func(self, *args, **kwargs)
             self.last_update_success = True
@@ -102,11 +111,16 @@ def sonarr_exception_handler(func):
                 _LOGGER.error("Invalid response from API: %s", error)
                 self.last_update_success = False
 
-    return handler
+    return wrapper
 
 
 class SonarrSensor(SonarrEntity, SensorEntity):
     """Implementation of the Sonarr sensor."""
+
+    data: dict[str, Any]
+    last_update_success: bool
+    upcoming_days: int
+    wanted_max_items: int
 
     def __init__(
         self,
@@ -119,10 +133,10 @@ class SonarrSensor(SonarrEntity, SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{entry_id}_{description.key}"
 
-        self.data: dict[str, Any] = {}
-        self.last_update_success: bool = False
-        self.upcoming_days: int = options[CONF_UPCOMING_DAYS]
-        self.wanted_max_items: int = options[CONF_WANTED_MAX_ITEMS]
+        self.data = {}
+        self.last_update_success = True
+        self.upcoming_days = options[CONF_UPCOMING_DAYS]
+        self.wanted_max_items = options[CONF_WANTED_MAX_ITEMS]
 
         super().__init__(
             sonarr=sonarr,

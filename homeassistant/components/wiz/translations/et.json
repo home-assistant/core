@@ -10,16 +10,25 @@
             "no_wiz_light": "Pirni ei saa \u00fchendada WiZ Platvormi sidumise kaudu.",
             "unknown": "Ootamatu t\u00f5rge"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "confirm": {
                 "description": "Kas alustan seadistamist?"
+            },
+            "discovery_confirm": {
+                "description": "Kas soovid seadistada {name}({host})?"
+            },
+            "pick_device": {
+                "data": {
+                    "device": "Seade"
+                }
             },
             "user": {
                 "data": {
                     "host": "Host",
                     "name": "Nimi"
                 },
-                "description": "Uue pirni lisamiseks sisesta hostnimi v\u00f5i IP-aadress ja nimi:"
+                "description": "Kui j\u00e4tad hosti t\u00fchjaks kasutatakse seadmete leidmiseks avastamist."
             }
         }
     }
