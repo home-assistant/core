@@ -6,8 +6,8 @@ from homeassistant.helpers.location import find_coordinates
 
 def is_valid_config_entry(hass, origin, destination, region):
     """Return whether the config entry data is valid."""
-    origin = find_coordinates(hass, origin)
-    destination = find_coordinates(hass, destination)
+    origin = (find_coordinates(hass, origin),origin)[find_coordinates(hass, origin)=="None"]
+    destination = (find_coordinates(hass, destination),destination)[find_coordinates(hass, origin)=="None"]
     try:
         WazeRouteCalculator(origin, destination, region).calc_all_routes_info()
     except WRCError:
