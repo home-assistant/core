@@ -143,7 +143,7 @@ jobs:
         uses: actions/checkout@v2.4.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v2.3.1
+        uses: actions/setup-python@v2.3.2
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Generate partial Python venv restore key
@@ -223,7 +223,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2.4.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.3.1
+        uses: actions/setup-python@v2.3.2
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -273,7 +273,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2.4.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.3.1
+        uses: actions/setup-python@v2.3.2
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -324,7 +324,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2.4.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.3.1
+        uses: actions/setup-python@v2.3.2
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -366,7 +366,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2.4.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.3.1
+        uses: actions/setup-python@v2.3.2
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -500,7 +500,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2.4.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.3.1
+        uses: actions/setup-python@v2.3.2
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
