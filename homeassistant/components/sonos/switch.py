@@ -23,7 +23,6 @@ from .const import (
     SONOS_CREATE_SWITCHES,
 )
 from .entity import SonosEntity, SonosPollingEntity
-from .exception import SpeakerUnavailable
 from .helpers import soco_error
 from .speaker import SonosSpeaker
 
@@ -171,9 +170,6 @@ class SonosSwitchEntity(SonosPollingEntity, SwitchEntity):
     @soco_error()
     def poll_state(self) -> None:
         """Poll the current state of the switch."""
-        if not self.available:
-            raise SpeakerUnavailable
-
         state = getattr(self.soco, self.feature_type)
         setattr(self.speaker, self.feature_type, state)
 

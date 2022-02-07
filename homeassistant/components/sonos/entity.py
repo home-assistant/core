@@ -21,7 +21,7 @@ from .const import (
     SONOS_FAVORITES_UPDATED,
     SONOS_STATE_UPDATED,
 )
-from .exception import SonosUpdateError, SpeakerUnavailable
+from .exception import SonosUpdateError
 from .speaker import SonosSpeaker
 
 SUB_FAIL_URL = "https://www.home-assistant.io/integrations/sonos/#network-requirements"
@@ -135,9 +135,9 @@ class SonosPollingEntity(SonosEntity):
 
     def update(self) -> None:
         """Update the state using the built-in entity poller."""
+        if not self.available:
+            return
         try:
             self.poll_state()
-        except SpeakerUnavailable:
-            return
         except SonosUpdateError as err:
             _LOGGER.debug("Could not poll: %s", err)
