@@ -181,6 +181,17 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_data=DPCode.COLOUR_DATA,
         ),
     ),
+    # Unknown product with light capabilities
+    # Fond in some diffusers, plugs and PIR flood lights
+    # Not documented
+    "qjdcz": (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            color_mode=DPCode.WORK_MODE,
+            brightness=DPCode.BRIGHT_VALUE,
+            color_data=DPCode.COLOUR_DATA,
+        ),
+    ),
     # Heater
     # https://developer.tuya.com/en/docs/iot/categoryqn?id=Kaiuz18kih0sm
     "qn": (
