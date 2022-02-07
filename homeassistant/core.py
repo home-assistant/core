@@ -89,7 +89,7 @@ from .util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
     from .auth import AuthManager
-    from .components.http import HomeAssistantHTTP
+    from .components.http import ApiConfig, HomeAssistantHTTP
     from .config_entries import ConfigEntries
 
 
@@ -1701,8 +1701,8 @@ class Config:
         # List of loaded components
         self.components: set[str] = set()
 
-        # API (HTTP) server configuration, see components.http.ApiConfig
-        self.api: Any | None = None
+        # API (HTTP) server configuration
+        self.api: ApiConfig | None = None
 
         # Directory that holds the configuration
         self.config_dir: str | None = None
