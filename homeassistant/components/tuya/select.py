@@ -282,7 +282,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         SelectEntityDescription(
             key=DPCode.FAN_SPEED_ENUM,
             name="Fan Speed",
-            device_class=TuyaDeviceClass.DEHUMIDIFIER_FAN_SPEED,    
+            device_class=TuyaDeviceClass.DEHUMIDIFIER_FAN_SPEED,
         ),
     ),
     # Humidifier
