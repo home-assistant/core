@@ -189,7 +189,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
-        key=SENSOR_SOLAR_POWER_PRODUCTION_TODAY,
+        key="solar power production today",
         name="Solar power production today",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_getter=lambda api: api.getSolarPowerProductionToday(),
@@ -198,7 +198,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ViCareSensorEntityDescription(
-        key=SENSOR_SOLAR_POWER_PRODUCTION_THIS_WEEK,
+        key="solar power production this week",
         name="Solar power production this week",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_getter=lambda api: api.getSolarPowerProductionThisWeek(),
@@ -207,7 +207,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ViCareSensorEntityDescription(
-        key=SENSOR_SOLAR_POWER_PRODUCTION_THIS_MONTH,
+        key="solar power production this month",
         name="Solar power production this month",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_getter=lambda api: api.getSolarPowerProductionThisMonth(),
@@ -216,7 +216,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ViCareSensorEntityDescription(
-        key=SENSOR_SOLAR_POWER_PRODUCTION_THIS_YEAR,
+        key="solar power production this year",
         name="Solar power production this year",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_getter=lambda api: api.getSolarPowerProductionThisYear(),
@@ -225,7 +225,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ViCareSensorEntityDescription(
-        key=SENSOR_POWER_CONSUMPTION_TODAY,
+        key="power consumption today",
         name="Power consumption today",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_getter=lambda api: api.getPowerConsumptionToday(),
@@ -234,7 +234,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ViCareSensorEntityDescription(
-        key=SENSOR_POWER_CONSUMPTION_THIS_WEEK,
+        key="power consumption this week",
         name="Power consumption this week",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_getter=lambda api: api.getPowerConsumptionThisWeek(),
@@ -243,7 +243,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ViCareSensorEntityDescription(
-        key=SENSOR_POWER_CONSUMPTION_THIS_MONTH,
+        key="power consumption this month",
         name="Power consumption this month",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_getter=lambda api: api.getPowerConsumptionThisMonth(),
@@ -252,7 +252,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ViCareSensorEntityDescription(
-        key=SENSOR_POWER_CONSUMPTION_THIS_YEAR,
+        key="power consumption this year",
         name="Power consumption this year",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_getter=lambda api: api.getPowerConsumptionThisYear(),
