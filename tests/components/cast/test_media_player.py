@@ -1002,7 +1002,7 @@ async def test_entity_play_media_sign_URL(hass: HomeAssistant, quick_play_mock):
 
     await async_process_ha_core_config(
         hass,
-        {"external_url": "http://example.com:8123"},
+        {"internal_url": "http://example.com:8123"},
     )
 
     info = get_fake_chromecast_info()
