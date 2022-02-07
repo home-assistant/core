@@ -81,11 +81,9 @@ async def async_setup_entry(
                 options[key] = new_data.pop(key)
             elif key in defaults:
                 options[key] = defaults[key]
-
         hass.config_entries.async_update_entry(
             config_entry, data=new_data, options=options
         )
-
     destination = config_entry.data[CONF_DESTINATION]
     origin = config_entry.data[CONF_ORIGIN]
     region = config_entry.data[CONF_REGION]
@@ -130,7 +128,6 @@ class WazeTravelTime(SensorEntity):
             self._origin_entity_id = origin
         else:
             self._waze_data.origin = origin
-
         if cmpl_re.fullmatch(destination):
             _LOGGER.debug("Found destination source entity %s", destination)
             self._destination_entity_id = destination
@@ -151,7 +148,6 @@ class WazeTravelTime(SensorEntity):
         """Return the state of the sensor."""
         if self._waze_data.duration is not None:
             return round(self._waze_data.duration)
-
         return None
 
     @property
@@ -159,7 +155,6 @@ class WazeTravelTime(SensorEntity):
         """Return the state attributes of the last update."""
         if self._waze_data.duration is None:
             return None
-
         return {
             ATTR_ATTRIBUTION: "Powered by Waze",
             "duration": self._waze_data.duration,
@@ -180,17 +175,23 @@ class WazeTravelTime(SensorEntity):
         # Get origin latitude and longitude from entity_id.
         if self._origin_entity_id is not None:
             if find_coordinates(self.hass, self._origin_entity_id) is not None:
-                self._waze_data.origin = find_coordinates(self.hass, self._origin_entity_id)
+                self._waze_data.origin = find_coordinates(
+                    self.hass, self._origin_entity_id
+                )
             else:
-                self._waze_data.origin = self.hass.states.get(self._origin_entity_id).state
-
+                self._waze_data.origin = self.hass.states.get(
+                    self._origin_entity_id
+                ).state
         # Get destination latitude and longitude from entity_id.
         if self._destination_entity_id is not None:
             if find_coordinates(self.hass, self._destination_entity_id) is not None:
-                self._waze_data.destination = find_coordinates(self.hass, self._destination_entity_id)
+                self._waze_data.destination = find_coordinates(
+                    self.hass, self._destination_entity_id
+                )
             else:
-                self._waze_data.destination = self.hass.states.get(self._destination_entity_id).state
-
+                self._waze_data.destination = self.hass.states.get(
+                    self._destination_entity_id
+                ).state
         self._waze_data.update()
 
 
@@ -241,20 +242,17 @@ class WazeTravelTimeData:
                         for k, v in routes.items()
                         if incl_filter.lower() in k.lower()
                     }
-
                 if excl_filter is not None:
                     routes = {
                         k: v
                         for k, v in routes.items()
                         if excl_filter.lower() not in k.lower()
                     }
-
                 if routes:
                     route = list(routes)[0]
                 else:
                     _LOGGER.warning("No routes found")
                     return
-
                 self.duration, distance = routes[route]
 
                 if units == CONF_UNIT_SYSTEM_IMPERIAL:
@@ -262,7 +260,6 @@ class WazeTravelTimeData:
                     self.distance = distance / 1.609
                 else:
                     self.distance = distance
-
                 self.route = route
             except WRCError as exp:
                 _LOGGER.warning("Error on retrieving data: %s", exp)
