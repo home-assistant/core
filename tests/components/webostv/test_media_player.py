@@ -565,26 +565,7 @@ async def test_cached_supported_features(hass, client, monkeypatch):
     await setup_webostv(hass)
     await client.mock_state_update()
 
-    # TV off start, support volume mute, step
-    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME
-    attrs = hass.states.get(ENTITY_ID).attributes
-
-    assert attrs[ATTR_SUPPORTED_FEATURES] == supported
-
-    # TV on, support volume mute, step, step
-    monkeypatch.setattr(client, "is_on", True)
-    monkeypatch.setattr(client, "sound_output", "speaker")
-    await client.mock_state_update()
-
-    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
-    attrs = hass.states.get(ENTITY_ID).attributes
-
-    assert attrs[ATTR_SUPPORTED_FEATURES] == supported
-
-    # TV off, support volume mute, step, step
-    monkeypatch.setattr(client, "is_on", False)
-    await client.mock_state_update()
-
+    # TV off, support volume mute, step, set
     supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
     attrs = hass.states.get(ENTITY_ID).attributes
 
@@ -600,11 +581,32 @@ async def test_cached_supported_features(hass, client, monkeypatch):
 
     assert attrs[ATTR_SUPPORTED_FEATURES] == supported
 
-    # TV off, support volume mute, step, step
+    # TV off, support volume mute, step
     monkeypatch.setattr(client, "is_on", False)
+    monkeypatch.setattr(client, "sound_output", None)
     await client.mock_state_update()
 
     supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME
+    attrs = hass.states.get(ENTITY_ID).attributes
+
+    assert attrs[ATTR_SUPPORTED_FEATURES] == supported
+
+    # TV on, support volume mute, step, set
+    monkeypatch.setattr(client, "is_on", True)
+    monkeypatch.setattr(client, "sound_output", "speaker")
+    await client.mock_state_update()
+
+    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
+    attrs = hass.states.get(ENTITY_ID).attributes
+
+    assert attrs[ATTR_SUPPORTED_FEATURES] == supported
+
+    # TV off, support volume mute, step, step, set
+    monkeypatch.setattr(client, "is_on", False)
+    monkeypatch.setattr(client, "sound_output", None)
+    await client.mock_state_update()
+
+    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
     attrs = hass.states.get(ENTITY_ID).attributes
 
     assert attrs[ATTR_SUPPORTED_FEATURES] == supported
