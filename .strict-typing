@@ -196,6 +196,7 @@ homeassistant.components.scene.*
 homeassistant.components.select.*
 homeassistant.components.sensor.*
 homeassistant.components.senseme.*
+homeassistant.components.senz.*
 homeassistant.components.shelly.*
 homeassistant.components.simplisafe.*
 homeassistant.components.slack.*
