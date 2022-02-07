@@ -91,7 +91,7 @@ async def async_setup_entry(
 
 def sonarr_exception_handler(
     func: Callable[Concatenate[_T, _P], Awaitable[None]]  # type: ignore[misc]
-) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:  # type: ignore[misc]:
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:  # type: ignore[misc]
     """Decorate Sonarr calls to handle Sonarr exceptions.
 
     A decorator that wraps the passed in function, catches Sonarr errors,
@@ -104,11 +104,11 @@ def sonarr_exception_handler(
             await func(self, *args, **kwargs)
             self.last_update_success = True
         except SonarrConnectionError as error:
-            if self.last_update_success:
+            if self.available:
                 _LOGGER.error("Error communicating with API: %s", error)
             self.last_update_success = False
         except SonarrError as error:
-            if self.last_update_success:
+            if self.available:
                 _LOGGER.error("Invalid response from API: %s", error)
                 self.last_update_success = False
 
