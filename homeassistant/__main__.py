@@ -14,7 +14,7 @@ FAULT_LOG_FILENAME = "home-assistant.log.fault"
 
 def validate_os() -> None:
     """Validate that Home Assistant is running in a supported operating system."""
-    if not sys.platform.startswith(("darwin", "linux")):
+    if not sys.platform.startswith(("darwin", "linux", "freebsd")):
         print("Home Assistant only supports Linux, OSX and Windows using WSL")
         sys.exit(1)
 
