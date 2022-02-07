@@ -191,8 +191,8 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           python --version
-          pip install --cache-dir=$PIP_CACHE -U "pip<20.3" setuptools wheel
-          pip install --cache-dir=$PIP_CACHE -r requirements.txt -r requirements_test.txt
+          pip install --cache-dir=$PIP_CACHE -U "pip>=21.0,<22.1" setuptools wheel
+          pip install --cache-dir=$PIP_CACHE -r requirements.txt -r requirements_test.txt --use-deprecated=legacy-resolver
       - name: Generate partial pre-commit restore key
         id: generate-pre-commit-key
         run: >-
@@ -583,9 +583,9 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           python --version
-          pip install --cache-dir=$PIP_CACHE -U "pip<20.3" setuptools wheel
-          pip install --cache-dir=$PIP_CACHE -r requirements_all.txt
-          pip install --cache-dir=$PIP_CACHE -r requirements_test.txt
+          pip install --cache-dir=$PIP_CACHE -U "pip>=21.0,<22.1" setuptools wheel
+          pip install --cache-dir=$PIP_CACHE -r requirements_all.txt --use-deprecated=legacy-resolver
+          pip install --cache-dir=$PIP_CACHE -r requirements_test.txt --use-deprecated=legacy-resolver
           pip install -e .
 
   pylint:
