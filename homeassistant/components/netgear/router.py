@@ -147,7 +147,7 @@ class NetgearRouter:
                 "ip": None,
                 "ssid": None,
                 "conn_ap_mac": None,
-                "allow_or_block": "Allow",
+                "allow_or_block": None,
             }
 
         return True
