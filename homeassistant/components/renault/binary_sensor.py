@@ -87,4 +87,12 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = (
         on_key="chargingStatus",
         on_value=ChargeState.CHARGE_IN_PROGRESS.value,
     ),
+    RenaultBinarySensorEntityDescription(
+        key="hvac_status",
+        coordinator="hvac_status",
+        device_class=BinarySensorDeviceClass.HEAT,
+        name="HVAC",
+        on_key="hvacStatus",
+        on_value="on",
+    ),
 )
