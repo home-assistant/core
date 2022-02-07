@@ -100,4 +100,7 @@ class NetgearAllowBlock(NetgearDeviceEntity, SwitchEntity):
         """Update the Netgear device."""
         self._device = self._router.devices[self._mac]
         self._active = self._device["active"]
-        self._state = self._device[self.entity_description.key] == "Allow"
+        if self._device[self.entity_description.key] is None:
+            self._state = None
+        else:
+            self._state = self._device[self.entity_description.key] == "Allow"
