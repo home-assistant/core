@@ -80,11 +80,6 @@ class RenaultBinarySensor(
         return None
 
 
-def _get_hvac_icon(entity: RenaultBinarySensor) -> str:
-    """Return the icon of this entity."""
-    return "mdi:fan" if entity.is_on else "mdi:fan-off"
-
-
 BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = (
     RenaultBinarySensorEntityDescription(
         key="plugged_in",
@@ -105,7 +100,7 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = (
     RenaultBinarySensorEntityDescription(
         key="hvac_status",
         coordinator="hvac_status",
-        icon_fn=_get_hvac_icon,
+        icon_fn=lambda e: "mdi:fan" if e.is_on else "mdi:fan-off",
         name="HVAC",
         on_key="hvacStatus",
         on_value="on",
