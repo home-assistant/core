@@ -1,10 +1,12 @@
 """Support for Sonarr sensors."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
+from functools import wraps
 import logging
-from typing import Any
+from typing import Any, TypeVar
+from typing_extensions import Concatenate, ParamSpec
 
 from sonarr import Sonarr, SonarrConnectionError, SonarrError
 
@@ -65,6 +67,10 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+_T = TypeVar("_T", bound="SonarrSensor")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -83,14 +89,17 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-def sonarr_exception_handler(func: Callable) -> Callable:
+def sonarr_exception_handler(
+    func: Callable[Concatenate[_T, _P], Awaitable[None]]  # type: ignore[misc]
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:  # type: ignore[misc]:
     """Decorate Sonarr calls to handle Sonarr exceptions.
 
     A decorator that wraps the passed in function, catches Sonarr errors,
     and handles the availability of the entity.
     """
 
-    async def handler(self, *args, **kwargs):
+    @wraps(func)
+    async def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
         try:
             await func(self, *args, **kwargs)
             self.last_update_success = True
