@@ -1410,6 +1410,16 @@ omit =
     homeassistant/components/zwave/util.py
     homeassistant/components/zwave_js/discovery.py
     homeassistant/components/zwave_js/sensor.py
+    homeassistant/components/zwave_me/__init__.py
+    homeassistant/components/zwave_me/binary_sensor.py
+    homeassistant/components/zwave_me/button.py
+    homeassistant/components/zwave_me/climate.py
+    homeassistant/components/zwave_me/helpers.py
+    homeassistant/components/zwave_me/light.py
+    homeassistant/components/zwave_me/lock.py
+    homeassistant/components/zwave_me/number.py
+    homeassistant/components/zwave_me/sensor.py
+    homeassistant/components/zwave_me/switch.py
 
 [report]
 # Regexes for lines to exclude from consideration
