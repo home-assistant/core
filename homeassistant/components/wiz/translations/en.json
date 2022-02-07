@@ -10,16 +10,25 @@
             "no_wiz_light": "The bulb can not be connected via WiZ Platform integration.",
             "unknown": "Unexpected error"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "confirm": {
-                "description": "Do you want to add a new Bulb?"
+                "description": "Do you want to start set up?"
+            },
+            "discovery_confirm": {
+                "description": "Do you want to setup {name} ({host})?"
+            },
+            "pick_device": {
+                "data": {
+                    "device": "Device"
+                }
             },
             "user": {
                 "data": {
-                    "host": "Hostname or IP",
+                    "host": "Host",
                     "name": "Name"
                 },
-                "description": "Please enter a hostname or IP address and name to add a new bulb:"
+                "description": "If you leave the host empty, discovery will be used to find devices."
             }
         }
     }

@@ -1032,8 +1032,8 @@ tests/components/vilfo/* @ManneW
 homeassistant/components/vivotek/* @HarlemSquirrel
 homeassistant/components/vizio/* @raman325
 tests/components/vizio/* @raman325
-homeassistant/components/vlc_telnet/* @rodripf @dmcc @MartinHjelmare
-tests/components/vlc_telnet/* @rodripf @dmcc @MartinHjelmare
+homeassistant/components/vlc_telnet/* @rodripf @MartinHjelmare
+tests/components/vlc_telnet/* @rodripf @MartinHjelmare
 homeassistant/components/volkszaehler/* @fabaff
 homeassistant/components/volumio/* @OnFreund
 tests/components/volumio/* @OnFreund
@@ -1090,8 +1090,8 @@ homeassistant/components/yamaha_musiccast/* @vigonotion @micha91
 tests/components/yamaha_musiccast/* @vigonotion @micha91
 homeassistant/components/yandex_transport/* @rishatik92 @devbis
 tests/components/yandex_transport/* @rishatik92 @devbis
-homeassistant/components/yeelight/* @zewelor @shenxn @starkillerOG
-tests/components/yeelight/* @zewelor @shenxn @starkillerOG
+homeassistant/components/yeelight/* @zewelor @shenxn @starkillerOG @alexyao2015
+tests/components/yeelight/* @zewelor @shenxn @starkillerOG @alexyao2015
 homeassistant/components/yeelightsunflower/* @lindsaymarkward
 homeassistant/components/yi/* @bachya
 homeassistant/components/youless/* @gjong
@@ -1111,6 +1111,8 @@ homeassistant/components/zwave/* @home-assistant/z-wave
 tests/components/zwave/* @home-assistant/z-wave
 homeassistant/components/zwave_js/* @home-assistant/z-wave
 tests/components/zwave_js/* @home-assistant/z-wave
+homeassistant/components/zwave_me/* @lawfulchaos @Z-Wave-Me
+tests/components/zwave_me/* @lawfulchaos @Z-Wave-Me
 
 # Individual files
 homeassistant/components/demo/weather @fabaff

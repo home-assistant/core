@@ -9,6 +9,12 @@
                     "mydevolo_url": "\u0394\u03b9\u03b5\u03cd\u03b8\u03c5\u03bd\u03c3\u03b7 URL \u03c4\u03bf\u03c5 mydevolo",
                     "username": "Email / devolo ID"
                 }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "mydevolo_url": "mydevolo \u0394\u03b9\u03b5\u03cd\u03b8\u03c5\u03bd\u03c3\u03b7 URL",
+                    "username": "Email / \u03b1\u03bd\u03b1\u03b3\u03bd\u03c9\u03c1\u03b9\u03c3\u03c4\u03b9\u03ba\u03cc devolo"
+                }
             }
         }
     }

@@ -101,6 +101,7 @@ components: &components
 # Testing related files that affect the whole test/linting suite
 tests: &tests
   - codecov.yaml
+  - pylint/*
   - requirements_test_pre_commit.txt
   - requirements_test.txt
   - tests/auth/**
@@ -111,6 +112,7 @@ tests: &tests
   - tests/helpers/*
   - tests/ignore_uncaught_exceptions.py
   - tests/mock/*
+  - tests/pylint/*
   - tests/scripts/*
   - tests/test_util/*
   - tests/testing_config/**

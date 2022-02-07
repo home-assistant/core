@@ -75,7 +75,7 @@ class CPUSpeedSensor(SensorEntity):
         info = cpuinfo.get_cpu_info()
 
         if info and HZ_ACTUAL in info:
-            self._attr_native_value = round(float(info[HZ_ACTUAL][0]) / 10 ** 9, 2)
+            self._attr_native_value = round(float(info[HZ_ACTUAL][0]) / 10**9, 2)
         else:
             self._attr_native_value = None
 
@@ -86,5 +86,5 @@ class CPUSpeedSensor(SensorEntity):
             }
             if HZ_ADVERTISED in info:
                 self._attr_extra_state_attributes[ATTR_HZ] = round(
-                    info[HZ_ADVERTISED][0] / 10 ** 9, 2
+                    info[HZ_ADVERTISED][0] / 10**9, 2
                 )

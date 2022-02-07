@@ -40,7 +40,7 @@ import attr
 import voluptuous as vol
 import yarl
 
-from . import async_timeout_backcompat, block_async_io, loader, util
+from . import block_async_io, loader, util
 from .backports.enum import StrEnum
 from .const import (
     ATTR_DOMAIN,
@@ -97,7 +97,6 @@ STAGE_1_SHUTDOWN_TIMEOUT = 100
 STAGE_2_SHUTDOWN_TIMEOUT = 60
 STAGE_3_SHUTDOWN_TIMEOUT = 30
 
-async_timeout_backcompat.enable()
 block_async_io.enable()
 
 T = TypeVar("T")
@@ -1920,7 +1919,7 @@ def _async_create_timer(hass: HomeAssistant) -> None:
         """Schedule a timer tick when the next second rolls around."""
         nonlocal handle
 
-        slp_seconds = 1 - (now.microsecond / 10 ** 6)
+        slp_seconds = 1 - (now.microsecond / 10**6)
         target = monotonic() + slp_seconds
         handle = hass.loop.call_later(slp_seconds, fire_time_event, target)
 
