@@ -748,7 +748,7 @@ class XiaomiAirFreshA1(XiaomiGenericAirPurifier):
         if self._favorite_speed is None:
             return None
         if self._state:
-            return ranged_value_to_percentage(self._speed_range, self._favorite_speed) #300
+            return ranged_value_to_percentage(self._speed_range, self._favorite_speed)
 
         return None
 
@@ -760,11 +760,12 @@ class XiaomiAirFreshA1(XiaomiGenericAirPurifier):
         if percentage == 0:
             await self.async_turn_off()
             return
-        
-        "Change mode to not auto controls"
+
         await self.async_set_preset_mode("Favorite")
 
-        favorite_speed = math.ceil(percentage_to_ranged_value(self._speed_range, percentage))
+        favorite_speed = math.ceil(
+            percentage_to_ranged_value(self._speed_range, percentage)
+        )
         if not favorite_speed:
             return
         if await self._try_command(
@@ -799,6 +800,7 @@ class XiaomiAirFreshA1(XiaomiGenericAirPurifier):
         self._favorite_speed = getattr(self.coordinator.data, ATTR_FAVORITE_SPEED, None)
         self.async_write_ha_state()
 
+
 class XiaomiAirFreshT2017(XiaomiAirFreshA1):
     """Representation of a Xiaomi Air Fresh T2017."""
 
@@ -807,6 +809,7 @@ class XiaomiAirFreshT2017(XiaomiAirFreshA1):
         super().__init__(name, device, entry, unique_id, coordinator)
         self._device_features = FEATURE_FLAGS_AIRFRESH_T2017
         self._speed_range = (60, 300)
+
 
 class XiaomiGenericFan(XiaomiGenericDevice):
     """Representation of a generic Xiaomi Fan."""

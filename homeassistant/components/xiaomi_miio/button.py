@@ -2,16 +2,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from contextlib import suppress
 from typing import Any
 
 from homeassistant.components.button import (
-    ButtonDeviceClass, 
-    ButtonEntity, 
+    ButtonDeviceClass,
+    ButtonEntity,
     ButtonEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -27,7 +26,6 @@ from .const import (
     MODEL_AIRFRESH_A1,
     MODEL_AIRFRESH_T2017,
 )
-
 from .device import XiaomiCoordinatedMiioEntity
 
 DATA_KEY = "button.xiaomi_miio"
@@ -39,6 +37,7 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_AIRFRESH_A1: FEATURE_FLAGS_AIRFRESH_A1,
     MODEL_AIRFRESH_T2017: FEATURE_FLAGS_AIRFRESH_T2017,
 }
+
 
 @dataclass
 class XiaomiMiioButtonDescription(ButtonEntityDescription):
@@ -76,6 +75,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    """Set up the button from a config entry."""
     entities = []
     model = config_entry.data[CONF_MODEL]
     unique_id = config_entry.unique_id
@@ -89,6 +89,8 @@ async def async_setup_entry(
 
     if model in MODEL_TO_FEATURES_MAP:
         device_features = MODEL_TO_FEATURES_MAP[model]
+    else:
+        return
 
     for description in BUTTON_TYPES:
         if description.feature & device_features:

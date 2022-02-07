@@ -30,8 +30,8 @@ from .const import (
     FEATURE_SET_PTC_LEVEL,
     KEY_COORDINATOR,
     KEY_DEVICE,
-    MODEL_AIRFRESH_VA2,
     MODEL_AIRFRESH_T2017,
+    MODEL_AIRFRESH_VA2,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRPURIFIER_3C,
     MODEL_AIRPURIFIER_M1,
@@ -62,19 +62,27 @@ LED_BRIGHTNESS_REVERSE_MAP_HUMIDIFIER_MIOT = {
 PTC_LEVEL_MAP = {"Low": "low", "Medium": "medium", "High": "high"}
 PTC_LEVEL_REVERSE_MAP = {val: key for key, val in PTC_LEVEL_MAP.items()}
 DISPLAY_ORIENTATION_MAP = {"Forward": "forward", "Left": "left", "Right": "right"}
-DISPLAY_ORIENTATION_REVERSE_MAP = {val: key for key, val in DISPLAY_ORIENTATION_MAP.items()}
+DISPLAY_ORIENTATION_REVERSE_MAP = {
+    val: key for key, val in DISPLAY_ORIENTATION_MAP.items()
+}
+
 
 @dataclass
 class XiaomiMiioSelectDescription(SelectEntityDescription):
     """A class that describes select entities."""
+
     feature: int | None = None
-    options_map: map | None = None
-    reverse_map: map | None = None
+    options_map: dict | None = None
+    reverse_map: dict | None = None
     set_method: str | None = None
     options: tuple = ()
 
+
 MODEL_TO_FEATURES_MAP = {
-    MODEL_AIRFRESH_T2017: [(FEATURE_SET_DISPLAY_ORIENTATION, AirfreshT2017DisplayOrientation), (FEATURE_SET_PTC_LEVEL, AirfreshT2017PtcLevel)],
+    MODEL_AIRFRESH_T2017: [
+        (FEATURE_SET_DISPLAY_ORIENTATION, AirfreshT2017DisplayOrientation),
+        (FEATURE_SET_PTC_LEVEL, AirfreshT2017PtcLevel),
+    ],
     MODEL_AIRHUMIDIFIER_CA1: [(FEATURE_SET_LED_BRIGHTNESS, AirhumidifierLedBrightness)],
 }
 
@@ -83,9 +91,9 @@ SELECTOR_TYPES = (
         key=ATTR_DISPLAY_ORIENTATION,
         feature=FEATURE_SET_DISPLAY_ORIENTATION,
         name="Display Orientation",
-        options_map = DISPLAY_ORIENTATION_MAP,
-        reverse_map = DISPLAY_ORIENTATION_REVERSE_MAP,
-        set_method = "async_set_display_orientation",
+        options_map=DISPLAY_ORIENTATION_MAP,
+        reverse_map=DISPLAY_ORIENTATION_REVERSE_MAP,
+        set_method="async_set_display_orientation",
         icon="mdi:tablet",
         device_class="xiaomi_miio__display_orientation",
         options=("forward", "left", "right"),
@@ -95,9 +103,9 @@ SELECTOR_TYPES = (
         key=ATTR_LED_BRIGHTNESS,
         feature=FEATURE_SET_LED_BRIGHTNESS,
         name="Led Brightness",
-        options_map = LED_BRIGHTNESS_MAP,
-        reverse_map = LED_BRIGHTNESS_REVERSE_MAP,
-        set_method = "async_set_led_brightness",
+        options_map=LED_BRIGHTNESS_MAP,
+        reverse_map=LED_BRIGHTNESS_REVERSE_MAP,
+        set_method="async_set_led_brightness",
         icon="mdi:brightness-6",
         device_class="xiaomi_miio__led_brightness",
         options=("bright", "dim", "off"),
@@ -107,15 +115,16 @@ SELECTOR_TYPES = (
         key=ATTR_PTC_LEVEL,
         feature=FEATURE_SET_PTC_LEVEL,
         name="Ptc Level",
-        options_map = PTC_LEVEL_MAP,
-        reverse_map = PTC_LEVEL_REVERSE_MAP,
-        set_method = "async_set_ptc_level",
+        options_map=PTC_LEVEL_MAP,
+        reverse_map=PTC_LEVEL_REVERSE_MAP,
+        set_method="async_set_ptc_level",
         icon="mdi:fire-circle",
         device_class="xiaomi_miio__ptc_level",
         options=("low", "medium", "high"),
         entity_category=EntityCategory.CONFIG,
     ),
 )
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -130,6 +139,7 @@ async def async_setup_entry(
         await async_setup_generic_entry(hass, config_entry, async_add_entities)
     else:
         await async_setup_other_entry(hass, config_entry, async_add_entities)
+
 
 async def async_setup_generic_entry(hass, config_entry, async_add_entities):
     """Set up the generic Selectors from a config entry."""
@@ -153,9 +163,10 @@ async def async_setup_generic_entry(hass, config_entry, async_add_entities):
                         feature[1],
                     )
                 )
-                
+
     async_add_entities(entities)
-    
+
+
 async def async_setup_other_entry(hass, config_entry, async_add_entities):
     """Set up the other type Selectors from a config entry."""
     entities = []
@@ -186,7 +197,6 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
     else:
         return
 
-
     for description in SELECTOR_TYPES:
         if description.feature & FEATURE_SET_LED_BRIGHTNESS:
             entities.append(
@@ -211,11 +221,14 @@ class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
         super().__init__(name, device, entry, unique_id, coordinator)
         self._attr_options = list(description.options)
         self.entity_description = description
-        
+
+
 class XiaomiGenericSelector(XiaomiSelector):
     """Representation of a Xiaomi generic selector."""
 
-    def __init__(self, name, device, entry, unique_id, coordinator, description, enum_class):
+    def __init__(
+        self, name, device, entry, unique_id, coordinator, description, enum_class
+    ):
         """Initialize the generic Xiaomi attribute selector."""
         super().__init__(name, device, entry, unique_id, coordinator, description)
         self._current_attr = self._extract_value_from_attribute(
@@ -245,17 +258,17 @@ class XiaomiGenericSelector(XiaomiSelector):
     @property
     def attr(self):
         """Return the current ptc level."""
-        
         return self.entity_description.reverse_map.get(self._current_attr)
 
     async def async_set_attr(self, attr_value: str):
-        """Set the ptc level."""
+        """Set attr."""
         method = getattr(self, self.entity_description.set_method)
         if await method(attr_value):
-            self._current_ptc_level = self.entity_description.options_map[attr_value]
+            self._current_attr = self.entity_description.options_map[attr_value]
             self.async_write_ha_state()
 
     async def async_set_ptc_level(self, ptc_level: str) -> bool:
+        """Set the ptc level."""
         return await self._try_command(
             "Setting the ptc level of the miio device failed.",
             self._device.set_ptc_level,
@@ -263,6 +276,7 @@ class XiaomiGenericSelector(XiaomiSelector):
         )
 
     async def async_set_display_orientation(self, display_orientation: str) -> bool:
+        """Set the display orientation."""
         return await self._try_command(
             "Setting the ptc level of the miio device failed.",
             self._device.set_display_orientation,
@@ -276,6 +290,7 @@ class XiaomiGenericSelector(XiaomiSelector):
             self._device.set_led_brightness,
             self._enum_class(self.entity_description.options_map[brightness]),
         )
+
 
 class XiaomiAirHumidifierSelector(XiaomiSelector):
     """Representation of a Xiaomi Air Humidifier selector."""
