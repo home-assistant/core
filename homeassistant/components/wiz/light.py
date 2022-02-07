@@ -28,7 +28,7 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin,
 )
 
-from .const import DOMAIN, SOCKET_DEVICE_STR
+from .const import DOMAIN
 from .entity import WizToggleEntity
 from .models import WizData
 
@@ -42,7 +42,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the WiZ Platform from config_flow."""
     wiz_data: WizData = hass.data[DOMAIN][entry.entry_id]
-    if SOCKET_DEVICE_STR not in wiz_data.bulb.bulbtype.name:
+    if wiz_data.bulb.bulbtype.bulb_type != BulbClass.SOCKET:
         async_add_entities([WizBulbEntity(wiz_data, entry.title)])
 
 
