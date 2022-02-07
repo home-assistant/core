@@ -80,6 +80,10 @@ anyio==3.5.0
 h11==0.12.0
 httpcore==0.14.5
 
+# Ensure we have a hyperframe version that works in Python 3.10
+# 5.2.0 fixed a collections abc deprecation
+hyperframe>=5.2.0
+
 # pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
 pytest_asyncio==1000000000.0.0
 
