@@ -16,6 +16,7 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
 from .coordinator import RokuDataUpdateCoordinator
+from .entity import RokuEntity
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -27,7 +28,7 @@ PLATFORMS = [
 ]
 _LOGGER = logging.getLogger(__name__)
 
-_T = TypeVar("_T", bound="SonarrSensor")
+_T = TypeVar("_T", bound="RokuEntity")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
 
