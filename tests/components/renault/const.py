@@ -54,6 +54,7 @@ FIXED_ATTRIBUTES = (
 DYNAMIC_ATTRIBUTES = (ATTR_ICON,)
 
 ICON_FOR_EMPTY_VALUES = {
+    "binary_sensor.reg_number_hvac": "mdi:fan-off",
     "select.reg_number_charge_mode": "mdi:calendar-remove",
     "sensor.reg_number_charge_state": "mdi:flash-off",
     "sensor.reg_number_plug_state": "mdi:power-plug-off",
@@ -105,8 +106,8 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_charging",
             },
             {
-                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.HEAT,
                 ATTR_ENTITY_ID: "binary_sensor.reg_number_hvac",
+                ATTR_ICON: "mdi:fan-off",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_hvac_status",
             },
@@ -273,8 +274,8 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_charging",
             },
             {
-                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.HEAT,
                 ATTR_ENTITY_ID: "binary_sensor.reg_number_hvac",
+                ATTR_ICON: "mdi:fan-off",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_hvac_status",
             },

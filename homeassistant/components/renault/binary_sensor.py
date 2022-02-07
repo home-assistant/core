@@ -1,6 +1,7 @@
 """Support for Renault binary sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from renault_api.kamereon.enums import ChargeState, PlugState
@@ -37,6 +38,8 @@ class RenaultBinarySensorEntityDescription(
 ):
     """Class describing Renault binary sensor entities."""
 
+    icon_fn: Callable[[RenaultBinarySensor], str] | None = None
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -69,6 +72,18 @@ class RenaultBinarySensor(
             == self.entity_description.on_value
         )
 
+    @property
+    def icon(self) -> str | None:
+        """Icon handling."""
+        if self.entity_description.icon_fn:
+            return self.entity_description.icon_fn(self)
+        return None
+
+
+def _get_hvac_icon(entity: RenaultBinarySensor) -> str:
+    """Return the icon of this entity."""
+    return "mdi:fan" if entity.is_on else "mdi:fan-off"
+
 
 BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = (
     RenaultBinarySensorEntityDescription(
@@ -90,7 +105,7 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = (
     RenaultBinarySensorEntityDescription(
         key="hvac_status",
         coordinator="hvac_status",
-        device_class=BinarySensorDeviceClass.HEAT,
+        icon_fn=_get_hvac_icon,
         name="HVAC",
         on_key="hvacStatus",
         on_value="on",
