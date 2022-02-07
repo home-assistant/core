@@ -290,7 +290,7 @@ def _find_duplicates(
         )
         .filter(subquery.c.is_duplicate == 1)
         .order_by(table.metadata_id, table.start, table.id.desc())
-        .limit(MAX_ROWS_TO_PURGE)
+        .limit(1000 * MAX_ROWS_TO_PURGE)
     )
     duplicates = execute(query)
     original_as_dict = {}
@@ -343,12 +343,13 @@ def _delete_duplicates_from_table(
         if not duplicate_ids:
             break
         all_non_identical_duplicates.extend(non_identical_duplicates)
-        deleted_rows = (
-            session.query(table)
-            .filter(table.id.in_(duplicate_ids))
-            .delete(synchronize_session=False)
-        )
-        total_deleted_rows += deleted_rows
+        for i in range(0, len(duplicate_ids), MAX_ROWS_TO_PURGE):
+            deleted_rows = (
+                session.query(table)
+                .filter(table.id.in_(duplicate_ids[i : i + MAX_ROWS_TO_PURGE]))
+                .delete(synchronize_session=False)
+            )
+            total_deleted_rows += deleted_rows
     return (total_deleted_rows, all_non_identical_duplicates)
 
 
