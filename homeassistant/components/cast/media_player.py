@@ -593,6 +593,15 @@ class CastDevice(MediaPlayerEntity):
                 return
 
         # Default to play with the default media receiver
+        if media_type == "application/vnd.apple.mpegurl":
+            extra = {
+                **extra,
+                "stream_type": "LIVE",
+                "media_info": {
+                    "hlsVideoSegmentFormat": "fmp4",
+                },
+            }
+
         app_data = {"media_id": media_id, "media_type": media_type, **extra}
         await self.hass.async_add_executor_job(
             quick_play, self._chromecast, "default_media_receiver", app_data
