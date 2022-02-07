@@ -29,6 +29,19 @@ async def async_get_config_entry_diagnostics(
             "mesh_role": avm_wrapper.mesh_role,
             "last_update success": avm_wrapper.last_update_success,
             "last_exception": avm_wrapper.last_exception,
+            "discovered_services": list(avm_wrapper.connection.services),
+            "client_devices": [
+                {
+                    "connected_to": device.connected_to,
+                    "connection_type": device.connection_type,
+                    "hostname": device.hostname,
+                    "is_connected": device.is_connected,
+                    "last_activity": device.last_activity,
+                    "wan_access": device.wan_access,
+                }
+                for _, device in avm_wrapper.devices.items()
+            ],
+            "wan_link_properties": await avm_wrapper.async_get_wan_link_properties(),
         },
     }
 

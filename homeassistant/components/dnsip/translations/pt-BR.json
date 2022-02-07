@@ -6,7 +6,9 @@
         "step": {
             "user": {
                 "data": {
-                    "hostname": "O hostname para o qual realizar a consulta DNS"
+                    "hostname": "O hostname para o qual realizar a consulta DNS",
+                    "resolver": "Resolvedor para consulta IPV4",
+                    "resolver_ipv6": "Resolvedor para consulta IPV6"
                 }
             }
         }

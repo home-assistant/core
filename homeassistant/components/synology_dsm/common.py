@@ -16,6 +16,7 @@ from synology_dsm.api.storage.storage import SynoStorage
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 from synology_dsm.exceptions import (
     SynologyDSMAPIErrorException,
+    SynologyDSMException,
     SynologyDSMLoginFailedException,
     SynologyDSMRequestException,
 )
@@ -237,7 +238,11 @@ class SynoApi:
 
     async def async_unload(self) -> None:
         """Stop interacting with the NAS and prepare for removal from hass."""
-        await self._syno_api_executer(self.dsm.logout)
+        try:
+            await self._syno_api_executer(self.dsm.logout)
+        except SynologyDSMException:
+            # ignore API errors during logout
+            pass
 
     async def async_update(self, now: timedelta | None = None) -> None:
         """Update function for updating API information."""

@@ -218,13 +218,7 @@ DHCP = [
     },
     {
         "domain": "powerwall",
-        "hostname": "1118431-*",
-        "macaddress": "88DA1A*"
-    },
-    {
-        "domain": "powerwall",
-        "hostname": "1118431-*",
-        "macaddress": "000145*"
+        "hostname": "1118431-*"
     },
     {
         "domain": "rachio",
@@ -613,6 +607,14 @@ DHCP = [
     {
         "domain": "vicare",
         "macaddress": "B87424*"
+    },
+    {
+        "domain": "wiz",
+        "macaddress": "A8BB50*"
+    },
+    {
+        "domain": "wiz",
+        "hostname": "wiz_[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]"
     },
     {
         "domain": "yeelight",

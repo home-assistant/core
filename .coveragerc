@@ -80,6 +80,7 @@ omit =
     homeassistant/components/asterisk_cdr/mailbox.py
     homeassistant/components/asterisk_mbox/*
     homeassistant/components/asuswrt/__init__.py
+    homeassistant/components/asuswrt/diagnostics.py
     homeassistant/components/asuswrt/router.py
     homeassistant/components/aten_pe/*
     homeassistant/components/atome/*
@@ -400,7 +401,6 @@ omit =
     homeassistant/components/glances/__init__.py
     homeassistant/components/glances/const.py
     homeassistant/components/glances/sensor.py
-    homeassistant/components/gntp/notify.py
     homeassistant/components/goalfeed/*
     homeassistant/components/goodwe/__init__.py
     homeassistant/components/goodwe/const.py
@@ -733,6 +733,7 @@ omit =
     homeassistant/components/netgear/device_tracker.py
     homeassistant/components/netgear/router.py
     homeassistant/components/netgear/sensor.py
+    homeassistant/components/netgear/switch.py
     homeassistant/components/netgear_lte/*
     homeassistant/components/netio/switch.py
     homeassistant/components/neurio_energy/sensor.py
@@ -759,6 +760,7 @@ omit =
     homeassistant/components/nuki/const.py
     homeassistant/components/nuki/binary_sensor.py
     homeassistant/components/nuki/lock.py
+    homeassistant/components/nut/diagnostics.py
     homeassistant/components/nx584/alarm_control_panel.py
     homeassistant/components/nzbget/coordinator.py
     homeassistant/components/obihai/*
@@ -976,6 +978,7 @@ omit =
     homeassistant/components/sensibo/__init__.py
     homeassistant/components/sensibo/climate.py
     homeassistant/components/sensibo/coordinator.py
+    homeassistant/components/sensibo/diagnostics.py
     homeassistant/components/serial/sensor.py
     homeassistant/components/serial_pm/sensor.py
     homeassistant/components/sesame/lock.py
@@ -1313,6 +1316,12 @@ omit =
     homeassistant/components/waze_travel_time/sensor.py
     homeassistant/components/wiffi/*
     homeassistant/components/wirelesstag/*
+    homeassistant/components/wiz/__init__.py
+    homeassistant/components/wiz/const.py
+    homeassistant/components/wiz/discovery.py
+    homeassistant/components/wiz/entity.py
+    homeassistant/components/wiz/light.py
+    homeassistant/components/wiz/switch.py
     homeassistant/components/wolflink/__init__.py
     homeassistant/components/wolflink/sensor.py
     homeassistant/components/wolflink/const.py

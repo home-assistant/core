@@ -13,8 +13,8 @@ from aiohomekit.exceptions import (
     EncryptionError,
 )
 from aiohomekit.model import Accessories, Accessory
-from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
-from aiohomekit.model.services import Service, ServicesTypes
+from aiohomekit.model.characteristics import Characteristic
+from aiohomekit.model.services import Service
 
 from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.core import CALLBACK_TYPE, callback
@@ -46,7 +46,7 @@ AddServiceCb = Callable[[Service], bool]
 AddCharacteristicCb = Callable[[Characteristic], bool]
 
 
-def valid_serial_number(serial):
+def valid_serial_number(serial: str) -> bool:
     """Return if the serial number appears to be valid."""
     if not serial:
         return False
@@ -190,10 +190,6 @@ class HKDevice:
 
     def device_info_for_accessory(self, accessory: Accessory) -> DeviceInfo:
         """Build a DeviceInfo for a given accessory."""
-        info = accessory.services.first(
-            service_type=ServicesTypes.ACCESSORY_INFORMATION,
-        )
-
         identifiers = {
             (
                 IDENTIFIER_ACCESSORY_ID,
@@ -202,16 +198,15 @@ class HKDevice:
         }
 
         if not self.unreliable_serial_numbers:
-            serial_number = info.value(CharacteristicsTypes.SERIAL_NUMBER)
-            identifiers.add((IDENTIFIER_SERIAL_NUMBER, serial_number))
+            identifiers.add((IDENTIFIER_SERIAL_NUMBER, accessory.serial_number))
 
         device_info = DeviceInfo(
             identifiers=identifiers,
-            name=info.value(CharacteristicsTypes.NAME),
-            manufacturer=info.value(CharacteristicsTypes.MANUFACTURER, ""),
-            model=info.value(CharacteristicsTypes.MODEL, ""),
-            sw_version=info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
-            hw_version=info.value(CharacteristicsTypes.HARDWARE_REVISION, ""),
+            name=accessory.name,
+            manufacturer=accessory.manufacturer,
+            model=accessory.model,
+            sw_version=accessory.firmware_revision,
+            hw_version=accessory.hardware_revision,
         )
 
         if accessory.aid != 1:
@@ -235,10 +230,6 @@ class HKDevice:
         device_registry = dr.async_get(self.hass)
 
         for accessory in self.entity_map.accessories:
-            info = accessory.services.first(
-                service_type=ServicesTypes.ACCESSORY_INFORMATION,
-            )
-
             identifiers = {
                 (
                     DOMAIN,
@@ -252,10 +243,9 @@ class HKDevice:
                     (DOMAIN, IDENTIFIER_LEGACY_ACCESSORY_ID, self.unique_id)
                 )
 
-            serial_number = info.value(CharacteristicsTypes.SERIAL_NUMBER)
-            if valid_serial_number(serial_number):
+            if valid_serial_number(accessory.serial_number):
                 identifiers.add(
-                    (DOMAIN, IDENTIFIER_LEGACY_SERIAL_NUMBER, serial_number)
+                    (DOMAIN, IDENTIFIER_LEGACY_SERIAL_NUMBER, accessory.serial_number)
                 )
 
             device = device_registry.async_get_device(identifiers=identifiers)  # type: ignore[arg-type]
@@ -284,8 +274,7 @@ class HKDevice:
             }
 
             if not self.unreliable_serial_numbers:
-                serial_number = info.value(CharacteristicsTypes.SERIAL_NUMBER)
-                new_identifiers.add((IDENTIFIER_SERIAL_NUMBER, serial_number))
+                new_identifiers.add((IDENTIFIER_SERIAL_NUMBER, accessory.serial_number))
             else:
                 _LOGGER.debug(
                     "Not migrating serial number identifier for %s:aid:%s (it is wrong, not unique or unreliable)",
@@ -334,35 +323,29 @@ class HKDevice:
         devices = set()
 
         for accessory in self.entity_map.accessories:
-            info = accessory.services.first(
-                service_type=ServicesTypes.ACCESSORY_INFORMATION,
-            )
-
-            serial_number = info.value(CharacteristicsTypes.SERIAL_NUMBER)
-
-            if not valid_serial_number(serial_number):
+            if not valid_serial_number(accessory.serial_number):
                 _LOGGER.debug(
                     "Serial number %r is not valid, it cannot be used as a unique identifier",
-                    serial_number,
+                    accessory.serial_number,
                 )
                 unreliable_serial_numbers = True
 
-            elif serial_number in devices:
+            elif accessory.serial_number in devices:
                 _LOGGER.debug(
                     "Serial number %r is duplicated within this pairing, it cannot be used as a unique identifier",
-                    serial_number,
+                    accessory.serial_number,
                 )
                 unreliable_serial_numbers = True
 
-            elif serial_number == info.value(CharacteristicsTypes.HARDWARE_REVISION):
+            elif accessory.serial_number == accessory.hardware_revision:
                 # This is a known bug with some devices (e.g. RYSE SmartShades)
                 _LOGGER.debug(
                     "Serial number %r is actually the hardware revision, it cannot be used as a unique identifier",
-                    serial_number,
+                    accessory.serial_number,
                 )
                 unreliable_serial_numbers = True
 
-            devices.add(serial_number)
+            devices.add(accessory.serial_number)
 
         self.unreliable_serial_numbers = unreliable_serial_numbers
 

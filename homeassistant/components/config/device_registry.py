@@ -62,6 +62,9 @@ async def websocket_update_device(hass, connection, msg):
     msg.pop("type")
     msg_id = msg.pop("id")
 
+    if msg.get("disabled_by") is not None:
+        msg["disabled_by"] = DeviceEntryDisabler(msg["disabled_by"])
+
     entry = registry.async_update_device(**msg)
 
     connection.send_message(websocket_api.result_message(msg_id, _entry_dict(entry)))

@@ -2,6 +2,17 @@
     "config": {
         "abort": {
             "not_songpal_device": "\u0394\u03b5\u03bd \u03b5\u03af\u03bd\u03b1\u03b9 \u03c3\u03c5\u03c3\u03ba\u03b5\u03c5\u03ae Songpal"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "init": {
+                "description": "\u0398\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03c1\u03c5\u03b8\u03bc\u03af\u03c3\u03b5\u03c4\u03b5 \u03c4\u03bf {name} ({host});"
+            },
+            "user": {
+                "data": {
+                    "endpoint": "\u03a4\u03b5\u03bb\u03b9\u03ba\u03cc \u03c3\u03b7\u03bc\u03b5\u03af\u03bf"
+                }
+            }
         }
     }
 }

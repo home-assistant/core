@@ -130,7 +130,7 @@ def numeric_type_validator(value: Any) -> str | int:
 def _max_payload_value(payload_length: int) -> int:
     if payload_length == 0:
         return 0x3F
-    return int(256 ** payload_length) - 1
+    return int(256**payload_length) - 1
 
 
 def button_payload_sub_validator(entity_config: OrderedDict) -> OrderedDict:

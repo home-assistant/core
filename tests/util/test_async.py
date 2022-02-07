@@ -105,8 +105,8 @@ async def test_check_loop_async_integration(caplog):
     ):
         hasync.check_loop(banned_function)
     assert (
-        "Detected blocking call inside the event loop. This is causing stability issues. "
-        "Please report issue for hue doing blocking calls at "
+        "Detected blocking call to banned_function inside the event loop. This is "
+        "causing stability issues. Please report issue for hue doing blocking calls at "
         "homeassistant/components/hue/light.py, line 23: self.light.is_on"
         in caplog.text
     )
@@ -136,8 +136,8 @@ async def test_check_loop_async_integration_non_strict(caplog):
     ):
         hasync.check_loop(banned_function, strict=False)
     assert (
-        "Detected blocking call inside the event loop. This is causing stability issues. "
-        "Please report issue for hue doing blocking calls at "
+        "Detected blocking call to banned_function inside the event loop. This is "
+        "causing stability issues. Please report issue for hue doing blocking calls at "
         "homeassistant/components/hue/light.py, line 23: self.light.is_on"
         in caplog.text
     )
@@ -167,9 +167,10 @@ async def test_check_loop_async_custom(caplog):
     ):
         hasync.check_loop(banned_function)
     assert (
-        "Detected blocking call inside the event loop. This is causing stability issues. "
-        "Please report issue to the custom component author for hue doing blocking calls "
-        "at custom_components/hue/light.py, line 23: self.light.is_on" in caplog.text
+        "Detected blocking call to banned_function inside the event loop. This is "
+        "causing stability issues. Please report issue to the custom component author "
+        "for hue doing blocking calls at custom_components/hue/light.py, line 23: "
+        "self.light.is_on" in caplog.text
     )
 
 

@@ -1533,6 +1533,7 @@ async def test_mqtt_ws_get_device_debug_info(
                     "payload": config,
                     "topic": "homeassistant/sensor/bla/config",
                 },
+                "transmitted": [],
             }
         ],
         "triggers": [],
@@ -1595,6 +1596,7 @@ async def test_mqtt_ws_get_device_debug_info_binary(
                     "payload": config,
                     "topic": "homeassistant/camera/bla/config",
                 },
+                "transmitted": [],
             }
         ],
         "triggers": [],
@@ -1662,7 +1664,7 @@ async def test_debug_info_multiple_devices(hass, mqtt_mock):
         device = registry.async_get_device({("mqtt", id)})
         assert device is not None
 
-        debug_info_data = await debug_info.info_for_device(hass, device.id)
+        debug_info_data = debug_info.info_for_device(hass, device.id)
         if d["domain"] != "device_automation":
             assert len(debug_info_data["entities"]) == 1
             assert len(debug_info_data["triggers"]) == 0
@@ -1739,7 +1741,7 @@ async def test_debug_info_multiple_entities_triggers(hass, mqtt_mock):
     device_id = config[0]["config"]["device"]["identifiers"][0]
     device = registry.async_get_device({("mqtt", device_id)})
     assert device is not None
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"]) == 2
     assert len(debug_info_data["triggers"]) == 2
 
@@ -1786,7 +1788,7 @@ async def test_debug_info_non_mqtt(hass, device_reg, entity_reg):
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"platform": "test"}})
 
-    debug_info_data = await debug_info.info_for_device(hass, device_entry.id)
+    debug_info_data = debug_info.info_for_device(hass, device_entry.id)
     assert len(debug_info_data["entities"]) == 0
     assert len(debug_info_data["triggers"]) == 0
 
@@ -1810,7 +1812,7 @@ async def test_debug_info_wildcard(hass, mqtt_mock):
     device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
     assert {"topic": "sensor/#", "messages": []} in debug_info_data["entities"][0][
         "subscriptions"
@@ -1821,7 +1823,7 @@ async def test_debug_info_wildcard(hass, mqtt_mock):
         dt_utcnow.return_value = start_dt
         async_fire_mqtt_message(hass, "sensor/abc", "123")
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
     assert {
         "topic": "sensor/#",
@@ -1856,7 +1858,7 @@ async def test_debug_info_filter_same(hass, mqtt_mock):
     device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
     assert {"topic": "sensor/#", "messages": []} in debug_info_data["entities"][0][
         "subscriptions"
@@ -1871,7 +1873,7 @@ async def test_debug_info_filter_same(hass, mqtt_mock):
         dt_utcnow.return_value = dt2
         async_fire_mqtt_message(hass, "sensor/abc", "123")
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
     assert len(debug_info_data["entities"][0]["subscriptions"][0]["messages"]) == 2
     assert {
@@ -1915,7 +1917,7 @@ async def test_debug_info_same_topic(hass, mqtt_mock):
     device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
     assert {"topic": "sensor/status", "messages": []} in debug_info_data["entities"][0][
         "subscriptions"
@@ -1926,7 +1928,7 @@ async def test_debug_info_same_topic(hass, mqtt_mock):
         dt_utcnow.return_value = start_dt
         async_fire_mqtt_message(hass, "sensor/status", "123", qos=0, retain=False)
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
     assert {
         "payload": "123",
@@ -1966,7 +1968,7 @@ async def test_debug_info_qos_retain(hass, mqtt_mock):
     device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
     assert {"topic": "sensor/#", "messages": []} in debug_info_data["entities"][0][
         "subscriptions"
@@ -1979,7 +1981,7 @@ async def test_debug_info_qos_retain(hass, mqtt_mock):
         async_fire_mqtt_message(hass, "sensor/abc", "123", qos=1, retain=True)
         async_fire_mqtt_message(hass, "sensor/abc", "123", qos=2, retain=False)
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
     assert {
         "payload": "123",
