@@ -57,7 +57,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 def roku_exception_handler(
     func: Callable[Concatenate[_T, _P], Awaitable[None]]  # type: ignore[misc]
-) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:  # type: ignore[misc]:) -> Callable:
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:  # type: ignore[misc]
     """Decorate Roku calls to handle Roku exceptions."""
 
     @wraps(func)
