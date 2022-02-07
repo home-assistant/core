@@ -34,6 +34,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
     STATE_OFF,
@@ -44,6 +45,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import WebOsClientWrapper
 from .const import (
@@ -121,7 +123,7 @@ def cmd(
     return cmd_wrapper
 
 
-class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
+class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
     """Representation of a LG webOS Smart TV."""
 
     def __init__(
@@ -144,8 +146,12 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         self._current_source = None
         self._source_list: dict = {}
 
+        self._supported_features: int | None = None
+
     async def async_added_to_hass(self) -> None:
         """Connect and subscribe to dispatcher signals and state updates."""
+        await super().async_added_to_hass()
+
         self.async_on_remove(
             async_dispatcher_connect(self.hass, DOMAIN, self.async_signal_handler)
         )
@@ -153,6 +159,12 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         await self._client.register_state_update_callback(
             self.async_handle_state_update
         )
+
+        if self._supported_features is not None:
+            return
+
+        if (state := await self.async_get_last_state()) is not None:
+            self._supported_features = state.attributes.get(ATTR_SUPPORTED_FEATURES)
 
     async def async_will_remove_from_hass(self) -> None:
         """Call disconnect on removal."""
@@ -313,6 +325,9 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     @property
     def supported_features(self) -> int:
         """Flag media player features that are supported."""
+        if self.state == STATE_OFF and self._supported_features is not None:
+            return self._supported_features
+
         supported = SUPPORT_WEBOSTV
 
         if self._client.sound_output in ("external_arc", "external_speaker"):
@@ -322,6 +337,9 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
 
         if self._wrapper.turn_on:
             supported |= SUPPORT_TURN_ON
+
+        if self.state != STATE_OFF:
+            self._supported_features = supported
 
         return supported
 
