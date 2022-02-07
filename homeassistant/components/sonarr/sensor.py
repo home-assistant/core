@@ -6,9 +6,9 @@ from datetime import timedelta
 from functools import wraps
 import logging
 from typing import Any, TypeVar
-from typing_extensions import Concatenate, ParamSpec
 
 from sonarr import Sonarr, SonarrConnectionError, SonarrError
+from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
