@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 import logging
-from typing import TypeVar
+from typing import Any, TypeVar
 from typing_extensions import Concatenate, ParamSpec
 
 from rokuecp import RokuConnectionError, RokuError
