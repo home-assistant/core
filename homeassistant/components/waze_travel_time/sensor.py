@@ -179,13 +179,17 @@ class WazeTravelTime(SensorEntity):
         _LOGGER.debug("Fetching Route for %s", self._attr_name)
         # Get origin latitude and longitude from entity_id.
         if self._origin_entity_id is not None:
-            self._waze_data.origin = find_coordinates(self.hass, self._origin_entity_id)
+            if find_coordinates(self.hass, self._origin_entity_id) is not None:
+                self._waze_data.origin = find_coordinates(self.hass, self._origin_entity_id)
+            else:
+                self._waze_data.origin = self.hass.states.get(self._origin_entity_id).state
 
         # Get destination latitude and longitude from entity_id.
         if self._destination_entity_id is not None:
-            self._waze_data.destination = find_coordinates(
-                self.hass, self._destination_entity_id
-            )
+            if find_coordinates(self.hass, self._destination_entity_id) is not None:
+                self._waze_data.destination = find_coordinates(self.hass, self._destination_entity_id)
+            else:
+                self._waze_data.destination = self.hass.states.get(self._destination_entity_id).state
 
         self._waze_data.update()
 
