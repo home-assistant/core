@@ -38,7 +38,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, network
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
@@ -1867,3 +1867,27 @@ async def test_cast_platform_play_media_local_media(
     assert app_data["media_info"] == {
         "hlsVideoSegmentFormat": "fmp4",
     }
+
+    quick_play_mock.reset_mock()
+
+    # Test not appending if we have a signature
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        media_player.SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            media_player.ATTR_MEDIA_CONTENT_TYPE: "application/vnd.apple.mpegurl",
+            media_player.ATTR_MEDIA_CONTENT_ID: f"{network.get_url(hass)}/api/hls/bla/master_playlist.m3u8?token=bla",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Assert we added extra play information
+    quick_play_mock.assert_called()
+    app_data = quick_play_mock.call_args[0][2]
+    # No authSig appended
+    assert (
+        app_data["media_id"]
+        == f"{network.get_url(hass)}/api/hls/bla/master_playlist.m3u8?token=bla"
+    )
