@@ -14,14 +14,11 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
-    COORDINATOR,
     DEFAULT_PORT,
     DEFAULT_USERNAME,
     DOMAIN,
-    GATEWAY,
     LOGGER,
     PLATFORMS_GATEWAY,
-    PW_TYPE,
     SENSOR_PLATFORMS,
 )
 from .coordinator import PlugwiseDataUpdateCoordinator
@@ -63,11 +60,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = PlugwiseDataUpdateCoordinator(hass, api)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        "api": api,
-        COORDINATOR: coordinator,
-        PW_TYPE: GATEWAY,
-    }
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
