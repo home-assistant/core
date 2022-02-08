@@ -46,8 +46,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_PORT],
     )
 
+    coordinator = FiveMDataUpdateCoordinator(hass, entry.data, entry.entry_id)
+
     try:
-        coordinator = FiveMDataUpdateCoordinator(hass, entry.data, entry.entry_id)
         await coordinator.initialize()
     except FiveMServerOfflineError as err:
         raise ConfigEntryNotReady from err
