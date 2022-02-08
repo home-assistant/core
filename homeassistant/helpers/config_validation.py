@@ -361,6 +361,22 @@ def enum(enumClass: type[Enum]) -> vol.All:
     return vol.All(vol.In(enumClass.__members__), enumClass.__getitem__)
 
 
+def enum_value(enumClass: type[Enum]) -> Callable[[Any], Enum]:
+    """Create validator for the value of a specified enum."""
+
+    def validate(value: Any) -> Enum:
+        """Validate and coerce an Enum value."""
+        try:
+            return enumClass(value)
+        except ValueError as err:
+            raise vol.Invalid(
+                f"Value '{value}' is not a valid {enumClass.__name__}, "
+                f"must be one of {[e.value for e in enumClass]}"
+            ) from err
+
+    return validate
+
+
 def icon(value: Any) -> str:
     """Validate icon."""
     str_value = str(value)

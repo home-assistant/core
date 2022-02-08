@@ -1060,8 +1060,30 @@ def test_enum():
 
     schema = vol.Schema(cv.enum(TestEnum))
 
-    with pytest.raises(vol.Invalid):
-        schema("value3")
+    for value in ("Value 1", "value3", TestEnum.value1, None):
+        with pytest.raises(vol.Invalid):
+            schema("value3")
+
+    schema("value1")
+
+
+def test_enum_value():
+    """Test enum_value validator."""
+
+    class TestEnum(enum.Enum):
+        """Test enum."""
+
+        value1 = "Value 1"
+        value2 = "Value 2"
+
+    schema = vol.Schema(cv.enum_value(TestEnum))
+
+    for value in ("value1", "Value 3", None):
+        with pytest.raises(vol.Invalid):
+            schema(value)
+
+    schema("Value 2")
+    schema(TestEnum.value1)
 
 
 def test_socket_timeout():  # pylint: disable=invalid-name
