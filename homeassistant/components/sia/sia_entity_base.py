@@ -100,21 +100,33 @@ class SIABaseEntity(RestoreEntity):
 
     @callback
     def async_handle_event(self, sia_event: SIAEvent) -> None:
-        """Listen to dispatcher events for this port and account and update state and attributes."""
+        """Listen to dispatcher events for this port and account and update state and attributes.
+
+        If the event is for either the zone or the 0 zone (hub zone), then handle it further.
+        If the event had a code that was relevant for the entity, then update the attributes.
+        If the event had a code that was relevant or it was a availability event then update the availability and schedule the next unavailability check.
+        """
         _LOGGER.debug("Received event: %s", sia_event)
         if int(sia_event.ri) not in (self.zone, SIA_HUB_ZONE):
             return
-        self._attr_extra_state_attributes.update(get_attr_from_sia_event(sia_event))
-        state_changed = self.update_state(sia_event)
-        if state_changed or sia_event.code == AVAILABILITY_EVENT_CODE:
-            self.async_reset_availability_cb()
+
+        relevant_event = self.update_state(sia_event)
+
+        if relevant_event:
+            self._attr_extra_state_attributes.update(get_attr_from_sia_event(sia_event))
+
+        if relevant_event or sia_event.code == AVAILABILITY_EVENT_CODE:
+            self._attr_available = True
+            self._cancel_post_interval_update_cb()
+            self.async_create_post_interval_update_cb()
+
         self.async_write_ha_state()
 
     @abstractmethod
     def update_state(self, sia_event: SIAEvent) -> bool:
         """Do the entity specific state updates.
 
-        Return True if the interval callback needs to be updated.
+        Return True if the event was relevant for this entity.
         """
 
     def async_create_post_interval_update_cb(self) -> None:
