@@ -1766,7 +1766,7 @@ async def test_debug_info_multiple_entities_triggers(hass, mqtt_mock):
         } in discovery_data
 
 
-async def test_debug_info_non_mqtt(hass, device_reg, entity_reg):
+async def test_debug_info_non_mqtt(hass, device_reg, entity_reg, mqtt_mock):
     """Test we get empty debug_info for a device with non MQTT entities."""
     DOMAIN = "sensor"
     platform = getattr(hass.components, f"test.{DOMAIN}")
