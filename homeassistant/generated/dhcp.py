@@ -68,6 +68,10 @@ DHCP = [
         "macaddress": "B4430D*"
     },
     {
+        "domain": "elkm1",
+        "macaddress": "00409D*"
+    },
+    {
         "domain": "emonitor",
         "hostname": "emonitor*",
         "macaddress": "0090C2*"
