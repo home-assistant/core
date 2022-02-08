@@ -143,4 +143,4 @@ class PlugwiseNotifyBinarySensorEntity(PlugwiseBinarySensorEntity):
                         msg
                     )
 
-        super()._handle_coordinator_update()
+        self.async_write_ha_state()
