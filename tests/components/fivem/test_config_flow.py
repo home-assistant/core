@@ -6,18 +6,17 @@ from fivem import FiveMServerOfflineError
 from homeassistant import config_entries
 from homeassistant.components.fivem.config_flow import DEFAULT_PORT
 from homeassistant.components.fivem.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
 USER_INPUT = {
-    CONF_NAME: "Dummy Server",
     CONF_HOST: "fivem.dummyserver.com",
     CONF_PORT: DEFAULT_PORT,
 }
 
 
-def mock_fivem_info_success():
+def _mock_fivem_info_success():
     return {
         "resources": [
             "fivem",
@@ -31,7 +30,7 @@ def mock_fivem_info_success():
     }
 
 
-def mock_fivem_info_invalid():
+def _mock_fivem_info_invalid():
     return {
         "plugins": [
             "sample",
@@ -42,8 +41,8 @@ def mock_fivem_info_invalid():
     }
 
 
-def mock_fivem_info_invalid_game_name():
-    info = mock_fivem_info_success()
+def _mock_fivem_info_invalid_game_name():
+    info = _mock_fivem_info_success()
     info["vars"]["gamename"] = "redm"
 
     return info
@@ -69,7 +68,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with patch(
         "fivem.fivem.FiveM.get_info_raw",
-        return_value=mock_fivem_info_success(),
+        return_value=_mock_fivem_info_success(),
     ), patch(
         "homeassistant.components.fivem.async_setup_entry",
         return_value=True,
@@ -81,7 +80,7 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == USER_INPUT[CONF_NAME]
+    assert result2["title"] == USER_INPUT[CONF_HOST]
     assert result2["data"] == USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -114,7 +113,7 @@ async def test_form_invalid(hass: HomeAssistant) -> None:
 
     with patch(
         "fivem.fivem.FiveM.get_info_raw",
-        return_value=mock_fivem_info_invalid(),
+        return_value=_mock_fivem_info_invalid(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -134,7 +133,7 @@ async def test_form_invalid_game_name(hass: HomeAssistant) -> None:
 
     with patch(
         "fivem.fivem.FiveM.get_info_raw",
-        return_value=mock_fivem_info_invalid_game_name(),
+        return_value=_mock_fivem_info_invalid_game_name(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

@@ -10,7 +10,7 @@ from typing import Any
 from fivem import FiveM, FiveMServerOfflineError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
@@ -89,7 +89,6 @@ class FiveMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.version = None
         self.game_name: str | None = None
 
-        self.server_name = config_data[CONF_NAME]
         self.host = config_data[CONF_HOST]
         self.port = config_data[CONF_PORT]
         self.online = False
@@ -158,13 +157,13 @@ class FiveMEntity(CoordinatorEntity):
         super().__init__(coordinator)
         self.entity_description = description
 
-        self._attr_name = f"{self.coordinator.server_name} {description.name}"
+        self._attr_name = f"{self.coordinator.host} {description.name}"
         self._attr_unique_id = f"{self.coordinator.unique_id}-{description.key}".lower()
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.unique_id)},
             manufacturer=MANUFACTURER,
             model=self.coordinator.server,
-            name=self.coordinator.server_name,
+            name=self.coordinator.host,
             sw_version=self.coordinator.version,
         )
 
