@@ -4,7 +4,7 @@ import aiohttp
 from spotipy import Spotify, SpotifyException
 import voluptuous as vol
 
-from homeassistant.components.media_player import BrowseError
+from homeassistant.components.media_player import BrowseError, BrowseMedia
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CREDENTIALS,
