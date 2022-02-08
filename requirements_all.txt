@@ -350,7 +350,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.23.4
+async-upnp-client==0.23.5
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
