@@ -436,14 +436,11 @@ class SonosSpeaker:
 
         This is to reset the state to allow a future clean subscription attempt.
         """
-        async with self._subscription_lock:
-            if not self.available:
-                return
+        if not self.available:
+            return
 
-            self.log_subscription_result(
-                exception, "Subscription renewal", logging.WARNING
-            )
-            await self.async_offline()
+        self.log_subscription_result(exception, "Subscription renewal", logging.WARNING)
+        await self.async_offline()
 
     @callback
     def async_dispatch_event(self, event: SonosEvent) -> None:
@@ -578,6 +575,9 @@ class SonosSpeaker:
 
     async def async_offline(self) -> None:
         """Handle removal of speaker when unavailable."""
+        if not self.available:
+            return
+
         self.available = False
         self.async_write_entity_states()
 
@@ -587,7 +587,8 @@ class SonosSpeaker:
             self._poll_timer()
             self._poll_timer = None
 
-        await self.async_unsubscribe()
+        async with self._subscription_lock:
+            await self.async_unsubscribe()
 
         self.hass.data[DATA_SONOS].discovery_known.discard(self.soco.uid)
 
