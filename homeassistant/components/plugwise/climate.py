@@ -52,17 +52,14 @@ async def async_setup_entry(
         "zone_thermostat",
         "thermostatic_radiator_valve",
     ]
-    for device_id, device_properties in coordinator.data.devices.items():
-        if device_properties["class"] not in thermostat_classes:
+    for device_id, device in coordinator.data.devices.items():
+        if device["class"] not in thermostat_classes:
             continue
 
         thermostat = PlugwiseClimateEntity(
             api,
             coordinator,
-            device_properties["name"],
             device_id,
-            device_properties["location"],
-            device_properties["class"],
         )
 
         entities.append(thermostat)
@@ -87,18 +84,16 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         self,
         api: Smile,
         coordinator: PlugwiseDataUpdateCoordinator,
-        name: str,
         device_id: str,
-        loc_id: str,
-        model: str,
     ) -> None:
         """Set up the Plugwise API."""
-        super().__init__(api, coordinator, name, device_id)
+        super().__init__(coordinator, device_id)
         self._attr_extra_state_attributes = {}
         self._attr_unique_id = f"{device_id}-climate"
+        self._attr_name = coordinator.data.devices[device_id].get("name")
 
         self._api = api
-        self._loc_id = loc_id
+        self._loc_id = coordinator.data.devices[device_id]["location"]
 
         self._presets = None
 

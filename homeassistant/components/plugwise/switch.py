@@ -26,18 +26,14 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
 
     entities: list[PlugwiseSwitchEntity] = []
-    for device_id, device_properties in coordinator.data.devices.items():
-        if (
-            "switches" not in device_properties
-            or "relay" not in device_properties["switches"]
-        ):
+    for device_id, device in coordinator.data.devices.items():
+        if "switches" not in device or "relay" not in device["switches"]:
             continue
 
         entities.append(
             PlugwiseSwitchEntity(
                 api,
                 coordinator,
-                device_properties["name"],
                 device_id,
             )
         )
@@ -54,14 +50,15 @@ class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
         self,
         api: Smile,
         coordinator: PlugwiseDataUpdateCoordinator,
-        name: str,
         device_id: str,
     ) -> None:
         """Set up the Plugwise API."""
-        super().__init__(api, coordinator, name, device_id)
+        super().__init__(coordinator, device_id)
+        self._api = api
         self._attr_unique_id = f"{device_id}-plug"
         self._members = coordinator.data.devices[device_id].get("members")
         self._attr_is_on = False
+        self._attr_name = coordinator.data.devices[device_id].get("name")
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -93,7 +90,7 @@ class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
     def _async_process_data(self) -> None:
         """Update the data from the Plugs."""
         if not (data := self.coordinator.data.devices.get(self._dev_id)):
-            LOGGER.error("Received no data for device %s", self._name)
+            LOGGER.error("Received no data for device %s", self._dev_id)
             self.async_write_ha_state()
             return
 
