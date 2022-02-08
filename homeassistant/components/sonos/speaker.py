@@ -576,6 +576,8 @@ class SonosSpeaker:
     async def async_offline(self) -> None:
         """Handle removal of speaker when unavailable."""
         self.available = False
+        self.async_write_entity_states()
+
         self._share_link_plugin = None
 
         if self._poll_timer:
@@ -585,7 +587,6 @@ class SonosSpeaker:
         await self.async_unsubscribe()
 
         self.hass.data[DATA_SONOS].discovery_known.discard(self.soco.uid)
-        self.async_write_entity_states()
 
     async def async_vanished(self, reason: str) -> None:
         """Handle removal of speaker when marked as vanished."""
