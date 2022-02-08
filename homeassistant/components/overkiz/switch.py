@@ -17,6 +17,7 @@ from homeassistant.components.switch import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
@@ -94,6 +95,18 @@ SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
         turn_on=lambda execute_command: execute_command(OverkizCommand.ON),
         turn_off=lambda execute_command: execute_command(OverkizCommand.OFF),
         icon="mdi:radiator",
+    ),
+    OverkizSwitchDescription(
+        key=UIWidget.MY_FOX_SECURITY_CAMERA,
+        name="Camera Shutter",
+        turn_on=lambda execute_command: execute_command(OverkizCommand.OPEN),
+        turn_off=lambda execute_command: execute_command(OverkizCommand.CLOSE),
+        icon="mdi:camera-lock",
+        is_on=lambda select_state: (
+            select_state(OverkizState.MYFOX_SHUTTER_STATUS)
+            == OverkizCommandParam.OPENED
+        ),
+        entity_category=EntityCategory.CONFIG,
     ),
 ]
 
