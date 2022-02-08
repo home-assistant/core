@@ -56,7 +56,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.network import get_url, is_hass_url
 
 from . import media_browser
 from .const import (
@@ -569,7 +569,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         elif media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK):
             # If media ID is a relative URL, we serve it from HA.
             # Create a signed path.
-            if media_id[0] == "/":
+            if media_id[0] == "/" or is_hass_url(self.hass, media_id):
                 media_id = async_sign_path(
                     self.hass,
                     quote(media_id),
@@ -577,8 +577,8 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 )
 
                 # prepend external URL
-                hass_url = get_url(self.hass, prefer_external=True)
-                media_id = f"{hass_url}{media_id}"
+                if media_id[0] == "/":
+                    media_id = f"{get_url(self.hass)}{media_id}"
 
             if kwargs.get(ATTR_MEDIA_ENQUEUE):
                 soco.add_uri_to_queue(media_id)
