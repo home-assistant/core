@@ -175,7 +175,7 @@ class SonosSpeaker:
         # Subscriptions and events
         self.subscriptions_failed: bool = False
         self._subscriptions: list[SubscriptionBase] = []
-        self._resubscription_lock: asyncio.Lock | None = None
+        self._subscription_lock: asyncio.Lock | None = None
         self._event_dispatchers: dict[str, Callable] = {}
         self._last_activity: float = NEVER_TIME
         self._last_event_cache: dict[str, Any] = {}
@@ -366,8 +366,18 @@ class SonosSpeaker:
             exc_info=exc_info,
         )
 
-    async def async_subscribe(self) -> bool:
-        """Initiate event subscriptions."""
+    async def async_subscribe(self) -> None:
+        """Initiate event subscriptions under an async lock."""
+        if not self._subscription_lock:
+            self._subscription_lock = asyncio.Lock()
+
+        async with self._subscription_lock:
+            if self._subscriptions:
+                return
+            await self._async_subscribe()
+
+    async def _async_subscribe(self) -> None:
+        """Create event subscriptions."""
         _LOGGER.debug("Creating subscriptions for %s", self.zone_name)
 
         # Create a polling task in case subscriptions fail or callback events do not arrive
@@ -432,10 +442,7 @@ class SonosSpeaker:
 
     async def async_resubscribe(self, exception: Exception) -> None:
         """Attempt to resubscribe when a renewal failure is detected."""
-        if not self._resubscription_lock:
-            self._resubscription_lock = asyncio.Lock()
-
-        async with self._resubscription_lock:
+        async with self._subscription_lock:
             if not self.available:
                 return
 
