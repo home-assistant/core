@@ -43,8 +43,6 @@ homeassistant/components/airtouch4/* @LonePurpleWolf
 tests/components/airtouch4/* @LonePurpleWolf
 homeassistant/components/airvisual/* @bachya
 tests/components/airvisual/* @bachya
-homeassistant/components/alarmdecoder/* @ajschmidt8
-tests/components/alarmdecoder/* @ajschmidt8
 homeassistant/components/alexa/* @home-assistant/cloud @ochlocracy
 tests/components/alexa/* @home-assistant/cloud @ochlocracy
 homeassistant/components/almond/* @gcampax @balloob
