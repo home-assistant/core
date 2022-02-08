@@ -4,7 +4,7 @@
   "config_flow": true,
   "dhcp": [
     {"macaddress":"A8BB50*"},
-    {"hostname":"wiz_[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]"}
+    {"hostname":"wiz_*"}
   ],
   "dependencies": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/wiz",
