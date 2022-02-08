@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "host": "[%key:common::config_flow::data::ip%]"
         },
         "description": "If you leave the host empty, discovery will be used to find devices. Host must be the IP address of the bulb."
       },
