@@ -1,7 +1,7 @@
 """Test the Sonarr config flow."""
 from unittest.mock import MagicMock, patch
 
-from sonarr import SonarrAccessRestricted, SonarrError
+from aiopyarr import ArrAuthenticationException, ArrException
 
 from homeassistant.components.sonarr.const import (
     CONF_UPCOMING_DAYS,
@@ -38,7 +38,7 @@ async def test_cannot_connect(
     hass: HomeAssistant, mock_sonarr_config_flow: MagicMock
 ) -> None:
     """Test we show user form on connection error."""
-    mock_sonarr_config_flow.update.side_effect = SonarrError
+    mock_sonarr_config_flow.async_get_system_status.side_effect = ArrException
 
     user_input = MOCK_USER_INPUT.copy()
     result = await hass.config_entries.flow.async_init(
@@ -56,7 +56,9 @@ async def test_invalid_auth(
     hass: HomeAssistant, mock_sonarr_config_flow: MagicMock
 ) -> None:
     """Test we show user form on invalid auth."""
-    mock_sonarr_config_flow.update.side_effect = SonarrAccessRestricted
+    mock_sonarr_config_flow.async_get_system_status.side_effect = (
+        ArrAuthenticationException
+    )
 
     user_input = MOCK_USER_INPUT.copy()
     result = await hass.config_entries.flow.async_init(
@@ -74,7 +76,7 @@ async def test_unknown_error(
     hass: HomeAssistant, mock_sonarr_config_flow: MagicMock
 ) -> None:
     """Test we show user form on unknown error."""
-    mock_sonarr_config_flow.update.side_effect = Exception
+    mock_sonarr_config_flow.async_get_system_status.side_effect = Exception
 
     user_input = MOCK_USER_INPUT.copy()
     result = await hass.config_entries.flow.async_init(

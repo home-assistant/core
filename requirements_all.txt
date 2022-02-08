@@ -244,6 +244,9 @@ aiopvapi==1.6.19
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==3.0.0
 
+# homeassistant.components.sonarr
+aiopyarr==22.2.0
+
 # homeassistant.components.recollect_waste
 aiorecollect==1.0.8
 
@@ -2251,9 +2254,6 @@ somecomfort==0.8.0
 
 # homeassistant.components.somfy_mylink
 somfy-mylink-synergy==1.0.6
-
-# homeassistant.components.sonarr
-sonarr==0.3.0
 
 # homeassistant.components.marytts
 speak2mary==1.4.0

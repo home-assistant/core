@@ -2,8 +2,8 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from aiopyarr import ArrException
 import pytest
-from sonarr import SonarrError
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.sonarr.const import DOMAIN
@@ -141,44 +141,49 @@ async def test_availability(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
+    assert hass.states.get(UPCOMING_ENTITY_ID)
     assert hass.states.get(UPCOMING_ENTITY_ID).state == "1"
 
     # state to unavailable
-    mock_sonarr.calendar.side_effect = SonarrError
+    mock_sonarr.async_get_calendar.side_effect = ArrException
 
     future = now + timedelta(minutes=1)
     with patch("homeassistant.util.dt.utcnow", return_value=future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
+    assert hass.states.get(UPCOMING_ENTITY_ID)
     assert hass.states.get(UPCOMING_ENTITY_ID).state == STATE_UNAVAILABLE
 
     # state to available
-    mock_sonarr.calendar.side_effect = None
+    mock_sonarr.async_get_calendar.side_effect = None
 
     future += timedelta(minutes=1)
     with patch("homeassistant.util.dt.utcnow", return_value=future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
+    assert hass.states.get(UPCOMING_ENTITY_ID)
     assert hass.states.get(UPCOMING_ENTITY_ID).state == "1"
 
     # state to unavailable
-    mock_sonarr.calendar.side_effect = SonarrError
+    mock_sonarr.async_get_calendar.side_effect = ArrException
 
     future += timedelta(minutes=1)
     with patch("homeassistant.util.dt.utcnow", return_value=future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
+    assert hass.states.get(UPCOMING_ENTITY_ID)
     assert hass.states.get(UPCOMING_ENTITY_ID).state == STATE_UNAVAILABLE
 
     # state to available
-    mock_sonarr.calendar.side_effect = None
+    mock_sonarr.async_get_calendar.side_effect = None
 
     future += timedelta(minutes=1)
     with patch("homeassistant.util.dt.utcnow", return_value=future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
+    assert hass.states.get(UPCOMING_ENTITY_ID)
     assert hass.states.get(UPCOMING_ENTITY_ID).state == "1"

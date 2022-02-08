@@ -4,7 +4,9 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from sonarr import Sonarr, SonarrAccessRestricted, SonarrError
+from aiopyarr import ArrAuthenticationException, ArrException
+from aiopyarr.models.host_configuration import PyArrHostConfiguration
+from aiopyarr.sonarr_client import SonarrClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, OptionsFlow
@@ -23,7 +25,6 @@ from .const import (
     CONF_BASE_PATH,
     CONF_UPCOMING_DAYS,
     CONF_WANTED_MAX_ITEMS,
-    DEFAULT_BASE_PATH,
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_UPCOMING_DAYS,
@@ -40,19 +41,26 @@ async def validate_input(hass: HomeAssistant, data: dict) -> None:
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    session = async_get_clientsession(hass)
+    base_api_path = data[CONF_BASE_PATH]
 
-    sonarr = Sonarr(
-        host=data[CONF_HOST],
+    if base_api_path in ("", "/", "/api"):
+        base_api_path = None
+
+    host_configuration = PyArrHostConfiguration(
+        api_token=data[CONF_API_KEY],
+        ipaddress=data[CONF_HOST],
         port=data[CONF_PORT],
-        api_key=data[CONF_API_KEY],
-        base_path=data[CONF_BASE_PATH],
-        tls=data[CONF_SSL],
+        ssl=data[CONF_SSL],
         verify_ssl=data[CONF_VERIFY_SSL],
-        session=session,
+        base_api_path=base_api_path,
     )
 
-    await sonarr.update()
+    sonarr = SonarrClient(
+        host_configuration=host_configuration,
+        session=async_get_clientsession(hass),
+    )
+
+    await sonarr.async_get_system_status()
 
 
 class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -105,9 +113,9 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await validate_input(self.hass, user_input)
-            except SonarrAccessRestricted:
+            except ArrAuthenticationException:
                 errors = {"base": "invalid_auth"}
-            except SonarrError:
+            except ArrException:
                 errors = {"base": "cannot_connect"}
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -142,7 +150,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         data_schema = {
             vol.Required(CONF_HOST): str,
             vol.Required(CONF_API_KEY): str,
-            vol.Optional(CONF_BASE_PATH, default=DEFAULT_BASE_PATH): str,
+            vol.Optional(CONF_BASE_PATH, default=""): str,
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
             vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
         }

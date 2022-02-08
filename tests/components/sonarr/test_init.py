@@ -1,7 +1,7 @@
 """Tests for the Sonsrr integration."""
 from unittest.mock import MagicMock, patch
 
-from sonarr import SonarrAccessRestricted, SonarrError
+from aiopyarr import ArrAuthenticationException, ArrException
 
 from homeassistant.components.sonarr.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -17,7 +17,7 @@ async def test_config_entry_not_ready(
     mock_sonarr: MagicMock,
 ) -> None:
     """Test the configuration entry not ready."""
-    mock_sonarr.update.side_effect = SonarrError
+    mock_sonarr.async_get_system_status.side_effect = ArrException
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -32,7 +32,7 @@ async def test_config_entry_reauth(
     mock_sonarr: MagicMock,
 ) -> None:
     """Test the configuration entry needing to be re-authenticated."""
-    mock_sonarr.update.side_effect = SonarrAccessRestricted
+    mock_sonarr.async_get_system_status.side_effect = ArrAuthenticationException
 
     with patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
         mock_config_entry.add_to_hass(hass)
