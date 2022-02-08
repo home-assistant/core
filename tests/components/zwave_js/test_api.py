@@ -29,6 +29,7 @@ from zwave_js_server.model.node import Node
 
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.components.zwave_js.api import (
+    ADDITIONAL_PROPERTIES,
     APPLICATION_VERSION,
     CLIENT_SIDE_AUTH,
     COMMAND_CLASS_ID,
@@ -837,6 +838,7 @@ async def test_provision_smart_start_node(hass, integration, client, hass_ws_cli
                 PRODUCT_TYPE: 1,
                 PRODUCT_ID: 1,
                 APPLICATION_VERSION: "test",
+                ADDITIONAL_PROPERTIES: {"name": "test"},
             },
         }
     )
@@ -861,6 +863,7 @@ async def test_provision_smart_start_node(hass, integration, client, hass_ws_cli
             max_inclusion_request_interval=None,
             uuid=None,
             supported_protocols=None,
+            additional_properties={"name": "test"},
         ).to_dict(),
     }
 
