@@ -63,6 +63,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
+            self._async_abort_entries_match(user_input)
             return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
         return self.async_show_form(
