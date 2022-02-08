@@ -110,38 +110,31 @@ class FiveMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Get server data from 3rd party library and update properties."""
-        was_online = self.online
-
         try:
             server = await self._fivem.get_server()
             self.online = True
         except FiveMServerOfflineError:
             self.online = False
 
-        if was_online and not self.online:
-            _LOGGER.warning("Connection to '%s:%s' lost", self.host, self.port)
-        elif not was_online and self.online:
-            _LOGGER.info("Connection to '%s:%s' (re-)established", self.host, self.port)
+        if not self.online:
+            raise UpdateFailed
 
-        if self.online:
-            players_list: list[str] = []
-            for player in server.players:
-                players_list.append(player.name)
-            players_list.sort()
+        players_list: list[str] = []
+        for player in server.players:
+            players_list.append(player.name)
+        players_list.sort()
 
-            resources_list = server.resources
-            resources_list.sort()
+        resources_list = server.resources
+        resources_list.sort()
 
-            return {
-                NAME_PLAYERS_ONLINE: len(players_list),
-                NAME_PLAYERS_MAX: server.max_players,
-                NAME_RESOURCES: len(resources_list),
-                NAME_STATUS: self.online,
-                ATTR_PLAYERS_LIST: players_list,
-                ATTR_RESOURCES_LIST: resources_list,
-            }
-
-        raise UpdateFailed
+        return {
+            NAME_PLAYERS_ONLINE: len(players_list),
+            NAME_PLAYERS_MAX: server.max_players,
+            NAME_RESOURCES: len(resources_list),
+            NAME_STATUS: self.online,
+            ATTR_PLAYERS_LIST: players_list,
+            ATTR_RESOURCES_LIST: resources_list,
+        }
 
 
 @dataclass
