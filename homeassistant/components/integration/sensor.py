@@ -1,6 +1,8 @@
 """Numeric integration of data coming from a source sensor over time."""
 from __future__ import annotations
 
+from datetime import timedelta
+
 from decimal import Decimal, DecimalException
 import logging
 
@@ -42,6 +44,7 @@ CONF_ROUND_DIGITS = "round"
 CONF_UNIT_PREFIX = "unit_prefix"
 CONF_UNIT_TIME = "unit_time"
 CONF_UNIT_OF_MEASUREMENT = "unit"
+CONF_MAX_TIMESLICE = "max_timeslice"
 
 TRAPEZOIDAL_METHOD = "trapezoidal"
 LEFT_METHOD = "left"
@@ -76,6 +79,11 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_METHOD, default=TRAPEZOIDAL_METHOD): vol.In(
                 INTEGRATION_METHOD
             ),
+            # No default for the max timeslice, everyone has different sensors
+            # with different expected update intervals.
+            vol.optional(CONF_MAX_TIMESLICE, default=None): vol.All(
+                cv.time_period, cv.positive_timedelta
+            ),
         }
     ),
 )
@@ -96,6 +104,7 @@ async def async_setup_platform(
         config[CONF_UNIT_TIME],
         config.get(CONF_UNIT_OF_MEASUREMENT),
         config[CONF_METHOD],
+        config[CONF_MAX_TIMESLICE],
     )
 
     async_add_entities([integral])
@@ -113,12 +122,14 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         unit_time: str,
         unit_of_measurement: str | None,
         integration_method: str,
+        max_timeslice: timedelta | None,
     ) -> None:
         """Initialize the integration sensor."""
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
         self._state = None
         self._method = integration_method
+        self._max_timeslice = max_timeslice
 
         self._name = name if name is not None else f"{source_entity} integral"
         self._unit_template = (
@@ -187,16 +198,55 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
                     new_state.last_updated - old_state.last_updated
                 ).total_seconds()
 
+                if self._max_timeslice is not None:
+                    # This extra piece of code breaks up the time between the
+                    # old and new state into timeslices of a specified
+                    # maximum width. This prevents crazy inaccuracies with the
+                    # right method of Riemann integration when used with a
+                    # dynamic-width timeslice, like when a sensor was at zero
+                    # for an extended period of time, and then spiked to a
+                    # large value, which would fill that whole time it's been
+                    # at zero with the new large value. The default trapezoidal
+                    # method is affected by this as well, since it's just the
+                    # arithmetic mean of the left and right methods.
+                    #
+                    # There are two reasons why I didn't just set up a timer to
+                    # poll this function at the interval of the max timeslice:
+                    # - It's a cycle eater, and I don't like 'em.
+                    # - I have no idea how this codebase is organized and it's
+                    #   too late in the night for me to go re-learn Python
+                    #   again.
+                    max_timeslice = self._max_timeslice.total_seconds()
+                    
+                    # Divide the time that has passed since the last update
+                    # into zero or more "max-timeslices" of the specified
+                    # width, and the remainder is the last one in the streak of
+                    # not having any changes to the value.
+                    most_recent_timeslice = elapsed_time % max_timeslice
+                    # Find the sum of the lengths of all max-timeslices (which
+                    # all have the value of the old state)
+                    sum_of_max_timeslices = elapsed_time - most_recent_timeslice
+
+                    # Since all of the max-timeslices by definition have the
+                    # same value, all the methods yield the same value.
+                    area += Decimal(old_state.state) * Decimal(sum_of_max_timeslices)
+                else:
+                    # If we're not doing the cool subdivision trick, just glue
+                    # the whole time period into one single timeslice and
+                    # let the electric kettle wattage spikes destroy our
+                    # beautiful trapezoidal integrator.
+                    most_recent_timeslice = elapsed_time
+
                 if self._method == TRAPEZOIDAL_METHOD:
-                    area = (
+                    area += (
                         (Decimal(new_state.state) + Decimal(old_state.state))
-                        * Decimal(elapsed_time)
+                        * Decimal(most_recent_timeslice)
                         / 2
                     )
                 elif self._method == LEFT_METHOD:
-                    area = Decimal(old_state.state) * Decimal(elapsed_time)
+                    area += Decimal(old_state.state) * Decimal(most_recent_timeslice)
                 elif self._method == RIGHT_METHOD:
-                    area = Decimal(new_state.state) * Decimal(elapsed_time)
+                    area += Decimal(new_state.state) * Decimal(most_recent_timeslice)
 
                 integral = area / (self._unit_prefix * self._unit_time)
                 assert isinstance(integral, Decimal)
