@@ -671,6 +671,9 @@ fints==1.0.1
 # homeassistant.components.fitbit
 fitbit==0.3.1
 
+# homeassistant.components.fivem
+fivem-api==0.1.2
+
 # homeassistant.components.fixer
 fixerio==1.0.0a0
 

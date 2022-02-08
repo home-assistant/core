@@ -420,6 +420,9 @@ faadelays==0.0.7
 # homeassistant.components.feedreader
 feedparser==6.0.2
 
+# homeassistant.components.fivem
+fivem-api==0.1.2
+
 # homeassistant.components.fjaraskupan
 fjaraskupan==1.0.2
 
