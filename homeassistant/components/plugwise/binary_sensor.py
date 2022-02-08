@@ -95,8 +95,8 @@ class PlugwiseBinarySensorEntity(PlugwiseEntity, BinarySensorEntity):
         self._attr_is_on = False
         self._attr_unique_id = f"{device_id}-{description.key}"
         self._attr_name = (
-            f"{coordinator.data.devices[device_id].get('name')} {description.name}"
-        )
+            f"{coordinator.data.devices[device_id].get('name', '')} {description.name}"
+        ).lstrip()
 
     @callback
     def _async_process_data(self) -> None:
