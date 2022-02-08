@@ -31,8 +31,6 @@ class SIARequiredKeysMixin:
 class SIAEntityDescription(EntityDescription, SIARequiredKeysMixin):
     """Entity Description for SIA entities."""
 
-    set_state_not_availability: bool = False
-
 
 class SIABaseEntity(RestoreEntity):
     """Base class for SIA entities."""
@@ -130,7 +128,7 @@ class SIABaseEntity(RestoreEntity):
         """
 
     def async_create_post_interval_update_cb(self) -> None:
-        """Create a port interval update cb and return the callback."""
+        """Create a port interval update cb and store the callback."""
         self._post_interval_update_cb_canceller = async_call_later(
             self.hass,
             get_unavailability_interval(self.ping_interval),
@@ -139,14 +137,7 @@ class SIABaseEntity(RestoreEntity):
 
     @callback
     def async_post_interval_update(self, _) -> None:
-        """Set unavailable or update state after a ping interval.
-
-        Since not all types of entities that inherit from SIABaseEntity have _attr_is_on, this function uses the setattr instead of a direct assignment.
-        """
-        if self.entity_description.set_state_not_availability:
-            setattr(self, "_attr_is_on", False)
-            self.async_write_ha_state()
-            return
+        """Set unavailable after a ping interval."""
         self._attr_available = False
         self.async_write_ha_state()
 
