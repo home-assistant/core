@@ -76,18 +76,14 @@ class FiveMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self, hass: HomeAssistant, config_data: Mapping[str, Any], unique_id: str
     ) -> None:
         """Initialize server instance."""
-        self._hass = hass
-
         self.unique_id = unique_id
         self.server = None
         self.version = None
         self.game_name: str | None = None
 
         self.host = config_data[CONF_HOST]
-        self.port = config_data[CONF_PORT]
-        self.online = False
 
-        self._fivem = FiveM(self.host, self.port)
+        self._fivem = FiveM(self.host, config_data[CONF_PORT])
 
         update_interval = timedelta(seconds=SCAN_INTERVAL)
 
@@ -104,12 +100,8 @@ class FiveMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Get server data from 3rd party library and update properties."""
         try:
             server = await self._fivem.get_server()
-            self.online = True
-        except FiveMServerOfflineError:
-            self.online = False
-
-        if not self.online:
-            raise UpdateFailed
+        except FiveMServerOfflineError as err:
+            raise UpdateFailed from err
 
         players_list: list[str] = []
         for player in server.players:
@@ -123,7 +115,7 @@ class FiveMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             NAME_PLAYERS_ONLINE: len(players_list),
             NAME_PLAYERS_MAX: server.max_players,
             NAME_RESOURCES: len(resources_list),
-            NAME_STATUS: self.online,
+            NAME_STATUS: self.last_update_success,
             ATTR_PLAYERS_LIST: players_list,
             ATTR_RESOURCES_LIST: resources_list,
         }
