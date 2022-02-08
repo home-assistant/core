@@ -98,7 +98,6 @@ class FiveMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._fivem = FiveM(self.host, self.port)
 
         update_interval = timedelta(seconds=SCAN_INTERVAL)
-        _LOGGER.debug("Data will be updated every %s", update_interval)
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
 
