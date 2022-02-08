@@ -1,4 +1,5 @@
 """Tests for Tradfri diagnostics."""
+from unittest.mock import MagicMock, Mock
 
 from aiohttp import ClientSession
 
@@ -14,9 +15,9 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSession,
-    mock_gateway,
-    mock_api_factory,
-):
+    mock_gateway: Mock,
+    mock_api_factory: MagicMock,
+) -> None:
     """Test diagnostics for config entry."""
     mock_gateway.mock_devices.append(
         # Add a fan
