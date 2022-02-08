@@ -17,6 +17,7 @@ from soco.core import (
 )
 from soco.data_structures import DidlFavorite
 import voluptuous as vol
+import yarl
 
 from homeassistant.components import media_source, spotify
 from homeassistant.components.http.auth import async_sign_path
@@ -570,11 +571,16 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             # If media ID is a relative URL, we serve it from HA.
             # Create a signed path.
             if media_id[0] == "/" or is_hass_url(self.hass, media_id):
-                media_id = async_sign_path(
-                    self.hass,
-                    quote(media_id),
-                    datetime.timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
-                )
+                parsed = yarl.URL(media_id)
+
+                if parsed.query:
+                    _LOGGER.debug("Not signing path for content with query param")
+                else:
+                    media_id = async_sign_path(
+                        self.hass,
+                        quote(media_id),
+                        datetime.timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
+                    )
 
                 # prepend external URL
                 if media_id[0] == "/":
