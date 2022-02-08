@@ -21,7 +21,7 @@ async def test_adam_climate_switch_entities(hass, mock_smile_adam):
 
 async def test_adam_climate_switch_negative_testing(hass, mock_smile_adam):
     """Test exceptions of climate related switch entities."""
-    mock_smile_adam.set_relay_state.side_effect = PlugwiseException
+    mock_smile_adam.set_switch_state.side_effect = PlugwiseException
     entry = await async_init_integration(hass, mock_smile_adam)
     assert entry.state is ConfigEntryState.LOADED
 

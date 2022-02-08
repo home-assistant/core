@@ -14,13 +14,11 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import PlugwiseDataUpdateCoordinator
+from .coordinator import PlugwiseData, PlugwiseDataUpdateCoordinator
 
 
-class PlugwiseEntity(CoordinatorEntity[bool]):
+class PlugwiseEntity(CoordinatorEntity[PlugwiseData]):
     """Represent a PlugWise Entity."""
-
-    _model: str | None = None
 
     def __init__(
         self,
@@ -45,6 +43,7 @@ class PlugwiseEntity(CoordinatorEntity[bool]):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
+        data = self.coordinator.data.devices[self._dev_id]
         device_information = DeviceInfo(
             identifiers={(DOMAIN, self._dev_id)},
             name=self._entity_name,
@@ -56,11 +55,14 @@ class PlugwiseEntity(CoordinatorEntity[bool]):
                 ATTR_CONFIGURATION_URL
             ] = f"http://{entry.data[CONF_HOST]}"
 
-        if self._model is not None:
-            device_information[ATTR_MODEL] = self._model.replace("_", " ").title()
+        if model := data.get("model"):
+            device_information[ATTR_MODEL] = model
 
-        if self._dev_id != self._api.gateway_id:
-            device_information[ATTR_VIA_DEVICE] = (DOMAIN, str(self._api.gateway_id))
+        if self._dev_id != self.coordinator.data.gateway["gateway_id"]:
+            device_information[ATTR_VIA_DEVICE] = (
+                DOMAIN,
+                str(self.coordinator.data.gateway["gateway_id"]),
+            )
 
         return device_information
 
