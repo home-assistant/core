@@ -99,11 +99,11 @@ class PlugwiseBinarySensorEntity(PlugwiseEntity, BinarySensorEntity):
         ).lstrip()
 
     @callback
-    def _async_process_data(self) -> None:
-        """Update the entity."""
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         if not (data := self.coordinator.data.devices.get(self._dev_id)):
             LOGGER.error("Received no data for device %s", self._dev_id)
-            self.async_write_ha_state()
+            super()._handle_coordinator_update()
             return
 
         self._attr_is_on = data["binary_sensors"].get(self.entity_description.key)
@@ -113,15 +113,15 @@ class PlugwiseBinarySensorEntity(PlugwiseEntity, BinarySensorEntity):
         if self.entity_description.key == "slave_boiler_state":
             self._attr_icon = FLAME_ICON if self._attr_is_on else IDLE_ICON
 
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
 
 class PlugwiseNotifyBinarySensorEntity(PlugwiseBinarySensorEntity):
     """Representation of a Plugwise Notification binary_sensor."""
 
     @callback
-    def _async_process_data(self) -> None:
-        """Update the entity."""
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         notify = self.coordinator.data.gateway["notifications"]
 
         self._attr_extra_state_attributes = {}
@@ -144,4 +144,4 @@ class PlugwiseNotifyBinarySensorEntity(PlugwiseBinarySensorEntity):
                         msg
                     )
 
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
