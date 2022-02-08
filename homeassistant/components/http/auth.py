@@ -67,6 +67,8 @@ def async_sign_path(
         secret,
         algorithm="HS256",
     )
+    if "?" in path
+        return f"{path}&{SIGN_QUERY_PARAM}={encoded}"
     return f"{path}?{SIGN_QUERY_PARAM}={encoded}"
 
 
