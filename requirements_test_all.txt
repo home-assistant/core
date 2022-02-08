@@ -270,7 +270,7 @@ av==8.1.0
 axis==44
 
 # homeassistant.components.azure_event_hub
-azure-eventhub==5.5.0
+azure-eventhub==5.7.0
 
 # homeassistant.components.homekit
 base36==0.1.1
@@ -419,6 +419,9 @@ faadelays==0.0.7
 
 # homeassistant.components.feedreader
 feedparser==6.0.2
+
+# homeassistant.components.fivem
+fivem-api==0.1.2
 
 # homeassistant.components.fjaraskupan
 fjaraskupan==1.0.2
@@ -783,7 +786,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.8.5
+plugwise==0.16.2
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11

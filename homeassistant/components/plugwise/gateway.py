@@ -55,14 +55,13 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if not connected:
         raise ConfigEntryNotReady("Unable to connect to Smile")
-
-    coordinator = PlugwiseDataUpdateCoordinator(hass, api)
-    await coordinator.async_config_entry_first_refresh()
-
     api.get_all_devices()
 
     if entry.unique_id is None and api.smile_version[0] != "1.8.0":
         hass.config_entries.async_update_entry(entry, unique_id=api.smile_hostname)
+
+    coordinator = PlugwiseDataUpdateCoordinator(hass, api)
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "api": api,
@@ -80,10 +79,8 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sw_version=api.smile_version[0],
     )
 
-    single_master_thermostat = api.single_master_thermostat()
-
     platforms = PLATFORMS_GATEWAY
-    if single_master_thermostat is None:
+    if coordinator.data.gateway["single_master_thermostat"] is None:
         platforms = SENSOR_PLATFORMS
 
     hass.config_entries.async_setup_platforms(entry, platforms)
