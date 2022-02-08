@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "host": "[%key:common::config_flow::data::ip%]"
         },
         "description": "If you leave the IP Address empty, discovery will be used to find devices."
       },
