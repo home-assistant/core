@@ -102,7 +102,8 @@ SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
         turn_off=lambda execute_command: execute_command(OverkizCommand.CLOSE),
         icon="mdi:camera-lock",
         is_on=lambda select_state: (
-            select_state(OverkizState.MYFOX_SHUTTER_STATUS) == "opened"
+            select_state(OverkizState.MYFOX_SHUTTER_STATUS)
+            == OverkizCommandParam.OPENED
         ),
     ),
 ]
