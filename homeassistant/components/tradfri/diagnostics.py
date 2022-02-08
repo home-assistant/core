@@ -1,45 +1,36 @@
 """Diagnostics support for IKEA Tradfri."""
 from __future__ import annotations
 
-from pytradfri import Gateway, PytradfriError
+from typing import cast
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from .const import (
-    CONF_GATEWAY_ID,
-    COORDINATOR,
-    COORDINATOR_LIST,
-    DOMAIN,
-    GROUPS_LIST,
-    KEY_API,
-    TIMEOUT_API,
-)
+from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN, GROUPS_LIST
 
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict:
     """Return diagnostics the Tradfri platform."""
-    _entry_data = hass.data[DOMAIN][entry.entry_id]
+    entry_data = hass.data[DOMAIN][entry.entry_id]
+    coordinator_data = entry_data[COORDINATOR]
 
-    _coordinator_data = _entry_data[COORDINATOR]
+    device_registry = dr.async_get(hass)
+    device = cast(
+        dr.DeviceEntry,
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, entry.data[CONF_GATEWAY_ID])}
+        ),
+    )
 
-    _api = _coordinator_data[KEY_API]
-    _gateway: Gateway = _coordinator_data[CONF_GATEWAY_ID]
-
-    try:
-        _gateway_info = await _api(_gateway.get_gateway_info(), timeout=TIMEOUT_API)
-        _fw_version = _gateway_info.firmware_version
-    except PytradfriError:
-        _fw_version = "Not available"
-
-    _device_data: list = []
-    for coordinator in _coordinator_data[COORDINATOR_LIST]:
-        _device_data.append(coordinator.device.device_info.model_number)
+    device_data: list = []
+    for coordinator in coordinator_data[COORDINATOR_LIST]:
+        device_data.append(coordinator.device.device_info.model_number)
 
     return {
-        "gateway_version": _fw_version,
-        "device_data": sorted(_device_data),
-        "no_of_groups": len(_coordinator_data[GROUPS_LIST]),
+        "gateway_version": device.sw_version,
+        "device_data": sorted(device_data),
+        "no_of_groups": len(coordinator_data[GROUPS_LIST]),
     }
