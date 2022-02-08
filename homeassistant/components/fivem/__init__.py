@@ -14,6 +14,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -77,7 +78,9 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
 class FiveMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching FiveM data."""
 
-    def __init__(self, hass: HomeAssistant, config_data, unique_id: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_data: ConfigType, unique_id: str
+    ) -> None:
         """Initialize server instance."""
         self._hass = hass
 
