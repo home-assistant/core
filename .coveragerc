@@ -939,6 +939,10 @@ omit =
     homeassistant/components/qrcode/image_processing.py
     homeassistant/components/quantum_gateway/device_tracker.py
     homeassistant/components/qvr_pro/*
+    homeassistant/components/rabbitair/__init__.py
+    homeassistant/components/rabbitair/const.py
+    homeassistant/components/rabbitair/entity.py
+    homeassistant/components/rabbitair/fan.py
     homeassistant/components/rachio/__init__.py
     homeassistant/components/rachio/binary_sensor.py
     homeassistant/components/rachio/device.py

@@ -748,6 +748,8 @@ homeassistant/components/quantum_gateway/* @cisasteelersfan
 homeassistant/components/qvr_pro/* @oblogic7
 homeassistant/components/qwikswitch/* @kellerza
 tests/components/qwikswitch/* @kellerza
+homeassistant/components/rabbitair/* @rabbit-air
+tests/components/rabbitair/* @rabbit-air
 homeassistant/components/rachio/* @bdraco
 tests/components/rachio/* @bdraco
 homeassistant/components/radiotherm/* @vinnyfuria
