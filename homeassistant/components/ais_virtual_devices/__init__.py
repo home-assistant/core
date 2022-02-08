@@ -620,31 +620,31 @@ async def async_setup(hass, config):
                 )
 
     # Set up android camera
-    if ais_global.has_root():
-        cmd = 'su -c "dumpsys package pl.sviete.screenstream | grep versionName"'
-        cmd_process = await asyncio.create_subprocess_shell(
-            cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-        )
-        apk_version, stderr = await cmd_process.communicate()
-        apk_version = (
-            apk_version.decode("utf-8")
-            .replace("\n", "")
-            .strip()
-            .replace("versionName=", "")
-        )
-
-        if "." in apk_version:
-            mjpeg_camera = {
-                CONF_PLATFORM: "mjpeg",
-                CONF_MJPEG_URL: "http://127.0.0.1:9966/stream.mjpeg",
-                CONF_STILL_IMAGE_URL: "http://127.0.0.1:9966/stream.mjpeg",
-                CONF_NAME: "Android",
-            }
-
-            hass.async_create_task(
-                discovery.async_load_platform(
-                    hass, "camera", "mjpeg", mjpeg_camera, config
-                )
-            )
+    # if ais_global.has_root():
+    #     cmd = 'su -c "dumpsys package pl.sviete.screenstream | grep versionName"'
+    #     cmd_process = await asyncio.create_subprocess_shell(
+    #         cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+    #     )
+    #     apk_version, stderr = await cmd_process.communicate()
+    #     apk_version = (
+    #         apk_version.decode("utf-8")
+    #         .replace("\n", "")
+    #         .strip()
+    #         .replace("versionName=", "")
+    #     )
+    #
+    #     if "." in apk_version:
+    #         mjpeg_camera = {
+    #             CONF_PLATFORM: "mjpeg",
+    #             CONF_MJPEG_URL: "http://127.0.0.1:9966/stream.mjpeg",
+    #             CONF_STILL_IMAGE_URL: "http://127.0.0.1:9966/stream.mjpeg",
+    #             CONF_NAME: "Android",
+    #         }
+    #
+    #         hass.async_create_task(
+    #             discovery.async_load_platform(
+    #                 hass, "camera", "mjpeg", mjpeg_camera, config
+    #             )
+    #         )
 
     return True
