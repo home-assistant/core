@@ -350,7 +350,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.23.4
+async-upnp-client==0.23.5
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -1951,7 +1951,7 @@ python-mpd2==3.0.4
 python-mystrom==1.1.2
 
 # homeassistant.components.nest
-python-nest==4.1.0
+python-nest==4.2.0
 
 # homeassistant.components.ozw
 python-openzwave-mqtt[mqtt-client]==1.4.0
@@ -2051,7 +2051,7 @@ pywemo==0.7.0
 pywilight==0.0.70
 
 # homeassistant.components.wiz
-pywizlight==0.5.2
+pywizlight==0.5.3
 
 # homeassistant.components.xeoma
 pyxeoma==1.4.1

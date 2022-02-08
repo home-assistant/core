@@ -1,8 +1,6 @@
 """Plugwise Sensor component for Home Assistant."""
 from __future__ import annotations
 
-from plugwise.smile import Smile
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -22,15 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    COOL_ICON,
-    COORDINATOR,
-    DOMAIN,
-    FLAME_ICON,
-    IDLE_ICON,
-    LOGGER,
-    UNIT_LUMEN,
-)
+from .const import COOL_ICON, DOMAIN, FLAME_ICON, IDLE_ICON, LOGGER, UNIT_LUMEN
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
@@ -286,23 +276,20 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Smile sensors from a config entry."""
-    api = hass.data[DOMAIN][config_entry.entry_id]["api"]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     entities: list[PlugwiseSensorEnity] = []
-    for device_id, device_properties in coordinator.data.devices.items():
+    for device_id, device in coordinator.data.devices.items():
         for description in SENSORS:
             if (
-                "sensors" not in device_properties
-                or device_properties["sensors"].get(description.key) is None
+                "sensors" not in device
+                or device["sensors"].get(description.key) is None
             ):
                 continue
 
             entities.append(
                 PlugwiseSensorEnity(
-                    api,
                     coordinator,
-                    device_properties["name"],
                     device_id,
                     description,
                 )
@@ -311,21 +298,19 @@ async def async_setup_entry(
         if coordinator.data.gateway["single_master_thermostat"] is False:
             # These sensors should actually be binary sensors.
             for description in INDICATE_ACTIVE_LOCAL_DEVICE_SENSORS:
-                if description.key not in device_properties:
+                if description.key not in device:
                     continue
 
                 entities.append(
                     PlugwiseAuxSensorEntity(
-                        api,
                         coordinator,
-                        device_properties["name"],
                         device_id,
                         description,
                     )
                 )
                 break
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class PlugwiseSensorEnity(PlugwiseEntity, SensorEntity):
@@ -333,35 +318,28 @@ class PlugwiseSensorEnity(PlugwiseEntity, SensorEntity):
 
     def __init__(
         self,
-        api: Smile,
         coordinator: PlugwiseDataUpdateCoordinator,
-        name: str,
         device_id: str,
         description: SensorEntityDescription,
     ) -> None:
         """Initialise the sensor."""
-        super().__init__(api, coordinator, name, device_id)
+        super().__init__(coordinator, device_id)
         self.entity_description = description
         self._attr_unique_id = f"{device_id}-{description.key}"
-
-        if device_id == coordinator.data.gateway["heater_id"]:
-            self._entity_name = "Auxiliary"
-
-        self._name = f"{self._entity_name} {description.name}"
-
-        if device_id == coordinator.data.gateway["gateway_id"]:
-            self._entity_name = f"Smile {self._entity_name}"
+        self._attr_name = (
+            f"{coordinator.data.devices[device_id].get('name', '')} {description.name}"
+        ).lstrip()
 
     @callback
-    def _async_process_data(self) -> None:
-        """Update the entity."""
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         if not (data := self.coordinator.data.devices.get(self._dev_id)):
-            LOGGER.error("Received no data for device %s", self._entity_name)
-            self.async_write_ha_state()
+            LOGGER.error("Received no data for device %s", self._dev_id)
+            super()._handle_coordinator_update()
             return
 
         self._attr_native_value = data["sensors"].get(self.entity_description.key)
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
 
 class PlugwiseAuxSensorEntity(PlugwiseSensorEnity):
@@ -371,11 +349,11 @@ class PlugwiseAuxSensorEntity(PlugwiseSensorEnity):
     _heating_state = False
 
     @callback
-    def _async_process_data(self) -> None:
-        """Update the entity."""
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         if not (data := self.coordinator.data.devices.get(self._dev_id)):
-            LOGGER.error("Received no data for device %s", self._entity_name)
-            self.async_write_ha_state()
+            LOGGER.error("Received no data for device %s", self._dev_id)
+            super()._handle_coordinator_update()
             return
 
         if data.get("heating_state") is not None:
@@ -392,4 +370,4 @@ class PlugwiseAuxSensorEntity(PlugwiseSensorEnity):
             self._attr_native_value = "cooling"
             self._attr_icon = COOL_ICON
 
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()

@@ -2,7 +2,6 @@
 from typing import Any
 
 from plugwise.exceptions import PlugwiseException
-from plugwise.smile import Smile
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -22,7 +21,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    COORDINATOR,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     DOMAIN,
@@ -35,6 +33,7 @@ from .entity import PlugwiseEntity
 
 HVAC_MODES_HEAT_ONLY = [HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF]
 HVAC_MODES_HEAT_COOL = [HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_AUTO, HVAC_MODE_OFF]
+THERMOSTAT_CLASSES = ["thermostat", "zone_thermostat", "thermostatic_radiator_valve"]
 
 
 async def async_setup_entry(
@@ -43,31 +42,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Smile Thermostats from a config entry."""
-    api = hass.data[DOMAIN][config_entry.entry_id]["api"]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
-
-    entities: list[PlugwiseClimateEntity] = []
-    thermostat_classes = [
-        "thermostat",
-        "zone_thermostat",
-        "thermostatic_radiator_valve",
-    ]
-    for device_id, device_properties in coordinator.data.devices.items():
-        if device_properties["class"] not in thermostat_classes:
-            continue
-
-        thermostat = PlugwiseClimateEntity(
-            api,
-            coordinator,
-            device_properties["name"],
-            device_id,
-            device_properties["location"],
-            device_properties["class"],
-        )
-
-        entities.append(thermostat)
-
-    async_add_entities(entities, True)
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    async_add_entities(
+        PlugwiseClimateEntity(coordinator, device_id)
+        for device_id, device in coordinator.data.devices.items()
+        if device["class"] in THERMOSTAT_CLASSES
+    )
 
 
 class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
@@ -85,20 +65,16 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
 
     def __init__(
         self,
-        api: Smile,
         coordinator: PlugwiseDataUpdateCoordinator,
-        name: str,
         device_id: str,
-        loc_id: str,
-        model: str,
     ) -> None:
         """Set up the Plugwise API."""
-        super().__init__(api, coordinator, name, device_id)
+        super().__init__(coordinator, device_id)
         self._attr_extra_state_attributes = {}
         self._attr_unique_id = f"{device_id}-climate"
+        self._attr_name = coordinator.data.devices[device_id].get("name")
 
-        self._api = api
-        self._loc_id = loc_id
+        self._loc_id = coordinator.data.devices[device_id]["location"]
 
         self._presets = None
 
@@ -109,7 +85,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
             self._attr_min_temp < temperature < self._attr_max_temp
         ):
             try:
-                await self._api.set_temperature(self._loc_id, temperature)
+                await self.coordinator.api.set_temperature(self._loc_id, temperature)
                 self._attr_target_temperature = temperature
                 self.async_write_ha_state()
             except PlugwiseException:
@@ -125,7 +101,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         if hvac_mode == HVAC_MODE_AUTO:
             state = SCHEDULE_ON
             try:
-                await self._api.set_temperature(
+                await self.coordinator.api.set_temperature(
                     self._loc_id, climate_data.get("schedule_temperature")
                 )
                 self._attr_target_temperature = climate_data.get("schedule_temperature")
@@ -133,7 +109,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
                 LOGGER.error("Error while communicating to device")
 
         try:
-            await self._api.set_schedule_state(
+            await self.coordinator.api.set_schedule_state(
                 self._loc_id, climate_data.get("last_used"), state
             )
             self._attr_hvac_mode = hvac_mode
@@ -147,7 +123,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
             raise ValueError("No presets available")
 
         try:
-            await self._api.set_preset(self._loc_id, preset_mode)
+            await self.coordinator.api.set_preset(self._loc_id, preset_mode)
             self._attr_preset_mode = preset_mode
             self._attr_target_temperature = self._presets.get(preset_mode, "none")[0]
             self.async_write_ha_state()
@@ -155,8 +131,8 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
             LOGGER.error("Error while communicating to device")
 
     @callback
-    def _async_process_data(self) -> None:
-        """Update the data for this climate device."""
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         data = self.coordinator.data.devices[self._dev_id]
         heater_central_data = self.coordinator.data.devices[
             self.coordinator.data.gateway["heater_id"]
@@ -197,4 +173,4 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
             "selected_schema": data.get("selected_schedule"),
         }
 
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
