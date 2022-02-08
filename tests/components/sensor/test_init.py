@@ -288,17 +288,28 @@ async def test_restore_sensor_save_state(
 
 
 @pytest.mark.parametrize(
-    "native_value, native_value_type, extra_data, device_class",
+    "native_value, native_value_type, extra_data, device_class, uom",
     [
-        ("abc123", str, RESTORE_DATA["str"], None),
-        (123, int, RESTORE_DATA["int"], SensorDeviceClass.TEMPERATURE),
-        (123.0, float, RESTORE_DATA["float"], SensorDeviceClass.TEMPERATURE),
-        (date(2020, 2, 8), date, RESTORE_DATA["date"], SensorDeviceClass.DATE),
+        ("abc123", str, RESTORE_DATA["str"], None, "°F"),
+        (123, int, RESTORE_DATA["int"], SensorDeviceClass.TEMPERATURE, "°F"),
+        (123.0, float, RESTORE_DATA["float"], SensorDeviceClass.TEMPERATURE, "°F"),
+        (date(2020, 2, 8), date, RESTORE_DATA["date"], SensorDeviceClass.DATE, "°F"),
         (
             datetime(2020, 2, 8, 15, tzinfo=timezone.utc),
             datetime,
             RESTORE_DATA["datetime"],
             SensorDeviceClass.TIMESTAMP,
+            "°F",
+        ),
+        (None, type(None), None, None, None),
+        (None, type(None), {}, None, None),
+        (None, type(None), {"beer": 123}, None, None),
+        (
+            None,
+            type(None),
+            {"native_unit_of_measurement": "°F", "native_value": {}},
+            None,
+            None,
         ),
     ],
 )
@@ -310,6 +321,7 @@ async def test_restore_sensor_restore_state(
     native_value_type,
     extra_data,
     device_class,
+    uom,
 ):
     """Test RestoreSensor."""
     mock_restore_cache_with_extra_data(hass, ((State("sensor.test", ""), extra_data),))
@@ -325,6 +337,8 @@ async def test_restore_sensor_restore_state(
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
+    assert hass.states.get(entity0.entity_id)
+
     assert entity0.native_value == native_value
     assert type(entity0.native_value) == native_value_type
-    assert entity0.native_unit_of_measurement == "°F"
+    assert entity0.native_unit_of_measurement == uom

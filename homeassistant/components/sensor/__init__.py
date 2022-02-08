@@ -472,16 +472,27 @@ class SensorExtraStoredData(ExtraStoredData):
         }
 
     @classmethod
-    def from_dict(cls, restored: dict[str, Any]) -> SensorExtraStoredData:
+    def from_dict(cls, restored: dict[str, Any]) -> SensorExtraStoredData | None:
         """Initialize a stored sensor state from a dict."""
-        native_value = restored["native_value"]
-        if isinstance(native_value, dict):
-            type_ = native_value.get("__type")
+        try:
+            native_value = restored["native_value"]
+            native_unit_of_measurement = restored["native_unit_of_measurement"]
+        except KeyError:
+            return None
+        try:
+            type_ = native_value["__type"]
             if type_ == "<class 'datetime.datetime'>":
                 native_value = dt_util.parse_datetime(native_value["isoformat"])
             elif type_ == "<class 'datetime.date'>":
                 native_value = dt_util.parse_date(native_value["isoformat"])
-        return cls(native_value, restored["native_unit_of_measurement"])
+        except TypeError:
+            # native_value is not a dict
+            pass
+        except KeyError:
+            # native_value is a dict, but does not have all values
+            return None
+
+        return cls(native_value, native_unit_of_measurement)
 
 
 class RestoreSensor(SensorEntity, RestoreEntity):
