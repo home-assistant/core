@@ -1546,6 +1546,7 @@ xbox-webapi==2.0.11
 xknx==0.19.2
 
 # homeassistant.components.bluesound
+# homeassistant.components.cybro
 # homeassistant.components.fritz
 # homeassistant.components.rest
 # homeassistant.components.startca

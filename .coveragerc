@@ -194,6 +194,11 @@ omit =
     homeassistant/components/crownstone/light.py
     homeassistant/components/cups/sensor.py
     homeassistant/components/currencylayer/sensor.py
+    homeassistant/components/cybro/__init__.py
+    homeassistant/components/cybro/binary_sensor.py
+    homeassistant/components/cybro/const.py
+    homeassistant/components/cybro/coordinator.py
+    homeassistant/components/cybro/models.py
     homeassistant/components/daikin/__init__.py
     homeassistant/components/daikin/climate.py
     homeassistant/components/daikin/sensor.py

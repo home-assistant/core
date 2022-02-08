@@ -8,18 +8,7 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import CybroDataUpdateCoordinator
 
-PLATFORMS = (
-    Platform.BINARY_SENSOR,
-    # Platform.BUTTON,
-    Platform.LIGHT,
-    # Platform.NUMBER,
-    # Platform.SELECT,
-    Platform.SENSOR,
-    # Platform.SWITCH,
-    Platform.WEATHER,
-)
-
-PLATFORM_NAMES = ("binary_sensor", "button", "light", "number", "sensor", "switch")
+PLATFORMS = (Platform.BINARY_SENSOR,)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -44,7 +33,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator: CybroDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
         # Ensure disconnected and cleanup stop sub
-        await coordinator.cybro.disconnect()
         if coordinator.unsub:
             coordinator.unsub()
 

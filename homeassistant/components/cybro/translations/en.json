@@ -2,7 +2,9 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
-            "cannot_connect": "Failed to connect"
+            "cannot_connect": "Failed to connect",
+            "plc_not_existing": "PLC with address `{address}` does not exist",
+            "scgi_server_not_running": "Cybro scgi server is not running"
         },
         "error": {
             "cannot_connect": "Failed to connect"
@@ -12,24 +14,13 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "port": "Port",
-                    "address": "Cybro 2/3 Controller NAD"
+                    "port": "Port"
                 },
                 "description": "Set up your Cybro PLC to integrate with Home Assistant."
             },
             "zeroconf_confirm": {
                 "description": "Do you want to add the Cybro PLC named `{name}` to Home Assistant?",
                 "title": "Discovered Cybro PLC"
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "unique_id": "Variable to add (eg: c1000.cybro_ix00)",
-                    "platform": "binary_sensor, light, sensor"
-                }
             }
         }
     }

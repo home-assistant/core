@@ -35,10 +35,8 @@ async def async_setup_entry(
     if variable_name == "":
         var_prefix = f"c{coordinator.cybro.nad}."
         dev_info = DeviceInfo(
-            # entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, var_prefix)},
             manufacturer=MANUFACTURER,
-            # name=f"Light {key}",
             default_name=f"{var_prefix} Diagnosis",
             suggested_area=AREA_SYSTEM,
             model=f"{DEVICE_DESCRIPTION} controller",
@@ -108,10 +106,6 @@ class CybroUpdateBinarySensor(CybroEntity, BinarySensorEntity):
         self._attr_entity_category = attr_entity_category
         self._attr_device_class = attr_device_class
         self._attr_device_info = dev_info
-        # LOGGER.debug(self.coordinator.data)
-        # LOGGER.debug(self._attr_unique_id)
-        # LOGGER.debug(self.coordinator)
-        # LOGGER.debug(coordinator.cybro)
         coordinator.data.add_var(self._attr_unique_id, var_type=0)
 
     @property

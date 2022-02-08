@@ -525,7 +525,7 @@ crownstone-sse==2.0.3
 crownstone-uart==2.1.0
 
 # homeassistant.components.cybro
-cybro==0.0.3
+cybro==0.0.5
 
 # homeassistant.components.datadog
 datadog==0.15.0
@@ -2503,6 +2503,7 @@ xboxapi==2.0.1
 xknx==0.19.2
 
 # homeassistant.components.bluesound
+# homeassistant.components.cybro
 # homeassistant.components.fritz
 # homeassistant.components.rest
 # homeassistant.components.startca

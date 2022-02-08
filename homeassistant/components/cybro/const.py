@@ -15,9 +15,6 @@ LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(seconds=10)
 
 # Options
-# CONF_KEEP_MASTER_LIGHT = "keep_master_light"
-# DEFAULT_KEEP_MASTER_LIGHT = False
-
 
 # Attributes
 AREA_SYSTEM = "System"

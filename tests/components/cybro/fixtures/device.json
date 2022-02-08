@@ -1,0 +1,94 @@
+{
+  "plc_info": {
+    "nad": 1000,
+    "plc_program_status": "ok",
+    "ip_port": "192.168.1.123:8442",
+    "timestamp": "2022-02-02 12:00:00"
+  },
+  "var": [
+    {
+      "name": "c1000.sys.plc_program_status",
+      "value": "ok"
+    },
+    {
+      "name": "sys.scgi_port_status",
+      "value": "running"
+    },
+    {
+      "name": "sys.server_uptime",
+      "value": "1:00"
+    },
+    {
+      "name": "sys.scgi_request_pending",
+      "value": "123"
+    },
+    {
+      "name": "sys.scgi_request_count",
+      "value": "5"
+    },
+    {
+      "name": "sys.push_port_status",
+      "value": "ok"
+    },
+    {
+      "name": "sys.push_count",
+      "value": "2"
+    },
+    {
+      "name": "sys.push_ack_errors",
+      "value": "0"
+    },
+    {
+      "name": "sys.push_list_count",
+      "value": "2"
+    },
+    {
+      "name": "sys.cache_request",
+      "value": "2"
+    },
+    {
+      "name": "sys.cache_valid",
+      "value": "2"
+    },
+    {
+      "name": "sys.server_version",
+      "value": "3.1.3"
+    },
+    {
+      "name": "sys.udp_rx_count",
+      "value": "1234"
+    },
+    {
+      "name": "sys.udp_tx_count",
+      "value": "12345"
+    },
+    {
+      "name": "sys.datalogger_status",
+      "value": "stopped"
+    },
+    {
+      "name": "c1000.sys.ip_port",
+      "value": "192.168.1.123:8442"
+    },
+    {
+      "name": "c1000.sys.timestamp",
+      "value": "2022-02-02 12:00:00"
+    },
+    {
+      "name": "c1000.sys.response_time",
+      "value": "4"
+    },
+    {
+      "name": "c1000.sys.bytes_transferred",
+      "value": "54321"
+    },
+    {
+      "name": "c1000.sys.comm_error_count",
+      "value": "1"
+    },
+    {
+      "name": "c1000.sys.alc_file",
+      "value": ";CPU CyBro-2 1000\n;Addr Id    Array Offset Size Scope  Type  Name\n0011  00000 1     0      1    global bit   scan_overrun                     Scan time longer than 60ms caused scan overrun error.\n0012  00000 1     0      1    global bit   general_error                    Logical or of IEX general errors, indicates that at least one module has an error.\n0018  00000 1     0      1    global bit   retentive_fail                   Indicates that retentive memory failed."
+    }
+  ]
+}

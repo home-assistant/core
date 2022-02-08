@@ -22,15 +22,5 @@
                 "title": "Cybro SPS entdeckt"
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "unique_id": "Variablenname zum hinzufügen (eg: c1000.cybro_ix00)",
-                    "platform": "binary_sensor, light, sensor"
-                }
-            }
-        }
     }
 }

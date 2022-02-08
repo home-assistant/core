@@ -27,9 +27,6 @@ class CybroDataUpdateCoordinator(DataUpdateCoordinator[CybroDevice]):
         entry: ConfigEntry,
     ) -> None:
         """Initialize global Cybro data updater."""
-        # self.keep_master_light = entry.options.get(
-        #    CONF_KEEP_MASTER_LIGHT, DEFAULT_KEEP_MASTER_LIGHT
-        # )
         self.cybro = Cybro(
             entry.data[CONF_HOST],
             entry.data[CONF_PORT],
@@ -45,13 +42,6 @@ class CybroDataUpdateCoordinator(DataUpdateCoordinator[CybroDevice]):
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
-
-    # @property
-    # def has_master_light(self) -> bool:
-    #    """Return if the coordinated device has an master light."""
-    #    return self.keep_master_light or (
-    #        self.data is not None and len(self.data.state.segments) > 1
-    #    )
 
     def update_listeners(self) -> None:
         """Call update on all listeners."""
