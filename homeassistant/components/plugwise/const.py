@@ -9,7 +9,6 @@ DOMAIN = "plugwise"
 LOGGER = logging.getLogger(__package__)
 
 API = "api"
-COORDINATOR = "coordinator"
 FLOW_SMILE = "smile (Adam/Anna/P1)"
 FLOW_STRETCH = "stretch (Stretch)"
 FLOW_TYPE = "flow_type"

@@ -1,8 +1,6 @@
 """Plugwise Sensor component for Home Assistant."""
 from __future__ import annotations
 
-from plugwise.smile import Smile
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -22,15 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    COOL_ICON,
-    COORDINATOR,
-    DOMAIN,
-    FLAME_ICON,
-    IDLE_ICON,
-    LOGGER,
-    UNIT_LUMEN,
-)
+from .const import COOL_ICON, DOMAIN, FLAME_ICON, IDLE_ICON, LOGGER, UNIT_LUMEN
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
@@ -286,8 +276,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Smile sensors from a config entry."""
-    api = hass.data[DOMAIN][config_entry.entry_id]["api"]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     entities: list[PlugwiseSensorEnity] = []
     for device_id, device in coordinator.data.devices.items():
@@ -300,7 +289,6 @@ async def async_setup_entry(
 
             entities.append(
                 PlugwiseSensorEnity(
-                    api,
                     coordinator,
                     device_id,
                     description,
@@ -315,7 +303,6 @@ async def async_setup_entry(
 
                 entities.append(
                     PlugwiseAuxSensorEntity(
-                        api,
                         coordinator,
                         device_id,
                         description,
@@ -323,7 +310,7 @@ async def async_setup_entry(
                 )
                 break
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class PlugwiseSensorEnity(PlugwiseEntity, SensorEntity):
@@ -331,7 +318,6 @@ class PlugwiseSensorEnity(PlugwiseEntity, SensorEntity):
 
     def __init__(
         self,
-        api: Smile,
         coordinator: PlugwiseDataUpdateCoordinator,
         device_id: str,
         description: SensorEntityDescription,
@@ -339,7 +325,6 @@ class PlugwiseSensorEnity(PlugwiseEntity, SensorEntity):
         """Initialise the sensor."""
         super().__init__(coordinator, device_id)
         self.entity_description = description
-        self._api = api
         self._attr_unique_id = f"{device_id}-{description.key}"
         self._attr_name = (
             f"{coordinator.data.devices[device_id].get('name', '')} {description.name}"
