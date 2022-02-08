@@ -8,8 +8,7 @@ from fivem import FiveM, FiveMServerOfflineError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
@@ -21,22 +20,21 @@ DEFAULT_PORT = 30120
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
+async def validate_input(data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
 
     fivem = FiveM(data[CONF_HOST], data[CONF_PORT])
     info = await fivem.get_info_raw()
 
-    gamename = info.get("vars")["gamename"]
-    if gamename is None or gamename != "gta5":
-        raise InvalidGamenameError
+    game_name = info.get("vars")["gamename"]
+    if game_name is None or game_name != "gta5":
+        raise InvalidGameNameError
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -56,21 +54,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            await validate_input(self.hass, user_input)
+            await validate_input(user_input)
         except FiveMServerOfflineError:
             errors["base"] = "cannot_connect"
-        except InvalidGamenameError:
-            errors["base"] = "invalid_gamename"
+        except InvalidGameNameError:
+            errors["base"] = "invalid_game_name"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+            self._async_abort_entries_match(user_input)
+            return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
 
-class InvalidGamenameError(Exception):
-    """Handle errors in the gamename from the api."""
+class InvalidGameNameError(Exception):
+    """Handle errors in the game name from the api."""
