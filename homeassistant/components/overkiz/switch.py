@@ -30,12 +30,13 @@ class OverkizSwitchDescriptionMixin:
 
     turn_on: Callable[[Callable[..., Awaitable[None]]], Awaitable[None]]
     turn_off: Callable[[Callable[..., Awaitable[None]]], Awaitable[None]]
-    is_on: Callable[[Callable[[str], OverkizStateType]], bool]
 
 
 @dataclass
 class OverkizSwitchDescription(SwitchEntityDescription, OverkizSwitchDescriptionMixin):
     """Class to describe an Overkiz switch."""
+
+    is_on: Callable[[Callable[[str], OverkizStateType]], bool] | None = None
 
 
 SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
@@ -75,14 +76,24 @@ SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
         turn_on=lambda execute_command: execute_command(OverkizCommand.ON),
         turn_off=lambda execute_command: execute_command(OverkizCommand.OFF),
         icon="mdi:bell",
-        is_on=lambda select_state: False,  # Remove when is_on in SwitchEntity doesn't require a bool value anymore
     ),
     OverkizSwitchDescription(
         key=UIWidget.RTD_OUTDOOR_SIREN,
         turn_on=lambda execute_command: execute_command(OverkizCommand.ON),
         turn_off=lambda execute_command: execute_command(OverkizCommand.OFF),
         icon="mdi:bell",
-        is_on=lambda select_state: False,  # Remove when is_on in SwitchEntity doesn't require a bool value anymore
+    ),
+    OverkizSwitchDescription(
+        key=UIWidget.STATELESS_ALARM_CONTROLLER,
+        turn_on=lambda execute_command: execute_command(OverkizCommand.ALARM_ON),
+        turn_off=lambda execute_command: execute_command(OverkizCommand.ALARM_OFF),
+        icon="mdi:shield-lock",
+    ),
+    OverkizSwitchDescription(
+        key=UIWidget.STATELESS_EXTERIOR_HEATING,
+        turn_on=lambda execute_command: execute_command(OverkizCommand.ON),
+        turn_off=lambda execute_command: execute_command(OverkizCommand.OFF),
+        icon="mdi:radiator",
     ),
 ]
 
@@ -121,9 +132,12 @@ class OverkizSwitch(OverkizDescriptiveEntity, SwitchEntity):
     entity_description: OverkizSwitchDescription
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return True if entity is on."""
-        return self.entity_description.is_on(self.executor.select_state)
+        if self.entity_description.is_on:
+            return self.entity_description.is_on(self.executor.select_state)
+
+        return None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
