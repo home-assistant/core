@@ -1,5 +1,5 @@
 """Support for Overkiz sirens."""
-from typing import Any, cast
+from typing import Any
 
 from pyoverkiz.enums import OverkizState
 from pyoverkiz.enums.command import OverkizCommand, OverkizCommandParam
@@ -51,7 +51,7 @@ class OverkizSiren(OverkizEntity, SirenEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Send the on command."""
         if kwargs.get(ATTR_DURATION):
-            duration = cast(int, kwargs.get(ATTR_DURATION))
+            duration = kwargs[ATTR_DURATION]
         else:
             duration = 2 * 60  # 2 minutes
 
