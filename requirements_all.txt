@@ -681,7 +681,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.28.21
+flux_led==0.28.22
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -1255,7 +1255,7 @@ pillow==9.0.1
 pizzapi==0.0.3
 
 # homeassistant.components.plex
-plexapi==4.9.1
+plexapi==4.9.2
 
 # homeassistant.components.plex
 plexauth==0.0.6
