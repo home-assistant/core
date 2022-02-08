@@ -133,6 +133,7 @@ APPLICATION_VERSION = "application_version"
 MAX_INCLUSION_REQUEST_INTERVAL = "max_inclusion_request_interval"
 UUID = "uuid"
 SUPPORTED_PROTOCOLS = "supported_protocols"
+ADDITIONAL_PROPERTIES = "additional_properties"
 
 FEATURE = "feature"
 UNPROVISION = "unprovision"
@@ -170,6 +171,7 @@ def convert_qr_provisioning_information(info: dict) -> QRProvisioningInformation
         max_inclusion_request_interval=info.get(MAX_INCLUSION_REQUEST_INTERVAL),
         uuid=info.get(UUID),
         supported_protocols=protocols if protocols else None,
+        additional_properties=info.get(ADDITIONAL_PROPERTIES, {}),
     )
     return info
 
@@ -212,6 +214,7 @@ QR_PROVISIONING_INFORMATION_SCHEMA = vol.All(
                 cv.ensure_list,
                 [vol.Coerce(Protocols)],
             ),
+            vol.Optional(ADDITIONAL_PROPERTIES): dict,
         }
     ),
     convert_qr_provisioning_information,

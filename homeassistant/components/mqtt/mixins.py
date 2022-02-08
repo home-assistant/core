@@ -30,11 +30,11 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import (
-    ENTITY_CATEGORIES_SCHEMA,
     DeviceInfo,
     Entity,
     EntityCategory,
     async_generate_entity_id,
+    validate_entity_category,
 )
 from homeassistant.helpers.typing import ConfigType
 
@@ -191,7 +191,7 @@ MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,
-        vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+        vol.Optional(CONF_ENTITY_CATEGORY): validate_entity_category,
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
@@ -549,7 +549,6 @@ class MqttDiscoveryUpdate(Entity):
     def _cleanup_discovery_on_remove(self) -> None:
         """Stop listening to signal and cleanup discovery data."""
         if self._discovery_data and not self._removed_from_hass:
-            debug_info.remove_entity_data(self.hass, self.entity_id)
             clear_discovery_hash(self.hass, self._discovery_data[ATTR_DISCOVERY_HASH])
             self._removed_from_hass = True
 
@@ -677,6 +676,7 @@ class MqttEntity(
         await MqttAttributes.async_will_remove_from_hass(self)
         await MqttAvailability.async_will_remove_from_hass(self)
         await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
+        debug_info.remove_entity_data(self.hass, self.entity_id)
 
     @staticmethod
     @abstractmethod
