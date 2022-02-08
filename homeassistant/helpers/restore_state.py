@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import asyncio
-from collections.abc import Mapping
 from datetime import datetime, timedelta
 import logging
 from typing import Any, TypeVar, cast
@@ -65,11 +64,11 @@ class StoredState:
     def __init__(
         self,
         state: State,
-        extra_data: Mapping[str, ExtraStoredData] | None,
+        extra_data: ExtraStoredData | None,
         last_seen: datetime,
     ) -> None:
         """Initialize a new stored state."""
-        self.extra_data: Mapping[str, ExtraStoredData] = extra_data or {}
+        self.extra_data = extra_data
         self.last_seen = last_seen
         self.state = state
 
@@ -77,9 +76,7 @@ class StoredState:
         """Return a dict representation of the stored state."""
         result = {
             "state": self.state.as_dict(),
-            "extra_data": {
-                key: value.as_dict() for key, value in self.extra_data.items()
-            },
+            "extra_data": self.extra_data.as_dict() if self.extra_data else None,
             "last_seen": self.last_seen,
         }
         return result
@@ -87,10 +84,8 @@ class StoredState:
     @classmethod
     def from_dict(cls: type[_StoredStateT], json_dict: dict) -> _StoredStateT:
         """Initialize a stored state from a dict."""
-        extra_data_dict = json_dict.get("extra_data") or {}
-        extra_data = {
-            key: RestoredExtraData(value) for key, value in extra_data_dict.items()
-        }
+        extra_data_dict = json_dict.get("extra_data")
+        extra_data = RestoredExtraData(extra_data_dict) if extra_data_dict else None
         last_seen = json_dict["last_seen"]
 
         if isinstance(last_seen, str):
@@ -240,7 +235,7 @@ class RestoreStateData:
 
     @callback
     def async_restore_entity_removed(
-        self, entity_id: str, extra_data: Mapping[str, Any] | None
+        self, entity_id: str, extra_data: ExtraStoredData | None
     ) -> None:
         """Unregister this entity from saving state."""
         # When an entity is being removed from hass, store its last state. This
@@ -323,14 +318,14 @@ class RestoreEntity(Entity):
             return None
         return stored_state.state
 
-    async def async_get_last_extra_data(self) -> Mapping[str, ExtraStoredData] | None:
+    async def async_get_last_extra_data(self) -> ExtraStoredData | None:
         """Get the entity specific state data from the previous run."""
         if (stored_state := await self._async_get_restored_data()) is None:
             return None
         return stored_state.extra_data
 
     @property
-    def extra_restore_state_data(self) -> Mapping[str, ExtraStoredData] | None:
+    def extra_restore_state_data(self) -> ExtraStoredData | None:
         """Return entity specific state data to be restored.
 
         Implemented by platform classes.

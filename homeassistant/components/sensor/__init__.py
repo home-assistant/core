@@ -474,19 +474,12 @@ class RestoreSensor(SensorEntity, RestoreEntity):
     """Mixin class for restoring previous sensor state."""
 
     @property
-    def extra_restore_state_data(self) -> Mapping[str, SensorExtraStoredData] | None:
+    def extra_restore_state_data(self) -> SensorExtraStoredData:
         """Return sensor specific state data to be restored."""
-        return {
-            "sensor": SensorExtraStoredData(
-                self.native_value, self.native_unit_of_measurement
-            )
-        }
+        return SensorExtraStoredData(self.native_value, self.native_unit_of_measurement)
 
     async def async_get_last_sensor_data(self) -> SensorExtraStoredData | None:
         """Restore native_value and native_unit_of_measurement."""
         if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
             return None
-        restored_sensor_json_data = restored_last_extra_data.get("sensor")
-        if not restored_sensor_json_data:
-            return None
-        return SensorExtraStoredData.from_dict(restored_sensor_json_data.as_dict())
+        return SensorExtraStoredData.from_dict(restored_last_extra_data.as_dict())

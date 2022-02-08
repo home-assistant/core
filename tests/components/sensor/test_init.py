@@ -217,7 +217,7 @@ async def test_reject_timezoneless_datetime_str(
 
 
 RESTORE_DATA = {
-    "int": {"sensor": {"native_unit_of_measurement": "°F", "native_value": 123}},
+    "int": {"native_unit_of_measurement": "°F", "native_value": 123},
 }
 
 
@@ -255,7 +255,7 @@ async def test_restore_sensor_save_state(
     assert state["entity_id"] == entity0.entity_id
     extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
     assert extra_data == expected_extra_data
-    assert type(extra_data["sensor"]["native_value"]) == native_value_type
+    assert type(extra_data["native_value"]) == native_value_type
 
 
 @pytest.mark.parametrize(
