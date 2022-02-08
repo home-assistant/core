@@ -64,6 +64,9 @@ def validate_entity_category(value: Any | None) -> EntityCategory:
     return EntityCategory(value)
 
 
+ENTITY_CATEGORIES_SCHEMA = validate_entity_category
+
+
 @callback
 @bind_hass
 def entity_sources(hass: HomeAssistant) -> dict[str, dict[str, str]]:
