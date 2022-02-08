@@ -1954,7 +1954,7 @@ python-mpd2==3.0.4
 python-mystrom==1.1.2
 
 # homeassistant.components.nest
-python-nest==4.1.0
+python-nest==4.2.0
 
 # homeassistant.components.ozw
 python-openzwave-mqtt[mqtt-client]==1.4.0

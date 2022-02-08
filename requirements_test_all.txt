@@ -1212,7 +1212,7 @@ python-kasa==0.4.1
 python-miio==0.5.9.2
 
 # homeassistant.components.nest
-python-nest==4.1.0
+python-nest==4.2.0
 
 # homeassistant.components.ozw
 python-openzwave-mqtt[mqtt-client]==1.4.0
