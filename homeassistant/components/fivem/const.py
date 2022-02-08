@@ -8,7 +8,6 @@ DOMAIN = "fivem"
 ICON_PLAYERS_MAX = "mdi:account-multiple"
 ICON_PLAYERS_ONLINE = "mdi:account-multiple"
 ICON_RESOURCES = "mdi:playlist-check"
-ICON_STATUS = "mdi:lan"
 
 MANUFACTURER = "Cfx.re"
 
