@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-import socket
 from typing import Any
 
 from pywizlight import wizlight
@@ -14,6 +13,7 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.util.network import is_ip_address
 
 from .const import DEFAULT_NAME, DISCOVER_SCAN_TIMEOUT, DOMAIN, WIZ_EXCEPTIONS
 from .discovery import async_discover_devices
@@ -138,9 +138,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
-            try:
-                socket.inet_aton(user_input[CONF_HOST])
-            except OSError:
+            if not is_ip_address(user_input[CONF_HOST]):
                 errors["base"] = "no_ip"
             else:
                 if not (host := user_input[CONF_HOST]):

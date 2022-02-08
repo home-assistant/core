@@ -6,7 +6,7 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
-        "description": "If you leave the host empty, discovery will be used to find devices. Host must be the IP address of the bulb."
+        "description": "If you leave the IP Address empty, discovery will be used to find devices."
       },
       "discovery_confirm": {
         "description": "Do you want to setup {name} ({host})?"

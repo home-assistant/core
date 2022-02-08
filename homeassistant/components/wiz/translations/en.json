@@ -22,9 +22,9 @@
             },
             "user": {
                 "data": {
-                    "host": "Host"
+                    "host": "IP Address"
                 },
-                "description": "If you leave the host empty, discovery will be used to find devices. Host must be the IP address of the bulb."
+                "description": "If you leave the IP Address empty, discovery will be used to find devices."
             }
         }
     }
