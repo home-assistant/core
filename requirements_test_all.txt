@@ -388,7 +388,7 @@ dynalite_devices==0.1.46
 elgato==3.0.0
 
 # homeassistant.components.elkm1
-elkm1-lib==1.0.0
+elkm1-lib==1.2.0
 
 # homeassistant.components.elmax
 elmax_api==0.0.2
@@ -427,7 +427,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.28.21
+flux_led==0.28.22
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -1488,7 +1488,7 @@ vallox-websocket-api==2.9.0
 vehicle==0.3.1
 
 # homeassistant.components.velbus
-velbus-aio==2022.2.2
+velbus-aio==2022.2.3
 
 # homeassistant.components.venstar
 venstarcolortouch==0.15
