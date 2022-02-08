@@ -10,8 +10,9 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     HVAC_MODE_AUTO,
+    HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_OFF,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
@@ -32,8 +33,8 @@ from .const import (
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
-HVAC_MODES_HEAT_ONLY = [HVAC_MODE_HEAT, HVAC_MODE_AUTO]
-HVAC_MODES_HEAT_COOL = [HVAC_MODE_HEAT_COOL, HVAC_MODE_AUTO]
+HVAC_MODES_HEAT_ONLY = [HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF]
+HVAC_MODES_HEAT_COOL = [HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_AUTO, HVAC_MODE_OFF]
 
 
 async def async_setup_entry(
@@ -45,24 +46,21 @@ async def async_setup_entry(
     api = hass.data[DOMAIN][config_entry.entry_id]["api"]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
 
-    entities = []
+    entities: list[PlugwiseClimateEntity] = []
     thermostat_classes = [
         "thermostat",
         "zone_thermostat",
         "thermostatic_radiator_valve",
     ]
-    all_devices = api.get_all_devices()
-
-    for dev_id, device_properties in all_devices.items():
-
+    for device_id, device_properties in coordinator.data.devices.items():
         if device_properties["class"] not in thermostat_classes:
             continue
 
-        thermostat = PwThermostat(
+        thermostat = PlugwiseClimateEntity(
             api,
             coordinator,
             device_properties["name"],
-            dev_id,
+            device_id,
             device_properties["location"],
             device_properties["class"],
         )
@@ -72,7 +70,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class PwThermostat(PlugwiseEntity, ClimateEntity):
+class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     """Representation of an Plugwise thermostat."""
 
     _attr_hvac_mode = HVAC_MODE_HEAT
@@ -90,21 +88,19 @@ class PwThermostat(PlugwiseEntity, ClimateEntity):
         api: Smile,
         coordinator: PlugwiseDataUpdateCoordinator,
         name: str,
-        dev_id: str,
+        device_id: str,
         loc_id: str,
         model: str,
     ) -> None:
         """Set up the Plugwise API."""
-        super().__init__(api, coordinator, name, dev_id)
+        super().__init__(api, coordinator, name, device_id)
         self._attr_extra_state_attributes = {}
-        self._attr_unique_id = f"{dev_id}-climate"
+        self._attr_unique_id = f"{device_id}-climate"
 
         self._api = api
         self._loc_id = loc_id
-        self._model = model
 
         self._presets = None
-        self._single_thermostat = self._api.single_master_thermostat()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -124,7 +120,7 @@ class PwThermostat(PlugwiseEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set the hvac mode."""
         state = SCHEDULE_OFF
-        climate_data = self._api.get_device_data(self._dev_id)
+        climate_data = self.coordinator.data.devices[self._dev_id]
 
         if hvac_mode == HVAC_MODE_AUTO:
             state = SCHEDULE_ON
@@ -161,18 +157,20 @@ class PwThermostat(PlugwiseEntity, ClimateEntity):
     @callback
     def _async_process_data(self) -> None:
         """Update the data for this climate device."""
-        climate_data = self._api.get_device_data(self._dev_id)
-        heater_central_data = self._api.get_device_data(self._api.heater_id)
+        data = self.coordinator.data.devices[self._dev_id]
+        heater_central_data = self.coordinator.data.devices[
+            self.coordinator.data.gateway["heater_id"]
+        ]
 
         # Current & set temperatures
-        if setpoint := climate_data.get("setpoint"):
+        if setpoint := data["sensors"].get("setpoint"):
             self._attr_target_temperature = setpoint
-        if temperature := climate_data.get("temperature"):
+        if temperature := data["sensors"].get("temperature"):
             self._attr_current_temperature = temperature
 
         # Presets handling
-        self._attr_preset_mode = climate_data.get("active_preset")
-        if presets := climate_data.get("presets"):
+        self._attr_preset_mode = data.get("active_preset")
+        if presets := data.get("presets"):
             self._presets = presets
             self._attr_preset_modes = list(presets)
         else:
@@ -181,31 +179,22 @@ class PwThermostat(PlugwiseEntity, ClimateEntity):
 
         # Determine current hvac action
         self._attr_hvac_action = CURRENT_HVAC_IDLE
-        if self._single_thermostat:
-            if heater_central_data.get("heating_state"):
-                self._attr_hvac_action = CURRENT_HVAC_HEAT
-            elif heater_central_data.get("cooling_state"):
-                self._attr_hvac_action = CURRENT_HVAC_COOL
-        elif (
-            self.target_temperature is not None
-            and self.current_temperature is not None
-            and self.target_temperature > self.current_temperature
-        ):
+        if heater_central_data.get("heating_state"):
             self._attr_hvac_action = CURRENT_HVAC_HEAT
+        elif heater_central_data.get("cooling_state"):
+            self._attr_hvac_action = CURRENT_HVAC_COOL
 
         # Determine hvac modes and current hvac mode
-        self._attr_hvac_mode = HVAC_MODE_HEAT
         self._attr_hvac_modes = HVAC_MODES_HEAT_ONLY
-        if heater_central_data.get("compressor_state") is not None:
-            self._attr_hvac_mode = HVAC_MODE_HEAT_COOL
+        if self.coordinator.data.gateway.get("cooling_present"):
             self._attr_hvac_modes = HVAC_MODES_HEAT_COOL
-        if climate_data.get("selected_schedule") is not None:
-            self._attr_hvac_mode = HVAC_MODE_AUTO
+        if data.get("mode") in self._attr_hvac_modes:
+            self._attr_hvac_mode = data["mode"]
 
         # Extra attributes
         self._attr_extra_state_attributes = {
-            "available_schemas": climate_data.get("available_schedules"),
-            "selected_schema": climate_data.get("selected_schedule"),
+            "available_schemas": data.get("available_schedules"),
+            "selected_schema": data.get("selected_schedule"),
         }
 
         self.async_write_ha_state()
