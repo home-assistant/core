@@ -377,7 +377,7 @@ av==8.1.0
 axis==44
 
 # homeassistant.components.azure_event_hub
-azure-eventhub==5.5.0
+azure-eventhub==5.7.0
 
 # homeassistant.components.azure_service_bus
 azure-servicebus==0.50.3
