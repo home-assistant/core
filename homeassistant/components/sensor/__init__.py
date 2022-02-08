@@ -52,6 +52,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, StateType
 
 from .const import CONF_STATE_CLASS  # noqa: F401
@@ -447,3 +448,45 @@ class SensorEntity(Entity):
             return f"<Entity {self.name}>"
 
         return super().__repr__()
+
+
+@dataclass
+class SensorExtraStoredData(ExtraStoredData):
+    """Object to hold extra stored data."""
+
+    native_value: StateType | date | datetime
+    native_unit_of_measurement: str | None
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the sensor data."""
+        return {
+            "native_value": self.native_value,
+            "native_unit_of_measurement": self.native_unit_of_measurement,
+        }
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> SensorExtraStoredData:
+        """Initialize a stored sensor state from a dict."""
+        return cls(restored["native_value"], restored["native_unit_of_measurement"])
+
+
+class RestoreSensor(SensorEntity, RestoreEntity):
+    """Mixin class for restoring previous sensor state."""
+
+    @property
+    def extra_restore_state_data(self) -> Mapping[str, SensorExtraStoredData] | None:
+        """Return sensor specific state data to be restored."""
+        return {
+            "sensor": SensorExtraStoredData(
+                self.native_value, self.native_unit_of_measurement
+            )
+        }
+
+    async def async_get_last_sensor_data(self) -> SensorExtraStoredData | None:
+        """Restore native_value and native_unit_of_measurement."""
+        if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
+            return None
+        restored_sensor_json_data = restored_last_extra_data.get("sensor")
+        if not restored_sensor_json_data:
+            return None
+        return SensorExtraStoredData.from_dict(restored_sensor_json_data.as_dict())

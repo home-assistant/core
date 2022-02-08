@@ -11,9 +11,13 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import State
+from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+
+from tests.common import mock_restore_cache_with_extra_data
 
 
 @pytest.mark.parametrize(
@@ -210,3 +214,75 @@ async def test_reject_timezoneless_datetime_str(
         "Invalid datetime: sensor.test provides state '2017-12-19 18:29:42', "
         "which is missing timezone information"
     ) in caplog.text
+
+
+RESTORE_DATA = {
+    "int": {"sensor": {"native_unit_of_measurement": "°F", "native_value": 123}},
+}
+
+
+@pytest.mark.parametrize(
+    "native_value, native_value_type, expected_extra_data",
+    [(123, int, RESTORE_DATA["int"])],
+)
+async def test_restore_sensor_save_state(
+    hass,
+    enable_custom_integrations,
+    hass_storage,
+    native_value,
+    native_value_type,
+    expected_extra_data,
+):
+    """Test RestoreSensor."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockRestoreSensor(
+        name="Test",
+        native_value=native_value,
+        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+    )
+
+    entity0 = platform.ENTITIES["0"]
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    # Trigger saving state
+    await hass.async_stop()
+
+    assert len(hass_storage[RESTORE_STATE_KEY]["data"]) == 1
+    state = hass_storage[RESTORE_STATE_KEY]["data"][0]["state"]
+    assert state["entity_id"] == entity0.entity_id
+    extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
+    assert extra_data == expected_extra_data
+    assert type(extra_data["sensor"]["native_value"]) == native_value_type
+
+
+@pytest.mark.parametrize(
+    "native_value, native_value_type, extra_data", [(123, int, RESTORE_DATA["int"])]
+)
+async def test_restore_sensor_restore_state(
+    hass,
+    enable_custom_integrations,
+    hass_storage,
+    native_value,
+    native_value_type,
+    extra_data,
+):
+    """Test RestoreSensor."""
+    mock_restore_cache_with_extra_data(hass, ((State("sensor.test", ""), extra_data),))
+
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockRestoreSensor(
+        name="Test",
+        device_class=SensorDeviceClass.TEMPERATURE,
+    )
+
+    entity0 = platform.ENTITIES["0"]
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert entity0.native_value == native_value
+    assert type(entity0.native_value) == native_value_type
+    assert entity0.native_unit_of_measurement == "°F"
