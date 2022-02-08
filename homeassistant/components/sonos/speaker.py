@@ -429,10 +429,13 @@ class SonosSpeaker:
     @callback
     def async_renew_failed(self, exception: Exception) -> None:
         """Handle a failed subscription renewal."""
-        self.hass.async_create_task(self.async_resubscribe(exception))
+        self.hass.async_create_task(self._async_renew_failed(exception))
 
-    async def async_resubscribe(self, exception: Exception) -> None:
-        """Attempt to resubscribe when a renewal failure is detected."""
+    async def _async_renew_failed(self, exception: Exception) -> None:
+        """Mark the speaker as offline after a subscription renewal failure.
+
+        This is to reset the state to allow a future clean subscription attempt.
+        """
         async with self._subscription_lock:
             if not self.available:
                 return
