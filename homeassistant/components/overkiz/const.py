@@ -5,8 +5,7 @@ from datetime import timedelta
 import logging
 from typing import Final
 
-from pyoverkiz.enums import UIClass
-from pyoverkiz.enums.ui import UIWidget
+from pyoverkiz.enums import OverkizCommandParam, UIClass, UIWidget
 
 from homeassistant.const import Platform
 
@@ -67,13 +66,13 @@ OVERKIZ_DEVICE_TO_PLATFORM: dict[UIClass | UIWidget, Platform] = {
 
 # Map Overkiz camelCase to Home Assistant snake_case for translation
 OVERKIZ_STATE_TO_TRANSLATION: dict[str, str] = {
-    "externalGateway": "external_gateway",
-    "localUser": "local_user",
-    "lowBattery": "low_battery",
-    "LSC": "lsc",
-    "maintenanceRequired": "maintenance_required",
-    "noDefect": "no_defect",
-    "SAAC": "saac",
-    "SFC": "sfc",
-    "UPS": "ups",
+    OverkizCommandParam.EXTERNAL_GATEWAY: "external_gateway",
+    OverkizCommandParam.LOCAL_USER: "local_user",
+    OverkizCommandParam.LOW_BATTERY: "low_battery",
+    OverkizCommandParam.LSC: "lsc",
+    OverkizCommandParam.MAINTENANCE_REQUIRED: "maintenance_required",
+    OverkizCommandParam.NO_DEFECT: "no_defect",
+    OverkizCommandParam.SAAC: "saac",
+    OverkizCommandParam.SFC: "sfc",
+    OverkizCommandParam.UPS: "ups",
 }
