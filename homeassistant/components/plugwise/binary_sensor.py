@@ -9,7 +9,6 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    COORDINATOR,
     DOMAIN,
     FLAME_ICON,
     FLOW_OFF_ICON,
@@ -45,7 +44,7 @@ async def async_setup_entry(
     """Set up the Smile binary_sensors from a config entry."""
     coordinator: PlugwiseDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
-    ][COORDINATOR]
+    ]
 
     entities: list[PlugwiseBinarySensorEntity] = []
     for device_id, device in coordinator.data.devices.items():
@@ -77,7 +76,7 @@ async def async_setup_entry(
                 )
             )
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class PlugwiseBinarySensorEntity(PlugwiseEntity, BinarySensorEntity):
