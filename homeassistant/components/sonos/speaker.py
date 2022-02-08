@@ -343,6 +343,29 @@ class SonosSpeaker:
     #
     # Subscription handling and event dispatchers
     #
+    def log_subscription_result(
+        self, result: Any, event: str, level: str = logging.DEBUG
+    ) -> None:
+        """Log a message if a subscription action (create/renew/stop) results in an exception."""
+        if not isinstance(result, Exception):
+            return
+
+        if isinstance(result, asyncio.exceptions.TimeoutError):
+            message = "Request timed out"
+            exc_info = None
+        else:
+            message = result
+            exc_info = result if not str(result) else None
+
+        _LOGGER.log(
+            level,
+            "%s failed for %s: %s",
+            event,
+            self.zone_name,
+            message,
+            exc_info=exc_info,
+        )
+
     async def async_subscribe(self) -> bool:
         """Initiate event subscriptions."""
         _LOGGER.debug("Creating subscriptions for %s", self.zone_name)
@@ -399,20 +422,7 @@ class SonosSpeaker:
             return_exceptions=True,
         )
         for result in results:
-            if isinstance(result, asyncio.exceptions.TimeoutError):
-                message = "Request timed out"
-                exc_info = None
-            elif isinstance(result, Exception):
-                message = result
-                exc_info = result if not str(result) else None
-            else:
-                continue
-            _LOGGER.debug(
-                "Unsubscribe failed for %s: %s",
-                self.zone_name,
-                message,
-                exc_info=exc_info,
-            )
+            self.log_subscription_result(result, "Unsubscribe")
         self._subscriptions = []
 
     @callback
@@ -429,17 +439,8 @@ class SonosSpeaker:
             if not self.available:
                 return
 
-            if isinstance(exception, asyncio.exceptions.TimeoutError):
-                message = "Request timed out"
-                exc_info = None
-            else:
-                message = exception
-                exc_info = exception if not str(exception) else None
-            _LOGGER.warning(
-                "Subscription renewals for %s failed, marking unavailable: %s",
-                self.zone_name,
-                message,
-                exc_info=exc_info,
+            self.log_subscription_result(
+                exception, "Subscription renewal", logging.WARNING
             )
             await self.async_offline()
 
