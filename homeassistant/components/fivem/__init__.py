@@ -88,7 +88,7 @@ class FiveMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.unique_id = unique_id
         self.server = None
         self.version = None
-        self.gamename: str | None = None
+        self.game_name: str | None = None
 
         self.server_name = config_data[CONF_NAME]
         self.host = config_data[CONF_HOST]
@@ -107,7 +107,7 @@ class FiveMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         info = await self._fivem.get_info_raw()
         self.server = info["server"]
         self.version = info["version"]
-        self.gamename = info["vars"]["gamename"]
+        self.game_name = info["vars"]["gamename"]
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Get server data from 3rd party library and update properties."""

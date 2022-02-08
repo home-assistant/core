@@ -34,9 +34,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     fivem = FiveM(data[CONF_HOST], data[CONF_PORT])
     info = await fivem.get_info_raw()
 
-    gamename = info.get("vars")["gamename"]
-    if gamename is None or gamename != "gta5":
-        raise InvalidGamenameError
+    game_name = info.get("vars")["gamename"]
+    if game_name is None or game_name != "gta5":
+        raise InvalidGameNameError
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -59,8 +59,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await validate_input(self.hass, user_input)
         except FiveMServerOfflineError:
             errors["base"] = "cannot_connect"
-        except InvalidGamenameError:
-            errors["base"] = "invalid_gamename"
+        except InvalidGameNameError:
+            errors["base"] = "invalid_game_name"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
@@ -72,5 +72,5 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class InvalidGamenameError(Exception):
-    """Handle errors in the gamename from the api."""
+class InvalidGameNameError(Exception):
+    """Handle errors in the game name from the api."""
