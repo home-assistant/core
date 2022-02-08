@@ -123,8 +123,9 @@ class NetgearRouter:
 
     async def async_setup(self) -> bool:
         """Set up a Netgear router."""
-        if not await self.hass.async_add_executor_job(self._setup):
-            return False
+        async with self._api_lock:
+            if not await self.hass.async_add_executor_job(self._setup):
+                return False
 
         # set already known devices to away instead of unavailable
         device_registry = dr.async_get(self.hass)
