@@ -712,8 +712,8 @@ homeassistant/components/plaato/* @JohNan
 tests/components/plaato/* @JohNan
 homeassistant/components/plex/* @jjlawren
 tests/components/plex/* @jjlawren
-homeassistant/components/plugwise/* @CoMPaTech @bouwew @brefra
-tests/components/plugwise/* @CoMPaTech @bouwew @brefra
+homeassistant/components/plugwise/* @CoMPaTech @bouwew @brefra @frenck
+tests/components/plugwise/* @CoMPaTech @bouwew @brefra @frenck
 homeassistant/components/plum_lightpad/* @ColinHarrington @prystupa
 tests/components/plum_lightpad/* @ColinHarrington @prystupa
 homeassistant/components/point/* @fredrike

@@ -3,7 +3,7 @@
   "name": "Plugwise",
   "documentation": "https://www.home-assistant.io/integrations/plugwise",
   "requirements": ["plugwise==0.16.2"],
-  "codeowners": ["@CoMPaTech", "@bouwew", "@brefra"],
+  "codeowners": ["@CoMPaTech", "@bouwew", "@brefra", "@frenck"],
   "zeroconf": ["_plugwise._tcp.local."],
   "config_flow": true,
   "iot_class": "local_polling",
