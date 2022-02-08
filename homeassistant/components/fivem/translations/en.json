@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "FiveM server is already configured"
+            "already_configured": "Service is already configured"
         },
         "error": {
             "cannot_connect": "Failed to connect. Please check the host and port and try again. Also ensure that you are running the latest FiveM server.",
