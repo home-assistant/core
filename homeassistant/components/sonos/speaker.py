@@ -399,13 +399,20 @@ class SonosSpeaker:
             return_exceptions=True,
         )
         for result in results:
-            if isinstance(result, Exception):
-                _LOGGER.debug(
-                    "Unsubscribe failed for %s: %s",
-                    self.zone_name,
-                    result,
-                    exc_info=result,
-                )
+            if isinstance(result, asyncio.exceptions.TimeoutError):
+                message = "Request timed out"
+                exc_info = None
+            elif isinstance(result, Exception):
+                message = result
+                exc_info = result if not str(result) else None
+            else:
+                continue
+            _LOGGER.debug(
+                "Unsubscribe failed for %s: %s",
+                self.zone_name,
+                message,
+                exc_info=exc_info,
+            )
         self._subscriptions = []
 
     @callback
@@ -422,19 +429,18 @@ class SonosSpeaker:
             if not self.available:
                 return
 
-            if getattr(exception, "status", None) == 412:
-                _LOGGER.warning(
-                    "Subscriptions for %s failed, speaker may have lost power",
-                    self.zone_name,
-                )
+            if isinstance(exception, asyncio.exceptions.TimeoutError):
+                message = "Request timed out"
+                exc_info = None
             else:
-                exc_info = exception if _LOGGER.isEnabledFor(logging.DEBUG) else None
-                _LOGGER.error(
-                    "Subscription renewals for %s failed: %s",
-                    self.zone_name,
-                    exception,
-                    exc_info=exc_info,
-                )
+                message = exception
+                exc_info = exception if not str(exception) else None
+            _LOGGER.warning(
+                "Subscription renewals for %s failed, marking unavailable: %s",
+                self.zone_name,
+                message,
+                exc_info=exc_info,
+            )
             await self.async_offline()
 
     @callback
