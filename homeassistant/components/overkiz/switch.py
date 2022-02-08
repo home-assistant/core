@@ -17,6 +17,7 @@ from homeassistant.components.switch import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
@@ -105,6 +106,7 @@ SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
             select_state(OverkizState.MYFOX_SHUTTER_STATUS)
             == OverkizCommandParam.OPENED
         ),
+        entity_category=EntityCategory.CONFIG,
     ),
 ]
 
