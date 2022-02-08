@@ -53,7 +53,7 @@ def create_file(path):
         pass
 
 
-@pytest.fixture(autouse=True, scope="function")
+@pytest.fixture(autouse=True)
 def teardown():
     """Clean up."""
     yield

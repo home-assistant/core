@@ -46,7 +46,7 @@ def setup_comp(hass):
     )
 
 
-@pytest.fixture(autouse=True, scope="function")
+@pytest.fixture(autouse=True)
 def teardown():
     """Restore."""
     yield

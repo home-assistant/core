@@ -26,7 +26,7 @@ TEST_BAD_SERIALIED = "THIS IS NOT JSON\n"
 TMP_DIR = None
 
 
-@pytest.fixture(autouse=True, scope="function")
+@pytest.fixture(autouse=True)
 def setup_and_teardown():
     """Clean up after tests."""
     global TMP_DIR
