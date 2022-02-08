@@ -8,6 +8,7 @@ import hpilo
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
@@ -51,8 +52,6 @@ SENSOR_TYPES = {
     "server_health": ["Server Health", "get_embedded_health"],
     "network_settings": ["Network Settings", "get_network_settings"],
 }
-
-CONF_STATE_CLASS = "state_class"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
