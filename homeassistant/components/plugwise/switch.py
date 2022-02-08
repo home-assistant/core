@@ -91,7 +91,7 @@ class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
         """Handle updated data from the coordinator."""
         if not (data := self.coordinator.data.devices.get(self._dev_id)):
             LOGGER.error("Received no data for device %s", self._dev_id)
-            self.async_write_ha_state()
+            super()._handle_coordinator_update()
             return
 
         self._attr_is_on = data["switches"].get("relay")
