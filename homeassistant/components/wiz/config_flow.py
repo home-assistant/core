@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import socket
 from typing import Any
 
 from pywizlight import wizlight
@@ -137,31 +138,36 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
-            if not (host := user_input[CONF_HOST]):
-                return await self.async_step_pick_device()
-            bulb = wizlight(host)
             try:
-                mac = await bulb.getMac()
-                bulbtype = await bulb.get_bulbtype()
-            except WizLightTimeOutError:
-                errors["base"] = "bulb_time_out"
-            except ConnectionRefusedError:
-                errors["base"] = "cannot_connect"
-            except WizLightConnectionError:
-                errors["base"] = "no_wiz_light"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                socket.inet_aton(user_input[CONF_HOST])
+            except OSError:
+                errors["base"] = "no_ip"
             else:
-                await self.async_set_unique_id(mac, raise_on_progress=False)
-                self._abort_if_unique_id_configured(
-                    updates={CONF_HOST: user_input[CONF_HOST]}
-                )
-                name = name_from_bulb_type_and_mac(bulbtype, mac)
-                return self.async_create_entry(
-                    title=name,
-                    data=user_input,
-                )
+                if not (host := user_input[CONF_HOST]):
+                    return await self.async_step_pick_device()
+                bulb = wizlight(host)
+                try:
+                    mac = await bulb.getMac()
+                    bulbtype = await bulb.get_bulbtype()
+                except WizLightTimeOutError:
+                    errors["base"] = "bulb_time_out"
+                except ConnectionRefusedError:
+                    errors["base"] = "cannot_connect"
+                except WizLightConnectionError:
+                    errors["base"] = "no_wiz_light"
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
+                else:
+                    await self.async_set_unique_id(mac, raise_on_progress=False)
+                    self._abort_if_unique_id_configured(
+                        updates={CONF_HOST: user_input[CONF_HOST]}
+                    )
+                    name = name_from_bulb_type_and_mac(bulbtype, mac)
+                    return self.async_create_entry(
+                        title=name,
+                        data=user_input,
+                    )
 
         return self.async_show_form(
             step_id="user",
