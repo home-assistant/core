@@ -392,24 +392,15 @@ class SonosSpeaker:
                 SCAN_INTERVAL,
             )
 
-        try:
-            await self.hass.async_add_executor_job(self.set_basic_info)
-
-            if self._subscriptions:
-                raise RuntimeError(
-                    f"Attempted to attach subscriptions to player: {self.soco} "
-                    f"when existing subscriptions exist: {self._subscriptions}"
-                )
-
-            subscriptions = [
-                self._subscribe(getattr(self.soco, service), self.async_dispatch_event)
-                for service in SUBSCRIPTION_SERVICES
-            ]
-            await asyncio.gather(*subscriptions)
-        except SoCoException as ex:
-            _LOGGER.warning("Could not connect %s: %s", self.zone_name, ex)
-            return False
-        return True
+        subscriptions = [
+            self._subscribe(getattr(self.soco, service), self.async_dispatch_event)
+            for service in SUBSCRIPTION_SERVICES
+        ]
+        results = await asyncio.gather(*subscriptions, return_exceptions=True)
+        for result in results:
+            self.log_subscription_result(
+                result, "Creating subscription", logging.WARNING
+            )
 
     async def _subscribe(
         self, target: SubscriptionBase, sub_callback: Callable
