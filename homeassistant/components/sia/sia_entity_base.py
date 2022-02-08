@@ -127,6 +127,7 @@ class SIABaseEntity(RestoreEntity):
         Return True if the event was relevant for this entity.
         """
 
+    @callback
     def async_create_post_interval_update_cb(self) -> None:
         """Create a port interval update cb and store the callback."""
         self._post_interval_update_cb_canceller = async_call_later(
@@ -141,7 +142,9 @@ class SIABaseEntity(RestoreEntity):
         self._attr_available = False
         self.async_write_ha_state()
 
+    @callback
     def _cancel_post_interval_update_cb(self) -> None:
         """Cancel the callback."""
         if self._post_interval_update_cb_canceller:
             self._post_interval_update_cb_canceller()
+            self._post_interval_update_cb_canceller = None

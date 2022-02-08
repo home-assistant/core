@@ -104,12 +104,12 @@ def generate_binary_sensors(entry) -> Iterable[SIABinarySensor]:
                 entry.entry_id,
                 account_data[CONF_ACCOUNT],
                 SIA_HUB_ZONE,
-                ENTITY_DESCRIPTION_CONNECTIVITY.device_class,
+                ENTITY_DESCRIPTION_CONNECTIVITY.key,
             ),
             name=SIA_NAME_FORMAT_HUB.format(
                 entry.data[CONF_PORT],
                 account_data[CONF_ACCOUNT],
-                ENTITY_DESCRIPTION_CONNECTIVITY.device_class,
+                ENTITY_DESCRIPTION_CONNECTIVITY.key,
             ),
         )
         yield SIABinarySensor(
@@ -122,12 +122,12 @@ def generate_binary_sensors(entry) -> Iterable[SIABinarySensor]:
                 entry.entry_id,
                 account_data[CONF_ACCOUNT],
                 SIA_HUB_ZONE,
-                ENTITY_DESCRIPTION_POWER.device_class,
+                ENTITY_DESCRIPTION_POWER.key,
             ),
             name=SIA_NAME_FORMAT_HUB.format(
                 entry.data[CONF_PORT],
                 account_data[CONF_ACCOUNT],
-                ENTITY_DESCRIPTION_POWER.device_class,
+                ENTITY_DESCRIPTION_POWER.key,
             ),
         )
         zones = entry.options[CONF_ACCOUNTS][account_data[CONF_ACCOUNT]][CONF_ZONES]
@@ -142,13 +142,13 @@ def generate_binary_sensors(entry) -> Iterable[SIABinarySensor]:
                     entry.entry_id,
                     account_data[CONF_ACCOUNT],
                     zone,
-                    ENTITY_DESCRIPTION_SMOKE.device_class,
+                    ENTITY_DESCRIPTION_SMOKE.key,
                 ),
                 name=SIA_NAME_FORMAT.format(
                     entry.data[CONF_PORT],
                     account_data[CONF_ACCOUNT],
                     zone,
-                    ENTITY_DESCRIPTION_SMOKE.device_class,
+                    ENTITY_DESCRIPTION_SMOKE.key,
                 ),
             )
             yield SIABinarySensor(
@@ -161,13 +161,13 @@ def generate_binary_sensors(entry) -> Iterable[SIABinarySensor]:
                     entry.entry_id,
                     account_data[CONF_ACCOUNT],
                     zone,
-                    ENTITY_DESCRIPTION_MOISTURE.device_class,
+                    ENTITY_DESCRIPTION_MOISTURE.key,
                 ),
                 name=SIA_NAME_FORMAT.format(
                     entry.data[CONF_PORT],
                     account_data[CONF_ACCOUNT],
                     zone,
-                    ENTITY_DESCRIPTION_MOISTURE.device_class,
+                    ENTITY_DESCRIPTION_MOISTURE.key,
                 ),
             )
 
