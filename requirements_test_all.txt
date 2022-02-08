@@ -388,7 +388,7 @@ dynalite_devices==0.1.46
 elgato==3.0.0
 
 # homeassistant.components.elkm1
-elkm1-lib==1.0.0
+elkm1-lib==1.2.0
 
 # homeassistant.components.elmax
 elmax_api==0.0.2
