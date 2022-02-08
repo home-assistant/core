@@ -150,8 +150,8 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
             LOGGER.error("Error while communicating to device")
 
     @callback
-    def _async_process_data(self) -> None:
-        """Update the data for this climate device."""
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         data = self.coordinator.data.devices[self._dev_id]
         heater_central_data = self.coordinator.data.devices[
             self.coordinator.data.gateway["heater_id"]
@@ -192,4 +192,4 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
             "selected_schema": data.get("selected_schedule"),
         }
 
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
