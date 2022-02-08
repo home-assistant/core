@@ -48,7 +48,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import Entity, EntityDescription, entity_sources
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
@@ -969,38 +969,22 @@ async def async_handle_play_stream_service(
     camera: Camera, service_call: ServiceCall
 ) -> None:
     """Handle play stream services calls."""
+    hass = camera.hass
     fmt = service_call.data[ATTR_FORMAT]
     url = await _async_stream_endpoint_url(camera.hass, camera, fmt)
+    url = f"{get_url(hass)}{url}"
 
-    hass = camera.hass
-
-    # It is required to send a different payload for cast media players
-    entity_ids = service_call.data[ATTR_MEDIA_PLAYER]
-    sources = entity_sources(hass)
-    cast_entity_ids = [
-        entity
-        for entity in entity_ids
-        # All entities should be in sources. This extra guard is to
-        # avoid people writing to the state machine and breaking it.
-        if entity in sources and sources[entity]["domain"] == "cast"
-    ]
-    other_entity_ids = list(set(entity_ids) - set(cast_entity_ids))
-
-    for entities, url_prefix in (
-        (cast_entity_ids, ""),
-        (other_entity_ids, get_url(hass)),
-    ):
-        await hass.services.async_call(
-            DOMAIN_MP,
-            SERVICE_PLAY_MEDIA,
-            {
-                ATTR_ENTITY_ID: entities,
-                ATTR_MEDIA_CONTENT_ID: f"{url_prefix}{url}",
-                ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[fmt],
-            },
-            blocking=True,
-            context=service_call.context,
-        )
+    await hass.services.async_call(
+        DOMAIN_MP,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: service_call.data[ATTR_MEDIA_PLAYER],
+            ATTR_MEDIA_CONTENT_ID: url,
+            ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[fmt],
+        },
+        blocking=True,
+        context=service_call.context,
+    )
 
 
 async def _async_stream_endpoint_url(
