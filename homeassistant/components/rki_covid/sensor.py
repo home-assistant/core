@@ -93,9 +93,6 @@ async def async_setup_entry(
     _LOGGER.debug("create sensor from config entry %s", config_entry.data)
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    if coordinator is None or coordinator.data is None:
-        raise PlatformNotReady("Data coordinator could not be initialized!")
-
     district = config_entry.data[ATTR_COUNTY]
     sensors = [
         RKICovidNumbersSensor(coordinator, district, info_type) for info_type in SENSORS
@@ -138,7 +135,6 @@ class RKICovidNumbersSensor(SensorEntity, CoordinatorEntity):
 
         self.district = district
         self.info_type = info_type
-        self.updated = datetime.now()
         self._attr_native_unit_of_measurement = self._measurement_unit()
         self._attr_native_value = self._native_value()
         self._attr_icon = {**SENSORS, **DISTRICT_SENSORS}[self.info_type]
@@ -150,7 +146,7 @@ class RKICovidNumbersSensor(SensorEntity, CoordinatorEntity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
-            self.coordinator.last_update_success
+            super().available
             and self.district in self.coordinator.data
         )
 
