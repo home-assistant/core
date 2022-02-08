@@ -1,0 +1,39 @@
+[
+  {
+    "active_device": false,
+    "cooling_present": null,
+    "gateway_id": "e950c7d5e1ee407a858e2a8b5016c8b3",
+    "heater_id": null,
+    "single_master_thermostat": null,
+    "smile_name": "P1",
+    "notifications": {}
+  },
+  {
+    "e950c7d5e1ee407a858e2a8b5016c8b3": {
+      "class": "gateway",
+      "fw": "3.3.9",
+      "location": "cd3e822288064775a7c4afcdd70bdda2",
+      "model": "P1",
+      "name": "P1",
+      "vendor": "Plugwise B.V.",
+      "sensors": {
+        "net_electricity_point": -2816,
+        "electricity_consumed_peak_point": 0,
+        "electricity_consumed_off_peak_point": 0,
+        "net_electricity_cumulative": 442.972,
+        "electricity_consumed_peak_cumulative": 442.932,
+        "electricity_consumed_off_peak_cumulative": 551.09,
+        "electricity_consumed_peak_interval": 0,
+        "electricity_consumed_off_peak_interval": 0,
+        "electricity_produced_peak_point": 2816,
+        "electricity_produced_off_peak_point": 0,
+        "electricity_produced_peak_cumulative": 396.559,
+        "electricity_produced_off_peak_cumulative": 154.491,
+        "electricity_produced_peak_interval": 0,
+        "electricity_produced_off_peak_interval": 0,
+        "gas_consumed_cumulative": 584.85,
+        "gas_consumed_interval": 0.0
+      }
+    }
+  }
+]

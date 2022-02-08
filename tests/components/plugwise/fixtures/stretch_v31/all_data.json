@@ -1,0 +1,178 @@
+[
+  {
+    "active_device": false,
+    "cooling_present": null,
+    "gateway_id": "0000aaaa0000aaaa0000aaaa0000aa00",
+    "heater_id": null,
+    "single_master_thermostat": null,
+    "smile_name": "Stretch",
+    "notifications": {}
+  },
+  {
+    "0000aaaa0000aaaa0000aaaa0000aa00": {
+      "class": "gateway",
+      "fw": "3.1.11",
+      "location": "0000aaaa0000aaaa0000aaaa0000aa00",
+      "vendor": "Plugwise B.V.",
+      "model": "Stretch",
+      "name": "Stretch"
+    },
+    "5ca521ac179d468e91d772eeeb8a2117": {
+      "class": "zz_misc",
+      "fw": null,
+      "location": "0000aaaa0000aaaa0000aaaa0000aa00",
+      "model": null,
+      "name": "Oven (793F84)",
+      "vendor": null,
+      "sensors": {
+        "electricity_consumed": 0.0,
+        "electricity_consumed_interval": 0.0,
+        "electricity_produced": 0.0,
+        "electricity_produced_interval": 0.0
+      },
+      "switches": { "relay": true, "lock": false }
+    },
+    "5871317346d045bc9f6b987ef25ee638": {
+      "class": "water_heater_vessel",
+      "fw": "2011-06-27T10:52:18+02:00",
+      "location": "0000aaaa0000aaaa0000aaaa0000aa00",
+      "model": "Circle type F",
+      "name": "Boiler (1EB31)",
+      "vendor": "Plugwise",
+      "sensors": {
+        "electricity_consumed": 1.19,
+        "electricity_consumed_interval": 0.0,
+        "electricity_produced": 0.0
+      },
+      "switches": { "relay": true, "lock": false }
+    },
+    "e1c884e7dede431dadee09506ec4f859": {
+      "class": "refrigerator",
+      "fw": "2011-06-27T10:47:37+02:00",
+      "location": "0000aaaa0000aaaa0000aaaa0000aa00",
+      "model": "Circle+ type F",
+      "name": "Koelkast (92C4A)",
+      "vendor": "Plugwise",
+      "sensors": {
+        "electricity_consumed": 50.5,
+        "electricity_consumed_interval": 0.08,
+        "electricity_produced": 0.0
+      },
+      "switches": { "relay": true, "lock": false }
+    },
+    "aac7b735042c4832ac9ff33aae4f453b": {
+      "class": "dishwasher",
+      "fw": "2011-06-27T10:52:18+02:00",
+      "location": "0000aaaa0000aaaa0000aaaa0000aa00",
+      "model": "Circle type F",
+      "name": "Vaatwasser (2a1ab)",
+      "vendor": "Plugwise",
+      "sensors": {
+        "electricity_consumed": 0.0,
+        "electricity_consumed_interval": 0.71,
+        "electricity_produced": 0.0
+      },
+      "switches": { "relay": true, "lock": false }
+    },
+    "cfe95cf3de1948c0b8955125bf754614": {
+      "class": "dryer",
+      "fw": "2011-06-27T10:52:18+02:00",
+      "location": "0000aaaa0000aaaa0000aaaa0000aa00",
+      "model": "Circle type F",
+      "name": "Droger (52559)",
+      "vendor": "Plugwise",
+      "sensors": {
+        "electricity_consumed": 0.0,
+        "electricity_consumed_interval": 0.0,
+        "electricity_produced": 0.0
+      },
+      "switches": { "relay": true, "lock": false }
+    },
+    "99f89d097be34fca88d8598c6dbc18ea": {
+      "class": "router",
+      "fw": null,
+      "location": "0000aaaa0000aaaa0000aaaa0000aa00",
+      "model": null,
+      "name": "Meterkast (787BFB)",
+      "vendor": null,
+      "sensors": {
+        "electricity_consumed": 27.6,
+        "electricity_consumed_interval": 28.2,
+        "electricity_produced": 0.0,
+        "electricity_produced_interval": 0.0
+      },
+      "switches": { "relay": true, "lock": true }
+    },
+    "059e4d03c7a34d278add5c7a4a781d19": {
+      "class": "washingmachine",
+      "fw": "2011-06-27T10:52:18+02:00",
+      "location": "0000aaaa0000aaaa0000aaaa0000aa00",
+      "model": "Circle type F",
+      "name": "Wasmachine (52AC1)",
+      "vendor": "Plugwise",
+      "sensors": {
+        "electricity_consumed": 0.0,
+        "electricity_consumed_interval": 0.0,
+        "electricity_produced": 0.0
+      },
+      "switches": { "relay": true, "lock": false }
+    },
+    "e309b52ea5684cf1a22f30cf0cd15051": {
+      "class": "computer_desktop",
+      "fw": null,
+      "location": "0000aaaa0000aaaa0000aaaa0000aa00",
+      "model": null,
+      "name": "Computer (788618)",
+      "vendor": null,
+      "sensors": {
+        "electricity_consumed": 156,
+        "electricity_consumed_interval": 163,
+        "electricity_produced": 0.0,
+        "electricity_produced_interval": 0.0
+      },
+      "switches": { "relay": true, "lock": true }
+    },
+    "71e1944f2a944b26ad73323e399efef0": {
+      "class": "switching",
+      "fw": null,
+      "location": null,
+      "model": "Switchgroup",
+      "name": "Test",
+      "members": ["5ca521ac179d468e91d772eeeb8a2117"],
+      "types": ["switch_group"],
+      "vendor": null,
+      "switches": { "relay": true }
+    },
+    "d950b314e9d8499f968e6db8d82ef78c": {
+      "class": "report",
+      "fw": null,
+      "location": null,
+      "model": "Switchgroup",
+      "name": "Stroomvreters",
+      "members": [
+        "059e4d03c7a34d278add5c7a4a781d19",
+        "5871317346d045bc9f6b987ef25ee638",
+        "aac7b735042c4832ac9ff33aae4f453b",
+        "cfe95cf3de1948c0b8955125bf754614",
+        "e1c884e7dede431dadee09506ec4f859"
+      ],
+      "types": ["switch_group"],
+      "vendor": null,
+      "switches": { "relay": true }
+    },
+    "d03738edfcc947f7b8f4573571d90d2d": {
+      "class": "switching",
+      "fw": null,
+      "location": null,
+      "model": "Switchgroup",
+      "name": "Schakel",
+      "members": [
+        "059e4d03c7a34d278add5c7a4a781d19",
+        "cfe95cf3de1948c0b8955125bf754614"
+      ],
+      "types": ["switch_group"],
+      "vendor": null,
+      "switches": { "relay": true }
+    }
+  }
+]
