@@ -20,6 +20,11 @@ DATA_MQTT_DEBUG_INFO = "mqtt_debug_info"
 STORED_MESSAGES = 10
 
 
+def initialize(hass: HomeAssistant):
+    """Initialize MQTT debug info."""
+    hass.data[DATA_MQTT_DEBUG_INFO] = {"entities": {}, "triggers": {}}
+
+
 def log_messages(
     hass: HomeAssistant, entity_id: str
 ) -> Callable[[MessageCallbackType], MessageCallbackType]:
@@ -67,9 +72,7 @@ def log_message(
     retain: bool,
 ) -> None:
     """Log an outgoing MQTT message."""
-    debug_info = hass.data.setdefault(
-        DATA_MQTT_DEBUG_INFO, {"entities": {}, "triggers": {}}
-    )
+    debug_info = hass.data[DATA_MQTT_DEBUG_INFO]
     entity_info = debug_info["entities"].setdefault(
         entity_id, {"subscriptions": {}, "discovery_data": {}, "transmitted": {}}
     )
@@ -86,9 +89,7 @@ def log_message(
 def add_subscription(hass, message_callback, subscription):
     """Prepare debug data for subscription."""
     if entity_id := getattr(message_callback, "__entity_id", None):
-        debug_info = hass.data.setdefault(
-            DATA_MQTT_DEBUG_INFO, {"entities": {}, "triggers": {}}
-        )
+        debug_info = hass.data[DATA_MQTT_DEBUG_INFO]
         entity_info = debug_info["entities"].setdefault(
             entity_id, {"subscriptions": {}, "discovery_data": {}, "transmitted": {}}
         )
@@ -117,9 +118,7 @@ def remove_subscription(hass, message_callback, subscription):
 
 def add_entity_discovery_data(hass, discovery_data, entity_id):
     """Add discovery data."""
-    debug_info = hass.data.setdefault(
-        DATA_MQTT_DEBUG_INFO, {"entities": {}, "triggers": {}}
-    )
+    debug_info = hass.data[DATA_MQTT_DEBUG_INFO]
     entity_info = debug_info["entities"].setdefault(
         entity_id, {"subscriptions": {}, "discovery_data": {}, "transmitted": {}}
     )
@@ -134,14 +133,13 @@ def update_entity_discovery_data(hass, discovery_payload, entity_id):
 
 def remove_entity_data(hass, entity_id):
     """Remove discovery data."""
-    hass.data[DATA_MQTT_DEBUG_INFO]["entities"].pop(entity_id)
+    if entity_id in hass.data[DATA_MQTT_DEBUG_INFO]["entities"]:
+        hass.data[DATA_MQTT_DEBUG_INFO]["entities"].pop(entity_id)
 
 
 def add_trigger_discovery_data(hass, discovery_hash, discovery_data, device_id):
     """Add discovery data."""
-    debug_info = hass.data.setdefault(
-        DATA_MQTT_DEBUG_INFO, {"entities": {}, "triggers": {}}
-    )
+    debug_info = hass.data[DATA_MQTT_DEBUG_INFO]
     debug_info["triggers"][discovery_hash] = {
         "device_id": device_id,
         "discovery_data": discovery_data,
@@ -167,9 +165,7 @@ def info_for_device(hass, device_id):
     entries = hass.helpers.entity_registry.async_entries_for_device(
         entity_registry, device_id, include_disabled_entities=True
     )
-    mqtt_debug_info = hass.data.setdefault(
-        DATA_MQTT_DEBUG_INFO, {"entities": {}, "triggers": {}}
-    )
+    mqtt_debug_info = hass.data[DATA_MQTT_DEBUG_INFO]
     for entry in entries:
         if entry.entity_id not in mqtt_debug_info["entities"]:
             continue
