@@ -595,6 +595,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         )
 
+    debug_info.initialize(hass)
+
     return True
 
 
