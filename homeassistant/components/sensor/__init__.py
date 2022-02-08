@@ -54,6 +54,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_STATE_CLASS  # noqa: F401
 
@@ -459,15 +460,28 @@ class SensorExtraStoredData(ExtraStoredData):
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the sensor data."""
+        native_value: StateType | date | datetime | dict[str, str] = self.native_value
+        if isinstance(native_value, (date, datetime)):
+            native_value = {
+                "__type": str(type(native_value)),
+                "isoformat": native_value.isoformat(),
+            }
         return {
-            "native_value": self.native_value,
+            "native_value": native_value,
             "native_unit_of_measurement": self.native_unit_of_measurement,
         }
 
     @classmethod
     def from_dict(cls, restored: dict[str, Any]) -> SensorExtraStoredData:
         """Initialize a stored sensor state from a dict."""
-        return cls(restored["native_value"], restored["native_unit_of_measurement"])
+        native_value = restored["native_value"]
+        if isinstance(native_value, dict):
+            type_ = native_value.get("__type")
+            if type_ == "<class 'datetime.datetime'>":
+                native_value = dt_util.parse_datetime(native_value["isoformat"])
+            elif type_ == "<class 'datetime.date'>":
+                native_value = dt_util.parse_date(native_value["isoformat"])
+        return cls(native_value, restored["native_unit_of_measurement"])
 
 
 class RestoreSensor(SensorEntity, RestoreEntity):

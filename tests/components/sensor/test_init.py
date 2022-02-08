@@ -217,13 +217,41 @@ async def test_reject_timezoneless_datetime_str(
 
 
 RESTORE_DATA = {
+    "str": {"native_unit_of_measurement": "°F", "native_value": "abc123"},
     "int": {"native_unit_of_measurement": "°F", "native_value": 123},
+    "float": {"native_unit_of_measurement": "°F", "native_value": 123.0},
+    "date": {
+        "native_unit_of_measurement": "°F",
+        "native_value": {
+            "__type": "<class 'datetime.date'>",
+            "isoformat": date(2020, 2, 8).isoformat(),
+        },
+    },
+    "datetime": {
+        "native_unit_of_measurement": "°F",
+        "native_value": {
+            "__type": "<class 'datetime.datetime'>",
+            "isoformat": datetime(2020, 2, 8, 15, tzinfo=timezone.utc).isoformat(),
+        },
+    },
 }
 
 
+# None | str | int | float | date | datetime:
 @pytest.mark.parametrize(
-    "native_value, native_value_type, expected_extra_data",
-    [(123, int, RESTORE_DATA["int"])],
+    "native_value, native_value_type, expected_extra_data, device_class",
+    [
+        ("abc123", str, RESTORE_DATA["str"], None),
+        (123, int, RESTORE_DATA["int"], SensorDeviceClass.TEMPERATURE),
+        (123.0, float, RESTORE_DATA["float"], SensorDeviceClass.TEMPERATURE),
+        (date(2020, 2, 8), dict, RESTORE_DATA["date"], SensorDeviceClass.DATE),
+        (
+            datetime(2020, 2, 8, 15, tzinfo=timezone.utc),
+            dict,
+            RESTORE_DATA["datetime"],
+            SensorDeviceClass.TIMESTAMP,
+        ),
+    ],
 )
 async def test_restore_sensor_save_state(
     hass,
@@ -232,6 +260,7 @@ async def test_restore_sensor_save_state(
     native_value,
     native_value_type,
     expected_extra_data,
+    device_class,
 ):
     """Test RestoreSensor."""
     platform = getattr(hass.components, "test.sensor")
@@ -240,7 +269,7 @@ async def test_restore_sensor_save_state(
         name="Test",
         native_value=native_value,
         native_unit_of_measurement=TEMP_FAHRENHEIT,
-        device_class=SensorDeviceClass.TEMPERATURE,
+        device_class=device_class,
     )
 
     entity0 = platform.ENTITIES["0"]
@@ -259,7 +288,19 @@ async def test_restore_sensor_save_state(
 
 
 @pytest.mark.parametrize(
-    "native_value, native_value_type, extra_data", [(123, int, RESTORE_DATA["int"])]
+    "native_value, native_value_type, extra_data, device_class",
+    [
+        ("abc123", str, RESTORE_DATA["str"], None),
+        (123, int, RESTORE_DATA["int"], SensorDeviceClass.TEMPERATURE),
+        (123.0, float, RESTORE_DATA["float"], SensorDeviceClass.TEMPERATURE),
+        (date(2020, 2, 8), date, RESTORE_DATA["date"], SensorDeviceClass.DATE),
+        (
+            datetime(2020, 2, 8, 15, tzinfo=timezone.utc),
+            datetime,
+            RESTORE_DATA["datetime"],
+            SensorDeviceClass.TIMESTAMP,
+        ),
+    ],
 )
 async def test_restore_sensor_restore_state(
     hass,
@@ -268,6 +309,7 @@ async def test_restore_sensor_restore_state(
     native_value,
     native_value_type,
     extra_data,
+    device_class,
 ):
     """Test RestoreSensor."""
     mock_restore_cache_with_extra_data(hass, ((State("sensor.test", ""), extra_data),))
@@ -276,7 +318,7 @@ async def test_restore_sensor_restore_state(
     platform.init(empty=True)
     platform.ENTITIES["0"] = platform.MockRestoreSensor(
         name="Test",
-        device_class=SensorDeviceClass.TEMPERATURE,
+        device_class=device_class,
     )
 
     entity0 = platform.ENTITIES["0"]
