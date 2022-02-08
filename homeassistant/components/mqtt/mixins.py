@@ -549,7 +549,6 @@ class MqttDiscoveryUpdate(Entity):
     def _cleanup_discovery_on_remove(self) -> None:
         """Stop listening to signal and cleanup discovery data."""
         if self._discovery_data and not self._removed_from_hass:
-            debug_info.remove_entity_data(self.hass, self.entity_id)
             clear_discovery_hash(self.hass, self._discovery_data[ATTR_DISCOVERY_HASH])
             self._removed_from_hass = True
 
@@ -677,6 +676,7 @@ class MqttEntity(
         await MqttAttributes.async_will_remove_from_hass(self)
         await MqttAvailability.async_will_remove_from_hass(self)
         await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
+        debug_info.remove_entity_data(self.hass, self.entity_id)
 
     @staticmethod
     @abstractmethod
