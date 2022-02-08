@@ -31,6 +31,48 @@ def is_internal_request(hass: HomeAssistant) -> bool:
         return False
 
 
+def is_hass_url(hass: HomeAssistant, url: str) -> bool:
+    """Return if the URL points at this Home Assistant instance."""
+    parsed = yarl.URL(normalize_url(url))
+
+    def host_ip() -> str | None:
+        if hass.config.api is None or is_loopback(ip_address(hass.config.api.local_ip)):
+            return None
+
+        return str(
+            yarl.URL.build(
+                scheme="http", host=hass.config.api.local_ip, port=hass.config.api.port
+            )
+        )
+
+    def cloud_url() -> str | None:
+        try:
+            return _get_cloud_url(hass)
+        except NoURLAvailableError:
+            return None
+
+    for potential_base_factory in (
+        lambda: hass.config.internal_url,
+        lambda: hass.config.external_url,
+        cloud_url,
+        host_ip,
+    ):
+        potential_base = potential_base_factory()
+
+        if potential_base is None:
+            continue
+
+        potential_parsed = yarl.URL(normalize_url(potential_base))
+
+        if (
+            parsed.scheme == potential_parsed.scheme
+            and parsed.authority == potential_parsed.authority
+        ):
+            return True
+
+    return False
+
+
 @bind_hass
 def get_url(
     hass: HomeAssistant,
