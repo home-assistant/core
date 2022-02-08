@@ -95,6 +95,16 @@ SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
         turn_off=lambda execute_command: execute_command(OverkizCommand.OFF),
         icon="mdi:radiator",
     ),
+    OverkizSwitchDescription(
+        key=UIWidget.MY_FOX_SECURITY_CAMERA,
+        name="Camera Shutter",
+        turn_on=lambda execute_command: execute_command(OverkizCommand.OPEN),
+        turn_off=lambda execute_command: execute_command(OverkizCommand.CLOSE),
+        icon="mdi:camera-lock",
+        is_on=lambda select_state: (
+            select_state(OverkizState.MYFOX_SHUTTER_STATUS) == "opened"
+        ),
+    ),
 ]
 
 SUPPORTED_DEVICES = {
