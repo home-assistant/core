@@ -58,8 +58,7 @@ SOURCE_PLATFORM_CONFIG = "platform_config"
 FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
 
 
-# pylint: disable-next=invalid-name
-def ENTITY_CATEGORIES_SCHEMA(value: Any | None) -> EntityCategory:
+def validate_entity_category(value: Any | None) -> EntityCategory:
     """Validate entity category configuration."""
     value = vol.In(ENTITY_CATEGORIES)(value)
     return EntityCategory(value)
