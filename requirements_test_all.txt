@@ -1279,7 +1279,7 @@ pywemo==0.7.0
 pywilight==0.0.70
 
 # homeassistant.components.wiz
-pywizlight==0.5.2
+pywizlight==0.5.3
 
 # homeassistant.components.zerproc
 pyzerproc==0.4.8
