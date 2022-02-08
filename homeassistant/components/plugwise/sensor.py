@@ -354,7 +354,7 @@ class PlugwiseSensorEnity(PlugwiseEntity, SensorEntity):
             return
 
         self._attr_native_value = data["sensors"].get(self.entity_description.key)
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
 
 class PlugwiseAuxSensorEntity(PlugwiseSensorEnity):
