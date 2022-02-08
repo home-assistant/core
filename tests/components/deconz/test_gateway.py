@@ -1,7 +1,8 @@
 """Test deCONZ gateway."""
 
+import asyncio
 from copy import deepcopy
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pydeconz
 from pydeconz.websocket import STATE_RETRYING, STATE_RUNNING
@@ -19,7 +20,7 @@ from homeassistant.components.deconz.config_flow import DECONZ_MANUFACTURERURL
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.errors import AuthenticationRequired, CannotConnect
 from homeassistant.components.deconz.gateway import (
-    get_gateway,
+    get_deconz_session,
     get_gateway_from_config_entry,
 )
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
@@ -202,25 +203,6 @@ async def test_gateway_device_configuration_url_when_addon(hass, aioclient_mock)
     )
 
 
-async def test_gateway_retry(hass):
-    """Retry setup."""
-    with patch(
-        "homeassistant.components.deconz.gateway.get_gateway",
-        side_effect=CannotConnect,
-    ):
-        await setup_deconz_integration(hass)
-    assert not hass.data[DECONZ_DOMAIN]
-
-
-async def test_gateway_setup_fails(hass):
-    """Retry setup."""
-    with patch(
-        "homeassistant.components.deconz.gateway.get_gateway", side_effect=Exception
-    ):
-        await setup_deconz_integration(hass)
-    assert not hass.data[DECONZ_DOMAIN]
-
-
 async def test_connection_status_signalling(
     hass, aioclient_mock, mock_deconz_websocket
 ):
@@ -282,18 +264,6 @@ async def test_update_address(hass, aioclient_mock):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_gateway_trigger_reauth_flow(hass):
-    """Failed authentication trigger a reauthentication flow."""
-    with patch(
-        "homeassistant.components.deconz.gateway.get_gateway",
-        side_effect=AuthenticationRequired,
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
-        await setup_deconz_integration(hass)
-        mock_flow_init.assert_called_once()
-
-    assert hass.data[DECONZ_DOMAIN] == {}
-
-
 async def test_reset_after_successful_setup(hass, aioclient_mock):
     """Make sure that connection status triggers a dispatcher send."""
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
@@ -305,25 +275,24 @@ async def test_reset_after_successful_setup(hass, aioclient_mock):
     assert result is True
 
 
-async def test_get_gateway(hass):
+async def test_get_deconz_session(hass):
     """Successful call."""
     with patch("pydeconz.DeconzSession.refresh_state", return_value=True):
-        assert await get_gateway(hass, ENTRY_CONFIG, Mock(), Mock())
+        assert await get_deconz_session(hass, ENTRY_CONFIG)
 
 
-async def test_get_gateway_fails_unauthorized(hass):
+@pytest.mark.parametrize(
+    "side_effect, raised_exception",
+    [
+        (asyncio.TimeoutError, CannotConnect),
+        (pydeconz.RequestError, CannotConnect),
+        (pydeconz.Unauthorized, AuthenticationRequired),
+    ],
+)
+async def test_get_deconz_session_fails(hass, side_effect, raised_exception):
     """Failed call."""
     with patch(
         "pydeconz.DeconzSession.refresh_state",
-        side_effect=pydeconz.errors.Unauthorized,
-    ), pytest.raises(AuthenticationRequired):
-        assert await get_gateway(hass, ENTRY_CONFIG, Mock(), Mock()) is False
-
-
-async def test_get_gateway_fails_cannot_connect(hass):
-    """Failed call."""
-    with patch(
-        "pydeconz.DeconzSession.refresh_state",
-        side_effect=pydeconz.errors.RequestError,
-    ), pytest.raises(CannotConnect):
-        assert await get_gateway(hass, ENTRY_CONFIG, Mock(), Mock()) is False
+        side_effect=side_effect,
+    ), pytest.raises(raised_exception):
+        assert await get_deconz_session(hass, ENTRY_CONFIG)
