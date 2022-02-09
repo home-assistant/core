@@ -124,7 +124,9 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
             self._attr_color_mode = COLOR_MODE_RGBW
         else:
             self._attr_color_mode = COLOR_MODE_BRIGHTNESS
-        self._attr_effect = state.get_scene()
+        self._attr_effect = (
+            state.get_scene() if "sceneId" in state.pilotResult else None
+        )
         super()._async_update_attrs()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
