@@ -112,7 +112,7 @@ class PlugwiseBinarySensorEntity(PlugwiseEntity, BinarySensorEntity):
         if icon_off := self.entity_description.icon_off:
             self._attr_icon = self.entity_description.icon if state else icon_off
 
-        # Add entity attribute for pluswise notifications
+        # Add entity attribute for Plugwise notifications
         if self.entity_description.key == "plugwise_notification":
             self._attr_extra_state_attributes = {
                 f"{severity}_msg": [] for severity in SEVERITIES
