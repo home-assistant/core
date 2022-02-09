@@ -52,7 +52,9 @@ omit =
     homeassistant/components/amazon_polly/*
     homeassistant/components/amberelectric/__init__.py
     homeassistant/components/ambiclimate/climate.py
-    homeassistant/components/ambient_station/*
+    homeassistant/components/ambient_station/__init__.py
+    homeassistant/components/ambient_station/binary_sensor.py
+    homeassistant/components/ambient_station/sensor.py
     homeassistant/components/amcrest/*
     homeassistant/components/ampio/*
     homeassistant/components/android_ip_webcam/*
