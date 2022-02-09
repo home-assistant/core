@@ -1101,13 +1101,13 @@ async def test_cleanup_device_registry_auto_cleanup(hass, registry):
     config_entry.async_enable_device_auto_cleanup()
     assert config_entry.device_auto_cleanup is True
 
-    d1 = registry.async_get_or_create(
+    registry.async_get_or_create(
         identifiers={("hue", "d1")}, config_entry_id=config_entry.entry_id
     )
     registry.async_get_or_create(
         identifiers={("hue", "d2")}, config_entry_id=config_entry.entry_id
     )
-    d3 = registry.async_get_or_create(
+    registry.async_get_or_create(
         identifiers={("hue", "d3")}, config_entry_id=config_entry.entry_id
     )
     registry.async_get_or_create(
@@ -1115,10 +1115,6 @@ async def test_cleanup_device_registry_auto_cleanup(hass, registry):
     )
 
     ent_reg = entity_registry.async_get(hass)
-    ent_reg.async_get_or_create("light", "hue", "e1", device_id=d1.id)
-    ent_reg.async_get_or_create("light", "hue", "e2", device_id=d1.id)
-    ent_reg.async_get_or_create("light", "hue", "e3", device_id=d3.id)
-
     device_registry.async_cleanup(hass, registry, ent_reg)
 
     assert registry.async_get_device({("hue", "d1")}) is None
@@ -1151,11 +1147,11 @@ async def test_cleanup_device_registry_auto_cleanup_one_with_one_without(
         identifiers={("hue", "d1")}, config_entry_id=no_auto_cleanup_entry.entry_id
     )
     registry.async_get_or_create(
-        identifiers={("auto_cleanup", "d2")},
+        identifiers={("hue", "d2")},
         config_entry_id=auto_cleanup_entry.entry_id,
     )
     d3 = registry.async_get_or_create(
-        identifiers={("auto_cleanup", "d3")},
+        identifiers={("hue", "d3")},
         config_entry_id=auto_cleanup_entry.entry_id,
     )
     registry.async_get_or_create(
@@ -1174,7 +1170,9 @@ async def test_cleanup_device_registry_auto_cleanup_one_with_one_without(
     assert registry.async_get_device({("hue", "d1")}) is not None
 
     assert registry.async_get_device({("hue", "d2")}) is None
-    assert registry.async_get_device({("hue", "d3")}) is None
+
+    # d3 still has an entity so it should not get removed
+    assert registry.async_get_device({("hue", "d3")}) is not None
     assert registry.async_get_device({("something", "d4")}) is None
 
 
