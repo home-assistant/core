@@ -42,13 +42,13 @@ async def async_setup_entry(
     cancel_dispatcher: Callable[[], None] | None = None
 
     @callback
-    def _async_add_montion_sensor() -> None:
+    def _async_add_occupancy_sensor() -> None:
         assert cancel_dispatcher is not None
         cancel_dispatcher()
         async_add_entities([WizOccupancyEntity(wiz_data, entry.title)])
 
     cancel_dispatcher = async_dispatcher_connect(
-        hass, SIGNAL_WIZ_PIR.format(mac), _async_add_montion_sensor
+        hass, SIGNAL_WIZ_PIR.format(mac), _async_add_occupancy_sensor
     )
     entry.async_on_unload(cancel_dispatcher)
 
