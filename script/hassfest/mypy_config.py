@@ -193,7 +193,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.template",
     "homeassistant.components.template.number",
     "homeassistant.components.template.sensor",
-    "homeassistant.components.template.trigger_entity",
     "homeassistant.components.template.weather",
     "homeassistant.components.toon",
     "homeassistant.components.toon.config_flow",
