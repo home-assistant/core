@@ -86,4 +86,4 @@ class WizOccupancyEntity(WizEntity, BinarySensorEntity):
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
         if self._device.state.get_source() == PIR_SOURCE:
-            self._attr_is_on = self._device.state.get_state()
+            self._attr_is_on = self._device.status
