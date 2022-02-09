@@ -43,14 +43,24 @@ async def async_setup_entry(
 
     @callback
     def _async_add_occupancy_sensor() -> None:
+        nonlocal cancel_dispatcher
         assert cancel_dispatcher is not None
         cancel_dispatcher()
+        cancel_dispatcher = None
         async_add_entities([WizOccupancyEntity(wiz_data, entry.title)])
 
     cancel_dispatcher = async_dispatcher_connect(
         hass, SIGNAL_WIZ_PIR.format(mac), _async_add_occupancy_sensor
     )
-    entry.async_on_unload(cancel_dispatcher)
+
+    @callback
+    def _async_cancel_dispatcher() -> None:
+        nonlocal cancel_dispatcher
+        if cancel_dispatcher is not None:
+            cancel_dispatcher()
+            cancel_dispatcher = None
+
+    entry.async_on_unload(_async_cancel_dispatcher)
 
 
 class WizOccupancyEntity(CoordinatorEntity, BinarySensorEntity):
