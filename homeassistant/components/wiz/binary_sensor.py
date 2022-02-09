@@ -34,7 +34,7 @@ async def async_setup_entry(
     mac = wiz_data.bulb.mac
 
     if er.async_get(hass).async_get_entity_id(
-        DOMAIN, Platform.BINARY_SENSOR, OCCUPANCY_UNIQUE_ID.format(mac)
+        Platform.BINARY_SENSOR, DOMAIN, OCCUPANCY_UNIQUE_ID.format(mac)
     ):
         async_add_entities([WizOccupancyEntity(wiz_data, entry.title)])
         return
