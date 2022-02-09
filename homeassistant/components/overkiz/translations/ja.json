@@ -11,6 +11,7 @@
             "too_many_requests": "\u30ea\u30af\u30a8\u30b9\u30c8\u304c\u591a\u3059\u304e\u307e\u3059\u3002\u3057\u3070\u3089\u304f\u3057\u3066\u304b\u3089\u3082\u3046\u4e00\u5ea6\u304a\u8a66\u3057\u304f\u3060\u3055\u3044\u3002",
             "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
         },
+        "flow_title": "\u30b2\u30fc\u30c8\u30a6\u30a7\u30a4: {gateway_id}",
         "step": {
             "user": {
                 "data": {

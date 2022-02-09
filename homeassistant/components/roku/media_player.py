@@ -7,6 +7,7 @@ from typing import Any
 from urllib.parse import quote
 
 import voluptuous as vol
+import yarl
 
 from homeassistant.components import media_source
 from homeassistant.components.http.auth import async_sign_path
@@ -46,7 +47,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.network import get_url, is_hass_url
 
 from . import roku_exception_handler
 from .browse_media import async_browse_media
@@ -376,16 +377,21 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             media_id = sourced_media.url
 
         # Sign and prefix with URL if playing a relative URL
-        if media_id[0] == "/":
-            media_id = async_sign_path(
-                self.hass,
-                quote(media_id),
-                dt.timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
-            )
+        if media_id[0] == "/" or is_hass_url(self.hass, media_id):
+            parsed = yarl.URL(media_id)
+
+            if parsed.query:
+                _LOGGER.debug("Not signing path for content with query param")
+            else:
+                media_id = async_sign_path(
+                    self.hass,
+                    quote(media_id),
+                    dt.timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
+                )
 
             # prepend external URL
-            hass_url = get_url(self.hass)
-            media_id = f"{hass_url}{media_id}"
+            if media_id[0] == "/":
+                media_id = f"{get_url(self.hass)}{media_id}"
 
         if media_type not in PLAY_MEDIA_SUPPORTED_TYPES:
             _LOGGER.error(
