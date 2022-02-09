@@ -185,6 +185,7 @@ class ConfigEntry:
         "reason",
         "_async_cancel_retry_setup",
         "_on_unload",
+        "device_auto_cleanup",
     )
 
     def __init__(
@@ -270,6 +271,21 @@ class ConfigEntry:
 
         # Hold list for functions to call on unload.
         self._on_unload: list[CALLBACK_TYPE] | None = None
+
+        self.device_auto_cleanup = False
+
+    @callback
+    def async_enable_device_auto_cleanup(self) -> None:
+        """Enable automatic device cleanup.
+
+        Controls how the system considers a device orphaned
+        when considering to cleanup devices.
+
+        Orphaned devices are defined by not have any entities
+        referenced and no config entries with auto cleanup
+        disabled (default).
+        """
+        self.device_auto_cleanup = True
 
     async def async_setup(
         self,

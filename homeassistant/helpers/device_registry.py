@@ -765,8 +765,13 @@ def async_cleanup(
     ent_reg: entity_registry.EntityRegistry,
 ) -> None:
     """Clean up device registry."""
-    # Find all devices that are referenced by a config_entry.
-    config_entry_ids = {entry.entry_id for entry in hass.config_entries.async_entries()}
+    # Find all devices that are referenced by a config_entry that
+    # do not have auto cleanup enabled
+    config_entry_ids = {
+        entry.entry_id
+        for entry in hass.config_entries.async_entries()
+        if not entry.device_auto_cleanup
+    }
     references_config_entries = {
         device.id
         for device in dev_reg.devices.values()
