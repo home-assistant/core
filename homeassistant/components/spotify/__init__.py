@@ -4,7 +4,6 @@ import aiohttp
 from spotipy import Spotify, SpotifyException
 import voluptuous as vol
 
-from homeassistant.components.media_player import BrowseError, BrowseMedia
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CREDENTIALS,
@@ -22,15 +21,15 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import config_flow
+from .browse_media import async_browse_media
 from .const import (
     DATA_SPOTIFY_CLIENT,
     DATA_SPOTIFY_ME,
     DATA_SPOTIFY_SESSION,
     DOMAIN,
-    MEDIA_PLAYER_PREFIX,
     SPOTIFY_SCOPES,
 )
-from .media_player import async_browse_media_internal
+from .util import is_spotify_media_type, resolve_spotify_media_type
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -47,35 +46,12 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
-def is_spotify_media_type(media_content_type: str) -> bool:
-    """Return whether the media_content_type is a valid Spotify media_id."""
-    return media_content_type.startswith(MEDIA_PLAYER_PREFIX)
-
-
-def resolve_spotify_media_type(media_content_type: str) -> str:
-    """Return actual spotify media_content_type."""
-    return media_content_type[len(MEDIA_PLAYER_PREFIX) :]
-
-
-async def async_browse_media(
-    hass: HomeAssistant,
-    media_content_type: str,
-    media_content_id: str,
-    *,
-    can_play_artist: bool = True,
-) -> BrowseMedia:
-    """Browse Spotify media."""
-    if not (info := next(iter(hass.data[DOMAIN].values()), None)):
-        raise BrowseError("No Spotify accounts available")
-    return await async_browse_media_internal(
-        hass,
-        info[DATA_SPOTIFY_CLIENT],
-        info[DATA_SPOTIFY_SESSION],
-        info[DATA_SPOTIFY_ME],
-        media_content_type,
-        media_content_id,
-        can_play_artist=can_play_artist,
-    )
+__all__ = [
+    "async_browse_media",
+    "DOMAIN",
+    "is_spotify_media_type",
+    "resolve_spotify_media_type",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
