@@ -58,6 +58,9 @@ from .util import find_state_attributes, mean_tuple, reduce_attribute
 
 DEFAULT_NAME = "Light Group"
 
+# No limit on parallel updates to enable a group calling another group
+PARALLEL_UPDATES = 0
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

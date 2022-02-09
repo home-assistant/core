@@ -2,16 +2,19 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 
 from plugwise.exceptions import InvalidAuthentication, PlugwiseException
 from plugwise.smile import Smile
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 
 from .const import (
     DEFAULT_PORT,
@@ -26,6 +29,8 @@ from .coordinator import PlugwiseDataUpdateCoordinator
 
 async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Plugwise Smiles from a config entry."""
+    await async_migrate_entries(hass, entry.entry_id, async_migrate_entity_entry)
+
     websession = async_get_clientsession(hass, verify_ssl=False)
     api = Smile(
         host=entry.data[CONF_HOST],
@@ -88,3 +93,16 @@ async def async_unload_entry_gw(hass: HomeAssistant, entry: ConfigEntry):
     ):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
+
+
+@callback
+def async_migrate_entity_entry(entry: RegistryEntry) -> dict[str, Any] | None:
+    """Migrate Plugwise entity entries.
+
+    - Migrates unique ID from old relay switches to the new unique ID
+    """
+    if entry.domain == SWITCH_DOMAIN and entry.unique_id.endswith("-plug"):
+        return {"new_unique_id": entry.unique_id.replace("-plug", "-relay")}
+
+    # No migration needed
+    return None
