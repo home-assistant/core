@@ -57,7 +57,7 @@ class ZWaveNodePingButton(ButtonEntity):
         name: str = (
             node.name
             or self.node.device_config.description
-            or f"Node {self.node.node_id}"
+            or f"Node {node.node_id}"
         )
         # Entity class attributes
         self._attr_name = f"{name}: Ping"
