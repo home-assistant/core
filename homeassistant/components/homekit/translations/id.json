@@ -12,7 +12,7 @@
                 "data": {
                     "include_domains": "Domain yang disertakan"
                 },
-                "description": "Pilih domain yang akan disertakan. Semua entitas yang didukung di domain akan disertakan. Instans HomeKit terpisah dalam mode aksesori akan dibuat untuk setiap pemutar media TV, remote berbasis aktivitas, kunci, dan kamera.",
+                "description": "Pilih domain yang akan disertakan. Semua entitas yang didukung di domain akan disertakan kecuali entitas yang dikategorikan. Instans HomeKit terpisah dalam mode aksesori akan dibuat untuk setiap pemutar media TV, remote berbasis aktivitas, kunci, dan kamera.",
                 "title": "Pilih domain yang akan disertakan"
             }
         }

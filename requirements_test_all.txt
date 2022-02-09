@@ -119,7 +119,7 @@ aioeagle==1.1.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==10.8.1
+aioesphomeapi==10.8.2
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -255,7 +255,7 @@ arcam-fmj==0.12.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.23.4
+async-upnp-client==0.23.5
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
@@ -270,7 +270,7 @@ av==8.1.0
 axis==44
 
 # homeassistant.components.azure_event_hub
-azure-eventhub==5.5.0
+azure-eventhub==5.7.0
 
 # homeassistant.components.homekit
 base36==0.1.1
@@ -420,6 +420,9 @@ faadelays==0.0.7
 # homeassistant.components.feedreader
 feedparser==6.0.2
 
+# homeassistant.components.fivem
+fivem-api==0.1.2
+
 # homeassistant.components.fjaraskupan
 fjaraskupan==1.0.2
 
@@ -492,7 +495,7 @@ google-api-python-client==1.6.4
 google-cloud-pubsub==2.9.0
 
 # homeassistant.components.nest
-google-nest-sdm==1.6.0
+google-nest-sdm==1.7.0
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -783,7 +786,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.8.5
+plugwise==0.16.2
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1109,7 +1112,7 @@ pyotgw==1.1b1
 pyotp==2.6.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.3.2
+pyoverkiz==1.3.4
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -1209,7 +1212,7 @@ python-kasa==0.4.1
 python-miio==0.5.9.2
 
 # homeassistant.components.nest
-python-nest==4.1.0
+python-nest==4.2.0
 
 # homeassistant.components.ozw
 python-openzwave-mqtt[mqtt-client]==1.4.0
@@ -1276,7 +1279,7 @@ pywemo==0.7.0
 pywilight==0.0.70
 
 # homeassistant.components.wiz
-pywizlight==0.5.2
+pywizlight==0.5.3
 
 # homeassistant.components.zerproc
 pyzerproc==0.4.8
@@ -1343,7 +1346,7 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.02.0
+simplisafe-python==2022.02.1
 
 # homeassistant.components.slack
 slackclient==2.5.0

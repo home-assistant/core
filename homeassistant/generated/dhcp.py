@@ -618,7 +618,7 @@ DHCP = [
     },
     {
         "domain": "wiz",
-        "hostname": "wiz_[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]"
+        "hostname": "wiz_*"
     },
     {
         "domain": "yeelight",

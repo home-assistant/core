@@ -16,7 +16,7 @@ import defusedxml.ElementTree as ET
 from soco.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
 from soco.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
 from soco.events_base import Event as SonosEvent, SubscriptionBase
-from soco.exceptions import SoCoException, SoCoSlaveException, SoCoUPnPException
+from soco.exceptions import SoCoException, SoCoUPnPException
 from soco.music_library import MusicLibrary
 from soco.plugins.plex import PlexPlugin
 from soco.plugins.sharelink import ShareLinkPlugin
@@ -50,7 +50,7 @@ from .const import (
     SONOS_CREATE_MEDIA_PLAYER,
     SONOS_CREATE_MIC_SENSOR,
     SONOS_CREATE_SWITCHES,
-    SONOS_POLL_UPDATE,
+    SONOS_FALLBACK_POLL,
     SONOS_REBOOTED,
     SONOS_SPEAKER_ACTIVITY,
     SONOS_SPEAKER_ADDED,
@@ -354,7 +354,7 @@ class SonosSpeaker:
                 partial(
                     async_dispatcher_send,
                     self.hass,
-                    f"{SONOS_POLL_UPDATE}-{self.soco.uid}",
+                    f"{SONOS_FALLBACK_POLL}-{self.soco.uid}",
                 ),
                 SCAN_INTERVAL,
             )
@@ -568,7 +568,7 @@ class SonosSpeaker:
         if not self.available:
             return
 
-        _LOGGER.debug(
+        _LOGGER.warning(
             "No recent activity and cannot reach %s, marking unavailable",
             self.zone_name,
         )
@@ -1044,18 +1044,11 @@ class SonosSpeaker:
     #
     # Media and playback state handlers
     #
-    @soco_error(raise_on_err=False)
+    @soco_error()
     def update_volume(self) -> None:
         """Update information about current volume settings."""
         self.volume = self.soco.volume
         self.muted = self.soco.mute
-        self.night_mode = self.soco.night_mode
-        self.dialog_level = self.soco.dialog_level
-
-        try:
-            self.cross_fade = self.soco.cross_fade
-        except SoCoSlaveException:
-            pass
 
     @soco_error()
     def update_media(self, event: SonosEvent | None = None) -> None:

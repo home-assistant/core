@@ -3,17 +3,24 @@ from __future__ import annotations
 
 from typing import Any
 
-from plugwise import Smile
 from plugwise.exceptions import PlugwiseException
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import COORDINATOR, DOMAIN, LOGGER, SWITCH_ICON
+from .const import DOMAIN, LOGGER
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
+
+SWITCHES: tuple[SwitchEntityDescription, ...] = (
+    SwitchEntityDescription(
+        key="relay",
+        name="Relay",
+        icon="mdi:electric-switch",
+    ),
+)
 
 
 async def async_setup_entry(
@@ -22,64 +29,39 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Smile switches from a config entry."""
-    api = hass.data[DOMAIN][config_entry.entry_id]["api"]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
-
-    entities = []
-    switch_classes = ["plug", "switch_group"]
-
-    all_devices = api.get_all_devices()
-    for dev_id, device_properties in all_devices.items():
-        members = None
-        model = None
-
-        if any(
-            switch_class in device_properties["types"]
-            for switch_class in switch_classes
-        ):
-            if "plug" in device_properties["types"]:
-                model = "Metered Switch"
-            if "switch_group" in device_properties["types"]:
-                members = device_properties["members"]
-                model = "Switch Group"
-
-            entities.append(
-                GwSwitch(
-                    api, coordinator, device_properties["name"], dev_id, members, model
-                )
-            )
-
-    async_add_entities(entities, True)
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    entities: list[PlugwiseSwitchEntity] = []
+    for device_id, device in coordinator.data.devices.items():
+        for description in SWITCHES:
+            if "switches" not in device or description.key not in device["switches"]:
+                continue
+            entities.append(PlugwiseSwitchEntity(coordinator, device_id, description))
+    async_add_entities(entities)
 
 
-class GwSwitch(PlugwiseEntity, SwitchEntity):
+class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
     """Representation of a Plugwise plug."""
-
-    _attr_icon = SWITCH_ICON
 
     def __init__(
         self,
-        api: Smile,
         coordinator: PlugwiseDataUpdateCoordinator,
-        name: str,
-        dev_id: str,
-        members: list[str] | None,
-        model: str | None,
+        device_id: str,
+        description: SwitchEntityDescription,
     ) -> None:
         """Set up the Plugwise API."""
-        super().__init__(api, coordinator, name, dev_id)
-        self._attr_unique_id = f"{dev_id}-plug"
-
-        self._members = members
-        self._model = model
-
-        self._attr_is_on = False
+        super().__init__(coordinator, device_id)
+        self.entity_description = description
+        self._attr_unique_id = f"{device_id}-{description.key}"
+        self._attr_name = coordinator.data.devices[device_id].get("name")
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         try:
-            state_on = await self._api.set_relay_state(
-                self._dev_id, self._members, "on"
+            state_on = await self.coordinator.api.set_switch_state(
+                self._dev_id,
+                self.coordinator.data.devices[self._dev_id].get("members"),
+                self.entity_description.key,
+                "on",
             )
         except PlugwiseException:
             LOGGER.error("Error while communicating to device")
@@ -91,8 +73,11 @@ class GwSwitch(PlugwiseEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         try:
-            state_off = await self._api.set_relay_state(
-                self._dev_id, self._members, "off"
+            state_off = await self.coordinator.api.set_switch_state(
+                self._dev_id,
+                self.coordinator.data.devices[self._dev_id].get("members"),
+                self.entity_description.key,
+                "off",
             )
         except PlugwiseException:
             LOGGER.error("Error while communicating to device")
@@ -102,14 +87,12 @@ class GwSwitch(PlugwiseEntity, SwitchEntity):
                 self.async_write_ha_state()
 
     @callback
-    def _async_process_data(self) -> None:
-        """Update the data from the Plugs."""
-        if not (data := self._api.get_device_data(self._dev_id)):
-            LOGGER.error("Received no data for device %s", self._name)
-            self.async_write_ha_state()
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if not (data := self.coordinator.data.devices.get(self._dev_id)):
+            LOGGER.error("Received no data for device %s", self._dev_id)
+            super()._handle_coordinator_update()
             return
 
-        if "relay" in data:
-            self._attr_is_on = data["relay"]
-
-        self.async_write_ha_state()
+        self._attr_is_on = data["switches"].get(self.entity_description.key)
+        super()._handle_coordinator_update()
