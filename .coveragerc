@@ -1078,8 +1078,10 @@ omit =
     homeassistant/components/spider/*
     homeassistant/components/splunk/*
     homeassistant/components/spotify/__init__.py
+    homeassistant/components/spotify/browse_media.py
     homeassistant/components/spotify/media_player.py
     homeassistant/components/spotify/system_health.py
+    homeassistant/components/spotify/util.py
     homeassistant/components/squeezebox/__init__.py
     homeassistant/components/squeezebox/browse_media.py
     homeassistant/components/squeezebox/media_player.py
