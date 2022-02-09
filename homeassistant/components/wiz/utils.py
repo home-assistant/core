@@ -13,7 +13,7 @@ def _short_mac(mac: str) -> str:
 
 def name_from_bulb_type_and_mac(bulb_type: BulbType, mac: str) -> str:
     """Generate a name from bulb_type and mac."""
-    if bulb_type.description:
+    if hasattr(bulb_type.bulb_type) and bulb_type.description:
         description = f"{bulb_type.description} {bulb_type.bulb_type.value}"
     else:
         description = bulb_type.bulb_type.value
