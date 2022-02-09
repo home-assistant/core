@@ -358,6 +358,10 @@ async def async_setup_entry(  # noqa: C901
                 hass,
                 f"{DOMAIN}_{client.driver.controller.home_id}.{node.node_id}.node_status_remove_entity",
             )
+            async_dispatcher_send(
+                hass,
+                f"{DOMAIN}_{client.driver.controller.home_id}.{node.node_id}.ping_remove_entity",
+            )
         else:
             remove_device(device)
 
