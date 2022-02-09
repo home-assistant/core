@@ -48,6 +48,11 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseData]):
                 }
             )
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self._dev_id in self.coordinator.data.devices
+
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         self._handle_coordinator_update()
