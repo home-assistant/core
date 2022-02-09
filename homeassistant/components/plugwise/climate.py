@@ -18,16 +18,10 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    DEFAULT_MAX_TEMP,
-    DEFAULT_MIN_TEMP,
-    DOMAIN,
-    LOGGER,
-    SCHEDULE_OFF,
-    SCHEDULE_ON,
-)
+from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN, SCHEDULE_OFF, SCHEDULE_ON
 from .coordinator import PlugwiseDataUpdateCoordinator
-from .entity import PlugwiseEntity, plugwise_exception_handler
+from .entity import PlugwiseEntity
+from .util import plugwise_command
 
 HVAC_MODES_HEAT_ONLY = [HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF]
 HVAC_MODES_HEAT_COOL = [HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_AUTO, HVAC_MODE_OFF]
@@ -74,20 +68,17 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
 
         self._loc_id = coordinator.data.devices[device_id]["location"]
 
-    @plugwise_exception_handler
+    @plugwise_command
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if (temperature is not None) and (
+        if ((temperature := kwargs.get(ATTR_TEMPERATURE)) is not None) and (
             self._attr_min_temp < temperature < self._attr_max_temp
         ):
             await self.coordinator.api.set_temperature(self._loc_id, temperature)
-            self._attr_target_temperature = temperature
-            self.async_write_ha_state()
         else:
-            LOGGER.error("Invalid temperature requested")
+            raise ValueError("Invalid temperature requested")
 
-    @plugwise_exception_handler
+    @plugwise_command
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set the hvac mode."""
         state = SCHEDULE_OFF
@@ -103,19 +94,14 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         await self.coordinator.api.set_schedule_state(
             self._loc_id, climate_data.get("last_used"), state
         )
-        self._attr_hvac_mode = hvac_mode
-        self.async_write_ha_state()
 
-    @plugwise_exception_handler
+    @plugwise_command
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
-        if not (presets := self.coordinator.data.devices[self._dev_id].get("presets")):
+        if not self.coordinator.data.devices[self._dev_id].get("presets"):
             raise ValueError("No presets available")
 
         await self.coordinator.api.set_preset(self._loc_id, preset_mode)
-        self._attr_preset_mode = preset_mode
-        self._attr_target_temperature = presets.get(preset_mode, "none")[0]
-        self.async_write_ha_state()
 
     @callback
     def _handle_coordinator_update(self) -> None:

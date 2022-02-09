@@ -10,7 +10,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, LOGGER
 from .coordinator import PlugwiseDataUpdateCoordinator
-from .entity import PlugwiseEntity, plugwise_exception_handler
+from .entity import PlugwiseEntity
+from .util import plugwise_command
 
 SWITCHES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
@@ -52,29 +53,25 @@ class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
         self._attr_unique_id = f"{device_id}-{description.key}"
         self._attr_name = coordinator.data.devices[device_id].get("name")
 
-    @plugwise_exception_handler
+    @plugwise_command
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        if await self.coordinator.api.set_switch_state(
+        await self.coordinator.api.set_switch_state(
             self._dev_id,
             self.coordinator.data.devices[self._dev_id].get("members"),
             self.entity_description.key,
             "on",
-        ):
-            self._attr_is_on = True
-            self.async_write_ha_state()
+        )
 
-    @plugwise_exception_handler
+    @plugwise_command
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        if await self.coordinator.api.set_switch_state(
+        await self.coordinator.api.set_switch_state(
             self._dev_id,
             self.coordinator.data.devices[self._dev_id].get("members"),
             self.entity_description.key,
             "off",
-        ):
-            self._attr_is_on = False
-            self.async_write_ha_state()
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:

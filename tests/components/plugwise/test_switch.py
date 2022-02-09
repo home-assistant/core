@@ -38,8 +38,10 @@ async def test_adam_climate_switch_negative_testing(hass, mock_smile_adam):
             blocking=True,
         )
 
-    state = hass.states.get("switch.cv_pomp")
-    assert str(state.state) == "on"
+    assert mock_smile_adam.set_switch_state.call_count == 1
+    mock_smile_adam.set_switch_state.assert_called_with(
+        "78d1126fc4c743db81b61c20e88342a7", None, "relay", "off"
+    )
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -48,8 +50,11 @@ async def test_adam_climate_switch_negative_testing(hass, mock_smile_adam):
             {"entity_id": "switch.fibaro_hc2"},
             blocking=True,
         )
-    state = hass.states.get("switch.fibaro_hc2")
-    assert str(state.state) == "on"
+
+    assert mock_smile_adam.set_switch_state.call_count == 2
+    mock_smile_adam.set_switch_state.assert_called_with(
+        "a28f588dc4a049a483fd03a30361ad3a", None, "relay", "on"
+    )
 
 
 async def test_adam_climate_switch_changes(hass, mock_smile_adam):
@@ -63,8 +68,11 @@ async def test_adam_climate_switch_changes(hass, mock_smile_adam):
         {"entity_id": "switch.cv_pomp"},
         blocking=True,
     )
-    state = hass.states.get("switch.cv_pomp")
-    assert str(state.state) == "off"
+
+    assert mock_smile_adam.set_switch_state.call_count == 1
+    mock_smile_adam.set_switch_state.assert_called_with(
+        "78d1126fc4c743db81b61c20e88342a7", None, "relay", "off"
+    )
 
     await hass.services.async_call(
         "switch",
@@ -72,17 +80,23 @@ async def test_adam_climate_switch_changes(hass, mock_smile_adam):
         {"entity_id": "switch.fibaro_hc2"},
         blocking=True,
     )
-    state = hass.states.get("switch.fibaro_hc2")
-    assert str(state.state) == "off"
+
+    assert mock_smile_adam.set_switch_state.call_count == 2
+    mock_smile_adam.set_switch_state.assert_called_with(
+        "a28f588dc4a049a483fd03a30361ad3a", None, "relay", "off"
+    )
 
     await hass.services.async_call(
         "switch",
-        "toggle",
+        "turn_on",
         {"entity_id": "switch.fibaro_hc2"},
         blocking=True,
     )
-    state = hass.states.get("switch.fibaro_hc2")
-    assert str(state.state) == "on"
+
+    assert mock_smile_adam.set_switch_state.call_count == 3
+    mock_smile_adam.set_switch_state.assert_called_with(
+        "a28f588dc4a049a483fd03a30361ad3a", None, "relay", "on"
+    )
 
 
 async def test_stretch_switch_entities(hass, mock_stretch):
@@ -108,9 +122,10 @@ async def test_stretch_switch_changes(hass, mock_stretch):
         {"entity_id": "switch.koelkast_92c4a"},
         blocking=True,
     )
-
-    state = hass.states.get("switch.koelkast_92c4a")
-    assert str(state.state) == "off"
+    assert mock_stretch.set_switch_state.call_count == 1
+    mock_stretch.set_switch_state.assert_called_with(
+        "e1c884e7dede431dadee09506ec4f859", None, "relay", "off"
+    )
 
     await hass.services.async_call(
         "switch",
@@ -118,17 +133,21 @@ async def test_stretch_switch_changes(hass, mock_stretch):
         {"entity_id": "switch.droger_52559"},
         blocking=True,
     )
-    state = hass.states.get("switch.droger_52559")
-    assert str(state.state) == "off"
+    assert mock_stretch.set_switch_state.call_count == 2
+    mock_stretch.set_switch_state.assert_called_with(
+        "cfe95cf3de1948c0b8955125bf754614", None, "relay", "off"
+    )
 
     await hass.services.async_call(
         "switch",
-        "toggle",
+        "turn_on",
         {"entity_id": "switch.droger_52559"},
         blocking=True,
     )
-    state = hass.states.get("switch.droger_52559")
-    assert str(state.state) == "on"
+    assert mock_stretch.set_switch_state.call_count == 3
+    mock_stretch.set_switch_state.assert_called_with(
+        "cfe95cf3de1948c0b8955125bf754614", None, "relay", "on"
+    )
 
 
 async def test_unique_id_migration_plug_relay(hass, mock_smile_adam):
