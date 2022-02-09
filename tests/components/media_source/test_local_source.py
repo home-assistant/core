@@ -171,6 +171,19 @@ async def test_upload_view(hass, hass_client, temp_dir, hass_admin_user):
         assert not (Path(temp_dir) / "bad-source-id.png").is_file()
 
     # Test invalid filename
+    res = await client.post(
+        "/api/media_source/local_source/upload",
+        data={
+            "media_content_id": "media-source://media_source/test_dir/.",
+            "file": get_file("invalid-data.png"),
+            "incorrect": "format",
+        },
+    )
+
+    assert res.status == 400
+    assert not (Path(temp_dir) / "invalid-data.png").is_file()
+
+    # Test invalid filename
     with patch(
         "aiohttp.formdata.guess_filename", return_value="../invalid-filename.png"
     ):
