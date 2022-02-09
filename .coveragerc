@@ -1314,7 +1314,9 @@ omit =
     homeassistant/components/upcloud/__init__.py
     homeassistant/components/upcloud/binary_sensor.py
     homeassistant/components/upcloud/switch.py
-    homeassistant/components/upnp/*
+    homeassistant/components/upnp/__init__.py
+    homeassistant/components/upnp/device.py
+    homeassistant/components/upnp/sensor.py
     homeassistant/components/upc_connect/*
     homeassistant/components/uscis/sensor.py
     homeassistant/components/vallox/__init__.py
