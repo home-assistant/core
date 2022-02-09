@@ -1,19 +1,36 @@
 """WiZ integration entities."""
 from __future__ import annotations
 
+from abc import abstractmethod
 from typing import Any
 
 from pywizlight.bulblibrary import BulbType
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo, ToggleEntity
+from homeassistant.helpers.entity import DeviceInfo, Entity, ToggleEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .models import WizData
 
 
-class WizToggleEntity(CoordinatorEntity, ToggleEntity):
+class WizEntity(CoordinatorEntity, Entity):
+    """Representation of WiZ entity."""
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._async_update_attrs()
+        super()._handle_coordinator_update()
+
+    @callback
+    @abstractmethod
+    def _async_update_attrs(self) -> None:
+        """Handle updating _attr values."""
+
+
+class WizToggleEntity(WizEntity, ToggleEntity):
     """Representation of WiZ toggle entity."""
 
     def __init__(self, wiz_data: WizData, name: str) -> None:
@@ -27,6 +44,7 @@ class WizToggleEntity(CoordinatorEntity, ToggleEntity):
         board = hw_data.pop(0)
         model = hw_data.pop(0)
         self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device.mac)},
             connections={(CONNECTION_NETWORK_MAC, self._device.mac)},
             name=name,
             manufacturer="WiZ",
@@ -34,12 +52,6 @@ class WizToggleEntity(CoordinatorEntity, ToggleEntity):
             hw_version=f"{board} {hw_data[0]}" if hw_data else board,
             sw_version=bulb_type.fw_version,
         )
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._async_update_attrs()
-        super()._handle_coordinator_update()
 
     @callback
     def _async_update_attrs(self) -> None:

@@ -16,9 +16,9 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, SIGNAL_WIZ_PIR
+from .entity import WizEntity
 from .models import WizData
 
 OCCUPANCY_UNIQUE_ID = "{}_occupancy"
@@ -63,7 +63,7 @@ async def async_setup_entry(
     entry.async_on_unload(_async_cancel_dispatcher)
 
 
-class WizOccupancyEntity(CoordinatorEntity, BinarySensorEntity):
+class WizOccupancyEntity(WizEntity, BinarySensorEntity):
     """Representation of WiZ Occupancy sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
@@ -80,6 +80,7 @@ class WizOccupancyEntity(CoordinatorEntity, BinarySensorEntity):
             manufacturer="WiZ",
             via_device=(DOMAIN, self._device.mac),
         )
+        self._async_update_attrs()
 
     @callback
     def _async_update_attrs(self) -> None:
