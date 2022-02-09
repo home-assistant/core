@@ -29,6 +29,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Huawei Solar from a config entry."""
 
+    primary_bridge = None
     try:
         # Multiple inverters can be connected to each other via a daisy chain,
         # via an internal modbus-network (ie. not the same modbus network that we are
@@ -74,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
 
             extra_bridge_device_infos = _compute_device_infos(
-                primary_bridge,
+                extra_bridge,
                 connecting_inverter_device_id=(DOMAIN, primary_bridge.serial_number),
             )
 
@@ -93,6 +94,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             DATA_UPDATE_COORDINATORS: update_coordinators,
         }
     except HuaweiSolarException as err:
+        if primary_bridge is not None:
+            await primary_bridge.stop()
+
         raise ConfigEntryNotReady from err
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
