@@ -8,6 +8,7 @@ import logging
 import secrets
 from typing import Final
 from urllib.parse import unquote
+from yarl import URL
 
 from aiohttp import hdrs
 from aiohttp.web import Application, Request, StreamResponse, middleware
@@ -67,9 +68,7 @@ def async_sign_path(
         secret,
         algorithm="HS256",
     )
-    if "?" in path
-        return f"{path}&{SIGN_QUERY_PARAM}={encoded}"
-    return f"{path}?{SIGN_QUERY_PARAM}={encoded}"
+    return str(URL(path)%f"{SIGN_QUERY_PARAM}={encoded}")
 
 
 @callback
