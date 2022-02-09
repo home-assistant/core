@@ -6,17 +6,19 @@ from typing import Any
 
 from pywizlight import PilotBuilder
 from pywizlight.bulblibrary import BulbClass, BulbType, Features
-from pywizlight.rgbcw import convertHSfromRGBCW
 from pywizlight.scenes import get_id_from_scene_name
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
-    ATTR_HS_COLOR,
+    ATTR_RGBW_COLOR,
+    ATTR_RGBWW_COLOR,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
+    COLOR_MODE_RGBW,
+    COLOR_MODE_RGBWW,
+    COLOR_MODES_COLOR,
     SUPPORT_EFFECT,
     LightEntity,
 )
@@ -56,7 +58,9 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         features: Features = bulb_type.features
         color_modes = set()
         if features.color:
-            color_modes.add(COLOR_MODE_HS)
+            if bulb_type.white_channels == 2:
+                color_modes.add(COLOR_MODE_RGBWW)
+            color_modes.add(COLOR_MODE_RGBW)
         if features.color_tmp:
             color_modes.add(COLOR_MODE_COLOR_TEMP)
         if not color_modes and features.brightness:
@@ -87,13 +91,18 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
             if color_temp := state.get_colortemp():
                 self._attr_color_temp = color_temperature_kelvin_to_mired(color_temp)
         elif (
-            COLOR_MODE_HS in color_modes
+            COLOR_MODES_COLOR.intersection(color_modes)
             and (rgb := state.get_rgb()) is not None
             and rgb[0] is not None
         ):
-            if (warm_white := state.get_warm_white()) is not None:
-                self._attr_hs_color = convertHSfromRGBCW(rgb, warm_white)
-            self._attr_color_mode = COLOR_MODE_HS
+            warm = state.get_warm_white() or 0
+            if COLOR_MODE_RGBWW in color_modes:
+                cold = state.get_cold_white() or 0
+                self._attr_rgbww_color = (rgb[0], rgb[1], rgb[2], cold, warm)
+                self._attr_color_mode = COLOR_MODE_RGBW
+            else:
+                self._attr_rgbw_color = (rgb[0], rgb[1], rgb[2], warm)
+                self._attr_color_mode = COLOR_MODE_RGBWW
         else:
             self._attr_color_mode = COLOR_MODE_BRIGHTNESS
         self._attr_effect = state.get_scene()
@@ -104,11 +113,27 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         """Create the PilotBuilder for turn on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
-        if ATTR_HS_COLOR in kwargs:
-            return PilotBuilder(
-                hucolor=(kwargs[ATTR_HS_COLOR][0], kwargs[ATTR_HS_COLOR][1]),
-                brightness=brightness,
+        if ATTR_RGBWW_COLOR in kwargs:
+            builder = PilotBuilder(brightness=brightness)
+            rgbww = kwargs[ATTR_RGBWW_COLOR]
+            builder.pilot_params.update(
+                {
+                    "r": rgbww[0],
+                    "g": rgbww[1],
+                    "b": rgbww[2],
+                    "c": rgbww[3],
+                    "w": rgbww[4],
+                }
             )
+            return builder
+
+        if ATTR_RGBW_COLOR in kwargs:
+            builder = PilotBuilder(brightness=brightness)
+            rgbw = kwargs[ATTR_RGBW_COLOR]
+            builder.pilot_params.update(
+                {"r": rgbw[0], "g": rgbw[1], "b": rgbw[2], "w": rgbw[3]}
+            )
+            return builder
 
         color_temp = None
         if ATTR_COLOR_TEMP in kwargs:
