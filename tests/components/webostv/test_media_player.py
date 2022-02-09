@@ -59,6 +59,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
@@ -67,7 +68,7 @@ from homeassistant.util import dt
 from . import setup_webostv
 from .const import CHANNEL_2, ENTITY_ID, TV_NAME
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, mock_restore_cache
 
 
 @pytest.mark.parametrize(
@@ -562,11 +563,23 @@ async def test_cached_supported_features(hass, client, monkeypatch):
     """Test test supported features."""
     monkeypatch.setattr(client, "is_on", False)
     monkeypatch.setattr(client, "sound_output", None)
+    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME
+    mock_restore_cache(
+        hass,
+        [
+            State(
+                ENTITY_ID,
+                STATE_OFF,
+                attributes={
+                    ATTR_SUPPORTED_FEATURES: supported,
+                },
+            )
+        ],
+    )
     await setup_webostv(hass)
     await client.mock_state_update()
 
-    # TV off, support volume mute, step, set
-    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
+    # TV off, restored state supports mute, step
     attrs = hass.states.get(ENTITY_ID).attributes
 
     assert attrs[ATTR_SUPPORTED_FEATURES] == supported
@@ -601,7 +614,7 @@ async def test_cached_supported_features(hass, client, monkeypatch):
 
     assert attrs[ATTR_SUPPORTED_FEATURES] == supported
 
-    # TV off, support volume mute, step, step, set
+    # TV off, support volume mute, step, set
     monkeypatch.setattr(client, "is_on", False)
     monkeypatch.setattr(client, "sound_output", None)
     await client.mock_state_update()
