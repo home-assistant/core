@@ -60,9 +60,9 @@ class ZWaveNodePingButton(ButtonEntity):
             or f"Node {self.node.node_id}"
         )
         # Entity class attributes
-        self._attr_name = f"{name}: Ping Node"
+        self._attr_name = f"{name}: Ping"
         self._attr_unique_id = (
-            f"{self.client.driver.controller.home_id}.{node.node_id}.ping_node"
+            f"{self.client.driver.controller.home_id}.{node.node_id}.ping"
         )
         # device is precreated in main handler
         self._attr_device_info = DeviceInfo(

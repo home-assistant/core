@@ -17,7 +17,7 @@ async def test_ping_entity(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
         {
-            ATTR_ENTITY_ID: "button.z_wave_thermostat_ping_node",
+            ATTR_ENTITY_ID: "button.z_wave_thermostat_ping",
         },
         blocking=True,
     )
