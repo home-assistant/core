@@ -372,6 +372,30 @@ async def ignore_config_flow(hass, connection, msg):
     connection.send_result(msg["id"])
 
 
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        "type": "config_entries/remove_device",
+        "entry_id": str,
+        "device_id": str,
+    }
+)
+async def config_entry_remove_device(hass, connection, msg):
+    """Remove config entry from a device."""
+    result = await hass.config_entries.async_set_disabled_by(
+        msg["entry_id"], msg["device_id"]
+    )
+    if not result:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_UNKNOWN_ERROR,
+            "Failed to remove config entry",
+        )
+
+    connection.send_result(msg["id"], result)
+
+
 @callback
 def entry_json(entry: config_entries.ConfigEntry) -> dict:
     """Return JSON value of a config entry."""
@@ -388,6 +412,7 @@ def entry_json(entry: config_entries.ConfigEntry) -> dict:
         "source": entry.source,
         "state": entry.state.value,
         "supports_options": supports_options,
+        "supports_remove_device": entry.supports_remove_device,
         "supports_unload": entry.supports_unload,
         "pref_disable_new_entities": entry.pref_disable_new_entities,
         "pref_disable_polling": entry.pref_disable_polling,
