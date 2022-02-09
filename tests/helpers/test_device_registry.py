@@ -1115,8 +1115,8 @@ async def test_cleanup_device_registry_auto_cleanup(hass, registry):
     )
 
     ent_reg = entity_registry.async_get(hass)
-    device_registry.async_cleanup(hass, registry, ent_reg)
     ent_reg.async_get_or_create("light", "hue", "e3", device_id=d3.id)
+    device_registry.async_cleanup(hass, registry, ent_reg)
 
     assert registry.async_get_device({("hue", "d1")}) is None
     assert registry.async_get_device({("hue", "d2")}) is None
