@@ -64,10 +64,6 @@ REAL_BULB_CONFIG = json.loads(
     "ping":0}}'
 )
 
-TEST_SYSTEM_INFO = {"id": "ABCABCABCABC", "name": "Test Bulb"}
-
-TEST_CONNECTION = {CONF_HOST: "1.1.1.1", CONF_NAME: "Test Bulb"}
-
 
 async def setup_integration(
     hass: HomeAssistantType,
