@@ -10,6 +10,7 @@ from urllib.parse import quote
 from aiovlc.client import Client
 from aiovlc.exceptions import AuthError, CommandError, ConnectError
 from typing_extensions import Concatenate, ParamSpec
+import yarl
 
 from homeassistant.components import media_source
 from homeassistant.components.http.auth import async_sign_path
@@ -32,10 +33,11 @@ from homeassistant.components.media_player.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.network import get_url, is_hass_url
 import homeassistant.util.dt as dt_util
 
 from .const import DATA_AVAILABLE, DATA_VLC, DEFAULT_NAME, DOMAIN, LOGGER
@@ -305,28 +307,30 @@ class VlcDevice(MediaPlayerEntity):
         # Handle media_source
         if media_source.is_media_source_id(media_id):
             sourced_media = await media_source.async_resolve_media(self.hass, media_id)
-            media_type = MEDIA_TYPE_MUSIC
+            media_type = sourced_media.mime_type
             media_id = sourced_media.url
 
-        # Sign and prefix with URL if playing a relative URL
-        if media_id[0] == "/":
-            media_id = async_sign_path(
-                self.hass,
-                quote(media_id),
-                timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
+        if media_type != MEDIA_TYPE_MUSIC and not media_type.startswith("audio/"):
+            raise HomeAssistantError(
+                f"Invalid media type {media_type}. Only {MEDIA_TYPE_MUSIC} is supported"
             )
+
+        # Sign and prefix with URL if playing a relative URL
+        if media_id[0] == "/" or is_hass_url(self.hass, media_id):
+            parsed = yarl.URL(media_id)
+
+            if parsed.query:
+                LOGGER.debug("Not signing path for content with query param")
+            else:
+                media_id = async_sign_path(
+                    self.hass,
+                    quote(media_id),
+                    timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
+                )
 
             # prepend external URL
-            hass_url = get_url(self.hass)
-            media_id = f"{hass_url}{media_id}"
-
-        if media_type != MEDIA_TYPE_MUSIC:
-            LOGGER.error(
-                "Invalid media type %s. Only %s is supported",
-                media_type,
-                MEDIA_TYPE_MUSIC,
-            )
-            return
+            if media_id[0] == "/":
+                media_id = f"{get_url(self.hass)}{media_id}"
 
         await self._vlc.add(media_id)
         self._state = STATE_PLAYING

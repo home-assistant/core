@@ -8,7 +8,11 @@ from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.homewizard.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_CREATE_ENTRY
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_ABORT,
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+)
 
 from .generator import get_mock_device
 
@@ -77,9 +81,19 @@ async def test_discovery_flow_works(hass, aioclient_mock):
     with patch(
         "homeassistant.components.homewizard.async_setup_entry",
         return_value=True,
-    ):
+    ), patch("aiohwenergy.HomeWizardEnergy", return_value=get_mock_device()):
         result = await hass.config_entries.flow.async_configure(
-            flow["flow_id"], user_input={}
+            flow["flow_id"], user_input=None
+        )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    with patch(
+        "homeassistant.components.homewizard.async_setup_entry",
+        return_value=True,
+    ), patch("aiohwenergy.HomeWizardEnergy", return_value=get_mock_device()):
+        result = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], user_input={"ip_address": "192.168.43.183"}
         )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
@@ -144,6 +158,16 @@ async def test_discovery_disabled_api(hass, aioclient_mock):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=service_info,
     )
+
+    assert result["type"] == RESULT_TYPE_FORM
+
+    with patch(
+        "homeassistant.components.homewizard.async_setup_entry",
+        return_value=True,
+    ), patch("aiohwenergy.HomeWizardEnergy", return_value=get_mock_device()):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"ip_address": "192.168.43.183"}
+        )
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "api_not_enabled"

@@ -158,7 +158,8 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         self.hass = hass
         self.host = host
         self.mesh_role = MeshRoles.NONE
-        self.device_is_router: bool = True
+        self.device_conn_type: str | None = None
+        self.device_is_router: bool = False
         self.password = password
         self.port = port
         self.username = username
@@ -217,7 +218,15 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         self._current_firmware = info.get("NewSoftwareVersion")
 
         self._update_available, self._latest_firmware = self._update_device_info()
-        self.device_is_router = "WANIPConn1" in self.connection.services
+        if "Layer3Forwarding1" in self.connection.services:
+            if connection_type := self.connection.call_action(
+                "Layer3Forwarding1", "GetDefaultConnectionService"
+            ).get("NewDefaultConnectionService"):
+                # Return NewDefaultConnectionService sample: "1.WANPPPConnection.1"
+                self.device_conn_type = connection_type[2:][:-2]
+                self.device_is_router = self.connection.call_action(
+                    self.device_conn_type, "GetInfo"
+                ).get("NewEnable")
 
     @callback
     async def _async_update_data(self) -> None:

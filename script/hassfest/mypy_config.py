@@ -188,8 +188,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.sonos.sensor",
     "homeassistant.components.sonos.speaker",
     "homeassistant.components.sonos.statistics",
-    "homeassistant.components.spotify.config_flow",
-    "homeassistant.components.spotify.media_player",
     "homeassistant.components.system_health",
     "homeassistant.components.telegram_bot.polling",
     "homeassistant.components.template",

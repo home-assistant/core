@@ -57,6 +57,11 @@
             "test": "Pengujian",
             "urlaubsmodus": "Mode liburan",
             "ventilprufung": "Uji katup",
+            "warmwasser": "Air Panas Domestik",
+            "warmwasser_schnellstart": "Mulai cepat Air Panas Domestik",
+            "warmwasserbetrieb": "Mode Air Panas Domestik",
+            "warmwassernachlauf": "Air Panas Domestik sisa",
+            "warmwasservorrang": "Prioritas Air Panas Domestik",
             "zunden": "Pengapian"
         }
     }
