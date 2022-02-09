@@ -60,7 +60,8 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         if features.color:
             if bulb_type.white_channels == 2:
                 color_modes.add(COLOR_MODE_RGBWW)
-            color_modes.add(COLOR_MODE_RGBW)
+            else:
+                color_modes.add(COLOR_MODE_RGBW)
         if features.color_tmp:
             color_modes.add(COLOR_MODE_COLOR_TEMP)
         if not color_modes and features.brightness:
