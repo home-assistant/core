@@ -94,7 +94,7 @@ LEGACY_FIELDS = {
 
 def rewrite_common_legacy_to_modern_conf(
     entity_cfg: dict[str, Any], extra_legacy_fields: dict[str, str] = None
-) -> list[dict]:
+) -> dict[str, Any]:
     """Rewrite legacy config."""
     entity_cfg = {**entity_cfg}
     if extra_legacy_fields is None:
