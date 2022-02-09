@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import functools
+import logging
 
 import voluptuous as vol
 
@@ -29,6 +30,8 @@ from .schema_template import (
     PLATFORM_SCHEMA_TEMPLATE,
     async_setup_entity_template,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def validate_mqtt_light_discovery(value):
@@ -70,6 +73,12 @@ async def async_setup_platform(
 ) -> None:
     """Set up MQTT light through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    if not bool(hass.config_entries.async_entries(DOMAIN)):
+        _LOGGER.warning(
+            "MQTT integration is not setup, skipping setup of manually configured "
+            "MQTT light"
+        )
+        return
     await _async_setup_entity(hass, async_add_entities, config)
 
 

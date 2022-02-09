@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import functools
+import logging
 
 import voluptuous as vol
 
@@ -26,6 +27,8 @@ from .mixins import (
     async_setup_entry_helper,
     init_entity_id_from_config,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "MQTT Scene"
 DEFAULT_RETAIN = False
@@ -53,6 +56,12 @@ async def async_setup_platform(
 ) -> None:
     """Set up MQTT scene through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    if not bool(hass.config_entries.async_entries(DOMAIN)):
+        _LOGGER.warning(
+            "MQTT integration is not setup, skipping setup of manually configured "
+            "MQTT scene"
+        )
+        return
     await _async_setup_entity(hass, async_add_entities, config)
 
 

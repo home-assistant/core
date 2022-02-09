@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import functools
+import logging
 
 import voluptuous as vol
 
@@ -37,6 +38,8 @@ from .const import (
 )
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+
+_LOGGER = logging.getLogger(__name__)
 
 MQTT_SWITCH_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -76,6 +79,12 @@ async def async_setup_platform(
 ) -> None:
     """Set up MQTT switch through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    if not bool(hass.config_entries.async_entries(DOMAIN)):
+        _LOGGER.warning(
+            "MQTT integration is not setup, skipping setup of manually configured "
+            "MQTT switch"
+        )
+        return
     await _async_setup_entity(hass, async_add_entities, config)
 
 

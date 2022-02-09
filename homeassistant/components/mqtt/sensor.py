@@ -121,6 +121,12 @@ async def async_setup_platform(
 ) -> None:
     """Set up MQTT sensors through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    if not bool(hass.config_entries.async_entries(DOMAIN)):
+        _LOGGER.warning(
+            "MQTT integration is not setup, skipping setup of manually configured "
+            "MQTT sensor"
+        )
+        return
     await _async_setup_entity(hass, async_add_entities, config)
 
 

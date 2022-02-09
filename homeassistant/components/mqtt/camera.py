@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import functools
+import logging
 
 import voluptuous as vol
 
@@ -20,6 +21,8 @@ from .. import mqtt
 from .const import CONF_QOS, CONF_TOPIC, DOMAIN
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+
+_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "MQTT Camera"
 
@@ -50,6 +53,12 @@ async def async_setup_platform(
 ) -> None:
     """Set up MQTT camera through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    if not bool(hass.config_entries.async_entries(DOMAIN)):
+        _LOGGER.warning(
+            "MQTT integration is not setup, skipping setup of manually configured "
+            "MQTT camera"
+        )
+        return
     await _async_setup_entity(hass, async_add_entities, config)
 
 
