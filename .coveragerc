@@ -549,7 +549,9 @@ omit =
     homeassistant/components/intellifire/sensor.py
     homeassistant/components/incomfort/*
     homeassistant/components/intesishome/*
-    homeassistant/components/ios/*
+    homeassistant/components/ios/__init__.py
+    homeassistant/components/ios/notify.py
+    homeassistant/components/ios/sensor.py
     homeassistant/components/iperf3/*
     homeassistant/components/iqvia/__init__.py
     homeassistant/components/iqvia/sensor.py
