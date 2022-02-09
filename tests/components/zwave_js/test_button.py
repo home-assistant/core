@@ -9,7 +9,7 @@ async def test_ping(
     climate_radio_thermostat_ct100_plus_different_endpoints,
     integration,
 ):
-    """Test ping service."""
+    """Test ping entity."""
     client.async_send_command.return_value = {"responded": True}
 
     # Test successful ping call
