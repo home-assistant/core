@@ -219,13 +219,11 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
 
         self._update_available, self._latest_firmware = self._update_device_info()
         if "Layer3Forwarding1" in self.connection.services:
-            connection_type = self.connection.call_action(
+            if connection_type := self.connection.call_action(
                 "Layer3Forwarding1", "GetDefaultConnectionService"
-            )
-            if connection_type:
-                self.device_conn_type = connection_type["NewDefaultConnectionService"][
-                    2:
-                ][:-2]
+            ).get("NewDefaultConnectionService"):
+                # Return NewDefaultConnectionService sample: "1.WANPPPConnection.1"
+                self.device_conn_type = connection_type[2:][:-2]
                 self.device_is_router = self.connection.call_action(
                     self.device_conn_type, "GetInfo"
                 ).get("NewEnable")
