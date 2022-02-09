@@ -234,8 +234,8 @@ class LocalMediaView(HomeAssistantView):
 class UploadMediaView(HomeAssistantView):
     """View to upload images."""
 
-    url = "/api/media_source/upload"
-    name = "api:media_source:upload"
+    url = "/api/media_source/local_source/upload"
+    name = "api:media_source:local_source:upload"
 
     def __init__(self, hass: HomeAssistant, source: LocalSource) -> None:
         """Initialize the media view."""
@@ -309,6 +309,7 @@ class UploadMediaView(HomeAssistantView):
 
         target_path = target_dir / uploaded_file.filename
 
+        target_path.relative_to(target_dir)
         raise_if_invalid_path(str(target_path))
 
         with target_path.open("wb") as target_fp:
