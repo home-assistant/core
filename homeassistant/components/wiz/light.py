@@ -120,7 +120,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
             self._attr_rgbww_color = rgbww
             self._attr_color_mode = COLOR_MODE_RGBWW
         elif COLOR_MODE_RGBW in color_modes and (rgbw := state.get_rgbw()) is not None:
-            self._attr_rgbww_color = rgbw
+            self._attr_rgbw_color = rgbw
             self._attr_color_mode = COLOR_MODE_RGBW
         else:
             self._attr_color_mode = COLOR_MODE_BRIGHTNESS
