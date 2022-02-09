@@ -163,7 +163,7 @@ async def test_pm10(hass, hk_driver):
     hass.states.async_set(entity_id, "200")
     await hass.async_block_till_done()
     assert acc.char_density.value == 200
-    assert acc.char_quality.value == 5
+    assert acc.char_quality.value == 4
 
 
 async def test_pm25(hass, hk_driver):
@@ -190,12 +190,12 @@ async def test_pm25(hass, hk_driver):
     hass.states.async_set(entity_id, "34")
     await hass.async_block_till_done()
     assert acc.char_density.value == 34
-    assert acc.char_quality.value == 1
+    assert acc.char_quality.value == 2
 
     hass.states.async_set(entity_id, "200")
     await hass.async_block_till_done()
     assert acc.char_density.value == 200
-    assert acc.char_quality.value == 5
+    assert acc.char_quality.value == 4
 
 
 async def test_co(hass, hk_driver):
