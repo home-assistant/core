@@ -309,6 +309,14 @@ class VlcDevice(MediaPlayerEntity):
             media_type = MEDIA_TYPE_MUSIC
             media_id = sourced_media.url
 
+        if media_type != MEDIA_TYPE_MUSIC:
+            LOGGER.error(
+                "Invalid media type %s. Only %s is supported",
+                media_type,
+                MEDIA_TYPE_MUSIC,
+            )
+            return
+
         # Sign and prefix with URL if playing a relative URL
         if media_id[0] == "/" or is_hass_url(self.hass, media_id):
             parsed = yarl.URL(media_id)
@@ -325,14 +333,6 @@ class VlcDevice(MediaPlayerEntity):
             # prepend external URL
             if media_id[0] == "/":
                 media_id = f"{get_url(self.hass)}{media_id}"
-
-        if media_type != MEDIA_TYPE_MUSIC:
-            LOGGER.error(
-                "Invalid media type %s. Only %s is supported",
-                media_type,
-                MEDIA_TYPE_MUSIC,
-            )
-            return
 
         await self._vlc.add(media_id)
         self._state = STATE_PLAYING
