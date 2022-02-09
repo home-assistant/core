@@ -170,7 +170,7 @@ async def test_upload_view(hass, hass_client, temp_dir, hass_admin_user):
         assert res.status == 400
         assert not (Path(temp_dir) / "bad-source-id.png").is_file()
 
-    # Test invalid filename
+    # Test invalid POST data
     res = await client.post(
         "/api/media_source/local_source/upload",
         data={
@@ -182,6 +182,20 @@ async def test_upload_view(hass, hass_client, temp_dir, hass_admin_user):
 
     assert res.status == 400
     assert not (Path(temp_dir) / "invalid-data.png").is_file()
+
+    # Test invalid content type
+    text_file = io.BytesIO(b"Hello world")
+    text_file.name = "hello.txt"
+    res = await client.post(
+        "/api/media_source/local_source/upload",
+        data={
+            "media_content_id": "media-source://media_source/test_dir/.",
+            "file": text_file,
+        },
+    )
+
+    assert res.status == 400
+    assert not (Path(temp_dir) / "hello.txt").is_file()
 
     # Test invalid filename
     with patch(
