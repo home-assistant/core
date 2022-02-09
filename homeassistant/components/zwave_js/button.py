@@ -1,5 +1,6 @@
 """Representation of Z-Wave buttons."""
 from __future__ import annotations
+
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.node import Node as ZwaveNode
 
@@ -12,6 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_CLIENT, DOMAIN
 from .helpers import get_device_id
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -43,7 +45,6 @@ class ZWaveNodePingButton(ButtonEntity):
 
     def __init__(self, client: ZwaveClient, node: ZwaveNode) -> None:
         """Initialize a ping Z-Wave device button entity."""
-        self.client = client
         self.node = node
         name: str = (
             node.name or node.device_config.description or f"Node {node.node_id}"
