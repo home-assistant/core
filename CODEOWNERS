@@ -1048,6 +1048,8 @@ homeassistant/components/waqi/* @andrey-git
 homeassistant/components/watson_tts/* @rutkai
 homeassistant/components/watttime/* @bachya
 tests/components/watttime/* @bachya
+homeassistant/components/waze_travel_time/* @eifinger
+tests/components/waze_travel_time/* @eifinger
 homeassistant/components/weather/* @fabaff
 tests/components/weather/* @fabaff
 homeassistant/components/webostv/* @bendavid @thecode
