@@ -876,6 +876,7 @@ omit =
     homeassistant/components/overkiz/scene.py
     homeassistant/components/overkiz/select.py
     homeassistant/components/overkiz/sensor.py
+    homeassistant/components/overkiz/siren.py
     homeassistant/components/overkiz/switch.py
     homeassistant/components/ovo_energy/__init__.py
     homeassistant/components/ovo_energy/const.py
