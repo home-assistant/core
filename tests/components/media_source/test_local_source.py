@@ -125,8 +125,10 @@ async def test_media_view(hass, hass_client):
 async def test_upload_view(hass, hass_client, temp_dir, hass_admin_user):
     """Allow uploading media."""
 
+    img = (Path(__file__).parent.parent / "image/logo.png").read_bytes()
+
     def get_file(name):
-        pic = io.BytesIO((Path(__file__).parent.parent / "image/logo.png").read_bytes())
+        pic = io.BytesIO(img)
         pic.name = name
         return pic
 
@@ -145,16 +147,28 @@ async def test_upload_view(hass, hass_client, temp_dir, hass_admin_user):
     assert (Path(temp_dir) / "logo.png").is_file()
 
     # Test with bad media source ID
-    res = await client.post(
-        "/api/media_source/local_source/upload",
-        data={
-            "media_content_id": "media-source://media_source/test_dir/some-other-dir",
-            "file": get_file("bad-source-id.png"),
-        },
-    )
+    for bad_id in (
+        # Subdir doesn't exist
+        "media-source://media_source/test_dir/some-other-dir",
+        # Main dir doesn't exist
+        "media-source://media_source/test_dir2",
+        # Location is invalid
+        "media-source://media_source/test_dir/..",
+        # Domain != media_source
+        "media-source://nest/test_dir/.",
+        # Completely something else
+        "http://bla",
+    ):
+        res = await client.post(
+            "/api/media_source/local_source/upload",
+            data={
+                "media_content_id": bad_id,
+                "file": get_file("bad-source-id.png"),
+            },
+        )
 
-    assert res.status == 400
-    assert not (Path(temp_dir) / "bad-source-id.png").is_file()
+        assert res.status == 400
+        assert not (Path(temp_dir) / "bad-source-id.png").is_file()
 
     # Test invalid filename
     with patch(

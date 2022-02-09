@@ -59,7 +59,7 @@ class LocalSource(MediaSource):
             # Empty source_dir_id and location
             return "", ""
 
-        source_dir_id, location = item.identifier.split("/", 1)
+        source_dir_id, _, location = item.identifier.partition("/")
         if source_dir_id not in self.hass.config.media_dirs:
             raise Unresolvable("Unknown source directory.")
 
