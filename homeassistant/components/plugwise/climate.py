@@ -1,8 +1,6 @@
 """Plugwise Climate component for Home Assistant."""
 from typing import Any
 
-from plugwise.exceptions import PlugwiseException
-
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
@@ -29,7 +27,7 @@ from .const import (
     SCHEDULE_ON,
 )
 from .coordinator import PlugwiseDataUpdateCoordinator
-from .entity import PlugwiseEntity
+from .entity import PlugwiseEntity, plugwise_exception_handler
 
 HVAC_MODES_HEAT_ONLY = [HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF]
 HVAC_MODES_HEAT_COOL = [HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_AUTO, HVAC_MODE_OFF]
@@ -76,21 +74,20 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
 
         self._loc_id = coordinator.data.devices[device_id]["location"]
 
+    @plugwise_exception_handler
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if (temperature is not None) and (
             self._attr_min_temp < temperature < self._attr_max_temp
         ):
-            try:
-                await self.coordinator.api.set_temperature(self._loc_id, temperature)
-                self._attr_target_temperature = temperature
-                self.async_write_ha_state()
-            except PlugwiseException:
-                LOGGER.error("Error while communicating to device")
+            await self.coordinator.api.set_temperature(self._loc_id, temperature)
+            self._attr_target_temperature = temperature
+            self.async_write_ha_state()
         else:
             LOGGER.error("Invalid temperature requested")
 
+    @plugwise_exception_handler
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set the hvac mode."""
         state = SCHEDULE_OFF
@@ -98,35 +95,27 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
 
         if hvac_mode == HVAC_MODE_AUTO:
             state = SCHEDULE_ON
-            try:
-                await self.coordinator.api.set_temperature(
-                    self._loc_id, climate_data.get("schedule_temperature")
-                )
-                self._attr_target_temperature = climate_data.get("schedule_temperature")
-            except PlugwiseException:
-                LOGGER.error("Error while communicating to device")
-
-        try:
-            await self.coordinator.api.set_schedule_state(
-                self._loc_id, climate_data.get("last_used"), state
+            await self.coordinator.api.set_temperature(
+                self._loc_id, climate_data.get("schedule_temperature")
             )
-            self._attr_hvac_mode = hvac_mode
-            self.async_write_ha_state()
-        except PlugwiseException:
-            LOGGER.error("Error while communicating to device")
+            self._attr_target_temperature = climate_data.get("schedule_temperature")
 
+        await self.coordinator.api.set_schedule_state(
+            self._loc_id, climate_data.get("last_used"), state
+        )
+        self._attr_hvac_mode = hvac_mode
+        self.async_write_ha_state()
+
+    @plugwise_exception_handler
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
         if not (presets := self.coordinator.data.devices[self._dev_id].get("presets")):
             raise ValueError("No presets available")
 
-        try:
-            await self.coordinator.api.set_preset(self._loc_id, preset_mode)
-            self._attr_preset_mode = preset_mode
-            self._attr_target_temperature = presets.get(preset_mode, "none")[0]
-            self.async_write_ha_state()
-        except PlugwiseException:
-            LOGGER.error("Error while communicating to device")
+        await self.coordinator.api.set_preset(self._loc_id, preset_mode)
+        self._attr_preset_mode = preset_mode
+        self._attr_target_temperature = presets.get(preset_mode, "none")[0]
+        self.async_write_ha_state()
 
     @callback
     def _handle_coordinator_update(self) -> None:

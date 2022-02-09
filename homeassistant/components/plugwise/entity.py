@@ -1,12 +1,41 @@
 """Generic Plugwise Entity Class."""
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
+from typing import Any, TypeVar
+
+from plugwise.exceptions import PlugwiseException
+
 from homeassistant.const import ATTR_NAME, ATTR_VIA_DEVICE, CONF_HOST
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import PlugwiseData, PlugwiseDataUpdateCoordinator
+
+T = TypeVar("T")
+
+
+def plugwise_exception_handler(
+    func: Callable[..., Coroutine[Any, Any, T]]
+) -> Callable[..., Coroutine[Any, Any, T]]:
+    """Decorate Plugwise calls to handle Plugwise exceptions.
+
+    A decorator that wraps the passed in function, catches Plugwise errors,
+    and requests an coordinator update to update status of the devices asap.
+    """
+
+    async def handler(self, *args: Any, **kwargs: Any) -> T:
+        try:
+            return await func(self, *args, **kwargs)
+        except PlugwiseException as error:
+            await self.coordinator.async_request_refresh()
+            raise HomeAssistantError(
+                f"Error communicating with API: {error}"
+            ) from error
+
+    return handler
 
 
 class PlugwiseEntity(CoordinatorEntity[PlugwiseData]):

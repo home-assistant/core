@@ -1,10 +1,11 @@
 """Tests for the Plugwise switch integration."""
-
 from plugwise.exceptions import PlugwiseException
+import pytest
 
 from homeassistant.components.plugwise.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -29,21 +30,24 @@ async def test_adam_climate_switch_negative_testing(hass, mock_smile_adam):
     entry = await async_init_integration(hass, mock_smile_adam)
     assert entry.state is ConfigEntryState.LOADED
 
-    await hass.services.async_call(
-        "switch",
-        "turn_off",
-        {"entity_id": "switch.cv_pomp"},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "switch",
+            "turn_off",
+            {"entity_id": "switch.cv_pomp"},
+            blocking=True,
+        )
+
     state = hass.states.get("switch.cv_pomp")
     assert str(state.state) == "on"
 
-    await hass.services.async_call(
-        "switch",
-        "turn_on",
-        {"entity_id": "switch.fibaro_hc2"},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "switch",
+            "turn_on",
+            {"entity_id": "switch.fibaro_hc2"},
+            blocking=True,
+        )
     state = hass.states.get("switch.fibaro_hc2")
     assert str(state.state) == "on"
 
