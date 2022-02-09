@@ -8,7 +8,9 @@ from unittest.mock import ANY, AsyncMock, MagicMock, call, mock_open, patch
 
 import pytest
 import voluptuous as vol
+import yaml
 
+from homeassistant import config as hass_config
 from homeassistant.components import mqtt, websocket_api
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.mixins import MQTT_ENTITY_DEVICE_INFO_SCHEMA
@@ -1105,6 +1107,43 @@ async def test_setup_logs_error_if_no_connect_broker(hass, caplog):
         mock_client().connect = lambda *args: 1
         assert await mqtt.async_setup_entry(hass, entry)
         assert "Failed to connect to MQTT server:" in caplog.text
+
+
+async def test_setup_override_configuration(hass, mqtt_mock, caplog, tmp_path):
+    """Test override setup from configuration entry."""
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "test-topic",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test")
+
+    new_yaml_config_file = tmp_path / "configuration.yaml"
+    new_yaml_config = yaml.dump({})
+    new_yaml_config_file.write_text(new_yaml_config)
+    assert new_yaml_config_file.read_text() == new_yaml_config
+
+    with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
+        # setup entry with password override
+        entry = MockConfigEntry(
+            domain=mqtt.DOMAIN,
+            data={mqtt.CONF_BROKER: "test-broker"},
+        )
+
+        with patch("paho.mqtt.client.Client") as mock_client:
+            mock_client().connect = lambda *args: 1
+            assert await mqtt.async_setup_entry(hass, entry)
+            assert (
+                "Data in your configuration entry is going to override your configuration.yaml:"
+                in caplog.text
+            )
 
 
 async def test_setup_raises_ConfigEntryNotReady_if_no_connect_broker(hass, caplog):
