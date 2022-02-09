@@ -138,15 +138,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
+            if not (host := user_input[CONF_HOST]):
+                return await self.async_step_pick_device()
             if not is_ip_address(user_input[CONF_HOST]):
                 errors["base"] = "no_ip"
             else:
-                if not (host := user_input[CONF_HOST]):
-                    return await self.async_step_pick_device()
                 bulb = wizlight(host)
                 try:
-                    mac = await bulb.getMac()
                     bulbtype = await bulb.get_bulbtype()
+                    mac = await bulb.getMac()
                 except WizLightTimeOutError:
                     errors["base"] = "bulb_time_out"
                 except ConnectionRefusedError:
