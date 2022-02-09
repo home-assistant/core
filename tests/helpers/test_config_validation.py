@@ -1079,8 +1079,12 @@ def test_enum_value():
     schema = vol.Schema(cv.enum_value(TestEnum))
 
     for value in ("value1", "Value 3", None):
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(vol.Invalid) as excinfo:
             schema(value)
+        assert (
+            f"Value '{value}' is not a valid TestEnum, "
+            "must be one of ['Value 1', 'Value 2']" in str(excinfo.value)
+        )
 
     schema("Value 2")
     schema(TestEnum.value1)
