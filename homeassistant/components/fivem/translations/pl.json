@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Serwer FiveM jest ju\u017c skonfigurowany"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia. Sprawd\u017a adres hosta oraz port i spr\u00f3buj ponownie. Upewnij si\u0119, \u017ce posiadasz najnowsz\u0105 wersj\u0119 serwera FiveM.",
+            "invalid_gamename": "API gry, do kt\u00f3rej pr\u00f3bujesz si\u0119 po\u0142\u0105czy\u0107, nie jest gr\u0105 FiveM."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "name": "Nazwa",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}
