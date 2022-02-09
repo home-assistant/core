@@ -1,0 +1,9 @@
+{
+  "domain": "ge_home",
+  "name": "GE Home (SmartHQ)",
+  "config_flow": true,
+  "documentation": "https://github.com/simbaja/ha_gehome",
+  "requirements": ["gehomesdk==0.4.23","magicattr==0.1.6"],
+  "codeowners": ["@simbaja"],	
+  "version": "0.5.0"
+}

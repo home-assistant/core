@@ -1,0 +1,47 @@
+# GE Home Services
+
+set_timer:
+  name: Set Timer
+  description: Sets a timer value (timespan)
+  target:
+    entity:
+      integration: "ge_home"
+      domain: "sensor"
+  fields:
+    duration:
+      name: Duration
+      description: Duration of the timer (minutes)
+      required: true
+      example: "90"
+      default: "30"
+      selector:
+        number:
+          min: 1
+          max: 360
+          unit_of_measurement: minutes
+          mode: slider
+clear_timer:
+  name: Clear Timer
+  description: Clears a timer value (sets to zero)
+  target:
+    entity:
+      integration: "ge_home"
+      domain: "sensor"
+
+set_int_value:
+  name: Set Int Value
+  description: Sets an integer value (also can be used with ERD enums)
+  target:
+    entity:
+      integration: "ge_home"
+      domain: "sensor"
+  fields:
+    value:
+      name: Value
+      description: The value to set
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 65535
+          
