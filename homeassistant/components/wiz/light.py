@@ -100,10 +100,10 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
             if COLOR_MODE_RGBWW in color_modes:
                 cold = state.get_cold_white() or 0
                 self._attr_rgbww_color = (rgb[0], rgb[1], rgb[2], cold, warm)
-                self._attr_color_mode = COLOR_MODE_RGBW
+                self._attr_color_mode = COLOR_MODE_RGBWW
             else:
                 self._attr_rgbw_color = (rgb[0], rgb[1], rgb[2], warm)
-                self._attr_color_mode = COLOR_MODE_RGBWW
+                self._attr_color_mode = COLOR_MODE_RGBW
         else:
             self._attr_color_mode = COLOR_MODE_BRIGHTNESS
         self._attr_effect = state.get_scene()
