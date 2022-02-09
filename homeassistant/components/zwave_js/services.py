@@ -523,7 +523,7 @@ class ZWaveServices:
         const.LOGGER.warning(
             "This service is deprecated in favor of the ping button entity. Service "
             "calls will still work for now but the service will be removed in a "
-            "future release."
+            "future release"
         )
         nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
         await asyncio.gather(*(node.async_ping() for node in nodes))
