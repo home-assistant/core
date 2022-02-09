@@ -45,7 +45,7 @@ class ZWaveNodePingButton(ButtonEntity):
     """Representation of a ping button entity."""
 
     _attr_should_poll = False
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self, config_entry: ConfigEntry, client: ZwaveClient, node: ZwaveNode
