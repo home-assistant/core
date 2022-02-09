@@ -105,15 +105,12 @@ class DemoNumber(NumberEntity):
         if step is not None:
             self._attr_step = step
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self.unique_id)
+                (DOMAIN, unique_id)
             },
-            name=self.name,
+            name=self._attr_name,
         )
 
     async def async_set_value(self, value):
