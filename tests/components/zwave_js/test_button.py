@@ -1,9 +1,9 @@
-"""Test the Z-Wave JS services."""
+"""Test the Z-Wave JS button entities."""
 from homeassistant.components.button.const import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID
 
 
-async def test_ping(
+async def test_ping_entity(
     hass,
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
