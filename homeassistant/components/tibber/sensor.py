@@ -210,7 +210,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="peak_hour",
-        name="Month peak hour consumption",
+        name="Monthly peak hour consumption",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     ),
