@@ -94,6 +94,7 @@ from .helpers import (
     get_device_id,
     get_device_id_ext,
     get_unique_id,
+    get_valueless_base_unique_id,
 )
 from .migrate import async_migrate_discovered_value
 from .services import ZWaveServices
@@ -356,11 +357,7 @@ async def async_setup_entry(  # noqa: C901
 
             async_dispatcher_send(
                 hass,
-                f"{DOMAIN}_{client.driver.controller.home_id}.{node.node_id}.node_status_remove_entity",
-            )
-            async_dispatcher_send(
-                hass,
-                f"{DOMAIN}_{client.driver.controller.home_id}.{node.node_id}.ping_remove_entity",
+                f"{DOMAIN}_{get_valueless_base_unique_id(client, node)}_remove_entity",
             )
         else:
             remove_device(device)

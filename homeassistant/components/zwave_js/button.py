@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_CLIENT, DOMAIN
-from .helpers import get_device_id
+from .helpers import get_device_id, get_valueless_base_unique_id
 
 
 async def async_setup_entry(
@@ -51,7 +51,8 @@ class ZWaveNodePingButton(ButtonEntity):
         )
         # Entity class attributes
         self._attr_name = f"{name}: Ping"
-        self._attr_unique_id = f"{client.driver.controller.home_id}.{node.node_id}.ping"
+        self._base_unique_id = get_valueless_base_unique_id(client, node)
+        self._attr_unique_id = f"{self._base_unique_id}.ping"
         # device is precreated in main handler
         self._attr_device_info = DeviceInfo(
             identifiers={get_device_id(client, node)},
@@ -62,7 +63,7 @@ class ZWaveNodePingButton(ButtonEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{DOMAIN}_{self.unique_id}_remove_entity",
+                f"{DOMAIN}_{self._base_unique_id}_remove_entity",
                 self.async_remove,
             )
         )
