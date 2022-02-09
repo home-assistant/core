@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan"
+        },
+        "error": {
+            "bulb_time_out": "Tidak dapat terhubung ke bohlam. Mungkin bohlam offline atau IP/host yang salah dimasukkan. Nyalakan lampu dan coba lagi!",
+            "cannot_connect": "Gagal terhubung",
+            "no_wiz_light": "Bohlam tidak dapat dihubungkan melalui integrasi Platform WiZ.",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "confirm": {
+                "description": "Ingin memulai penyiapan?"
+            },
+            "discovery_confirm": {
+                "description": "Ingin menyiapkan {name} ({host})?"
+            },
+            "pick_device": {
+                "data": {
+                    "device": "Perangkat"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nama"
+                },
+                "description": "Jika host dibiarkan kosong, proses penemuan akan digunakan untuk menemukan perangkat."
+            }
+        }
+    }
+}

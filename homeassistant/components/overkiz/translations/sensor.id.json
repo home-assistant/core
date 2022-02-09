@@ -19,9 +19,17 @@
             "myself": "Saya sendiri",
             "rain": "Hujan",
             "saac": "SAAC",
-            "security": "Keamanan"
+            "security": "Keamanan",
+            "sfc": "SFC",
+            "temperature": "Suhu",
+            "timer": "Timer",
+            "ups": "UPS",
+            "user": "Pengguna",
+            "wind": "Angin"
         },
         "overkiz__sensor_defect": {
+            "dead": "Mati",
+            "low_battery": "Baterai lemah",
             "maintenance_required": "Diperlukan perawatan",
             "no_defect": "Tidak ada cacat"
         },

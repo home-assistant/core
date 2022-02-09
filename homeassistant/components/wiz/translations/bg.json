@@ -1,0 +1,13 @@
+{
+    "config": {
+        "flow_title": "{name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u0425\u043e\u0441\u0442",
+                    "name": "\u0418\u043c\u0435"
+                }
+            }
+        }
+    }
+}
