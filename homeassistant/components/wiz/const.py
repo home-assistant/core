@@ -16,3 +16,5 @@ WIZ_EXCEPTIONS = (
     WizLightConnectionError,
     ConnectionRefusedError,
 )
+
+SIGNAL_WIZ_PIR = "wiz_pir_{}"
