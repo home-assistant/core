@@ -1,8 +1,6 @@
 """Representation of Z-Wave buttons."""
 from __future__ import annotations
 
-import logging
-
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.node import Node as ZwaveNode
 
@@ -16,8 +14,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DATA_CLIENT, DOMAIN
 from .helpers import get_device_id
 
-LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -30,7 +26,7 @@ async def async_setup_entry(
     @callback
     def async_add_ping_button_entity(node: ZwaveNode) -> None:
         """Add ping button entity."""
-        async_add_entities([ZWaveNodePingButton(config_entry, client, node)])
+        async_add_entities([ZWaveNodePingButton(client, node)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
@@ -47,26 +43,19 @@ class ZWaveNodePingButton(ButtonEntity):
     _attr_should_poll = False
     _attr_entity_category = EntityCategory.CONFIG
 
-    def __init__(
-        self, config_entry: ConfigEntry, client: ZwaveClient, node: ZwaveNode
-    ) -> None:
+    def __init__(self, client: ZwaveClient, node: ZwaveNode) -> None:
         """Initialize a ping Z-Wave device button entity."""
-        self.config_entry = config_entry
         self.client = client
         self.node = node
         name: str = (
-            node.name
-            or node.device_config.description
-            or f"Node {node.node_id}"
+            node.name or node.device_config.description or f"Node {node.node_id}"
         )
         # Entity class attributes
         self._attr_name = f"{name}: Ping"
-        self._attr_unique_id = (
-            f"{self.client.driver.controller.home_id}.{node.node_id}.ping"
-        )
+        self._attr_unique_id = f"{client.driver.controller.home_id}.{node.node_id}.ping"
         # device is precreated in main handler
         self._attr_device_info = DeviceInfo(
-            identifiers={get_device_id(self.client, self.node)},
+            identifiers={get_device_id(client, node)},
         )
 
     async def async_press(self) -> None:
