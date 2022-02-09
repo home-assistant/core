@@ -43,13 +43,10 @@ async def async_setup_entry(
             device.get_color_temps
         )
 
-        supported_colors = await hass.async_add_executor_job(device.get_colors)
-
         entities.append(
             FritzboxLight(
                 coordinator,
                 ain,
-                supported_colors,
                 supported_color_temps,
             )
         )
@@ -64,7 +61,6 @@ class FritzboxLight(FritzBoxEntity, LightEntity):
         self,
         coordinator: FritzboxDataUpdateCoordinator,
         ain: str,
-        supported_colors: dict,
         supported_color_temps: list[str],
     ) -> None:
         """Initialize the FritzboxLight entity."""
@@ -76,17 +72,6 @@ class FritzboxLight(FritzBoxEntity, LightEntity):
         # max kelvin is min mireds and min kelvin is max mireds
         self._attr_min_mireds = color.color_temperature_kelvin_to_mired(max_kelvin)
         self._attr_max_mireds = color.color_temperature_kelvin_to_mired(min_kelvin)
-
-        # Fritz!DECT 500 only supports 12 values for hue, with 3 saturations each.
-        # Map supported colors to dict {hue: [sat1, sat2, sat3]} for easier lookup
-        self._supported_hs = {}
-        for values in supported_colors.values():
-            hue = int(values[0][0])
-            self._supported_hs[hue] = [
-                int(values[0][1]),
-                int(values[1][1]),
-                int(values[2][1]),
-            ]
 
     @property
     def is_on(self) -> bool:
@@ -129,15 +114,11 @@ class FritzboxLight(FritzBoxEntity, LightEntity):
             level = kwargs[ATTR_BRIGHTNESS]
             await self.hass.async_add_executor_job(self.device.set_level, level)
         if kwargs.get(ATTR_HS_COLOR) is not None:
-            hass_hue = int(kwargs[ATTR_HS_COLOR][0])
-            hass_saturation = round(kwargs[ATTR_HS_COLOR][1] * 255.0 / 100.0)
-            # find supported hs values closest to what user selected
-            hue = min(self._supported_hs.keys(), key=lambda x: abs(x - hass_hue))
-            saturation = min(
-                self._supported_hs[hue], key=lambda x: abs(x - hass_saturation)
-            )
+            # HA gives 0..360 for hue, light only supports 0..359
+            hue = int(kwargs[ATTR_HS_COLOR][0] % 360)
+            saturation = round(kwargs[ATTR_HS_COLOR][1] * 255.0 / 100.0)
             await self.hass.async_add_executor_job(
-                self.device.set_color, (hue, saturation)
+                self.device.set_unmapped_color, (hue, saturation)
             )
 
         if kwargs.get(ATTR_COLOR_TEMP) is not None:
