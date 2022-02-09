@@ -43,8 +43,6 @@ homeassistant/components/airtouch4/* @LonePurpleWolf
 tests/components/airtouch4/* @LonePurpleWolf
 homeassistant/components/airvisual/* @bachya
 tests/components/airvisual/* @bachya
-homeassistant/components/alarmdecoder/* @ajschmidt8
-tests/components/alarmdecoder/* @ajschmidt8
 homeassistant/components/alexa/* @home-assistant/cloud @ochlocracy
 tests/components/alexa/* @home-assistant/cloud @ochlocracy
 homeassistant/components/almond/* @gcampax @balloob
@@ -287,6 +285,8 @@ homeassistant/components/fireservicerota/* @cyberjunky
 tests/components/fireservicerota/* @cyberjunky
 homeassistant/components/firmata/* @DaAwesomeP
 tests/components/firmata/* @DaAwesomeP
+homeassistant/components/fivem/* @Sander0542
+tests/components/fivem/* @Sander0542
 homeassistant/components/fixer/* @fabaff
 homeassistant/components/fjaraskupan/* @elupus
 tests/components/fjaraskupan/* @elupus
@@ -467,6 +467,8 @@ tests/components/iqvia/* @bachya
 homeassistant/components/irish_rail_transport/* @ttroy50
 homeassistant/components/islamic_prayer_times/* @engrbm87
 tests/components/islamic_prayer_times/* @engrbm87
+homeassistant/components/iss/* @DurgNomis-drol
+tests/components/iss/* @DurgNomis-drol
 homeassistant/components/isy994/* @bdraco @shbatm
 tests/components/isy994/* @bdraco @shbatm
 homeassistant/components/izone/* @Swamp-Ig
@@ -710,8 +712,8 @@ homeassistant/components/plaato/* @JohNan
 tests/components/plaato/* @JohNan
 homeassistant/components/plex/* @jjlawren
 tests/components/plex/* @jjlawren
-homeassistant/components/plugwise/* @CoMPaTech @bouwew @brefra
-tests/components/plugwise/* @CoMPaTech @bouwew @brefra
+homeassistant/components/plugwise/* @CoMPaTech @bouwew @brefra @frenck
+tests/components/plugwise/* @CoMPaTech @bouwew @brefra @frenck
 homeassistant/components/plum_lightpad/* @ColinHarrington @prystupa
 tests/components/plum_lightpad/* @ColinHarrington @prystupa
 homeassistant/components/point/* @fredrike
@@ -867,6 +869,7 @@ homeassistant/components/solaredge_local/* @drobtravels @scheric
 homeassistant/components/solarlog/* @Ernst79
 tests/components/solarlog/* @Ernst79
 homeassistant/components/solax/* @squishykid
+tests/components/solax/* @squishykid
 homeassistant/components/soma/* @ratsept @sebfortier2288
 tests/components/soma/* @ratsept @sebfortier2288
 homeassistant/components/somfy/* @tetienne
@@ -998,16 +1001,16 @@ homeassistant/components/updater/* @home-assistant/core
 tests/components/updater/* @home-assistant/core
 homeassistant/components/upnp/* @StevenLooman @ehendrix23
 tests/components/upnp/* @StevenLooman @ehendrix23
-homeassistant/components/uptimerobot/* @ludeeus
-tests/components/uptimerobot/* @ludeeus
+homeassistant/components/uptimerobot/* @ludeeus @chemelli74
+tests/components/uptimerobot/* @ludeeus @chemelli74
 homeassistant/components/usb/* @bdraco
 tests/components/usb/* @bdraco
 homeassistant/components/usgs_earthquakes_feed/* @exxamalte
 tests/components/usgs_earthquakes_feed/* @exxamalte
 homeassistant/components/utility_meter/* @dgomes
 tests/components/utility_meter/* @dgomes
-homeassistant/components/vallox/* @andre-richter @slovdahl
-tests/components/vallox/* @andre-richter @slovdahl
+homeassistant/components/vallox/* @andre-richter @slovdahl @viiru-
+tests/components/vallox/* @andre-richter @slovdahl @viiru-
 homeassistant/components/velbus/* @Cereal2nd @brefra
 tests/components/velbus/* @Cereal2nd @brefra
 homeassistant/components/velux/* @Julius2342
@@ -1029,8 +1032,8 @@ tests/components/vilfo/* @ManneW
 homeassistant/components/vivotek/* @HarlemSquirrel
 homeassistant/components/vizio/* @raman325
 tests/components/vizio/* @raman325
-homeassistant/components/vlc_telnet/* @rodripf @dmcc @MartinHjelmare
-tests/components/vlc_telnet/* @rodripf @dmcc @MartinHjelmare
+homeassistant/components/vlc_telnet/* @rodripf @MartinHjelmare
+tests/components/vlc_telnet/* @rodripf @MartinHjelmare
 homeassistant/components/volkszaehler/* @fabaff
 homeassistant/components/volumio/* @OnFreund
 tests/components/volumio/* @OnFreund
@@ -1062,6 +1065,8 @@ tests/components/wilight/* @leofig-rj
 homeassistant/components/wirelesstag/* @sergeymaysak
 homeassistant/components/withings/* @vangorra
 tests/components/withings/* @vangorra
+homeassistant/components/wiz/* @sbidy
+tests/components/wiz/* @sbidy
 homeassistant/components/wled/* @frenck
 tests/components/wled/* @frenck
 homeassistant/components/wolflink/* @adamkrol93
@@ -1085,8 +1090,8 @@ homeassistant/components/yamaha_musiccast/* @vigonotion @micha91
 tests/components/yamaha_musiccast/* @vigonotion @micha91
 homeassistant/components/yandex_transport/* @rishatik92 @devbis
 tests/components/yandex_transport/* @rishatik92 @devbis
-homeassistant/components/yeelight/* @zewelor @shenxn @starkillerOG
-tests/components/yeelight/* @zewelor @shenxn @starkillerOG
+homeassistant/components/yeelight/* @zewelor @shenxn @starkillerOG @alexyao2015
+tests/components/yeelight/* @zewelor @shenxn @starkillerOG @alexyao2015
 homeassistant/components/yeelightsunflower/* @lindsaymarkward
 homeassistant/components/yi/* @bachya
 homeassistant/components/youless/* @gjong
@@ -1106,6 +1111,8 @@ homeassistant/components/zwave/* @home-assistant/z-wave
 tests/components/zwave/* @home-assistant/z-wave
 homeassistant/components/zwave_js/* @home-assistant/z-wave
 tests/components/zwave_js/* @home-assistant/z-wave
+homeassistant/components/zwave_me/* @lawfulchaos @Z-Wave-Me
+tests/components/zwave_me/* @lawfulchaos @Z-Wave-Me
 
 # Individual files
 homeassistant/components/demo/weather @fabaff

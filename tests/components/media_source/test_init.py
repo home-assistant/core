@@ -1,22 +1,22 @@
 """Test Media Source initialization."""
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from urllib.parse import quote
 
 import pytest
 
 from homeassistant.components import media_source
-from homeassistant.components.media_player.const import MEDIA_CLASS_DIRECTORY
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import MEDIA_CLASS_DIRECTORY, BrowseError
 from homeassistant.components.media_source import const
-from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.setup import async_setup_component
 
 
 async def test_is_media_source_id():
     """Test media source validation."""
-    assert media_source.is_media_source_id(const.URI_SCHEME)
-    assert media_source.is_media_source_id(f"{const.URI_SCHEME}domain")
-    assert media_source.is_media_source_id(f"{const.URI_SCHEME}domain/identifier")
+    assert media_source.is_media_source_id(media_source.URI_SCHEME)
+    assert media_source.is_media_source_id(f"{media_source.URI_SCHEME}domain")
+    assert media_source.is_media_source_id(
+        f"{media_source.URI_SCHEME}domain/identifier"
+    )
     assert not media_source.is_media_source_id("test")
 
 
@@ -39,7 +39,7 @@ async def test_generate_media_source_id():
 
 async def test_async_browse_media(hass):
     """Test browse media."""
-    assert await async_setup_component(hass, const.DOMAIN, {})
+    assert await async_setup_component(hass, media_source.DOMAIN, {})
     await hass.async_block_till_done()
 
     # Test non-media ignored (/media has test.mp3 and not_media.txt)
@@ -47,6 +47,17 @@ async def test_async_browse_media(hass):
     assert isinstance(media, media_source.models.BrowseMediaSource)
     assert media.title == "media"
     assert len(media.children) == 2
+
+    # Test content filter
+    media = await media_source.async_browse_media(
+        hass,
+        "",
+        content_filter=lambda item: item.media_content_type.startswith("video/"),
+    )
+    assert isinstance(media, media_source.models.BrowseMediaSource)
+    assert media.title == "media"
+    assert len(media.children) == 1, media.children
+    media.children[0].title = "Epic Sax Guy 10 Hours"
 
     # Test invalid media content
     with pytest.raises(ValueError):
@@ -61,35 +72,35 @@ async def test_async_browse_media(hass):
 
 async def test_async_resolve_media(hass):
     """Test browse media."""
-    assert await async_setup_component(hass, const.DOMAIN, {})
+    assert await async_setup_component(hass, media_source.DOMAIN, {})
     await hass.async_block_till_done()
 
     media = await media_source.async_resolve_media(
         hass,
-        media_source.generate_media_source_id(const.DOMAIN, "local/test.mp3"),
+        media_source.generate_media_source_id(media_source.DOMAIN, "local/test.mp3"),
     )
     assert isinstance(media, media_source.models.PlayMedia)
 
 
 async def test_async_unresolve_media(hass):
     """Test browse media."""
-    assert await async_setup_component(hass, const.DOMAIN, {})
+    assert await async_setup_component(hass, media_source.DOMAIN, {})
     await hass.async_block_till_done()
 
     # Test no media content
-    with pytest.raises(Unresolvable):
+    with pytest.raises(media_source.Unresolvable):
         await media_source.async_resolve_media(hass, "")
 
 
 async def test_websocket_browse_media(hass, hass_ws_client):
     """Test browse media websocket."""
-    assert await async_setup_component(hass, const.DOMAIN, {})
+    assert await async_setup_component(hass, media_source.DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
 
     media = media_source.models.BrowseMediaSource(
-        domain=const.DOMAIN,
+        domain=media_source.DOMAIN,
         identifier="/media",
         title="Local Media",
         media_class=MEDIA_CLASS_DIRECTORY,
@@ -137,7 +148,7 @@ async def test_websocket_browse_media(hass, hass_ws_client):
 @pytest.mark.parametrize("filename", ["test.mp3", "Epic Sax Guy 10 Hours.mp4"])
 async def test_websocket_resolve_media(hass, hass_ws_client, filename):
     """Test browse media websocket."""
-    assert await async_setup_component(hass, const.DOMAIN, {})
+    assert await async_setup_component(hass, media_source.DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
@@ -152,7 +163,7 @@ async def test_websocket_resolve_media(hass, hass_ws_client, filename):
             {
                 "id": 1,
                 "type": "media_source/resolve_media",
-                "media_content_id": f"{const.URI_SCHEME}{const.DOMAIN}/local/{filename}",
+                "media_content_id": f"{const.URI_SCHEME}{media_source.DOMAIN}/local/{filename}",
             }
         )
 
@@ -180,3 +191,12 @@ async def test_websocket_resolve_media(hass, hass_ws_client, filename):
     assert not msg["success"]
     assert msg["error"]["code"] == "resolve_media_failed"
     assert msg["error"]["message"] == "test"
+
+
+async def test_browse_resolve_without_setup():
+    """Test browse and resolve work without being setup."""
+    with pytest.raises(BrowseError):
+        await media_source.async_browse_media(Mock(data={}), None)
+
+    with pytest.raises(media_source.Unresolvable):
+        await media_source.async_resolve_media(Mock(data={}), None)

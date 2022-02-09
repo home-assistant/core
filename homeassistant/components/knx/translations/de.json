@@ -14,7 +14,8 @@
                     "individual_address": "Individuelle Adresse f\u00fcr die Verbindung",
                     "local_ip": "Lokale IP des Home Assistant (f\u00fcr automatische Erkennung leer lassen)",
                     "port": "Port",
-                    "route_back": "Route Back / NAT-Modus"
+                    "route_back": "Route Back / NAT-Modus",
+                    "tunneling_type": "KNX Tunneling Typ"
                 },
                 "description": "Bitte gib die Verbindungsinformationen deines Tunnelger\u00e4ts ein."
             },
@@ -59,7 +60,8 @@
                     "host": "Host",
                     "local_ip": "Lokale IP (leer lassen, wenn unsicher)",
                     "port": "Port",
-                    "route_back": "Route Back / NAT-Modus"
+                    "route_back": "Route Back / NAT-Modus",
+                    "tunneling_type": "KNX Tunneling Typ"
                 }
             }
         }

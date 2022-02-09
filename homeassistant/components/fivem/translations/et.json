@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "FiveM server on juba seadistatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine eba\u00f5nnestus. Kontrolli hosti ja porti ning proovi uuesti. Veendu, et kasutad uusimat FiveM-i serverit.",
+            "invalid_gamename": "M\u00e4ngu API, millega proovid \u00fchendust luua, ei ole FiveM-m\u00e4ng."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nimi",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

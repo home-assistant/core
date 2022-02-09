@@ -18,7 +18,8 @@
                     "username": "Username",
                     "verify_ssl": "Verify SSL certificate"
                 },
-                "description": "Do you want to setup {name} ({ip_address})?"
+                "description": "Do you want to setup {name} ({ip_address})? You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud Users will not work. For more information: {local_user_documentation_url}",
+                "title": "UniFi Protect Discovered"
             },
             "reauth_confirm": {
                 "data": {
@@ -37,6 +38,7 @@
                     "username": "Username",
                     "verify_ssl": "Verify SSL certificate"
                 },
+                "description": "You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud Users will not work. For more information: {local_user_documentation_url}",
                 "title": "UniFi Protect Setup"
             }
         }

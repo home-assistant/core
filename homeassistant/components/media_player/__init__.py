@@ -1271,3 +1271,7 @@ class BrowseMedia:
         proposed_class = self.children[0].media_class
         if all(child.media_class == proposed_class for child in self.children):
             self.children_media_class = proposed_class
+
+    def __repr__(self):
+        """Return representation of browse media."""
+        return f"<BrowseMedia {self.title} ({self.media_class})>"

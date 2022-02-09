@@ -16,6 +16,7 @@ from pyoverkiz.exceptions import (
 from pyoverkiz.models import Device, Event, Place
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.decorator import Registry
@@ -65,7 +66,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         try:
             events = await self.client.fetch_events()
         except BadCredentialsException as exception:
-            raise UpdateFailed("Invalid authentication.") from exception
+            raise ConfigEntryAuthFailed("Invalid authentication.") from exception
         except TooManyRequestsException as exception:
             raise UpdateFailed("Too many requests, try again later.") from exception
         except MaintenanceException as exception:
@@ -80,7 +81,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 await self.client.login()
                 self.devices = await self._get_devices()
             except BadCredentialsException as exception:
-                raise UpdateFailed("Invalid authentication.") from exception
+                raise ConfigEntryAuthFailed("Invalid authentication.") from exception
             except TooManyRequestsException as exception:
                 raise UpdateFailed("Too many requests, try again later.") from exception
 

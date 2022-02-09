@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "cct_unsupported": "\u6b64\u6574\u5408\u4e0d\u652f\u63f4\u6b64 WLED \u88dd\u7f6e\u6240\u4f7f\u7528\u4e4b CCT \u901a\u9053"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557"

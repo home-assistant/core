@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect"
         },
         "error": {
             "cannot_connect": "Failed to connect"
@@ -16,7 +17,7 @@
                     "port": "Port",
                     "username": "Username"
                 },
-                "description": "Set up you BSB-Lan device to integrate with Home Assistant.",
+                "description": "Set up your BSB-Lan device to integrate with Home Assistant.",
                 "title": "Connect to the BSB-Lan device"
             }
         }

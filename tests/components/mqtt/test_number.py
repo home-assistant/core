@@ -541,7 +541,14 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
 async def test_entity_debug_info_message(hass, mqtt_mock):
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
-        hass, mqtt_mock, number.DOMAIN, DEFAULT_CONFIG, payload="1"
+        hass,
+        mqtt_mock,
+        number.DOMAIN,
+        DEFAULT_CONFIG,
+        SERVICE_SET_VALUE,
+        service_parameters={ATTR_VALUE: 45},
+        command_payload="45",
+        state_payload="1",
     )
 
 

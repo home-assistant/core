@@ -47,6 +47,11 @@ DHCP = [
         "macaddress": "B85F98*"
     },
     {
+        "domain": "blink",
+        "hostname": "blink*",
+        "macaddress": "00037F*"
+    },
+    {
         "domain": "broadlink",
         "macaddress": "34EA34*"
     },
@@ -61,6 +66,10 @@ DHCP = [
     {
         "domain": "broadlink",
         "macaddress": "B4430D*"
+    },
+    {
+        "domain": "elkm1",
+        "macaddress": "00409D*"
     },
     {
         "domain": "emonitor",
@@ -202,19 +211,18 @@ DHCP = [
         "hostname": "nuki_bridge_*"
     },
     {
+        "domain": "oncue",
+        "hostname": "kohlergen*",
+        "macaddress": "00146F*"
+    },
+    {
         "domain": "overkiz",
         "hostname": "gateway*",
         "macaddress": "F8811A*"
     },
     {
         "domain": "powerwall",
-        "hostname": "1118431-*",
-        "macaddress": "88DA1A*"
-    },
-    {
-        "domain": "powerwall",
-        "hostname": "1118431-*",
-        "macaddress": "000145*"
+        "hostname": "1118431-*"
     },
     {
         "domain": "rachio",
@@ -249,6 +257,11 @@ DHCP = [
         "domain": "roomba",
         "hostname": "roomba-*",
         "macaddress": "80A589*"
+    },
+    {
+        "domain": "roomba",
+        "hostname": "roomba-*",
+        "macaddress": "DCF505*"
     },
     {
         "domain": "samsungtv",
@@ -289,6 +302,10 @@ DHCP = [
         "domain": "sense",
         "hostname": "sense-*",
         "macaddress": "A4D578*"
+    },
+    {
+        "domain": "senseme",
+        "macaddress": "20F85E*"
     },
     {
         "domain": "simplisafe",
@@ -387,6 +404,11 @@ DHCP = [
         "domain": "tplink",
         "hostname": "k[lp]*",
         "macaddress": "403F8C*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "C0C9E3*"
     },
     {
         "domain": "tplink",
@@ -589,6 +611,14 @@ DHCP = [
     {
         "domain": "vicare",
         "macaddress": "B87424*"
+    },
+    {
+        "domain": "wiz",
+        "macaddress": "A8BB50*"
+    },
+    {
+        "domain": "wiz",
+        "hostname": "wiz_*"
     },
     {
         "domain": "yeelight",

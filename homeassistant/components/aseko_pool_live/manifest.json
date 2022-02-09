@@ -7,5 +7,6 @@
   "codeowners": [
     "@milanmeu"
   ],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["aioaseko"]
 }

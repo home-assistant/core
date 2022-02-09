@@ -1,7 +1,11 @@
 """Support for a Emonitor channel sensor."""
 from aioemonitor.monitor import EmonitorChannel
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import POWER_WATT
 from homeassistant.core import HomeAssistant
@@ -45,16 +49,13 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.POWER
     _attr_native_unit_of_measurement = POWER_WATT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, coordinator: DataUpdateCoordinator, channel_number: int) -> None:
         """Initialize the channel sensor."""
         self.channel_number = channel_number
         super().__init__(coordinator)
-
-    @property
-    def unique_id(self) -> str:
-        """Channel unique id."""
-        return f"{self.mac_address}_{self.channel_number}"
+        self._attr_unique_id = f"{self.mac_address}_{channel_number}"
 
     @property
     def channel_data(self) -> EmonitorChannel:

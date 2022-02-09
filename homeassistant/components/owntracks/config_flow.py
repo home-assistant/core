@@ -25,7 +25,10 @@ class OwnTracksFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="user")
 
-        webhook_id, webhook_url, cloudhook = await self._get_webhook_id()
+        try:
+            webhook_id, webhook_url, cloudhook = await self._get_webhook_id()
+        except cloud.CloudNotConnected:
+            return self.async_abort(reason="cloud_not_connected")
 
         secret = secrets.token_hex(16)
 
@@ -47,21 +50,6 @@ class OwnTracksFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "android_url": "https://play.google.com/store/apps/details?id=org.owntracks.android",
                 "ios_url": "https://itunes.apple.com/us/app/owntracks/id692424691?mt=8",
                 "docs_url": "https://www.home-assistant.io/integrations/owntracks/",
-            },
-        )
-
-    async def async_step_import(self, user_input):
-        """Import a config flow from configuration."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-        webhook_id, _webhook_url, cloudhook = await self._get_webhook_id()
-        secret = secrets.token_hex(16)
-        return self.async_create_entry(
-            title="OwnTracks",
-            data={
-                CONF_WEBHOOK_ID: webhook_id,
-                CONF_SECRET: secret,
-                CONF_CLOUDHOOK: cloudhook,
             },
         )
 

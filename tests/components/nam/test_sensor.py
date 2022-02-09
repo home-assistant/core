@@ -54,7 +54,10 @@ async def test_sensor(hass):
         disabled_by=None,
     )
 
-    await init_integration(hass)
+    # Patch return value from utcnow, with offset to make sure the patch is correct
+    now = utcnow() - timedelta(hours=1)
+    with patch("homeassistant.components.nam.sensor.utcnow", return_value=now):
+        await init_integration(hass)
 
     state = hass.states.get("sensor.nettigo_air_monitor_bme280_humidity")
     assert state
@@ -217,7 +220,7 @@ async def test_sensor(hass):
     assert state
     assert (
         state.state
-        == (utcnow() - timedelta(seconds=456987)).replace(microsecond=0).isoformat()
+        == (now - timedelta(seconds=456987)).replace(microsecond=0).isoformat()
     )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
     assert state.attributes.get(ATTR_STATE_CLASS) is None

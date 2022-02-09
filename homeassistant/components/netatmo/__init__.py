@@ -21,7 +21,7 @@ from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_WEBHOOK_ID,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall
@@ -242,7 +242,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if hass.state == CoreState.running:
         await register_webhook(None)
     else:
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, register_webhook)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, register_webhook)
 
     hass.services.async_register(DOMAIN, "register_webhook", register_webhook)
     hass.services.async_register(DOMAIN, "unregister_webhook", unregister_webhook)

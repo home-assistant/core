@@ -2,17 +2,22 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 from typing import Any, TypeVar
+from urllib.parse import quote
 
 from aiovlc.client import Client
 from aiovlc.exceptions import AuthError, CommandError, ConnectError
 from typing_extensions import Concatenate, ParamSpec
+import yarl
 
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components import media_source
+from homeassistant.components.http.auth import async_sign_path
+from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -28,9 +33,11 @@ from homeassistant.components.media_player.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.network import get_url, is_hass_url
 import homeassistant.util.dt as dt_util
 
 from .const import DATA_AVAILABLE, DATA_VLC, DEFAULT_NAME, DOMAIN, LOGGER
@@ -49,6 +56,7 @@ SUPPORT_VLC = (
     | SUPPORT_STOP
     | SUPPORT_VOLUME_MUTE
     | SUPPORT_VOLUME_SET
+    | SUPPORT_BROWSE_MEDIA
 )
 
 _T = TypeVar("_T", bound="VlcDevice")
@@ -170,10 +178,16 @@ class VlcDevice(MediaPlayerEntity):
         self._media_artist = data.get(0, {}).get("artist")
         self._media_title = data.get(0, {}).get("title")
 
-        if not self._media_title:
-            # Fall back to filename.
-            if data_info := data.get("data"):
-                self._media_title = data_info["filename"]
+        if self._media_title:
+            return
+
+        # Fall back to filename.
+        if data_info := data.get("data"):
+            self._media_title = data_info["filename"]
+
+            # Strip out auth signatures if streaming local media
+            if self._media_title and (pos := self._media_title.find("?authSig=")) != -1:
+                self._media_title = self._media_title[:pos]
 
     @property
     def name(self) -> str:
@@ -290,13 +304,33 @@ class VlcDevice(MediaPlayerEntity):
         self, media_type: str, media_id: str, **kwargs: Any
     ) -> None:
         """Play media from a URL or file."""
-        if media_type != MEDIA_TYPE_MUSIC:
-            LOGGER.error(
-                "Invalid media type %s. Only %s is supported",
-                media_type,
-                MEDIA_TYPE_MUSIC,
+        # Handle media_source
+        if media_source.is_media_source_id(media_id):
+            sourced_media = await media_source.async_resolve_media(self.hass, media_id)
+            media_type = sourced_media.mime_type
+            media_id = sourced_media.url
+
+        if media_type != MEDIA_TYPE_MUSIC and not media_type.startswith("audio/"):
+            raise HomeAssistantError(
+                f"Invalid media type {media_type}. Only {MEDIA_TYPE_MUSIC} is supported"
             )
-            return
+
+        # Sign and prefix with URL if playing a relative URL
+        if media_id[0] == "/" or is_hass_url(self.hass, media_id):
+            parsed = yarl.URL(media_id)
+
+            if parsed.query:
+                LOGGER.debug("Not signing path for content with query param")
+            else:
+                media_id = async_sign_path(
+                    self.hass,
+                    quote(media_id),
+                    timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
+                )
+
+            # prepend external URL
+            if media_id[0] == "/":
+                media_id = f"{get_url(self.hass)}{media_id}"
 
         await self._vlc.add(media_id)
         self._state = STATE_PLAYING
@@ -321,3 +355,13 @@ class VlcDevice(MediaPlayerEntity):
         """Enable/disable shuffle mode."""
         shuffle_command = "on" if shuffle else "off"
         await self._vlc.random(shuffle_command)
+
+    async def async_browse_media(
+        self, media_content_type: str | None = None, media_content_id: str | None = None
+    ) -> BrowseMedia:
+        """Implement the websocket media browsing helper."""
+        return await media_source.async_browse_media(
+            self.hass,
+            media_content_id,
+            content_filter=lambda item: item.media_content_type.startswith("audio/"),
+        )

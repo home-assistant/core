@@ -2237,12 +2237,18 @@ DEVICES = [
             "switch.lumi_lumi_plug_maus01_77665544_on_off",
             "sensor.lumi_lumi_plug_maus01_77665544_basic_rssi",
             "sensor.lumi_lumi_plug_maus01_77665544_basic_lqi",
+            "sensor.lumi_lumi_plug_maus01_77665544_device_temperature",
         ],
         DEV_SIG_ENT_MAP: {
             ("switch", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["on_off"],
                 DEV_SIG_ENT_MAP_CLASS: "Switch",
                 DEV_SIG_ENT_MAP_ID: "switch.lumi_lumi_plug_maus01_77665544_on_off",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2"): {
+                DEV_SIG_CHANNELS: ["device_temperature"],
+                DEV_SIG_ENT_MAP_CLASS: "DeviceTemperature",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_77665544_device_temperature",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
@@ -2328,12 +2334,18 @@ DEVICES = [
             "sensor.lumi_lumi_relay_c2acn01_77665544_electrical_measurement_rms_voltage",
             "sensor.lumi_lumi_relay_c2acn01_77665544_basic_rssi",
             "sensor.lumi_lumi_relay_c2acn01_77665544_basic_lqi",
+            "sensor.lumi_lumi_relay_c2acn01_77665544_device_temperature",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["on_off"],
                 DEV_SIG_ENT_MAP_CLASS: "Light",
                 DEV_SIG_ENT_MAP_ID: "light.lumi_lumi_relay_c2acn01_77665544_on_off",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2"): {
+                DEV_SIG_CHANNELS: ["device_temperature"],
+                DEV_SIG_ENT_MAP_CLASS: "DeviceTemperature",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_77665544_device_temperature",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
@@ -3453,7 +3465,7 @@ DEVICES = [
             1: {
                 SIG_EP_TYPE: 1026,
                 DEV_SIG_EP_ID: 1,
-                SIG_EP_INPUT: [0, 1, 3, 1280],
+                SIG_EP_INPUT: [0, 1, 2, 3, 1280],
                 SIG_EP_OUTPUT: [25],
                 SIG_EP_PROFILE: 260,
             },
@@ -3465,12 +3477,18 @@ DEVICES = [
             "binary_sensor.lumi_lumi_sensor_wleak_aq1_77665544_ias_zone",
             "sensor.lumi_lumi_sensor_wleak_aq1_77665544_basic_rssi",
             "sensor.lumi_lumi_sensor_wleak_aq1_77665544_basic_lqi",
+            "sensor.lumi_lumi_sensor_wleak_aq1_77665544_device_temperature",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CHANNELS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
                 DEV_SIG_ENT_MAP_ID: "binary_sensor.lumi_lumi_sensor_wleak_aq1_77665544_ias_zone",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2"): {
+                DEV_SIG_CHANNELS: ["device_temperature"],
+                DEV_SIG_ENT_MAP_CLASS: "DeviceTemperature",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_wleak_aq1_77665544_device_temperature",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],

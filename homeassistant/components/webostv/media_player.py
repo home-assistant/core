@@ -24,6 +24,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE,
+    SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
@@ -33,15 +34,18 @@ from homeassistant.components.media_player.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
     STATE_OFF,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import WebOsClientWrapper
 from .const import (
@@ -64,6 +68,7 @@ SUPPORT_WEBOSTV = (
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_PLAY_MEDIA
     | SUPPORT_PLAY
+    | SUPPORT_STOP
 )
 
 SUPPORT_WEBOSTV_VOLUME = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP
@@ -103,23 +108,22 @@ def cmd(
         try:
             await func(self, *args, **kwargs)
         except WEBOSTV_EXCEPTIONS as exc:
-            # If TV is off, we expect calls to fail.
-            if self.state == STATE_OFF:
-                level = logging.INFO
-            else:
-                level = logging.ERROR
-            _LOGGER.log(
-                level,
-                "Error calling %s on entity %s: %r",
+            if self.state != STATE_OFF:
+                raise HomeAssistantError(
+                    f"Error calling {func.__name__} on entity {self.entity_id}, state:{self.state}"
+                ) from exc
+            _LOGGER.warning(
+                "Error calling %s on entity %s, state:%s, error: %r",
                 func.__name__,
                 self.entity_id,
+                self.state,
                 exc,
             )
 
     return cmd_wrapper
 
 
-class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
+class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
     """Representation of a LG webOS Smart TV."""
 
     def __init__(
@@ -142,8 +146,12 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         self._current_source = None
         self._source_list: dict = {}
 
+        self._supported_features: int | None = None
+
     async def async_added_to_hass(self) -> None:
         """Connect and subscribe to dispatcher signals and state updates."""
+        await super().async_added_to_hass()
+
         self.async_on_remove(
             async_dispatcher_connect(self.hass, DOMAIN, self.async_signal_handler)
         )
@@ -151,6 +159,12 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         await self._client.register_state_update_callback(
             self.async_handle_state_update
         )
+
+        if self._supported_features is not None:
+            return
+
+        if (state := await self.async_get_last_state()) is not None:
+            self._supported_features = state.attributes.get(ATTR_SUPPORTED_FEATURES)
 
     async def async_will_remove_from_hass(self) -> None:
         """Call disconnect on removal."""
@@ -208,9 +222,12 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
             ):
                 self._source_list[source["label"]] = source
 
+        # empty list, TV may be off, keep previous list
+        if not self._source_list and source_list:
+            self._source_list = source_list
         # special handling of live tv since this might
         # not appear in the app or input lists in some cases
-        if not found_live_tv:
+        elif not found_live_tv:
             app = {"id": LIVE_TV_APP_ID, "title": "Live TV"}
             if LIVE_TV_APP_ID == self._client.current_app_id:
                 self._current_source = app["title"]
@@ -222,8 +239,6 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
                 or any(word in app["id"] for word in conf_sources)
             ):
                 self._source_list["Live TV"] = app
-        if not self._source_list and source_list:
-            self._source_list = source_list
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     async def async_update(self) -> None:
@@ -310,6 +325,9 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     @property
     def supported_features(self) -> int:
         """Flag media player features that are supported."""
+        if self.state == STATE_OFF and self._supported_features is not None:
+            return self._supported_features
+
         supported = SUPPORT_WEBOSTV
 
         if self._client.sound_output in ("external_arc", "external_speaker"):
@@ -319,6 +337,9 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
 
         if self._wrapper.turn_on:
             supported |= SUPPORT_TURN_ON
+
+        if self.state != STATE_OFF:
+            self._supported_features = supported
 
         return supported
 

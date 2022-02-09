@@ -18,7 +18,8 @@
                     "username": "Kasutajanimi",
                     "verify_ssl": "Kontrolli SSL \u00fchendust"
                 },
-                "description": "Kas soovid seadistada {name} ({ip_address})?"
+                "description": "Kas soovid seadistada kasutaja {name} ( {ip_address} )? Sisselogimiseks on vaja UniFi OS-i konsoolis loodud kohalikku kasutajat. Ubiquiti pilve kasutajad ei t\u00f6\u00f6ta. Lisateabe saamiseks: {local_user_documentation_url}",
+                "title": "Avastati UniFi Protect"
             },
             "reauth_confirm": {
                 "data": {
@@ -37,6 +38,7 @@
                     "username": "Kasutajanimi",
                     "verify_ssl": "Kontrolli SSL sertifikaati"
                 },
+                "description": "Sisselogimiseks on vaja UniFi OS-i konsoolis loodud kohalikku kasutajat. Ubiquiti pilve kasutajad ei t\u00f6\u00f6ta. Lisateabe saamiseks: {local_user_documentation_url}",
                 "title": "UniFi Protect seadistamine"
             }
         }

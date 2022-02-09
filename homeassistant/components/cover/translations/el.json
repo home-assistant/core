@@ -1,5 +1,20 @@
 {
     "device_automation": {
+        "action_type": {
+            "close": "\u039a\u03bb\u03b5\u03af\u03c3\u03b9\u03bc\u03bf {entity_name}",
+            "close_tilt": "\u039a\u03bb\u03b5\u03af\u03c3\u03b9\u03bc\u03bf \u03ba\u03bb\u03af\u03c3\u03b7\u03c2 {entity_name}",
+            "open": "\u0386\u03bd\u03bf\u03b9\u03b3\u03bc\u03b1 {entity_name}",
+            "open_tilt": "\u0386\u03bd\u03bf\u03b9\u03b3\u03bc\u03b1 \u03ba\u03bb\u03af\u03c3\u03b7\u03c2 {entity_name}",
+            "set_position": "\u039f\u03c1\u03b9\u03c3\u03bc\u03cc\u03c2 \u03b8\u03ad\u03c3\u03b7\u03c2 {entity_name}",
+            "set_tilt_position": "\u039f\u03c1\u03b9\u03c3\u03bc\u03cc\u03c2 \u03b8\u03ad\u03c3\u03b7\u03c2 \u03ba\u03bb\u03af\u03c3\u03b7\u03c2 {entity_name}",
+            "stop": "\u0394\u03b9\u03b1\u03ba\u03bf\u03c0\u03ae {entity_name}"
+        },
+        "condition_type": {
+            "is_closed": "{entity_name} \u03b5\u03af\u03bd\u03b1\u03b9 \u03ba\u03bb\u03b5\u03b9\u03c3\u03c4\u03cc",
+            "is_closing": "{entity_name} \u03ba\u03bb\u03b5\u03af\u03bd\u03b5\u03b9",
+            "is_open": "{entity_name} \u03b5\u03af\u03bd\u03b1\u03b9 \u03b1\u03bd\u03bf\u03b9\u03c7\u03c4\u03cc",
+            "is_opening": "{entity_name} \u03b1\u03bd\u03bf\u03af\u03b3\u03b5\u03b9"
+        },
         "trigger_type": {
             "closed": "{entity_name} \u03ad\u03ba\u03bb\u03b5\u03b9\u03c3\u03b5",
             "closing": "{entity_name} \u03ba\u03bb\u03b5\u03af\u03bd\u03b5\u03b9",

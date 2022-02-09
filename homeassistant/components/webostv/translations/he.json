@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u05ea\u05e6\u05d5\u05e8\u05ea \u05d4\u05d4\u05ea\u05e7\u05df \u05db\u05d1\u05e8 \u05e0\u05e7\u05d1\u05e2\u05d4",
+            "already_in_progress": "\u05d6\u05e8\u05d9\u05de\u05ea \u05d4\u05ea\u05e6\u05d5\u05e8\u05d4 \u05db\u05d1\u05e8 \u05de\u05ea\u05d1\u05e6\u05e2\u05ea"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u05de\u05d0\u05e8\u05d7",
+                    "name": "\u05e9\u05dd"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "webostv.turn_on": "\u05d4\u05d4\u05ea\u05e7\u05df \u05d4\u05ea\u05d1\u05e7\u05e9 \u05dc\u05d4\u05e4\u05e2\u05d9\u05dc"
+        }
+    }
+}

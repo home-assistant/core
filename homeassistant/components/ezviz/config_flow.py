@@ -134,7 +134,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         except PyEzvizError as err:
             raise PyEzvizError from err
 
-        # Secondly try to wake hybernating camera.
+        # Secondly try to wake hibernating camera.
         try:
             await self.hass.async_add_executor_job(
                 ezviz_client.get_detection_sensibility, data[ATTR_SERIAL]

@@ -1,4 +1,8 @@
 """Tests for the sensors provided by the Roku integration."""
+from unittest.mock import MagicMock
+
+import pytest
+
 from homeassistant.components.roku.const import DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -10,17 +14,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 
-from tests.components.roku import UPNP_SERIAL, setup_integration
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.common import MockConfigEntry
+from tests.components.roku import UPNP_SERIAL
 
 
 async def test_roku_sensors(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test the Roku sensors."""
-    await setup_integration(hass, aioclient_mock)
-
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
@@ -59,22 +61,17 @@ async def test_roku_sensors(
     assert device_entry.name == "My Roku 3"
     assert device_entry.entry_type is None
     assert device_entry.sw_version == "7.5.0"
+    assert device_entry.hw_version == "4200X"
+    assert device_entry.suggested_area is None
 
 
+@pytest.mark.parametrize("mock_roku", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_rokutv_sensors(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
+    init_integration: MockConfigEntry,
+    mock_roku: MagicMock,
 ) -> None:
     """Test the Roku TV sensors."""
-    await setup_integration(
-        hass,
-        aioclient_mock,
-        device="rokutv",
-        app="tvinput-dtv",
-        host="192.168.1.161",
-        unique_id="YN00H5555555",
-    )
-
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
@@ -113,3 +110,5 @@ async def test_rokutv_sensors(
     assert device_entry.name == '58" Onn Roku TV'
     assert device_entry.entry_type is None
     assert device_entry.sw_version == "9.2.0"
+    assert device_entry.hw_version == "7820X"
+    assert device_entry.suggested_area == "Living room"

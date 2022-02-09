@@ -8,7 +8,6 @@ import voluptuous as vol
 from homeassistant import config as conf_util
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.system_info import async_get_system_info
 
 from . import CONFIG_SCHEMA
 from .const import DOMAIN
@@ -19,8 +18,6 @@ async def async_get_config_entry_diagnostics(
 ) -> dict:
     """Return diagnostics for a config entry."""
     diag: dict[str, Any] = {}
-    diag["home_assistant"] = await async_get_system_info(hass)
-
     knx_module = hass.data[DOMAIN]
     diag["xknx"] = {
         "version": knx_module.xknx.version,
