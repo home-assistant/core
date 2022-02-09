@@ -3,10 +3,9 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import suppress
-from datetime import datetime, timedelta
+from datetime import datetime
 import json
 import logging
-from urllib.parse import quote
 
 import pychromecast
 from pychromecast.controllers.homeassistant import HomeAssistantController
@@ -21,11 +20,11 @@ import voluptuous as vol
 import yarl
 
 from homeassistant.components import media_source, zeroconf
-from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player import (
     BrowseError,
     BrowseMedia,
     MediaPlayerEntity,
+    async_process_play_media_url,
 )
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_EXTRA,
@@ -582,10 +581,11 @@ class CastDevice(MediaPlayerEntity):
                 return
 
         # If media ID is a relative URL, we serve it from HA.
-        # Create a signed path.
-        if media_id[0] == "/" or is_hass_url(self.hass, media_id):
+        media_id = async_process_play_media_url(self.hass, media_id)
+
+        # Configure play command for when playing a HLS stream
+        if is_hass_url(self.hass, media_id):
             parsed = yarl.URL(media_id)
-            # Configure play command for when playing a HLS stream
             if parsed.path.startswith("/api/hls/"):
                 extra = {
                     **extra,
@@ -594,19 +594,6 @@ class CastDevice(MediaPlayerEntity):
                         "hlsVideoSegmentFormat": "fmp4",
                     },
                 }
-
-            if parsed.query:
-                _LOGGER.debug("Not signing path for content with query param")
-            else:
-                media_id = async_sign_path(
-                    self.hass,
-                    quote(media_id),
-                    timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
-                )
-
-            if media_id[0] == "/":
-                # prepend URL
-                media_id = f"{get_url(self.hass)}{media_id}"
 
         # Default to play with the default media receiver
         app_data = {"media_id": media_id, "media_type": media_type, **extra}

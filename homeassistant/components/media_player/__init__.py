@@ -59,7 +59,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
-    datetime,
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
@@ -67,7 +66,8 @@ from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from .const import (
+from .browse_media import BrowseMedia, async_process_play_media_url  # noqa: F401
+from .const import (  # noqa: F401
     ATTR_APP_ID,
     ATTR_APP_NAME,
     ATTR_GROUP_MEMBERS,
@@ -97,6 +97,7 @@ from .const import (
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
+    CONTENT_AUTH_EXPIRY_TIME,
     DOMAIN,
     MEDIA_CLASS_DIRECTORY,
     REPEAT_MODES,
@@ -1204,74 +1205,3 @@ async def websocket_browse_media(hass, connection, msg):
         _LOGGER.warning("Browse Media should use new BrowseMedia class")
 
     connection.send_result(msg["id"], payload)
-
-
-class BrowseMedia:
-    """Represent a browsable media file."""
-
-    def __init__(
-        self,
-        *,
-        media_class: str,
-        media_content_id: str,
-        media_content_type: str,
-        title: str,
-        can_play: bool,
-        can_expand: bool,
-        children: list[BrowseMedia] | None = None,
-        children_media_class: str | None = None,
-        thumbnail: str | None = None,
-    ) -> None:
-        """Initialize browse media item."""
-        self.media_class = media_class
-        self.media_content_id = media_content_id
-        self.media_content_type = media_content_type
-        self.title = title
-        self.can_play = can_play
-        self.can_expand = can_expand
-        self.children = children
-        self.children_media_class = children_media_class
-        self.thumbnail = thumbnail
-
-    def as_dict(self, *, parent: bool = True) -> dict:
-        """Convert Media class to browse media dictionary."""
-        if self.children_media_class is None:
-            self.calculate_children_class()
-
-        response = {
-            "title": self.title,
-            "media_class": self.media_class,
-            "media_content_type": self.media_content_type,
-            "media_content_id": self.media_content_id,
-            "can_play": self.can_play,
-            "can_expand": self.can_expand,
-            "children_media_class": self.children_media_class,
-            "thumbnail": self.thumbnail,
-        }
-
-        if not parent:
-            return response
-
-        if self.children:
-            response["children"] = [
-                child.as_dict(parent=False) for child in self.children
-            ]
-        else:
-            response["children"] = []
-
-        return response
-
-    def calculate_children_class(self) -> None:
-        """Count the children media classes and calculate the correct class."""
-        if self.children is None or len(self.children) == 0:
-            return
-
-        self.children_media_class = MEDIA_CLASS_DIRECTORY
-
-        proposed_class = self.children[0].media_class
-        if all(child.media_class == proposed_class for child in self.children):
-            self.children_media_class = proposed_class
-
-    def __repr__(self):
-        """Return representation of browse media."""
-        return f"<BrowseMedia {self.title} ({self.media_class})>"
