@@ -55,7 +55,7 @@ class ZWaveNodePingButton(ButtonEntity):
         self.client = client
         self.node = node
         name: str = (
-            self.node.name
+            node.name
             or self.node.device_config.description
             or f"Node {self.node.node_id}"
         )
