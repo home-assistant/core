@@ -48,6 +48,7 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 
 __all__ = [
     "async_browse_media",
+    "DOMAIN",
     "is_spotify_media_type",
     "resolve_spotify_media_type",
 ]
