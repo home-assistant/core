@@ -46,6 +46,7 @@ CONF_PM25 = "pm25"
 CONF_POWER = "power"
 CONF_POWER_FACTOR = "power_factor"
 CONF_PRESSURE = "pressure"
+CONF_RADON = "radon"
 CONF_REACTIVE_POWER = "reactive_power"
 CONF_SIGNAL_STRENGTH = "signal_strength"
 CONF_SULPHUR_DIOXIDE = "sulphur_dioxide"
@@ -75,6 +76,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.POWER: [{CONF_TYPE: CONF_POWER}],
     SensorDeviceClass.POWER_FACTOR: [{CONF_TYPE: CONF_POWER_FACTOR}],
     SensorDeviceClass.PRESSURE: [{CONF_TYPE: CONF_PRESSURE}],
+    SensorDeviceClass.RADON: [{CONF_TYPE: CONF_RADON}],
     SensorDeviceClass.REACTIVE_POWER: [{CONF_TYPE: CONF_REACTIVE_POWER}],
     SensorDeviceClass.SIGNAL_STRENGTH: [{CONF_TYPE: CONF_SIGNAL_STRENGTH}],
     SensorDeviceClass.SULPHUR_DIOXIDE: [{CONF_TYPE: CONF_SULPHUR_DIOXIDE}],
@@ -113,6 +115,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_POWER,
                     CONF_POWER_FACTOR,
                     CONF_PRESSURE,
+                    CONF_RADON,
                     CONF_REACTIVE_POWER,
                     CONF_SIGNAL_STRENGTH,
                     CONF_SULPHUR_DIOXIDE,

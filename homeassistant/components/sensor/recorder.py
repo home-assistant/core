@@ -38,6 +38,8 @@ from homeassistant.const import (
     PRESSURE_MBAR,
     PRESSURE_PA,
     PRESSURE_PSI,
+    RADON_BECQUERELS,
+    RADON_PICOCURIES,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
@@ -76,6 +78,7 @@ DEVICE_CLASS_UNITS: dict[str, str] = {
     SensorDeviceClass.ENERGY: ENERGY_KILO_WATT_HOUR,
     SensorDeviceClass.POWER: POWER_WATT,
     SensorDeviceClass.PRESSURE: PRESSURE_PA,
+    SensorDeviceClass.RADON: RADON_BECQUERELS,
     SensorDeviceClass.TEMPERATURE: TEMP_CELSIUS,
     SensorDeviceClass.GAS: VOLUME_CUBIC_METERS,
 }
@@ -102,6 +105,11 @@ UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
         PRESSURE_MBAR: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_MBAR],
         PRESSURE_PA: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_PA],
         PRESSURE_PSI: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_PSI],
+    },
+    # Convert radon to PICOCURIES
+    SensorDeviceClass.RADON: {
+        RADON_BECQUERELS: lambda x: x,
+        RADON_PICOCURIES: lambda x: x / 37,
     },
     # Convert temperature to °C
     # Note: temperature_util.convert is bypassed to avoid redundant error checking

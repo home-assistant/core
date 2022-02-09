@@ -17,6 +17,7 @@ from homeassistant.const import (
     POWER_VOLT_AMPERE,
     POWER_VOLT_AMPERE_REACTIVE,
     PRESSURE_HPA,
+    RADON_BECQUERELS,
     SIGNAL_STRENGTH_DECIBELS,
     VOLUME_CUBIC_METERS,
 )
@@ -43,6 +44,7 @@ UNITS_OF_MEASUREMENT = {
     SensorDeviceClass.SULPHUR_DIOXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of sulphur dioxide
     SensorDeviceClass.TEMPERATURE: "C",  # temperature (C/F)
     SensorDeviceClass.PRESSURE: PRESSURE_HPA,  # pressure (hPa/mbar)
+    SensorDeviceClass.RADON: RADON_BECQUERELS,  # radon (Bq/m³)
     SensorDeviceClass.POWER: "kW",  # power (W/kW)
     SensorDeviceClass.CURRENT: "A",  # current (A)
     SensorDeviceClass.ENERGY: "kWh",  # energy (Wh/kWh/MWh)

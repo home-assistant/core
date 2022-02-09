@@ -36,6 +36,7 @@ from homeassistant.const import (  # noqa: F401
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_POWER_FACTOR,
     DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_RADON,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_SULPHUR_DIOXIDE,
     DEVICE_CLASS_TEMPERATURE,
@@ -141,6 +142,9 @@ class SensorDeviceClass(StrEnum):
 
     # pressure (hPa/mbar)
     PRESSURE = "pressure"
+
+    # radon (Bq/m³, pCi/L)
+    RADON = "radon"
 
     # reactive power (var)
     REACTIVE_POWER = "reactive_power"

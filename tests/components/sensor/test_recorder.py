@@ -52,6 +52,11 @@ PRESSURE_SENSOR_ATTRIBUTES = {
     "state_class": "measurement",
     "unit_of_measurement": "hPa",
 }
+RADON_SENSOR_ATTRIBUTES = {
+    "device_class": "radon",
+    "state_class": "measurement",
+    "unit_of_measurement": "Bq/m³",
+}
 TEMPERATURE_SENSOR_ATTRIBUTES = {
     "device_class": "temperature",
     "state_class": "measurement",
@@ -87,6 +92,8 @@ def set_time_zone():
         ("pressure", "mbar", "Pa", 1305.0847, -1000, 3000),
         ("pressure", "inHg", "Pa", 44195.25, -33863.89, 101591.67),
         ("pressure", "psi", "Pa", 89982.42, -68947.57, 206842.71),
+        ("radon", "Bq/m³", "Bq/m³", 13.050847, -10, 30),
+        ("radon", "pCi/L", "Bq/m³", 0.3527256, -0.270270, 0.8108108),
         ("temperature", "°C", "°C", 13.050847, -10, 30),
         ("temperature", "°F", "°C", -10.52731, -23.33333, -1.111111),
     ],
@@ -1362,6 +1369,8 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
         ("pressure", "mbar", 3000),
         ("pressure", "inHg", 101591.67),
         ("pressure", "psi", 206842.71),
+        ("radon", "Bq/m³", 64.0),
+        ("radon", "pCi/L", 1.7297297),
         ("temperature", "°C", 30),
         ("temperature", "°F", -1.111111),
     ],
@@ -1449,6 +1458,8 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
         ("pressure", "mbar", 3000),
         ("pressure", "inHg", 101591.67),
         ("pressure", "psi", 206842.71),
+        ("radon", "Bq/m³", 64.0),
+        ("radon", "pCi/L", 1.7297297),
         ("temperature", "°C", 30),
         ("temperature", "°F", -1.111111),
     ],
@@ -1534,6 +1545,8 @@ def test_compile_hourly_statistics_fails(hass_recorder, caplog):
         ("measurement", "pressure", "mbar", "Pa", "mean"),
         ("measurement", "pressure", "inHg", "Pa", "mean"),
         ("measurement", "pressure", "psi", "Pa", "mean"),
+        ("measurement", "radon", "Bq/m³", "Bq/m³", "mean"),
+        ("measurement", "radon", "pCi/L", "Bq/m³", "mean"),
         ("measurement", "temperature", "°C", "°C", "mean"),
         ("measurement", "temperature", "°F", "°C", "mean"),
     ],
@@ -2606,6 +2619,8 @@ def record_states(hass, zero, entity_id, attributes, seq=None):
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, "°C"),
         (IMPERIAL_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, "psi"),
         (METRIC_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, "Pa"),
+        (IMPERIAL_SYSTEM, RADON_SENSOR_ATTRIBUTES, "pCi/L"),
+        (METRIC_SYSTEM, RADON_SENSOR_ATTRIBUTES, "Bq/m³"),
     ],
 )
 async def test_validate_statistics_supported_device_class(

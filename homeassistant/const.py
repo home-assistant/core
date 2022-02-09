@@ -295,6 +295,7 @@ DEVICE_CLASS_PM25: Final = "pm25"
 DEVICE_CLASS_POWER_FACTOR: Final = "power_factor"
 DEVICE_CLASS_POWER: Final = "power"
 DEVICE_CLASS_PRESSURE: Final = "pressure"
+DEVICE_CLASS_RADON: Final = "radon"
 DEVICE_CLASS_SIGNAL_STRENGTH: Final = "signal_strength"
 DEVICE_CLASS_SULPHUR_DIOXIDE = "sulphur_dioxide"
 DEVICE_CLASS_TEMPERATURE: Final = "temperature"
@@ -537,6 +538,10 @@ PRESSURE_PSI: Final = "psi"
 # Sound pressure units
 SOUND_PRESSURE_DB: Final = "dB"
 SOUND_PRESSURE_WEIGHTED_DBA: Final = "dBa"
+
+# Radon units
+RADON_BECQUERELS: Final = "Bq/m³"
+RADON_PICOCURIES: Final = "pCi/L"
 
 # Volume units
 VOLUME_LITERS: Final = "L"

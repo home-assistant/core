@@ -49,6 +49,7 @@ CONF_IS_PM25 = "is_pm25"
 CONF_IS_POWER = "is_power"
 CONF_IS_POWER_FACTOR = "is_power_factor"
 CONF_IS_PRESSURE = "is_pressure"
+CONF_IS_RADON = "is_radon"
 CONF_IS_REACTIVE_POWER = "is_reactive_power"
 CONF_IS_SIGNAL_STRENGTH = "is_signal_strength"
 CONF_IS_SULPHUR_DIOXIDE = "is_sulphur_dioxide"
@@ -78,6 +79,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.PM10: [{CONF_TYPE: CONF_IS_PM10}],
     SensorDeviceClass.PM25: [{CONF_TYPE: CONF_IS_PM25}],
     SensorDeviceClass.PRESSURE: [{CONF_TYPE: CONF_IS_PRESSURE}],
+    SensorDeviceClass.RADON: [{CONF_TYPE: CONF_IS_RADON}],
     SensorDeviceClass.REACTIVE_POWER: [{CONF_TYPE: CONF_IS_REACTIVE_POWER}],
     SensorDeviceClass.SIGNAL_STRENGTH: [{CONF_TYPE: CONF_IS_SIGNAL_STRENGTH}],
     SensorDeviceClass.SULPHUR_DIOXIDE: [{CONF_TYPE: CONF_IS_SULPHUR_DIOXIDE}],
@@ -115,6 +117,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_PM10,
                     CONF_IS_PM25,
                     CONF_IS_PRESSURE,
+                    CONF_IS_RADON,
                     CONF_IS_REACTIVE_POWER,
                     CONF_IS_SIGNAL_STRENGTH,
                     CONF_IS_SULPHUR_DIOXIDE,
