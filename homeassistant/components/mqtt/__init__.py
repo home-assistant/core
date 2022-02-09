@@ -578,6 +578,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_subscribe)
     websocket_api.async_register_command(hass, websocket_remove_device)
     websocket_api.async_register_command(hass, websocket_mqtt_info)
+    debug_info.initialize(hass)
 
     if conf is None:
         # If we have a config entry, setup is done by that config entry.
@@ -595,8 +596,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
             )
         )
-
-    debug_info.initialize(hass)
 
     return True
 
