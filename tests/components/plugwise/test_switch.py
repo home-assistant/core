@@ -135,6 +135,7 @@ async def test_unique_id_migration_plug_relay(hass, mock_smile_adam):
     entry.add_to_hass(hass)
 
     registry = er.async_get(hass)
+    # Entry to migrate
     registry.async_get_or_create(
         Platform.SWITCH,
         DOMAIN,
@@ -143,12 +144,26 @@ async def test_unique_id_migration_plug_relay(hass, mock_smile_adam):
         suggested_object_id="playstation_smart_plug",
         disabled_by=None,
     )
+    # Entry not needing migration
+    registry.async_get_or_create(
+        Platform.SWITCH,
+        DOMAIN,
+        "675416a629f343c495449970e2ca37b5-relay",
+        config_entry=entry,
+        suggested_object_id="router",
+        disabled_by=None,
+    )
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.playstation_smart_plug") is not None
+    assert hass.states.get("switch.router") is not None
 
     entity_entry = registry.async_get("switch.playstation_smart_plug")
     assert entity_entry
     assert entity_entry.unique_id == "21f2b542c49845e6bb416884c55778d6-relay"
+
+    entity_entry = registry.async_get("switch.router")
+    assert entity_entry
+    assert entity_entry.unique_id == "675416a629f343c495449970e2ca37b5-relay"
