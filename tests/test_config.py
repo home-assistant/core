@@ -53,8 +53,11 @@ def create_file(path):
         pass
 
 
+@pytest.fixture(autouse=True)
 def teardown():
     """Clean up."""
+    yield
+
     dt_util.DEFAULT_TIME_ZONE = ORIG_TIMEZONE
 
     if os.path.isfile(YAML_PATH):
@@ -78,6 +81,11 @@ def teardown():
 
 async def test_create_default_config(hass):
     """Test creation of default config."""
+    assert not os.path.isfile(YAML_PATH)
+    assert not os.path.isfile(SECRET_PATH)
+    assert not os.path.isfile(VERSION_PATH)
+    assert not os.path.isfile(AUTOMATIONS_PATH)
+
     await config_util.async_create_default_config(hass)
 
     assert os.path.isfile(YAML_PATH)
@@ -91,6 +99,7 @@ async def test_ensure_config_exists_creates_config(hass):
 
     If not creates a new config file.
     """
+    assert not os.path.isfile(YAML_PATH)
     with patch("builtins.print") as mock_print:
         await config_util.async_ensure_config_exists(hass)
 
@@ -1050,23 +1059,20 @@ async def test_component_config_exceptions(hass, caplog):
 
     # component.PLATFORM_SCHEMA
     caplog.clear()
-    assert (
-        await config_util.async_process_component_config(
-            hass,
-            {"test_domain": {"platform": "test_platform"}},
-            integration=Mock(
-                domain="test_domain",
-                get_platform=Mock(return_value=None),
-                get_component=Mock(
-                    return_value=Mock(
-                        spec=["PLATFORM_SCHEMA_BASE"],
-                        PLATFORM_SCHEMA_BASE=Mock(side_effect=ValueError("broken")),
-                    )
-                ),
+    assert await config_util.async_process_component_config(
+        hass,
+        {"test_domain": {"platform": "test_platform"}},
+        integration=Mock(
+            domain="test_domain",
+            get_platform=Mock(return_value=None),
+            get_component=Mock(
+                return_value=Mock(
+                    spec=["PLATFORM_SCHEMA_BASE"],
+                    PLATFORM_SCHEMA_BASE=Mock(side_effect=ValueError("broken")),
+                )
             ),
-        )
-        == {"test_domain": []}
-    )
+        ),
+    ) == {"test_domain": []}
     assert "ValueError: broken" in caplog.text
     assert (
         "Unknown error validating test_platform platform config with test_domain component platform schema"
@@ -1085,20 +1091,15 @@ async def test_component_config_exceptions(hass, caplog):
             )
         ),
     ):
-        assert (
-            await config_util.async_process_component_config(
-                hass,
-                {"test_domain": {"platform": "test_platform"}},
-                integration=Mock(
-                    domain="test_domain",
-                    get_platform=Mock(return_value=None),
-                    get_component=Mock(
-                        return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])
-                    ),
-                ),
-            )
-            == {"test_domain": []}
-        )
+        assert await config_util.async_process_component_config(
+            hass,
+            {"test_domain": {"platform": "test_platform"}},
+            integration=Mock(
+                domain="test_domain",
+                get_platform=Mock(return_value=None),
+                get_component=Mock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
+            ),
+        ) == {"test_domain": []}
         assert "ValueError: broken" in caplog.text
         assert (
             "Unknown error validating config for test_platform platform for test_domain component with PLATFORM_SCHEMA"

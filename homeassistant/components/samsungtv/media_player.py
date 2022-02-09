@@ -245,7 +245,7 @@ class SamsungTVDevice(MediaPlayerEntity):
 
         for digit in media_id:
             await self.hass.async_add_executor_job(self.send_key, f"KEY_{digit}")
-            await asyncio.sleep(KEY_PRESS_TIMEOUT, self.hass.loop)
+            await asyncio.sleep(KEY_PRESS_TIMEOUT)
         await self.hass.async_add_executor_job(self.send_key, "KEY_ENTER")
 
     def _wake_on_lan(self) -> None:

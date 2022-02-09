@@ -16,7 +16,7 @@ import defusedxml.ElementTree as ET
 from soco.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
 from soco.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
 from soco.events_base import Event as SonosEvent, SubscriptionBase
-from soco.exceptions import SoCoException, SoCoSlaveException, SoCoUPnPException
+from soco.exceptions import SoCoException, SoCoUPnPException
 from soco.music_library import MusicLibrary
 from soco.plugins.plex import PlexPlugin
 from soco.plugins.sharelink import ShareLinkPlugin
@@ -50,7 +50,7 @@ from .const import (
     SONOS_CREATE_MEDIA_PLAYER,
     SONOS_CREATE_MIC_SENSOR,
     SONOS_CREATE_SWITCHES,
-    SONOS_POLL_UPDATE,
+    SONOS_FALLBACK_POLL,
     SONOS_REBOOTED,
     SONOS_SPEAKER_ACTIVITY,
     SONOS_SPEAKER_ADDED,
@@ -354,7 +354,7 @@ class SonosSpeaker:
                 partial(
                     async_dispatcher_send,
                     self.hass,
-                    f"{SONOS_POLL_UPDATE}-{self.soco.uid}",
+                    f"{SONOS_FALLBACK_POLL}-{self.soco.uid}",
                 ),
                 SCAN_INTERVAL,
             )
@@ -399,13 +399,20 @@ class SonosSpeaker:
             return_exceptions=True,
         )
         for result in results:
-            if isinstance(result, Exception):
-                _LOGGER.debug(
-                    "Unsubscribe failed for %s: %s",
-                    self.zone_name,
-                    result,
-                    exc_info=result,
-                )
+            if isinstance(result, asyncio.exceptions.TimeoutError):
+                message = "Request timed out"
+                exc_info = None
+            elif isinstance(result, Exception):
+                message = result
+                exc_info = result if not str(result) else None
+            else:
+                continue
+            _LOGGER.debug(
+                "Unsubscribe failed for %s: %s",
+                self.zone_name,
+                message,
+                exc_info=exc_info,
+            )
         self._subscriptions = []
 
     @callback
@@ -422,19 +429,18 @@ class SonosSpeaker:
             if not self.available:
                 return
 
-            if getattr(exception, "status", None) == 412:
-                _LOGGER.warning(
-                    "Subscriptions for %s failed, speaker may have lost power",
-                    self.zone_name,
-                )
+            if isinstance(exception, asyncio.exceptions.TimeoutError):
+                message = "Request timed out"
+                exc_info = None
             else:
-                exc_info = exception if _LOGGER.isEnabledFor(logging.DEBUG) else None
-                _LOGGER.error(
-                    "Subscription renewals for %s failed: %s",
-                    self.zone_name,
-                    exception,
-                    exc_info=exc_info,
-                )
+                message = exception
+                exc_info = exception if not str(exception) else None
+            _LOGGER.warning(
+                "Subscription renewals for %s failed, marking unavailable: %s",
+                self.zone_name,
+                message,
+                exc_info=exc_info,
+            )
             await self.async_offline()
 
     @callback
@@ -562,7 +568,7 @@ class SonosSpeaker:
         if not self.available:
             return
 
-        _LOGGER.debug(
+        _LOGGER.warning(
             "No recent activity and cannot reach %s, marking unavailable",
             self.zone_name,
         )
@@ -1038,18 +1044,11 @@ class SonosSpeaker:
     #
     # Media and playback state handlers
     #
-    @soco_error(raise_on_err=False)
+    @soco_error()
     def update_volume(self) -> None:
         """Update information about current volume settings."""
         self.volume = self.soco.volume
         self.muted = self.soco.mute
-        self.night_mode = self.soco.night_mode
-        self.dialog_level = self.soco.dialog_level
-
-        try:
-            self.cross_fade = self.soco.cross_fade
-        except SoCoSlaveException:
-            pass
 
     @soco_error()
     def update_media(self, event: SonosEvent | None = None) -> None:

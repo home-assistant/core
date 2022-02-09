@@ -12,6 +12,7 @@
             "too_many_requests": "Muitas solicita\u00e7\u00f5es, tente novamente mais tarde",
             "unknown": "Erro inesperado"
         },
+        "flow_title": "Gateway: {gateway_id}",
         "step": {
             "user": {
                 "data": {

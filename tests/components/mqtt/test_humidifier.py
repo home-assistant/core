@@ -1102,7 +1102,7 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
 async def test_entity_debug_info_message(hass, mqtt_mock):
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
-        hass, mqtt_mock, humidifier.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock, humidifier.DOMAIN, DEFAULT_CONFIG, humidifier.SERVICE_TURN_ON
     )
 
 

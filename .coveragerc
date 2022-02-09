@@ -80,6 +80,7 @@ omit =
     homeassistant/components/asterisk_cdr/mailbox.py
     homeassistant/components/asterisk_mbox/*
     homeassistant/components/asuswrt/__init__.py
+    homeassistant/components/asuswrt/diagnostics.py
     homeassistant/components/asuswrt/router.py
     homeassistant/components/aten_pe/*
     homeassistant/components/atome/*
@@ -256,7 +257,14 @@ omit =
     homeassistant/components/egardia/*
     homeassistant/components/eight_sleep/*
     homeassistant/components/eliqonline/sensor.py
-    homeassistant/components/elkm1/*
+    homeassistant/components/elkm1/__init__.py
+    homeassistant/components/elkm1/alarm_control_panel.py
+    homeassistant/components/elkm1/climate.py
+    homeassistant/components/elkm1/discovery.py
+    homeassistant/components/elkm1/light.py
+    homeassistant/components/elkm1/scene.py
+    homeassistant/components/elkm1/sensor.py
+    homeassistant/components/elkm1/switch.py
     homeassistant/components/elmax/__init__.py
     homeassistant/components/elmax/common.py
     homeassistant/components/elmax/const.py
@@ -339,6 +347,9 @@ omit =
     homeassistant/components/firmata/sensor.py
     homeassistant/components/firmata/switch.py
     homeassistant/components/fitbit/*
+    homeassistant/components/fivem/__init__.py
+    homeassistant/components/fivem/binary_sensor.py
+    homeassistant/components/fivem/sensor.py
     homeassistant/components/fixer/sensor.py
     homeassistant/components/fjaraskupan/__init__.py
     homeassistant/components/fjaraskupan/binary_sensor.py
@@ -400,7 +411,6 @@ omit =
     homeassistant/components/glances/__init__.py
     homeassistant/components/glances/const.py
     homeassistant/components/glances/sensor.py
-    homeassistant/components/gntp/notify.py
     homeassistant/components/goalfeed/*
     homeassistant/components/goodwe/__init__.py
     homeassistant/components/goodwe/const.py
@@ -733,6 +743,7 @@ omit =
     homeassistant/components/netgear/device_tracker.py
     homeassistant/components/netgear/router.py
     homeassistant/components/netgear/sensor.py
+    homeassistant/components/netgear/switch.py
     homeassistant/components/netgear_lte/*
     homeassistant/components/netio/switch.py
     homeassistant/components/neurio_energy/sensor.py
@@ -759,6 +770,7 @@ omit =
     homeassistant/components/nuki/const.py
     homeassistant/components/nuki/binary_sensor.py
     homeassistant/components/nuki/lock.py
+    homeassistant/components/nut/diagnostics.py
     homeassistant/components/nx584/alarm_control_panel.py
     homeassistant/components/nzbget/coordinator.py
     homeassistant/components/obihai/*
@@ -1314,6 +1326,12 @@ omit =
     homeassistant/components/waze_travel_time/sensor.py
     homeassistant/components/wiffi/*
     homeassistant/components/wirelesstag/*
+    homeassistant/components/wiz/__init__.py
+    homeassistant/components/wiz/const.py
+    homeassistant/components/wiz/discovery.py
+    homeassistant/components/wiz/entity.py
+    homeassistant/components/wiz/light.py
+    homeassistant/components/wiz/switch.py
     homeassistant/components/wolflink/__init__.py
     homeassistant/components/wolflink/sensor.py
     homeassistant/components/wolflink/const.py
@@ -1402,6 +1420,16 @@ omit =
     homeassistant/components/zwave/util.py
     homeassistant/components/zwave_js/discovery.py
     homeassistant/components/zwave_js/sensor.py
+    homeassistant/components/zwave_me/__init__.py
+    homeassistant/components/zwave_me/binary_sensor.py
+    homeassistant/components/zwave_me/button.py
+    homeassistant/components/zwave_me/climate.py
+    homeassistant/components/zwave_me/helpers.py
+    homeassistant/components/zwave_me/light.py
+    homeassistant/components/zwave_me/lock.py
+    homeassistant/components/zwave_me/number.py
+    homeassistant/components/zwave_me/sensor.py
+    homeassistant/components/zwave_me/switch.py
 
 [report]
 # Regexes for lines to exclude from consideration

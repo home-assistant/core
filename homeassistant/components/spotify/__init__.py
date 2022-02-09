@@ -4,7 +4,7 @@ import aiohttp
 from spotipy import Spotify, SpotifyException
 import voluptuous as vol
 
-from homeassistant.components.media_player import BrowseError
+from homeassistant.components.media_player import BrowseError, BrowseMedia
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CREDENTIALS,
@@ -47,19 +47,23 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
-def is_spotify_media_type(media_content_type):
+def is_spotify_media_type(media_content_type: str) -> bool:
     """Return whether the media_content_type is a valid Spotify media_id."""
     return media_content_type.startswith(MEDIA_PLAYER_PREFIX)
 
 
-def resolve_spotify_media_type(media_content_type):
+def resolve_spotify_media_type(media_content_type: str) -> str:
     """Return actual spotify media_content_type."""
     return media_content_type[len(MEDIA_PLAYER_PREFIX) :]
 
 
 async def async_browse_media(
-    hass, media_content_type, media_content_id, *, can_play_artist=True
-):
+    hass: HomeAssistant,
+    media_content_type: str,
+    media_content_id: str,
+    *,
+    can_play_artist: bool = True,
+) -> BrowseMedia:
     """Browse Spotify media."""
     if not (info := next(iter(hass.data[DOMAIN].values()), None)):
         raise BrowseError("No Spotify accounts available")
@@ -128,12 +132,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Spotify config entry."""
-    # Unload entities for this entry/device.
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    # Cleanup
-    del hass.data[DOMAIN][entry.entry_id]
-    if not hass.data[DOMAIN]:
-        del hass.data[DOMAIN]
-
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        del hass.data[DOMAIN][entry.entry_id]
     return unload_ok

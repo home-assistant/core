@@ -578,6 +578,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_subscribe)
     websocket_api.async_register_command(hass, websocket_remove_device)
     websocket_api.async_register_command(hass, websocket_mqtt_info)
+    debug_info.initialize(hass)
 
     if conf is None:
         # If we have a config entry, setup is done by that config entry.
@@ -1184,7 +1185,7 @@ def _matcher_for_topic(subscription: str) -> Any:
 async def websocket_mqtt_info(hass, connection, msg):
     """Get MQTT debug info for device."""
     device_id = msg["device_id"]
-    mqtt_info = await debug_info.info_for_device(hass, device_id)
+    mqtt_info = debug_info.info_for_device(hass, device_id)
 
     connection.send_result(msg["id"], mqtt_info)
 

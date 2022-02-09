@@ -18,6 +18,7 @@ from pychromecast.socket_client import (
     CONNECTION_STATUS_DISCONNECTED,
 )
 import voluptuous as vol
+import yarl
 
 from homeassistant.components import media_source, zeroconf
 from homeassistant.components.http.auth import async_sign_path
@@ -50,6 +51,7 @@ from homeassistant.const import (
     CAST_APP_ID_HOMEASSISTANT_LOVELACE,
     EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
+    STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
 )
@@ -58,7 +60,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.network import NoURLAvailableError, get_url, is_hass_url
 import homeassistant.util.dt as dt_util
 from homeassistant.util.logging import async_create_catching_coro
 
@@ -534,19 +536,6 @@ class CastDevice(MediaPlayerEntity):
             media_type = sourced_media.mime_type
             media_id = sourced_media.url
 
-        # If media ID is a relative URL, we serve it from HA.
-        # Create a signed path.
-        if media_id[0] == "/":
-            media_id = async_sign_path(
-                self.hass,
-                quote(media_id),
-                timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
-            )
-
-            # prepend external URL
-            hass_url = get_url(self.hass, prefer_external=True)
-            media_id = f"{hass_url}{media_id}"
-
         extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
         metadata = extra.get("metadata")
 
@@ -592,6 +581,33 @@ class CastDevice(MediaPlayerEntity):
             if result:
                 return
 
+        # If media ID is a relative URL, we serve it from HA.
+        # Create a signed path.
+        if media_id[0] == "/" or is_hass_url(self.hass, media_id):
+            parsed = yarl.URL(media_id)
+            # Configure play command for when playing a HLS stream
+            if parsed.path.startswith("/api/hls/"):
+                extra = {
+                    **extra,
+                    "stream_type": "LIVE",
+                    "media_info": {
+                        "hlsVideoSegmentFormat": "fmp4",
+                    },
+                }
+
+            if parsed.query:
+                _LOGGER.debug("Not signing path for content with query param")
+            else:
+                media_id = async_sign_path(
+                    self.hass,
+                    quote(media_id),
+                    timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
+                )
+
+            if media_id[0] == "/":
+                # prepend URL
+                media_id = f"{get_url(self.hass)}{media_id}"
+
         # Default to play with the default media receiver
         app_data = {"media_id": media_id, "media_type": media_type, **extra}
         await self.hass.async_add_executor_job(
@@ -636,7 +652,7 @@ class CastDevice(MediaPlayerEntity):
                 return STATE_PLAYING
             return STATE_IDLE
         if self._chromecast is not None and self._chromecast.is_idle:
-            return STATE_IDLE
+            return STATE_OFF
         return None
 
     @property

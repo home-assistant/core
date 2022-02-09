@@ -257,8 +257,7 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
             self._current_number = current_number
             self.async_write_ha_state()
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._config[CONF_COMMAND_TOPIC],
             payload,
             self._config[CONF_QOS],

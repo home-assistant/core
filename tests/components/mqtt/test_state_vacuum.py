@@ -510,7 +510,13 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
 async def test_entity_debug_info_message(hass, mqtt_mock):
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
-        hass, mqtt_mock, vacuum.DOMAIN, DEFAULT_CONFIG_2, payload="{}"
+        hass,
+        mqtt_mock,
+        vacuum.DOMAIN,
+        DEFAULT_CONFIG_2,
+        vacuum.SERVICE_START,
+        command_payload="start",
+        state_payload="{}",
     )
 
 

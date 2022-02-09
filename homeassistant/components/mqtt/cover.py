@@ -534,8 +534,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
         This method is a coroutine.
         """
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._config.get(CONF_COMMAND_TOPIC),
             self._config[CONF_PAYLOAD_OPEN],
             self._config[CONF_QOS],
@@ -556,8 +555,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
         This method is a coroutine.
         """
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._config.get(CONF_COMMAND_TOPIC),
             self._config[CONF_PAYLOAD_CLOSE],
             self._config[CONF_QOS],
@@ -578,8 +576,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
         This method is a coroutine.
         """
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._config.get(CONF_COMMAND_TOPIC),
             self._config[CONF_PAYLOAD_STOP],
             self._config[CONF_QOS],
@@ -599,8 +596,7 @@ class MqttCover(MqttEntity, CoverEntity):
             "tilt_max": self._config.get(CONF_TILT_MAX),
         }
         tilt_payload = self._set_tilt_template(tilt_open_position, variables=variables)
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._config.get(CONF_TILT_COMMAND_TOPIC),
             tilt_payload,
             self._config[CONF_QOS],
@@ -627,8 +623,7 @@ class MqttCover(MqttEntity, CoverEntity):
         tilt_payload = self._set_tilt_template(
             tilt_closed_position, variables=variables
         )
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._config.get(CONF_TILT_COMMAND_TOPIC),
             tilt_payload,
             self._config[CONF_QOS],
@@ -657,8 +652,7 @@ class MqttCover(MqttEntity, CoverEntity):
         }
         tilt = self._set_tilt_template(tilt, variables=variables)
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._config.get(CONF_TILT_COMMAND_TOPIC),
             tilt,
             self._config[CONF_QOS],
@@ -685,8 +679,7 @@ class MqttCover(MqttEntity, CoverEntity):
         }
         position = self._set_position_template(position, variables=variables)
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._config.get(CONF_SET_POSITION_TOPIC),
             position,
             self._config[CONF_QOS],

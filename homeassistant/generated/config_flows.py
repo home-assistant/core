@@ -95,6 +95,7 @@ FLOWS = [
     "ezviz",
     "faa_delays",
     "fireservicerota",
+    "fivem",
     "fjaraskupan",
     "flick_electric",
     "flipr",
@@ -365,6 +366,7 @@ FLOWS = [
     "wiffi",
     "wilight",
     "withings",
+    "wiz",
     "wled",
     "wolflink",
     "xbox",
@@ -377,5 +379,6 @@ FLOWS = [
     "zerproc",
     "zha",
     "zwave",
-    "zwave_js"
+    "zwave_js",
+    "zwave_me"
 ]

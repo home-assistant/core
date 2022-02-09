@@ -833,8 +833,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         async def publish(topic, payload):
             """Publish an MQTT message."""
-            await mqtt.async_publish(
-                self.hass,
+            await self.async_publish(
                 self._topic[topic],
                 payload,
                 self._config[CONF_QOS],
@@ -1081,8 +1080,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         This method is a coroutine.
         """
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_COMMAND_TOPIC],
             self._payload["off"],
             self._config[CONF_QOS],

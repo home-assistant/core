@@ -80,7 +80,19 @@ async def test_list_devices(hass, client, registry):
     ]
 
 
-async def test_update_device(hass, client, registry):
+@pytest.mark.parametrize(
+    "payload_key,payload_value",
+    [
+        ["area_id", "12345A"],
+        ["area_id", None],
+        ["disabled_by", helpers_dr.DeviceEntryDisabler.USER],
+        ["disabled_by", "user"],
+        ["disabled_by", None],
+        ["name_by_user", "Test Friendly Name"],
+        ["name_by_user", None],
+    ],
+)
+async def test_update_device(hass, client, registry, payload_key, payload_value):
     """Test update entry."""
     device = registry.async_get_or_create(
         config_entry_id="1234",
@@ -90,24 +102,27 @@ async def test_update_device(hass, client, registry):
         model="model",
     )
 
-    assert not device.area_id
-    assert not device.name_by_user
+    assert not getattr(device, payload_key)
 
     await client.send_json(
         {
             "id": 1,
-            "device_id": device.id,
-            "area_id": "12345A",
-            "name_by_user": "Test Friendly Name",
-            "disabled_by": helpers_dr.DeviceEntryDisabler.USER,
             "type": "config/device_registry/update",
+            "device_id": device.id,
+            payload_key: payload_value,
         }
     )
 
     msg = await client.receive_json()
-
-    assert msg["result"]["id"] == device.id
-    assert msg["result"]["area_id"] == "12345A"
-    assert msg["result"]["name_by_user"] == "Test Friendly Name"
-    assert msg["result"]["disabled_by"] == helpers_dr.DeviceEntryDisabler.USER
+    await hass.async_block_till_done()
     assert len(registry.devices) == 1
+
+    device = registry.async_get_device(
+        identifiers={("bridgeid", "0123")},
+        connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
+    )
+
+    assert msg["result"][payload_key] == payload_value
+    assert getattr(device, payload_key) == payload_value
+
+    assert isinstance(device.disabled_by, (helpers_dr.DeviceEntryDisabler, type(None)))

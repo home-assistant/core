@@ -10,6 +10,7 @@ import attr
 import pychromecast
 from pychromecast.const import CAST_TYPE_CHROMECAST, CAST_TYPE_GROUP
 import pytest
+import yarl
 
 from homeassistant.components import media_player, tts
 from homeassistant.components.cast import media_player as cast
@@ -37,7 +38,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, network
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
@@ -595,7 +596,7 @@ async def test_entity_availability(hass: HomeAssistant):
     conn_status_cb(connection_status)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.state == "idle"
+    assert state.state == "off"
 
     connection_status = MagicMock()
     connection_status.status = "DISCONNECTED"
@@ -624,7 +625,7 @@ async def test_entity_cast_status(hass: HomeAssistant):
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == "Speaker"
-    assert state.state == "idle"
+    assert state.state == "off"
     assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
 
     # No media status, pause, play, stop not supported
@@ -642,8 +643,8 @@ async def test_entity_cast_status(hass: HomeAssistant):
     cast_status_cb(cast_status)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    # Volume not hidden even if no app is active
-    assert state.attributes.get("volume_level") == 0.5
+    # Volume hidden if no app is active
+    assert state.attributes.get("volume_level") is None
     assert not state.attributes.get("is_volume_muted")
 
     chromecast.app_id = "1234"
@@ -747,7 +748,7 @@ async def test_supported_features(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == "Speaker"
-    assert state.state == "idle"
+    assert state.state == "off"
     assert state.attributes.get("supported_features") == supported_features_no_media
 
     media_status = MagicMock(images=None)
@@ -882,7 +883,7 @@ async def test_entity_play_media(hass: HomeAssistant, quick_play_mock):
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == "Speaker"
-    assert state.state == "idle"
+    assert state.state == "off"
     assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
 
     # Play_media
@@ -928,7 +929,7 @@ async def test_entity_play_media_cast(hass: HomeAssistant, quick_play_mock):
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == "Speaker"
-    assert state.state == "idle"
+    assert state.state == "off"
     assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
 
     # Play_media - cast with app ID
@@ -970,7 +971,7 @@ async def test_entity_play_media_cast_invalid(hass, caplog, quick_play_mock):
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == "Speaker"
-    assert state.state == "idle"
+    assert state.state == "off"
     assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
 
     # play_media - media_type cast with invalid JSON
@@ -1001,7 +1002,7 @@ async def test_entity_play_media_sign_URL(hass: HomeAssistant, quick_play_mock):
 
     await async_process_ha_core_config(
         hass,
-        {"external_url": "http://example.com:8123"},
+        {"internal_url": "http://example.com:8123"},
     )
 
     info = get_fake_chromecast_info()
@@ -1042,7 +1043,7 @@ async def test_entity_media_content_type(hass: HomeAssistant):
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == "Speaker"
-    assert state.state == "idle"
+    assert state.state == "off"
     assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
 
     media_status = MagicMock(images=None)
@@ -1213,7 +1214,7 @@ async def test_entity_media_states(hass: HomeAssistant, app_id, state_no_media):
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == "Speaker"
-    assert state.state == "idle"
+    assert state.state == "off"
     assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
 
     # App id updated, but no media status
@@ -1258,7 +1259,7 @@ async def test_entity_media_states(hass: HomeAssistant, app_id, state_no_media):
     cast_status_cb(cast_status)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.state == "idle"
+    assert state.state == "off"
 
     # No cast status
     chromecast.is_idle = False
@@ -1286,7 +1287,7 @@ async def test_entity_media_states_lovelace_app(hass: HomeAssistant):
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == "Speaker"
-    assert state.state == "idle"
+    assert state.state == "off"
     assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
 
     chromecast.app_id = CAST_APP_ID_HOMEASSISTANT_LOVELACE
@@ -1326,7 +1327,7 @@ async def test_entity_media_states_lovelace_app(hass: HomeAssistant):
     media_status_cb(media_status)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.state == "idle"
+    assert state.state == "off"
 
     chromecast.is_idle = False
     media_status_cb(media_status)
@@ -1355,7 +1356,7 @@ async def test_group_media_states(hass, mz_mock):
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == "Speaker"
-    assert state.state == "idle"
+    assert state.state == "off"
     assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
 
     group_media_status = MagicMock(images=None)
@@ -1406,7 +1407,7 @@ async def test_group_media_control(hass, mz_mock, quick_play_mock):
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == "Speaker"
-    assert state.state == "idle"
+    assert state.state == "off"
     assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
 
     group_media_status = MagicMock(images=None)
@@ -1824,3 +1825,69 @@ async def test_cast_platform_browse_media(hass: HomeAssistant, hass_ws_client):
         "children": [],
     }
     assert response["result"] == expected_response
+
+
+async def test_cast_platform_play_media_local_media(
+    hass: HomeAssistant, quick_play_mock, caplog
+):
+    """Test we process data when playing local media."""
+    entity_id = "media_player.speaker"
+    info = get_fake_chromecast_info()
+
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
+    _, conn_status_cb, _ = get_status_callbacks(chromecast)
+
+    # Bring Chromecast online
+    connection_status = MagicMock()
+    connection_status.status = "CONNECTED"
+    conn_status_cb(connection_status)
+    await hass.async_block_till_done()
+
+    # This will play using the cast platform
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        media_player.SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            media_player.ATTR_MEDIA_CONTENT_TYPE: "application/vnd.apple.mpegurl",
+            media_player.ATTR_MEDIA_CONTENT_ID: "/api/hls/bla/master_playlist.m3u8",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Assert we added extra play information
+    quick_play_mock.assert_called()
+    app_data = quick_play_mock.call_args[0][2]
+
+    assert not app_data["media_id"].startswith("/")
+    assert "authSig" in yarl.URL(app_data["media_id"]).query
+    assert app_data["media_type"] == "application/vnd.apple.mpegurl"
+    assert app_data["stream_type"] == "LIVE"
+    assert app_data["media_info"] == {
+        "hlsVideoSegmentFormat": "fmp4",
+    }
+
+    quick_play_mock.reset_mock()
+
+    # Test not appending if we have a signature
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        media_player.SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            media_player.ATTR_MEDIA_CONTENT_TYPE: "application/vnd.apple.mpegurl",
+            media_player.ATTR_MEDIA_CONTENT_ID: f"{network.get_url(hass)}/api/hls/bla/master_playlist.m3u8?token=bla",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Assert we added extra play information
+    quick_play_mock.assert_called()
+    app_data = quick_play_mock.call_args[0][2]
+    # No authSig appended
+    assert (
+        app_data["media_id"]
+        == f"{network.get_url(hass)}/api/hls/bla/master_playlist.m3u8?token=bla"
+    )

@@ -1240,11 +1240,19 @@ async def test_entity_debug_info_message(hass, mqtt_mock):
         CLIMATE_DOMAIN: {
             "platform": "mqtt",
             "name": "test",
+            "mode_command_topic": "command-topic",
             "mode_state_topic": "test-topic",
         }
     }
     await help_test_entity_debug_info_message(
-        hass, mqtt_mock, CLIMATE_DOMAIN, config, "test-topic"
+        hass,
+        mqtt_mock,
+        CLIMATE_DOMAIN,
+        config,
+        climate.SERVICE_TURN_ON,
+        command_topic="command-topic",
+        command_payload="heat",
+        state_topic="test-topic",
     )
 
 

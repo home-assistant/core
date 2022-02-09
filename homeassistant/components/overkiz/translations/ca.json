@@ -12,6 +12,7 @@
             "too_many_requests": "Massa sol\u00b7licituds, torna-ho a provar m\u00e9s tard",
             "unknown": "Error inesperat"
         },
+        "flow_title": "Passarel\u00b7la: {gateway_id}",
         "step": {
             "user": {
                 "data": {

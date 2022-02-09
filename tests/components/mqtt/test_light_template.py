@@ -1082,12 +1082,14 @@ async def test_entity_debug_info_message(hass, mqtt_mock):
             "schema": "template",
             "name": "test",
             "command_topic": "test-topic",
-            "command_on_template": "on,{{ transition }}",
+            "command_on_template": "ON",
             "command_off_template": "off,{{ transition|d }}",
             "state_template": '{{ value.split(",")[0] }}',
         }
     }
-    await help_test_entity_debug_info_message(hass, mqtt_mock, light.DOMAIN, config)
+    await help_test_entity_debug_info_message(
+        hass, mqtt_mock, light.DOMAIN, config, light.SERVICE_TURN_ON
+    )
 
 
 async def test_max_mireds(hass, mqtt_mock):
