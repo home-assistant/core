@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+import logging
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -20,16 +21,24 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt
 
 from . import ValloxDataUpdateCoordinator
 from .const import (
     DOMAIN,
+    METRIC_KEY_DAY,
+    METRIC_KEY_HOUR,
+    METRIC_KEY_MINUTE,
     METRIC_KEY_MODE,
+    METRIC_KEY_MONTH,
+    METRIC_KEY_REMAINING_TIME_FOR_FILTER,
+    METRIC_KEY_YEAR,
     MODE_ON,
     VALLOX_CELL_STATE_TO_STR,
     VALLOX_PROFILE_TO_STR_REPORTABLE,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class ValloxSensor(CoordinatorEntity, SensorEntity):
@@ -100,13 +109,63 @@ class ValloxFilterRemainingSensor(ValloxSensor):
         if not isinstance(super_native_value, (int, float)):
             return None
 
-        # Since only a delta of days is received from the device, fix the time so the timestamp does
-        # not change with every update.
+        # The value returned for the "remaining time for filter" metric is the
+        # number of days left. The counter is decremented at midnight according
+        # to the clock of the Vallox unit. The Vallox unit does not seem to
+        # synchronize its clock using NTP, which means that it will drift and
+        # get out of sync. The upside is that the Vallox clock is exposed in
+        # the metric output too, which means we can adjust the remaining filter
+        # days sensor with the delta between the clocks in Home Assistant and
+        # Vallox.
         days_remaining = float(super_native_value)
         days_remaining_delta = timedelta(days=days_remaining)
-        now = datetime.utcnow().replace(hour=13, minute=0, second=0, microsecond=0)
 
-        return (now + days_remaining_delta).astimezone(dt_util.UTC)
+        home_assistant_now = dt.now(dt.DEFAULT_TIME_ZONE)
+        vallox_now = self._get_vallox_datetime() or home_assistant_now
+
+        home_assistant_to_vallox_time_delta = home_assistant_now - vallox_now
+
+        days_remaining_adjusted_delta = (
+            days_remaining_delta - home_assistant_to_vallox_time_delta
+        )
+
+        filter_remaining_time = home_assistant_now + days_remaining_adjusted_delta
+
+        _LOGGER.debug(
+            "Remaining time for filter is %d days, Vallox time is %s and delta to HA %s s",
+            days_remaining,
+            vallox_now,
+            home_assistant_to_vallox_time_delta.total_seconds(),
+        )
+
+        # Since only a delta of days is received from the device, fix the time so the timestamp does
+        # not change with every update.
+        return filter_remaining_time.replace(hour=13, minute=0, second=0, microsecond=0)
+
+    def _get_vallox_datetime(self) -> datetime | None:
+        vallox_year = self.coordinator.data.get_metric(METRIC_KEY_YEAR)
+        vallox_month = self.coordinator.data.get_metric(METRIC_KEY_MONTH)
+        vallox_day = self.coordinator.data.get_metric(METRIC_KEY_DAY)
+        vallox_hour = self.coordinator.data.get_metric(METRIC_KEY_HOUR)
+        vallox_minute = self.coordinator.data.get_metric(METRIC_KEY_MINUTE)
+
+        if (
+            vallox_year is not None
+            and vallox_month is not None
+            and vallox_day is not None
+            and vallox_hour is not None
+            and vallox_minute is not None
+        ):
+            return datetime(
+                year=2000 + int(vallox_year),
+                month=int(vallox_month),
+                day=int(vallox_day),
+                hour=int(vallox_hour),
+                minute=int(vallox_minute),
+                tzinfo=dt.DEFAULT_TIME_ZONE,
+            )
+
+        return None
 
 
 class ValloxCellStateSensor(ValloxSensor):
@@ -150,7 +209,7 @@ SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
     ValloxSensorEntityDescription(
         key="remaining_time_for_filter",
         name="Remaining Time For Filter",
-        metric_key="A_CYC_REMAINING_TIME_FOR_FILTER",
+        metric_key=METRIC_KEY_REMAINING_TIME_FOR_FILTER,
         device_class=SensorDeviceClass.TIMESTAMP,
         sensor_type=ValloxFilterRemainingSensor,
     ),
