@@ -1120,7 +1120,10 @@ omit =
     homeassistant/components/sonos/switch.py
     homeassistant/components/sony_projector/switch.py
     homeassistant/components/spc/*
-    homeassistant/components/spider/*
+    homeassistant/components/spider/__init__.py
+    homeassistant/components/spider/climate.py
+    homeassistant/components/spider/sensor.py
+    homeassistant/components/spider/switch.py
     homeassistant/components/splunk/*
     homeassistant/components/spotify/__init__.py
     homeassistant/components/spotify/media_player.py
