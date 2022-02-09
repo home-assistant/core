@@ -2991,3 +2991,11 @@ async def test_deprecated_disabled_by_str_set(hass, manager, caplog):
     )
     assert entry.disabled_by is config_entries.ConfigEntryDisabler.USER
     assert " str for config entry disabled_by. This is deprecated " in caplog.text
+
+
+async def test_enable_device_auto_cleanup(hass, caplog):
+    """Test we can enable device auto cleanup."""
+    entry = MockConfigEntry()
+    assert entry.device_auto_cleanup is False
+    entry.async_enable_device_auto_cleanup()
+    assert entry.device_auto_cleanup is True
