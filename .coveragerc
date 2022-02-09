@@ -449,7 +449,11 @@ omit =
     homeassistant/components/habitica/__init__.py
     homeassistant/components/habitica/const.py
     homeassistant/components/habitica/sensor.py
-    homeassistant/components/hangouts/*
+    homeassistant/components/hangouts/__init__.py
+    homeassistant/components/hangouts/hangouts_bot.py
+    homeassistant/components/hangouts/hangups_utils.py
+    homeassistant/components/hangouts/intents.py
+    homeassistant/components/hangouts/notify.py
     homeassistant/components/harman_kardon_avr/media_player.py
     homeassistant/components/harmony/const.py
     homeassistant/components/harmony/data.py
