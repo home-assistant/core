@@ -22,7 +22,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "bulb_time_out": "Can not connect to the bulb. Maybe the bulb is offline or a wrong IP was entered. Please turn on the light and try again!",
       "no_wiz_light": "The bulb can not be connected via WiZ Platform integration.",
-      "no_ip": "The entered string was no valid IP address."
+      "no_ip": "Not a valid IP address."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
