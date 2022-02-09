@@ -76,8 +76,6 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
 
         self._loc_id = coordinator.data.devices[device_id]["location"]
 
-        self._presets = None
-
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -119,13 +117,13 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
-        if self._presets is None:
+        if not (presets := self.coordinator.data.devices[self._dev_id].get("presets")):
             raise ValueError("No presets available")
 
         try:
             await self.coordinator.api.set_preset(self._loc_id, preset_mode)
             self._attr_preset_mode = preset_mode
-            self._attr_target_temperature = self._presets.get(preset_mode, "none")[0]
+            self._attr_target_temperature = presets.get(preset_mode, "none")[0]
             self.async_write_ha_state()
         except PlugwiseException:
             LOGGER.error("Error while communicating to device")
@@ -147,10 +145,8 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         # Presets handling
         self._attr_preset_mode = data.get("active_preset")
         if presets := data.get("presets"):
-            self._presets = presets
             self._attr_preset_modes = list(presets)
         else:
-            self._presets = None
             self._attr_preset_mode = None
 
         # Determine current hvac action
