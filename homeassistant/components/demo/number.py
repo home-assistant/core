@@ -110,7 +110,7 @@ class DemoNumber(NumberEntity):
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, unique_id)
             },
-            name=self._attr_name,
+            name=self.name,
         )
 
     async def async_set_value(self, value):
