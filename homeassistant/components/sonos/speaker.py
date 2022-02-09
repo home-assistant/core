@@ -79,6 +79,7 @@ SUBSCRIPTION_SERVICES = [
     "renderingControl",
     "zoneGroupTopology",
 ]
+SUPPORTED_VANISH_REASONS = ("sleeping", "upgrade")
 UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
 UNUSED_DEVICE_KEYS = ["SPID", "TargetRoomName"]
 
@@ -553,18 +554,25 @@ class SonosSpeaker:
 
     async def async_check_activity(self, now: datetime.datetime) -> None:
         """Validate availability of the speaker based on recent activity."""
+        if not self.available:
+            return
         if time.monotonic() - self._last_activity < AVAILABILITY_TIMEOUT:
             return
 
         try:
-            _ = await self.hass.async_add_executor_job(getattr, self.soco, "volume")
-        except (OSError, SoCoException):
+            # Make a short-timeout call as a final check
+            # before marking this speaker as unavailable
+            await self.hass.async_add_executor_job(
+                partial(
+                    self.soco.renderingControl.GetVolume,
+                    [("InstanceID", 0), ("Channel", "Master")],
+                    timeout=1,
+                )
+            )
+        except OSError:
             pass
         else:
             self.speaker_activity("timeout poll")
-            return
-
-        if not self.available:
             return
 
         _LOGGER.warning(
@@ -603,8 +611,8 @@ class SonosSpeaker:
 
     async def async_rebooted(self, soco: SoCo) -> None:
         """Handle a detected speaker reboot."""
-        _LOGGER.warning(
-            "%s rebooted or lost network connectivity, reconnecting with %s",
+        _LOGGER.debug(
+            "%s rebooted, reconnecting with %s",
             self.zone_name,
             soco,
         )
@@ -717,7 +725,9 @@ class SonosSpeaker:
         if xml := event.variables.get("zone_group_state"):
             zgs = ET.fromstring(xml)
             for vanished_device in zgs.find("VanishedDevices") or []:
-                if (reason := vanished_device.get("Reason")) != "sleeping":
+                if (
+                    reason := vanished_device.get("Reason")
+                ) not in SUPPORTED_VANISH_REASONS:
                     _LOGGER.debug(
                         "Ignoring %s marked %s as vanished with reason: %s",
                         self.zone_name,
