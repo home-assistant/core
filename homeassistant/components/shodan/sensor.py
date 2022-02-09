@@ -67,7 +67,7 @@ class ShodanSensor(SensorEntity):
     def update(self) -> None:
         """Get the latest data and updates the states."""
         data = self.data.update()
-        self._attr_native_value = data.details["total"]
+        self._attr_native_value = data["total"]
 
 
 class ShodanData:

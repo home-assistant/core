@@ -72,5 +72,6 @@
     }
   ],
   "after_dependencies": ["usb", "zeroconf"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["aiosqlite", "bellows", "crccheck", "pure_pcapy3", "zhaquirks", "zigpy", "zigpy_deconz", "zigpy_xbee", "zigpy_zigate", "zigpy_znp"]
 }

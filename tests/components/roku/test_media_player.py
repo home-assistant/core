@@ -476,8 +476,8 @@ async def test_services(
         blocking=True,
     )
 
-    assert mock_roku.play_video.call_count == 1
-    mock_roku.play_video.assert_called_with(
+    assert mock_roku.play_on_roku.call_count == 1
+    mock_roku.play_on_roku.assert_called_with(
         "https://awesome.tld/media.mp4",
         {
             "videoName": "Sent from HA",
@@ -496,8 +496,8 @@ async def test_services(
         blocking=True,
     )
 
-    assert mock_roku.play_video.call_count == 2
-    mock_roku.play_video.assert_called_with(
+    assert mock_roku.play_on_roku.call_count == 2
+    mock_roku.play_on_roku.assert_called_with(
         "https://awesome.tld/api/hls/api_token/master_playlist.m3u8",
         {
             "MediaType": "hls",
@@ -551,9 +551,9 @@ async def test_services_play_media_local_source(
         blocking=True,
     )
 
-    assert mock_roku.play_video.call_count == 1
-    assert mock_roku.play_video.call_args
-    call_args = mock_roku.play_video.call_args.args
+    assert mock_roku.play_on_roku.call_count == 1
+    assert mock_roku.play_on_roku.call_args
+    call_args = mock_roku.play_on_roku.call_args.args
     assert "/media/local/Epic%20Sax%20Guy%2010%20Hours.mp4?authSig=" in call_args[0]
 
 

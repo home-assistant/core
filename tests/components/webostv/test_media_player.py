@@ -64,7 +64,8 @@ from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
-from . import CHANNEL_2, ENTITY_ID, TV_NAME, setup_webostv
+from . import setup_webostv
+from .const import CHANNEL_2, ENTITY_ID, TV_NAME
 
 from tests.common import async_fire_time_changed
 
@@ -552,6 +553,60 @@ async def test_supported_features(hass, client, monkeypatch):
     )
     supported |= SUPPORT_TURN_ON
     await client.mock_state_update()
+    attrs = hass.states.get(ENTITY_ID).attributes
+
+    assert attrs[ATTR_SUPPORTED_FEATURES] == supported
+
+
+async def test_cached_supported_features(hass, client, monkeypatch):
+    """Test test supported features."""
+    monkeypatch.setattr(client, "is_on", False)
+    monkeypatch.setattr(client, "sound_output", None)
+    await setup_webostv(hass)
+    await client.mock_state_update()
+
+    # TV off, support volume mute, step, set
+    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
+    attrs = hass.states.get(ENTITY_ID).attributes
+
+    assert attrs[ATTR_SUPPORTED_FEATURES] == supported
+
+    # TV on, support volume mute, step
+    monkeypatch.setattr(client, "is_on", True)
+    monkeypatch.setattr(client, "sound_output", "external_speaker")
+    await client.mock_state_update()
+
+    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME
+    attrs = hass.states.get(ENTITY_ID).attributes
+
+    assert attrs[ATTR_SUPPORTED_FEATURES] == supported
+
+    # TV off, support volume mute, step
+    monkeypatch.setattr(client, "is_on", False)
+    monkeypatch.setattr(client, "sound_output", None)
+    await client.mock_state_update()
+
+    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME
+    attrs = hass.states.get(ENTITY_ID).attributes
+
+    assert attrs[ATTR_SUPPORTED_FEATURES] == supported
+
+    # TV on, support volume mute, step, set
+    monkeypatch.setattr(client, "is_on", True)
+    monkeypatch.setattr(client, "sound_output", "speaker")
+    await client.mock_state_update()
+
+    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
+    attrs = hass.states.get(ENTITY_ID).attributes
+
+    assert attrs[ATTR_SUPPORTED_FEATURES] == supported
+
+    # TV off, support volume mute, step, step, set
+    monkeypatch.setattr(client, "is_on", False)
+    monkeypatch.setattr(client, "sound_output", None)
+    await client.mock_state_update()
+
+    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
     attrs = hass.states.get(ENTITY_ID).attributes
 
     assert attrs[ATTR_SUPPORTED_FEATURES] == supported

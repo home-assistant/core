@@ -161,7 +161,10 @@ class YaleOptionsFlowHandler(OptionsFlow):
         errors = {}
 
         if user_input:
-            if len(user_input[CONF_CODE]) not in [0, user_input[CONF_LOCK_CODE_DIGITS]]:
+            if len(user_input.get(CONF_CODE, "")) not in [
+                0,
+                user_input[CONF_LOCK_CODE_DIGITS],
+            ]:
                 errors["base"] = "code_format_mismatch"
             else:
                 return self.async_create_entry(title="", data=user_input)
@@ -171,7 +174,10 @@ class YaleOptionsFlowHandler(OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_CODE, default=self.entry.options.get(CONF_CODE)
+                        CONF_CODE,
+                        description={
+                            "suggested_value": self.entry.options.get(CONF_CODE)
+                        },
                     ): str,
                     vol.Optional(
                         CONF_LOCK_CODE_DIGITS,

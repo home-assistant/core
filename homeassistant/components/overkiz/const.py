@@ -5,8 +5,7 @@ from datetime import timedelta
 import logging
 from typing import Final
 
-from pyoverkiz.enums import UIClass
-from pyoverkiz.enums.ui import UIWidget
+from pyoverkiz.enums import OverkizCommandParam, UIClass, UIWidget
 
 from homeassistant.const import Platform
 
@@ -57,21 +56,23 @@ OVERKIZ_DEVICE_TO_PLATFORM: dict[UIClass | UIWidget, Platform] = {
     UIClass.VENETIAN_BLIND: Platform.COVER,
     UIClass.WINDOW: Platform.COVER,
     UIWidget.DOMESTIC_HOT_WATER_TANK: Platform.SWITCH,  # widgetName, uiClass is WaterHeatingSystem (not supported)
-    UIWidget.MY_FOX_SECURITY_CAMERA: Platform.COVER,  # widgetName, uiClass is Camera (not supported)
+    UIWidget.MY_FOX_SECURITY_CAMERA: Platform.SWITCH,  # widgetName, uiClass is Camera (not supported)
     UIWidget.RTD_INDOOR_SIREN: Platform.SWITCH,  # widgetName, uiClass is Siren (not supported)
     UIWidget.RTD_OUTDOOR_SIREN: Platform.SWITCH,  # widgetName, uiClass is Siren (not supported)
     UIWidget.RTS_GENERIC: Platform.COVER,  # widgetName, uiClass is Generic (not supported)
+    UIWidget.STATELESS_ALARM_CONTROLLER: Platform.SWITCH,  # widgetName, uiClass is Alarm (not supported)
+    UIWidget.STATELESS_EXTERIOR_HEATING: Platform.SWITCH,  # widgetName, uiClass is ExteriorHeatingSystem (not supported)
 }
 
 # Map Overkiz camelCase to Home Assistant snake_case for translation
 OVERKIZ_STATE_TO_TRANSLATION: dict[str, str] = {
-    "externalGateway": "external_gateway",
-    "localUser": "local_user",
-    "lowBattery": "low_battery",
-    "LSC": "lsc",
-    "maintenanceRequired": "maintenance_required",
-    "noDefect": "no_defect",
-    "SAAC": "saac",
-    "SFC": "sfc",
-    "UPS": "ups",
+    OverkizCommandParam.EXTERNAL_GATEWAY: "external_gateway",
+    OverkizCommandParam.LOCAL_USER: "local_user",
+    OverkizCommandParam.LOW_BATTERY: "low_battery",
+    OverkizCommandParam.LSC: "lsc",
+    OverkizCommandParam.MAINTENANCE_REQUIRED: "maintenance_required",
+    OverkizCommandParam.NO_DEFECT: "no_defect",
+    OverkizCommandParam.SAAC: "saac",
+    OverkizCommandParam.SFC: "sfc",
+    OverkizCommandParam.UPS: "ups",
 }

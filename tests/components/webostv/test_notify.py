@@ -9,7 +9,8 @@ from homeassistant.components.webostv import DOMAIN
 from homeassistant.const import CONF_ICON, CONF_SERVICE_DATA
 from homeassistant.setup import async_setup_component
 
-from . import TV_NAME, setup_webostv
+from . import setup_webostv
+from .const import TV_NAME
 
 ICON_PATH = "/some/path"
 MESSAGE = "one, two, testing, testing"

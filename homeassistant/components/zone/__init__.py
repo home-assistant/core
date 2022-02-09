@@ -1,7 +1,6 @@
 """Support for the definition of zones."""
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
 from typing import Any, cast
 
@@ -22,20 +21,12 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import (
-    Event,
-    HomeAssistant,
-    ServiceCall,
-    State,
-    callback,
-    split_entity_id,
-)
+from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
 from homeassistant.helpers import (
     collection,
     config_validation as cv,
     entity,
     entity_component,
-    event,
     service,
     storage,
 )
@@ -293,10 +284,7 @@ class Zone(entity.Entity):
         """Initialize the zone."""
         self._config = config
         self.editable = True
-        self._attrs: dict | None = None
-        self._remove_listener: Callable[[], None] | None = None
         self._generate_attrs()
-        self._persons_in_zone: set[str] = set()
 
     @classmethod
     def from_yaml(cls, config: dict) -> Zone:
@@ -307,9 +295,9 @@ class Zone(entity.Entity):
         return zone
 
     @property
-    def state(self) -> int:
+    def state(self) -> str:
         """Return the state property really does nothing for a zone."""
-        return len(self._persons_in_zone)
+        return "zoning"
 
     @property
     def name(self) -> str:
@@ -327,11 +315,6 @@ class Zone(entity.Entity):
         return self._config.get(CONF_ICON)
 
     @property
-    def extra_state_attributes(self) -> dict | None:
-        """Return the state attributes of the zone."""
-        return self._attrs
-
-    @property
     def should_poll(self) -> bool:
         """Zone does not poll."""
         return False
@@ -345,41 +328,9 @@ class Zone(entity.Entity):
         self.async_write_ha_state()
 
     @callback
-    def _person_state_change_listener(self, evt: Event) -> None:
-        object_id = split_entity_id(self.entity_id)[1]
-        person_entity_id = evt.data["entity_id"]
-        cur_count = len(self._persons_in_zone)
-        if evt.data["new_state"] and evt.data["new_state"].state == object_id:
-            self._persons_in_zone.add(person_entity_id)
-        elif person_entity_id in self._persons_in_zone:
-            self._persons_in_zone.remove(person_entity_id)
-
-        if len(self._persons_in_zone) != cur_count:
-            self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        person_domain = "person"  # avoid circular import
-        persons = self.hass.states.async_entity_ids(person_domain)
-        object_id = split_entity_id(self.entity_id)[1]
-        for person in persons:
-            state = self.hass.states.get(person)
-            if state and state.state == object_id:
-                self._persons_in_zone.add(person)
-
-        self.async_on_remove(
-            event.async_track_state_change_filtered(
-                self.hass,
-                event.TrackStates(False, set(), {person_domain}),
-                self._person_state_change_listener,
-            ).async_remove
-        )
-
-    @callback
     def _generate_attrs(self) -> None:
         """Generate new attrs based on config."""
-        self._attrs = {
+        self._attr_extra_state_attributes = {
             ATTR_LATITUDE: self._config[CONF_LATITUDE],
             ATTR_LONGITUDE: self._config[CONF_LONGITUDE],
             ATTR_RADIUS: self._config[CONF_RADIUS],

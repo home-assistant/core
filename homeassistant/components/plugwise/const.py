@@ -1,16 +1,17 @@
 """Constants for Plugwise component."""
+from datetime import timedelta
+import logging
+
 from homeassistant.const import Platform
 
-API = "api"
-ATTR_ILLUMINANCE = "illuminance"
-COORDINATOR = "coordinator"
-DEVICE_STATE = "device_state"
 DOMAIN = "plugwise"
-FLOW_NET = "Network: Smile/Stretch"
+
+LOGGER = logging.getLogger(__package__)
+
+API = "api"
 FLOW_SMILE = "smile (Adam/Anna/P1)"
 FLOW_STRETCH = "stretch (Stretch)"
 FLOW_TYPE = "flow_type"
-FLOW_USB = "USB: Stick - Coming soon"
 GATEWAY = "gateway"
 PW_TYPE = "plugwise_type"
 SCHEDULE_OFF = "false"
@@ -18,7 +19,6 @@ SCHEDULE_ON = "true"
 SMILE = "smile"
 STRETCH = "stretch"
 STRETCH_USERNAME = "stretch"
-UNDO_UPDATE_LISTENER = "undo_update_listener"
 UNIT_LUMEN = "lm"
 
 PLATFORMS_GATEWAY = [
@@ -35,11 +35,6 @@ ZEROCONF_MAP = {
     "stretch": "Stretch",
 }
 
-# Sensor mapping
-SENSOR_MAP_DEVICE_CLASS = 2
-SENSOR_MAP_MODEL = 0
-SENSOR_MAP_STATE_CLASS = 3
-SENSOR_MAP_UOM = 1
 
 # Default directives
 DEFAULT_MAX_TEMP = 30
@@ -47,9 +42,9 @@ DEFAULT_MIN_TEMP = 4
 DEFAULT_NAME = "Smile"
 DEFAULT_PORT = 80
 DEFAULT_SCAN_INTERVAL = {
-    "power": 10,
-    "stretch": 60,
-    "thermostat": 60,
+    "power": timedelta(seconds=10),
+    "stretch": timedelta(seconds=60),
+    "thermostat": timedelta(seconds=60),
 }
 DEFAULT_TIMEOUT = 60
 DEFAULT_USERNAME = "smile"

@@ -158,12 +158,9 @@ def wifi_entities_list(
         if network_info:
             ssid = network_info["NewSSID"]
             _LOGGER.debug("SSID from device: <%s>", ssid)
-            if (
-                slugify(
-                    ssid,
-                )
-                in [slugify(v) for v in networks.values()]
-            ):
+            if slugify(
+                ssid,
+            ) in [slugify(v) for v in networks.values()]:
                 _LOGGER.debug("SSID duplicated, adding suffix")
                 networks[i] = f'{ssid} {std_table[network_info["NewStandard"]]}'
             else:
@@ -477,9 +474,16 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         self._attr_entity_category = EntityCategory.CONFIG
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Switch status."""
         return self._avm_wrapper.devices[self._mac].wan_access
+
+    @property
+    def available(self) -> bool:
+        """Return availability of the switch."""
+        if self._avm_wrapper.devices[self._mac].wan_access is None:
+            return False
+        return super().available
 
     @property
     def device_info(self) -> DeviceInfo:

@@ -7,6 +7,7 @@ from typing import Any
 from urllib.parse import quote
 
 import voluptuous as vol
+import yarl
 
 from homeassistant.components import media_source
 from homeassistant.components.http.auth import async_sign_path
@@ -46,7 +47,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.network import get_url, is_hass_url
 
 from . import roku_exception_handler
 from .browse_media import async_browse_media
@@ -117,7 +118,9 @@ async def async_setup_entry(
 class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     """Representation of a Roku media player on the network."""
 
-    def __init__(self, unique_id: str, coordinator: RokuDataUpdateCoordinator) -> None:
+    def __init__(
+        self, unique_id: str | None, coordinator: RokuDataUpdateCoordinator
+    ) -> None:
         """Initialize the Roku device."""
         super().__init__(
             coordinator=coordinator,
@@ -231,7 +234,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @property
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
-        if self._media_playback_trackable():
+        if self.coordinator.data.media is not None and self._media_playback_trackable():
             return self.coordinator.data.media.duration
 
         return None
@@ -239,7 +242,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        if self._media_playback_trackable():
+        if self.coordinator.data.media is not None and self._media_playback_trackable():
             return self.coordinator.data.media.position
 
         return None
@@ -247,7 +250,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @property
     def media_position_updated_at(self) -> dt.datetime | None:
         """When was the position of the current playing media valid."""
-        if self._media_playback_trackable():
+        if self.coordinator.data.media is not None and self._media_playback_trackable():
             return self.coordinator.data.media.at
 
         return None
@@ -263,10 +266,12 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @property
     def source_list(self) -> list:
         """List of available input sources."""
-        return ["Home"] + sorted(app.name for app in self.coordinator.data.apps)
+        return ["Home"] + sorted(
+            app.name for app in self.coordinator.data.apps if app.name is not None
+        )
 
     @roku_exception_handler
-    async def search(self, keyword):
+    async def search(self, keyword: str) -> None:
         """Emulate opening the search screen and entering the search keyword."""
         await self.coordinator.roku.search(keyword)
 
@@ -343,7 +348,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         await self.coordinator.async_request_refresh()
 
     @roku_exception_handler
-    async def async_mute_volume(self, mute) -> None:
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         await self.coordinator.roku.remote("volume_mute")
         await self.coordinator.async_request_refresh()
@@ -359,7 +364,9 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         await self.coordinator.roku.remote("volume_down")
 
     @roku_exception_handler
-    async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play media from a URL or file, launch an application, or tune to a channel."""
         extra: dict[str, Any] = kwargs.get(ATTR_MEDIA_EXTRA) or {}
 
@@ -370,16 +377,21 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             media_id = sourced_media.url
 
         # Sign and prefix with URL if playing a relative URL
-        if media_id[0] == "/":
-            media_id = async_sign_path(
-                self.hass,
-                quote(media_id),
-                dt.timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
-            )
+        if media_id[0] == "/" or is_hass_url(self.hass, media_id):
+            parsed = yarl.URL(media_id)
+
+            if parsed.query:
+                _LOGGER.debug("Not signing path for content with query param")
+            else:
+                media_id = async_sign_path(
+                    self.hass,
+                    quote(media_id),
+                    dt.timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
+                )
 
             # prepend external URL
-            hass_url = get_url(self.hass)
-            media_id = f"{hass_url}{media_id}"
+            if media_id[0] == "/":
+                media_id = f"{get_url(self.hass)}{media_id}"
 
         if media_type not in PLAY_MEDIA_SUPPORTED_TYPES:
             _LOGGER.error(
@@ -408,13 +420,13 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
                 if attr in extra
             }
 
-            await self.coordinator.roku.play_video(media_id, params)
+            await self.coordinator.roku.play_on_roku(media_id, params)
         elif media_type == FORMAT_CONTENT_TYPE[HLS_PROVIDER]:
             params = {
                 "MediaType": "hls",
             }
 
-            await self.coordinator.roku.play_video(media_id, params)
+            await self.coordinator.roku.play_on_roku(media_id, params)
 
         await self.coordinator.async_request_refresh()
 
@@ -433,7 +445,6 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             None,
         )
 
-        if appl is not None:
+        if appl is not None and appl.app_id is not None:
             await self.coordinator.roku.launch(appl.app_id)
-
-        await self.coordinator.async_request_refresh()
+            await self.coordinator.async_request_refresh()

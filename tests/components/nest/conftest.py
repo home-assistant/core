@@ -1,6 +1,7 @@
 """Common libraries for test setup."""
 from __future__ import annotations
 
+from collections.abc import Generator
 import copy
 import shutil
 from typing import Any
@@ -8,6 +9,7 @@ from unittest.mock import patch
 import uuid
 
 import aiohttp
+from google_nest_sdm import diagnostics
 from google_nest_sdm.auth import AbstractAuth
 from google_nest_sdm.device_manager import DeviceManager
 import pytest
@@ -234,3 +236,10 @@ async def setup_platform(
 ) -> PlatformSetup:
     """Fixture to setup the integration platform and subscriber."""
     return setup_base_platform
+
+
+@pytest.fixture(autouse=True)
+def reset_diagnostics() -> Generator[None, None, None]:
+    """Fixture to reset client library diagnostic counters."""
+    yield
+    diagnostics.reset()

@@ -9,6 +9,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
 from homeassistant.core import CoreState, callback, valid_entity_id
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
 
 from tests.common import (
     MockConfigEntry,
@@ -77,7 +78,7 @@ def test_get_or_create_updates_data(registry):
         config_entry=orig_config_entry,
         device_id="mock-dev-id",
         disabled_by=er.RegistryEntryDisabler.HASS,
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
         original_device_class="mock-device-class",
         original_icon="initial-original_icon",
         original_name="initial-original_name",
@@ -95,7 +96,7 @@ def test_get_or_create_updates_data(registry):
         device_class=None,
         device_id="mock-dev-id",
         disabled_by=er.RegistryEntryDisabler.HASS,
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
         icon=None,
         id=orig_entry.id,
         name=None,
@@ -135,7 +136,7 @@ def test_get_or_create_updates_data(registry):
         device_class=None,
         device_id="new-mock-dev-id",
         disabled_by=er.RegistryEntryDisabler.HASS,  # Should not be updated
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
         icon=None,
         id=orig_entry.id,
         name=None,
@@ -189,7 +190,7 @@ async def test_loading_saving_data(hass, registry):
         config_entry=mock_config,
         device_id="mock-dev-id",
         disabled_by=er.RegistryEntryDisabler.HASS,
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
         original_device_class="mock-device-class",
         original_icon="hass:original-icon",
         original_name="Original Name",
@@ -1124,3 +1125,16 @@ async def test_deprecated_disabled_by_str(hass, registry, caplog):
 
     assert entry.disabled_by is er.RegistryEntryDisabler.USER
     assert " str for entity registry disabled_by. This is deprecated " in caplog.text
+
+
+async def test_deprecated_entity_category_str(hass, registry, caplog):
+    """Test deprecated str use of entity_category converts to enum and logs a warning."""
+    entry = er.RegistryEntry(
+        "light",
+        "hue",
+        "5678",
+        entity_category="diagnostic",
+    )
+
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
+    assert " should be updated to use EntityCategory" in caplog.text

@@ -20,6 +20,9 @@
             "button2": "\u0394\u03b5\u03cd\u03c4\u03b5\u03c1\u03bf \u03ba\u03bf\u03c5\u03bc\u03c0\u03af",
             "button3": "\u03a4\u03c1\u03af\u03c4\u03bf \u03ba\u03bf\u03c5\u03bc\u03c0\u03af",
             "button4": "\u03a4\u03ad\u03c4\u03b1\u03c1\u03c4\u03bf \u03ba\u03bf\u03c5\u03bc\u03c0\u03af"
+        },
+        "trigger_type": {
+            "triple": "\u03a4\u03c1\u03b9\u03c0\u03bb\u03cc \u03ba\u03bb\u03b9\u03ba \u03c3\u03c4\u03bf {subtype}"
         }
     }
 }

@@ -283,7 +283,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             return STATE_PLAYING
         return STATE_IDLE
 
-    async def _async_poll(self) -> None:
+    async def _async_fallback_poll(self) -> None:
         """Retrieve latest state by polling."""
         await self.hass.data[DATA_SONOS].favorites[
             self.speaker.household_id
@@ -558,7 +558,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             plex_plugin.play_now(media)
             return
 
-        share_link = self.speaker.share_link
+        share_link = self.coordinator.share_link
         if share_link.is_share_link(media_id):
             if kwargs.get(ATTR_MEDIA_ENQUEUE):
                 share_link.add_share_link_to_queue(media_id)
