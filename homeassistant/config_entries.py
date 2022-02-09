@@ -460,7 +460,6 @@ class ConfigEntry:
                 self.reason = None
                 return True
 
-        # Why not check entry.supports_unload ?
         supports_unload = hasattr(component, "async_unload_entry")
 
         if not supports_unload:
@@ -1178,29 +1177,35 @@ class ConfigEntries:
     async def async_remove_device(self, entry_id: str, device_id: str) -> bool:
         """Remove a device."""
         if (config_entry := self.async_get_entry(entry_id)) is None:
-            return False
+            raise UnknownEntry
 
         if not config_entry.supports_remove_device:
-            return False
+            raise HomeAssistantError("Config entry does not support device removal")
 
         dev_reg = device_registry.async_get(self.hass)
         ent_reg = entity_registry.async_get(self.hass)
 
         if (device_entry := dev_reg.async_get(device_id)) is None:
-            return False
+            raise HomeAssistantError("Unknown device")
 
         if entry_id not in device_entry.config_entries:
-            return False
+            raise HomeAssistantError("Config entry not in device")
 
         try:
             integration = await loader.async_get_integration(
                 self.hass, config_entry.domain
             )
-        except loader.IntegrationNotFound:
-            return False
+        except loader.IntegrationNotFound as exc:
+            raise HomeAssistantError from exc
         try:
             component = integration.get_component()
-        except ImportError:
+        except ImportError as exc:
+            raise HomeAssistantError from exc
+
+        # Check with the config entry if it can be removed from the device
+        if not await component.async_config_entry_will_remove_from_device(
+            self.hass, config_entry, device_entry
+        ):
             return False
 
         # Remove device entities which belong to the config entry
@@ -1215,10 +1220,6 @@ class ConfigEntries:
         # if it was the only config entry.
         dev_reg.async_update_device(device_id, remove_config_entry_id=entry_id)
 
-        # Inform the config entry in case it needs to take additional actions
-        await component.async_config_entry_removed_from_device(
-            self.hass, config_entry, device_entry
-        )
         return True
 
 
@@ -1664,4 +1665,4 @@ async def support_device_remove(hass: HomeAssistant, domain: str) -> bool:
     """Test if a domain supports removing devices."""
     integration = await loader.async_get_integration(hass, domain)
     component = integration.get_component()
-    return hasattr(component, "async_config_entry_removed_from_device")
+    return hasattr(component, "async_config_entry_will_remove_from_device")
