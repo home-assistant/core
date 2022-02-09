@@ -1,4 +1,8 @@
 """Plugwise Binary Sensor component for Home Assistant."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -8,29 +12,33 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    DOMAIN,
-    FLAME_ICON,
-    FLOW_OFF_ICON,
-    FLOW_ON_ICON,
-    IDLE_ICON,
-    LOGGER,
-    NO_NOTIFICATION_ICON,
-    NOTIFICATION_ICON,
-)
+from .const import DOMAIN, LOGGER, NO_NOTIFICATION_ICON, NOTIFICATION_ICON
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
 SEVERITIES = ["other", "info", "warning", "error"]
-BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
-    BinarySensorEntityDescription(
+
+
+@dataclass
+class PlugwiseBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes a Plugwise binary sensor entity."""
+
+    icon_off: str | None = None
+
+
+BINARY_SENSORS: tuple[PlugwiseBinarySensorEntityDescription, ...] = (
+    PlugwiseBinarySensorEntityDescription(
         key="dhw_state",
         name="DHW State",
+        icon="mdi:water-pump",
+        icon_off="mdi:water-pump-off",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    BinarySensorEntityDescription(
+    PlugwiseBinarySensorEntityDescription(
         key="slave_boiler_state",
         name="Secondary Boiler State",
+        icon="mdi:fire",
+        icon_off="mdi:circle-off-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -69,7 +77,7 @@ async def async_setup_entry(
                 PlugwiseNotifyBinarySensorEntity(
                     coordinator,
                     device_id,
-                    BinarySensorEntityDescription(
+                    PlugwiseBinarySensorEntityDescription(
                         key="plugwise_notification",
                         name="Plugwise Notification",
                     ),
@@ -82,16 +90,17 @@ async def async_setup_entry(
 class PlugwiseBinarySensorEntity(PlugwiseEntity, BinarySensorEntity):
     """Represent Smile Binary Sensors."""
 
+    entity_description: PlugwiseBinarySensorEntityDescription
+
     def __init__(
         self,
         coordinator: PlugwiseDataUpdateCoordinator,
         device_id: str,
-        description: BinarySensorEntityDescription,
+        description: PlugwiseBinarySensorEntityDescription,
     ) -> None:
         """Initialise the binary_sensor."""
         super().__init__(coordinator, device_id)
         self.entity_description = description
-        self._attr_is_on = False
         self._attr_unique_id = f"{device_id}-{description.key}"
         self._attr_name = (
             f"{coordinator.data.devices[device_id].get('name', '')} {description.name}"
@@ -105,12 +114,10 @@ class PlugwiseBinarySensorEntity(PlugwiseEntity, BinarySensorEntity):
             super()._handle_coordinator_update()
             return
 
-        self._attr_is_on = data["binary_sensors"].get(self.entity_description.key)
-
-        if self.entity_description.key == "dhw_state":
-            self._attr_icon = FLOW_ON_ICON if self._attr_is_on else FLOW_OFF_ICON
-        if self.entity_description.key == "slave_boiler_state":
-            self._attr_icon = FLAME_ICON if self._attr_is_on else IDLE_ICON
+        state = data["binary_sensors"].get(self.entity_description.key)
+        self._attr_is_on = state
+        if icon_off := self.entity_description.icon_off:
+            self._attr_icon = self.entity_description.icon if state else icon_off
 
         super()._handle_coordinator_update()
 
