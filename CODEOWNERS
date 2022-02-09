@@ -353,6 +353,8 @@ tests/components/goodwe/* @mletenay @starkillerOG
 homeassistant/components/google_assistant/* @home-assistant/cloud
 tests/components/google_assistant/* @home-assistant/cloud
 homeassistant/components/google_cloud/* @lufton
+homeassistant/components/google_travel_time/* @eifinger
+tests/components/google_travel_time/* @eifinger
 homeassistant/components/gpsd/* @fabaff
 homeassistant/components/gree/* @cmroche
 tests/components/gree/* @cmroche
