@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-
 from decimal import Decimal, DecimalException
 import logging
 
@@ -81,7 +80,7 @@ PLATFORM_SCHEMA = vol.All(
             ),
             # No default for the max timeslice, everyone has different sensors
             # with different expected update intervals.
-            vol.optional(CONF_MAX_TIMESLICE, default=None): vol.All(
+            vol.Optional(CONF_MAX_TIMESLICE, default=None): vol.All(
                 cv.time_period, cv.positive_timedelta
             ),
         }
@@ -217,7 +216,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
                     #   too late in the night for me to go re-learn Python
                     #   again.
                     max_timeslice = self._max_timeslice.total_seconds()
-                    
+
                     # Divide the time that has passed since the last update
                     # into zero or more "max-timeslices" of the specified
                     # width, and the remainder is the last one in the streak of
