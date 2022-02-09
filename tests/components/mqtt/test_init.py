@@ -1,6 +1,7 @@
 """The tests for the MQTT component."""
 import asyncio
 from datetime import datetime, timedelta
+from functools import partial
 import json
 import ssl
 from unittest.mock import ANY, AsyncMock, MagicMock, call, mock_open, patch
@@ -33,6 +34,12 @@ from tests.common import (
     mock_registry,
 )
 from tests.testing_config.custom_components.test.sensor import DEVICE_CLASSES
+
+
+class RecordCallsPartial(partial):
+    """Wrapper class for partial."""
+
+    __name__ = "RecordCallPartialTest"
 
 
 @pytest.fixture(autouse=True)
@@ -728,6 +735,27 @@ async def test_subscribe_deprecated(hass, mqtt_mock):
 
     await hass.async_block_till_done()
     assert len(calls) == 1
+    mqtt_mock.async_publish.reset_mock()
+
+    # Test with partial wrapper
+    calls = []
+    unsub = await mqtt.async_subscribe(
+        hass, "test-topic", RecordCallsPartial(record_calls)
+    )
+
+    async_fire_mqtt_message(hass, "test-topic", "test-payload")
+
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0][0] == "test-topic"
+    assert calls[0][1] == "test-payload"
+
+    unsub()
+
+    async_fire_mqtt_message(hass, "test-topic", "test-payload")
+
+    await hass.async_block_till_done()
+    assert len(calls) == 1
 
 
 async def test_subscribe_deprecated_async(hass, mqtt_mock):
@@ -753,6 +781,22 @@ async def test_subscribe_deprecated_async(hass, mqtt_mock):
 
     await hass.async_block_till_done()
     assert len(calls) == 1
+    mqtt_mock.async_publish.reset_mock()
+
+    # Test with partial wrapper
+    calls = []
+    unsub = await mqtt.async_subscribe(
+        hass, "test-topic", RecordCallsPartial(record_calls)
+    )
+
+    async_fire_mqtt_message(hass, "test-topic", "test-payload")
+
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0][0] == "test-topic"
+    assert calls[0][1] == "test-payload"
+
+    unsub()
 
 
 async def test_subscribe_topic_not_match(hass, mqtt_mock, calls, record_calls):
