@@ -50,20 +50,6 @@ DEVICE_TRAITS = {
     "sdm.devices.traits.CameraEventImage": {},
     "sdm.devices.traits.CameraMotion": {},
 }
-WEBRTC_DEVICE_TRAITS = {
-    "sdm.devices.traits.Info": {
-        "customName": "My Camera",
-    },
-    "sdm.devices.traits.CameraLiveStream": {
-        "maxVideoResolution": {
-            "width": 640,
-            "height": 480,
-        },
-        "videoCodecs": ["H264"],
-        "audioCodecs": ["AAC"],
-        "supportedProtocols": ["WEB_RTC"],
-    },
-}
 DATETIME_FORMAT = "YY-MM-DDTHH:MM:SS"
 MOTION_EVENT_ID = "FWWVQVUdGNUlTU2V4MGV2aTNXV..."
 EVENT_SESSION_ID = "CjY5Y3VKaTZwR3o4Y19YbTVfMF..."
@@ -101,7 +87,22 @@ def camera_device(create_device: CreateDevice) -> None:
 @pytest.fixture
 def webrtc_camera_device(create_device: CreateDevice) -> None:
     """Fixture to create a WebRTC camera device."""
-    create_device.create(WEBRTC_DEVICE_TRAITS)
+    create_device.create(
+        {
+            "sdm.devices.traits.Info": {
+                "customName": "My Camera",
+            },
+            "sdm.devices.traits.CameraLiveStream": {
+                "maxVideoResolution": {
+                    "width": 640,
+                    "height": 480,
+                },
+                "videoCodecs": ["H264"],
+                "audioCodecs": ["AAC"],
+                "supportedProtocols": ["WEB_RTC"],
+            },
+        }
+    )
 
 
 def make_motion_event(
