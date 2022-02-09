@@ -777,7 +777,7 @@ def async_cleanup(
         device.id
         for device in dev_reg.devices.values()
         for config_entry_id in device.config_entries
-        if config_entry_id in config_entry_ids
+        if config_entry_id in config_entry_ids_without_auto_cleanup
     }
 
     # Find all devices that are referenced in the entity registry.
@@ -792,7 +792,7 @@ def async_cleanup(
     # This shouldn't happen but have not been able to track down the bug :(
     for device in list(dev_reg.devices.values()):
         for config_entry_id in device.config_entries:
-            if config_entry_id not in config_entry_ids_without_auto_cleanup:
+            if config_entry_id not in config_entry_ids:
                 dev_reg.async_update_device(
                     device.id, remove_config_entry_id=config_entry_id
                 )
