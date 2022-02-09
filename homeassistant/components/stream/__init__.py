@@ -120,10 +120,8 @@ CONFIG_SCHEMA = vol.Schema(
 def filter_libav_logging() -> None:
     """Filter libav logging to only log when the stream logger is at DEBUG."""
 
-    stream_debug_enabled = logging.getLogger(__name__).isEnabledFor(logging.DEBUG)
-
     def libav_filter(record: logging.LogRecord) -> bool:
-        return stream_debug_enabled
+        return logging.getLogger(__name__).isEnabledFor(logging.DEBUG)
 
     for logging_namespace in (
         "libav.mp4",
