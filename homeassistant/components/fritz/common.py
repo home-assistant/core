@@ -306,7 +306,6 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         for host in self._update_hosts_info():
             if not host.get("mac"):
                 continue
-
             hosts[host["mac"]] = Device(
                 name=host["name"],
                 connected=host["status"],
@@ -316,6 +315,15 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                 ssid=None,
                 wan_access=False,
             )
+
+        # due to a bug in how some Fritz!Boxes report their mesh topology, not all devices
+        # can be identified via get_mesh_topology() - but they are visible as hosts
+        for host_mac, host_info in hosts.items():
+            if host_mac not in self._devices:
+                device = FritzDevice(host_mac, host_info.name)
+                self._devices[host_mac] = device
+                new_device = True
+            self._devices[host_mac].update(host_info, consider_home)
 
         mesh_intf = {}
         # first get all meshed devices
@@ -341,15 +349,15 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                 continue
 
             for interf in node["node_interfaces"]:
-                dev_mac = interf["mac_address"]
+                host_mac = interf["mac_address"]
                 for link in interf["node_links"]:
                     intf = mesh_intf.get(link["node_interface_1_uid"])
                     if (
                         intf is not None
                         and link["state"] == "CONNECTED"
-                        and dev_mac in hosts
+                        and host_mac in hosts
                     ):
-                        dev_info: Device = hosts[dev_mac]
+                        dev_info: Device = hosts[host_mac]
                         if intf["op_mode"] != "AP_GUEST":
                             dev_info.wan_access = not self.connection.call_action(
                                 "X_AVM-DE_HostFilter:1",
@@ -361,12 +369,12 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                         dev_info.connection_type = intf["type"]
                         dev_info.ssid = intf.get("ssid")
 
-                        if dev_mac in self._devices:
-                            self._devices[dev_mac].update(dev_info, consider_home)
+                        if host_mac in self._devices:
+                            self._devices[host_mac].update(dev_info, consider_home)
                         else:
-                            device = FritzDevice(dev_mac, dev_info.name)
+                            device = FritzDevice(host_mac, dev_info.name)
                             device.update(dev_info, consider_home)
-                            self._devices[dev_mac] = device
+                            self._devices[host_mac] = device
                             new_device = True
 
         dispatcher_send(self.hass, self.signal_device_update)
