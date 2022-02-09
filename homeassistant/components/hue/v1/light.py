@@ -259,7 +259,7 @@ def async_update_items(
         current[item_id] = create_item(api, item_id)
         new_items.append(current[item_id])
 
-    bridge.hass.async_create_task(remove_devices(bridge, api, current))
+    remove_devices(bridge, api, current)
 
     if new_items:
         # This is currently used to setup the listener to update rooms

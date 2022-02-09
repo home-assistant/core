@@ -152,12 +152,10 @@ class SensorManager:
 
             to_add.setdefault(sensor_config["platform"], []).append(current[uniqueid])
 
-        self.bridge.hass.async_create_task(
-            remove_devices(
-                self.bridge,
-                [value.uniqueid for value in api.values()],
-                current,
-            )
+        remove_devices(
+            self.bridge,
+            [value.uniqueid for value in api.values()],
+            current,
         )
 
         for platform, value in to_add.items():

@@ -1,12 +1,12 @@
 """Helper functions for Philips Hue."""
 
-from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
-from homeassistant.helpers.entity_registry import async_get_registry as get_ent_reg
+from homeassistant.helpers.device_registry import async_get as get_dev_reg
+from homeassistant.helpers.entity_registry import async_get as get_ent_reg
 
 from ..const import DOMAIN
 
 
-async def remove_devices(bridge, api_ids, current):
+def remove_devices(bridge, api_ids, current):
     """Get items that are removed from api."""
     removed_items = []
 
@@ -17,11 +17,10 @@ async def remove_devices(bridge, api_ids, current):
         # Device is removed from Hue, so we remove it from Home Assistant
         entity = current[item_id]
         removed_items.append(item_id)
-        await entity.async_remove(force_remove=True)
-        ent_registry = await get_ent_reg(bridge.hass)
+        ent_registry = get_ent_reg(bridge.hass)
         if entity.entity_id in ent_registry.entities:
             ent_registry.async_remove(entity.entity_id)
-        dev_registry = await get_dev_reg(bridge.hass)
+        dev_registry = get_dev_reg(bridge.hass)
         device = dev_registry.async_get_device(identifiers={(DOMAIN, entity.device_id)})
         if device is not None:
             dev_registry.async_update_device(
