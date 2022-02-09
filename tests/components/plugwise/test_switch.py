@@ -135,7 +135,7 @@ async def test_unique_id_migration_plug_relay(hass, mock_smile_adam):
     entry.add_to_hass(hass)
 
     registry = er.async_get(hass)
-    entity_entry = registry.async_get_or_create(
+    registry.async_get_or_create(
         Platform.SWITCH,
         DOMAIN,
         "21f2b542c49845e6bb416884c55778d6-plug",
