@@ -1107,7 +1107,7 @@ async def test_cleanup_device_registry_auto_cleanup(hass, registry):
     registry.async_get_or_create(
         identifiers={("hue", "d2")}, config_entry_id=config_entry.entry_id
     )
-    registry.async_get_or_create(
+    d3 = registry.async_get_or_create(
         identifiers={("hue", "d3")}, config_entry_id=config_entry.entry_id
     )
     registry.async_get_or_create(
@@ -1116,10 +1116,11 @@ async def test_cleanup_device_registry_auto_cleanup(hass, registry):
 
     ent_reg = entity_registry.async_get(hass)
     device_registry.async_cleanup(hass, registry, ent_reg)
+    ent_reg.async_get_or_create("light", "hue", "e3", device_id=d3.id)
 
     assert registry.async_get_device({("hue", "d1")}) is None
     assert registry.async_get_device({("hue", "d2")}) is None
-    assert registry.async_get_device({("hue", "d3")}) is None
+    assert registry.async_get_device({("hue", "d3")}) is not None
     assert registry.async_get_device({("something", "d4")}) is None
 
 
