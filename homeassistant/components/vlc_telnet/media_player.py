@@ -33,6 +33,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -306,16 +307,13 @@ class VlcDevice(MediaPlayerEntity):
         # Handle media_source
         if media_source.is_media_source_id(media_id):
             sourced_media = await media_source.async_resolve_media(self.hass, media_id)
-            media_type = MEDIA_TYPE_MUSIC
+            media_type = sourced_media.mime_type
             media_id = sourced_media.url
 
-        if media_type != MEDIA_TYPE_MUSIC:
-            LOGGER.error(
-                "Invalid media type %s. Only %s is supported",
-                media_type,
-                MEDIA_TYPE_MUSIC,
+        if media_type != MEDIA_TYPE_MUSIC and not media_type.startswith("audio/"):
+            raise HomeAssistantError(
+                f"Invalid media type {media_type}. Only {MEDIA_TYPE_MUSIC} is supported"
             )
-            return
 
         # Sign and prefix with URL if playing a relative URL
         if media_id[0] == "/" or is_hass_url(self.hass, media_id):
