@@ -192,7 +192,10 @@ omit =
     homeassistant/components/crownstone/light.py
     homeassistant/components/cups/sensor.py
     homeassistant/components/currencylayer/sensor.py
-    homeassistant/components/daikin/*
+    homeassistant/components/daikin/__init__.py
+    homeassistant/components/daikin/climate.py
+    homeassistant/components/daikin/sensor.py
+    homeassistant/components/daikin/switch.py
     homeassistant/components/danfoss_air/*
     homeassistant/components/darksky/weather.py
     homeassistant/components/ddwrt/device_tracker.py
