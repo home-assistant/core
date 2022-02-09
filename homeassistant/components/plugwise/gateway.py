@@ -7,14 +7,9 @@ from typing import Any
 from plugwise.exceptions import InvalidAuthentication, PlugwiseException
 from plugwise.smile import Smile
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    Platform,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -106,7 +101,7 @@ def async_migrate_entity_entry(entry: RegistryEntry) -> dict[str, Any] | None:
 
     - Migrates unique ID from old relay switches to the new unique ID
     """
-    if entry.domain == Platform.SWITCH and entry.unique_id.endswith("-plug"):
+    if entry.domain == SWITCH_DOMAIN and entry.unique_id.endswith("-plug"):
         return {"new_unique_id": entry.unique_id.replace("-plug", "-relay")}
 
     # No migration needed

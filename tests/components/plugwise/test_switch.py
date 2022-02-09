@@ -3,8 +3,8 @@
 from plugwise.exceptions import PlugwiseException
 
 from homeassistant.components.plugwise.const import DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -137,7 +137,7 @@ async def test_unique_id_migration_plug_relay(hass, mock_smile_adam):
     registry = er.async_get(hass)
     # Entry to migrate
     registry.async_get_or_create(
-        Platform.SWITCH,
+        SWITCH_DOMAIN,
         DOMAIN,
         "21f2b542c49845e6bb416884c55778d6-plug",
         config_entry=entry,
@@ -146,7 +146,7 @@ async def test_unique_id_migration_plug_relay(hass, mock_smile_adam):
     )
     # Entry not needing migration
     registry.async_get_or_create(
-        Platform.SWITCH,
+        SWITCH_DOMAIN,
         DOMAIN,
         "675416a629f343c495449970e2ca37b5-relay",
         config_entry=entry,
