@@ -13,9 +13,13 @@ from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
 
 from . import (
     FAKE_BULB_CONFIG,
+    FAKE_DIMMABLE_BULB,
     FAKE_EXTENDED_WHITE_RANGE,
     FAKE_IP,
     FAKE_MAC,
+    FAKE_RGBW_BULB,
+    FAKE_RGBWW_BULB,
+    FAKE_SOCKET,
     FAKE_SOCKET_CONFIG,
     TEST_CONNECTION,
     TEST_SYSTEM_INFO,
@@ -142,12 +146,13 @@ async def test_discovered_by_dhcp_connection_fails(hass, source, data):
 
 
 @pytest.mark.parametrize(
-    "source, data, device, extended_white_range, name",
+    "source, data, device, bulb_type, extended_white_range, name",
     [
         (
             config_entries.SOURCE_DHCP,
             DHCP_DISCOVERY,
             FAKE_BULB_CONFIG,
+            FAKE_DIMMABLE_BULB,
             FAKE_EXTENDED_WHITE_RANGE,
             "WiZ Dimmable White ABCABC",
         ),
@@ -155,13 +160,47 @@ async def test_discovered_by_dhcp_connection_fails(hass, source, data):
             config_entries.SOURCE_INTEGRATION_DISCOVERY,
             INTEGRATION_DISCOVERY,
             FAKE_BULB_CONFIG,
+            FAKE_DIMMABLE_BULB,
             FAKE_EXTENDED_WHITE_RANGE,
             "WiZ Dimmable White ABCABC",
         ),
         (
             config_entries.SOURCE_DHCP,
             DHCP_DISCOVERY,
+            FAKE_BULB_CONFIG,
+            FAKE_RGBW_BULB,
+            FAKE_EXTENDED_WHITE_RANGE,
+            "WiZ RGBW Tunable ABCABC",
+        ),
+        (
+            config_entries.SOURCE_INTEGRATION_DISCOVERY,
+            INTEGRATION_DISCOVERY,
+            FAKE_BULB_CONFIG,
+            FAKE_RGBW_BULB,
+            FAKE_EXTENDED_WHITE_RANGE,
+            "WiZ RGBW Tunable ABCABC",
+        ),
+        (
+            config_entries.SOURCE_DHCP,
+            DHCP_DISCOVERY,
+            FAKE_BULB_CONFIG,
+            FAKE_RGBWW_BULB,
+            FAKE_EXTENDED_WHITE_RANGE,
+            "WiZ RGBWW Tunable ABCABC",
+        ),
+        (
+            config_entries.SOURCE_INTEGRATION_DISCOVERY,
+            INTEGRATION_DISCOVERY,
+            FAKE_BULB_CONFIG,
+            FAKE_RGBWW_BULB,
+            FAKE_EXTENDED_WHITE_RANGE,
+            "WiZ RGBWW Tunable ABCABC",
+        ),
+        (
+            config_entries.SOURCE_DHCP,
+            DHCP_DISCOVERY,
             FAKE_SOCKET_CONFIG,
+            FAKE_SOCKET,
             None,
             "WiZ Socket ABCABC",
         ),
@@ -169,16 +208,19 @@ async def test_discovered_by_dhcp_connection_fails(hass, source, data):
             config_entries.SOURCE_INTEGRATION_DISCOVERY,
             INTEGRATION_DISCOVERY,
             FAKE_SOCKET_CONFIG,
+            FAKE_SOCKET,
             None,
             "WiZ Socket ABCABC",
         ),
     ],
 )
 async def test_discovered_by_dhcp_or_integration_discovery(
-    hass, source, data, device, extended_white_range, name
+    hass, source, data, device, bulb_type, extended_white_range, name
 ):
     """Test we can configure when discovered from dhcp or discovery."""
-    with _patch_wizlight(device=device, extended_white_range=extended_white_range):
+    with _patch_wizlight(
+        device=device, extended_white_range=extended_white_range, bulb_type=bulb_type
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": source}, data=data
         )
