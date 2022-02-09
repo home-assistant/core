@@ -525,7 +525,9 @@ omit =
     homeassistant/components/izone/discovery.py
     homeassistant/components/izone/__init__.py
     homeassistant/components/idteck_prox/*
-    homeassistant/components/ifttt/*
+    homeassistant/components/ifttt/__init__.py
+    homeassistant/components/ifttt/alarm_control_panel.py
+    homeassistant/components/ifttt/const.py
     homeassistant/components/iglo/light.py
     homeassistant/components/ihc/*
     homeassistant/components/imap/sensor.py
