@@ -1,6 +1,8 @@
 """Support for Spotify media browsing."""
 from __future__ import annotations
 
+from urllib.parse import parse_qs, urlparse
+
 from functools import partial
 import logging
 from typing import Any
@@ -9,6 +11,7 @@ from spotipy import Spotify
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.components.media_player import BrowseError, BrowseMedia
+from homeassistant.components.media_player.const import MEDIA_CLASS_APP
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_ALBUM,
     MEDIA_CLASS_ARTIST,
@@ -135,6 +138,34 @@ class UnknownMediaType(BrowseError):
     """Unknown media type."""
 
 
+async def async_get_media_browser_root_object(
+    hass: HomeAssistant,
+) -> list[BrowseMedia]:
+    """Create a Spotify root object for media browsing."""
+    return [
+        BrowseMedia(
+            title=f"Spotify {info[DATA_SPOTIFY_ME]['display_name']}",
+            media_class=MEDIA_CLASS_APP,
+            media_content_id=f"?ha_config_entry={config_entry_id}",
+            media_content_type="spotify",
+            thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
+            can_play=False,
+            can_expand=True,
+        )
+        for config_entry_id, info in hass.data[DOMAIN].items()
+    ]
+
+
+def _get_spotify_data_from_query(hass: HomeAssistant, query: str) -> dict | None:
+    """Get spotify data if specified in query, else None."""
+    config_entry_ids = parse_qs(query).get("ha_config_entry")
+    if config_entry_ids is None:
+        return None
+    if (info := hass.data[DOMAIN].get(config_entry_ids[0])) is None:
+        raise BrowseError("Invalid Spotify account specified")
+    return info
+
+
 async def async_browse_media(
     hass: HomeAssistant,
     media_content_type: str,
@@ -143,9 +174,20 @@ async def async_browse_media(
     can_play_artist: bool = True,
 ) -> BrowseMedia:
     """Browse Spotify media."""
-    if not (info := next(iter(hass.data[DOMAIN].values()), None)):
-        raise BrowseError("No Spotify accounts available")
-    return await async_browse_media_internal(
+    info = None
+    parsed_url = urlparse(media_content_id)
+    query = None
+
+    # Check for config entry specifier, and remove query
+    if media_content_id and (query := parsed_url.query):
+        info = _get_spotify_data_from_query(hass, query)
+        media_content_id = parsed_url._replace(query="").geturl()
+
+    if info is None:
+        if not (info := next(iter(hass.data[DOMAIN].values()), None)):
+            raise BrowseError("No Spotify accounts available")
+
+    result = await async_browse_media_internal(
         hass,
         info.client,
         info.session,
@@ -155,6 +197,17 @@ async def async_browse_media(
         can_play_artist=can_play_artist,
     )
 
+    # Add query back to the result
+    if query:
+        result.media_content_id = (
+            urlparse(result.media_content_id)._replace(query=query).geturl()
+        )
+        if result.children:
+            for child in result.children:
+                child.media_content_id = (
+                    urlparse(child.media_content_id)._replace(query=query).geturl()
+                )
+    return result
 
 async def async_browse_media_internal(
     hass: HomeAssistant,

@@ -28,7 +28,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import config_flow
-from .browse_media import async_browse_media
+from .browse_media import async_browse_media, async_get_media_browser_root_object
 from .const import DOMAIN, LOGGER, SPOTIFY_SCOPES
 from .util import is_spotify_media_type, resolve_spotify_media_type
 
@@ -49,6 +49,7 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 
 __all__ = [
     "async_browse_media",
+    "async_get_media_browser_root_object",
     "DOMAIN",
     "is_spotify_media_type",
     "resolve_spotify_media_type",
