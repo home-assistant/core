@@ -537,9 +537,9 @@ class Thermostat(HomeAccessory):
 class AttrSelectBase(HomeAccessory):
     """Generate a Switch accessory that contains multiple switches."""
 
-    def __init__(self, options_attrs, option_attr, service, *args):
+    def __init__(self, options_attrs, option_attr, service, *args, **kwargs):
         """Initialize a Switch accessory object."""
-        super().__init__(*args, category=CATEGORY_SWITCH)
+        super().__init__(*args, category=CATEGORY_SWITCH, **kwargs)
         self.options_attrs = options_attrs
         self.option_attr = option_attr
         self.service = service
