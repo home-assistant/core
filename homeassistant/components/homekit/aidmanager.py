@@ -11,7 +11,6 @@ This module generates and stores them in a HA storage.
 """
 from __future__ import annotations
 
-import logging
 import random
 
 from fnvhash import fnv1a_32
@@ -33,7 +32,6 @@ INVALID_AIDS = (0, 1)
 
 AID_MIN = 2
 AID_MAX = 18446744073709551615
-_LOGGER = logging.getLogger(__name__)
 
 
 def get_system_unique_id(entity: RegistryEntry):
@@ -115,7 +113,6 @@ class AccessoryAidStorage:
 
     def get_or_allocate_aid(self, unique_id: str, entity_id: str):
         """Allocate (and return) a new aid for an accessory."""
-        _LOGGER.warning("get_or_allocate_aid: %s - %s", unique_id, entity_id)
         if unique_id and unique_id in self.allocations:
             return self.allocations[unique_id]
         if entity_id in self.allocations:
