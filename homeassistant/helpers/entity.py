@@ -11,7 +11,7 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import Any, Final, Literal, TypedDict, final
+from typing import Any, Literal, TypedDict, final
 
 import voluptuous as vol
 
@@ -58,7 +58,13 @@ SOURCE_PLATFORM_CONFIG = "platform_config"
 FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
 
 
-ENTITY_CATEGORIES_SCHEMA: Final = vol.In(ENTITY_CATEGORIES)
+def validate_entity_category(value: Any | None) -> EntityCategory:
+    """Validate entity category configuration."""
+    value = vol.In(ENTITY_CATEGORIES)(value)
+    return EntityCategory(value)
+
+
+ENTITY_CATEGORIES_SCHEMA = validate_entity_category
 
 
 @callback
