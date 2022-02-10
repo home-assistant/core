@@ -702,10 +702,9 @@ class Thermostat(HomeAccessory):
             )
 
         hvac_mode = new_state.state
-        fan_active = 1
-        if hvac_mode == HVAC_MODE_OFF or fan_mode == FAN_OFF:
-            fan_active = 0
-        self.char_active.set_value(fan_active)
+        self.char_active.set_value(
+            int(hvac_mode == HVAC_MODE_OFF or fan_mode == FAN_OFF)
+        )
 
 
 @TYPES.register("WaterHeater")
