@@ -660,6 +660,9 @@ class Thermostat(HomeAccessory):
             unit = UNIT_HASS_TO_HOMEKIT[self._unit]
             self.char_display_units.set_value(unit)
 
+        if not self.fan_chars:
+            return
+
         if CHAR_SWING_MODE in self.fan_chars and (
             swing_mode := attributes.get(ATTR_SWING_MODE)
         ):
