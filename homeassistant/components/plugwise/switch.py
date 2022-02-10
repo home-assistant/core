@@ -3,9 +3,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -15,9 +20,21 @@ from .util import plugwise_command
 
 SWITCHES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
+        key="dhw_cm_switch",
+        name="DHW Comfort Mode",
+        icon="mdi:water-plus",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    SwitchEntityDescription(
+        key="lock",
+        name="Lock",
+        icon="mdi:lock",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    SwitchEntityDescription(
         key="relay",
         name="Relay",
-        icon="mdi:electric-switch",
+        device_class=SwitchDeviceClass.SWITCH,
     ),
 )
 
