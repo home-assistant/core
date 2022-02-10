@@ -108,7 +108,7 @@ CONF_PRESET_MODE_COMMAND_TOPIC = "preset_mode_command_topic"
 CONF_PRESET_MODE_VALUE_TEMPLATE = "preset_mode_value_template"
 CONF_PRESET_MODE_COMMAND_TEMPLATE = "preset_mode_command_template"
 CONF_PRESET_MODES_LIST = "preset_modes"
-# CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.4
+# CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.9
 CONF_SEND_IF_OFF = "send_if_off"
 CONF_SWING_MODE_COMMAND_TEMPLATE = "swing_mode_command_template"
 CONF_SWING_MODE_COMMAND_TOPIC = "swing_mode_command_topic"
@@ -294,7 +294,7 @@ _PLATFORM_SCHEMA_BASE = SCHEMA_BASE.extend(
             [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
         ),
         vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
-        # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.4
+        # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.9
         vol.Optional(CONF_SEND_IF_OFF, default=True): cv.boolean,
         vol.Optional(CONF_ACTION_TEMPLATE): cv.template,
         vol.Optional(CONF_ACTION_TOPIC): mqtt.valid_subscribe_topic,
@@ -337,16 +337,8 @@ _PLATFORM_SCHEMA_BASE = SCHEMA_BASE.extend(
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 PLATFORM_SCHEMA = vol.All(
-    # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.4
-    cv.deprecated(CONF_SEND_IF_OFF),
     _PLATFORM_SCHEMA_BASE,
-    valid_preset_mode_configuration,
-)
-
-_DISCOVERY_SCHEMA_BASE = _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA)
-
-DISCOVERY_SCHEMA = vol.All(
-    # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.4
+    # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.9
     cv.deprecated(CONF_SEND_IF_OFF),
     # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.7
     cv.deprecated(CONF_AWAY_MODE_COMMAND_TOPIC),
@@ -357,7 +349,24 @@ DISCOVERY_SCHEMA = vol.All(
     cv.deprecated(CONF_HOLD_STATE_TEMPLATE),
     cv.deprecated(CONF_HOLD_STATE_TOPIC),
     cv.deprecated(CONF_HOLD_LIST),
+    valid_preset_mode_configuration,
+)
+
+_DISCOVERY_SCHEMA_BASE = _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA)
+
+DISCOVERY_SCHEMA = vol.All(
     _DISCOVERY_SCHEMA_BASE,
+    # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.9
+    cv.deprecated(CONF_SEND_IF_OFF),
+    # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.7
+    cv.deprecated(CONF_AWAY_MODE_COMMAND_TOPIC),
+    cv.deprecated(CONF_AWAY_MODE_STATE_TEMPLATE),
+    cv.deprecated(CONF_AWAY_MODE_STATE_TOPIC),
+    cv.deprecated(CONF_HOLD_COMMAND_TEMPLATE),
+    cv.deprecated(CONF_HOLD_COMMAND_TOPIC),
+    cv.deprecated(CONF_HOLD_STATE_TEMPLATE),
+    cv.deprecated(CONF_HOLD_STATE_TOPIC),
+    cv.deprecated(CONF_HOLD_LIST),
 )
 
 
@@ -832,7 +841,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
                 # optimistic mode
                 setattr(self, attr, temp)
 
-            # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.4
+            # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.9
             if (
                 self._config[CONF_SEND_IF_OFF]
                 or self._current_operation != HVAC_MODE_OFF
@@ -875,7 +884,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
     async def async_set_swing_mode(self, swing_mode):
         """Set new swing mode."""
-        # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.4
+        # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.9
         if self._config[CONF_SEND_IF_OFF] or self._current_operation != HVAC_MODE_OFF:
             payload = self._command_templates[CONF_SWING_MODE_COMMAND_TEMPLATE](
                 swing_mode
@@ -888,7 +897,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new target temperature."""
-        # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.4
+        # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.9
         if self._config[CONF_SEND_IF_OFF] or self._current_operation != HVAC_MODE_OFF:
             payload = self._command_templates[CONF_FAN_MODE_COMMAND_TEMPLATE](fan_mode)
             await self._publish(CONF_FAN_MODE_COMMAND_TOPIC, payload)
