@@ -34,6 +34,7 @@ from homeassistant.components.climate.const import (
     FAN_LOW,
     FAN_MEDIUM,
     FAN_MIDDLE,
+    FAN_OFF,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
@@ -312,9 +313,7 @@ class Thermostat(HomeAccessory):
             if attributes.get(ATTR_HVAC_ACTION) is not None:
                 self.fan_chars.append(CHAR_CURRENT_FAN_STATE)
             serv_fan = self.add_preload_service(SERV_FANV2, self.fan_chars)
-            self.char_active = serv_fan.configure_char(
-                CHAR_ACTIVE, value=1, properties={PROP_MIN_VALUE: 1, PROP_MAX_VALUE: 1}
-            )
+            self.char_active = serv_fan.configure_char(CHAR_ACTIVE, value=1)
             if CHAR_SWING_MODE in self.fan_chars:
                 self.char_swing = serv_fan.configure_char(
                     CHAR_SWING_MODE, value=0, setter_callback=self._set_fan_swing_mode
@@ -652,6 +651,7 @@ class Thermostat(HomeAccessory):
             swing = 1 if PRE_DEFINED_SWING_MODES.intersection(swing_mode) else 0
             self.char_swing.set_value(swing)
 
+        fan_mode = None
         if (
             CHAR_ROTATION_SPEED in self.fan_chars
             and (fan_mode := attributes.get(ATTR_FAN_MODE))
@@ -667,6 +667,8 @@ class Thermostat(HomeAccessory):
             )
         if CHAR_TARGET_FAN_STATE in self.fan_chars and fan_mode:
             self.char_target_fan_state.set_value(1 if fan_mode == FAN_AUTO else 0)
+
+        self.char_active.set_value(0 if fan_mode == FAN_OFF else 1)
 
 
 @TYPES.register("WaterHeater")
