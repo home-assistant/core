@@ -5,10 +5,10 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 from .util import plugwise_command
@@ -51,14 +51,19 @@ class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
         super().__init__(coordinator, device_id)
         self.entity_description = description
         self._attr_unique_id = f"{device_id}-{description.key}"
-        self._attr_name = coordinator.data.devices[device_id].get("name")
+        self._attr_name = (f"{self.device.get('name', '')} {description.name}").lstrip()
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return True if entity is on."""
+        return self.device["switches"].get(self.entity_description.key)
 
     @plugwise_command
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.coordinator.api.set_switch_state(
             self._dev_id,
-            self.coordinator.data.devices[self._dev_id].get("members"),
+            self.device.get("members"),
             self.entity_description.key,
             "on",
         )
@@ -68,18 +73,7 @@ class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
         """Turn the device off."""
         await self.coordinator.api.set_switch_state(
             self._dev_id,
-            self.coordinator.data.devices[self._dev_id].get("members"),
+            self.device.get("members"),
             self.entity_description.key,
             "off",
         )
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        if not (data := self.coordinator.data.devices.get(self._dev_id)):
-            LOGGER.error("Received no data for device %s", self._dev_id)
-            super()._handle_coordinator_update()
-            return
-
-        self._attr_is_on = data["switches"].get(self.entity_description.key)
-        super()._handle_coordinator_update()
