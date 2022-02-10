@@ -1,6 +1,8 @@
 """Generic Plugwise Entity Class."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.const import ATTR_NAME, ATTR_VIA_DEVICE, CONF_HOST
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -52,6 +54,11 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseData]):
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self._dev_id in self.coordinator.data.devices
+
+    @property
+    def device(self) -> dict[str, Any]:
+        """Return data for this device."""
+        return self.coordinator.data.devices[self._dev_id]
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
