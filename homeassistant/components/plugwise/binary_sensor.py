@@ -37,6 +37,13 @@ BINARY_SENSORS: tuple[PlugwiseBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PlugwiseBinarySensorEntityDescription(
+        key="flame_state",
+        name="Flame State",
+        icon="mdi:fire",
+        icon_off="mdi:fire-off",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PlugwiseBinarySensorEntityDescription(
         key="slave_boiler_state",
         name="Secondary Boiler State",
         icon="mdi:fire",
