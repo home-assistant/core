@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.util.network import is_ip_address
 
 from .const import DEFAULT_NAME, DISCOVER_SCAN_TIMEOUT, DOMAIN, WIZ_EXCEPTIONS
@@ -60,13 +60,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         mac = device.mac_address
         await self.async_set_unique_id(mac)
         self._abort_if_unique_id_configured(updates={CONF_HOST: ip_address})
-        bulb = wizlight(ip_address)
+        await self._async_connect_discovered_or_abort()
+        return await self.async_step_discovery_confirm()
+
+    async def _async_connect_discovered_or_abort(self) -> None:
+        """Connect to the device and verify its responding."""
+        device = self._discovered_device
+        assert device is not None
+        bulb = wizlight(device.ip_address)
         try:
             bulbtype = await bulb.get_bulbtype()
-        except WIZ_EXCEPTIONS:
-            return self.async_abort(reason="cannot_connect")
-        self._name = name_from_bulb_type_and_mac(bulbtype, mac)
-        return await self.async_step_discovery_confirm()
+        except WIZ_EXCEPTIONS as ex:
+            raise AbortFlow("cannot_connect") from ex
+        self._name = name_from_bulb_type_and_mac(bulbtype, device.mac_address)
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -76,6 +82,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._name is not None
         ip_address = self._discovered_device.ip_address
         if user_input is not None:
+            # Make sure the device is still there and
+            # update the name if the firmware has auto
+            # updated since discovery
+            await self._async_connect_discovered_or_abort()
             return self.async_create_entry(
                 title=self._name,
                 data={CONF_HOST: ip_address},
