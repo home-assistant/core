@@ -46,6 +46,11 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return MQTTOptionsFlowHandler(config_entry)
 
+    async def async_step_discovery(self, discovery_info):
+        """MQTT is present in the config, but a config entry is not setup."""
+
+        return await self.async_step_user()
+
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
