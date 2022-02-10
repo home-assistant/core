@@ -666,6 +666,11 @@ class Thermostat(HomeAccessory):
         if CHAR_SWING_MODE in self.fan_chars and (
             swing_mode := attributes.get(ATTR_SWING_MODE)
         ):
+            _LOGGER.debug(
+                "Swing mode: %s, predefined:%s",
+                swing_mode,
+                PRE_DEFINED_SWING_MODES.intersection(swing_mode),
+            )
             swing = 1 if PRE_DEFINED_SWING_MODES.intersection(swing_mode) else 0
             self.char_swing.set_value(swing)
 
