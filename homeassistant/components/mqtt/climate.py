@@ -367,6 +367,7 @@ DISCOVERY_SCHEMA = vol.All(
     cv.deprecated(CONF_HOLD_STATE_TEMPLATE),
     cv.deprecated(CONF_HOLD_STATE_TOPIC),
     cv.deprecated(CONF_HOLD_LIST),
+    valid_preset_mode_configuration,
 )
 
 
