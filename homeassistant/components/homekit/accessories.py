@@ -213,7 +213,7 @@ def get_accessories(hass, driver, state, aid, config, aid_storage=None):  # noqa
 
     accessories = []
     for idx, a_type in enumerate(a_types):
-        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, a_type)
+        _LOGGER.warning('Add "%s" as "%s" with aid: %s', state.entity_id, a_type, aid)
         # If the entity creates multiple accessories
         # we need to augment the air storage generator
         aid_trailer = f".{a_type}" if idx else None
