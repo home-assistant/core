@@ -207,6 +207,7 @@ class Thermostat(HomeAccessory):
             self.chars.extend((CHAR_TARGET_HUMIDITY, CHAR_CURRENT_HUMIDITY))
 
         serv_thermostat = self.add_preload_service(SERV_THERMOSTAT, self.chars)
+        self.set_primary_service(serv_thermostat)
 
         # Current mode characteristics
         self.char_current_heat_cool = serv_thermostat.configure_char(
@@ -315,6 +316,7 @@ class Thermostat(HomeAccessory):
             if attributes.get(ATTR_HVAC_ACTION) is not None:
                 self.fan_chars.append(CHAR_CURRENT_FAN_STATE)
             serv_fan = self.add_preload_service(SERV_FANV2, self.fan_chars)
+            serv_thermostat.add_linked_service(serv_fan)
             self.char_active = serv_fan.configure_char(
                 CHAR_ACTIVE, value=1, setter_callback=self._set_fan_active
             )
@@ -660,8 +662,13 @@ class Thermostat(HomeAccessory):
             unit = UNIT_HASS_TO_HOMEKIT[self._unit]
             self.char_display_units.set_value(unit)
 
-        if not self.fan_chars:
-            return
+        if self.fan_chars:
+            self._async_update_fan_state(new_state)
+
+    @callback
+    def _async_update_fan_state(self, new_state):
+        """Update state without rechecking the device features."""
+        attributes = new_state.attributes
 
         if CHAR_SWING_MODE in self.fan_chars and (
             swing_mode := attributes.get(ATTR_SWING_MODE)
@@ -674,22 +681,23 @@ class Thermostat(HomeAccessory):
             swing = 1 if PRE_DEFINED_SWING_MODES.intersection(swing_mode) else 0
             self.char_swing.set_value(swing)
 
-        fan_mode = None
-        if (
-            CHAR_ROTATION_SPEED in self.fan_chars
-            and (fan_mode := attributes.get(ATTR_FAN_MODE))
-            and fan_mode in self.ordered_fan_speeds
-        ):
-            self.char_speed.set_value(
-                ordered_list_item_to_percentage(self.ordered_fan_speeds, fan_mode)
-            )
+        if fan_mode := attributes.get(ATTR_FAN_MODE):
+            if (
+                CHAR_ROTATION_SPEED in self.fan_chars
+                and fan_mode in self.ordered_fan_speeds
+            ):
+                self.char_speed.set_value(
+                    ordered_list_item_to_percentage(self.ordered_fan_speeds, fan_mode)
+                )
+            if CHAR_TARGET_FAN_STATE in self.fan_chars:
+                self.char_target_fan_state.set_value(1 if fan_mode == FAN_AUTO else 0)
 
-        if CHAR_CURRENT_FAN_STATE in self.fan_chars and hvac_action:
+        if CHAR_CURRENT_FAN_STATE in self.fan_chars and (
+            hvac_action := attributes.get(ATTR_HVAC_ACTION)
+        ):
             self.char_current_fan_state.set_value(
                 HC_HASS_TO_HOMEKIT_FAN_STATE[hvac_action]
             )
-        if CHAR_TARGET_FAN_STATE in self.fan_chars and fan_mode:
-            self.char_target_fan_state.set_value(1 if fan_mode == FAN_AUTO else 0)
 
         self.char_active.set_value(0 if fan_mode == FAN_OFF else 1)
 
