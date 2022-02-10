@@ -5,14 +5,22 @@ from typing import Any
 
 from plugwise.exceptions import PlugwiseException
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, LOGGER, SWITCH_ICON
+from .const import DOMAIN, LOGGER
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
+
+SWITCHES: tuple[SwitchEntityDescription, ...] = (
+    SwitchEntityDescription(
+        key="relay",
+        name="Relay",
+        icon="mdi:electric-switch",
+    ),
+)
 
 
 async def async_setup_entry(
@@ -22,35 +30,38 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Smile switches from a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities(
-        PlugwiseSwitchEntity(coordinator, device_id)
-        for device_id, device in coordinator.data.devices.items()
-        if "switches" in device and "relay" in device["switches"]
-    )
+    entities: list[PlugwiseSwitchEntity] = []
+    for device_id, device in coordinator.data.devices.items():
+        for description in SWITCHES:
+            if "switches" not in device or description.key not in device["switches"]:
+                continue
+            entities.append(PlugwiseSwitchEntity(coordinator, device_id, description))
+    async_add_entities(entities)
 
 
 class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
     """Representation of a Plugwise plug."""
 
-    _attr_icon = SWITCH_ICON
-
     def __init__(
         self,
         coordinator: PlugwiseDataUpdateCoordinator,
         device_id: str,
+        description: SwitchEntityDescription,
     ) -> None:
         """Set up the Plugwise API."""
         super().__init__(coordinator, device_id)
-        self._attr_unique_id = f"{device_id}-plug"
-        self._members = coordinator.data.devices[device_id].get("members")
-        self._attr_is_on = False
+        self.entity_description = description
+        self._attr_unique_id = f"{device_id}-{description.key}"
         self._attr_name = coordinator.data.devices[device_id].get("name")
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         try:
             state_on = await self.coordinator.api.set_switch_state(
-                self._dev_id, self._members, "relay", "on"
+                self._dev_id,
+                self.coordinator.data.devices[self._dev_id].get("members"),
+                self.entity_description.key,
+                "on",
             )
         except PlugwiseException:
             LOGGER.error("Error while communicating to device")
@@ -63,7 +74,10 @@ class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
         """Turn the device off."""
         try:
             state_off = await self.coordinator.api.set_switch_state(
-                self._dev_id, self._members, "relay", "off"
+                self._dev_id,
+                self.coordinator.data.devices[self._dev_id].get("members"),
+                self.entity_description.key,
+                "off",
             )
         except PlugwiseException:
             LOGGER.error("Error while communicating to device")
@@ -80,5 +94,5 @@ class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
             super()._handle_coordinator_update()
             return
 
-        self._attr_is_on = data["switches"].get("relay")
+        self._attr_is_on = data["switches"].get(self.entity_description.key)
         super()._handle_coordinator_update()

@@ -2,8 +2,12 @@
 
 from plugwise.exceptions import PlugwiseException
 
+from homeassistant.components.plugwise.const import DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.helpers import entity_registry as er
 
+from tests.common import MockConfigEntry
 from tests.components.plugwise.common import async_init_integration
 
 
@@ -121,3 +125,45 @@ async def test_stretch_switch_changes(hass, mock_stretch):
     )
     state = hass.states.get("switch.droger_52559")
     assert str(state.state) == "on"
+
+
+async def test_unique_id_migration_plug_relay(hass, mock_smile_adam):
+    """Test unique ID migration of -plugs to -relay."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"host": "1.1.1.1", "password": "test-password"}
+    )
+    entry.add_to_hass(hass)
+
+    registry = er.async_get(hass)
+    # Entry to migrate
+    registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        "21f2b542c49845e6bb416884c55778d6-plug",
+        config_entry=entry,
+        suggested_object_id="playstation_smart_plug",
+        disabled_by=None,
+    )
+    # Entry not needing migration
+    registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        "675416a629f343c495449970e2ca37b5-relay",
+        config_entry=entry,
+        suggested_object_id="router",
+        disabled_by=None,
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.playstation_smart_plug") is not None
+    assert hass.states.get("switch.router") is not None
+
+    entity_entry = registry.async_get("switch.playstation_smart_plug")
+    assert entity_entry
+    assert entity_entry.unique_id == "21f2b542c49845e6bb416884c55778d6-relay"
+
+    entity_entry = registry.async_get("switch.router")
+    assert entity_entry
+    assert entity_entry.unique_id == "675416a629f343c495449970e2ca37b5-relay"
