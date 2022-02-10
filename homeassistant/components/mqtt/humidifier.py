@@ -39,7 +39,9 @@ from .const import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
+    CONF_STATE_VALUE_TEMPLATE,
     DOMAIN,
+    PAYLOAD_NONE,
 )
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
@@ -52,7 +54,6 @@ CONF_MODE_STATE_TOPIC = "mode_state_topic"
 CONF_MODE_STATE_TEMPLATE = "mode_state_template"
 CONF_PAYLOAD_RESET_MODE = "payload_reset_mode"
 CONF_PAYLOAD_RESET_HUMIDITY = "payload_reset_humidity"
-CONF_STATE_VALUE_TEMPLATE = "state_value_template"
 CONF_TARGET_HUMIDITY_COMMAND_TEMPLATE = "target_humidity_command_template"
 CONF_TARGET_HUMIDITY_COMMAND_TOPIC = "target_humidity_command_topic"
 CONF_TARGET_HUMIDITY_MIN = "min_humidity"
@@ -65,8 +66,6 @@ DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_PAYLOAD_RESET = "None"
-
-PAYLOAD_NONE = "None"
 
 MQTT_HUMIDIFIER_ATTRIBUTES_BLOCKED = frozenset(
     {

@@ -343,7 +343,6 @@ class SonosDiscoveryManager:
                 )
             )
             await self.hass.async_add_executor_job(self._manual_hosts)
-            return
 
         self.entry.async_on_unload(
             await ssdp.async_register_callback(

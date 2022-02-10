@@ -20,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import COOL_ICON, DOMAIN, FLAME_ICON, IDLE_ICON, LOGGER, UNIT_LUMEN
+from .const import DOMAIN, LOGGER, UNIT_LUMEN
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
@@ -295,21 +295,6 @@ async def async_setup_entry(
                 )
             )
 
-        if coordinator.data.gateway["single_master_thermostat"] is False:
-            # These sensors should actually be binary sensors.
-            for description in INDICATE_ACTIVE_LOCAL_DEVICE_SENSORS:
-                if description.key not in device:
-                    continue
-
-                entities.append(
-                    PlugwiseAuxSensorEntity(
-                        coordinator,
-                        device_id,
-                        description,
-                    )
-                )
-                break
-
     async_add_entities(entities)
 
 
@@ -326,9 +311,7 @@ class PlugwiseSensorEnity(PlugwiseEntity, SensorEntity):
         super().__init__(coordinator, device_id)
         self.entity_description = description
         self._attr_unique_id = f"{device_id}-{description.key}"
-        self._attr_name = (
-            f"{coordinator.data.devices[device_id].get('name', '')} {description.name}"
-        ).lstrip()
+        self._attr_name = (f"{self.device.get('name', '')} {description.name}").lstrip()
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -339,35 +322,4 @@ class PlugwiseSensorEnity(PlugwiseEntity, SensorEntity):
             return
 
         self._attr_native_value = data["sensors"].get(self.entity_description.key)
-        super()._handle_coordinator_update()
-
-
-class PlugwiseAuxSensorEntity(PlugwiseSensorEnity):
-    """Auxiliary Device Sensors."""
-
-    _cooling_state = False
-    _heating_state = False
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        if not (data := self.coordinator.data.devices.get(self._dev_id)):
-            LOGGER.error("Received no data for device %s", self._dev_id)
-            super()._handle_coordinator_update()
-            return
-
-        if data.get("heating_state") is not None:
-            self._heating_state = data["heating_state"]
-        if data.get("cooling_state") is not None:
-            self._cooling_state = data["cooling_state"]
-
-        self._attr_native_value = "idle"
-        self._attr_icon = IDLE_ICON
-        if self._heating_state:
-            self._attr_native_value = "heating"
-            self._attr_icon = FLAME_ICON
-        if self._cooling_state:
-            self._attr_native_value = "cooling"
-            self._attr_icon = COOL_ICON
-
         super()._handle_coordinator_update()

@@ -64,7 +64,7 @@ from . import (
     subscription,
 )
 from .. import mqtt
-from .const import CONF_ENCODING, CONF_QOS, CONF_RETAIN, DOMAIN
+from .const import CONF_ENCODING, CONF_QOS, CONF_RETAIN, DOMAIN, PAYLOAD_NONE
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
@@ -124,8 +124,6 @@ CONF_TEMP_INITIAL = "initial"
 CONF_TEMP_MAX = "max_temp"
 CONF_TEMP_MIN = "min_temp"
 CONF_TEMP_STEP = "temp_step"
-
-PAYLOAD_NONE = "None"
 
 MQTT_CLIMATE_ATTRIBUTES_BLOCKED = frozenset(
     {

@@ -36,6 +36,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+SOURCE_DHCP = "dhcp"
 SOURCE_DISCOVERY = "discovery"
 SOURCE_HASSIO = "hassio"
 SOURCE_HOMEKIT = "homekit"
@@ -46,7 +47,6 @@ SOURCE_SSDP = "ssdp"
 SOURCE_USB = "usb"
 SOURCE_USER = "user"
 SOURCE_ZEROCONF = "zeroconf"
-SOURCE_DHCP = "dhcp"
 
 # If a user wants to hide a discovery from the UI they can "Ignore" it. The config_entries/ignore_flow
 # websocket command creates a config entry with this source and while it exists normal discoveries
@@ -108,17 +108,16 @@ class ConfigEntryState(Enum):
 DEFAULT_DISCOVERY_UNIQUE_ID = "default_discovery_unique_id"
 DISCOVERY_NOTIFICATION_ID = "config_entry_discovery"
 DISCOVERY_SOURCES = (
-    SOURCE_SSDP,
-    SOURCE_USB,
-    SOURCE_DHCP,
-    SOURCE_HOMEKIT,
-    SOURCE_ZEROCONF,
-    SOURCE_HOMEKIT,
     SOURCE_DHCP,
     SOURCE_DISCOVERY,
+    SOURCE_HOMEKIT,
     SOURCE_IMPORT,
     SOURCE_INTEGRATION_DISCOVERY,
+    SOURCE_MQTT,
+    SOURCE_SSDP,
     SOURCE_UNIGNORE,
+    SOURCE_USB,
+    SOURCE_ZEROCONF,
 )
 
 RECONFIGURE_NOTIFICATION_ID = "config_entry_reconfigure"
