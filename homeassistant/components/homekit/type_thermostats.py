@@ -327,7 +327,7 @@ class Thermostat(HomeAccessory):
                     value=0,
                     setter_callback=self._set_fan_swing_mode,
                 )
-                self.char_swing.display_name = "Fan Swing Mode"
+                self.char_swing.display_name = "Swing Mode"
             if CHAR_ROTATION_SPEED in self.fan_chars:
                 self.char_speed = serv_fan.configure_char(
                     CHAR_ROTATION_SPEED,
