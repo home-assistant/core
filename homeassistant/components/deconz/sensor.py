@@ -46,6 +46,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+import homeassistant.util.dt as dt_util
 
 from .const import ATTR_DARK, ATTR_ON
 from .deconz_device import DeconzDevice
@@ -89,14 +90,14 @@ ENTITY_DESCRIPTIONS = {
     AirQuality: [
         DeconzSensorDescription(
             key="air_quality",
-            value_fn=lambda device: device.air_quality,
+            value_fn=lambda device: device.air_quality,  # type: ignore[no-any-return]
             suffix="",
             update_key="airquality",
             state_class=SensorStateClass.MEASUREMENT,
         ),
         DeconzSensorDescription(
             key="air_quality_ppb",
-            value_fn=lambda device: device.air_quality_ppb,
+            value_fn=lambda device: device.air_quality_ppb,  # type: ignore[no-any-return]
             suffix="PPB",
             update_key="airqualityppb",
             device_class=SensorDeviceClass.AQI,
@@ -107,7 +108,7 @@ ENTITY_DESCRIPTIONS = {
     Consumption: [
         DeconzSensorDescription(
             key="consumption",
-            value_fn=lambda device: device.scaled_consumption,
+            value_fn=lambda device: device.scaled_consumption,  # type: ignore[no-any-return]
             suffix="",
             update_key="consumption",
             device_class=SensorDeviceClass.ENERGY,
@@ -118,7 +119,7 @@ ENTITY_DESCRIPTIONS = {
     Daylight: [
         DeconzSensorDescription(
             key="status",
-            value_fn=lambda device: device.status,
+            value_fn=lambda device: device.status,  # type: ignore[no-any-return]
             suffix="",
             update_key="status",
             icon="mdi:white-balance-sunny",
@@ -128,7 +129,7 @@ ENTITY_DESCRIPTIONS = {
     GenericStatus: [
         DeconzSensorDescription(
             key="status",
-            value_fn=lambda device: device.status,
+            value_fn=lambda device: device.status,  # type: ignore[no-any-return]
             suffix="",
             update_key="status",
         )
@@ -136,7 +137,7 @@ ENTITY_DESCRIPTIONS = {
     Humidity: [
         DeconzSensorDescription(
             key="humidity",
-            value_fn=lambda device: device.scaled_humidity,
+            value_fn=lambda device: device.scaled_humidity,  # type: ignore[no-any-return]
             suffix="",
             update_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
@@ -147,7 +148,7 @@ ENTITY_DESCRIPTIONS = {
     LightLevel: [
         DeconzSensorDescription(
             key="light_level",
-            value_fn=lambda device: device.scaled_light_level,
+            value_fn=lambda device: device.scaled_light_level,  # type: ignore[no-any-return]
             suffix="",
             update_key="lightlevel",
             device_class=SensorDeviceClass.ILLUMINANCE,
@@ -157,7 +158,7 @@ ENTITY_DESCRIPTIONS = {
     Power: [
         DeconzSensorDescription(
             key="power",
-            value_fn=lambda device: device.power,
+            value_fn=lambda device: device.power,  # type: ignore[no-any-return]
             suffix="",
             update_key="power",
             device_class=SensorDeviceClass.POWER,
@@ -168,7 +169,7 @@ ENTITY_DESCRIPTIONS = {
     Pressure: [
         DeconzSensorDescription(
             key="pressure",
-            value_fn=lambda device: device.pressure,
+            value_fn=lambda device: device.pressure,  # type: ignore[no-any-return]
             suffix="",
             update_key="pressure",
             device_class=SensorDeviceClass.PRESSURE,
@@ -179,7 +180,7 @@ ENTITY_DESCRIPTIONS = {
     Temperature: [
         DeconzSensorDescription(
             key="temperature",
-            value_fn=lambda device: device.temperature,
+            value_fn=lambda device: device.temperature,  # type: ignore[no-any-return]
             suffix="",
             update_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
@@ -190,7 +191,7 @@ ENTITY_DESCRIPTIONS = {
     Time: [
         DeconzSensorDescription(
             key="last_set",
-            value_fn=lambda device: device.last_set,
+            value_fn=lambda device: device.last_set,  # type: ignore[no-any-return]
             suffix="",
             update_key="lastset",
             device_class=SensorDeviceClass.TIMESTAMP,
@@ -202,7 +203,7 @@ ENTITY_DESCRIPTIONS = {
 SENSOR_DESCRIPTIONS = [
     DeconzSensorDescription(
         key="battery",
-        value_fn=lambda device: device.battery,
+        value_fn=lambda device: device.battery,  # type: ignore[no-any-return]
         suffix="Battery",
         update_key="battery",
         device_class=SensorDeviceClass.BATTERY,
@@ -212,7 +213,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     DeconzSensorDescription(
         key="secondary_temperature",
-        value_fn=lambda device: device.secondary_temperature,
+        value_fn=lambda device: device.secondary_temperature,  # type: ignore[no-any-return]
         suffix="Temperature",
         update_key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -339,15 +340,19 @@ class DeconzSensor(DeconzDevice, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self._device)  # type: ignore[no-any-return]
+        if self.entity_description.device_class is SensorDeviceClass.TIMESTAMP:
+            return dt_util.parse_datetime(
+                self.entity_description.value_fn(self._device)
+            )
+        return self.entity_description.value_fn(self._device)
 
     @property
     def extra_state_attributes(self) -> dict[str, bool | float | int | None]:
         """Return the state attributes of the sensor."""
-        if self.entity_description.key not in PROVIDES_EXTRA_ATTRIBUTES:
-            return
-
         attr: dict[str, bool | float | int | None] = {}
+
+        if self.entity_description.key not in PROVIDES_EXTRA_ATTRIBUTES:
+            return attr
 
         if self._device.on is not None:
             attr[ATTR_ON] = self._device.on
