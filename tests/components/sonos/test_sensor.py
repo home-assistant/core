@@ -1,14 +1,15 @@
 """Tests for the Sonos battery sensor platform."""
+from unittest.mock import PropertyMock
+
 from soco.exceptions import NotSupportedException
 
 from homeassistant.components.sensor import SCAN_INTERVAL
 from homeassistant.components.sonos.binary_sensor import ATTR_BATTERY_POWER_SOURCE
-from homeassistant.components.sonos.const import DATA_SONOS, SOURCE_TV
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_registry as ent_reg
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed, patch
+from tests.common import async_fire_time_changed
 
 
 async def test_entity_registry_unsupported(hass, async_setup_sonos, soco):
@@ -119,18 +120,14 @@ async def test_device_payload_without_battery_and_ignored_keys(
 
 
 async def test_audio_input_sensor(
-    hass, async_autosetup_sonos, soco, device_properties_event
+    hass, async_autosetup_sonos, soco, tv_event, no_media_event
 ):
     """Test audio input sensor."""
     entity_registry = ent_reg.async_get(hass)
 
-    speaker = list(hass.data[DATA_SONOS].discovered.values())[0]
-    speaker.media.source_name = SOURCE_TV
-
-    # Send any event to cancel fallback polling
-    subscription = soco.deviceProperties.subscribe.return_value
+    subscription = soco.avTransport.subscribe.return_value
     sub_callback = subscription.callback
-    sub_callback(device_properties_event)
+    sub_callback(tv_event)
     await hass.async_block_till_done()
 
     audio_input_sensor = entity_registry.entities["sensor.zone_a_audio_input_format"]
@@ -138,22 +135,27 @@ async def test_audio_input_sensor(
     assert audio_input_state.state == "Dolby 5.1"
 
     # Set mocked input format to new value and ensure poll success
-    soco.soundbar_audio_input_format = "No input"
+    no_input_mock = PropertyMock(return_value="No input")
+    type(soco).soundbar_audio_input_format = no_input_mock
 
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
+
+    no_input_mock.assert_called_once()
     audio_input_state = hass.states.get(audio_input_sensor.entity_id)
     assert audio_input_state.state == "No input"
 
     # Ensure state is not polled when source is not TV and state is already "No input"
-    speaker.media.source_name = None
-    soco.soundbar_audio_input_format = "Will not be polled"
-    with patch(
-        "homeassistant.components.sonos.sensor.SonosAudioInputFormatSensorEntity._poll_state"
-    ) as mock_poll:
-        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
-        await hass.async_block_till_done()
-        assert not mock_poll.called
+    sub_callback(no_media_event)
+    await hass.async_block_till_done()
+
+    unpolled_mock = PropertyMock(return_value="Will not be polled")
+    type(soco).soundbar_audio_input_format = unpolled_mock
+
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    await hass.async_block_till_done()
+
+    unpolled_mock.assert_not_called()
     audio_input_state = hass.states.get(audio_input_sensor.entity_id)
     assert audio_input_state.state == "No input"
 
