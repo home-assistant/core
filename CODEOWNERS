@@ -574,6 +574,8 @@ homeassistant/components/modem_callerid/* @tkdrob
 tests/components/modem_callerid/* @tkdrob
 homeassistant/components/modern_forms/* @wonderslug
 tests/components/modern_forms/* @wonderslug
+homeassistant/components/moehlenhoff_alpha2/* @j-a-n
+tests/components/moehlenhoff_alpha2/* @j-a-n
 homeassistant/components/monoprice/* @etsinko @OnFreund
 tests/components/monoprice/* @etsinko @OnFreund
 homeassistant/components/moon/* @fabaff
