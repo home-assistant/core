@@ -23,8 +23,9 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "ebusd"
 DEFAULT_PORT = 8888
+DEFAULT_CACHE_TTL = 900
 CONF_CIRCUIT = "circuit"
-CACHE_TTL = 900
+CONF_CACHE_TTL = "cache_ttl"
 SERVICE_EBUSD_WRITE = "ebusd_write"
 
 
@@ -46,6 +47,8 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Required(CONF_HOST): cv.string,
                     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                    vol.Optional(CONF_CACHE_TTL, default=DEFAULT_CACHE_TTL): vol.All(
+                        vol.Coerce(int), vol.Range(min=0, max=24*60*60)),
                     vol.Optional(CONF_MONITORED_CONDITIONS, default=[]): cv.ensure_list,
                 },
                 verify_ebusd_config,
@@ -62,13 +65,14 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config[DOMAIN]
     name = conf[CONF_NAME]
     circuit = conf[CONF_CIRCUIT]
+    cache_ttl = conf[CONF_CACHE_TTL]
     monitored_conditions = conf.get(CONF_MONITORED_CONDITIONS)
     server_address = (conf.get(CONF_HOST), conf.get(CONF_PORT))
 
     try:
 
         ebusdpy.init(server_address)
-        hass.data[DOMAIN] = EbusdData(server_address, circuit)
+        hass.data[DOMAIN] = EbusdData(server_address, circuit, cache_ttl)
 
         sensor_config = {
             CONF_MONITORED_CONDITIONS: monitored_conditions,
@@ -88,10 +92,11 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class EbusdData:
     """Get the latest data from Ebusd."""
 
-    def __init__(self, address, circuit):
+    def __init__(self, address, circuit, cache_ttl):
         """Initialize the data object."""
         self._circuit = circuit
         self._address = address
+        self._cache_ttl = cache_ttl
         self.value = {}
 
     def update(self, name, stype):
@@ -99,7 +104,7 @@ class EbusdData:
         try:
             _LOGGER.debug("Opening socket to ebusd %s", name)
             command_result = ebusdpy.read(
-                self._address, self._circuit, name, stype, CACHE_TTL
+                self._address, self._circuit, name, stype, self._cache_ttl
             )
             if command_result is not None:
                 if "ERR:" in command_result:
