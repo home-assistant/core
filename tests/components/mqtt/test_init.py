@@ -12,7 +12,6 @@ import voluptuous as vol
 from homeassistant.components import mqtt, websocket_api
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.mixins import MQTT_ENTITY_DEVICE_INFO_SCHEMA
-import homeassistant.config_entries
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     EVENT_HOMEASSISTANT_STARTED,
@@ -1125,24 +1124,6 @@ async def test_setup_override_configuration(hass, mqtt_mock, caplog):
             "Data in your configuration entry is going to override your configuration.yaml:"
             in caplog.text
         )
-
-
-async def test_cleanup_config_entry(hass, mqtt_mock, caplog, tmp_path):
-    """Test setup with clean up of and old configuration entry."""
-    # Mock config removed
-    del hass.data["mqtt_config"]
-
-    entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
-        data={mqtt.CONF_BROKER: "test-broker", "password": "somepassword"},
-        source=homeassistant.config_entries.SOURCE_IMPORT,
-    )
-    entry.add_to_hass(hass)
-
-    with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client().connect = lambda *args: 1
-        mock_client().disconnect = lambda *args: 1
-        assert not await mqtt.async_setup_entry(hass, entry)
 
 
 async def test_setup_raises_ConfigEntryNotReady_if_no_connect_broker(hass, caplog):
