@@ -1,19 +1,18 @@
 """Support for Spotify media browsing."""
 from __future__ import annotations
 
-from urllib.parse import parse_qs, urlparse
-
 from functools import partial
 import logging
 from typing import Any
+from urllib.parse import parse_qs, urlparse
 
 from spotipy import Spotify
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.components.media_player import BrowseError, BrowseMedia
-from homeassistant.components.media_player.const import MEDIA_CLASS_APP
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_ALBUM,
+    MEDIA_CLASS_APP,
     MEDIA_CLASS_ARTIST,
     MEDIA_CLASS_DIRECTORY,
     MEDIA_CLASS_EPISODE,
@@ -208,6 +207,7 @@ async def async_browse_media(
                     urlparse(child.media_content_id)._replace(query=query).geturl()
                 )
     return result
+
 
 async def async_browse_media_internal(
     hass: HomeAssistant,
