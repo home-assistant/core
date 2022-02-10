@@ -268,7 +268,7 @@ async def async_setup_platform_helper(
     """Return true if platform setup should be aborted."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     if not bool(hass.config_entries.async_entries(DOMAIN)):
-        hass.data[DATA_MQTT_RELOAD_NEEDED] = {}
+        hass.data[DATA_MQTT_RELOAD_NEEDED] = None
         _LOGGER.warning(
             "MQTT integration is not setup, skipping setup of manually configured "
             "MQTT %s",
