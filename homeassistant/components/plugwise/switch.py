@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from plugwise.exceptions import PlugwiseException
-
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -13,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN, LOGGER
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
+from .util import plugwise_command
 
 SWITCHES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
@@ -54,37 +53,25 @@ class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
         self._attr_unique_id = f"{device_id}-{description.key}"
         self._attr_name = coordinator.data.devices[device_id].get("name")
 
+    @plugwise_command
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        try:
-            state_on = await self.coordinator.api.set_switch_state(
-                self._dev_id,
-                self.coordinator.data.devices[self._dev_id].get("members"),
-                self.entity_description.key,
-                "on",
-            )
-        except PlugwiseException:
-            LOGGER.error("Error while communicating to device")
-        else:
-            if state_on:
-                self._attr_is_on = True
-                self.async_write_ha_state()
+        await self.coordinator.api.set_switch_state(
+            self._dev_id,
+            self.coordinator.data.devices[self._dev_id].get("members"),
+            self.entity_description.key,
+            "on",
+        )
 
+    @plugwise_command
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        try:
-            state_off = await self.coordinator.api.set_switch_state(
-                self._dev_id,
-                self.coordinator.data.devices[self._dev_id].get("members"),
-                self.entity_description.key,
-                "off",
-            )
-        except PlugwiseException:
-            LOGGER.error("Error while communicating to device")
-        else:
-            if state_off:
-                self._attr_is_on = False
-                self.async_write_ha_state()
+        await self.coordinator.api.set_switch_state(
+            self._dev_id,
+            self.coordinator.data.devices[self._dev_id].get("members"),
+            self.entity_description.key,
+            "off",
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
