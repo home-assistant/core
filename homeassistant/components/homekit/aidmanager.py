@@ -9,6 +9,8 @@ can't change the hash without causing breakages for HA users.
 
 This module generates and stores them in a HA storage.
 """
+from __future__ import annotations
+
 import random
 
 from fnvhash import fnv1a_32
@@ -89,13 +91,25 @@ class AccessoryAidStorage:
         self.allocations = raw_storage.get(ALLOCATIONS_KEY, {})
         self.allocated_aids = set(self.allocations.values())
 
-    def get_or_allocate_aid_for_entity_id(self, entity_id: str):
+    def get_or_allocate_aid_for_entity_id(
+        self, entity_id: str, trailer: str | None = None
+    ):
         """Generate a stable aid for an entity id."""
+        if trailer is not None:
+            entity_id_allocation = f"{entity_id}{trailer}"
+        else:
+            entity_id_allocation = entity_id
+
         if not (entity := self._entity_registry.async_get(entity_id)):
-            return self.get_or_allocate_aid(None, entity_id)
+            return self.get_or_allocate_aid(None, entity_id_allocation)
 
         sys_unique_id = get_system_unique_id(entity)
-        return self.get_or_allocate_aid(sys_unique_id, entity_id)
+
+        if trailer is not None:
+            sys_unique_id_allocation = f"{sys_unique_id}{trailer}"
+        else:
+            sys_unique_id_allocation = sys_unique_id
+        return self.get_or_allocate_aid(sys_unique_id_allocation, entity_id_allocation)
 
     def get_or_allocate_aid(self, unique_id: str, entity_id: str):
         """Allocate (and return) a new aid for an accessory."""

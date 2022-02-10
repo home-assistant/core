@@ -67,7 +67,7 @@ from . import (  # noqa: F401
     type_switches,
     type_thermostats,
 )
-from .accessories import HomeBridge, HomeDriver, get_accessory
+from .accessories import HomeBridge, HomeDriver, get_accessories
 from .aidmanager import AccessoryAidStorage
 from .const import (
     ATTR_INTEGRATION,
@@ -560,8 +560,8 @@ class HomeKit:
         await self.async_config_changed()
         await asyncio.sleep(_HOMEKIT_CONFIG_UPDATE_TIME)
         for state in new:
-            acc = self.add_bridge_accessory(state)
-            if acc:
+            accs = self.add_bridge_accessory(state)
+            for acc in accs:
                 self.hass.async_add_job(acc.run)
         await self.async_config_changed()
 
@@ -570,10 +570,7 @@ class HomeKit:
         await self.hass.async_add_executor_job(self.driver.config_changed)
 
     def add_bridge_accessory(self, state):
-        """Try adding accessory to bridge if configured beforehand."""
-        if self._would_exceed_max_devices(state.entity_id):
-            return
-
+        """Try adding accessories to bridge if configured beforehand."""
         if state_needs_accessory_mode(state):
             if self._exclude_accessory_mode:
                 return
@@ -586,21 +583,27 @@ class HomeKit:
                 state.entity_id,
             )
 
-        aid = self.aid_storage.get_or_allocate_aid_for_entity_id(state.entity_id)
         conf = self._config.get(state.entity_id, {}).copy()
         # If an accessory cannot be created or added due to an exception
         # of any kind (usually in pyhap) it should not prevent
         # the rest of the accessories from being created
+        accs = []
         try:
-            acc = get_accessory(self.hass, self.driver, state, aid, conf)
-            if acc is not None:
-                self.bridge.add_accessory(acc)
-                return acc
+            accs = get_accessories(
+                self.hass, self.driver, state, None, conf, aid_storage=self.aid_storage
+            )
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Failed to create a HomeKit accessory for %s", state.entity_id
             )
-        return None
+
+        added = []
+        for acc in accs:
+            if self._would_exceed_max_devices(state.entity_id):
+                return
+            self.bridge.add_accessory(acc)
+            added.append(acc)
+        return added
 
     def _would_exceed_max_devices(self, name):
         """Check if adding another devices would reach the limit and log."""
@@ -787,14 +790,15 @@ class HomeKit:
             return None
         state = entity_states[0]
         conf = self._config.get(state.entity_id, {}).copy()
-        acc = get_accessory(self.hass, self.driver, state, STANDALONE_AID, conf)
-        if acc is None:
+        acc = get_accessories(self.hass, self.driver, state, STANDALONE_AID, conf)
+        if not acc:
             _LOGGER.error(
                 "HomeKit %s cannot startup: entity not supported: %s",
                 self._name,
                 self._filter.config,
             )
-        return acc
+            return None
+        return acc[0]
 
     async def _async_create_bridge_accessory(self, entity_states):
         """Create a HomeKit bridge with accessories. (bridge mode)."""

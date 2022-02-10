@@ -1,7 +1,7 @@
 """Test different accessory types: Sensors."""
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.homekit import get_accessory
+from homeassistant.components.homekit import get_accessories
 from homeassistant.components.homekit.const import (
     PROP_CELSIUS,
     THRESHOLD_CO,
@@ -361,10 +361,12 @@ async def test_sensor_restore(hass, hk_driver, events):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
     await hass.async_block_till_done()
 
-    acc = get_accessory(hass, hk_driver, hass.states.get("sensor.temperature"), 2, {})
+    acc = get_accessories(
+        hass, hk_driver, hass.states.get("sensor.temperature"), 2, {}
+    )[0]
     assert acc.category == 10
 
-    acc = get_accessory(hass, hk_driver, hass.states.get("sensor.humidity"), 2, {})
+    acc = get_accessories(hass, hk_driver, hass.states.get("sensor.humidity"), 2, {})[0]
     assert acc.category == 10
 
 

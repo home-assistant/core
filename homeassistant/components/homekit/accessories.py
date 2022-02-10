@@ -7,6 +7,7 @@ from pyhap.const import CATEGORY_OTHER
 from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components import cover
+from homeassistant.components.climate.const import SUPPORT_FAN_MODE, SUPPORT_SWING_MODE
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.remote import SUPPORT_ACTIVITY
 from homeassistant.components.sensor import SensorDeviceClass
@@ -93,28 +94,25 @@ SWITCH_TYPES = {
 TYPES = Registry()
 
 
-def get_accessory(hass, driver, state, aid, config):  # noqa: C901
+def get_accessories(hass, driver, state, aid, config, aid_storage=None):  # noqa: C901
     """Take state and return an accessory object if supported."""
-    if not aid:
-        _LOGGER.warning(
-            'The entity "%s" is not supported, since it '
-            "generates an invalid aid, please change it",
-            state.entity_id,
-        )
-        return None
-
-    a_type = None
+    a_types = []
     name = config.get(CONF_NAME, state.name)
+    entity_id = state.entity_id
     features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
     if state.domain == "alarm_control_panel":
-        a_type = "SecuritySystem"
+        a_types.append("SecuritySystem")
 
     elif state.domain in ("binary_sensor", "device_tracker", "person"):
-        a_type = "BinarySensor"
+        a_types.append("BinarySensor")
 
     elif state.domain == "climate":
-        a_type = "Thermostat"
+        a_types.append("Thermostat")
+        if features & SUPPORT_FAN_MODE:
+            a_types.append("ThermostatFanMode")
+        if features & SUPPORT_SWING_MODE:
+            a_types.append("ThermostatSwingMode")
 
     elif state.domain == "cover":
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
@@ -123,42 +121,42 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
             cover.CoverDeviceClass.GARAGE,
             cover.CoverDeviceClass.GATE,
         ) and features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE):
-            a_type = "GarageDoorOpener"
+            a_types.append("GarageDoorOpener")
         elif (
             device_class == cover.CoverDeviceClass.WINDOW
             and features & cover.SUPPORT_SET_POSITION
         ):
-            a_type = "Window"
+            a_types.append("Window")
         elif features & cover.SUPPORT_SET_POSITION:
-            a_type = "WindowCovering"
+            a_types.append("WindowCovering")
         elif features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE):
-            a_type = "WindowCoveringBasic"
+            a_types.append("WindowCoveringBasic")
         elif features & cover.SUPPORT_SET_TILT_POSITION:
             # WindowCovering and WindowCoveringBasic both support tilt
             # only WindowCovering can handle the covers that are missing
             # SUPPORT_SET_POSITION, SUPPORT_OPEN, and SUPPORT_CLOSE
-            a_type = "WindowCovering"
+            a_types.append("WindowCovering")
 
     elif state.domain == "fan":
-        a_type = "Fan"
+        a_types.append("Fan")
 
     elif state.domain == "humidifier":
-        a_type = "HumidifierDehumidifier"
+        a_types.append("HumidifierDehumidifier")
 
     elif state.domain == "light":
-        a_type = "Light"
+        a_types.append("Light")
 
     elif state.domain == "lock":
-        a_type = "Lock"
+        a_types.append("Lock")
 
     elif state.domain == "media_player":
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         feature_list = config.get(CONF_FEATURE_LIST, [])
 
         if device_class == MediaPlayerDeviceClass.TV:
-            a_type = "TelevisionMediaPlayer"
+            a_types.append("TelevisionMediaPlayer")
         elif validate_media_player_features(state, feature_list):
-            a_type = "MediaPlayer"
+            a_types.append("MediaPlayer")
 
     elif state.domain == "sensor":
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
@@ -168,30 +166,30 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
             TEMP_CELSIUS,
             TEMP_FAHRENHEIT,
         ):
-            a_type = "TemperatureSensor"
+            a_types.append("TemperatureSensor")
         elif device_class == SensorDeviceClass.HUMIDITY and unit == PERCENTAGE:
-            a_type = "HumiditySensor"
+            a_types.append("HumiditySensor")
         elif (
             device_class == SensorDeviceClass.PM25
             or SensorDeviceClass.PM25 in state.entity_id
         ):
-            a_type = "AirQualitySensor"
+            a_types.append("AirQualitySensor")
         elif device_class == SensorDeviceClass.CO:
-            a_type = "CarbonMonoxideSensor"
+            a_types.append("CarbonMonoxideSensor")
         elif device_class == SensorDeviceClass.CO2 or "co2" in state.entity_id:
-            a_type = "CarbonDioxideSensor"
+            a_types.append("CarbonDioxideSensor")
         elif device_class == SensorDeviceClass.ILLUMINANCE or unit in ("lm", LIGHT_LUX):
-            a_type = "LightSensor"
+            a_types.append("LightSensor")
 
     elif state.domain == "switch":
         switch_type = config.get(CONF_TYPE, TYPE_SWITCH)
-        a_type = SWITCH_TYPES[switch_type]
+        a_types.append(SWITCH_TYPES[switch_type])
 
     elif state.domain == "vacuum":
-        a_type = "Vacuum"
+        a_types.append("Vacuum")
 
     elif state.domain == "remote" and features & SUPPORT_ACTIVITY:
-        a_type = "ActivityRemote"
+        a_types.append("ActivityRemote")
 
     elif state.domain in (
         "automation",
@@ -202,22 +200,30 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
         "scene",
         "script",
     ):
-        a_type = "Switch"
+        a_types.append("Switch")
 
     elif state.domain in ("input_select", "select"):
-        a_type = "SelectSwitch"
+        a_types.append("SelectSwitch")
 
     elif state.domain == "water_heater":
-        a_type = "WaterHeater"
+        a_types.append("WaterHeater")
 
     elif state.domain == "camera":
-        a_type = "Camera"
+        a_types.append("Camera")
 
-    if a_type is None:
-        return None
+    accessories = []
+    for idx, a_type in enumerate(a_types):
+        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, a_type)
+        # If the entity creates multiple accessories
+        # we need to augment the air storage generator
+        aid_trailer = f".{a_type}" if idx else None
+        if aid is None:
+            aid = aid_storage.get_or_allocate_aid_for_entity_id(entity_id, aid_trailer)
+        accessories.append(
+            TYPES[a_type](hass, driver, name, state.entity_id, aid, config)
+        )
 
-    _LOGGER.debug('Add "%s" as "%s"', state.entity_id, a_type)
-    return TYPES[a_type](hass, driver, name, state.entity_id, aid, config)
+    return accessories
 
 
 class HomeAccessory(Accessory):
