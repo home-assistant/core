@@ -44,6 +44,7 @@ SONOS_ALBUM_ARTIST = "album_artists"
 SONOS_TRACKS = "tracks"
 SONOS_COMPOSER = "composers"
 SONOS_RADIO = "radio"
+SONOS_OTHER_ITEM = "other items"
 
 SONOS_STATE_PLAYING = "PLAYING"
 SONOS_STATE_TRANSITIONING = "TRANSITIONING"
@@ -76,6 +77,7 @@ SONOS_TO_MEDIA_CLASSES = {
     "object.container.person.musicArtist": MEDIA_CLASS_ARTIST,
     "object.container.playlistContainer.sameArtist": MEDIA_CLASS_ARTIST,
     "object.container.playlistContainer": MEDIA_CLASS_PLAYLIST,
+    "object.item": MEDIA_CLASS_TRACK,
     "object.item.audioItem.musicTrack": MEDIA_CLASS_TRACK,
     "object.item.audioItem.audioBroadcast": MEDIA_CLASS_GENRE,
 }
@@ -121,6 +123,7 @@ SONOS_TYPES_MAPPING = {
     "object.container.person.musicArtist": SONOS_ALBUM_ARTIST,
     "object.container.playlistContainer.sameArtist": SONOS_ARTIST,
     "object.container.playlistContainer": SONOS_PLAYLISTS,
+    "object.item": SONOS_OTHER_ITEM,
     "object.item.audioItem.musicTrack": SONOS_TRACKS,
     "object.item.audioItem.audioBroadcast": SONOS_RADIO,
 }
