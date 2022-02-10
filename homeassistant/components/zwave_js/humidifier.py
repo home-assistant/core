@@ -6,7 +6,6 @@ from typing import Any
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.humidity_control import (
-    HUMIDITY_CONTROL_MODE_PROPERTY,
     HUMIDITY_CONTROL_SETPOINT_PROPERTY,
     HumidityControlMode,
     HumidityControlSetpointType,
@@ -73,6 +72,7 @@ class ZWaveBaseHumidifier(ZWaveBaseEntity, HumidifierEntity):
 
     _on_mode = HumidityControlMode
     _inverse_mode = HumidityControlMode
+    _setpoint_type = HumidityControlSetpointType
 
     def __init__(
         self,
@@ -86,13 +86,17 @@ class ZWaveBaseHumidifier(ZWaveBaseEntity, HumidifierEntity):
         self._attr_name = f"{self._attr_name} {self.device_class}"
         self._attr_unique_id = f"{self._attr_unique_id}_{self.device_class}"
 
-        self._current_mode = self.get_zwave_value(
-            HUMIDITY_CONTROL_MODE_PROPERTY,
-            command_class=CommandClass.HUMIDITY_CONTROL_MODE,
+        self._current_mode = self.info.primary_value
+
+        self._setpoint = self.get_zwave_value(
+            HUMIDITY_CONTROL_SETPOINT_PROPERTY,
+            command_class=CommandClass.HUMIDITY_CONTROL_SETPOINT,
+            value_property_key=self._setpoint_type,
+            add_to_watched_value_ids=True,
         )
 
-        if not self._current_mode:
-            raise ValueError("Humidity control mode is required")
+        if not self._setpoint:
+            raise ValueError(f"{self._setpoint_type.name} setpoint is required")
 
     @property
     def is_on(self) -> bool | None:
@@ -166,25 +170,7 @@ class ZWaveHumidifier(ZWaveBaseHumidifier):
     _attr_device_class = HumidifierDeviceClass.HUMIDIFIER
     _on_mode = HumidityControlMode.HUMIDIFY
     _inverse_mode = HumidityControlMode.DEHUMIDIFY
-
-    def __init__(
-        self,
-        config_entry: ConfigEntry,
-        client: ZwaveClient,
-        info: ZwaveDiscoveryInfo,
-    ) -> None:
-        """Initialize thermostat."""
-        super().__init__(config_entry, client, info)
-
-        self._setpoint = self.get_zwave_value(
-            HUMIDITY_CONTROL_SETPOINT_PROPERTY,
-            command_class=CommandClass.HUMIDITY_CONTROL_SETPOINT,
-            value_property_key=HumidityControlSetpointType.HUMIDIFIER,
-            add_to_watched_value_ids=True,
-        )
-
-        if not self._setpoint:
-            raise ValueError("Humidifier setpoint is required")
+    _setpoint_type = HumidityControlSetpointType.HUMIDIFIER
 
 
 class ZWaveDehumidifier(ZWaveBaseHumidifier):
@@ -193,22 +179,4 @@ class ZWaveDehumidifier(ZWaveBaseHumidifier):
     _attr_device_class = HumidifierDeviceClass.DEHUMIDIFIER
     _on_mode = HumidityControlMode.DEHUMIDIFY
     _inverse_mode = HumidityControlMode.HUMIDIFY
-
-    def __init__(
-        self,
-        config_entry: ConfigEntry,
-        client: ZwaveClient,
-        info: ZwaveDiscoveryInfo,
-    ) -> None:
-        """Initialize thermostat."""
-        super().__init__(config_entry, client, info)
-
-        self._setpoint = self.get_zwave_value(
-            HUMIDITY_CONTROL_SETPOINT_PROPERTY,
-            command_class=CommandClass.HUMIDITY_CONTROL_SETPOINT,
-            value_property_key=HumidityControlSetpointType.DEHUMIDIFIER,
-            add_to_watched_value_ids=True,
-        )
-
-        if not self._setpoint:
-            raise ValueError("Dehumidifier setpoint is required")
+    _setpoint_type = HumidityControlSetpointType.DEHUMIDIFIER
