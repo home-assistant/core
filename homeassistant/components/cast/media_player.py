@@ -473,7 +473,7 @@ class CastDevice(MediaPlayerEntity):
             result = await media_source.async_browse_media(
                 self.hass, None, content_filter=content_filter
             )
-            children.append(result)
+            children.extend(result.children)
         except BrowseError:
             if not children:
                 raise
@@ -492,7 +492,7 @@ class CastDevice(MediaPlayerEntity):
             media_content_type="",
             can_play=False,
             can_expand=True,
-            children=children,
+            children=sorted(children, key=lambda c: c.title),
         )
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
