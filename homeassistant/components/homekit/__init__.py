@@ -587,9 +587,9 @@ class HomeKit:
         # If an accessory cannot be created or added due to an exception
         # of any kind (usually in pyhap) it should not prevent
         # the rest of the accessories from being created
-        accs = []
+        accessories = []
         try:
-            accs = get_accessories(
+            accessories = get_accessories(
                 self.hass, self.driver, state, None, conf, aid_storage=self.aid_storage
             )
         except Exception:  # pylint: disable=broad-except
@@ -598,9 +598,9 @@ class HomeKit:
             )
 
         added = []
-        for acc in accs:
+        for acc in accessories:
             if self._would_exceed_max_devices(state.entity_id):
-                return
+                return added
             self.bridge.add_accessory(acc)
             added.append(acc)
         return added
