@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import timedelta
 from ipaddress import ip_address
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from async_upnp_client.exceptions import UpnpConnectionError
 import voluptuous as vol
@@ -121,6 +121,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         cancel_discovered_callback()
 
     # Create device.
+    if TYPE_CHECKING:
+        assert discovery_info is not None
+        assert discovery_info.ssdp_location is not None
     location = discovery_info.ssdp_location
     try:
         device = await Device.async_create_device(hass, location)
