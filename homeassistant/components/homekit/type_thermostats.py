@@ -581,7 +581,7 @@ class AttrSelectBase(HomeAccessory):
 
 
 @TYPES.register("ThermostatFanMode")
-class ThermostatFanMode(HomeAccessory):
+class ThermostatFanMode(AttrSelectBase):
     """Generate a multi switch accessory for fan modes."""
 
     def __init__(self, *args):
@@ -590,7 +590,7 @@ class ThermostatFanMode(HomeAccessory):
 
 
 @TYPES.register("ThermostatSwingMode")
-class ThermostatSwingMode(HomeAccessory):
+class ThermostatSwingMode(AttrSelectBase):
     """Generate a multi switch accessory for swing modes."""
 
     def __init__(self, *args):
