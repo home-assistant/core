@@ -26,7 +26,12 @@ from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 from .util import plugwise_command
 
-THERMOSTAT_CLASSES = ["thermostat", "zone_thermostat", "thermostatic_radiator_valve"]
+THERMOSTAT_CLASSES = [
+    "thermostat",
+    "thermostatic_radiator_valve",
+    "zone_thermometer",
+    "zone_thermostat",
+]
 
 
 async def async_setup_entry(
@@ -94,15 +99,20 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     @property
     def hvac_action(self) -> str:
         """Return the current running hvac operation if supported."""
-        heater_central_data = self.coordinator.data.devices[
-            self.coordinator.data.gateway["heater_id"]
-        ]
-
-        if heater_central_data.get("heating_state"):
-            return CURRENT_HVAC_HEAT
-        if heater_central_data.get("cooling_state"):
-            return CURRENT_HVAC_COOL
-
+        # When control_state is present, prefer this data
+        if "control_state" in self.device:
+            if self.device.get("control_state") == "cooling":
+                return CURRENT_HVAC_COOL
+            if self.device.get("control_state") == "heating":
+                return CURRENT_HVAC_HEAT
+        else:
+            heater_central_data = self.coordinator.data.devices[
+                self.coordinator.data.gateway["heater_id"]
+            ]
+            if heater_central_data.get("heating_state"):
+                return CURRENT_HVAC_HEAT
+            if heater_central_data.get("cooling_state"):
+                return CURRENT_HVAC_COOL
         return CURRENT_HVAC_IDLE
 
     @property
