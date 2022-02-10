@@ -26,6 +26,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     DEGREE,
     LENGTH_METERS,
     PERCENTAGE,
@@ -190,6 +191,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
             cv.ensure_list, [vol.In(SENSOR_KEYS)]
         ),
         vol.Optional(CONF_STATION_ID): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Inclusive(
             CONF_LATITUDE, "coordinates", "Latitude and longitude must exist together"
@@ -215,6 +217,9 @@ def setup_platform(
     station_id = config.get(CONF_STATION_ID) or closest_station(
         latitude, longitude, hass.config.config_dir
     )
+
+    unique_id = config.get(CONF_UNIQUE_ID, config.get(CONF_NAME, station_id))
+
     if station_id not in _get_ogd_stations():
         _LOGGER.error(
             "Configured ZAMG %s (%s) is not a known station",
@@ -233,7 +238,7 @@ def setup_platform(
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
     add_entities(
         [
-            ZamgSensor(probe, name, description)
+            ZamgSensor(probe, name, description, unique_id)
             for description in SENSOR_TYPES
             if description.key in monitored_conditions
         ],
@@ -246,11 +251,14 @@ class ZamgSensor(SensorEntity):
 
     entity_description: ZamgSensorEntityDescription
 
-    def __init__(self, probe, name, description: ZamgSensorEntityDescription):
+    def __init__(
+        self, probe, name, description: ZamgSensorEntityDescription, unique_id: str
+    ):
         """Initialize the sensor."""
         self.entity_description = description
         self.probe = probe
         self._attr_name = f"{name} {description.key}"
+        self._attr_unique_id = f"{unique_id}_{description.key}"
 
     @property
     def native_value(self):

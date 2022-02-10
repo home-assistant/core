@@ -14,7 +14,13 @@ from homeassistant.components.weather import (
     PLATFORM_SCHEMA,
     WeatherEntity,
 )
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -35,6 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_STATION_ID): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Inclusive(
             CONF_LATITUDE, "coordinates", "Latitude and longitude must exist together"
         ): cv.latitude,
@@ -59,6 +66,9 @@ def setup_platform(
     station_id = config.get(CONF_STATION_ID) or closest_station(
         latitude, longitude, hass.config.config_dir
     )
+
+    unique_id = config.get(CONF_UNIQUE_ID, config.get(CONF_NAME, station_id))
+
     if station_id not in zamg_stations(hass.config.config_dir):
         _LOGGER.error(
             "Configured ZAMG %s (%s) is not a known station",
@@ -74,16 +84,17 @@ def setup_platform(
         _LOGGER.error("Received error from ZAMG: %s", err)
         return
 
-    add_entities([ZamgWeather(probe, name)], True)
+    add_entities([ZamgWeather(probe, unique_id, name)], True)
 
 
 class ZamgWeather(WeatherEntity):
     """Representation of a weather condition."""
 
-    def __init__(self, zamg_data, stationname=None):
+    def __init__(self, zamg_data, unique_id: str, stationname=None):
         """Initialise the platform with a data instance and station name."""
         self.zamg_data = zamg_data
         self.stationname = stationname
+        self._attr_unique_id = unique_id
 
     @property
     def name(self):
