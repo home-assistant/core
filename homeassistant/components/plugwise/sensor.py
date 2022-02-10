@@ -17,10 +17,10 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, LOGGER, UNIT_LUMEN
+from .const import DOMAIN, UNIT_LUMEN
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
@@ -63,13 +63,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="water_temperature",
         name="Water Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key="return_temperature",
-        name="Return Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -258,17 +251,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
-INDICATE_ACTIVE_LOCAL_DEVICE_SENSORS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key="cooling_state",
-        name="Cooling State",
-    ),
-    SensorEntityDescription(
-        key="flame_state",
-        name="Flame State",
-    ),
-)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -313,13 +295,7 @@ class PlugwiseSensorEnity(PlugwiseEntity, SensorEntity):
         self._attr_unique_id = f"{device_id}-{description.key}"
         self._attr_name = (f"{self.device.get('name', '')} {description.name}").lstrip()
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        if not (data := self.coordinator.data.devices.get(self._dev_id)):
-            LOGGER.error("Received no data for device %s", self._dev_id)
-            super()._handle_coordinator_update()
-            return
-
-        self._attr_native_value = data["sensors"].get(self.entity_description.key)
-        super()._handle_coordinator_update()
+    @property
+    def native_value(self) -> int | float | None:
+        """Return the value reported by the sensor."""
+        return self.device["sensors"].get(self.entity_description.key)
