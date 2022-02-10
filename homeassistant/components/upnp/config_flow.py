@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 from datetime import timedelta
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -32,8 +32,8 @@ from .const import (
 def _friendly_name_from_discovery(discovery_info: ssdp.SsdpServiceInfo) -> str:
     """Extract user-friendly name from discovery."""
     return (
-        discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
-        or discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME)
+        cast(str, discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME))
+        or cast(str, discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME))
         or discovery_info.ssdp_headers.get("_host", "")
     )
 
@@ -42,9 +42,9 @@ def _is_complete_discovery(discovery_info: ssdp.SsdpServiceInfo) -> bool:
     """Test if discovery is complete and usable."""
     return (
         ssdp.ATTR_UPNP_UDN in discovery_info.upnp
-        and discovery_info.ssdp_st
-        and discovery_info.ssdp_location
-        and discovery_info.ssdp_usn
+        and cast(bool, discovery_info.ssdp_st)
+        and cast(bool, discovery_info.ssdp_location)
+        and cast(bool, discovery_info.ssdp_usn)
     )
 
 
@@ -114,14 +114,13 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the UPnP/IGD config flow."""
         self._discoveries: list[SsdpServiceInfo] | None = None
 
-    async def async_step_user(
-        self, user_input: Mapping | None = None
-    ) -> Mapping[str, Any]:
+    async def async_step_user(self, user_input: Mapping | None = None) -> FlowResult:
         """Handle a flow start."""
         LOGGER.debug("async_step_user: user_input: %s", user_input)
 
         if user_input is not None:
             # Ensure wanted device was discovered.
+            assert self._discoveries
             matching_discoveries = [
                 discovery
                 for discovery in self._discoveries
@@ -248,12 +247,13 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp_confirm(
         self, user_input: Mapping | None = None
-    ) -> Mapping[str, Any]:
+    ) -> FlowResult:
         """Confirm integration via SSDP."""
         LOGGER.debug("async_step_ssdp_confirm: user_input: %s", user_input)
         if user_input is None:
             return self.async_show_form(step_id="ssdp_confirm")
 
+        assert self._discoveries
         discovery = self._discoveries[0]
         return await self._async_create_entry_from_discovery(discovery)
 
@@ -268,7 +268,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_create_entry_from_discovery(
         self,
         discovery: SsdpServiceInfo,
-    ) -> Mapping[str, Any]:
+    ) -> FlowResult:
         """Create an entry from discovery."""
         LOGGER.debug(
             "_async_create_entry_from_discovery: discovery: %s",
@@ -291,7 +291,7 @@ class UpnpOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input: Mapping = None) -> None:
+    async def async_step_init(self, user_input: Mapping = None) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
             coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
