@@ -316,7 +316,6 @@ class Thermostat(HomeAccessory):
             if attributes.get(ATTR_HVAC_ACTION) is not None:
                 self.fan_chars.append(CHAR_CURRENT_FAN_STATE)
             serv_fan = self.add_preload_service(SERV_FANV2, self.fan_chars)
-            serv_fan.display_name = "{self.display_name} Fan"
             serv_thermostat.add_linked_service(serv_fan)
             self.char_active = serv_fan.configure_char(
                 CHAR_ACTIVE, value=1, setter_callback=self._set_fan_active
