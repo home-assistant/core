@@ -316,30 +316,37 @@ class Thermostat(HomeAccessory):
             if attributes.get(ATTR_HVAC_ACTION) is not None:
                 self.fan_chars.append(CHAR_CURRENT_FAN_STATE)
             serv_fan = self.add_preload_service(SERV_FANV2, self.fan_chars)
+            serv_fan.display_name = "{self.display_name} Fan"
             serv_thermostat.add_linked_service(serv_fan)
             self.char_active = serv_fan.configure_char(
                 CHAR_ACTIVE, value=1, setter_callback=self._set_fan_active
             )
             if CHAR_SWING_MODE in self.fan_chars:
                 self.char_swing = serv_fan.configure_char(
-                    CHAR_SWING_MODE, value=0, setter_callback=self._set_fan_swing_mode
+                    CHAR_SWING_MODE,
+                    value=0,
+                    setter_callback=self._set_fan_swing_mode,
+                    display_name="{self.display_name} Fan Swing Mode",
                 )
             if CHAR_ROTATION_SPEED in self.fan_chars:
                 self.char_speed = serv_fan.configure_char(
                     CHAR_ROTATION_SPEED,
                     value=100,
+                    display_name="{self.display_name} Fan Mode",
                     properties={PROP_MIN_STEP: 100 / len(self.ordered_fan_speeds)},
                     setter_callback=self._set_fan_speed,
                 )
             if CHAR_CURRENT_FAN_STATE in self.fan_chars:
                 self.char_current_fan_state = serv_fan.configure_char(
                     CHAR_CURRENT_FAN_STATE,
+                    display_name="{self.display_name} Fan State",
                     value=0,
                 )
             if CHAR_TARGET_FAN_STATE in self.fan_chars and FAN_AUTO in self.fan_modes:
                 self.char_target_fan_state = serv_fan.configure_char(
                     CHAR_TARGET_FAN_STATE,
                     value=0,
+                    display_name="{self.display_name} Fan Auto",
                     setter_callback=self._set_fan_auto,
                 )
 
