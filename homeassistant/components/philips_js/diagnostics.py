@@ -10,7 +10,15 @@ from homeassistant.core import HomeAssistant
 from . import PhilipsTVDataUpdateCoordinator
 from .const import DOMAIN
 
-TO_REDACT = {"serialnumber_encrypted", "serialnumber", "deviceid_encrypted", "deviceid"}
+TO_REDACT = {
+    "serialnumber_encrypted",
+    "serialnumber",
+    "deviceid_encrypted",
+    "deviceid",
+    "username",
+    "password",
+    "title",
+}
 
 
 async def async_get_config_entry_diagnostics(
@@ -21,10 +29,7 @@ async def async_get_config_entry_diagnostics(
     api = coordinator.api
 
     return {
-        "entry": {
-            "title": entry.title,
-            "config": async_redact_data(entry.as_dict(), TO_REDACT)
-        },
+        "entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "data": {
             "system": async_redact_data(api.system, TO_REDACT),
             "powerstate": api.powerstate,
