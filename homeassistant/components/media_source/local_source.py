@@ -4,10 +4,10 @@ from __future__ import annotations
 import logging
 import mimetypes
 from pathlib import Path
+import shutil
 
 from aiohttp import web
 from aiohttp.web_request import FileField
-from aioshutil import shutil
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
