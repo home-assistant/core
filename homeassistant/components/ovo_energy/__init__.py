@@ -31,6 +31,9 @@ PLATFORMS = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OVO Energy from a config entry."""
 
+    if CONF_ACCOUNT not in entry.data:
+        entry.data[CONF_ACCOUNT] = ""
+
     client = OVOEnergy()
 
     try:
