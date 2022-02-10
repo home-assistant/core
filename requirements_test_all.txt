@@ -835,7 +835,7 @@ py-melissa-climate==2.1.4
 py-nightscout==1.2.2
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==1.0.5
+py-synologydsm-api==1.0.6
 
 # homeassistant.components.seventeentrack
 py17track==2021.12.2
