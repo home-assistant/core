@@ -144,6 +144,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         keep_alive,
         hass.loop,
         connection_timeout,
+        create_zone_bypass_switches,
     )
     hass.data[DATA_EVL] = controller
 
@@ -217,11 +218,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     _LOGGER.info("Start envisalink")
     controller.start()
-    if panel_type == PANEL_TYPE_DSC and not create_zone_bypass_switches:
-        # Temporary hack to prevent the underlying pyenvisalink package from sending periodic *1# commands to the EVL
-        _LOGGER.info("Disabling zone bypass refresh task")
-        # pylint: disable=W0212
-        controller._client._zoneBypassRefreshTask = "disabled"
 
     if not await sync_connect:
         return False
