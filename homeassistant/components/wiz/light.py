@@ -108,9 +108,8 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         assert color_modes is not None
         if (brightness := state.get_brightness()) is not None:
             self._attr_brightness = max(0, min(255, brightness))
-        if (
-            COLOR_MODE_COLOR_TEMP in color_modes
-            and (color_temp := state.get_colortemp()) is not None
+        if COLOR_MODE_COLOR_TEMP in color_modes and (
+            color_temp := state.get_colortemp()
         ):
             self._attr_color_mode = COLOR_MODE_COLOR_TEMP
             self._attr_color_temp = color_temperature_kelvin_to_mired(color_temp)
