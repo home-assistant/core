@@ -219,6 +219,7 @@ def get_accessories(hass, driver, state, aid, config, aid_storage=None):  # noqa
         aid_trailer = f".{a_type}" if idx else None
         if aid is None:
             aid = aid_storage.get_or_allocate_aid_for_entity_id(entity_id, aid_trailer)
+        _LOGGER.warning("Allocated AID=%s for %s%s", aid, entity_id, aid_trailer)
         accessories.append(
             TYPES[a_type](hass, driver, name, state.entity_id, aid, config)
         )
