@@ -324,7 +324,7 @@ class Thermostat(HomeAccessory):
                     CHAR_ROTATION_SPEED,
                     value=100,
                     properties={PROP_MIN_STEP: 100 / len(self.ordered_fan_speeds)},
-                    setter_callback=self.set_fan_speed,
+                    setter_callback=self._set_fan_speed,
                 )
             if CHAR_CURRENT_FAN_STATE in self.fan_chars:
                 self.char_current_fan_state = serv_fan.configure_char(
