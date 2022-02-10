@@ -93,9 +93,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     @callback
     def _async_push_update(state: PilotParser) -> None:
         """Receive a push update."""
+        _LOGGER.debug("%s: Got push update: %s", bulb.mac, state.pilotResult)
+        coordinator.async_set_updated_data(None)
         if state.get_source() == PIR_SOURCE:
             async_dispatcher_send(hass, SIGNAL_WIZ_PIR.format(bulb.mac))
-        coordinator.async_set_updated_data(None)
 
     await bulb.start_push(_async_push_update)
     bulb.set_discovery_callback(lambda bulb: async_trigger_discovery(hass, [bulb]))

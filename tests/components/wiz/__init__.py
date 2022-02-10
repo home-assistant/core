@@ -144,10 +144,10 @@ async def setup_integration(
 
 
 def _mocked_wizlight(device, extended_white_range, bulb_type) -> wizlight:
-    bulb = MagicMock(auto_spec=wizlight)
+    bulb = MagicMock(auto_spec=wizlight, name="Mocked wizlight")
 
     async def _save_setup_callback(callback: Callable) -> None:
-        bulb.data_receive_callback = callback
+        bulb.push_callback = callback
 
     bulb.getBulbConfig = AsyncMock(return_value=device or FAKE_BULB_CONFIG)
     bulb.getExtendedWhiteRange = AsyncMock(
@@ -169,8 +169,8 @@ def _mocked_wizlight(device, extended_white_range, bulb_type) -> wizlight:
 def _patch_wizlight(device=None, extended_white_range=None, bulb_type=None):
     @contextmanager
     def _patcher():
-        bulb = _mocked_wizlight(device, extended_white_range, bulb_type)
-        with patch("homeassistant.components.wiz.wizlight", return_value=bulb,), patch(
+        bulb = device or _mocked_wizlight(device, extended_white_range, bulb_type)
+        with patch("homeassistant.components.wiz.wizlight", return_value=bulb), patch(
             "homeassistant.components.wiz.config_flow.wizlight",
             return_value=bulb,
         ):
