@@ -571,15 +571,19 @@ class AttrSelectBase(HomeAccessory):
         _LOGGER.debug("%s: Set mode to %s", self.entity_id, option)
         params = {ATTR_ENTITY_ID: self.entity_id, self.option_attr: option}
         self.async_call_service(DOMAIN_CLIMATE, self.service, params)
+        self.async_set_option(option)
+
+    @callback
+    def async_set_option(self, raw_option):
+        """Update switch state after state changed."""
+        current_option = cleanup_name_for_homekit(raw_option)
+        for option, char in self.select_chars.items():
+            char.set_value(option == current_option)
 
     @callback
     def async_update_state(self, new_state):
         """Update switch state after state changed."""
-        current_option = cleanup_name_for_homekit(
-            new_state.attributes[self.option_attr]
-        )
-        for option, char in self.select_chars.items():
-            char.set_value(option == current_option)
+        self.async_set_option(new_state.attributes[self.option_attr])
 
 
 @TYPES.register("ThermostatFanMode")
