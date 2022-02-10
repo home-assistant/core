@@ -1,5 +1,8 @@
 """The spotify integration."""
 
+from dataclasses import dataclass
+from typing import Any
+
 import aiohttp
 from spotipy import Spotify, SpotifyException
 import voluptuous as vol
@@ -22,13 +25,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import config_flow
 from .browse_media import async_browse_media
-from .const import (
-    DATA_SPOTIFY_CLIENT,
-    DATA_SPOTIFY_ME,
-    DATA_SPOTIFY_SESSION,
-    DOMAIN,
-    SPOTIFY_SCOPES,
-)
+from .const import DOMAIN, SPOTIFY_SCOPES
 from .util import is_spotify_media_type, resolve_spotify_media_type
 
 CONFIG_SCHEMA = vol.Schema(
@@ -52,6 +49,15 @@ __all__ = [
     "is_spotify_media_type",
     "resolve_spotify_media_type",
 ]
+
+
+@dataclass
+class HomeAssistantSpotifyData:
+    """Spotify data stored in the Home Assistant data object."""
+
+    client: Spotify
+    current_user: dict[str, Any]
+    session: OAuth2Session
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -92,12 +98,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SpotifyException as err:
         raise ConfigEntryNotReady from err
 
+    if not current_user:
+        raise ConfigEntryNotReady
+
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_SPOTIFY_CLIENT: spotify,
-        DATA_SPOTIFY_ME: current_user,
-        DATA_SPOTIFY_SESSION: session,
-    }
+    hass.data[DOMAIN][entry.entry_id] = HomeAssistantSpotifyData(
+        client=spotify,
+        current_user=current_user,
+        session=session,
+    )
 
     if not set(session.token["scope"].split(" ")).issuperset(SPOTIFY_SCOPES):
         raise ConfigEntryAuthFailed
