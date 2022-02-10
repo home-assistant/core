@@ -121,3 +121,15 @@ async def test_sensors(hass):
     # HA changes the implementation and a new one appears
     for key, value in expected_attributes.items():
         assert state.attributes[key] == value
+
+    state = hass.states.get("sensor.powerwall_backup_reserve")
+    assert state.state == "15"
+    expected_attributes = {
+        "unit_of_measurement": PERCENTAGE,
+        "friendly_name": "Powerwall Backup Reserve",
+        "device_class": "battery",
+    }
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    for key, value in expected_attributes.items():
+        assert state.attributes[key] == value

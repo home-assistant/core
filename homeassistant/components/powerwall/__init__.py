@@ -25,6 +25,7 @@ from homeassistant.util.network import is_ip_address
 
 from .const import (
     DOMAIN,
+    POWERWALL_API_BACKUP_RESERVE,
     POWERWALL_API_CHANGED,
     POWERWALL_API_CHARGE,
     POWERWALL_API_DEVICE_TYPE,
@@ -249,6 +250,7 @@ def call_base_info(power_wall):
 def _fetch_powerwall_data(power_wall):
     """Process and update powerwall data."""
     return {
+        POWERWALL_API_BACKUP_RESERVE: power_wall.get_backup_reserve_percentage(),
         POWERWALL_API_CHARGE: power_wall.get_charge(),
         POWERWALL_API_SITEMASTER: power_wall.get_sitemaster(),
         POWERWALL_API_METERS: power_wall.get_meters(),

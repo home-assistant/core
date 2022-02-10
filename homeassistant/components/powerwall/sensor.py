@@ -21,6 +21,7 @@ from .const import (
     ATTR_INSTANT_TOTAL_CURRENT,
     ATTR_IS_ACTIVE,
     DOMAIN,
+    POWERWALL_API_BACKUP_RESERVE,
     POWERWALL_API_CHARGE,
     POWERWALL_API_DEVICE_TYPE,
     POWERWALL_API_METERS,
@@ -80,10 +81,15 @@ async def async_setup_entry(
                 )
             )
 
-    entities.append(
-        PowerWallChargeSensor(
-            coordinator, site_info, status, device_type, powerwalls_serial_numbers
-        )
+    entities.extend(
+        [
+            PowerWallChargeSensor(
+                coordinator, site_info, status, device_type, powerwalls_serial_numbers
+            ),
+            PowerWallBackupReserveSensor(
+                coordinator, site_info, status, device_type, powerwalls_serial_numbers
+            ),
+        ]
     )
 
     async_add_entities(entities, True)
@@ -153,6 +159,25 @@ class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
             ATTR_INSTANT_TOTAL_CURRENT: meter.get_instant_total_current(),
             ATTR_IS_ACTIVE: meter.is_active(),
         }
+
+
+class PowerWallBackupReserveSensor(PowerWallEntity, SensorEntity):
+    """Representation of the Powerwall backup reserve setting."""
+
+    _attr_name = "Powerwall Backup Reserve"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_device_class = SensorDeviceClass.BATTERY
+
+    @property
+    def unique_id(self):
+        """Device Uniqueid."""
+        return f"{self.base_unique_id}_backup_reserve"
+
+    @property
+    def native_value(self):
+        """Get the current value in percentage."""
+        return round(self.coordinator.data[POWERWALL_API_BACKUP_RESERVE])
 
 
 class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):

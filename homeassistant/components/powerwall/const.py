@@ -27,6 +27,7 @@ POWERWALL_API_DEVICE_TYPE = "device_type"
 POWERWALL_API_SITE_INFO = "site_info"
 POWERWALL_API_SERIAL_NUMBERS = "serial_numbers"
 POWERWALL_API_GATEWAY_DIN = "gateway_din"
+POWERWALL_API_BACKUP_RESERVE = "backup_reserve"
 
 POWERWALL_HTTP_SESSION = "http_session"
 
