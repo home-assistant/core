@@ -71,12 +71,11 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     @plugwise_command
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if ((temperature := kwargs.get(ATTR_TEMPERATURE)) is not None) and (
-            self._attr_min_temp < temperature < self._attr_max_temp
+        if ((temperature := kwargs.get(ATTR_TEMPERATURE)) is None) or (
+            self._attr_max_temp < temperature < self._attr_min_temp
         ):
-            await self.coordinator.api.set_temperature(self._loc_id, temperature)
-        else:
             raise ValueError("Invalid temperature requested")
+        await self.coordinator.api.set_temperature(self._loc_id, temperature)
 
     @plugwise_command
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
