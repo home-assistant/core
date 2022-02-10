@@ -5,9 +5,11 @@ from abc import abstractmethod
 from collections.abc import Callable
 import json
 import logging
+from typing import Any, Protocol
 
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONFIGURATION_URL,
     ATTR_MANUFACTURER,
@@ -23,7 +25,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -40,9 +42,18 @@ from homeassistant.helpers.entity import (
     async_generate_entity_id,
     validate_entity_category,
 )
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 
-from . import DATA_MQTT, MqttValueTemplate, async_publish, debug_info, subscription
+from . import (
+    DATA_MQTT,
+    PLATFORMS,
+    MqttValueTemplate,
+    async_publish,
+    debug_info,
+    subscription,
+)
 from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
@@ -51,6 +62,7 @@ from .const import (
     CONF_ENCODING,
     CONF_QOS,
     CONF_TOPIC,
+    DATA_MQTT_RELOAD_NEEDED,
     DEFAULT_ENCODING,
     DEFAULT_PAYLOAD_AVAILABLE,
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
@@ -210,6 +222,20 @@ MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
 )
 
 
+class SetupEntity(Protocol):
+    """Protocol type for async_setup_entities."""
+
+    async def __call__(
+        self,
+        hass: HomeAssistant,
+        async_add_entities: AddEntitiesCallback,
+        config: ConfigType,
+        config_entry: ConfigEntry | None = None,
+        discovery_data: dict[str, Any] | None = None,
+    ) -> None:
+        """Define setup_entities type."""
+
+
 async def async_setup_entry_helper(hass, domain, async_setup, schema):
     """Set up entity, automation or tag creation dynamically through MQTT discovery."""
 
@@ -230,6 +256,26 @@ async def async_setup_entry_helper(hass, domain, async_setup, schema):
     async_dispatcher_connect(
         hass, MQTT_DISCOVERY_NEW.format(domain, "mqtt"), async_discover
     )
+
+
+async def async_setup_platform_helper(
+    hass: HomeAssistant,
+    platform_domain: str,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    async_setup_entities: SetupEntity,
+) -> None:
+    """Return true if platform setup should be aborted."""
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    if not bool(hass.config_entries.async_entries(DOMAIN)):
+        hass.data[DATA_MQTT_RELOAD_NEEDED] = None
+        _LOGGER.warning(
+            "MQTT integration is not setup, skipping setup of manually configured "
+            "MQTT %s",
+            platform_domain,
+        )
+        return
+    await async_setup_entities(hass, async_add_entities, config)
 
 
 def init_entity_id_from_config(hass, entity, config, entity_id_format):

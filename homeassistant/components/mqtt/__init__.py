@@ -21,7 +21,6 @@ import certifi
 import jinja2
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -37,6 +36,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
+    SERVICE_RELOAD,
     Platform,
 )
 from homeassistant.core import (
@@ -76,6 +76,7 @@ from .const import (
     CONF_TOPIC,
     CONF_WILL_MESSAGE,
     DATA_MQTT_CONFIG,
+    DATA_MQTT_RELOAD_NEEDED,
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
@@ -580,22 +581,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_mqtt_info)
     debug_info.initialize(hass)
 
-    if conf is None:
-        # If we have a config entry, setup is done by that config entry.
-        # If there is no config entry, this should fail.
-        return bool(hass.config_entries.async_entries(DOMAIN))
-
-    conf = dict(conf)
-
-    hass.data[DATA_MQTT_CONFIG] = conf
-
-    # Only import if we haven't before.
-    if not hass.config_entries.async_entries(DOMAIN):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
-            )
-        )
+    if conf:
+        conf = dict(conf)
+        hass.data[DATA_MQTT_CONFIG] = conf
 
     return True
 
@@ -608,12 +596,6 @@ def _merge_config(entry, conf):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
     conf = hass.data.get(DATA_MQTT_CONFIG)
-
-    # Config entry was created because user had configuration.yaml entry
-    # They removed that, so remove entry.
-    if conf is None and entry.source == config_entries.SOURCE_IMPORT:
-        hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-        return False
 
     # If user didn't have configuration.yaml config, generate defaults
     if conf is None:
@@ -734,6 +716,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if conf.get(CONF_DISCOVERY):
         await _async_setup_discovery(hass, conf, entry)
+
+    if DATA_MQTT_RELOAD_NEEDED in hass.data:
+        hass.data.pop(DATA_MQTT_RELOAD_NEEDED)
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=False,
+        )
 
     return True
 
