@@ -28,20 +28,20 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.event as evt
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from . import PLATFORMS, MqttValueTemplate, subscription
+from . import MqttValueTemplate, subscription
 from .. import mqtt
-from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC, DOMAIN, PAYLOAD_NONE
+from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC, PAYLOAD_NONE
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttAvailability,
     MqttEntity,
     async_setup_entry_helper,
+    async_setup_platform_helper,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,8 +75,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up MQTT binary sensor through configuration.yaml."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(hass, async_add_entities, config)
+    await async_setup_platform_helper(
+        hass, binary_sensor.DOMAIN, config, async_add_entities, _async_setup_entity
+    )
 
 
 async def async_setup_entry(
