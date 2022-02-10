@@ -84,7 +84,7 @@ class TradfriBaseEntity(CoordinatorEntity):
             identifiers={(DOMAIN, self._device.id)},
             manufacturer=info.manufacturer,
             model=info.model_number,
-            name=self._attr_name,
+            name=self._device.name,
             sw_version=info.firmware_version,
             via_device=(DOMAIN, self._gateway_id),
         )
