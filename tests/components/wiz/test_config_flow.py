@@ -267,7 +267,9 @@ async def test_discovered_by_dhcp_or_integration_discovery(
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "discovery_confirm"
 
-    with patch(
+    with _patch_wizlight(
+        device=device, extended_white_range=extended_white_range, bulb_type=bulb_type
+    ), patch(
         "homeassistant.components.wiz.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
@@ -416,3 +418,49 @@ async def test_setup_via_discovery_cannot_connect(hass):
 
     assert result3["type"] == "abort"
     assert result3["reason"] == "cannot_connect"
+
+
+async def test_discovery_with_firmware_update(hass):
+    """Test we check the device again between first discovery and config entry creation."""
+    with _patch_wizlight(
+        device=FAKE_BULB_CONFIG,
+        extended_white_range=FAKE_EXTENDED_WHITE_RANGE,
+        bulb_type=FAKE_RGBW_BULB,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data=INTEGRATION_DISCOVERY,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    # In between discovery and when the user clicks to set it up the firmware
+    # updates and we now can see its really RGBWW not RGBW since the older
+    # firmwares did not tell us how many white channels exist
+
+    with patch(
+        "homeassistant.components.wiz.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.wiz.async_setup", return_value=True
+    ) as mock_setup, _patch_wizlight(
+        device=FAKE_BULB_CONFIG,
+        extended_white_range=FAKE_EXTENDED_WHITE_RANGE,
+        bulb_type=FAKE_RGBWW_BULB,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "WiZ RGBWW Tunable ABCABC"
+    assert result2["data"] == {
+        CONF_HOST: "1.1.1.1",
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
