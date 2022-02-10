@@ -25,7 +25,9 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
+from homeassistant.helpers import entity_registry
 
 
 async def test_generic_fan(hass, client, fan_generic, integration):
@@ -330,8 +332,25 @@ async def test_thermostat_fan(hass, client, climate_adc_t3000, integration):
     """Test the fan entity for a z-wave fan."""
     node = climate_adc_t3000
     entity_id = "fan.adc_t3000"
-    state = hass.states.get(entity_id)
 
+    registry = entity_registry.async_get(hass)
+    state = hass.states.get(entity_id)
+    assert state is None
+
+    entry = registry.async_get(entity_id)
+    assert entry
+    assert entry.disabled
+    assert entry.disabled_by is entity_registry.RegistryEntryDisabler.INTEGRATION
+
+    # Test enabling entity
+    updated_entry = registry.async_update_entity(entity_id, disabled_by=None)
+    assert updated_entry != entry
+    assert updated_entry.disabled is False
+
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_FAN_STATE) == "Idle / off"
@@ -549,10 +568,27 @@ async def test_thermostat_fan_without_off(
 ):
     """Test the fan entity for a z-wave fan without "off" property."""
     entity_id = "fan.z_wave_thermostat"
-    state = hass.states.get(entity_id)
 
+    registry = entity_registry.async_get(hass)
+    state = hass.states.get(entity_id)
+    assert state is None
+
+    entry = registry.async_get(entity_id)
+    assert entry
+    assert entry.disabled
+    assert entry.disabled_by is entity_registry.RegistryEntryDisabler.INTEGRATION
+
+    # Test enabling entity
+    updated_entry = registry.async_update_entity(entity_id, disabled_by=None)
+    assert updated_entry != entry
+    assert updated_entry.disabled is False
+
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_ON
+    assert state.state == STATE_UNKNOWN
 
     # Test turning off
     await hass.services.async_call(
@@ -563,7 +599,7 @@ async def test_thermostat_fan_without_off(
     )
 
     assert len(client.async_send_command.call_args_list) == 0
-    assert state.state == STATE_ON
+    assert state.state == STATE_UNKNOWN
 
     client.async_send_command.reset_mock()
 
@@ -576,6 +612,6 @@ async def test_thermostat_fan_without_off(
     )
 
     assert len(client.async_send_command.call_args_list) == 0
-    assert state.state == STATE_ON
+    assert state.state == STATE_UNKNOWN
 
     client.async_send_command.reset_mock()

@@ -282,14 +282,14 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if device is on."""
-        if value := get_value_of_zwave_value(self._fan_off) is None:
+        if (value := get_value_of_zwave_value(self._fan_off)) is None:
             return None
         return not cast(bool, value)
 
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., auto, smart, interval, favorite."""
-        value = get_value_of_zwave_value(self._fan_off)
+        value = get_value_of_zwave_value(self._fan_mode)
         if value is None or str(value) not in self._fan_mode.metadata.states:
             return None
         return cast(str, self._fan_mode.metadata.states[str(value)])
