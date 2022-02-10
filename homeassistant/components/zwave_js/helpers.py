@@ -55,9 +55,9 @@ def update_data_collection_preference(
 
 
 @callback
-def get_unique_id(home_id: str, value_id: str) -> str:
-    """Get unique ID from home ID and value ID."""
-    return f"{home_id}.{value_id}"
+def get_unique_id(client: ZwaveClient, value_id: str) -> str:
+    """Get unique ID from client and value ID."""
+    return f"{client.driver.controller.home_id}.{value_id}"
 
 
 @callback
