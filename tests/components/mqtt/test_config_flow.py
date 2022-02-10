@@ -82,17 +82,34 @@ async def test_user_connection_fails(hass, mock_try_connection, mock_finish_setu
 async def test_manual_config_set(
     hass, mock_try_connection, mock_finish_setup, mqtt_client_mock
 ):
-    """Test we ignore entry if manual config available."""
+    """Test manual config does not create an entry, and entry can be setup late."""
+    # MQTT config present in yaml config
     assert await async_setup_component(hass, "mqtt", {"mqtt": {"broker": "bla"}})
     await hass.async_block_till_done()
-    assert len(mock_finish_setup.mock_calls) == 1
+    assert len(mock_finish_setup.mock_calls) == 0
 
     mock_try_connection.return_value = True
 
+    # Start config flow
     result = await hass.config_entries.flow.async_init(
         "mqtt", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "abort"
+    assert result["type"] == "form"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"broker": "127.0.0.1"}
+    )
+
+    assert result["type"] == "create_entry"
+    assert result["result"].data == {
+        "broker": "127.0.0.1",
+        "port": 1883,
+        "discovery": True,
+    }
+    # Check we tried the connection, with precedence for config entry settings
+    mock_try_connection.assert_called_once_with("127.0.0.1", 1883, None, None)
+    # Check config entry got setup
+    assert len(mock_finish_setup.mock_calls) == 1
 
 
 async def test_user_single_instance(hass):
