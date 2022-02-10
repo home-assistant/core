@@ -520,6 +520,7 @@ DISCOVERY_SCHEMAS = [
             property={THERMOSTAT_FAN_MODE_PROPERTY},
             type={"number"},
         ),
+        entity_registry_enabled_default=False,
     ),
     # humidifier
     # hygrostats supporting mode (and optional setpoint)

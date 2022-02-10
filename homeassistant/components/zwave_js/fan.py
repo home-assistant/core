@@ -7,7 +7,6 @@ from typing import Any, cast
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import TARGET_VALUE_PROPERTY, CommandClass
 from zwave_js_server.const.command_class.thermostat import (
-    THERMOSTAT_FAN_MODE_PROPERTY,
     THERMOSTAT_FAN_OFF_PROPERTY,
     THERMOSTAT_FAN_STATE_PROPERTY,
 )
@@ -33,6 +32,7 @@ from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import FanSpeedDataTemplate
 from .entity import ZWaveBaseEntity
+from .helpers import get_value_of_zwave_value
 
 SUPPORTED_FEATURES = SUPPORT_SET_SPEED
 
@@ -250,27 +250,17 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
         """Initialize the thermostat fan."""
         super().__init__(config_entry, client, info)
 
-        self._fan_mode = self.get_zwave_value(
-            THERMOSTAT_FAN_MODE_PROPERTY,
-            CommandClass.THERMOSTAT_FAN_MODE,
-            add_to_watched_value_ids=True,
-            check_all_endpoints=True,
-        )
-
-        if not self._fan_mode:
-            raise ValueError("Thermostat fan mode is required")
+        self._fan_mode = self.info.primary_value
 
         self._fan_off = self.get_zwave_value(
             THERMOSTAT_FAN_OFF_PROPERTY,
             CommandClass.THERMOSTAT_FAN_MODE,
             add_to_watched_value_ids=True,
-            check_all_endpoints=True,
         )
         self._fan_state = self.get_zwave_value(
             THERMOSTAT_FAN_STATE_PROPERTY,
             CommandClass.THERMOSTAT_FAN_STATE,
             add_to_watched_value_ids=True,
-            check_all_endpoints=True,
         )
 
     async def async_turn_on(
@@ -290,21 +280,19 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
             await self.info.node.async_set_value(self._fan_off, True)
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
-        if self._fan_off and self._fan_off.value is not None:
-            return not cast(bool, self._fan_off.value)
-        return True
+        if value := get_value_of_zwave_value(self._fan_off) is None:
+            return None
+        return not cast(bool, value)
 
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., auto, smart, interval, favorite."""
-        if (
-            self._fan_mode.value is not None
-            and str(self._fan_mode.value) in self._fan_mode.metadata.states
-        ):
-            return cast(str, self._fan_mode.metadata.states[str(self._fan_mode.value)])
-        return None
+        value = get_value_of_zwave_value(self._fan_off)
+        if value is None or str(value) not in self._fan_mode.metadata.states:
+            return None
+        return cast(str, self._fan_mode.metadata.states[str(value)])
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
@@ -325,9 +313,9 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
     @property
     def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
-        if self._fan_mode.metadata.states:
-            return list(self._fan_mode.metadata.states.values())
-        return None
+        if not self._fan_mode.metadata.states:
+            return None
+        return list(self._fan_mode.metadata.states.values())
 
     @property
     def supported_features(self) -> int:
@@ -337,15 +325,14 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
     @property
     def fan_state(self) -> str | None:
         """Return the current state, Idle, Running, etc."""
+        value = get_value_of_zwave_value(self._fan_state)
         if (
-            self._fan_state
-            and self._fan_state.value is not None
-            and str(self._fan_state.value) in self._fan_state.metadata.states
+            value is None
+            or self._fan_state is None
+            or str(value) not in self._fan_state.metadata.states
         ):
-            return cast(
-                str, self._fan_state.metadata.states[str(self._fan_state.value)]
-            )
-        return None
+            return None
+        return cast(str, self._fan_state.metadata.states[str(value)])
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
