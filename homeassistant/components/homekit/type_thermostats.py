@@ -29,6 +29,7 @@ from homeassistant.components.climate.const import (
     DEFAULT_MIN_HUMIDITY,
     DEFAULT_MIN_TEMP,
     DOMAIN as DOMAIN_CLIMATE,
+    FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
@@ -85,6 +86,7 @@ from .const import (
     CHAR_HEATING_THRESHOLD_TEMPERATURE,
     CHAR_ROTATION_SPEED,
     CHAR_SWING_MODE,
+    CHAR_TARGET_FAN_STATE,
     CHAR_TARGET_HEATING_COOLING,
     CHAR_TARGET_HUMIDITY,
     CHAR_TARGET_TEMPERATURE,
@@ -289,6 +291,8 @@ class Thermostat(HomeAccessory):
                 speed for speed in ORDERED_FAN_SPEEDS if speed in fan_modes
             ]
             self.fan_chars.append(CHAR_ROTATION_SPEED)
+            if FAN_AUTO in fan_modes:
+                self.fan_chars.append(CHAR_TARGET_FAN_STATE)
 
         if (
             features & SUPPORT_SWING_MODE
@@ -304,10 +308,9 @@ class Thermostat(HomeAccessory):
             )
             self.fan_chars.append(CHAR_SWING_MODE)
 
-        if attributes.get(ATTR_HVAC_ACTION) is not None:
-            self.fan_chars.append(CHAR_CURRENT_FAN_STATE)
-
         if self.fan_chars:
+            if attributes.get(ATTR_HVAC_ACTION) is not None:
+                self.fan_chars.append(CHAR_CURRENT_FAN_STATE)
             serv_fan = self.add_preload_service(SERV_FANV2, self.fan_chars)
             self.char_active = serv_fan.configure_char(
                 CHAR_ACTIVE, value=1, properties={PROP_MIN_VALUE: 1, PROP_MAX_VALUE: 1}
@@ -326,6 +329,11 @@ class Thermostat(HomeAccessory):
             if CHAR_CURRENT_FAN_STATE in self.fan_chars:
                 self.char_current_fan_state = serv_fan.configure_char(
                     CHAR_CURRENT_FAN_STATE,
+                    value=0,
+                )
+            if CHAR_TARGET_FAN_STATE in self.fan_chars:
+                self.char_target_fan_state = serv_fan.configure_char(
+                    CHAR_TARGET_FAN_STATE,
                     value=0,
                 )
 
@@ -647,6 +655,8 @@ class Thermostat(HomeAccessory):
             self.char_current_fan_state.set_value(
                 HC_HASS_TO_HOMEKIT_FAN_STATE[hvac_action]
             )
+        if CHAR_TARGET_FAN_STATE in self.fan_chars and fan_mode:
+            self.char_target_fan_state(1 if fan_mode == FAN_AUTO else 0)
 
 
 @TYPES.register("WaterHeater")
