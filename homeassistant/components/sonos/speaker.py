@@ -570,16 +570,13 @@ class SonosSpeaker:
                 )
             )
         except OSError:
-            pass
+            _LOGGER.warning(
+                "No recent activity and cannot reach %s, marking unavailable",
+                self.zone_name,
+            )
+            await self.async_offline()
         else:
             self.speaker_activity("timeout poll")
-            return
-
-        _LOGGER.warning(
-            "No recent activity and cannot reach %s, marking unavailable",
-            self.zone_name,
-        )
-        await self.async_offline()
 
     async def async_offline(self) -> None:
         """Handle removal of speaker when unavailable."""
