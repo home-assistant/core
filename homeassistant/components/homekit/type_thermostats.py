@@ -353,7 +353,7 @@ class Thermostat(HomeAccessory):
 
     def _set_fan_speed(self, speed) -> None:
         _LOGGER.debug("%s: Set fan speed to %s", self.entity_id, speed)
-        mode = percentage_to_ordered_list_item(self.ordered_fan_speeds, speed)
+        mode = percentage_to_ordered_list_item(self.ordered_fan_speeds, speed - 1)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: mode}
         self.async_call_service(DOMAIN_CLIMATE, SERVICE_SET_FAN_MODE, params)
 
