@@ -2,19 +2,20 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
-from datetime import datetime, timedelta
+from datetime import datetime
 from functools import wraps
 from typing import Any, TypeVar
-from urllib.parse import quote
 
 from aiovlc.client import Client
 from aiovlc.exceptions import AuthError, CommandError, ConnectError
 from typing_extensions import Concatenate, ParamSpec
-import yarl
 
 from homeassistant.components import media_source
-from homeassistant.components.http.auth import async_sign_path
-from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    BrowseMedia,
+    MediaPlayerEntity,
+    async_process_play_media_url,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_BROWSE_MEDIA,
@@ -37,7 +38,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.network import get_url, is_hass_url
 import homeassistant.util.dt as dt_util
 
 from .const import DATA_AVAILABLE, DATA_VLC, DEFAULT_NAME, DOMAIN, LOGGER
@@ -315,22 +315,8 @@ class VlcDevice(MediaPlayerEntity):
                 f"Invalid media type {media_type}. Only {MEDIA_TYPE_MUSIC} is supported"
             )
 
-        # Sign and prefix with URL if playing a relative URL
-        if media_id[0] == "/" or is_hass_url(self.hass, media_id):
-            parsed = yarl.URL(media_id)
-
-            if parsed.query:
-                LOGGER.debug("Not signing path for content with query param")
-            else:
-                media_id = async_sign_path(
-                    self.hass,
-                    quote(media_id),
-                    timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
-                )
-
-            # prepend external URL
-            if media_id[0] == "/":
-                media_id = f"{get_url(self.hass)}{media_id}"
+        # If media ID is a relative URL, we serve it from HA.
+        media_id = async_process_play_media_url(self.hass, media_id)
 
         await self._vlc.add(media_id)
         self._state = STATE_PLAYING

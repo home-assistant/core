@@ -27,6 +27,7 @@ PLATFORMS: list[Platform] = [
     Platform.NUMBER,
     Platform.SCENE,
     Platform.SENSOR,
+    Platform.SIREN,
     Platform.SWITCH,
 ]
 
@@ -36,7 +37,7 @@ IGNORED_OVERKIZ_DEVICES: list[UIClass | UIWidget] = [
 ]
 
 # Used to map the Somfy widget and ui_class to the Home Assistant platform
-OVERKIZ_DEVICE_TO_PLATFORM: dict[UIClass | UIWidget, Platform] = {
+OVERKIZ_DEVICE_TO_PLATFORM: dict[UIClass | UIWidget, Platform | None] = {
     UIClass.ADJUSTABLE_SLATS_ROLLER_SHUTTER: Platform.COVER,
     UIClass.AWNING: Platform.COVER,
     UIClass.CURTAIN: Platform.COVER,
@@ -51,6 +52,7 @@ OVERKIZ_DEVICE_TO_PLATFORM: dict[UIClass | UIWidget, Platform] = {
     UIClass.ROLLER_SHUTTER: Platform.COVER,
     UIClass.SCREEN: Platform.COVER,
     UIClass.SHUTTER: Platform.COVER,
+    UIClass.SIREN: Platform.SIREN,
     UIClass.SWIMMING_POOL: Platform.SWITCH,
     UIClass.SWINGING_SHUTTER: Platform.COVER,
     UIClass.VENETIAN_BLIND: Platform.COVER,
@@ -60,6 +62,7 @@ OVERKIZ_DEVICE_TO_PLATFORM: dict[UIClass | UIWidget, Platform] = {
     UIWidget.RTD_INDOOR_SIREN: Platform.SWITCH,  # widgetName, uiClass is Siren (not supported)
     UIWidget.RTD_OUTDOOR_SIREN: Platform.SWITCH,  # widgetName, uiClass is Siren (not supported)
     UIWidget.RTS_GENERIC: Platform.COVER,  # widgetName, uiClass is Generic (not supported)
+    UIWidget.SIREN_STATUS: None,  # widgetName, uiClass is Siren (siren)
     UIWidget.STATELESS_ALARM_CONTROLLER: Platform.SWITCH,  # widgetName, uiClass is Alarm (not supported)
     UIWidget.STATELESS_EXTERIOR_HEATING: Platform.SWITCH,  # widgetName, uiClass is ExteriorHeatingSystem (not supported)
 }
