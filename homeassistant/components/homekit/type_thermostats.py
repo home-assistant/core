@@ -537,9 +537,11 @@ class Thermostat(HomeAccessory):
 class AttrSelectBase(HomeAccessory):
     """Generate a Switch accessory that contains multiple switches."""
 
-    def __init__(self, options_attrs, option_attr, service, *args, **kwargs):
+    def __init__(
+        self, hass, driver, name, options_attrs, option_attr, service, *args, **kwargs
+    ):
         """Initialize a Switch accessory object."""
-        super().__init__(*args, category=CATEGORY_SWITCH, **kwargs)
+        super().__init__(hass, driver, name, *args, category=CATEGORY_SWITCH, **kwargs)
         self.options_attrs = options_attrs
         self.option_attr = option_attr
         self.service = service
@@ -584,19 +586,33 @@ class AttrSelectBase(HomeAccessory):
 class ThermostatFanMode(AttrSelectBase):
     """Generate a multi switch accessory for fan modes."""
 
-    def __init__(self, *args):
+    def __init__(self, hass, driver, name, *args):
         """Initialize a Switch accessory object."""
-        super().__init__(ATTR_FAN_MODES, ATTR_FAN_MODE, SERVICE_SET_FAN_MODE, *args)
+        super().__init__(
+            hass,
+            driver,
+            f"{name} Fan Mode",
+            ATTR_FAN_MODES,
+            ATTR_FAN_MODE,
+            SERVICE_SET_FAN_MODE,
+            *args,
+        )
 
 
 @TYPES.register("ThermostatSwingMode")
 class ThermostatSwingMode(AttrSelectBase):
     """Generate a multi switch accessory for swing modes."""
 
-    def __init__(self, *args):
+    def __init__(self, hass, driver, name, *args):
         """Initialize a Switch accessory object."""
         super().__init__(
-            ATTR_SWING_MODES, ATTR_SWING_MODE, SERVICE_SET_SWING_MODE, *args
+            hass,
+            driver,
+            f"{name} Swing Mode",
+            ATTR_SWING_MODES,
+            ATTR_SWING_MODE,
+            SERVICE_SET_SWING_MODE,
+            *args,
         )
 
 
