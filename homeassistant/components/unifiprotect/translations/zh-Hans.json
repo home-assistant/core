@@ -1,7 +1,21 @@
 {
     "config": {
         "error": {
-            "protect_version": "\u6240\u9700\u7684\u6700\u4f4e\u7248\u672c\u4e3a v1.20.0\u3002\u8bf7\u5347\u7ea7 UniFi Protect\uff0c\u7136\u540e\u91cd\u8bd5\u3002"
+            "protect_version": "\u8981\u6c42\u8f6f\u4ef6\u6700\u4f4e\u7248\u672c\u4e3a v1.20.0\u3002\u8bf7\u5347\u7ea7 UniFi Protect \u540e\u91cd\u8bd5\u3002"
+        },
+        "step": {
+            "discovery_confirm": {
+                "title": "UniFi Protect \u53d1\u73b0\u670d\u52a1"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "host": "UniFi Protect \u670d\u52a1\u5668\u4e3b\u673a\u5730\u5740"
+                },
+                "title": "UniFi Protect \u91cd\u9a8c\u8bc1"
+            },
+            "user": {
+                "title": "UniFi Protect \u914d\u7f6e"
+            }
         }
     },
     "options": {

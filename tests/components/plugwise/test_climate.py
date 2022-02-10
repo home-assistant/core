@@ -1,6 +1,7 @@
 """Tests for the Plugwise Climate integration."""
 
 from plugwise.exceptions import PlugwiseException
+import pytest
 
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
@@ -8,6 +9,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
 )
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.components.plugwise.common import async_init_integration
 
@@ -56,32 +58,38 @@ async def test_adam_climate_adjust_negative_testing(hass, mock_smile_adam):
     entry = await async_init_integration(hass, mock_smile_adam)
     assert entry.state is ConfigEntryState.LOADED
 
-    await hass.services.async_call(
-        "climate",
-        "set_temperature",
-        {"entity_id": "climate.zone_lisa_wk", "temperature": 25},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "climate",
+            "set_temperature",
+            {"entity_id": "climate.zone_lisa_wk", "temperature": 25},
+            blocking=True,
+        )
     state = hass.states.get("climate.zone_lisa_wk")
     attrs = state.attributes
     assert attrs["temperature"] == 21.5
 
-    await hass.services.async_call(
-        "climate",
-        "set_preset_mode",
-        {"entity_id": "climate.zone_thermostat_jessie", "preset_mode": "home"},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "climate",
+            "set_preset_mode",
+            {"entity_id": "climate.zone_thermostat_jessie", "preset_mode": "home"},
+            blocking=True,
+        )
     state = hass.states.get("climate.zone_thermostat_jessie")
     attrs = state.attributes
     assert attrs["preset_mode"] == "asleep"
 
-    await hass.services.async_call(
-        "climate",
-        "set_hvac_mode",
-        {"entity_id": "climate.zone_thermostat_jessie", "hvac_mode": HVAC_MODE_AUTO},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "climate",
+            "set_hvac_mode",
+            {
+                "entity_id": "climate.zone_thermostat_jessie",
+                "hvac_mode": HVAC_MODE_AUTO,
+            },
+            blocking=True,
+        )
     state = hass.states.get("climate.zone_thermostat_jessie")
     attrs = state.attributes
 
@@ -97,10 +105,11 @@ async def test_adam_climate_entity_climate_changes(hass, mock_smile_adam):
         {"entity_id": "climate.zone_lisa_wk", "temperature": 25},
         blocking=True,
     )
-    state = hass.states.get("climate.zone_lisa_wk")
-    attrs = state.attributes
 
-    assert attrs["temperature"] == 25.0
+    assert mock_smile_adam.set_temperature.call_count == 1
+    mock_smile_adam.set_temperature.assert_called_with(
+        "c50f167537524366a5af7aa3942feb1e", 25.0
+    )
 
     await hass.services.async_call(
         "climate",
@@ -108,12 +117,11 @@ async def test_adam_climate_entity_climate_changes(hass, mock_smile_adam):
         {"entity_id": "climate.zone_lisa_wk", "preset_mode": "away"},
         blocking=True,
     )
-    state = hass.states.get("climate.zone_lisa_wk")
-    attrs = state.attributes
 
-    assert attrs["preset_mode"] == "away"
-
-    assert attrs["supported_features"] == 17
+    assert mock_smile_adam.set_preset.call_count == 1
+    mock_smile_adam.set_preset.assert_called_with(
+        "c50f167537524366a5af7aa3942feb1e", "away"
+    )
 
     await hass.services.async_call(
         "climate",
@@ -122,10 +130,10 @@ async def test_adam_climate_entity_climate_changes(hass, mock_smile_adam):
         blocking=True,
     )
 
-    state = hass.states.get("climate.zone_thermostat_jessie")
-    attrs = state.attributes
-
-    assert attrs["temperature"] == 25.0
+    assert mock_smile_adam.set_temperature.call_count == 2
+    mock_smile_adam.set_temperature.assert_called_with(
+        "82fa13f017d240daa0d0ea1775420f24", 25.0
+    )
 
     await hass.services.async_call(
         "climate",
@@ -133,10 +141,11 @@ async def test_adam_climate_entity_climate_changes(hass, mock_smile_adam):
         {"entity_id": "climate.zone_thermostat_jessie", "preset_mode": "home"},
         blocking=True,
     )
-    state = hass.states.get("climate.zone_thermostat_jessie")
-    attrs = state.attributes
 
-    assert attrs["preset_mode"] == "home"
+    assert mock_smile_adam.set_preset.call_count == 2
+    mock_smile_adam.set_preset.assert_called_with(
+        "82fa13f017d240daa0d0ea1775420f24", "home"
+    )
 
 
 async def test_anna_climate_entity_attributes(hass, mock_smile_anna):
@@ -176,10 +185,10 @@ async def test_anna_climate_entity_climate_changes(hass, mock_smile_anna):
         blocking=True,
     )
 
-    state = hass.states.get("climate.anna")
-    attrs = state.attributes
-
-    assert attrs["temperature"] == 25.0
+    assert mock_smile_anna.set_temperature.call_count == 1
+    mock_smile_anna.set_temperature.assert_called_with(
+        "c784ee9fdab44e1395b8dee7d7a497d5", 25.0
+    )
 
     await hass.services.async_call(
         "climate",
@@ -188,10 +197,10 @@ async def test_anna_climate_entity_climate_changes(hass, mock_smile_anna):
         blocking=True,
     )
 
-    state = hass.states.get("climate.anna")
-    attrs = state.attributes
-
-    assert attrs["preset_mode"] == "away"
+    assert mock_smile_anna.set_preset.call_count == 1
+    mock_smile_anna.set_preset.assert_called_with(
+        "c784ee9fdab44e1395b8dee7d7a497d5", "away"
+    )
 
     await hass.services.async_call(
         "climate",
@@ -200,7 +209,8 @@ async def test_anna_climate_entity_climate_changes(hass, mock_smile_anna):
         blocking=True,
     )
 
-    state = hass.states.get("climate.anna")
-    attrs = state.attributes
-
-    assert state.state == "heat_cool"
+    assert mock_smile_anna.set_temperature.call_count == 1
+    assert mock_smile_anna.set_schedule_state.call_count == 1
+    mock_smile_anna.set_schedule_state.assert_called_with(
+        "c784ee9fdab44e1395b8dee7d7a497d5", None, "false"
+    )

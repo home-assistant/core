@@ -6,7 +6,6 @@ import datetime
 import json
 import logging
 from typing import Any
-from urllib.parse import quote
 
 from soco import alarms
 from soco.core import (
@@ -19,8 +18,10 @@ from soco.data_structures import DidlFavorite
 import voluptuous as vol
 
 from homeassistant.components import media_source, spotify
-from homeassistant.components.http.auth import async_sign_path
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    async_process_play_media_url,
+)
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_ALBUM,
@@ -56,7 +57,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.network import get_url
 
 from . import media_browser
 from .const import (
@@ -568,17 +568,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 soco.play_from_queue(0)
         elif media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK):
             # If media ID is a relative URL, we serve it from HA.
-            # Create a signed path.
-            if media_id[0] == "/":
-                media_id = async_sign_path(
-                    self.hass,
-                    quote(media_id),
-                    datetime.timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
-                )
-
-                # prepend external URL
-                hass_url = get_url(self.hass, prefer_external=True)
-                media_id = f"{hass_url}{media_id}"
+            media_id = async_process_play_media_url(self.hass, media_id)
 
             if kwargs.get(ATTR_MEDIA_ENQUEUE):
                 soco.add_uri_to_queue(media_id)
