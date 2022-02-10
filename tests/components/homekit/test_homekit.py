@@ -125,10 +125,6 @@ def _mock_homekit_bridge(hass, entry):
     return homekit
 
 
-def _mock_accessory():
-    return MagicMock(display_name="demo", name="demo", async_stop=AsyncMock())
-
-
 def _mock_accessories(accessory_count):
     accessories = {}
     for idx in range(accessory_count + 1):
@@ -316,6 +312,7 @@ async def test_homekit_add_accessory(hass, mock_async_zeroconf):
     entry.add_to_hass(hass)
 
     homekit = _mock_homekit_bridge(hass, entry)
+    mock_acc = Mock(category="any")
 
     with patch(f"{PATH_HOMEKIT}.HomeKit", return_value=homekit):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -323,21 +320,21 @@ async def test_homekit_add_accessory(hass, mock_async_zeroconf):
 
     homekit.bridge = _mock_pyhap_bridge()
 
-    with patch(f"{PATH_HOMEKIT}.get_accessories") as mock_get_acc:
-        mock_get_acc.side_effect = [[], [_mock_accessory()], []]
+    with patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc:
+        mock_get_acc.side_effect = [None, mock_acc, None]
         state = State("light.demo", "on")
         homekit.add_bridge_accessory(state)
-        mock_get_acc.assert_called_with(hass, ANY, ANY, None, {}, aid_storage=ANY)
+        mock_get_acc.assert_called_with(hass, ANY, ANY, 1403373688, {})
         assert not homekit.bridge.add_accessory.called
 
         state = State("demo.test", "on")
         homekit.add_bridge_accessory(state)
-        mock_get_acc.assert_called_with(hass, ANY, ANY, None, {}, aid_storage=ANY)
+        mock_get_acc.assert_called_with(hass, ANY, ANY, 600325356, {})
         assert homekit.bridge.add_accessory.called
 
         state = State("demo.test_2", "on")
         homekit.add_bridge_accessory(state)
-        mock_get_acc.assert_called_with(hass, ANY, ANY, None, {}, aid_storage=ANY)
+        mock_get_acc.assert_called_with(hass, ANY, ANY, 1467253281, {})
         assert homekit.bridge.add_accessory.called
 
 
@@ -361,11 +358,11 @@ async def test_homekit_warn_add_accessory_bridge(
     mock_camera_acc = Mock(category=acc_category)
     homekit.bridge = _mock_pyhap_bridge()
 
-    with patch(f"{PATH_HOMEKIT}.get_accessories") as mock_get_acc:
-        mock_get_acc.side_effect = [[], [mock_camera_acc], []]
+    with patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc:
+        mock_get_acc.side_effect = [None, mock_camera_acc, None]
         state = State("camera.test", "on")
         homekit.add_bridge_accessory(state)
-        mock_get_acc.assert_called_with(hass, ANY, ANY, None, {}, aid_storage=ANY)
+        mock_get_acc.assert_called_with(hass, ANY, ANY, 1508819236, {})
         assert not homekit.bridge.add_accessory.called
 
     assert "accessory mode" in caplog.text
@@ -583,7 +580,7 @@ async def test_homekit_start_with_a_broken_accessory(
     hass.states.async_set("light.demo", "on")
     hass.states.async_set("light.broken", "on")
 
-    with patch(f"{PATH_HOMEKIT}.get_accessories", side_effect=Exception), patch(
+    with patch(f"{PATH_HOMEKIT}.get_accessory", side_effect=Exception), patch(
         f"{PATH_HOMEKIT}.async_show_setup_message"
     ) as mock_setup_msg, patch(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
@@ -622,7 +619,7 @@ async def test_homekit_start_with_a_device(
     homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE, None, devices=[device_id])
     homekit.driver = hk_driver
 
-    with patch(f"{PATH_HOMEKIT}.get_accessories", side_effect=Exception), patch(
+    with patch(f"{PATH_HOMEKIT}.get_accessory", side_effect=Exception), patch(
         f"{PATH_HOMEKIT}.async_show_setup_message"
     ) as mock_setup_msg:
         await homekit.async_start()
@@ -1203,7 +1200,7 @@ async def test_homekit_finds_linked_batteries(
     hass.states.async_set(light.entity_id, STATE_ON)
 
     with patch(f"{PATH_HOMEKIT}.async_show_setup_message"), patch(
-        f"{PATH_HOMEKIT}.get_accessories", return_value=[]
+        f"{PATH_HOMEKIT}.get_accessory"
     ) as mock_get_acc, patch("pyhap.accessory_driver.AccessoryDriver.async_start"):
         await homekit.async_start()
     await hass.async_block_till_done()
@@ -1222,7 +1219,6 @@ async def test_homekit_finds_linked_batteries(
             "linked_battery_charging_sensor": "binary_sensor.powerwall_battery_charging",
             "linked_battery_sensor": "sensor.powerwall_battery",
         },
-        aid_storage=ANY,
     )
 
 
@@ -1275,7 +1271,7 @@ async def test_homekit_async_get_integration_fails(
 
     with patch.object(homekit.bridge, "add_accessory"), patch(
         f"{PATH_HOMEKIT}.async_show_setup_message"
-    ), patch(f"{PATH_HOMEKIT}.get_accessories", return_value=[]) as mock_get_acc, patch(
+    ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
     ):
         await homekit.async_start()
@@ -1293,7 +1289,6 @@ async def test_homekit_async_get_integration_fails(
             "linked_battery_charging_sensor": "binary_sensor.invalid_integration_does_not_exist_battery_charging",
             "linked_battery_sensor": "sensor.invalid_integration_does_not_exist_battery",
         },
-        aid_storage=ANY,
     )
 
 
@@ -1422,13 +1417,9 @@ async def test_homekit_ignored_missing_devices(
     hass.states.async_set(light.entity_id, STATE_ON)
     hass.states.async_set("light.two", STATE_ON)
 
-    with patch(
-        f"{PATH_HOMEKIT}.get_accessories", return_value=[]
-    ) as mock_get_acc, patch(
+    with patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
         f"{PATH_HOMEKIT}.HomeBridge", return_value=homekit.bridge
-    ), patch(
-        "pyhap.accessory_driver.AccessoryDriver.async_start"
-    ):
+    ), patch("pyhap.accessory_driver.AccessoryDriver.async_start"):
         await homekit.async_start()
         await hass.async_block_till_done()
 
@@ -1442,7 +1433,6 @@ async def test_homekit_ignored_missing_devices(
             "linked_battery_charging_sensor": "binary_sensor.powerwall_battery_charging",
             "linked_battery_sensor": "sensor.powerwall_battery",
         },
-        aid_storage=ANY,
     )
 
 
@@ -1487,7 +1477,7 @@ async def test_homekit_finds_linked_motion_sensors(
 
     with patch.object(homekit.bridge, "add_accessory"), patch(
         f"{PATH_HOMEKIT}.async_show_setup_message"
-    ), patch(f"{PATH_HOMEKIT}.get_accessories", return_value=[]) as mock_get_acc, patch(
+    ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
     ):
         await homekit.async_start()
@@ -1505,7 +1495,6 @@ async def test_homekit_finds_linked_motion_sensors(
             "sw_version": "0.16.0",
             "linked_motion_sensor": "binary_sensor.camera_motion_sensor",
         },
-        aid_storage=ANY,
     )
 
 
@@ -1553,7 +1542,7 @@ async def test_homekit_finds_linked_humidity_sensors(
 
     with patch.object(homekit.bridge, "add_accessory"), patch(
         f"{PATH_HOMEKIT}.async_show_setup_message"
-    ), patch(f"{PATH_HOMEKIT}.get_accessories", return_value=[]) as mock_get_acc, patch(
+    ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
     ):
         await homekit.async_start()
@@ -1571,7 +1560,6 @@ async def test_homekit_finds_linked_humidity_sensors(
             "sw_version": "0.16.1",
             "linked_humidity_sensor": "sensor.humidifier_humidity_sensor",
         },
-        aid_storage=ANY,
     )
 
 
@@ -1615,7 +1603,7 @@ async def test_reload(hass, mock_async_zeroconf):
     ) as mock_homekit2, patch.object(homekit.bridge, "add_accessory"), patch(
         f"{PATH_HOMEKIT}.async_show_setup_message"
     ), patch(
-        f"{PATH_HOMEKIT}.get_accessories", return_value=[]
+        f"{PATH_HOMEKIT}.get_accessory"
     ), patch(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
     ), patch(
@@ -1661,9 +1649,7 @@ async def test_homekit_start_in_accessory_mode(
 
     hass.states.async_set("light.demo", "on")
 
-    with patch(
-        f"{PATH_HOMEKIT}.get_accessories", return_value=[_mock_accessory()]
-    ), patch(f"{PATH_HOMEKIT}.HomeKit.add_bridge_accessory") as mock_add_acc, patch(
+    with patch(f"{PATH_HOMEKIT}.HomeKit.add_bridge_accessory") as mock_add_acc, patch(
         f"{PATH_HOMEKIT}.async_show_setup_message"
     ) as mock_setup_msg, patch(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
@@ -1694,9 +1680,7 @@ async def test_homekit_start_in_accessory_mode_unsupported_entity(
 
     hass.states.async_set("notsupported.demo", "on")
 
-    with patch(f"{PATH_HOMEKIT}.get_accessories", return_value=[]), patch(
-        f"{PATH_HOMEKIT}.HomeKit.add_bridge_accessory"
-    ) as mock_add_acc, patch(
+    with patch(f"{PATH_HOMEKIT}.HomeKit.add_bridge_accessory") as mock_add_acc, patch(
         f"{PATH_HOMEKIT}.async_show_setup_message"
     ) as mock_setup_msg, patch(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
