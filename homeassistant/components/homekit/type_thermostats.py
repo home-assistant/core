@@ -656,7 +656,7 @@ class Thermostat(HomeAccessory):
                 HC_HASS_TO_HOMEKIT_FAN_STATE[hvac_action]
             )
         if CHAR_TARGET_FAN_STATE in self.fan_chars and fan_mode:
-            self.char_target_fan_state(1 if fan_mode == FAN_AUTO else 0)
+            self.char_target_fan_state.set_value(1 if fan_mode == FAN_AUTO else 0)
 
 
 @TYPES.register("WaterHeater")
