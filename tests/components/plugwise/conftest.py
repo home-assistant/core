@@ -2,17 +2,10 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from http import HTTPStatus
 import json
-import re
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from plugwise.exceptions import (
-    ConnectionFailedError,
-    InvalidAuthentication,
-    PlugwiseException,
-)
 import pytest
 
 from homeassistant.components.plugwise.const import API, DOMAIN, PW_TYPE
@@ -26,7 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 def _read_json(environment: str, call: str) -> dict[str, Any]:
@@ -76,36 +68,6 @@ def mock_smile_config_flow() -> Generator[None, MagicMock, None]:
         yield smile
 
 
-@pytest.fixture(name="mock_smile_unauth")
-def mock_smile_unauth(aioclient_mock: AiohttpClientMocker) -> None:
-    """Mock the Plugwise Smile unauthorized for Home Assistant."""
-    aioclient_mock.get(re.compile(".*"), status=HTTPStatus.UNAUTHORIZED)
-    aioclient_mock.put(re.compile(".*"), status=HTTPStatus.UNAUTHORIZED)
-
-
-@pytest.fixture(name="mock_smile_error")
-def mock_smile_error(aioclient_mock: AiohttpClientMocker) -> None:
-    """Mock the Plugwise Smile server failure for Home Assistant."""
-    aioclient_mock.get(re.compile(".*"), status=HTTPStatus.INTERNAL_SERVER_ERROR)
-    aioclient_mock.put(re.compile(".*"), status=HTTPStatus.INTERNAL_SERVER_ERROR)
-
-
-@pytest.fixture(name="mock_smile_notconnect")
-def mock_smile_notconnect():
-    """Mock the Plugwise Smile general connection failure for Home Assistant."""
-    with patch("homeassistant.components.plugwise.gateway.Smile") as smile_mock:
-        smile_mock.InvalidAuthentication = InvalidAuthentication
-        smile_mock.ConnectionFailedError = ConnectionFailedError
-        smile_mock.PlugwiseException = PlugwiseException
-        smile_mock.return_value.connect.side_effect = AsyncMock(return_value=False)
-        yield smile_mock.return_value
-
-
-def _get_device_data(chosen_env, device_id):
-    """Mock return data for specific devices."""
-    return _read_json(chosen_env, "get_device_data/" + device_id)
-
-
 @pytest.fixture
 def mock_smile_adam() -> Generator[None, MagicMock, None]:
     """Create a Mock Adam environment for testing exceptions."""
@@ -152,7 +114,7 @@ def mock_smile_anna() -> Generator[None, MagicMock, None]:
         smile.notifications = _read_json(chosen_env, "notifications")
         smile.async_update.return_value = _read_json(chosen_env, "all_data")
 
-        yield smile_mock.return_value
+        yield smile
 
 
 @pytest.fixture
@@ -176,7 +138,7 @@ def mock_smile_p1() -> Generator[None, MagicMock, None]:
         smile.notifications = _read_json(chosen_env, "notifications")
         smile.async_update.return_value = _read_json(chosen_env, "all_data")
 
-        yield smile_mock.return_value
+        yield smile
 
 
 @pytest.fixture
@@ -198,7 +160,7 @@ def mock_stretch() -> Generator[None, MagicMock, None]:
         smile.connect.return_value = True
         smile.async_update.return_value = _read_json(chosen_env, "all_data")
 
-        yield smile_mock.return_value
+        yield smile
 
 
 @pytest.fixture
