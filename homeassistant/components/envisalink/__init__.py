@@ -25,6 +25,7 @@ DOMAIN = "envisalink"
 
 DATA_EVL = "envisalink"
 
+CONF_CREATE_ZONE_BYPASS_SWITCHES = "create_zone_bypass_switches"
 CONF_EVL_KEEPALIVE = "keepalive_interval"
 CONF_EVL_PORT = "port"
 CONF_EVL_VERSION = "evl_version"
@@ -42,6 +43,7 @@ CONF_ZONETYPE = "type"
 PANEL_TYPE_HONEYWELL = "HONEYWELL"
 PANEL_TYPE_DSC = "DSC"
 
+DEFAULT_CREATE_ZONE_BYPASS_SWITCHES = False
 DEFAULT_PORT = 4025
 DEFAULT_EVL_VERSION = 3
 DEFAULT_KEEPALIVE = 60
@@ -89,6 +91,10 @@ CONFIG_SCHEMA = vol.Schema(
                     CONF_ZONEDUMP_INTERVAL, default=DEFAULT_ZONEDUMP_INTERVAL
                 ): vol.Coerce(int),
                 vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
+                vol.Optional(
+                    CONF_CREATE_ZONE_BYPASS_SWITCHES,
+                    default=DEFAULT_CREATE_ZONE_BYPASS_SWITCHES,
+                ): vol.Coerce(bool),
             }
         )
     },
@@ -122,6 +128,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     keep_alive = conf.get(CONF_EVL_KEEPALIVE)
     zone_dump = conf.get(CONF_ZONEDUMP_INTERVAL)
     zones = conf.get(CONF_ZONES)
+    create_zone_bypass_switches = conf.get(CONF_CREATE_ZONE_BYPASS_SWITCHES)
     partitions = conf.get(CONF_PARTITIONS)
     connection_timeout = conf.get(CONF_TIMEOUT)
     sync_connect: asyncio.Future[bool] = asyncio.Future()
@@ -210,6 +217,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     _LOGGER.info("Start envisalink")
     controller.start()
+    if panel_type == PANEL_TYPE_DSC and not create_zone_bypass_switches:
+        # Temporary hack to prevent the underlying pyenvisalink package from sending periodic *1# commands to the EVL
+        _LOGGER.info("Disabling zone bypass refresh task")
+        # pylint: disable=W0212
+        controller._client._zoneBypassRefreshTask = "disabled"
 
     if not await sync_connect:
         return False
@@ -241,7 +253,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         )
         # Only DSC panels support getting zone bypass status
-        if panel_type == PANEL_TYPE_DSC:
+        if panel_type == PANEL_TYPE_DSC and create_zone_bypass_switches:
             hass.async_create_task(
                 async_load_platform(
                     hass, "switch", "envisalink", {CONF_ZONES: zones}, config
