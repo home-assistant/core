@@ -317,7 +317,7 @@ class Thermostat(HomeAccessory):
                 self.fan_chars.append(CHAR_CURRENT_FAN_STATE)
             serv_fan = self.add_preload_service(SERV_FANV2, self.fan_chars)
             serv_fan.display_name = "{self.display_name} Fan"
-            # serv_fan.add_linked_service(serv_thermostat)
+            serv_thermostat.add_linked_service(serv_fan)
             self.char_active = serv_fan.configure_char(
                 CHAR_ACTIVE, value=1, setter_callback=self._set_fan_active
             )
@@ -701,7 +701,11 @@ class Thermostat(HomeAccessory):
                 HC_HASS_TO_HOMEKIT_FAN_STATE[hvac_action]
             )
 
-        self.char_active.set_value(0 if fan_mode == FAN_OFF else 1)
+        hvac_mode = new_state.state
+        fan_active = 1
+        if hvac_mode == HVAC_MODE_OFF or fan_mode == FAN_OFF:
+            fan_active = 0
+        self.char_active.set_value(fan_active)
 
 
 @TYPES.register("WaterHeater")
