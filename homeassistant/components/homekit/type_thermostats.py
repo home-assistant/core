@@ -326,22 +326,22 @@ class Thermostat(HomeAccessory):
                     CHAR_SWING_MODE,
                     value=0,
                     setter_callback=self._set_fan_swing_mode,
-                    display_name="{self.display_name} Fan Swing Mode",
                 )
+                self.char_swing.display_name = "Fan Swing Mode"
             if CHAR_ROTATION_SPEED in self.fan_chars:
                 self.char_speed = serv_fan.configure_char(
                     CHAR_ROTATION_SPEED,
                     value=100,
-                    display_name="{self.display_name} Fan Mode",
                     properties={PROP_MIN_STEP: 100 / len(self.ordered_fan_speeds)},
                     setter_callback=self._set_fan_speed,
                 )
+                self.char_speed.display_name = "Fan Mode"
             if CHAR_CURRENT_FAN_STATE in self.fan_chars:
                 self.char_current_fan_state = serv_fan.configure_char(
                     CHAR_CURRENT_FAN_STATE,
-                    display_name="{self.display_name} Fan State",
                     value=0,
                 )
+                self.char_current_fan_state.display_name = "Fan State"
             if CHAR_TARGET_FAN_STATE in self.fan_chars and FAN_AUTO in self.fan_modes:
                 self.char_target_fan_state = serv_fan.configure_char(
                     CHAR_TARGET_FAN_STATE,
@@ -349,6 +349,7 @@ class Thermostat(HomeAccessory):
                     display_name="{self.display_name} Fan Auto",
                     setter_callback=self._set_fan_auto,
                 )
+                self.char_target_fan_state.display_name = "Fan Auto"
 
         self._async_update_state(state)
 
