@@ -9,10 +9,6 @@ from homeassistant.components.media_player.const import (
 
 DOMAIN = "spotify"
 
-DATA_SPOTIFY_CLIENT = "spotify_client"
-DATA_SPOTIFY_ME = "spotify_me"
-DATA_SPOTIFY_SESSION = "spotify_session"
-
 SPOTIFY_SCOPES = [
     # Needed to be able to control playback
     "user-modify-playback-state",

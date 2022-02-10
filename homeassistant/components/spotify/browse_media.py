@@ -27,15 +27,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 
-from .const import (
-    DATA_SPOTIFY_CLIENT,
-    DATA_SPOTIFY_ME,
-    DATA_SPOTIFY_SESSION,
-    DOMAIN,
-    MEDIA_PLAYER_PREFIX,
-    MEDIA_TYPE_SHOW,
-    PLAYABLE_MEDIA_TYPES,
-)
+from .const import DOMAIN, MEDIA_PLAYER_PREFIX, MEDIA_TYPE_SHOW, PLAYABLE_MEDIA_TYPES
 from .util import fetch_image_url
 
 BROWSE_LIMIT = 48
@@ -155,9 +147,9 @@ async def async_browse_media(
         raise BrowseError("No Spotify accounts available")
     return await async_browse_media_internal(
         hass,
-        info[DATA_SPOTIFY_CLIENT],
-        info[DATA_SPOTIFY_SESSION],
-        info[DATA_SPOTIFY_ME],
+        info.client,
+        info.session,
+        info.current_user,
         media_content_type,
         media_content_id,
         can_play_artist=can_play_artist,
