@@ -21,13 +21,11 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN, SCHEDULE_OFF, SCHEDULE_ON
+from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 from .util import plugwise_command
 
-HVAC_MODES_HEAT_ONLY = [HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF]
-HVAC_MODES_HEAT_COOL = [HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_AUTO, HVAC_MODE_OFF]
 THERMOSTAT_CLASSES = ["thermostat", "zone_thermostat", "thermostatic_radiator_valve"]
 
 
@@ -50,10 +48,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
 
     _attr_max_temp = DEFAULT_MAX_TEMP
     _attr_min_temp = DEFAULT_MIN_TEMP
-    _attr_preset_modes = None
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
     _attr_temperature_unit = TEMP_CELSIUS
-    _attr_hvac_modes = HVAC_MODES_HEAT_ONLY
 
     def __init__(
         self,
@@ -67,12 +62,17 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         self._attr_name = self.device.get("name")
 
         # Determine preset modes
+        self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
         if presets := self.device.get("presets"):
+            self._attr_supported_features |= SUPPORT_PRESET_MODE
             self._attr_preset_modes = list(presets)
 
         # Determine hvac modes and current hvac mode
+        self._attr_hvac_modes = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
         if self.coordinator.data.gateway.get("cooling_present"):
-            self._attr_hvac_modes = HVAC_MODES_HEAT_COOL
+            self._attr_hvac_modes.append(HVAC_MODE_COOL)
+        if self.device.get("available_schedules") != ["None"]:
+            self._attr_hvac_modes.append(HVAC_MODE_AUTO)
 
     @property
     def current_temperature(self) -> float | None:
@@ -130,16 +130,20 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     @plugwise_command
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set the hvac mode."""
-        state = SCHEDULE_OFF
         if hvac_mode == HVAC_MODE_AUTO:
-            state = SCHEDULE_ON
+            if (
+                schedule_temperature := self.device.get("schedule_temperature")
+            ) is None:
+                raise ValueError("Cannot set HVAC mode to Auto: No schedule available")
+
             await self.coordinator.api.set_temperature(
-                self.device["location"], self.device.get("schedule_temperature")
+                self.device["location"], schedule_temperature
             )
-            self._attr_target_temperature = self.device.get("schedule_temperature")
 
         await self.coordinator.api.set_schedule_state(
-            self.device["location"], self.device.get("last_used"), state
+            self.device["location"],
+            self.device.get("last_used"),
+            "true" if hvac_mode == HVAC_MODE_AUTO else "false",
         )
 
     @plugwise_command

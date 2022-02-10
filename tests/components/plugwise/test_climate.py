@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
+    HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
 )
@@ -22,7 +23,7 @@ async def test_adam_climate_entity_attributes(hass, mock_smile_adam):
     state = hass.states.get("climate.zone_lisa_wk")
     attrs = state.attributes
 
-    assert attrs["hvac_modes"] == [HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF]
+    assert attrs["hvac_modes"] == [HVAC_MODE_HEAT, HVAC_MODE_OFF, HVAC_MODE_AUTO]
 
     assert "preset_modes" in attrs
     assert "no_frost" in attrs["preset_modes"]
@@ -38,7 +39,7 @@ async def test_adam_climate_entity_attributes(hass, mock_smile_adam):
     state = hass.states.get("climate.zone_thermostat_jessie")
     attrs = state.attributes
 
-    assert attrs["hvac_modes"] == [HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF]
+    assert attrs["hvac_modes"] == [HVAC_MODE_HEAT, HVAC_MODE_OFF, HVAC_MODE_AUTO]
 
     assert "preset_modes" in attrs
     assert "no_frost" in attrs["preset_modes"]
@@ -157,7 +158,7 @@ async def test_anna_climate_entity_attributes(hass, mock_smile_anna):
     attrs = state.attributes
 
     assert "hvac_modes" in attrs
-    assert "heat" in attrs["hvac_modes"]
+    assert attrs["hvac_modes"] == [HVAC_MODE_HEAT, HVAC_MODE_OFF, HVAC_MODE_COOL]
 
     assert "preset_modes" in attrs
     assert "no_frost" in attrs["preset_modes"]
@@ -214,3 +215,15 @@ async def test_anna_climate_entity_climate_changes(hass, mock_smile_anna):
     mock_smile_anna.set_schedule_state.assert_called_with(
         "c784ee9fdab44e1395b8dee7d7a497d5", None, "false"
     )
+
+    # Auto mode is not available, no schedules
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            "climate",
+            "set_hvac_mode",
+            {"entity_id": "climate.anna", "hvac_mode": "auto"},
+            blocking=True,
+        )
+
+    assert mock_smile_anna.set_temperature.call_count == 1
+    assert mock_smile_anna.set_schedule_state.call_count == 1
