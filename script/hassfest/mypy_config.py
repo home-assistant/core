@@ -38,7 +38,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.deconz.services",
     "homeassistant.components.deconz.siren",
     "homeassistant.components.deconz.switch",
-    "homeassistant.components.demo",
     "homeassistant.components.demo.fan",
     "homeassistant.components.demo.light",
     "homeassistant.components.demo.number",
