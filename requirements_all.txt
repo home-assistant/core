@@ -1048,6 +1048,9 @@ minio==5.0.10
 # homeassistant.components.mitemp_bt
 mitemp_bt==0.0.5
 
+# homeassistant.components.moehlenhoff_alpha2
+moehlenhoff-alpha2==1.1.2
+
 # homeassistant.components.motion_blinds
 motionblinds==0.5.11
 

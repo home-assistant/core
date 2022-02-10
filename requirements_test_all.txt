@@ -657,6 +657,9 @@ millheater==0.9.0
 # homeassistant.components.minio
 minio==5.0.10
 
+# homeassistant.components.moehlenhoff_alpha2
+moehlenhoff-alpha2==1.1.2
+
 # homeassistant.components.motion_blinds
 motionblinds==0.5.11
 
