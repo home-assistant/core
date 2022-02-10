@@ -36,6 +36,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
+    SERVICE_RELOAD,
     Platform,
 )
 from homeassistant.core import (
@@ -75,6 +76,7 @@ from .const import (
     CONF_TOPIC,
     CONF_WILL_MESSAGE,
     DATA_MQTT_CONFIG,
+    DATA_MQTT_RELOAD_NEEDED,
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
@@ -714,6 +716,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if conf.get(CONF_DISCOVERY):
         await _async_setup_discovery(hass, conf, entry)
+
+    if DATA_MQTT_RELOAD_NEEDED in hass.data:
+        hass.data.pop(DATA_MQTT_RELOAD_NEEDED)
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=False,
+        )
 
     return True
 

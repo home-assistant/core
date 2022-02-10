@@ -1647,23 +1647,30 @@ async def help_test_reloadable_late(hass, caplog, tmp_path, domain, config):
     old_config_2 = copy.deepcopy(config)
     old_config_2["name"] = "test_old_2"
 
+    old_yaml_config_file = tmp_path / "configuration.yaml"
+    old_yaml_config = yaml.dump({domain: [old_config_1, old_config_2]})
+    old_yaml_config_file.write_text(old_yaml_config)
+    assert old_yaml_config_file.read_text() == old_yaml_config
+
     assert await async_setup_component(
         hass, domain, {domain: [old_config_1, old_config_2]}
     )
     await hass.async_block_till_done()
 
-    # No MQTT config entry, there should be warning and no entities
+    # No MQTT config entry, there should be a warning and no entities
     assert (
         "MQTT integration is not setup, skipping setup of manually "
         f"configured MQTT {domain}"
     ) in caplog.text
     assert len(hass.states.async_all(domain)) == 0
 
-    # User sets up a config entry, should succeed but entities will not be setup yet
+    # User sets up a config entry, should succeed and entities will setup
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
     entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    assert len(hass.states.async_all(domain)) == 0
+    with patch.object(hass_config, "YAML_CONFIG_FILE", old_yaml_config_file):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    assert len(hass.states.async_all(domain)) == 2
 
     # Create temporary fixture for configuration.yaml based on the supplied config and
     # test a reload with this new config

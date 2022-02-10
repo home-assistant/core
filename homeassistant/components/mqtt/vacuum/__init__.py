@@ -1,14 +1,11 @@
 """Support for MQTT vacuums."""
 import functools
-import logging
 
 import voluptuous as vol
 
 from homeassistant.components import vacuum
-from homeassistant.helpers.reload import async_setup_reload_service
 
-from .. import DOMAIN, PLATFORMS
-from ..mixins import async_setup_entry_helper
+from ..mixins import async_setup_entry_helper, async_setup_platform_helper
 from .schema import CONF_SCHEMA, LEGACY, MQTT_VACUUM_SCHEMA, STATE
 from .schema_legacy import (
     DISCOVERY_SCHEMA_LEGACY,
@@ -20,8 +17,6 @@ from .schema_state import (
     PLATFORM_SCHEMA_STATE,
     async_setup_entity_state,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def validate_mqtt_vacuum_discovery(value):
@@ -47,14 +42,9 @@ PLATFORM_SCHEMA = vol.All(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up MQTT vacuum through configuration.yaml."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    if not bool(hass.config_entries.async_entries(DOMAIN)):
-        _LOGGER.warning(
-            "MQTT integration is not setup, skipping setup of manually configured "
-            "MQTT vacuum"
-        )
-        return
-    await _async_setup_entity(hass, async_add_entities, config)
+    await async_setup_platform_helper(
+        hass, vacuum.DOMAIN, config, async_add_entities, _async_setup_entity
+    )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
