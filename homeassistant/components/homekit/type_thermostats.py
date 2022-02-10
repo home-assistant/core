@@ -283,6 +283,7 @@ class Thermostat(HomeAccessory):
                 CHAR_CURRENT_HUMIDITY, value=50
             )
 
+        fan_modes = []
         if (
             features & SUPPORT_FAN_MODE
             and (fan_modes := attributes.get(ATTR_FAN_MODES, []))
@@ -295,6 +296,7 @@ class Thermostat(HomeAccessory):
             if FAN_AUTO in fan_modes:
                 self.fan_chars.append(CHAR_TARGET_FAN_STATE)
 
+        self.fan_modes = fan_modes
         if (
             features & SUPPORT_SWING_MODE
             and (swing_modes := attributes.get(ATTR_SWING_MODES))
@@ -313,7 +315,9 @@ class Thermostat(HomeAccessory):
             if attributes.get(ATTR_HVAC_ACTION) is not None:
                 self.fan_chars.append(CHAR_CURRENT_FAN_STATE)
             serv_fan = self.add_preload_service(SERV_FANV2, self.fan_chars)
-            self.char_active = serv_fan.configure_char(CHAR_ACTIVE, value=1)
+            self.char_active = serv_fan.configure_char(
+                CHAR_ACTIVE, value=1, setter_callback=self._set_fan_active
+            )
             if CHAR_SWING_MODE in self.fan_chars:
                 self.char_swing = serv_fan.configure_char(
                     CHAR_SWING_MODE, value=0, setter_callback=self._set_fan_swing_mode
@@ -330,7 +334,7 @@ class Thermostat(HomeAccessory):
                     CHAR_CURRENT_FAN_STATE,
                     value=0,
                 )
-            if CHAR_TARGET_FAN_STATE in self.fan_chars and FAN_AUTO in self.fan_chars:
+            if CHAR_TARGET_FAN_STATE in self.fan_chars and FAN_AUTO in self.fan_modes:
                 self.char_target_fan_state = serv_fan.configure_char(
                     CHAR_TARGET_FAN_STATE,
                     value=0,
@@ -350,6 +354,17 @@ class Thermostat(HomeAccessory):
     def _set_fan_speed(self, speed) -> None:
         _LOGGER.debug("%s: Set fan speed to %s", self.entity_id, speed)
         mode = percentage_to_ordered_list_item(self.ordered_fan_speeds, speed)
+        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: mode}
+        self.async_call_service(DOMAIN_CLIMATE, SERVICE_SET_FAN_MODE, params)
+
+    def _set_fan_active(self, active) -> None:
+        _LOGGER.debug("%s: Set fan active to %s", self.entity_id, active)
+        if FAN_OFF not in self.fan_modes:
+            return
+        if not active:
+            mode = FAN_OFF
+        else:
+            mode = percentage_to_ordered_list_item(self.ordered_fan_speeds, 50)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: mode}
         self.async_call_service(DOMAIN_CLIMATE, SERVICE_SET_FAN_MODE, params)
 
