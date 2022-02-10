@@ -17,10 +17,10 @@ async def test_adam_climate_switch_entities(hass, mock_smile_adam):
     entry = await async_init_integration(hass, mock_smile_adam)
     assert entry.state is ConfigEntryState.LOADED
 
-    state = hass.states.get("switch.cv_pomp")
+    state = hass.states.get("switch.cv_pomp_relay")
     assert str(state.state) == "on"
 
-    state = hass.states.get("switch.fibaro_hc2")
+    state = hass.states.get("switch.fibaro_hc2_relay")
     assert str(state.state) == "on"
 
 
@@ -34,7 +34,7 @@ async def test_adam_climate_switch_negative_testing(hass, mock_smile_adam):
         await hass.services.async_call(
             "switch",
             "turn_off",
-            {"entity_id": "switch.cv_pomp"},
+            {"entity_id": "switch.cv_pomp_relay"},
             blocking=True,
         )
 
@@ -47,7 +47,7 @@ async def test_adam_climate_switch_negative_testing(hass, mock_smile_adam):
         await hass.services.async_call(
             "switch",
             "turn_on",
-            {"entity_id": "switch.fibaro_hc2"},
+            {"entity_id": "switch.fibaro_hc2_relay"},
             blocking=True,
         )
 
@@ -65,7 +65,7 @@ async def test_adam_climate_switch_changes(hass, mock_smile_adam):
     await hass.services.async_call(
         "switch",
         "turn_off",
-        {"entity_id": "switch.cv_pomp"},
+        {"entity_id": "switch.cv_pomp_relay"},
         blocking=True,
     )
 
@@ -77,7 +77,7 @@ async def test_adam_climate_switch_changes(hass, mock_smile_adam):
     await hass.services.async_call(
         "switch",
         "toggle",
-        {"entity_id": "switch.fibaro_hc2"},
+        {"entity_id": "switch.fibaro_hc2_relay"},
         blocking=True,
     )
 
@@ -89,7 +89,7 @@ async def test_adam_climate_switch_changes(hass, mock_smile_adam):
     await hass.services.async_call(
         "switch",
         "turn_on",
-        {"entity_id": "switch.fibaro_hc2"},
+        {"entity_id": "switch.fibaro_hc2_relay"},
         blocking=True,
     )
 
@@ -104,10 +104,10 @@ async def test_stretch_switch_entities(hass, mock_stretch):
     entry = await async_init_integration(hass, mock_stretch)
     assert entry.state is ConfigEntryState.LOADED
 
-    state = hass.states.get("switch.koelkast_92c4a")
+    state = hass.states.get("switch.koelkast_92c4a_relay")
     assert str(state.state) == "on"
 
-    state = hass.states.get("switch.droger_52559")
+    state = hass.states.get("switch.droger_52559_relay")
     assert str(state.state) == "on"
 
 
@@ -119,7 +119,7 @@ async def test_stretch_switch_changes(hass, mock_stretch):
     await hass.services.async_call(
         "switch",
         "turn_off",
-        {"entity_id": "switch.koelkast_92c4a"},
+        {"entity_id": "switch.koelkast_92c4a_relay"},
         blocking=True,
     )
     assert mock_stretch.set_switch_state.call_count == 1
@@ -130,7 +130,7 @@ async def test_stretch_switch_changes(hass, mock_stretch):
     await hass.services.async_call(
         "switch",
         "toggle",
-        {"entity_id": "switch.droger_52559"},
+        {"entity_id": "switch.droger_52559_relay"},
         blocking=True,
     )
     assert mock_stretch.set_switch_state.call_count == 2
@@ -141,7 +141,7 @@ async def test_stretch_switch_changes(hass, mock_stretch):
     await hass.services.async_call(
         "switch",
         "turn_on",
-        {"entity_id": "switch.droger_52559"},
+        {"entity_id": "switch.droger_52559_relay"},
         blocking=True,
     )
     assert mock_stretch.set_switch_state.call_count == 3
