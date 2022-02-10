@@ -221,7 +221,12 @@ async def async_get_mjpeg_stream(
     """Fetch an mjpeg stream from a camera entity."""
     camera = _get_camera_from_entity_id(hass, entity_id)
 
-    return await camera.handle_async_mjpeg_stream(request)
+    try:
+        stream = await camera.handle_async_mjpeg_stream(request)
+    except ConnectionResetError:
+        stream = None
+        _LOGGER.debug("Error while writing MJPEG stream to transport")
+    return stream
 
 
 async def async_get_still_stream(
@@ -783,7 +788,11 @@ class CameraMjpegStream(CameraView):
     async def handle(self, request: web.Request, camera: Camera) -> web.StreamResponse:
         """Serve camera stream, possibly with interval."""
         if (interval_str := request.query.get("interval")) is None:
-            stream = await camera.handle_async_mjpeg_stream(request)
+            try:
+                stream = await camera.handle_async_mjpeg_stream(request)
+            except ConnectionResetError:
+                stream = None
+                _LOGGER.debug("Error while writing MJPEG stream to transport")
             if stream is None:
                 raise web.HTTPBadGateway()
             return stream
