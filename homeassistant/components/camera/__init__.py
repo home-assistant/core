@@ -224,6 +224,7 @@ async def async_get_mjpeg_stream(
     try:
         stream = await camera.handle_async_mjpeg_stream(request)
     except ConnectionResetError:
+        stream = None
         _LOGGER.debug("Error while writing MJPEG stream to transport")
     return stream
 
@@ -790,6 +791,7 @@ class CameraMjpegStream(CameraView):
             try:
                 stream = await camera.handle_async_mjpeg_stream(request)
             except ConnectionResetError:
+                stream = None
                 _LOGGER.debug("Error while writing MJPEG stream to transport")
             if stream is None:
                 raise web.HTTPBadGateway()
