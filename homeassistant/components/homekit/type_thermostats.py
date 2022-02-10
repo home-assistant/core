@@ -346,7 +346,6 @@ class Thermostat(HomeAccessory):
                 self.char_target_fan_state = serv_fan.configure_char(
                     CHAR_TARGET_FAN_STATE,
                     value=0,
-                    display_name="{self.display_name} Fan Auto",
                     setter_callback=self._set_fan_auto,
                 )
                 self.char_target_fan_state.display_name = "Fan Auto"
