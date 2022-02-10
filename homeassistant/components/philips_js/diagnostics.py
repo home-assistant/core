@@ -18,6 +18,7 @@ TO_REDACT = {
     "username",
     "password",
     "title",
+    "unique_id",
 }
 
 
