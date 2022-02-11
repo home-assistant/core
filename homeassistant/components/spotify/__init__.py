@@ -1,6 +1,11 @@
 """The spotify integration."""
+from __future__ import annotations
+
+from datetime import timedelta
+from typing import Any
 
 import aiohttp
+import requests
 from spotipy import Spotify, SpotifyException
 import voluptuous as vol
 
@@ -20,13 +25,16 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import config_flow
 from .const import (
     DATA_SPOTIFY_CLIENT,
+    DATA_SPOTIFY_DEVICES,
     DATA_SPOTIFY_ME,
     DATA_SPOTIFY_SESSION,
     DOMAIN,
+    LOGGER,
     MEDIA_PLAYER_PREFIX,
     SPOTIFY_SCOPES,
 )
@@ -112,9 +120,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SpotifyException as err:
         raise ConfigEntryNotReady from err
 
+    async def _update_devices() -> list[dict[str, Any]]:
+        try:
+            devices: dict[str, Any] | None = await hass.async_add_executor_job(
+                spotify.devices
+            )
+        except (requests.RequestException, SpotifyException) as err:
+            raise UpdateFailed from err
+
+        if devices is None:
+            return []
+
+        return devices.get("devices", [])
+
+    device_coordinator: DataUpdateCoordinator[
+        list[dict[str, Any]]
+    ] = DataUpdateCoordinator(
+        hass,
+        LOGGER,
+        name=f"{entry.title} Devices",
+        update_interval=timedelta(minutes=5),
+        update_method=_update_devices,
+    )
+    await device_coordinator.async_config_entry_first_refresh()
+
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_SPOTIFY_CLIENT: spotify,
+        DATA_SPOTIFY_DEVICES: device_coordinator,
         DATA_SPOTIFY_ME: current_user,
         DATA_SPOTIFY_SESSION: session,
     }
