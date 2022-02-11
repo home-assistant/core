@@ -25,6 +25,7 @@ FLOWS = [
     "ais_google_home",
     "ais_host",
     "ais_nbp",
+    "ais_easy",
     "ais_spotify_service",
     "ais_wear_os",
     "ais_wifi_service",

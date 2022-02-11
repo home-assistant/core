@@ -1,0 +1,10 @@
+{
+  "domain": "ais_easy",
+  "name": "Eaton Easy e4",
+  "documentation": "https://ai-speaker.com",
+  "dependencies": [],
+  "codeowners": [],
+  "requirements": [],
+  "config_flow": true,
+  "iot_class": "local_pull"
+}
