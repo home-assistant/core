@@ -147,7 +147,6 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             SPOTIFY_SCOPES
         )
         self._currently_playing: dict | None = {}
-        self._devices: list[dict] | None = []
         self._playlist: dict | None = None
 
     @property
@@ -258,9 +257,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     @property
     def source_list(self) -> list[str] | None:
         """Return a list of source devices."""
-        if not self._devices:
-            return None
-        return [device["name"] for device in self._devices]
+        return [device["name"] for device in self.data.devices.data]
 
     @property
     def shuffle(self) -> bool | None:
@@ -332,19 +329,16 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         if (
             self._currently_playing
             and not self._currently_playing.get("device")
-            and self._devices
+            and self.data.devices.data
         ):
-            kwargs["device_id"] = self._devices[0].get("id")
+            kwargs["device_id"] = self.data.devices.data[0].get("id")
 
         self.data.client.start_playback(**kwargs)
 
     @spotify_exception_handler
     def select_source(self, source: str) -> None:
         """Select playback device."""
-        if not self._devices:
-            return
-
-        for device in self._devices:
+        for device in self.data.devices.data:
             if device["name"] == source:
                 self.data.client.transfer_playback(
                     device["id"], self.state == STATE_PLAYING
@@ -382,9 +376,6 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         context = self._currently_playing.get("context")
         if context is not None and context["type"] == MEDIA_TYPE_PLAYLIST:
             self._playlist = self.data.client.playlist(current["context"]["uri"])
-
-        devices = self.data.client.devices() or {}
-        self._devices = devices.get("devices", [])
 
     async def async_browse_media(
         self, media_content_type: str | None = None, media_content_id: str | None = None
