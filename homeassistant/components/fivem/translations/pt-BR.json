@@ -12,8 +12,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
-                    "name": "Noma",
+                    "host": "Nome do host",
+                    "name": "Nome",
                     "port": "Porta"
                 }
             }
