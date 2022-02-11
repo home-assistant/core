@@ -1139,6 +1139,17 @@ async def test_setup_override_configuration(hass, caplog, tmp_path):
             )
 
 
+async def test_setup_mqtt_client_protocol(hass):
+    """Test MQTT client protocol setup."""
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data={mqtt.CONF_BROKER: "test-broker", mqtt.CONF_PROTOCOL: "3.1"},
+    )
+    with patch("paho.mqtt.client.Client") as mock_client:
+        mock_client().connect = lambda *args: 1
+        assert await mqtt.async_setup_entry(hass, entry)
+
+
 async def test_setup_raises_ConfigEntryNotReady_if_no_connect_broker(hass, caplog):
     """Test for setup failure if connection to broker is missing."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
