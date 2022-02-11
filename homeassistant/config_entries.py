@@ -1393,11 +1393,23 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             reason=reason, description_placeholders=description_placeholders
         )
 
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> data_entry_flow.FlowResult:
+        """Handle a flow initialized by DHCP discovery."""
+        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
+
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by HASS IO discovery."""
         return await self.async_step_discovery(discovery_info.config)
+
+    async def async_step_integration_discovery(
+        self, discovery_info: DiscoveryInfoType
+    ) -> data_entry_flow.FlowResult:
+        """Handle a flow initialized by integration specific discovery."""
+        return await self.async_step_discovery(discovery_info)
 
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
@@ -1417,22 +1429,16 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         """Handle a flow initialized by SSDP discovery."""
         return await self.async_step_discovery(dataclasses.asdict(discovery_info))
 
-    async def async_step_zeroconf(
-        self, discovery_info: ZeroconfServiceInfo
-    ) -> data_entry_flow.FlowResult:
-        """Handle a flow initialized by Zeroconf discovery."""
-        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
-
-    async def async_step_dhcp(
-        self, discovery_info: DhcpServiceInfo
-    ) -> data_entry_flow.FlowResult:
-        """Handle a flow initialized by DHCP discovery."""
-        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
-
     async def async_step_usb(
         self, discovery_info: UsbServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by USB discovery."""
+        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> data_entry_flow.FlowResult:
+        """Handle a flow initialized by Zeroconf discovery."""
         return await self.async_step_discovery(dataclasses.asdict(discovery_info))
 
     @callback
