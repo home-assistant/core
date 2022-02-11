@@ -107,11 +107,10 @@ class AugustData(AugustSubscriberMixin):
     async def async_setup(self):
         """Async setup of august device data and activities."""
         token = self._august_gateway.access_token
-        user_data, locks, doorbells = await asyncio.gather(
-            self._api.async_get_user(token),
-            self._api.async_get_operable_locks(token),
-            self._api.async_get_doorbells(token),
-        )
+        # This used to be a gather but it was less reliable with august's recent api changes.
+        user_data = await self._api.async_get_user(token)
+        locks = await self._api.async_get_operable_locks(token)
+        doorbells = await self._api.async_get_doorbells(token)
         if not doorbells:
             doorbells = []
         if not locks:
