@@ -20,6 +20,7 @@ from homeassistant.helpers.device_registry import (
 )
 
 from .const import DOMAIN, KNOWN_DEVICES
+from .utils import async_get_controller
 
 HOMEKIT_DIR = ".homekit"
 HOMEKIT_BRIDGE_DOMAIN = "homekit"
@@ -104,10 +105,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_setup_controller(self):
         """Create the controller."""
-        async_zeroconf_instance = await zeroconf.async_get_async_instance(self.hass)
-        self.controller = aiohomekit.Controller(
-            async_zeroconf_instance=async_zeroconf_instance
-        )
+        self.controller = await async_get_controller(self.hass)
 
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
