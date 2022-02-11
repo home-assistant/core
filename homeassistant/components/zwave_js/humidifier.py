@@ -1,4 +1,4 @@
-"""Representation of Z-Wave thermostats."""
+"""Representation of Z-Wave humidifiers."""
 from __future__ import annotations
 
 from typing import Any
@@ -80,7 +80,7 @@ class ZWaveBaseHumidifier(ZWaveBaseEntity, HumidifierEntity):
         client: ZwaveClient,
         info: ZwaveDiscoveryInfo,
     ) -> None:
-        """Initialize thermostat."""
+        """Initialize humidifier."""
         super().__init__(config_entry, client, info)
 
         self._attr_name = f"{self._attr_name} {self.device_class}"

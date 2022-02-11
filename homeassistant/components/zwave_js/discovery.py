@@ -496,7 +496,7 @@ DISCOVERY_SCHEMAS = [
         ),
     ),
     # humidifier
-    # thermostats supporting mode (and optional setpoint)
+    # hygrostats supporting mode (and optional setpoint)
     ZWaveDiscoverySchema(
         platform="humidifier",
         primary_value=ZWaveValueDiscoverySchema(

@@ -1,4 +1,4 @@
-"""Test the Z-Wave JS climate platform."""
+"""Test the Z-Wave JS humidifier platform."""
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.humidity_control import HumidityControlMode
 from zwave_js_server.event import Event
@@ -24,7 +24,7 @@ from .common import DEHUMIDIFIER_ADC_T3000_ENTITY, HUMIDIFIER_ADC_T3000_ENTITY
 
 
 async def test_humidifier(hass, client, climate_adc_t3000, integration):
-    """Test a thermostat v2 command class entity."""
+    """Test a humidity control command class entity."""
 
     node = climate_adc_t3000
     state = hass.states.get(HUMIDIFIER_ADC_T3000_ENTITY)
@@ -488,7 +488,7 @@ async def test_humidifier(hass, client, climate_adc_t3000, integration):
 
 
 async def test_dehumidifier(hass, client, climate_adc_t3000, integration):
-    """Test a thermostat v2 command class entity."""
+    """Test a humidity control command class entity."""
 
     node = climate_adc_t3000
     state = hass.states.get(DEHUMIDIFIER_ADC_T3000_ENTITY)
