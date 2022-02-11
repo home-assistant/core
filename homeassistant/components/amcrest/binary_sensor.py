@@ -118,7 +118,7 @@ BINARY_SENSORS: tuple[AmcrestSensorEntityDescription, ...] = (
     AmcrestSensorEntityDescription(
         key=_DOORBELL_KEY,
         name=_DOORBELL_NAME,
-        device_class=BinarySensorDeviceClass.MOTION,
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
         event_code=_DOORBELL_EVENT_CODE,
     ),
 )
