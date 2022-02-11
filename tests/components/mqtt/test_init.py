@@ -684,6 +684,10 @@ async def test_subscribe_topic(hass, mqtt_mock, calls, record_calls):
     await hass.async_block_till_done()
     assert len(calls) == 1
 
+    # Cannot unsubscribe twice
+    with pytest.raises(HomeAssistantError):
+        unsub()
+
 
 async def test_subscribe_topic_non_async(hass, mqtt_mock, calls, record_calls):
     """Test the subscription of a topic using the non-async function."""
