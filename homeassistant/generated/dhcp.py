@@ -312,6 +312,10 @@ DHCP = [
         "macaddress": "20F85E*"
     },
     {
+        "domain": "sensibo",
+        "hostname": "sensibo*"
+    },
+    {
         "domain": "simplisafe",
         "hostname": "simplisafe*",
         "macaddress": "30AEA4*"
