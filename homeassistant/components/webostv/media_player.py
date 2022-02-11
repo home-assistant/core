@@ -326,7 +326,10 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
     def supported_features(self) -> int:
         """Flag media player features that are supported."""
         if self.state == STATE_OFF and self._supported_features is not None:
-            return self._supported_features
+            if self._wrapper.turn_on:
+                return self._supported_features | SUPPORT_TURN_ON
+
+            return self._supported_features & ~SUPPORT_TURN_ON
 
         supported = SUPPORT_WEBOSTV
 
