@@ -216,6 +216,8 @@ build.json @home-assistant/supervisor
 /tests/components/denonavr/ @ol-iver @starkillerOG
 /homeassistant/components/derivative/ @afaucogney
 /tests/components/derivative/ @afaucogney
+/homeassistant/components/developer_credentials/ @allenporter
+/tests/components/developer_credentials/ @allenporter
 /homeassistant/components/device_automation/ @home-assistant/core
 /tests/components/device_automation/ @home-assistant/core
 /homeassistant/components/device_tracker/ @home-assistant/core

@@ -328,10 +328,15 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
 @callback
 def async_register_implementation(
     hass: HomeAssistant, domain: str, implementation: AbstractOAuth2Implementation
-) -> None:
+) -> Callable[[], None]:
     """Register an OAuth2 flow implementation for an integration."""
     implementations = hass.data.setdefault(DATA_IMPLEMENTATIONS, {})
     implementations.setdefault(domain, {})[implementation.domain] = implementation
+
+    def unsub() -> None:
+        del implementations[domain][implementation.domain]
+
+    return unsub
 
 
 async def async_get_implementations(
