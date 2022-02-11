@@ -101,6 +101,7 @@ class ZeroconfServiceInfo(BaseServiceInfo):
     """Prepared info from mDNS entries."""
 
     host: str
+    addresses: list[str]
     port: int | None
     hostname: str
     type: str
@@ -547,6 +548,7 @@ def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
 
     return ZeroconfServiceInfo(
         host=str(host),
+        addresses=service.parsed_addresses(),
         port=service.port,
         hostname=service.server,
         type=service.type,
