@@ -44,6 +44,20 @@ BINARY_SENSORS: tuple[PlugwiseBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PlugwiseBinarySensorEntityDescription(
+        key="heating_state",
+        name="Heating",
+        icon="mdi:radiator",
+        icon_off="mdi:radiator-off",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PlugwiseBinarySensorEntityDescription(
+        key="cooling_state",
+        name="Cooling",
+        icon="mdi:snowflake",
+        icon_off="mdi:snowflake-off",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PlugwiseBinarySensorEntityDescription(
         key="slave_boiler_state",
         name="Secondary Boiler State",
         icon="mdi:fire",
@@ -73,7 +87,7 @@ async def async_setup_entry(
     entities: list[PlugwiseBinarySensorEntity] = []
     for device_id, device in coordinator.data.devices.items():
         for description in BINARY_SENSORS:
-            if (
+            if description.key not in device and (
                 "binary_sensors" not in device
                 or description.key not in device["binary_sensors"]
             ):
@@ -109,6 +123,8 @@ class PlugwiseBinarySensorEntity(PlugwiseEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
+        if self.entity_description.key in self.device:
+            return self.device[self.entity_description.key]
         return self.device["binary_sensors"].get(self.entity_description.key)
 
     @property
