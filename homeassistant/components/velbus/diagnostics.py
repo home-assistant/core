@@ -53,8 +53,5 @@ def build_channels_diagnostics_info(
     """Build diagnostics info for all channels."""
     data: dict[str, Any] = {}
     for channel in channels.values():
-        data[str(channel.get_channel_number())] = {}
-        for key, value in channel.__dict__.items():
-            if key not in ["_module", "_writer", "_name_parts", "_on_status_update"]:
-                data[str(channel.get_channel_number())][key.replace("_", "", 1)] = value
+        data[str(channel.get_channel_number())] = channel.get_channel_info()
     return data
