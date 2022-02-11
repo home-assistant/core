@@ -1160,18 +1160,24 @@ async def test_setup_raises_ConfigEntryNotReady_if_no_connect_broker(hass, caplo
         assert "Failed to connect to MQTT server due to exception:" in caplog.text
 
 
-async def test_setup_uses_certificate_on_certificate_set_to_auto(hass):
-    """Test setup uses bundled certs when certificate is set to auto."""
+@pytest.mark.parametrize("insecure", [None, False, True])
+async def test_setup_uses_certificate_on_certificate_set_to_auto_and_insecure(
+    hass, insecure
+):
+    """Test setup uses bundled certs when certificate is set to auto and insecure."""
     calls = []
 
     def mock_tls_set(certificate, certfile=None, keyfile=None, tls_version=None):
         calls.append((certificate, certfile, keyfile, tls_version))
 
+    config_item_data = {mqtt.CONF_BROKER: "test-broker", "certificate": "auto"}
+    if insecure is not None:
+        config_item_data["tls_insecure"] = insecure
     with patch("paho.mqtt.client.Client") as mock_client:
         mock_client().tls_set = mock_tls_set
         entry = MockConfigEntry(
             domain=mqtt.DOMAIN,
-            data={mqtt.CONF_BROKER: "test-broker", "certificate": "auto"},
+            data=config_item_data,
         )
 
         assert await mqtt.async_setup_entry(hass, entry)
