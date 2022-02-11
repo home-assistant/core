@@ -162,8 +162,17 @@ def build_item_response(media_library, payload, get_thumbnail_url=None):
             payload["idstring"].split("/")[2:]
         )
 
+    try:
+        search_type = MEDIA_TYPES_TO_SONOS[payload["search_type"]]
+    except KeyError:
+        _LOGGER.debug(
+            "Unknown media type received when building item response: %s",
+            payload["search_type"],
+        )
+        return
+
     media = media_library.browse_by_idstring(
-        MEDIA_TYPES_TO_SONOS[payload["search_type"]],
+        search_type,
         payload["idstring"],
         full_album_art_uri=True,
         max_items=0,
@@ -371,11 +380,16 @@ def favorites_payload(favorites):
 
     group_types = {fav.reference.item_class for fav in favorites}
     for group_type in sorted(group_types):
-        media_content_type = SONOS_TYPES_MAPPING[group_type]
+        try:
+            media_content_type = SONOS_TYPES_MAPPING[group_type]
+            media_class = SONOS_TO_MEDIA_CLASSES[group_type]
+        except KeyError:
+            _LOGGER.debug("Unknown media type or class received %s", group_type)
+            continue
         children.append(
             BrowseMedia(
                 title=media_content_type.title(),
-                media_class=SONOS_TO_MEDIA_CLASSES[group_type],
+                media_class=media_class,
                 media_content_id=group_type,
                 media_content_type="favorites_folder",
                 can_play=False,

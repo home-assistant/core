@@ -81,8 +81,8 @@ class CPUSpeedSensor(SensorEntity):
 
         if info:
             self._attr_extra_state_attributes = {
-                ATTR_ARCH: info["arch_string_raw"],
-                ATTR_BRAND: info["brand_raw"],
+                ATTR_ARCH: info.get("arch_string_raw"),
+                ATTR_BRAND: info.get("brand_raw"),
             }
             if HZ_ADVERTISED in info:
                 self._attr_extra_state_attributes[ATTR_HZ] = round(
