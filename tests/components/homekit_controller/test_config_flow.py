@@ -141,6 +141,7 @@ def get_device_discovery_info(
     record = device.info
     result = zeroconf.ZeroconfServiceInfo(
         host=record["address"],
+        addresses=[record["address"]],
         hostname=record["name"],
         name=record["name"],
         port=record["port"],
