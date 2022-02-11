@@ -605,6 +605,10 @@ DHCP = [
         "macaddress": "265A4C*"
     },
     {
+        "domain": "unifiprotect",
+        "macaddress": "74ACB9*"
+    },
+    {
         "domain": "verisure",
         "macaddress": "0023C1*"
     },
