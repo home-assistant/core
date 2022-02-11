@@ -77,7 +77,6 @@ async def test_sensor_partial_info(
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    await async_setup_component(hass, "homeassistant", {})
 
     state = hass.states.get("sensor.cpu_speed")
     assert state
