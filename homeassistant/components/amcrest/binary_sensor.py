@@ -65,6 +65,10 @@ _MOTION_DETECTED_EVENT_CODE = "VideoMotion"
 
 _ONLINE_KEY = "online"
 
+_DOORBELL_KEY = "doorbell"
+_DOORBELL_NAME = "Doorbell Button"
+_DOORBELL_EVENT_CODE = "CallNoAnswered"
+
 BINARY_SENSORS: tuple[AmcrestSensorEntityDescription, ...] = (
     AmcrestSensorEntityDescription(
         key=_AUDIO_DETECTED_KEY,
@@ -110,6 +114,12 @@ BINARY_SENSORS: tuple[AmcrestSensorEntityDescription, ...] = (
         name="Online",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         should_poll=True,
+    ),
+    AmcrestSensorEntityDescription(
+        key=_DOORBELL_KEY,
+        name=_DOORBELL_NAME,
+        device_class=BinarySensorDeviceClass.MOTION,
+        event_code=_DOORBELL_EVENT_CODE,
     ),
 )
 BINARY_SENSOR_KEYS = [description.key for description in BINARY_SENSORS]
