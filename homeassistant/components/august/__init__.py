@@ -75,6 +75,7 @@ async def async_setup_august(
         hass.config_entries.async_update_entry(config_entry, data=config_data)
 
     await august_gateway.async_authenticate()
+    await august_gateway.async_refresh_access_token_if_needed()
 
     hass.data.setdefault(DOMAIN, {})
     data = hass.data[DOMAIN][config_entry.entry_id] = {
