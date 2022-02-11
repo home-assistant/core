@@ -1,48 +1,21 @@
 """The tests for SleepIQ sensor platform."""
-from unittest.mock import MagicMock
+from homeassistant.components.sensor import DOMAIN
+from homeassistant.helpers import entity_registry as er
 
-import homeassistant.components.sleepiq.sensor as sleepiq
-from homeassistant.setup import async_setup_component
-
-from tests.components.sleepiq.test_init import mock_responses
-
-CONFIG = {"username": "foo", "password": "bar"}
+from .conftest import setup_platform
 
 
-async def test_setup(hass, requests_mock):
+async def test_setup(hass, mock_aioresponse):
     """Test for successfully setting up the SleepIQ platform."""
-    mock_responses(requests_mock)
+    await setup_platform(hass, DOMAIN)
+    entity_registry = er.async_get(hass)
 
-    assert await async_setup_component(hass, "sleepiq", {"sleepiq": CONFIG})
+    assert len(entity_registry.entities) == 2
 
-    device_mock = MagicMock()
-    sleepiq.setup_platform(hass, CONFIG, device_mock, MagicMock())
-    devices = device_mock.call_args[0][0]
-    assert len(devices) == 2
+    entry = entity_registry.async_get("sensor.sleepnumber_ile_test1_sleepnumber")
+    assert entry.original_name == "SleepNumber ILE Test1 SleepNumber"
+    assert hass.states.get(entry.entity_id).state == "40"
 
-    left_side = devices[1]
-    left_side.hass = hass
-    assert left_side.name == "SleepNumber ILE Test1 SleepNumber"
-    assert left_side.state == 40
-
-    right_side = devices[0]
-    right_side.hass = hass
-    assert right_side.name == "SleepNumber ILE Test2 SleepNumber"
-    assert right_side.state == 80
-
-
-async def test_setup_single(hass, requests_mock):
-    """Test for successfully setting up the SleepIQ platform."""
-    mock_responses(requests_mock, single=True)
-
-    assert await async_setup_component(hass, "sleepiq", {"sleepiq": CONFIG})
-
-    device_mock = MagicMock()
-    sleepiq.setup_platform(hass, CONFIG, device_mock, MagicMock())
-    devices = device_mock.call_args[0][0]
-    assert len(devices) == 1
-
-    right_side = devices[0]
-    right_side.hass = hass
-    assert right_side.name == "SleepNumber ILE Test1 SleepNumber"
-    assert right_side.state == 40
+    entry = entity_registry.async_get("sensor.sleepnumber_ile_test2_sleepnumber")
+    assert entry.original_name == "SleepNumber ILE Test2 SleepNumber"
+    assert hass.states.get(entry.entity_id).state == "80"

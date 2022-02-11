@@ -1,45 +1,23 @@
 """The tests for SleepIQ binary sensor platform."""
-from unittest.mock import MagicMock
+from homeassistant.components.binary_sensor import DOMAIN
+from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from homeassistant.components.sleepiq import binary_sensor as sleepiq
-from homeassistant.setup import async_setup_component
-
-from tests.components.sleepiq.test_init import mock_responses
-
-CONFIG = {"username": "foo", "password": "bar"}
+from .conftest import setup_platform
 
 
-async def test_sensor_setup(hass, requests_mock):
-    """Test for successfully setting up the SleepIQ platform."""
-    mock_responses(requests_mock)
+async def test_setup_binary_sensor(hass: HomeAssistant, mock_aioresponse) -> None:
+    """Tests that the devices are registered in the entity registry."""
+    await setup_platform(hass, DOMAIN)
+    entity_registry = er.async_get(hass)
 
-    await async_setup_component(hass, "sleepiq", {"sleepiq": CONFIG})
+    assert len(entity_registry.entities) == 2
 
-    device_mock = MagicMock()
-    sleepiq.setup_platform(hass, CONFIG, device_mock, MagicMock())
-    devices = device_mock.call_args[0][0]
-    assert len(devices) == 2
+    entry = entity_registry.async_get("binary_sensor.sleepnumber_ile_test1_is_in_bed")
+    assert entry.unique_id == "-31-R-InBed"
+    assert hass.states.get(entry.entity_id).state == STATE_ON
 
-    left_side = devices[1]
-    assert left_side.name == "SleepNumber ILE Test1 Is In Bed"
-    assert left_side.state == "on"
-
-    right_side = devices[0]
-    assert right_side.name == "SleepNumber ILE Test2 Is In Bed"
-    assert right_side.state == "off"
-
-
-async def test_setup_single(hass, requests_mock):
-    """Test for successfully setting up the SleepIQ platform."""
-    mock_responses(requests_mock, single=True)
-
-    await async_setup_component(hass, "sleepiq", {"sleepiq": CONFIG})
-
-    device_mock = MagicMock()
-    sleepiq.setup_platform(hass, CONFIG, device_mock, MagicMock())
-    devices = device_mock.call_args[0][0]
-    assert len(devices) == 1
-
-    right_side = devices[0]
-    assert right_side.name == "SleepNumber ILE Test1 Is In Bed"
-    assert right_side.state == "on"
+    entry = entity_registry.async_get("binary_sensor.sleepnumber_ile_test2_is_in_bed")
+    assert entry.unique_id == "-31-L-InBed"
+    assert hass.states.get(entry.entity_id).state == STATE_OFF
