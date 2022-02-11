@@ -14,6 +14,7 @@ from homeassistant import config as hass_config
 from homeassistant.components import mqtt, websocket_api
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.mixins import MQTT_ENTITY_DEVICE_INFO_SCHEMA
+from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     EVENT_HOMEASSISTANT_STARTED,
@@ -1111,6 +1112,50 @@ async def test_setup_logs_error_if_no_connect_broker(hass, caplog):
         mock_client().connect = lambda *args: 1
         assert await mqtt.async_setup_entry(hass, entry)
         assert "Failed to connect to MQTT server:" in caplog.text
+
+
+async def test_connection_error(hass, caplog):
+    """Test for connection error handling."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+
+    with patch("paho.mqtt.client.Client") as mock_client:
+        mock_client().connect = lambda *args: 0
+        assert await mqtt.async_setup_entry(hass, entry)
+        await hass.async_block_till_done()
+        component = hass.data["mqtt"]
+        component._mqtt_on_connect(mock_client, None, None, 3)
+        assert "Unable to connect to the MQTT broker:" in caplog.text
+
+
+async def test_handle_mid_event(hass, caplog):
+    """Test handling of the mid event."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+
+    with patch("paho.mqtt.client.Client") as mock_client:
+        mock_client().connect = lambda *args: 0
+        assert await mqtt.async_setup_entry(hass, entry)
+        await hass.async_block_till_done()
+        mid = 123
+        component = hass.data["mqtt"]
+        component._mqtt_handle_mid(mid)
+        await hass.async_block_till_done()
+        assert mid in component._pending_operations
+        del component._pending_operations[mid]
+
+
+async def test_handle_message_callback(hass, caplog):
+    """Test for handling an incoming message callback."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+    msg = ReceiveMessage("some-topic", "test-payload", 0, False)
+    with patch("paho.mqtt.client.Client") as mock_client:
+        mock_client().connect = lambda *args: 0
+        assert await mqtt.async_setup_entry(hass, entry)
+        await hass.async_block_till_done()
+        await mqtt.async_subscribe(hass, "some-topic", None)
+        component = hass.data["mqtt"]
+        component._mqtt_handle_message(msg)
+        await hass.async_block_till_done()
+        assert "Received message on some-topic: test-payload" in caplog.text
 
 
 async def test_setup_override_configuration(hass, caplog, tmp_path):
