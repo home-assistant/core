@@ -62,6 +62,20 @@ class AzureDataExplorerClient:
 
         self.query_client.execute(self.database, query)
 
+    def ingest_data_inline(self, adx_events) -> None:
+        """Send data to Axure Data Explorer using the inline ingest."""
+
+        basequery = (
+            '.ingest inline into table %s with (format="json", ingestionMappingReference = "ha_json_mapping") <|'
+            % self.table
+        )
+
+        json_string = adx_events
+
+        query = f"{basequery} {json_string}"
+
+        self.query_client.execute(self.database, query)
+
     def ingest_data(self, adx_events) -> None:
         """Send data to Axure Data Explorer."""
 
