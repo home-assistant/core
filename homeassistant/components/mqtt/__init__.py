@@ -21,6 +21,7 @@ import certifi
 import jinja2
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -585,6 +586,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         conf = dict(conf)
         hass.data[DATA_MQTT_CONFIG] = conf
 
+    if not bool(hass.config_entries.async_entries(DOMAIN)):
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+                data={},
+            )
+        )
     return True
 
 

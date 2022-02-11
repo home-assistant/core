@@ -262,6 +262,7 @@ tests/components/enphase_envoy/* @gtdiehl
 homeassistant/components/entur_public_transport/* @hfurubotten
 homeassistant/components/environment_canada/* @gwww @michaeldavie
 tests/components/environment_canada/* @gwww @michaeldavie
+homeassistant/components/envisalink/* @ufodone
 homeassistant/components/ephember/* @ttroy50
 homeassistant/components/epson/* @pszafer
 tests/components/epson/* @pszafer

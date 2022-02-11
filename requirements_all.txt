@@ -764,7 +764,7 @@ google-cloud-pubsub==2.9.0
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.nest
-google-nest-sdm==1.7.0
+google-nest-sdm==1.7.1
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1052,7 +1052,7 @@ mitemp_bt==0.0.5
 moehlenhoff-alpha2==1.1.2
 
 # homeassistant.components.motion_blinds
-motionblinds==0.5.11
+motionblinds==0.5.12
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
@@ -1503,7 +1503,7 @@ pyeight==0.2.0
 pyemby==1.8
 
 # homeassistant.components.envisalink
-pyenvisalink==4.3
+pyenvisalink==4.4
 
 # homeassistant.components.ephember
 pyephember==0.3.1
@@ -2057,7 +2057,7 @@ pywemo==0.7.0
 pywilight==0.0.70
 
 # homeassistant.components.wiz
-pywizlight==0.5.5
+pywizlight==0.5.6
 
 # homeassistant.components.xeoma
 pyxeoma==1.4.1
@@ -2430,7 +2430,7 @@ vallox-websocket-api==2.9.0
 vehicle==0.3.1
 
 # homeassistant.components.velbus
-velbus-aio==2022.2.3
+velbus-aio==2022.2.4
 
 # homeassistant.components.venstar
 venstarcolortouch==0.15
@@ -2520,7 +2520,7 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.7
 
 # homeassistant.components.august
-yalexs==1.1.20
+yalexs==1.1.22
 
 # homeassistant.components.yeelight
 yeelight==0.7.9
