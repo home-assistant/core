@@ -5,8 +5,9 @@
             "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden"
         },
         "error": {
-            "bulb_time_out": "Es kann keine Verbindung zur Gl\u00fchbirne hergestellt werden. Vielleicht ist die Gl\u00fchbirne offline oder es wurde eine falsche IP/Host eingegeben. Bitte schalte das Licht ein und versuche es erneut!",
+            "bulb_time_out": "Es kann keine Verbindung zur Gl\u00fchbirne hergestellt werden. Vielleicht ist die Gl\u00fchbirne offline oder es wurde eine falsche IP eingegeben. Bitte schalte das Licht ein und versuche es erneut!",
             "cannot_connect": "Verbindung fehlgeschlagen",
+            "no_ip": "Keine g\u00fcltige IP-Adresse.",
             "no_wiz_light": "Die Gl\u00fchbirne kann nicht \u00fcber die Integration der WiZ-Plattform verbunden werden.",
             "unknown": "Unerwarteter Fehler"
         },
@@ -25,10 +26,10 @@
             },
             "user": {
                 "data": {
-                    "host": "Host",
+                    "host": "IP-Adresse",
                     "name": "Name"
                 },
-                "description": "Wenn du den Host leer l\u00e4sst, wird die Erkennung verwendet, um Ger\u00e4te zu finden."
+                "description": "Wenn du die IP-Adresse leer l\u00e4sst, wird die Erkennung verwendet, um Ger\u00e4te zu finden."
             }
         }
     }

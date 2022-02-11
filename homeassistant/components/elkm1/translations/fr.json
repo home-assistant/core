@@ -9,10 +9,30 @@
             "invalid_auth": "Authentification invalide",
             "unknown": "Erreur inattendue"
         },
+        "flow_title": "{mac_address} ({host})",
         "step": {
+            "discovered_connection": {
+                "data": {
+                    "password": "Mot de passe",
+                    "protocol": "Protocole",
+                    "username": "Nom d'utilisateur"
+                },
+                "description": "Connectez-vous au syst\u00e8me d\u00e9couvert : {mac_address} ({host})"
+            },
+            "manual_connection": {
+                "data": {
+                    "address": "L'adresse IP ou le domaine ou le port s\u00e9rie en cas de connexion via le port s\u00e9rie.",
+                    "password": "Mot de passe",
+                    "prefix": "Un pr\u00e9fixe unique (laissez vide si vous n'avez qu'un seul ElkM1).",
+                    "protocol": "Protocole",
+                    "temperature_unit": "L'unit\u00e9 de temp\u00e9rature utilis\u00e9e par ElkM1.",
+                    "username": "Nom d'utilisateur"
+                }
+            },
             "user": {
                 "data": {
                     "address": "L'adresse IP ou le domaine ou le port s\u00e9rie si vous vous connectez via s\u00e9rie.",
+                    "device": "Appareil",
                     "password": "Mot de passe",
                     "prefix": "Un pr\u00e9fixe unique (laissez vide si vous n'avez qu'un seul ElkM1).",
                     "protocol": "Protocole",
