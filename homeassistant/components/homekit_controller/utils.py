@@ -33,6 +33,8 @@ async def async_get_controller(hass: HomeAssistant) -> Controller:
         hass.data.pop(CONTROLLER, None)
         await controller.async_stop()
 
+    # Right now _async_stop_homekit_controller is only called on HA exiting
+    # So we don't have to worry about leaking a callback here.
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_homekit_controller)
 
     await controller.async_start()
