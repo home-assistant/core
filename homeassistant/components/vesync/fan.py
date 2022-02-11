@@ -20,6 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEV_TYPE_TO_HA = {
     "LV-PUR131S": "fan",
+    "Classic300S": "fan",
     "Core200S": "fan",
     "Core300S": "fan",
     "Core400S": "fan",
@@ -30,11 +31,13 @@ FAN_MODE_SLEEP = "sleep"
 
 PRESET_MODES = {
     "LV-PUR131S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
+    "Classic300S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
     "Core200S": [FAN_MODE_SLEEP],
     "Core300S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
     "Core400S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
 }
 SPEED_RANGE = (1, 3)  # off is not included
+MIST_RANGE = (1, 9)  # off is not included
 
 
 async def async_setup_entry(
@@ -81,6 +84,11 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         self.smartfan = fan
 
     @property
+    def is_fan(self):
+        """Return if this is a fan or humidifier."""
+        return hasattr(self.smartfan, "change_fan_speed")
+
+    @property
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_SET_SPEED
@@ -93,12 +101,20 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
             and (current_level := self.smartfan.fan_level) is not None
         ):
             return ranged_value_to_percentage(SPEED_RANGE, current_level)
+        if (
+            self.smartfan.details.get("mode", None) == "manual"
+            and (current_level := self.smartfan.details.get("mist_level", None))
+            is not None
+        ):
+            return ranged_value_to_percentage(MIST_RANGE, current_level)
         return None
 
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-        return int_states_in_range(SPEED_RANGE)
+        if self.is_fan:
+            return int_states_in_range(SPEED_RANGE)
+        return int_states_in_range(MIST_RANGE)
 
     @property
     def preset_modes(self):
@@ -108,8 +124,15 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
     @property
     def preset_mode(self):
         """Get the current preset mode."""
-        if self.smartfan.mode in (FAN_MODE_AUTO, FAN_MODE_SLEEP):
-            return self.smartfan.mode
+        if self.is_fan:
+            if self.smartfan.mode in (FAN_MODE_AUTO, FAN_MODE_SLEEP):
+                return self.smartfan.mode
+        else:
+            if (current_mode := self.smartfan.details.get("mode", None)) in (
+                FAN_MODE_AUTO,
+                FAN_MODE_SLEEP,
+            ):
+                return current_mode
         return None
 
     @property
@@ -140,8 +163,23 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         if hasattr(self.smartfan, "mode"):
             attr["mode"] = self.smartfan.mode
 
+        if self.smartfan.details.get("mode", None) is not None:
+            attr["mode"] = self.smartfan.details["mode"]
+
         if hasattr(self.smartfan, "filter_life"):
             attr["filter_life"] = self.smartfan.filter_life
+
+        if self.smartfan.details.get("mist_level", None) is not None:
+            attr["mist_level"] = self.smartfan.details["mist_level"]
+
+        if self.smartfan.details.get("humidity", None) is not None:
+            attr["humidity"] = self.smartfan.details["humidity"]
+
+        if self.smartfan.details.get("water_lacks", None) is not None:
+            attr["tank_empty"] = self.smartfan.details["water_lacks"]
+
+        if self.smartfan.details.get("water_tank_lifted", None) is not None:
+            attr["tank_removed"] = self.smartfan.details["water_tank_lifted"]
 
         return attr
 
@@ -154,11 +192,17 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         if not self.smartfan.is_on:
             self.smartfan.turn_on()
 
-        self.smartfan.manual_mode()
-        self.smartfan.change_fan_speed(
-            math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
-        )
-        self.schedule_update_ha_state()
+        if self.is_fan:
+            self.smartfan.manual_mode()
+            self.smartfan.change_fan_speed(
+                math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
+            )
+            self.schedule_update_ha_state()
+        else:
+            self.smartfan.set_mist_level(
+                math.ceil(percentage_to_ranged_value(MIST_RANGE, percentage))
+            )
+            self.schedule_update_ha_state()
 
     def set_preset_mode(self, preset_mode):
         """Set the preset mode of device."""
@@ -171,9 +215,15 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
             self.smartfan.turn_on()
 
         if preset_mode == FAN_MODE_AUTO:
-            self.smartfan.auto_mode()
+            if self.is_fan:
+                self.smartfan.auto_mode()
+            else:
+                self.smartfan.set_humidity_mode(FAN_MODE_AUTO)
         elif preset_mode == FAN_MODE_SLEEP:
-            self.smartfan.sleep_mode()
+            if self.is_fan:
+                self.smartfan.sleep_mode()
+            else:
+                self.smartfan.set_humidity_mode(FAN_MODE_SLEEP)
 
         self.schedule_update_ha_state()
 
