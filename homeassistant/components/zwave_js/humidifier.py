@@ -1,6 +1,7 @@
 """Representation of Z-Wave humidifiers."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from zwave_js_server.client import Client as ZwaveClient
@@ -12,7 +13,11 @@ from zwave_js_server.const.command_class.humidity_control import (
 )
 from zwave_js_server.model.value import Value as ZwaveValue
 
-from homeassistant.components.humidifier import HumidifierDeviceClass, HumidifierEntity
+from homeassistant.components.humidifier import (
+    HumidifierDeviceClass,
+    HumidifierEntity,
+    HumidifierEntityDescription,
+)
 from homeassistant.components.humidifier.const import (
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
@@ -26,6 +31,43 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
+
+
+@dataclass
+class ZwaveHumidifierEntityDescription(HumidifierEntityDescription):
+    """A class that describes the humidifier or dehumidifier entity."""
+
+    # The "on" control mode for this entity, e.g. HUMIDIFY for humidifier
+    on_mode: HumidityControlMode | None = None
+
+    # The "on" control mode for the inverse entity, e.g. DEHUMIDIFY for humidifier
+    inverse_mode: HumidityControlMode | None = None
+
+    # The setpoint type controlled by this entity
+    setpoint_type: HumidityControlSetpointType | None = None
+
+    # Suffix added to name and unique id
+    name_suffix: str | None = None
+
+
+HUMIDIFIER_ENTITY_DESCRIPTION = ZwaveHumidifierEntityDescription(
+    key="0",
+    device_class=HumidifierDeviceClass.HUMIDIFIER,
+    on_mode=HumidityControlMode.HUMIDIFY,
+    inverse_mode=HumidityControlMode.DEHUMIDIFY,
+    setpoint_type=HumidityControlSetpointType.HUMIDIFIER,
+    name_suffix="humidifier",
+)
+
+
+DEHUMIDIFIER_ENTITY_DESCRIPTION = ZwaveHumidifierEntityDescription(
+    key="1",
+    device_class=HumidifierDeviceClass.DEHUMIDIFIER,
+    on_mode=HumidityControlMode.DEHUMIDIFY,
+    inverse_mode=HumidityControlMode.HUMIDIFY,
+    setpoint_type=HumidityControlSetpointType.DEHUMIDIFIER,
+    name_suffix="dehumidifier",
+)
 
 
 async def async_setup_entry(
@@ -45,13 +87,21 @@ async def async_setup_entry(
             str(HumidityControlMode.HUMIDIFY.value)
             in info.primary_value.metadata.states
         ):
-            entities.append(ZWaveHumidifier(config_entry, client, info))
+            entities.append(
+                ZWaveHumidifier(
+                    config_entry, client, info, HUMIDIFIER_ENTITY_DESCRIPTION
+                )
+            )
 
         if (
             str(HumidityControlMode.DEHUMIDIFY.value)
             in info.primary_value.metadata.states
         ):
-            entities.append(ZWaveDehumidifier(config_entry, client, info))
+            entities.append(
+                ZWaveHumidifier(
+                    config_entry, client, info, DEHUMIDIFIER_ENTITY_DESCRIPTION
+                )
+            )
 
         async_add_entities(entities)
 
@@ -64,57 +114,62 @@ async def async_setup_entry(
     )
 
 
-class ZWaveBaseHumidifier(ZWaveBaseEntity, HumidifierEntity):
+class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
     """Representation of a Z-Wave Humidifier or Dehumidifier."""
 
+    entity_description: ZwaveHumidifierEntityDescription
     _current_mode: ZwaveValue
     _setpoint: ZwaveValue | None = None
-
-    _on_mode = HumidityControlMode
-    _inverse_mode = HumidityControlMode
-    _setpoint_type = HumidityControlSetpointType
 
     def __init__(
         self,
         config_entry: ConfigEntry,
         client: ZwaveClient,
         info: ZwaveDiscoveryInfo,
+        description: ZwaveHumidifierEntityDescription,
     ) -> None:
         """Initialize humidifier."""
         super().__init__(config_entry, client, info)
 
-        self._attr_name = f"{self._attr_name} {self.device_class}"
-        self._attr_unique_id = f"{self._attr_unique_id}_{self.device_class}"
+        self.entity_description = description
+
+        self._attr_name = f"{self._attr_name} {description.name_suffix}"
+        self._attr_unique_id = f"{self._attr_unique_id}_{description.name_suffix}"
 
         self._current_mode = self.info.primary_value
 
         self._setpoint = self.get_zwave_value(
             HUMIDITY_CONTROL_SETPOINT_PROPERTY,
             command_class=CommandClass.HUMIDITY_CONTROL_SETPOINT,
-            value_property_key=self._setpoint_type,
+            value_property_key=description.setpoint_type,
             add_to_watched_value_ids=True,
         )
 
         if not self._setpoint:
-            raise ValueError(f"{self._setpoint_type.name} setpoint is required")
+            raise ValueError(f"setpoint {description.setpoint_type} is required")
 
     @property
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return int(self._current_mode.value) in [
-            self._on_mode,
+            self.entity_description.on_mode,
             HumidityControlMode.AUTO,
         ]
 
     def _supports_inverse_mode(self) -> bool:
-        return str(self._inverse_mode.value) in self._current_mode.metadata.states
+        if self.entity_description.inverse_mode is None:
+            return False
+        return (
+            str(self.entity_description.inverse_mode.value)
+            in self._current_mode.metadata.states
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on device."""
         mode = int(self._current_mode.value)
         if mode == HumidityControlMode.OFF:
-            new_mode = self._on_mode
-        elif mode == self._inverse_mode:
+            new_mode = self.entity_description.on_mode
+        elif mode == self.entity_description.inverse_mode:
             new_mode = HumidityControlMode.AUTO
         else:
             return
@@ -126,10 +181,10 @@ class ZWaveBaseHumidifier(ZWaveBaseEntity, HumidifierEntity):
         mode = int(self._current_mode.value)
         if mode == HumidityControlMode.AUTO:
             if self._supports_inverse_mode():
-                new_mode = self._inverse_mode
+                new_mode = self.entity_description.inverse_mode
             else:
                 new_mode = HumidityControlMode.OFF
-        elif mode == self._on_mode:
+        elif mode == self.entity_description.on_mode:
             new_mode = HumidityControlMode.OFF
         else:
             return
@@ -162,21 +217,3 @@ class ZWaveBaseHumidifier(ZWaveBaseEntity, HumidifierEntity):
         if self._setpoint and self._setpoint.metadata.max:
             max_value = self._setpoint.metadata.max
         return max_value
-
-
-class ZWaveHumidifier(ZWaveBaseHumidifier):
-    """Representation of a Z-Wave Humidifier."""
-
-    _attr_device_class = HumidifierDeviceClass.HUMIDIFIER
-    _on_mode = HumidityControlMode.HUMIDIFY
-    _inverse_mode = HumidityControlMode.DEHUMIDIFY
-    _setpoint_type = HumidityControlSetpointType.HUMIDIFIER
-
-
-class ZWaveDehumidifier(ZWaveBaseHumidifier):
-    """Representation of a Z-Wave Dehumidifier."""
-
-    _attr_device_class = HumidifierDeviceClass.DEHUMIDIFIER
-    _on_mode = HumidityControlMode.DEHUMIDIFY
-    _inverse_mode = HumidityControlMode.HUMIDIFY
-    _setpoint_type = HumidityControlSetpointType.DEHUMIDIFIER
