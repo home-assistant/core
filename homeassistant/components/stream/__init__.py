@@ -338,7 +338,6 @@ class Stream:
                 )
             except StreamWorkerError as err:
                 self._logger.error("Error from stream worker: %s", str(err))
-                self._available = False
 
             stream_state.discontinuity()
             if not self.keepalive or self._thread_quit.is_set():
