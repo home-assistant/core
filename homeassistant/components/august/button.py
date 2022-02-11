@@ -28,7 +28,7 @@ class AugustWakeLockButton(AugustEntityMixin, ButtonEntity):
         """Initialize the lock wake button."""
         super().__init__(data, device)
         self._attr_name = f"{device.device_name} Wake"
-        self._attr_unique_id = f"{self._device_id:s}_wake"
+        self._attr_unique_id = f"{self._device_id}_wake"
 
     async def async_press(self, **kwargs):
         """Wake the device."""
