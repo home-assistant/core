@@ -1143,19 +1143,37 @@ async def test_handle_mid_event(hass, caplog):
         del component._pending_operations[mid]
 
 
-async def test_handle_message_callback(hass, caplog):
-    """Test for handling an incoming message callback."""
+async def test_mid_timeout(hass, caplog):
+    """Test handling of the mid event."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
-    msg = ReceiveMessage("some-topic", "test-payload", 0, False)
+
     with patch("paho.mqtt.client.Client") as mock_client:
         mock_client().connect = lambda *args: 0
         assert await mqtt.async_setup_entry(hass, entry)
         await hass.async_block_till_done()
-        await mqtt.async_subscribe(hass, "some-topic", None)
+        mid = 123
         component = hass.data["mqtt"]
-        component._mqtt_handle_message(msg)
+        component._mqtt_handle_mid(mid)
         await hass.async_block_till_done()
-        assert "Received message on some-topic: test-payload" in caplog.text
+        assert mid in component._pending_operations
+        del component._pending_operations[mid]
+
+
+async def test_handle_message_callback(hass, caplog, mqtt_mock):
+    """Test for handling an incoming message callback."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+    msg = ReceiveMessage("some-topic", b"test-payload", 0, False)
+    with patch("paho.mqtt.client.Client") as mock_client:
+        mock_client().connect = lambda *args: 0
+        assert await mqtt.async_setup_entry(hass, entry)
+        await hass.async_block_till_done()
+        await mqtt.async_subscribe(hass, "some-topic", lambda *args: 0)
+        component = hass.data["mqtt"]
+        component._mqtt_on_message(mock_client, None, msg)
+
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert "Received message on some-topic: b'test-payload'" in caplog.text
 
 
 async def test_setup_override_configuration(hass, caplog, tmp_path):
