@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from velbusaio.channels import Channel as VelbusChannel
 from velbusaio.module import Module as VelbusModule
 
 from homeassistant.config_entries import ConfigEntry
@@ -46,12 +47,14 @@ def build_module_diagnostics_info(module: VelbusModule) -> dict[str, Any]:
     return data
 
 
-def build_channels_diagnostics_info(channels: dict[str, Any]) -> dict[str, Any]:
+def build_channels_diagnostics_info(
+    channels: dict[str, VelbusChannel]
+) -> dict[str, Any]:
     """Build diagnostics info for all channels."""
     data: dict[str, Any] = {}
     for channel in channels.values():
-        data[channel.get_channel_number()] = {}
+        data[str(channel.get_channel_number())] = {}
         for key, value in channel.__dict__.items():
             if key not in ["_module", "_writer", "_name_parts", "_on_status_update"]:
-                data[channel.get_channel_number()][key.replace("_", "", 1)] = value
+                data[str(channel.get_channel_number())][key.replace("_", "", 1)] = value
     return data
