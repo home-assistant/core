@@ -44,8 +44,7 @@ class SIABaseEntity(RestoreEntity):
         zone: int | None,
         ping_interval: int,
         entity_description: SIAEntityDescription,
-        unique_id: str,
-        name: str,
+        unique_id_and_name: tuple[str, str],
     ) -> None:
         """Create SIABaseEntity object."""
         self.port = port
@@ -53,11 +52,11 @@ class SIABaseEntity(RestoreEntity):
         self.zone = zone
         self.ping_interval = ping_interval
         self.entity_description = entity_description
-        self._attr_unique_id = unique_id
-        self._attr_name = name
+        self._attr_unique_id = unique_id_and_name[0]
+        self._attr_name = unique_id_and_name[1]
         self._attr_device_info = DeviceInfo(
-            name=name,
-            identifiers={(DOMAIN, unique_id)},
+            name=unique_id_and_name[1],
+            identifiers={(DOMAIN, unique_id_and_name[0])},
             via_device=(DOMAIN, f"{port}_{account}"),
         )
 

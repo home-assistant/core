@@ -30,11 +30,11 @@ from .const import (
     CONF_PING_INTERVAL,
     CONF_ZONES,
     KEY_ALARM,
+    KEY_ALARM_NAME,
     PREVIOUS_STATE,
-    SIA_NAME_FORMAT,
-    SIA_UNIQUE_ID_FORMAT_ALARM,
 )
 from .sia_entity_base import SIABaseEntity, SIAEntityDescription
+from .utils import get_unique_id_and_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,11 +91,12 @@ async def async_setup_entry(
             zone=zone,
             ping_interval=account_data[CONF_PING_INTERVAL],
             entity_description=ENTITY_DESCRIPTION_ALARM,
-            unique_id=SIA_UNIQUE_ID_FORMAT_ALARM.format(
-                entry.entry_id, account_data[CONF_ACCOUNT], zone
-            ),
-            name=SIA_NAME_FORMAT.format(
-                entry.data[CONF_PORT], account_data[CONF_ACCOUNT], zone, "alarm"
+            unique_id_and_name=get_unique_id_and_name(
+                entry.entry_id,
+                entry.data[CONF_PORT],
+                account_data[CONF_ACCOUNT],
+                zone,
+                KEY_ALARM_NAME,
             ),
         )
         for account_data in entry.data[CONF_ACCOUNTS]
@@ -119,8 +120,7 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
         zone: int | None,
         ping_interval: int,
         entity_description: SIAAlarmControlPanelEntityDescription,
-        unique_id: str,
-        name: str,
+        unique_id_and_name: tuple[str, str],
     ) -> None:
         """Create SIAAlarmControlPanel object."""
         super().__init__(
@@ -129,8 +129,7 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
             zone,
             ping_interval,
             entity_description,
-            unique_id,
-            name,
+            unique_id_and_name,
         )
 
         self._attr_state: StateType = None

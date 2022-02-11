@@ -28,11 +28,9 @@ from .const import (
     KEY_POWER,
     KEY_SMOKE,
     SIA_HUB_ZONE,
-    SIA_NAME_FORMAT,
-    SIA_NAME_FORMAT_HUB,
-    SIA_UNIQUE_ID_FORMAT_BINARY,
 )
 from .sia_entity_base import SIABaseEntity, SIAEntityDescription
+from .utils import get_unique_id_and_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,15 +98,11 @@ def generate_binary_sensors(entry) -> Iterable[SIABinarySensor]:
             zone=SIA_HUB_ZONE,
             ping_interval=account_data[CONF_PING_INTERVAL],
             entity_description=ENTITY_DESCRIPTION_CONNECTIVITY,
-            unique_id=SIA_UNIQUE_ID_FORMAT_BINARY.format(
+            unique_id_and_name=get_unique_id_and_name(
                 entry.entry_id,
-                account_data[CONF_ACCOUNT],
-                SIA_HUB_ZONE,
-                ENTITY_DESCRIPTION_CONNECTIVITY.key,
-            ),
-            name=SIA_NAME_FORMAT_HUB.format(
                 entry.data[CONF_PORT],
                 account_data[CONF_ACCOUNT],
+                SIA_HUB_ZONE,
                 ENTITY_DESCRIPTION_CONNECTIVITY.key,
             ),
         )
@@ -118,15 +112,11 @@ def generate_binary_sensors(entry) -> Iterable[SIABinarySensor]:
             zone=SIA_HUB_ZONE,
             ping_interval=account_data[CONF_PING_INTERVAL],
             entity_description=ENTITY_DESCRIPTION_POWER,
-            unique_id=SIA_UNIQUE_ID_FORMAT_BINARY.format(
+            unique_id_and_name=get_unique_id_and_name(
                 entry.entry_id,
-                account_data[CONF_ACCOUNT],
-                SIA_HUB_ZONE,
-                ENTITY_DESCRIPTION_POWER.key,
-            ),
-            name=SIA_NAME_FORMAT_HUB.format(
                 entry.data[CONF_PORT],
                 account_data[CONF_ACCOUNT],
+                SIA_HUB_ZONE,
                 ENTITY_DESCRIPTION_POWER.key,
             ),
         )
@@ -138,13 +128,8 @@ def generate_binary_sensors(entry) -> Iterable[SIABinarySensor]:
                 zone=zone,
                 ping_interval=account_data[CONF_PING_INTERVAL],
                 entity_description=ENTITY_DESCRIPTION_SMOKE,
-                unique_id=SIA_UNIQUE_ID_FORMAT_BINARY.format(
+                unique_id_and_name=get_unique_id_and_name(
                     entry.entry_id,
-                    account_data[CONF_ACCOUNT],
-                    zone,
-                    ENTITY_DESCRIPTION_SMOKE.key,
-                ),
-                name=SIA_NAME_FORMAT.format(
                     entry.data[CONF_PORT],
                     account_data[CONF_ACCOUNT],
                     zone,
@@ -157,13 +142,8 @@ def generate_binary_sensors(entry) -> Iterable[SIABinarySensor]:
                 zone=zone,
                 ping_interval=account_data[CONF_PING_INTERVAL],
                 entity_description=ENTITY_DESCRIPTION_MOISTURE,
-                unique_id=SIA_UNIQUE_ID_FORMAT_BINARY.format(
+                unique_id_and_name=get_unique_id_and_name(
                     entry.entry_id,
-                    account_data[CONF_ACCOUNT],
-                    zone,
-                    ENTITY_DESCRIPTION_MOISTURE.key,
-                ),
-                name=SIA_NAME_FORMAT.format(
                     entry.data[CONF_PORT],
                     account_data[CONF_ACCOUNT],
                     zone,
