@@ -1143,20 +1143,15 @@ async def test_handle_mid_event(hass, caplog):
         del component._pending_operations[mid]
 
 
-async def test_mid_timeout(hass, caplog):
-    """Test handling of the mid event."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+async def test_timeout(hass, mqtt_mock, caplog):
+    """Test time out."""
 
-    with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client().connect = lambda *args: 0
-        assert await mqtt.async_setup_entry(hass, entry)
-        await hass.async_block_till_done()
-        mid = 123
-        component = hass.data["mqtt"]
-        component._mqtt_handle_mid(mid)
-        await hass.async_block_till_done()
-        assert mid in component._pending_operations
-        del component._pending_operations[mid]
+    with patch("asyncio.wait_for", side_effect=asyncio.TimeoutError):
+        await mqtt.async_publish(
+            hass, "some-topic", b"test-payload", qos=0, retain=False, encoding=None
+        )
+    await hass.async_block_till_done()
+    assert "No ACK from MQTT server in 10 seconds" in caplog.text
 
 
 async def test_handle_message_callback(hass, caplog):
