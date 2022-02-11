@@ -378,9 +378,12 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         current = self.data.client.current_playback()
         self._currently_playing = current or {}
 
-        self._playlist = None
         context = self._currently_playing.get("context")
-        if context is not None and context["type"] == MEDIA_TYPE_PLAYLIST:
+        if (
+            context is not None
+            and context["type"] == MEDIA_TYPE_PLAYLIST
+            and (self._playlist is None or self._playlist["uri"] != context["uri"])
+        ):
             self._playlist = self.data.client.playlist(current["context"]["uri"])
 
         devices = self.data.client.devices() or {}
