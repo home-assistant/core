@@ -174,7 +174,9 @@ async def setup_platform(hass):
     """Load the platform but with a fake Controller API."""
     config = {"discovery": {}}
 
-    with mock.patch("aiohomekit.Controller") as controller:
+    with mock.patch(
+        "homeassistant.components.homekit_controller.utils.Controller"
+    ) as controller:
         fake_controller = controller.return_value = FakeController()
         await async_setup_component(hass, DOMAIN, config)
 
