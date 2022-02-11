@@ -48,19 +48,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         scenes = await bulb.getSupportedScenes()
         await bulb.getMac()
-        # ValueError gets thrown if the bulb type
-        # cannot be determined on the first try.
-        # This is likely because way the library
-        # processes responses and can be cleaned up
-        # in the future.
-    except WizLightNotKnownBulb:
-        # This is only thrown on IndexError when the
-        # bulb responds with invalid data? It may
-        # not actually be possible anymore
-        _LOGGER.warning("The WiZ bulb type could not be determined for %s", ip_address)
-        return False
-    except (ValueError, *WIZ_EXCEPTIONS) as err:
-        raise ConfigEntryNotReady from err
+    except (WizLightNotKnownBulb, *WIZ_EXCEPTIONS) as err:
+        raise ConfigEntryNotReady(f"{ip_address}: {err}") from err
 
     async def _async_update() -> None:
         """Update the WiZ device."""
