@@ -1,5 +1,4 @@
 """Support for SleepIQ from SleepNumber."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -83,7 +82,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await gateway.init_beds()
-        await gateway.fetch_bed_statuses()
     except SleepIQTimeoutException as err:
         raise ConfigEntryNotReady(
             str(err) or "Timed out during initialization"
@@ -98,10 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_method=gateway.fetch_bed_statuses,
         update_interval=MIN_TIME_BETWEEN_UPDATES,
     )
-    # Start out as unavailable so we do not report 0 data
-    # until the update happens
-    status_coordinator.last_update_success = False
-    asyncio.create_task(status_coordinator.async_request_refresh())
+    await status_coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         SLEEPIQ_DATA: gateway,

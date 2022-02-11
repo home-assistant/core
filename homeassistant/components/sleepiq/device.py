@@ -33,5 +33,4 @@ class SleepNumberCoordinatorEntity(CoordinatorEntity, SleepNumberEntity):
     def __init__(self, bed, status_coordinator=None):
         """Initialize the SleepIQ Entity."""
         super().__init__(status_coordinator)
-        self._attr_should_poll = False
         self._bed = bed
