@@ -68,6 +68,10 @@ DHCP = [
         "macaddress": "B4430D*"
     },
     {
+        "domain": "elkm1",
+        "macaddress": "00409D*"
+    },
+    {
         "domain": "emonitor",
         "hostname": "emonitor*",
         "macaddress": "0090C2*"
@@ -618,7 +622,7 @@ DHCP = [
     },
     {
         "domain": "wiz",
-        "hostname": "wiz_[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]"
+        "hostname": "wiz_*"
     },
     {
         "domain": "yeelight",

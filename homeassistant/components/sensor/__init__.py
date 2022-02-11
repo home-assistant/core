@@ -52,7 +52,9 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_STATE_CLASS  # noqa: F401
 
@@ -447,3 +449,62 @@ class SensorEntity(Entity):
             return f"<Entity {self.name}>"
 
         return super().__repr__()
+
+
+@dataclass
+class SensorExtraStoredData(ExtraStoredData):
+    """Object to hold extra stored data."""
+
+    native_value: StateType | date | datetime
+    native_unit_of_measurement: str | None
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the sensor data."""
+        native_value: StateType | date | datetime | dict[str, str] = self.native_value
+        if isinstance(native_value, (date, datetime)):
+            native_value = {
+                "__type": str(type(native_value)),
+                "isoformat": native_value.isoformat(),
+            }
+        return {
+            "native_value": native_value,
+            "native_unit_of_measurement": self.native_unit_of_measurement,
+        }
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> SensorExtraStoredData | None:
+        """Initialize a stored sensor state from a dict."""
+        try:
+            native_value = restored["native_value"]
+            native_unit_of_measurement = restored["native_unit_of_measurement"]
+        except KeyError:
+            return None
+        try:
+            type_ = native_value["__type"]
+            if type_ == "<class 'datetime.datetime'>":
+                native_value = dt_util.parse_datetime(native_value["isoformat"])
+            elif type_ == "<class 'datetime.date'>":
+                native_value = dt_util.parse_date(native_value["isoformat"])
+        except TypeError:
+            # native_value is not a dict
+            pass
+        except KeyError:
+            # native_value is a dict, but does not have all values
+            return None
+
+        return cls(native_value, native_unit_of_measurement)
+
+
+class RestoreSensor(SensorEntity, RestoreEntity):
+    """Mixin class for restoring previous sensor state."""
+
+    @property
+    def extra_restore_state_data(self) -> SensorExtraStoredData:
+        """Return sensor specific state data to be restored."""
+        return SensorExtraStoredData(self.native_value, self.native_unit_of_measurement)
+
+    async def async_get_last_sensor_data(self) -> SensorExtraStoredData | None:
+        """Restore native_value and native_unit_of_measurement."""
+        if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
+            return None
+        return SensorExtraStoredData.from_dict(restored_last_extra_data.as_dict())

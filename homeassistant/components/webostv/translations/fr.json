@@ -36,7 +36,9 @@
             "init": {
                 "data": {
                     "sources": "Liste des sources"
-                }
+                },
+                "description": "S\u00e9lectionnez les sources activ\u00e9es",
+                "title": "Options pour webOS Smart TV"
             }
         }
     }

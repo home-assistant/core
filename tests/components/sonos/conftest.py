@@ -3,6 +3,7 @@ from copy import copy
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from soco import SoCo
 
 from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
@@ -82,7 +83,9 @@ def config_entry_fixture():
 
 
 @pytest.fixture(name="soco")
-def soco_fixture(music_library, speaker_info, battery_info, alarm_clock):
+def soco_fixture(
+    music_library, speaker_info, current_track_info_empty, battery_info, alarm_clock
+):
     """Create a mock soco SoCo fixture."""
     with patch("homeassistant.components.sonos.SoCo", autospec=True) as mock, patch(
         "socket.gethostbyname", return_value="192.168.42.2"
@@ -92,6 +95,8 @@ def soco_fixture(music_library, speaker_info, battery_info, alarm_clock):
         mock_soco.uid = "RINCON_test"
         mock_soco.play_mode = "NORMAL"
         mock_soco.music_library = music_library
+        mock_soco.get_current_track_info.return_value = current_track_info_empty
+        mock_soco.music_source_from_uri = SoCo.music_source_from_uri
         mock_soco.get_speaker_info.return_value = speaker_info
         mock_soco.avTransport = SonosMockService("AVTransport")
         mock_soco.renderingControl = SonosMockService("RenderingControl")
@@ -216,6 +221,22 @@ def speaker_info_fixture():
     }
 
 
+@pytest.fixture(name="current_track_info_empty")
+def current_track_info_empty_fixture():
+    """Create current_track_info_empty fixture."""
+    return {
+        "title": "",
+        "artist": "",
+        "album": "",
+        "album_art": "",
+        "position": "NOT_IMPLEMENTED",
+        "playlist_position": "1",
+        "duration": "NOT_IMPLEMENTED",
+        "uri": "",
+        "metadata": "NOT_IMPLEMENTED",
+    }
+
+
 @pytest.fixture(name="battery_info")
 def battery_info_fixture():
     """Create battery_info fixture."""
@@ -252,6 +273,61 @@ def alarm_event_fixture(soco):
     }
 
     return SonosMockEvent(soco, soco.alarmClock, variables)
+
+
+@pytest.fixture(name="no_media_event")
+def no_media_event_fixture(soco):
+    """Create no_media_event_fixture."""
+    variables = {
+        "current_crossfade_mode": "0",
+        "current_play_mode": "NORMAL",
+        "current_section": "0",
+        "current_track_uri": "",
+        "enqueued_transport_uri": "",
+        "enqueued_transport_uri_meta_data": "",
+        "transport_state": "STOPPED",
+    }
+    return SonosMockEvent(soco, soco.avTransport, variables)
+
+
+@pytest.fixture(name="tv_event")
+def tv_event_fixture(soco):
+    """Create alarm_event fixture."""
+    variables = {
+        "transport_state": "PLAYING",
+        "current_play_mode": "NORMAL",
+        "current_crossfade_mode": "0",
+        "number_of_tracks": "1",
+        "current_track": "1",
+        "current_section": "0",
+        "current_track_uri": f"x-sonos-htastream:{soco.uid}:spdif",
+        "current_track_duration": "",
+        "current_track_meta_data": {
+            "title": " ",
+            "parent_id": "-1",
+            "item_id": "-1",
+            "restricted": True,
+            "resources": [],
+            "desc": None,
+        },
+        "next_track_uri": "",
+        "next_track_meta_data": "",
+        "enqueued_transport_uri": "",
+        "enqueued_transport_uri_meta_data": "",
+        "playback_storage_medium": "NETWORK",
+        "av_transport_uri": f"x-sonos-htastream:{soco.uid}:spdif",
+        "av_transport_uri_meta_data": {
+            "title": soco.uid,
+            "parent_id": "0",
+            "item_id": "spdif-input",
+            "restricted": False,
+            "resources": [],
+            "desc": None,
+        },
+        "current_transport_actions": "Set, Play",
+        "current_valid_play_modes": "",
+    }
+    return SonosMockEvent(soco, soco.avTransport, variables)
 
 
 @pytest.fixture(autouse=True)

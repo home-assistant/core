@@ -26,14 +26,14 @@ TEST_BAD_SERIALIED = "THIS IS NOT JSON\n"
 TMP_DIR = None
 
 
-def setup():
-    """Set up for tests."""
+@pytest.fixture(autouse=True)
+def setup_and_teardown():
+    """Clean up after tests."""
     global TMP_DIR
     TMP_DIR = mkdtemp()
 
+    yield
 
-def teardown():
-    """Clean up after tests."""
     for fname in os.listdir(TMP_DIR):
         os.remove(os.path.join(TMP_DIR, fname))
     os.rmdir(TMP_DIR)

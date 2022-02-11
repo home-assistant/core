@@ -194,7 +194,13 @@ async def test_reauthentication(
     old_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_REAUTH}, data=old_entry.data
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "unique_id": old_entry.unique_id,
+            "entry_id": old_entry.entry_id,
+        },
+        data=old_entry.data,
     )
 
     flows = hass.config_entries.flow.async_progress()
@@ -261,7 +267,13 @@ async def test_reauth_account_mismatch(
     old_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_REAUTH}, data=old_entry.data
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "unique_id": old_entry.unique_id,
+            "entry_id": old_entry.entry_id,
+        },
+        data=old_entry.data,
     )
 
     flows = hass.config_entries.flow.async_progress()
@@ -294,3 +306,13 @@ async def test_reauth_account_mismatch(
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "reauth_account_mismatch"
+
+
+async def test_abort_if_no_reauth_entry(hass):
+    """Check flow aborts when no entry is known when entring reauth confirmation."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "reauth_confirm"}
+    )
+
+    assert result.get("type") == data_entry_flow.RESULT_TYPE_ABORT
+    assert result.get("reason") == "reauth_account_mismatch"

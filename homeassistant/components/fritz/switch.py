@@ -81,16 +81,12 @@ def port_entities_list(
 
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_PORTFORWARD)
     entities_list: list[FritzBoxPortSwitch] = []
-    connection_type = avm_wrapper.get_default_connection()
-    if not connection_type:
+    if not avm_wrapper.device_conn_type:
         _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_PORTFORWARD)
         return []
 
-    # Return NewDefaultConnectionService sample: "1.WANPPPConnection.1"
-    con_type: str = connection_type["NewDefaultConnectionService"][2:][:-2]
-
     # Query port forwardings and setup a switch for each forward for the current device
-    resp = avm_wrapper.get_num_port_mapping(con_type)
+    resp = avm_wrapper.get_num_port_mapping(avm_wrapper.device_conn_type)
     if not resp:
         _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
         return []
@@ -107,7 +103,7 @@ def port_entities_list(
 
     for i in range(port_forwards_count):
 
-        portmap = avm_wrapper.get_port_mapping(con_type, i)
+        portmap = avm_wrapper.get_port_mapping(avm_wrapper.device_conn_type, i)
         if not portmap:
             _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
             continue
@@ -133,7 +129,7 @@ def port_entities_list(
                     portmap,
                     port_name,
                     i,
-                    con_type,
+                    avm_wrapper.device_conn_type,
                 )
             )
 

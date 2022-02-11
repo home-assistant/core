@@ -59,6 +59,8 @@ from ..const import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
+    CONF_STATE_VALUE_TEMPLATE,
+    PAYLOAD_NONE,
 )
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
@@ -97,7 +99,6 @@ CONF_RGBWW_COMMAND_TEMPLATE = "rgbww_command_template"
 CONF_RGBWW_COMMAND_TOPIC = "rgbww_command_topic"
 CONF_RGBWW_STATE_TOPIC = "rgbww_state_topic"
 CONF_RGBWW_VALUE_TEMPLATE = "rgbww_value_template"
-CONF_STATE_VALUE_TEMPLATE = "state_value_template"
 CONF_XY_COMMAND_TOPIC = "xy_command_topic"
 CONF_XY_STATE_TOPIC = "xy_state_topic"
 CONF_XY_VALUE_TEMPLATE = "xy_value_template"
@@ -108,8 +109,6 @@ CONF_WHITE_VALUE_SCALE = "white_value_scale"
 CONF_WHITE_VALUE_STATE_TOPIC = "white_value_state_topic"
 CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 CONF_ON_COMMAND_TYPE = "on_command_type"
-
-PAYLOAD_NONE = "None"
 
 MQTT_LIGHT_ATTRIBUTES_BLOCKED = frozenset(
     {
