@@ -48,7 +48,8 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                     vol.Optional(CONF_CACHE_TTL, default=DEFAULT_CACHE_TTL): vol.All(
-                        vol.Coerce(int), vol.Range(min=0, max=24*60*60)),
+                        vol.Coerce(int), vol.Range(min=0, max=24 * 60 * 60)
+                    ),
                     vol.Optional(CONF_MONITORED_CONDITIONS, default=[]): cv.ensure_list,
                 },
                 verify_ebusd_config,
