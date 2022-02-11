@@ -199,7 +199,9 @@ async def test_humidifier(hass, client, climate_adc_t3000, integration):
             "label": "Humidity control mode",
             "states": {"0": "Off", "1": "Humidify", "2": "De-humidify", "3": "Auto"},
         },
-        "value": int(HumidityControlMode.HUMIDIFY),
+        "newValue": int(HumidityControlMode.HUMIDIFY),
+        "prevValue": int(HumidityControlMode.OFF),
+        "value": int(HumidityControlMode.AUTO),
     }
     assert args["value"] == int(HumidityControlMode.OFF)
 
@@ -252,6 +254,8 @@ async def test_humidifier(hass, client, climate_adc_t3000, integration):
             "label": "Humidity control mode",
             "states": {"0": "Off", "1": "Humidify", "2": "De-humidify", "3": "Auto"},
         },
+        "newValue": int(HumidityControlMode.AUTO),
+        "prevValue": int(HumidityControlMode.OFF),
         "value": int(HumidityControlMode.AUTO),
     }
     assert args["value"] == int(HumidityControlMode.DEHUMIDIFY)
@@ -429,7 +433,9 @@ async def test_humidifier(hass, client, climate_adc_t3000, integration):
             "label": "Humidity control mode",
             "states": {"0": "Off", "1": "Humidify", "2": "De-humidify", "3": "Auto"},
         },
-        "value": int(HumidityControlMode.DEHUMIDIFY),
+        "newValue": int(HumidityControlMode.DEHUMIDIFY),
+        "prevValue": int(HumidityControlMode.OFF),
+        "value": int(HumidityControlMode.AUTO),
     }
     assert args["value"] == int(HumidityControlMode.AUTO)
 
@@ -482,7 +488,9 @@ async def test_humidifier(hass, client, climate_adc_t3000, integration):
             "label": "Humidity control mode",
             "states": {"0": "Off", "1": "Humidify", "2": "De-humidify", "3": "Auto"},
         },
-        "value": int(HumidityControlMode.OFF),
+        "newValue": int(HumidityControlMode.OFF),
+        "prevValue": int(HumidityControlMode.AUTO),
+        "value": int(HumidityControlMode.AUTO),
     }
     assert args["value"] == int(HumidityControlMode.HUMIDIFY)
 
@@ -663,7 +671,9 @@ async def test_dehumidifier(hass, client, climate_adc_t3000, integration):
             "label": "Humidity control mode",
             "states": {"0": "Off", "1": "Humidify", "2": "De-humidify", "3": "Auto"},
         },
-        "value": int(HumidityControlMode.DEHUMIDIFY),
+        "newValue": int(HumidityControlMode.DEHUMIDIFY),
+        "prevValue": int(HumidityControlMode.OFF),
+        "value": int(HumidityControlMode.AUTO),
     }
     assert args["value"] == int(HumidityControlMode.OFF)
 
@@ -716,6 +726,8 @@ async def test_dehumidifier(hass, client, climate_adc_t3000, integration):
             "label": "Humidity control mode",
             "states": {"0": "Off", "1": "Humidify", "2": "De-humidify", "3": "Auto"},
         },
+        "newValue": int(HumidityControlMode.AUTO),
+        "prevValue": int(HumidityControlMode.OFF),
         "value": int(HumidityControlMode.AUTO),
     }
     assert args["value"] == int(HumidityControlMode.HUMIDIFY)
@@ -893,7 +905,9 @@ async def test_dehumidifier(hass, client, climate_adc_t3000, integration):
             "label": "Humidity control mode",
             "states": {"0": "Off", "1": "Humidify", "2": "De-humidify", "3": "Auto"},
         },
-        "value": int(HumidityControlMode.HUMIDIFY),
+        "newValue": int(HumidityControlMode.HUMIDIFY),
+        "prevValue": int(HumidityControlMode.OFF),
+        "value": int(HumidityControlMode.AUTO),
     }
     assert args["value"] == int(HumidityControlMode.AUTO)
 
@@ -946,6 +960,8 @@ async def test_dehumidifier(hass, client, climate_adc_t3000, integration):
             "label": "Humidity control mode",
             "states": {"0": "Off", "1": "Humidify", "2": "De-humidify", "3": "Auto"},
         },
-        "value": int(HumidityControlMode.OFF),
+        "newValue": int(HumidityControlMode.OFF),
+        "prevValue": int(HumidityControlMode.AUTO),
+        "value": int(HumidityControlMode.AUTO),
     }
     assert args["value"] == int(HumidityControlMode.DEHUMIDIFY)
