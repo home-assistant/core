@@ -25,7 +25,6 @@ DOMAIN = "envisalink"
 
 DATA_EVL = "envisalink"
 
-CONF_CREATE_ZONE_BYPASS_SWITCHES = "create_zone_bypass_switches"
 CONF_EVL_KEEPALIVE = "keepalive_interval"
 CONF_EVL_PORT = "port"
 CONF_EVL_VERSION = "evl_version"
@@ -43,7 +42,6 @@ CONF_ZONETYPE = "type"
 PANEL_TYPE_HONEYWELL = "HONEYWELL"
 PANEL_TYPE_DSC = "DSC"
 
-DEFAULT_CREATE_ZONE_BYPASS_SWITCHES = False
 DEFAULT_PORT = 4025
 DEFAULT_EVL_VERSION = 3
 DEFAULT_KEEPALIVE = 60
@@ -91,10 +89,6 @@ CONFIG_SCHEMA = vol.Schema(
                     CONF_ZONEDUMP_INTERVAL, default=DEFAULT_ZONEDUMP_INTERVAL
                 ): vol.Coerce(int),
                 vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
-                vol.Optional(
-                    CONF_CREATE_ZONE_BYPASS_SWITCHES,
-                    default=DEFAULT_CREATE_ZONE_BYPASS_SWITCHES,
-                ): vol.Coerce(bool),
             }
         )
     },
@@ -128,7 +122,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     keep_alive = conf.get(CONF_EVL_KEEPALIVE)
     zone_dump = conf.get(CONF_ZONEDUMP_INTERVAL)
     zones = conf.get(CONF_ZONES)
-    create_zone_bypass_switches = conf.get(CONF_CREATE_ZONE_BYPASS_SWITCHES)
     partitions = conf.get(CONF_PARTITIONS)
     connection_timeout = conf.get(CONF_TIMEOUT)
     sync_connect: asyncio.Future[bool] = asyncio.Future()
@@ -144,7 +137,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         keep_alive,
         hass.loop,
         connection_timeout,
-        create_zone_bypass_switches,
+        False,
     )
     hass.data[DATA_EVL] = controller
 
@@ -190,12 +183,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_dispatcher_send(hass, SIGNAL_PARTITION_UPDATE, data)
 
     @callback
-    def async_zone_bypass_update(data):
-        """Handle zone bypass status updates."""
-        _LOGGER.debug("Envisalink sent a zone bypass update event. Updating zones")
-        async_dispatcher_send(hass, SIGNAL_ZONE_BYPASS_UPDATE, data)
-
-    @callback
     def stop_envisalink(event):
         """Shutdown envisalink connection and thread on exit."""
         _LOGGER.info("Shutting down Envisalink")
@@ -214,7 +201,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     controller.callback_login_failure = async_login_fail_callback
     controller.callback_login_timeout = async_connection_fail_callback
     controller.callback_login_success = async_connection_success_callback
-    controller.callback_zone_bypass_update = async_zone_bypass_update
 
     _LOGGER.info("Start envisalink")
     controller.start()
@@ -248,13 +234,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 hass, Platform.BINARY_SENSOR, "envisalink", {CONF_ZONES: zones}, config
             )
         )
-        # Only DSC panels support getting zone bypass status
-        if panel_type == PANEL_TYPE_DSC and create_zone_bypass_switches:
-            hass.async_create_task(
-                async_load_platform(
-                    hass, "switch", "envisalink", {CONF_ZONES: zones}, config
-                )
-            )
+
+        # Zone bypass switches are not currently created due to an issue with some panels.
+        # These switches will be re-added in the future after some further refactoring of the integration.
 
     hass.services.async_register(
         DOMAIN, SERVICE_CUSTOM_FUNCTION, handle_custom_function, schema=SERVICE_SCHEMA
