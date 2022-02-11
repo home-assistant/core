@@ -1154,6 +1154,21 @@ async def test_timeout(hass, mqtt_mock, caplog):
     assert "No ACK from MQTT server in 10 seconds" in caplog.text
 
 
+async def test_mqtt_client_error_handling(hass, mqtt_mock, caplog):
+    """Test error MQTT client handling."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+
+    with patch("paho.mqtt.client.Client") as mock_client:
+        mock_client().connect = lambda *args: 0
+        patch("paho.mqtt.client.Client.publish", return_value=1)
+        assert await mqtt.async_setup_entry(hass, entry)
+        await hass.async_block_till_done()
+        with pytest.raises(HomeAssistantError):
+            await mqtt.async_publish(
+                hass, "some-topic", b"test-payload", qos=0, retain=False, encoding=None
+            )
+
+
 async def test_handle_message_callback(hass, caplog):
     """Test for handling an incoming message callback."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
