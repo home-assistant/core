@@ -83,7 +83,7 @@ async def _tune_channel(device: RokuDevice, roku: Roku, value: str) -> None:
         None,
     )
 
-    if _channel is not None and _channel.number is not None:
+    if _channel is not None:
         await roku.tune(_channel.number)
 
 
