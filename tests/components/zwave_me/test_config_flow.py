@@ -18,6 +18,7 @@ MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
     host="ws://192.168.1.14",
     hostname="mock_hostname",
     name="mock_name",
+    addresses=["192.168.1.14"],
     port=1234,
     properties={
         "deviceid": "aa:bb:cc:dd:ee:ff",
