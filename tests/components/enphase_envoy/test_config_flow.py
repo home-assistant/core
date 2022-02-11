@@ -212,6 +212,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="1.1.1.1",
+            addresses=["1.1.1.1"],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -312,6 +313,7 @@ async def test_zeroconf_serial_already_exists(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="1.1.1.1",
+            addresses=["1.1.1.1"],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -351,6 +353,7 @@ async def test_zeroconf_host_already_exists(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
                 host="1.1.1.1",
+                addresses=["1.1.1.1"],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
