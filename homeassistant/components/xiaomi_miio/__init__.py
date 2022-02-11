@@ -314,7 +314,7 @@ async def async_create_miio_device_and_coordinator(
         device = AirHumidifier(host, token, model=model)
         migrate = True
     # Airpurifiers and Airfresh
-    elif model in MODEL_AIRPURIFIER_3C:
+    elif model == MODEL_AIRPURIFIER_3C:
         device = AirPurifierMB4(host, token)
     elif model in MODELS_PURIFIER_MIOT:
         device = AirPurifierMiot(host, token)
@@ -322,9 +322,9 @@ async def async_create_miio_device_and_coordinator(
         device = AirPurifier(host, token)
     elif model.startswith("zhimi.airfresh."):
         device = AirFresh(host, token)
-    elif model in MODEL_AIRFRESH_A1:
+    elif model == MODEL_AIRFRESH_A1:
         device = AirFreshA1(host, token)
-    elif model in MODEL_AIRFRESH_T2017:
+    elif model == MODEL_AIRFRESH_T2017:
         device = AirFreshT2017(host, token)
     elif (
         model in MODELS_VACUUM
