@@ -1138,3 +1138,15 @@ async def test_deprecated_entity_category_str(hass, registry, caplog):
 
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
     assert " should be updated to use EntityCategory" in caplog.text
+
+
+async def test_invalid_entity_category_str(hass, registry, caplog):
+    """Test use of invalid entity category."""
+    entry = er.RegistryEntry(
+        "light",
+        "hue",
+        "5678",
+        entity_category="invalid",
+    )
+
+    assert entry.entity_category is None
