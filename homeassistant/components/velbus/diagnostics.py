@@ -20,7 +20,7 @@ async def async_get_config_entry_diagnostics(
     controller = hass.data[DOMAIN][entry.entry_id]["cntrl"]
     data: dict[str, Any] = {"entry": entry.as_dict(), "modules": []}
     for module in controller.get_modules().values():
-        data["modules"].append(build_module_diagnostics_info(module))
+        data["modules"].append(_build_module_diagnostics_info(module))
     return data
 
 
@@ -31,10 +31,10 @@ async def async_get_device_diagnostics(
     controller = hass.data[DOMAIN][entry.entry_id]["cntrl"]
     channel = list(next(iter(device.identifiers)))[1]
     modules = controller.get_modules()
-    return build_module_diagnostics_info(modules[int(channel)])
+    return _build_module_diagnostics_info(modules[int(channel)])
 
 
-def build_module_diagnostics_info(module: VelbusModule) -> dict[str, Any]:
+def _build_module_diagnostics_info(module: VelbusModule) -> dict[str, Any]:
     """Build per module diagnostics info."""
     data: dict[str, Any] = {
         "type": module.get_type_name(),
@@ -42,12 +42,12 @@ def build_module_diagnostics_info(module: VelbusModule) -> dict[str, Any]:
         "name": module.get_name(),
         "sw_version": module.get_sw_version(),
         "is_loaded": module.is_loaded(),
-        "channels": build_channels_diagnostics_info(module.get_channels()),
+        "channels": _build_channels_diagnostics_info(module.get_channels()),
     }
     return data
 
 
-def build_channels_diagnostics_info(
+def _build_channels_diagnostics_info(
     channels: dict[str, VelbusChannel]
 ) -> dict[str, Any]:
     """Build diagnostics info for all channels."""
