@@ -197,7 +197,6 @@ def build_item_response(
                 "type": MEDIA_TYPE_CHANNEL,
             }
             for channel in coordinator.data.channels
-            if channel.number is not None and channel.number != ""
         ]
         children_media_class = MEDIA_CLASS_CHANNEL
 
