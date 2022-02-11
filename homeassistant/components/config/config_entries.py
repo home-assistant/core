@@ -383,7 +383,7 @@ async def ignore_config_flow(hass, connection, msg):
 @websocket_api.async_response
 async def config_entry_remove_device(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
-):
+) -> None:
     """Remove config entry from a device."""
     try:
         result = await hass.config_entries.async_remove_device(

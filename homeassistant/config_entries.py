@@ -1203,7 +1203,7 @@ class ConfigEntries:
             raise HomeAssistantError from exc
 
         # Check with the config entry if it can be removed from the device
-        if not await component.async_config_entry_will_remove_from_device(
+        if not await component.async_remove_config_entry_device(
             self.hass, config_entry, device_entry
         ):
             return False
@@ -1665,4 +1665,4 @@ async def support_device_remove(hass: HomeAssistant, domain: str) -> bool:
     """Test if a domain supports removing devices."""
     integration = await loader.async_get_integration(hass, domain)
     component = integration.get_component()
-    return hasattr(component, "async_config_entry_will_remove_from_device")
+    return hasattr(component, "async_remove_config_entry_device")
