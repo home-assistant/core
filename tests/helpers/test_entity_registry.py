@@ -1124,3 +1124,15 @@ async def test_deprecated_disabled_by_str(hass, registry, caplog):
 
     assert entry.disabled_by is er.RegistryEntryDisabler.USER
     assert " str for entity registry disabled_by. This is deprecated " in caplog.text
+
+
+async def test_invalid_entity_category_str(hass, registry, caplog):
+    """Test use of invalid entity category."""
+    entry = er.RegistryEntry(
+        "light",
+        "hue",
+        "5678",
+        entity_category="invalid",
+    )
+
+    assert entry.entity_category is None
