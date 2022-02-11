@@ -764,7 +764,7 @@ google-cloud-pubsub==2.9.0
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.nest
-google-nest-sdm==1.7.0
+google-nest-sdm==1.7.1
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
