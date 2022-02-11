@@ -91,7 +91,7 @@ aio_georss_gdacs==0.5
 aioambient==2021.11.0
 
 # homeassistant.components.aseko_pool_live
-aioaseko==0.0.1
+aioaseko==0.0.2
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.4.0
@@ -119,7 +119,7 @@ aioeagle==1.1.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==10.8.1
+aioesphomeapi==10.8.2
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -492,7 +492,7 @@ google-api-python-client==1.6.4
 google-cloud-pubsub==2.9.0
 
 # homeassistant.components.nest
-google-nest-sdm==1.6.0
+google-nest-sdm==1.7.1
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -655,7 +655,7 @@ millheater==0.9.0
 minio==5.0.10
 
 # homeassistant.components.motion_blinds
-motionblinds==0.5.10
+motionblinds==0.5.12
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
@@ -814,7 +814,7 @@ pure-python-adb[async]==0.3.0.dev0
 pushbullet.py==0.11.0
 
 # homeassistant.components.pvoutput
-pvo==0.2.1
+pvo==0.2.2
 
 # homeassistant.components.canary
 py-canary==0.5.1
@@ -829,7 +829,7 @@ py-melissa-climate==2.1.4
 py-nightscout==1.2.2
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==1.0.5
+py-synologydsm-api==1.0.6
 
 # homeassistant.components.seventeentrack
 py17track==2021.12.2
@@ -1206,7 +1206,7 @@ python-kasa==0.4.1
 python-miio==0.5.9.2
 
 # homeassistant.components.nest
-python-nest==4.1.0
+python-nest==4.2.0
 
 # homeassistant.components.ozw
 python-openzwave-mqtt[mqtt-client]==1.4.0
@@ -1541,7 +1541,7 @@ xmltodict==0.12.0
 yalesmartalarmclient==0.3.7
 
 # homeassistant.components.august
-yalexs==1.1.20
+yalexs==1.1.22
 
 # homeassistant.components.yeelight
 yeelight==0.7.8
