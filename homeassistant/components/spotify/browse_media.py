@@ -4,9 +4,9 @@ from __future__ import annotations
 from functools import partial
 import logging
 from typing import Any
-from urllib.parse import parse_qs, urlparse
 
 from spotipy import Spotify
+import yarl
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.components.media_player import BrowseError, BrowseMedia
@@ -137,50 +137,42 @@ class UnknownMediaType(BrowseError):
     """Unknown media type."""
 
 
-async def async_get_media_browser_root_object(
-    hass: HomeAssistant,
-) -> list[BrowseMedia]:
-    """Create a Spotify root object for media browsing."""
-    return [
-        BrowseMedia(
-            title=f"Spotify {info[DATA_SPOTIFY_ME]['display_name']}",
-            media_class=MEDIA_CLASS_APP,
-            media_content_id=f"?ha_config_entry={config_entry_id}",
-            media_content_type="spotify",
-            thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
-            can_play=False,
-            can_expand=True,
-        )
-        for config_entry_id, info in hass.data[DOMAIN].items()
-    ]
-
-
-def _get_spotify_data_from_query(hass: HomeAssistant, query: str) -> dict | None:
-    """Get spotify data if specified in query, else None."""
-    config_entry_ids = parse_qs(query).get("ha_config_entry")
-    if config_entry_ids is None:
-        return None
-    if (info := hass.data[DOMAIN].get(config_entry_ids[0])) is None:
-        raise BrowseError("Invalid Spotify account specified")
-    return info
-
-
 async def async_browse_media(
     hass: HomeAssistant,
-    media_content_type: str,
-    media_content_id: str,
+    media_content_type: str | None,
+    media_content_id: str | None,
     *,
     can_play_artist: bool = True,
-) -> BrowseMedia:
+) -> BrowseMedia | list[BrowseMedia]:
     """Browse Spotify media."""
+    parsed_url = None
     info = None
-    parsed_url = urlparse(media_content_id)
-    query = None
 
-    # Check for config entry specifier, and remove query
-    if media_content_id and (query := parsed_url.query):
-        info = _get_spotify_data_from_query(hass, query)
-        media_content_id = parsed_url._replace(query="").geturl()
+    # Check if caller is requesting the root nodes
+    if media_content_type is None and media_content_id is None:
+        items = []
+        for config_entry_id, info in hass.data[DOMAIN].items():
+            config_entry = hass.config_entries.async_get_entry(config_entry_id)
+            if not config_entry:
+                raise BrowseError("No config entry found for spotify account")
+            items.append(
+                BrowseMedia(
+                    title=config_entry.title,
+                    media_class=MEDIA_CLASS_APP,
+                    media_content_id=f"spotify://{config_entry_id}",
+                    media_content_type="spotify",
+                    thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
+                    can_play=False,
+                    can_expand=True,
+                )
+            )
+
+    # Check for config entry specifier, and extract Spotify URI
+    if media_content_id and media_content_id.startswith(MEDIA_PLAYER_PREFIX):
+        parsed_url = yarl.URL(media_content_id)
+        if (info := hass.data[DOMAIN].get(parsed_url.host)) is None:
+            raise BrowseError("Invalid Spotify account specified")
+        media_content_id = parsed_url.name
 
     if info is None:
         if not (info := next(iter(hass.data[DOMAIN].values()), None)):
@@ -196,15 +188,13 @@ async def async_browse_media(
         can_play_artist=can_play_artist,
     )
 
-    # Add query back to the result
-    if query:
-        result.media_content_id = (
-            urlparse(result.media_content_id)._replace(query=query).geturl()
-        )
+    # Build new URLs with config entry specifyers
+    if parsed_url is not None:
+        result.media_content_id = str(parsed_url.with_name(result.media_content_id))
         if result.children:
             for child in result.children:
-                child.media_content_id = (
-                    urlparse(child.media_content_id)._replace(query=query).geturl()
+                child.media_content_id = str(
+                    parsed_url.with_name(child.media_content_id)
                 )
     return result
 
