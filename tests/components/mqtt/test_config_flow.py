@@ -79,6 +79,26 @@ async def test_user_connection_fails(hass, mock_try_connection, mock_finish_setu
     assert len(mock_finish_setup.mock_calls) == 0
 
 
+async def test_manual_config_starts_discovery_flow(
+    hass, mock_try_connection, mock_finish_setup, mqtt_client_mock
+):
+    """Test manual config initiates a discovery flow."""
+    # No flows in progress
+    assert hass.config_entries.flow.async_progress() == []
+
+    # MQTT config present in yaml config
+    assert await async_setup_component(hass, "mqtt", {"mqtt": {}})
+    await hass.async_block_till_done()
+    assert len(mock_finish_setup.mock_calls) == 0
+
+    # There should now be a discovery flow
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "integration_discovery"
+    assert flows[0]["handler"] == "mqtt"
+    assert flows[0]["step_id"] == "broker"
+
+
 async def test_manual_config_set(
     hass, mock_try_connection, mock_finish_setup, mqtt_client_mock
 ):
