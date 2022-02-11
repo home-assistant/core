@@ -132,14 +132,23 @@ async def test_reloadable_stops_on_invalid_config(hass, start_ha):
     "config",
     [
         {
-            "sensor": {
-                "platform": DOMAIN,
-                "name": "Test OID",
-                "unit_of_measurement": "kW",
-                "baseoid": "1.3.6.1.4.1.3808.1.1.1.4.2.5.0",
-                "host": "192.168.210.25",
-                "community": "public",
-            },
+            "sensor": [
+                {
+                    "platform": DOMAIN,
+                    "name": "Test OID",
+                    "unit_of_measurement": "kW",
+                    "baseoid": "1.3.6.1.4.1.3808.1.1.1.4.2.5.0",
+                    "host": "192.168.210.25",
+                    "community": "public",
+                },
+                {
+                    "platform": DOMAIN,
+                    "name": "Test OID 2",
+                    "unit_of_measurement": "kW",
+                    "host": "192.168.210.25",
+                    "community": "public",
+                },
+            ],
         },
     ],
 )
@@ -150,10 +159,10 @@ async def test_reloadable_stops_on_invalid_config(hass, start_ha):
 async def test_reloadable_handles_partial_valid_config(hass, start_ha):
     """Test we can still setup valid sensors when configuration.yaml has a broken entry."""
     assert hass.states.get("sensor.test_oid").state == "1"
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all("sensor")) == 1
 
     await async_yaml_patch_helper(hass, "sensor_configuration.yaml")
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all("sensor")) == 2
 
     assert hass.states.get("sensor.test_oid").state == "1"
     assert hass.states.get("sensor.other_oid").state == "2"
