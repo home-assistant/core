@@ -223,7 +223,10 @@ def convert_to_entity_category(
                 "EntityCategory instead" % (type(value).__name__, value),
                 error_if_core=False,
             )
-        return EntityCategory(value)
+        try:
+            return EntityCategory(value)
+        except ValueError:
+            return None
     return value
 
 
