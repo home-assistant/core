@@ -1159,7 +1159,7 @@ async def test_mid_timeout(hass, caplog):
         del component._pending_operations[mid]
 
 
-async def test_handle_message_callback(hass, caplog, mqtt_mock):
+async def test_handle_message_callback(hass, caplog):
     """Test for handling an incoming message callback."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
     msg = ReceiveMessage("some-topic", b"test-payload", 0, False)
