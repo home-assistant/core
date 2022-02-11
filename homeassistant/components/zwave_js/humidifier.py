@@ -159,8 +159,6 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
         ]
 
     def _supports_inverse_mode(self) -> bool:
-        if self.entity_description.inverse_mode is None:
-            return False
         return (
             str(self.entity_description.inverse_mode.value)
             in self._current_mode.metadata.states
