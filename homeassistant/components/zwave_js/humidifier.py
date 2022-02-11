@@ -34,39 +34,41 @@ from .entity import ZWaveBaseEntity
 
 
 @dataclass
-class ZwaveHumidifierEntityDescription(HumidifierEntityDescription):
-    """A class that describes the humidifier or dehumidifier entity."""
+class ZwaveHumidifierEntityDescriptionRequiredKeys:
+    """A class for humidifier entity description required keys."""
 
     # The "on" control mode for this entity, e.g. HUMIDIFY for humidifier
-    on_mode: HumidityControlMode | None = None
+    on_mode: HumidityControlMode
 
     # The "on" control mode for the inverse entity, e.g. DEHUMIDIFY for humidifier
-    inverse_mode: HumidityControlMode | None = None
+    inverse_mode: HumidityControlMode
 
     # The setpoint type controlled by this entity
-    setpoint_type: HumidityControlSetpointType | None = None
+    setpoint_type: HumidityControlSetpointType
 
-    # Suffix added to name and unique id
-    name_suffix: str | None = None
+
+@dataclass
+class ZwaveHumidifierEntityDescription(
+    HumidifierEntityDescription, ZwaveHumidifierEntityDescriptionRequiredKeys
+):
+    """A class that describes the humidifier or dehumidifier entity."""
 
 
 HUMIDIFIER_ENTITY_DESCRIPTION = ZwaveHumidifierEntityDescription(
-    key="0",
+    key="humidifier",
     device_class=HumidifierDeviceClass.HUMIDIFIER,
     on_mode=HumidityControlMode.HUMIDIFY,
     inverse_mode=HumidityControlMode.DEHUMIDIFY,
     setpoint_type=HumidityControlSetpointType.HUMIDIFIER,
-    name_suffix="humidifier",
 )
 
 
 DEHUMIDIFIER_ENTITY_DESCRIPTION = ZwaveHumidifierEntityDescription(
-    key="1",
+    key="dehumidifier",
     device_class=HumidifierDeviceClass.DEHUMIDIFIER,
     on_mode=HumidityControlMode.DEHUMIDIFY,
     inverse_mode=HumidityControlMode.HUMIDIFY,
     setpoint_type=HumidityControlSetpointType.DEHUMIDIFIER,
-    name_suffix="dehumidifier",
 )
 
 
@@ -133,8 +135,8 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
 
         self.entity_description = description
 
-        self._attr_name = f"{self._attr_name} {description.name_suffix}"
-        self._attr_unique_id = f"{self._attr_unique_id}_{description.name_suffix}"
+        self._attr_name = f"{self._attr_name} {description.key}"
+        self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
 
         self._current_mode = self.info.primary_value
 
