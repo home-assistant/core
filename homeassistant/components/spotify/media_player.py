@@ -62,6 +62,7 @@ from homeassistant.util.dt import utc_from_timestamp
 
 from .const import (
     DATA_SPOTIFY_CLIENT,
+    DATA_SPOTIFY_DEVICES,
     DATA_SPOTIFY_ME,
     DATA_SPOTIFY_SESSION,
     DOMAIN,
@@ -269,7 +270,6 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         )
 
         self._currently_playing: dict | None = {}
-        self._devices: list[dict] | None = []
         self._playlist: dict | None = None
 
         self._attr_name = self._name
@@ -289,6 +289,11 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     def _spotify(self) -> Spotify:
         """Return spotify API."""
         return self._spotify_data[DATA_SPOTIFY_CLIENT]
+
+    @property
+    def _devices(self) -> list:
+        """Return spotify devices."""
+        return self._spotify_data[DATA_SPOTIFY_DEVICES].data
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -517,13 +522,13 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         current = self._spotify.current_playback()
         self._currently_playing = current or {}
 
-        self._playlist = None
         context = self._currently_playing.get("context")
-        if context is not None and context["type"] == MEDIA_TYPE_PLAYLIST:
-            self._playlist = self._spotify.playlist(current["context"]["uri"])
-
-        devices = self._spotify.devices() or {}
-        self._devices = devices.get("devices", [])
+        if context is not None and (
+            self._playlist is None or self._playlist["uri"] != context["uri"]
+        ):
+            self._playlist = None
+            if context["type"] == MEDIA_TYPE_PLAYLIST:
+                self._playlist = self._spotify.playlist(current["context"]["uri"])
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
