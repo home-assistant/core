@@ -309,6 +309,10 @@ DHCP = [
         "macaddress": "30AEA4*"
     },
     {
+        "domain": "sleepiq",
+        "macaddress": "64DBA0*"
+    },
+    {
         "domain": "smartthings",
         "hostname": "st*",
         "macaddress": "24FD5B*"
