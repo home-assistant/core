@@ -51,8 +51,7 @@ def _get_channel_name(device: RokuDevice) -> str | None:
 
 def _get_channels(device: RokuDevice) -> list[str]:
     return sorted(
-        format_channel_name(channel.number, channel.name)
-        for channel in device.channels
+        format_channel_name(channel.number, channel.name) for channel in device.channels
     )
 
 
