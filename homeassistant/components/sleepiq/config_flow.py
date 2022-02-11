@@ -1,9 +1,9 @@
 """Config flow for SleepIQ integration."""
 import logging
 
+from asyncsleepiq import AsyncSleepIQ, SleepIQLoginException, SleepIQTimeoutException
 import voluptuous as vol
 
-from asyncsleepiq import AsyncSleepIQ, SleepIQLoginException, SleepIQTimeoutException
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession

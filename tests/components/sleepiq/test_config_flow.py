@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from asyncsleepiq import SleepIQLoginException, SleepIQTimeoutException
+
 from homeassistant import config_entries
 from homeassistant.components.sleepiq.const import DOMAIN
 

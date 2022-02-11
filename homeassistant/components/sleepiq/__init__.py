@@ -2,14 +2,14 @@
 from datetime import timedelta
 import logging
 
-import voluptuous as vol
-
 from asyncsleepiq import (
     AsyncSleepIQ,
     SleepIQAPIException,
     SleepIQLoginException,
     SleepIQTimeoutException,
 )
+import voluptuous as vol
+
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
