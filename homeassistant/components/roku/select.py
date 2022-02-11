@@ -53,7 +53,7 @@ def _get_channels(device: RokuDevice) -> list[str]:
     return sorted(
         format_channel_name(channel.number, channel.name)
         for channel in device.channels
-        if channel.name is not None and channel.number is not None
+        if channel.name is not None
     )
 
 
@@ -79,7 +79,7 @@ async def _tune_channel(device: RokuDevice, roku: Roku, value: str) -> None:
                 channel.name is not None
                 and value == f"{channel.name} ({channel.number})"
             )
-            or (channel.number is not None and value == channel.number)
+            or value == channel.number
         ),
         None,
     )
