@@ -1,0 +1,14 @@
+{
+  "domain": "backup",
+  "name": "Backup",
+  "documentation": "https://www.home-assistant.io/integrations/backup",
+  "dependencies": [
+    "http",
+    "websocket_api"
+  ],
+  "codeowners": [
+    "@home-assistant/core"
+  ],
+  "iot_class": "calculated",
+  "quality_scale": "internal"
+}
