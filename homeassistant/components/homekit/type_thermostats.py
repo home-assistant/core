@@ -35,6 +35,7 @@ from homeassistant.components.climate.const import (
     FAN_MEDIUM,
     FAN_MIDDLE,
     FAN_OFF,
+    FAN_ON,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
@@ -284,18 +285,19 @@ class Thermostat(HomeAccessory):
                 CHAR_CURRENT_HUMIDITY, value=50
             )
 
-        fan_modes = []
+        fan_modes = self.fan_modes = attributes.get(ATTR_FAN_MODES, [])
         if (
             features & SUPPORT_FAN_MODE
-            and (fan_modes := attributes.get(ATTR_FAN_MODES, []))
+            and fan_modes
             and PRE_DEFINED_FAN_MODES.intersection(fan_modes)
         ):
             self.ordered_fan_speeds = [
                 speed for speed in ORDERED_FAN_SPEEDS if speed in fan_modes
             ]
             self.fan_chars.append(CHAR_ROTATION_SPEED)
-            if FAN_AUTO in fan_modes:
-                self.fan_chars.append(CHAR_TARGET_FAN_STATE)
+
+        if FAN_AUTO in fan_modes and (FAN_ON in fan_modes or self.ordered_fan_speeds):
+            self.fan_chars.append(CHAR_TARGET_FAN_STATE)
 
         self.fan_modes = fan_modes
         if (
@@ -380,7 +382,9 @@ class Thermostat(HomeAccessory):
         _LOGGER.debug("%s: Set fan auto to %s", self.entity_id, auto)
         if auto:
             mode = FAN_AUTO
-        else:
+        elif FAN_ON in self.fan_modes:
+            mode = FAN_ON
+        elif self.ordered_fan_speeds:
             mode = percentage_to_ordered_list_item(self.ordered_fan_speeds, 50)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: mode}
         self.async_call_service(DOMAIN_CLIMATE, SERVICE_SET_FAN_MODE, params)
