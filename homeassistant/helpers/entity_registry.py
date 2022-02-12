@@ -463,8 +463,9 @@ class EntityRegistry:
             self, event.data["device_id"], include_disabled_entities=True
         )
         for entity in entities:
-            if entity.config_entry_id not in device.config_entries:
-                self.async_remove(entity.entity_id)
+            if entity.config_entry_id is not None:
+                if entity.config_entry_id not in device.config_entries:
+                    self.async_remove(entity.entity_id)
 
         # Re-enable disabled entities if the device is no longer disabled
         if not device.disabled:
