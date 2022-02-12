@@ -1,5 +1,6 @@
 """Test config flow."""
 
+import queue
 from unittest.mock import patch
 
 import pytest
@@ -8,6 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import mqtt
 from homeassistant.components.hassio import HassioServiceInfo
+from homeassistant.components.mqtt.config_flow import try_connection
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -617,3 +619,30 @@ async def test_options_bad_will_message_fails(hass, mock_try_connection):
         mqtt.CONF_BROKER: "test-broker",
         mqtt.CONF_PORT: 1234,
     }
+
+
+async def test_try_connection(hass, mqtt_mock):
+    """Test try connection."""
+
+    def loop_start():
+        """Simulate connect on loop start."""
+        mock_client().on_connect(mock_client, None, None, 0)
+
+    with patch("paho.mqtt.client.Client") as mock_client:
+        mock_client().loop_start = loop_start
+
+        assert try_connection("test-broker", 1234, "username", "")
+        assert try_connection("test-broker", 1234, "username", "password")
+        assert try_connection(
+            "test-broker", 1234, "username", "password", protocol="3.1.1"
+        )
+
+        # test time out
+        mock_client().loop_start = lambda *args: 1
+        with patch("queue.Queue.get", side_effect=queue.Empty):
+            assert (
+                try_connection(
+                    "test-broker", 1234, "username", "password", protocol="3.1.1"
+                )
+                is False
+            )
