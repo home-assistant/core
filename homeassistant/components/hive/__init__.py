@@ -25,7 +25,6 @@ from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS
 ENTITY_CATEGORY = {
     "config": EntityCategory.CONFIG,
     "diagnostic": EntityCategory.DIAGNOSTIC,
-    "system": EntityCategory.SYSTEM,
 }
 
 _LOGGER = logging.getLogger(__name__)
