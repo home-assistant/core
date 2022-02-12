@@ -7,7 +7,7 @@ from datetime import timedelta
 import logging
 
 import requests
-from spotipy import Spotify, SpotifyException
+from spotipy import SpotifyException
 from yarl import URL
 
 from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
@@ -367,7 +367,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             run_coroutine_threadsafe(
                 self.data.session.async_ensure_token_valid(), self.hass.loop
             ).result()
-            self.data.client = Spotify(auth=self.data.session.token["access_token"])
+            self.data.client.set_auth(auth=self.data.session.token["access_token"])
 
         current = self.data.client.current_playback()
         self._currently_playing = current or {}
