@@ -1086,6 +1086,8 @@ async def test_remove_config_entry_from_device(hass, hass_ws_client):
     )
     assert device_entry.config_entries == {entry_1.entry_id, entry_2.entry_id}
 
+    # Try removing a config entry from the device, it should fail because
+    # async_remove_config_entry_device returns False
     await ws_client.send_json(
         {
             "id": 5,
@@ -1099,7 +1101,9 @@ async def test_remove_config_entry_from_device(hass, hass_ws_client):
     assert not response["success"]
     assert response["error"]["code"] == "unknown_error"
 
+    # Make async_remove_config_entry_device return True
     can_remove = True
+
     # Remove the 1st config entry
     await ws_client.send_json(
         {
@@ -1114,7 +1118,7 @@ async def test_remove_config_entry_from_device(hass, hass_ws_client):
     assert response["success"]
     assert response["result"] is True
 
-    # This was the last config entry, the device is removed
+    # Check that the config entry was removed from the device
     assert device_registry.async_get(device_entry.id).config_entries == {
         entry_2.entry_id
     }
