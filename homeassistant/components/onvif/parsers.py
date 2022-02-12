@@ -408,7 +408,7 @@ async def async_parse_last_reset(uid: str, msg) -> Event:
     except (AttributeError, KeyError, ValueError):
         return None
 
-    
+
 @PARSERS.register("tns1:Monitoring/Backup/Last")
 # pylint: disable=protected-access
 async def async_parse_backup_last(uid: str, msg) -> Event:
