@@ -1,4 +1,6 @@
 """Support for SleepIQ sensors."""
+from typing import cast
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
@@ -42,4 +44,4 @@ class SleepNumberSensor(SleepIQSensor, SensorEntity):
     @property
     def native_value(self) -> int:
         """Return the state of the sensor."""
-        return self._side.sleep_number
+        return cast(int, self._side.sleep_number)

@@ -1,4 +1,6 @@
 """Support for SleepIQ sensors."""
+from typing import cast
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -52,4 +54,4 @@ class IsInBedBinarySensor(SleepIQSensor, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the side is occupied."""
-        return getattr(self._side, IS_IN_BED)
+        return cast(bool, getattr(self._side, IS_IN_BED))

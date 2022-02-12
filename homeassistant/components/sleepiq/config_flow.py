@@ -1,4 +1,6 @@
 """Config flow to configure SleepIQ component."""
+from __future__ import annotations
+
 from typing import Any
 
 from sleepyq import Sleepyq
@@ -25,7 +27,9 @@ class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             title=import_config[CONF_USERNAME], data=import_config
         )
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 
@@ -56,7 +60,7 @@ class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-def try_connection(user_input) -> bool:
+def try_connection(user_input: dict[str, Any]) -> bool:
     """Test if the given credentials can successfully login to SleepIQ."""
 
     client = Sleepyq(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
