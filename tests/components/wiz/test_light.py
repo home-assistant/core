@@ -1,6 +1,6 @@
 """Tests for light platform."""
 
-from pywizlight import PilotBuilder, PilotParser
+from pywizlight import PilotBuilder
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -10,12 +10,14 @@ from homeassistant.components.light import (
     ATTR_RGBWW_COLOR,
     DOMAIN as LIGHT_DOMAIN,
 )
+from homeassistant.components.wiz.light import ATTR_OCCUPANCY
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -54,10 +56,7 @@ async def test_light_operation(hass: HomeAssistant) -> None:
     )
     bulb.turn_off.assert_called_once()
 
-    bulb.status = False
-    bulb.state = PilotParser({"mac": FAKE_MAC, "state": False})
-    bulb.push_callback(bulb.state)
-    await hass.async_block_till_done()
+    await async_push_update(hass, bulb, {"mac": FAKE_MAC, "state": False})
     assert hass.states.get(entity_id).state == STATE_OFF
 
     await hass.services.async_call(
@@ -65,10 +64,7 @@ async def test_light_operation(hass: HomeAssistant) -> None:
     )
     bulb.turn_on.assert_called_once()
 
-    bulb.status = True
-    bulb.state = PilotParser({"mac": FAKE_MAC, "state": True})
-    bulb.push_callback(bulb.state)
-    await hass.async_block_till_done()
+    await async_push_update(hass, bulb, {"mac": FAKE_MAC, "state": True})
     assert hass.states.get(entity_id).state == STATE_ON
 
 
@@ -175,3 +171,22 @@ async def test_turnable_light(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
     assert state.attributes[ATTR_COLOR_TEMP] == 153
+
+
+async def test_occupancy_from_push_updates(hass: HomeAssistant) -> None:
+    """Test occupancy from push updates."""
+    bulb, _ = await async_setup_integration(hass)
+    entity_id = "light.mock_title"
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_OCCUPANCY] == STATE_UNKNOWN
+
+    await async_push_update(hass, bulb, {"mac": FAKE_MAC, "src": "pir", "state": True})
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_OCCUPANCY] is True
+
+    await async_push_update(hass, bulb, {"mac": FAKE_MAC, "src": "pir", "state": False})
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_OCCUPANCY] is False
