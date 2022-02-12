@@ -87,6 +87,14 @@ homeassistant.components.group.*
 homeassistant.components.guardian.*
 homeassistant.components.history.*
 homeassistant.components.homeassistant.triggers.event
+homeassistant.components.homekit_controller
+homeassistant.components.homekit_controller.alarm_control_panel
+homeassistant.components.homekit_controller.button
+homeassistant.components.homekit_controller.const
+homeassistant.components.homekit_controller.lock
+homeassistant.components.homekit_controller.select
+homeassistant.components.homekit_controller.storage
+homeassistant.components.homekit_controller.utils
 homeassistant.components.homewizard.*
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
@@ -95,6 +103,7 @@ homeassistant.components.image_processing.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
 homeassistant.components.integration.*
+homeassistant.components.isy994.*
 homeassistant.components.iqvia.*
 homeassistant.components.jellyfin.*
 homeassistant.components.jewish_calendar.*
@@ -144,6 +153,7 @@ homeassistant.components.remote.*
 homeassistant.components.renault.*
 homeassistant.components.ridwell.*
 homeassistant.components.rituals_perfume_genie.*
+homeassistant.components.roku.*
 homeassistant.components.rpi_power.*
 homeassistant.components.rtsp_to_webrtc.*
 homeassistant.components.samsungtv.*
@@ -156,7 +166,6 @@ homeassistant.components.simplisafe.*
 homeassistant.components.slack.*
 homeassistant.components.sleepiq.*
 homeassistant.components.smhi.*
-homeassistant.components.sonos.media_player
 homeassistant.components.ssdp.*
 homeassistant.components.stookalert.*
 homeassistant.components.statistics.*
@@ -197,6 +206,7 @@ homeassistant.components.webostv.*
 homeassistant.components.websocket_api.*
 homeassistant.components.wemo.*
 homeassistant.components.whois.*
+homeassistant.components.wiz.*
 homeassistant.components.zodiac.*
 homeassistant.components.zeroconf.*
 homeassistant.components.zone.*

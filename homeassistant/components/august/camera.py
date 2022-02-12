@@ -37,8 +37,6 @@ class AugustCamera(AugustEntityMixin, Camera):
     def __init__(self, data, device, session, timeout):
         """Initialize a August security camera."""
         super().__init__(data, device)
-        self._data = data
-        self._device = device
         self._timeout = timeout
         self._session = session
         self._image_url = None

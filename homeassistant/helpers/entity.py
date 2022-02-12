@@ -11,7 +11,7 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import Any, Final, Literal, TypedDict, final
+from typing import Any, Literal, TypedDict, final
 
 import voluptuous as vol
 
@@ -58,7 +58,13 @@ SOURCE_PLATFORM_CONFIG = "platform_config"
 FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
 
 
-ENTITY_CATEGORIES_SCHEMA: Final = vol.In(ENTITY_CATEGORIES)
+def validate_entity_category(value: Any | None) -> EntityCategory:
+    """Validate entity category configuration."""
+    value = vol.In(ENTITY_CATEGORIES)(value)
+    return EntityCategory(value)
+
+
+ENTITY_CATEGORIES_SCHEMA = validate_entity_category
 
 
 @callback
@@ -202,7 +208,7 @@ class EntityCategory(StrEnum):
 
 
 def convert_to_entity_category(
-    value: EntityCategory | str | None,
+    value: EntityCategory | str | None, raise_report: bool = True
 ) -> EntityCategory | None:
     """Force incoming entity_category to be an enum."""
 
@@ -210,12 +216,17 @@ def convert_to_entity_category(
         return value
 
     if not isinstance(value, EntityCategory):
-        report(
-            "An entity_category should only be assigned an enum.  Strings or other assignments are deprecated. Value %s is type %s"
-            % (value, type(value)),
-            error_if_core=False,
-        )
-        return EntityCategory(value)
+        if raise_report:
+            report(
+                "uses %s (%s) for entity category. This is deprecated and will "
+                "stop working in Home Assistant 2022.4, it should be updated to use "
+                "EntityCategory instead" % (type(value).__name__, value),
+                error_if_core=False,
+            )
+        try:
+            return EntityCategory(value)
+        except ValueError:
+            return None
     return value
 
 

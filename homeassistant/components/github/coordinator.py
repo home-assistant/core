@@ -6,8 +6,10 @@ from typing import Literal, TypedDict
 from aiogithubapi import (
     GitHubAPI,
     GitHubCommitModel,
+    GitHubConnectionException,
     GitHubException,
     GitHubNotModifiedException,
+    GitHubRatelimitException,
     GitHubReleaseModel,
     GitHubRepositoryModel,
     GitHubResponseModel,
@@ -69,7 +71,11 @@ class GitHubBaseDataUpdateCoordinator(DataUpdateCoordinator[T]):
             )
             # Return the last known data if the request result was not modified
             return self.data
+        except (GitHubConnectionException, GitHubRatelimitException) as exception:
+            # These are expected and we dont log anything extra
+            raise UpdateFailed(exception) from exception
         except GitHubException as exception:
+            # These are unexpected and we log the trace to help with troubleshooting
             LOGGER.exception(exception)
             raise UpdateFailed(exception) from exception
         else:
@@ -101,7 +107,7 @@ class RepositoryReleaseDataUpdateCoordinator(
             return None
 
         for release in response.data:
-            if not release.prerelease:
+            if not release.prerelease and not release.draft:
                 return release
 
         # Fall back to the latest release if no non-prerelease release is found
@@ -110,7 +116,7 @@ class RepositoryReleaseDataUpdateCoordinator(
     async def fetch_data(self) -> GitHubReleaseModel | None:
         """Get the latest data from GitHub."""
         return await self._client.repos.releases.list(
-            self.repository, **{"params": {"per_page": 1}, "etag": self._etag}
+            self.repository, **{"etag": self._etag}
         )
 
 
@@ -144,8 +150,8 @@ class RepositoryIssueDataUpdateCoordinator(
             pull_last = self.data.pull_last
         else:
             self._pull_etag = pull_response.etag
-            pulls_count = pull_response.last_page_number or 0
-            pull_last = pull_response.data[0] if pulls_count != 0 else None
+            pulls_count = pull_response.last_page_number or len(pull_response.data)
+            pull_last = pull_response.data[0] if pull_response.data else None
 
         try:
             issue_response = await self._client.repos.issues.list(
@@ -158,8 +164,10 @@ class RepositoryIssueDataUpdateCoordinator(
             issue_last = self.data.issue_last
         else:
             self._issue_etag = issue_response.etag
-            issues_count = (issue_response.last_page_number or 0) - pulls_count
-            issue_last = issue_response.data[0] if issues_count != 0 else None
+            issues_count = (
+                issue_response.last_page_number or len(issue_response.data)
+            ) - pulls_count
+            issue_last = issue_response.data[0] if issue_response.data else None
 
             if issue_last is not None and issue_last.pull_request:
                 issue_response = await self._client.repos.issues.list(self.repository)

@@ -11,7 +11,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_
 from homeassistant.helpers import entity_registry as er
 
 
-async def test_duplicate_error(hass, config, config_entry, setup_rainmachine):
+async def test_duplicate_error(hass, config, config_entry):
     """Test that errors are shown when duplicates are added."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=config
@@ -149,6 +149,7 @@ async def test_step_homekit_zeroconf_ip_already_exists(
             context={"source": source},
             data=zeroconf.ZeroconfServiceInfo(
                 host="192.168.1.100",
+                addresses=["192.168.1.100"],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -174,6 +175,7 @@ async def test_step_homekit_zeroconf_ip_change(hass, client, config_entry, sourc
             context={"source": source},
             data=zeroconf.ZeroconfServiceInfo(
                 host="192.168.1.2",
+                addresses=["192.168.1.2"],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -202,6 +204,7 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(
             context={"source": source},
             data=zeroconf.ZeroconfServiceInfo(
                 host="192.168.1.100",
+                addresses=["192.168.1.100"],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -249,6 +252,7 @@ async def test_discovery_by_homekit_and_zeroconf_same_time(hass, client):
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
                 host="192.168.1.100",
+                addresses=["192.168.1.100"],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -268,6 +272,7 @@ async def test_discovery_by_homekit_and_zeroconf_same_time(hass, client):
             context={"source": config_entries.SOURCE_HOMEKIT},
             data=zeroconf.ZeroconfServiceInfo(
                 host="192.168.1.100",
+                addresses=["192.168.1.100"],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,

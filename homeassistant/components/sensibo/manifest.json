@@ -8,5 +8,9 @@
   "iot_class": "cloud_polling",
   "homekit": {
     "models": ["Sensibo"]
-  }
+  },
+  "dhcp": [
+    {"hostname":"sensibo*"}
+  ],  
+  "loggers": ["pysensibo"]
 }

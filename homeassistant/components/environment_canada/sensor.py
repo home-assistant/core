@@ -223,35 +223,35 @@ ALERT_TYPES: tuple[ECSensorEntityDescription, ...] = (
         key="advisories",
         name="Advisory",
         icon="mdi:bell-alert",
-        value_fn=lambda data: data.alerts.get("advisories", {}).get("value", []),
+        value_fn=lambda data: data.alerts.get("advisories", {}).get("value"),
         transform=len,
     ),
     ECSensorEntityDescription(
         key="endings",
         name="Endings",
         icon="mdi:alert-circle-check",
-        value_fn=lambda data: data.alerts.get("endings", {}).get("value", []),
+        value_fn=lambda data: data.alerts.get("endings", {}).get("value"),
         transform=len,
     ),
     ECSensorEntityDescription(
         key="statements",
         name="Statements",
         icon="mdi:bell-alert",
-        value_fn=lambda data: data.alerts.get("statements", {}).get("value", []),
+        value_fn=lambda data: data.alerts.get("statements", {}).get("value"),
         transform=len,
     ),
     ECSensorEntityDescription(
         key="warnings",
         name="Warnings",
         icon="mdi:alert-octagon",
-        value_fn=lambda data: data.alerts.get("warnings", {}).get("value", []),
+        value_fn=lambda data: data.alerts.get("warnings", {}).get("value"),
         transform=len,
     ),
     ECSensorEntityDescription(
         key="watches",
         name="Watches",
         icon="mdi:alert",
-        value_fn=lambda data: data.alerts.get("watches", {}).get("value", []),
+        value_fn=lambda data: data.alerts.get("watches", {}).get("value"),
         transform=len,
     ),
 )
@@ -283,13 +283,13 @@ class ECBaseSensor(CoordinatorEntity, SensorEntity):
         self._ec_data = coordinator.ec_data
         self._attr_attribution = self._ec_data.metadata["attribution"]
         self._attr_name = f"{coordinator.config_entry.title} {description.name}"
-        self._attr_unique_id = f"{self._ec_data.metadata['location']}-{description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.title}-{description.key}"
 
     @property
     def native_value(self):
         """Return the native value of the sensor."""
         value = self.entity_description.value_fn(self._ec_data)
-        if self.entity_description.transform:
+        if value is not None and self.entity_description.transform:
             value = self.entity_description.transform(value)
         return value
 
@@ -313,6 +313,8 @@ class ECAlertSensor(ECBaseSensor):
     def extra_state_attributes(self):
         """Return the extra state attributes."""
         value = self.entity_description.value_fn(self._ec_data)
+        if not value:
+            return None
 
         extra_state_attrs = {
             ATTR_LOCATION: self._ec_data.metadata.get("location"),

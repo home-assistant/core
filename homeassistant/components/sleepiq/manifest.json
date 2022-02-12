@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/sleepiq",
   "requirements": ["sleepyq==0.8.1"],
   "codeowners": ["@mfugate1"],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["sleepyq"]
 }

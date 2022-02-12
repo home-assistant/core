@@ -7,7 +7,8 @@ from homeassistant.const import SERVICE_RELOAD
 from homeassistant.helpers.device_registry import async_get as get_dev_reg
 from homeassistant.setup import async_setup_component
 
-from . import ENTITY_ID, FAKE_UUID, setup_webostv
+from . import setup_webostv
+from .const import ENTITY_ID, FAKE_UUID
 
 from tests.common import MockEntity, MockEntityPlatform
 

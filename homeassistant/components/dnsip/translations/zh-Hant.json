@@ -6,7 +6,9 @@
         "step": {
             "user": {
                 "data": {
-                    "hostname": "\u57f7\u884c DNS \u67e5\u8a62\u7684\u4e3b\u6a5f\u540d\u7a31"
+                    "hostname": "\u57f7\u884c DNS \u67e5\u8a62\u7684\u4e3b\u6a5f\u540d\u7a31",
+                    "resolver": "IPV4 \u89e3\u6790\u5668",
+                    "resolver_ipv6": "IPV6 \u89e3\u6790\u5668"
                 }
             }
         }

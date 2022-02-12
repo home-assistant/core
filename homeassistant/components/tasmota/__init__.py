@@ -19,6 +19,7 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt, websocket_api
 from homeassistant.components.mqtt.subscription import (
+    async_prepare_subscribe_topics,
     async_subscribe_topics,
     async_unsubscribe_topics,
 )
@@ -62,10 +63,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for topic in topics.values():
             if "msg_callback" in topic and "event_loop_safe" in topic:
                 topic["msg_callback"] = callback(topic["msg_callback"])
-        return await async_subscribe_topics(hass, sub_state, topics)
+        sub_state = async_prepare_subscribe_topics(hass, sub_state, topics)
+        await async_subscribe_topics(hass, sub_state)
+        return sub_state
 
     async def _unsubscribe_topics(sub_state: dict | None) -> dict:
-        return await async_unsubscribe_topics(hass, sub_state)
+        return async_unsubscribe_topics(hass, sub_state)
 
     tasmota_mqtt = TasmotaMQTTClient(_publish, _subscribe_topics, _unsubscribe_topics)
 

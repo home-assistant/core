@@ -33,6 +33,7 @@ class MockPlexMedia:
 class MockPlexClip(MockPlexMedia):
     """Minimal mock of plexapi clip object."""
 
+    TAG = "Video"
     type = "clip"
     title = "Clip 1"
 
@@ -40,6 +41,7 @@ class MockPlexClip(MockPlexMedia):
 class MockPlexMovie(MockPlexMedia):
     """Minimal mock of plexapi movie object."""
 
+    TAG = "Video"
     type = "movie"
     title = "Movie 1"
 
@@ -47,6 +49,7 @@ class MockPlexMovie(MockPlexMedia):
 class MockPlexMusic(MockPlexMedia):
     """Minimal mock of plexapi album object."""
 
+    TAG = "Directory"
     listType = "audio"
     type = "album"
     title = "Album"
@@ -56,6 +59,7 @@ class MockPlexMusic(MockPlexMedia):
 class MockPlexTVEpisode(MockPlexMedia):
     """Minimal mock of plexapi episode object."""
 
+    TAG = "Video"
     type = "episode"
     title = "Episode 5"
     grandparentTitle = "TV Show"
