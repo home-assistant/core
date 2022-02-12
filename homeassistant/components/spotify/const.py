@@ -1,8 +1,13 @@
 """Define constants for the Spotify integration."""
 
+import logging
+
 DOMAIN = "spotify"
 
+LOGGER = logging.getLogger(__package__)
+
 DATA_SPOTIFY_CLIENT = "spotify_client"
+DATA_SPOTIFY_DEVICES = "spotify_devices"
 DATA_SPOTIFY_ME = "spotify_me"
 DATA_SPOTIFY_SESSION = "spotify_session"
 
