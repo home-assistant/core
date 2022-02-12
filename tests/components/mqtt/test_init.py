@@ -1157,6 +1157,23 @@ async def test_timeout(hass, mqtt_mock, caplog):
     assert "No ACK from MQTT server in 10 seconds" in caplog.text
 
 
+async def test_publish_error(hass, caplog):
+    """Test publish error."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+
+    # simulate an Out of memory error
+    with patch("paho.mqtt.client.Client") as mock_client:
+        mock_client().connect = lambda *args: 1
+        mock_client().publish().rc = 1
+        assert await mqtt.async_setup_entry(hass, entry)
+        await hass.async_block_till_done()
+        with pytest.raises(HomeAssistantError):
+            await mqtt.async_publish(
+                hass, "some-topic", b"test-payload", qos=0, retain=False, encoding=None
+            )
+        assert "Failed to connect to MQTT server: Out of memory." in caplog.text
+
+
 async def test_handle_message_callback(hass, caplog):
     """Test for handling an incoming message callback."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
