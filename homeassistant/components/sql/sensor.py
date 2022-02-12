@@ -108,7 +108,7 @@ def setup_platform(
             )
 
         sensor = SQLSensor(
-            name, sessmaker, query_str, column_name, unit, value_template, db_url
+            name, sessmaker, query_str, column_name, unit, value_template
         )
         queries.append(sensor)
 
@@ -126,7 +126,6 @@ class SQLSensor(SensorEntity):
         column: str,
         unit: str | None,
         value_template: Template | None,
-        db_url: str,
     ) -> None:
         """Initialize the SQL sensor."""
         self._attr_name = name
