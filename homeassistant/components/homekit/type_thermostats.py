@@ -712,9 +712,8 @@ class Thermostat(HomeAccessory):
                 HC_HASS_TO_HOMEKIT_FAN_STATE[hvac_action]
             )
 
-        hvac_mode = new_state.state
         self.char_active.set_value(
-            int(hvac_mode != HVAC_MODE_OFF and fan_mode_lower != FAN_OFF)
+            int(new_state.state != HVAC_MODE_OFF and fan_mode_lower != FAN_OFF)
         )
 
 
