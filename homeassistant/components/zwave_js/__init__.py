@@ -446,9 +446,7 @@ async def async_setup_entry(  # noqa: C901
         # We assert because we know the device exists
         assert device
 
-        unique_id = get_unique_id(
-            client.driver.controller.home_id, disc_info.primary_value.value_id
-        )
+        unique_id = get_unique_id(client, disc_info.primary_value.value_id)
         entity_id = ent_reg.async_get_entity_id(disc_info.platform, DOMAIN, unique_id)
 
         raw_value = value_ = value.value

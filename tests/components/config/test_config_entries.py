@@ -252,6 +252,35 @@ async def test_initialize_flow(hass, client):
     }
 
 
+async def test_initialize_flow_unmet_dependency(hass, client):
+    """Test unmet dependencies are listed."""
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    config_schema = vol.Schema({"comp_conf": {"hello": str}}, required=True)
+    mock_integration(
+        hass, MockModule(domain="dependency_1", config_schema=config_schema)
+    )
+    # The test2 config flow should  fail because dependency_1 can't be automatically setup
+    mock_integration(
+        hass,
+        MockModule(domain="test2", partial_manifest={"dependencies": ["dependency_1"]}),
+    )
+
+    class TestFlow(core_ce.ConfigFlow):
+        async def async_step_user(self, user_input=None):
+            pass
+
+    with patch.dict(HANDLERS, {"test2": TestFlow}):
+        resp = await client.post(
+            "/api/config/config_entries/flow",
+            json={"handler": "test2", "show_advanced_options": True},
+        )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    data = await resp.text()
+    assert data == "Failed dependencies dependency_1"
+
+
 async def test_initialize_flow_unauth(hass, client, hass_admin_user):
     """Test we can initialize a flow."""
     hass_admin_user.groups = []

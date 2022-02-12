@@ -38,7 +38,7 @@ from .const import (
     CONF_REMOTE_ACCESS_ENABLED,
     CONF_REMOTE_ACCESS_HOST,
     CONF_REMOTE_ACCESS_PORT,
-    DISCOVER_SCAN_TIMEOUT,
+    DIRECTED_DISCOVERY_TIMEOUT,
     DOMAIN,
     FLUX_LED_DISCOVERY,
 )
@@ -194,7 +194,7 @@ async def async_discover_device(
     """Direct discovery at a single ip instead of broadcast."""
     # If we are missing the unique_id we should be able to fetch it
     # from the device by doing a directed discovery at the host only
-    for device in await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT, host):
+    for device in await async_discover_devices(hass, DIRECTED_DISCOVERY_TIMEOUT, host):
         if device[ATTR_IPADDR] == host:
             return device
     return None

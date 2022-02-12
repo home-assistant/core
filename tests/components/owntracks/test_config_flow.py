@@ -149,20 +149,48 @@ async def test_unload(hass):
 
 async def test_with_cloud_sub(hass):
     """Test creating a config flow while subscribed."""
-    hass.config.components.add("cloud")
+    assert await async_setup_component(hass, "cloud", {})
+
     with patch(
         "homeassistant.components.cloud.async_active_subscription", return_value=True
     ), patch(
-        "homeassistant.components.cloud.async_create_cloudhook",
-        return_value="https://hooks.nabu.casa/ABCD",
+        "homeassistant.components.cloud.async_is_logged_in", return_value=True
+    ), patch(
+        "homeassistant.components.cloud.async_is_connected", return_value=True
+    ), patch(
+        "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
+        return_value={"cloudhook_url": "https://hooks.nabu.casa/ABCD"},
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}
         )
 
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     entry = result["result"]
     assert entry.data["cloudhook"]
     assert (
         result["description_placeholders"]["webhook_url"]
         == "https://hooks.nabu.casa/ABCD"
     )
+
+
+async def test_with_cloud_sub_not_connected(hass):
+    """Test creating a config flow while subscribed."""
+    assert await async_setup_component(hass, "cloud", {})
+
+    with patch(
+        "homeassistant.components.cloud.async_active_subscription", return_value=True
+    ), patch(
+        "homeassistant.components.cloud.async_is_logged_in", return_value=True
+    ), patch(
+        "homeassistant.components.cloud.async_is_connected", return_value=False
+    ), patch(
+        "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
+        return_value={"cloudhook_url": "https://hooks.nabu.casa/ABCD"},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "cloud_not_connected"

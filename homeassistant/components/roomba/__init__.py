@@ -111,7 +111,7 @@ async def async_disconnect_or_timeout(hass, roomba):
     return True
 
 
-async def async_update_options(hass, config_entry):
+async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Update options."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 

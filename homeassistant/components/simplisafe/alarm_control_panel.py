@@ -1,8 +1,6 @@
 """Support for SimpliSafe alarm control panels."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from simplipy.errors import SimplipyError
 from simplipy.system import SystemStates
 from simplipy.system.v3 import SystemV3
@@ -240,8 +238,9 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
     def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
         """Update the entity when new data comes from the websocket."""
         self._attr_changed_by = event.changed_by
-        if TYPE_CHECKING:
-            assert event.event_type
+
+        assert event.event_type
+
         if state := STATE_MAP_FROM_WEBSOCKET_EVENT.get(event.event_type):
             self._attr_state = state
             self.async_reset_error_count()

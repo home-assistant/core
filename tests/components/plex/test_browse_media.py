@@ -6,7 +6,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
 )
-from homeassistant.components.plex.const import CONF_SERVER_IDENTIFIER
+from homeassistant.components.plex.const import CONF_SERVER_IDENTIFIER, PLEX_URI_SCHEME
 from homeassistant.components.websocket_api.const import ERR_UNKNOWN_ERROR, TYPE_RESULT
 
 from .const import DEFAULT_DATA
@@ -120,23 +120,6 @@ async def test_browse_media(
     media_players = hass.states.async_entity_ids("media_player")
     msg_id = 1
 
-    # Browse base of non-existent Plex server
-    await websocket_client.send_json(
-        {
-            "id": msg_id,
-            "type": "media_player/browse_media",
-            "entity_id": media_players[0],
-            ATTR_MEDIA_CONTENT_TYPE: "server",
-            ATTR_MEDIA_CONTENT_ID: "this server does not exist",
-        }
-    )
-
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == msg_id
-    assert msg["type"] == TYPE_RESULT
-    assert not msg["success"]
-    assert msg["error"]["code"] == ERR_UNKNOWN_ERROR
-
     # Browse base of Plex server
     msg_id += 1
     await websocket_client.send_json(
@@ -153,7 +136,10 @@ async def test_browse_media(
     assert msg["success"]
     result = msg["result"]
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "server"
-    assert result[ATTR_MEDIA_CONTENT_ID] == DEFAULT_DATA[CONF_SERVER_IDENTIFIER]
+    assert (
+        result[ATTR_MEDIA_CONTENT_ID]
+        == PLEX_URI_SCHEME + DEFAULT_DATA[CONF_SERVER_IDENTIFIER]
+    )
     # Library Sections + Recommended + Playlists
     assert len(result["children"]) == len(mock_plex_server.library.sections()) + 2
 
@@ -175,7 +161,8 @@ async def test_browse_media(
             "type": "media_player/browse_media",
             "entity_id": media_players[0],
             ATTR_MEDIA_CONTENT_TYPE: "server",
-            ATTR_MEDIA_CONTENT_ID: f"{DEFAULT_DATA[CONF_SERVER_IDENTIFIER]}:{special_keys[0]}",
+            ATTR_MEDIA_CONTENT_ID: PLEX_URI_SCHEME
+            + f"{DEFAULT_DATA[CONF_SERVER_IDENTIFIER]}:{special_keys[0]}",
         }
     )
 
@@ -187,7 +174,7 @@ async def test_browse_media(
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "server"
     assert (
         result[ATTR_MEDIA_CONTENT_ID]
-        == f"{DEFAULT_DATA[CONF_SERVER_IDENTIFIER]}:{special_keys[0]}"
+        == PLEX_URI_SCHEME + f"{DEFAULT_DATA[CONF_SERVER_IDENTIFIER]}:{special_keys[0]}"
     )
     assert len(result["children"]) == 4  # Hardcoded in fixture
     assert result["children"][0]["media_content_type"] == "mixed"
@@ -228,7 +215,8 @@ async def test_browse_media(
             "type": "media_player/browse_media",
             "entity_id": media_players[0],
             ATTR_MEDIA_CONTENT_TYPE: "library",
-            ATTR_MEDIA_CONTENT_ID: f"{library_section_id}:{special_keys[0]}",
+            ATTR_MEDIA_CONTENT_ID: PLEX_URI_SCHEME
+            + f"{library_section_id}:{special_keys[0]}",
         }
     )
 
@@ -238,7 +226,10 @@ async def test_browse_media(
     assert msg["success"]
     result = msg["result"]
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "library"
-    assert result[ATTR_MEDIA_CONTENT_ID] == f"{library_section_id}:{special_keys[0]}"
+    assert (
+        result[ATTR_MEDIA_CONTENT_ID]
+        == PLEX_URI_SCHEME + f"{library_section_id}:{special_keys[0]}"
+    )
     assert len(result["children"]) == 1
 
     # Browse into a library radio station hub
@@ -280,7 +271,7 @@ async def test_browse_media(
     assert msg["success"]
     result = msg["result"]
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "library"
-    result_id = int(result[ATTR_MEDIA_CONTENT_ID])
+    result_id = int(result[ATTR_MEDIA_CONTENT_ID][len(PLEX_URI_SCHEME) :])
     # All items in section + Hubs
     assert (
         len(result["children"])
@@ -314,7 +305,7 @@ async def test_browse_media(
     assert msg["success"]
     result = msg["result"]
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "show"
-    result_id = int(result[ATTR_MEDIA_CONTENT_ID])
+    result_id = int(result[ATTR_MEDIA_CONTENT_ID][len(PLEX_URI_SCHEME) :])
     assert result["title"] == mock_plex_server.fetch_item(result_id).title
     assert result["children"][0]["title"] == f"{mock_season.title} ({mock_season.year})"
 
@@ -344,7 +335,7 @@ async def test_browse_media(
     assert msg["success"]
     result = msg["result"]
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "season"
-    result_id = int(result[ATTR_MEDIA_CONTENT_ID])
+    result_id = int(result[ATTR_MEDIA_CONTENT_ID][len(PLEX_URI_SCHEME) :])
     assert (
         result["title"]
         == f"{mock_season.parentTitle} - {mock_season.title} ({mock_season.year})"
@@ -369,7 +360,7 @@ async def test_browse_media(
 
     assert msg["success"]
     result = msg["result"]
-    result_id = int(result[ATTR_MEDIA_CONTENT_ID])
+    result_id = int(result[ATTR_MEDIA_CONTENT_ID][len(PLEX_URI_SCHEME) :])
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "library"
     assert result["title"] == "Music"
 
@@ -399,7 +390,7 @@ async def test_browse_media(
     assert mock_fetch.called
     assert msg["success"]
     result = msg["result"]
-    result_id = int(result[ATTR_MEDIA_CONTENT_ID])
+    result_id = int(result[ATTR_MEDIA_CONTENT_ID][len(PLEX_URI_SCHEME) :])
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "artist"
     assert result["title"] == mock_artist.title
     assert result["children"][0]["title"] == "Radio Station"
@@ -420,7 +411,7 @@ async def test_browse_media(
 
     assert msg["success"]
     result = msg["result"]
-    result_id = int(result[ATTR_MEDIA_CONTENT_ID])
+    result_id = int(result[ATTR_MEDIA_CONTENT_ID][len(PLEX_URI_SCHEME) :])
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "album"
     assert (
         result["title"]

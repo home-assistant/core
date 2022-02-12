@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_API_VERSION,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_STOP,
@@ -109,6 +110,7 @@ def validate_query_format_for_version(conf: dict) -> dict:
 _QUERY_SENSOR_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
@@ -198,6 +200,7 @@ class InfluxSensor(SensorEntity):
             self._value_template = None
         self._state = None
         self._hass = hass
+        self._attr_unique_id = query.get(CONF_UNIQUE_ID)
 
         if query[CONF_LANGUAGE] == LANGUAGE_FLUX:
             query_clause = query.get(CONF_QUERY)

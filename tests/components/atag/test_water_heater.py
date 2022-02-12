@@ -2,7 +2,10 @@
 from unittest.mock import patch
 
 from homeassistant.components.atag import DOMAIN
-from homeassistant.components.water_heater import SERVICE_SET_TEMPERATURE
+from homeassistant.components.water_heater import (
+    DOMAIN as WATER_HEATER_DOMAIN,
+    SERVICE_SET_TEMPERATURE,
+)
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -33,7 +36,7 @@ async def test_setting_target_temperature(
     await init_integration(hass, aioclient_mock)
     with patch("pyatag.entities.DHW.set_temp") as mock_set_temp:
         await hass.services.async_call(
-            Platform.WATER_HEATER,
+            WATER_HEATER_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {ATTR_ENTITY_ID: WATER_HEATER_ID, ATTR_TEMPERATURE: 50},
             blocking=True,

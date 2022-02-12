@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/snmp",
   "requirements": ["pysnmp==4.4.12"],
   "codeowners": [],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["pyasn1", "pysmi", "pysnmp"]
 }

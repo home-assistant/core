@@ -566,6 +566,7 @@ async def test_bridge_homekit(hass, aioclient_mock):
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="0.0.0.0",
+            addresses=["0.0.0.0"],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -613,6 +614,7 @@ async def test_bridge_homekit_already_configured(hass, aioclient_mock):
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="0.0.0.0",
+            addresses=["0.0.0.0"],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -739,6 +741,7 @@ async def test_bridge_zeroconf(hass, aioclient_mock):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.217",
+            addresses=["192.168.1.217"],
             port=443,
             hostname="Philips-hue.local",
             type="_hue._tcp.local.",
@@ -772,6 +775,7 @@ async def test_bridge_zeroconf_already_exists(hass, aioclient_mock):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.217",
+            addresses=["192.168.1.217"],
             port=443,
             hostname="Philips-hue.local",
             type="_hue._tcp.local.",

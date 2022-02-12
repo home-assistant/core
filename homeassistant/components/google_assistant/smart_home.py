@@ -294,6 +294,15 @@ async def async_devices_reachable(hass, data: RequestData, payload):
     }
 
 
+@HANDLERS.register("action.devices.PROXY_SELECTED")
+async def async_devices_proxy_selected(hass, data: RequestData, payload):
+    """Handle action.devices.PROXY_SELECTED request.
+
+    When selected for local SDK.
+    """
+    return {}
+
+
 def turned_off_response(message):
     """Return a device turned off response."""
     return {

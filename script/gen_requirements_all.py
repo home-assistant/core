@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate an updated requirements_all.txt."""
+import configparser
 import difflib
 import importlib
 import os
@@ -167,10 +168,9 @@ def explore_module(package, explore_children):
 
 def core_requirements():
     """Gather core requirements out of setup.py."""
-    reqs_raw = re.search(
-        r"REQUIRES = \[(.*?)\]", Path("setup.py").read_text(), re.S
-    ).group(1)
-    return [x[1] for x in re.findall(r"(['\"])(.*?)\1", reqs_raw)]
+    parser = configparser.ConfigParser()
+    parser.read("setup.cfg")
+    return parser["options"]["install_requires"].strip().split("\n")
 
 
 def gather_recursive_requirements(domain, seen=None):

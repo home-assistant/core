@@ -162,15 +162,15 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         except exceptions.ProtocolError:
             _LOGGER.exception("Failed to update app list")
         else:
-            self._app_list = {app.name: app.identifier for app in apps}
+            self._app_list = {
+                app.name: app.identifier
+                for app in sorted(apps, key=lambda app: app.name.lower())
+            }
             self.async_write_ha_state()
 
     @callback
     def async_device_disconnected(self):
         """Handle when connection was lost to device."""
-        self.atv.push_updater.stop()
-        self.atv.push_updater.listener = None
-        self.atv.power.listener = None
         self._attr_supported_features = SUPPORT_APPLE_TV
 
     @property

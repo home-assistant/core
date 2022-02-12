@@ -37,8 +37,8 @@ async def test_koogeek_p1eu_setup(hass):
                     state="off",
                 ),
                 EntityTestInfo(
-                    entity_id="sensor.koogeek_p1_a00aa0_real_time_energy",
-                    friendly_name="Koogeek-P1-A00AA0 Real Time Energy",
+                    entity_id="sensor.koogeek_p1_a00aa0_power",
+                    friendly_name="Koogeek-P1-A00AA0 Power",
                     unique_id="homekit-EUCP03190xxxxx48-aid:1-sid:21-cid:22",
                     unit_of_measurement=POWER_WATT,
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},

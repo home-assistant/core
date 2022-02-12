@@ -1,4 +1,6 @@
 """Local Nest authentication for the legacy api."""
+# mypy: ignore-errors
+
 import asyncio
 from functools import partial
 from http import HTTPStatus

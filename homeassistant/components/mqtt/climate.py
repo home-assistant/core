@@ -53,20 +53,23 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     MQTT_BASE_PLATFORM_SCHEMA,
-    PLATFORMS,
     MqttCommandTemplate,
     MqttValueTemplate,
     subscription,
 )
 from .. import mqtt
-from .const import CONF_ENCODING, CONF_QOS, CONF_RETAIN, DOMAIN
+from .const import CONF_ENCODING, CONF_QOS, CONF_RETAIN, PAYLOAD_NONE
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+    async_setup_platform_helper,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -303,8 +306,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up MQTT climate device through configuration.yaml."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(hass, async_add_entities, config)
+    await async_setup_platform_helper(
+        hass, climate.DOMAIN, config, async_add_entities, _async_setup_entity
+    )
 
 
 async def async_setup_entry(
@@ -355,11 +359,6 @@ class MqttClimate(MqttEntity, ClimateEntity):
     def config_schema():
         """Return the config schema."""
         return DISCOVERY_SCHEMA
-
-    async def async_added_to_hass(self):
-        """Handle being added to Home Assistant."""
-        await super().async_added_to_hass()
-        await self._subscribe_topics()
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
@@ -415,7 +414,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
         self._command_templates = command_templates
 
-    async def _subscribe_topics(self):  # noqa: C901
+    def _prepare_subscribe_topics(self):  # noqa: C901
         """(Re)Subscribe to topics."""
         topics = {}
         qos = self._config[CONF_QOS]
@@ -441,6 +440,12 @@ class MqttClimate(MqttEntity, ClimateEntity):
             if payload in CURRENT_HVAC_ACTIONS:
                 self._action = payload
                 self.async_write_ha_state()
+            elif not payload or payload == PAYLOAD_NONE:
+                _LOGGER.debug(
+                    "Invalid %s action: %s, ignoring",
+                    CURRENT_HVAC_ACTIONS,
+                    payload,
+                )
             else:
                 _LOGGER.warning(
                     "Invalid %s action: %s",
@@ -607,9 +612,13 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
         add_subscription(topics, CONF_HOLD_STATE_TOPIC, handle_hold_mode_received)
 
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics
         )
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
     def temperature_unit(self):
@@ -701,8 +710,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
     async def _publish(self, topic, payload):
         if self._topic[topic] is not None:
-            await mqtt.async_publish(
-                self.hass,
+            await self.async_publish(
                 self._topic[topic],
                 payload,
                 self._config[CONF_QOS],

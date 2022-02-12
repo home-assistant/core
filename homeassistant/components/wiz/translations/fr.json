@@ -1,0 +1,13 @@
+{
+    "config": {
+        "error": {
+            "no_ip": "Adresse IP non valide"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Voulez-vous configurer {name} ({host}) ?"
+            }
+        }
+    }
+}

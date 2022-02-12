@@ -84,17 +84,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="broker", data_schema=vol.Schema(fields), errors=errors
         )
 
-    async def async_step_import(self, user_input):
-        """Import a config entry.
-
-        Special type of import, we're not actually going to store any data.
-        Instead, we're going to rely on the values that are in config file.
-        """
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
-        return self.async_create_entry(title="configuration.yaml", data={})
-
     async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
         """Receive a Hass.io discovery."""
         await self._async_handle_discovery_without_unique_id()

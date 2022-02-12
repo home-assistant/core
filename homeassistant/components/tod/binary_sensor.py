@@ -161,6 +161,21 @@ class TodSensor(BinarySensorEntity):
 
         self._time_before = before_event_date
 
+        # We are calculating the _time_after value assuming that it will happen today
+        # But that is not always true, e.g. after 23:00, before 12:00 and now is 10:00
+        # If _time_before and _time_after are ahead of nowutc:
+        # _time_before is set to 12:00 next day
+        # _time_after is set to 23:00 today
+        # nowutc is set to 10:00 today
+        if (
+            not is_sun_event(self._after)
+            and self._time_after > nowutc
+            and self._time_before > nowutc + timedelta(days=1)
+        ):
+            # remove one day from _time_before and _time_after
+            self._time_after -= timedelta(days=1)
+            self._time_before -= timedelta(days=1)
+
         # Add offset to utc boundaries according to the configuration
         self._time_after += self._after_offset
         self._time_before += self._before_offset
