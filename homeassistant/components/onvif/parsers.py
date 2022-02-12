@@ -409,6 +409,29 @@ async def async_parse_last_reset(uid: str, msg) -> Event:
     except (AttributeError, KeyError, ValueError):
         return None
 
+    
+@PARSERS.register("tns1:Monitoring/Backup/Last")
+# pylint: disable=protected-access
+async def async_parse_backup_last(uid: str, msg) -> Event:
+    """Handle parsing event message.
+
+    Topic: tns1:Monitoring/Backup/Last
+    """
+
+    date_time = datetime_or_zero(msg.Message._value_1.Data.SimpleItem[0].Value)
+    try:
+        return Event(
+            f"{uid}_{msg.Topic._value_1}",
+            "Last Backup",
+            "sensor",
+            "timestamp",
+            None,
+            date_time,
+            entity_enabled=False,
+        )
+    except (AttributeError, KeyError, ValueError):
+        return None
+
 
 @PARSERS.register("tns1:Monitoring/OperatingTime/LastClockSynchronization")
 # pylint: disable=protected-access
@@ -451,27 +474,4 @@ async def async_parse_jobstate(uid: str, msg) -> Event:
             msg.Message._value_1.Data.SimpleItem[0].Value == "Active",
         )
     except (AttributeError, KeyError):
-        return None
-
-
-@PARSERS.register("tns1:Monitoring/Backup/Last")
-# pylint: disable=protected-access
-async def async_parse_backup_last(uid: str, msg) -> Event:
-    """Handle parsing event message.
-
-    Topic: tns1:Monitoring/Backup/Last
-    """
-
-    date_time = datetime_or_zero(msg.Message._value_1.Data.SimpleItem[0].Value)
-    try:
-        return Event(
-            f"{uid}_{msg.Topic._value_1}",
-            "Last Backup",
-            "sensor",
-            "timestamp",
-            None,
-            date_time,
-            entity_enabled=False,
-        )
-    except (AttributeError, KeyError, ValueError):
         return None
