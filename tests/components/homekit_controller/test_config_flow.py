@@ -844,7 +844,7 @@ async def test_unignore_ignores_missing_devices(hass, controller):
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == "no_devices"
+    assert result["reason"] == "accessory_not_found_error"
 
 
 async def test_discovery_dismiss_existing_flow_on_paired(hass, controller):
