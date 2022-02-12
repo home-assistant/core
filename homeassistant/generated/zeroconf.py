@@ -144,6 +144,10 @@ ZEROCONF = {
     "_hap._tcp.local.": [
         {
             "domain": "homekit_controller"
+        },
+        {
+            "domain": "zwave_me",
+            "name": "*z.wave-me*"
         }
     ],
     "_homekit._tcp.local.": [
@@ -387,7 +391,12 @@ HOMEKIT = {
     "Iota": "abode",
     "LIFX": "lifx",
     "MYQ": "myq",
-    "NL*": "nanoleaf",
+    "NL29": "nanoleaf",
+    "NL42": "nanoleaf",
+    "NL47": "nanoleaf",
+    "NL48": "nanoleaf",
+    "NL52": "nanoleaf",
+    "NL59": "nanoleaf",
     "Netatmo Relay": "netatmo",
     "PowerView": "hunterdouglas_powerview",
     "Presence": "netatmo",

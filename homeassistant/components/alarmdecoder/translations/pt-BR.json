@@ -1,0 +1,74 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
+        },
+        "create_entry": {
+            "default": "Conectado com sucesso ao AlarmDecoder."
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar"
+        },
+        "step": {
+            "protocol": {
+                "data": {
+                    "device_baudrate": "Taxa de transmiss\u00e3o do dispositivo",
+                    "device_path": "Caminho do dispositivo",
+                    "host": "Nome do host",
+                    "port": "Porta"
+                },
+                "title": "Definir as configura\u00e7\u00f5es de conex\u00e3o"
+            },
+            "user": {
+                "data": {
+                    "protocol": "Protocolo"
+                },
+                "title": "Escolha o protocolo AlarmDecoder"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "int": "O campo abaixo deve ser um n\u00famero inteiro.",
+            "loop_range": "RF Loop deve ser um n\u00famero inteiro entre 1 e 4.",
+            "loop_rfid": "RF Loop n\u00e3o pode ser usado sem RF Serial.",
+            "relay_inclusive": "O Relay Address e o Relay Channel s\u00e3o codependentes e devem ser inclu\u00eddos juntos."
+        },
+        "step": {
+            "arm_settings": {
+                "data": {
+                    "alt_night_mode": "Modo noturno alternativo",
+                    "auto_bypass": "Auto Bypass ao armar",
+                    "code_arm_required": "C\u00f3digo necess\u00e1rio para armar"
+                },
+                "title": "Configurar AlarmDecoder"
+            },
+            "init": {
+                "data": {
+                    "edit_select": "Editar"
+                },
+                "description": "O que voc\u00ea gostaria de editar?",
+                "title": "Configurar AlarmDecoder"
+            },
+            "zone_details": {
+                "data": {
+                    "zone_loop": "Loop RF",
+                    "zone_name": "Nome da zona",
+                    "zone_relayaddr": "Endere\u00e7o do rel\u00e9",
+                    "zone_relaychan": "Canal do rel\u00e9",
+                    "zone_rfid": "RF Serial",
+                    "zone_type": "Tipo de zona"
+                },
+                "description": "Insira os detalhes da zona {zone_number}. Para excluir a zona {zone_number}, deixe o nome da zona em branco.",
+                "title": "Configurar AlarmDecoder"
+            },
+            "zone_select": {
+                "data": {
+                    "zone_number": "N\u00famero da zona"
+                },
+                "description": "Insira o n\u00famero da zona que voc\u00ea deseja adicionar, editar ou remover.",
+                "title": "Configurar AlarmDecoder"
+            }
+        }
+    }
+}

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import copy
 from http import HTTPStatus
 from typing import Any
@@ -22,7 +21,6 @@ from homeassistant.components.google import (
     CONF_TRACK,
     DEVICE_SCHEMA,
     SERVICE_SCAN_CALENDARS,
-    GoogleCalendarService,
     do_setup,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -356,21 +354,6 @@ async def test_http_event_api_failure(hass, hass_client, google_service):
     # A failure to talk to the server results in an empty list of events
     events = await response.json()
     assert events == []
-
-
-@pytest.fixture
-def mock_events_list(
-    google_service: GoogleCalendarService,
-) -> Callable[[dict[str, Any]], None]:
-    """Fixture to construct a fake event list API response."""
-
-    def _put_result(response: dict[str, Any]) -> None:
-        google_service.return_value.get.return_value.events.return_value.list.return_value.execute.return_value = (
-            response
-        )
-        return
-
-    return _put_result
 
 
 async def test_http_api_event(hass, hass_client, google_service, mock_events_list):

@@ -10,6 +10,9 @@
         },
         "flow_title": "{name} - {model} ({host})",
         "step": {
+            "discovery_confirm": {
+                "description": "Wilt u {name} - {model} ({host})?"
+            },
             "manual": {
                 "data": {
                     "host": "Host"

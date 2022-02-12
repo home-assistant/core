@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/arris_tg2492lg",
   "requirements": ["arris-tg2492lg==1.2.1"],
   "codeowners": ["@vanbalken"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["arris_tg2492lg"]
 }

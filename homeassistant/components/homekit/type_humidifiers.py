@@ -190,7 +190,7 @@ class HumidifierDehumidifier(HomeAccessory):
                 )
                 self.char_current_humidity.set_value(current_humidity)
         except ValueError as ex:
-            _LOGGER.error(
+            _LOGGER.debug(
                 "%s: Unable to update from linked humidity sensor %s: %s",
                 self.entity_id,
                 self.linked_humidity_sensor,

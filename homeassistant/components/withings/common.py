@@ -1111,3 +1111,46 @@ class WithingsLocalOAuth2Implementation(LocalOAuth2Implementation):
         """Return the redirect uri."""
         url = get_url(self.hass, allow_internal=False, prefer_cloud=True)
         return f"{url}{AUTH_CALLBACK_PATH}"
+
+    async def _token_request(self, data: dict) -> dict:
+        """Make a token request and adapt Withings API reply."""
+        new_token = await super()._token_request(data)
+        # Withings API returns habitual token data under json key "body":
+        # {
+        #     "status": [{integer} Withings API response status],
+        #     "body": {
+        #         "access_token": [{string} Your new access_token],
+        #         "expires_in": [{integer} Access token expiry delay in seconds],
+        #         "token_type": [{string] HTTP Authorization Header format: Bearer],
+        #         "scope": [{string} Scopes the user accepted],
+        #         "refresh_token": [{string} Your new refresh_token],
+        #         "userid": [{string} The Withings ID of the user]
+        #     }
+        # }
+        # so we copy that to token root.
+        if body := new_token.pop("body", None):
+            new_token.update(body)
+        return new_token
+
+    async def async_resolve_external_data(self, external_data: Any) -> dict:
+        """Resolve the authorization code to tokens."""
+        return await self._token_request(
+            {
+                "action": "requesttoken",
+                "grant_type": "authorization_code",
+                "code": external_data["code"],
+                "redirect_uri": external_data["state"]["redirect_uri"],
+            }
+        )
+
+    async def _async_refresh_token(self, token: dict) -> dict:
+        """Refresh tokens."""
+        new_token = await self._token_request(
+            {
+                "action": "requesttoken",
+                "grant_type": "refresh_token",
+                "client_id": self.client_id,
+                "refresh_token": token["refresh_token"],
+            }
+        )
+        return {**token, **new_token}

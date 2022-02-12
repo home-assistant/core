@@ -1,0 +1,8 @@
+{
+    "config": {
+        "abort": {
+            "latitude_longitude_not_defined": "Lengde- og breddegrad er ikke definert i Home Assistant.",
+            "single_instance_allowed": "Allerede konfigurert. Kun \u00e9n enkelt konfigurasjon er mulig."
+        }
+    }
+}

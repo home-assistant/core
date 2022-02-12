@@ -515,8 +515,8 @@ class AmcrestCam(Camera):
         max_tries = 3
         for tries in range(max_tries, 0, -1):
             try:
-                await getattr(self, f"_set_{func}")(value)
-                new_value = await getattr(self, f"_get_{func}")()
+                await getattr(self, f"_async_set_{func}")(value)
+                new_value = await getattr(self, f"_async_get_{func}")()
                 if new_value != value:
                     raise AmcrestCommandFailed
             except (AmcrestError, AmcrestCommandFailed) as error:

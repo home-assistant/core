@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/bh1750",
   "requirements": ["i2csense==0.0.4", "smbus-cffi==0.5.1"],
   "codeowners": [],
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "loggers": ["i2csense", "smbus"]
 }

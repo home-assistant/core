@@ -249,6 +249,7 @@ class IntentResponse:
         """Initialize an IntentResponse."""
         self.intent = intent
         self.speech: dict[str, dict[str, Any]] = {}
+        self.reprompt: dict[str, dict[str, Any]] = {}
         self.card: dict[str, dict[str, str]] = {}
 
     @callback
@@ -259,13 +260,24 @@ class IntentResponse:
         self.speech[speech_type] = {"speech": speech, "extra_data": extra_data}
 
     @callback
+    def async_set_reprompt(
+        self, speech: str, speech_type: str = "plain", extra_data: Any | None = None
+    ) -> None:
+        """Set reprompt response."""
+        self.reprompt[speech_type] = {"reprompt": speech, "extra_data": extra_data}
+
+    @callback
     def async_set_card(
         self, title: str, content: str, card_type: str = "simple"
     ) -> None:
-        """Set speech response."""
+        """Set card response."""
         self.card[card_type] = {"title": title, "content": content}
 
     @callback
     def as_dict(self) -> dict[str, dict[str, dict[str, Any]]]:
         """Return a dictionary representation of an intent response."""
-        return {"speech": self.speech, "card": self.card}
+        return (
+            {"speech": self.speech, "reprompt": self.reprompt, "card": self.card}
+            if self.reprompt
+            else {"speech": self.speech, "card": self.card}
+        )

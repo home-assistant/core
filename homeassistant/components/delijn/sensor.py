@@ -67,7 +67,6 @@ async def async_setup_platform(
         sensors.append(
             DeLijnPublicTransportSensor(
                 Passages(
-                    hass.loop,
                     nextpassage[CONF_STOP_ID],
                     nextpassage[CONF_NUMBER_OF_DEPARTURES],
                     api_key,

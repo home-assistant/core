@@ -1,6 +1,6 @@
 """Tradfri fan (recognised as air purifiers in the IKEA ecosystem) platform tests."""
 
-from unittest.mock import MagicMock, Mock, PropertyMock, patch
+from unittest.mock import MagicMock, Mock
 
 import pytest
 from pytradfri.device import Device
@@ -8,19 +8,6 @@ from pytradfri.device.air_purifier import AirPurifier
 from pytradfri.device.air_purifier_control import AirPurifierControl
 
 from .common import setup_integration
-
-
-@pytest.fixture(autouse=True, scope="module")
-def setup(request):
-    """Set up patches for pytradfri methods."""
-    with patch(
-        "pytradfri.device.AirPurifierControl.raw",
-        new_callable=PropertyMock,
-        return_value=[{"mock": "mock"}],
-    ), patch(
-        "pytradfri.device.AirPurifierControl.air_purifiers",
-    ):
-        yield
 
 
 def mock_fan(test_features=None, test_state=None, device_number=0):
@@ -57,9 +44,7 @@ def mock_fan(test_features=None, test_state=None, device_number=0):
 
 async def test_fan(hass, mock_gateway, mock_api_factory):
     """Test that fans are correctly added."""
-    state = {
-        "fan_speed": 10,
-    }
+    state = {"fan_speed": 10, "air_quality": 12}
 
     mock_gateway.mock_devices.append(mock_fan(test_state=state))
     await setup_integration(hass)
@@ -74,9 +59,7 @@ async def test_fan(hass, mock_gateway, mock_api_factory):
 
 async def test_fan_observed(hass, mock_gateway, mock_api_factory):
     """Test that fans are correctly observed."""
-    state = {
-        "fan_speed": 10,
-    }
+    state = {"fan_speed": 10, "air_quality": 12}
 
     fan = mock_fan(test_state=state)
     mock_gateway.mock_devices.append(fan)
@@ -87,10 +70,10 @@ async def test_fan_observed(hass, mock_gateway, mock_api_factory):
 async def test_fan_available(hass, mock_gateway, mock_api_factory):
     """Test fan available property."""
 
-    fan = mock_fan(test_state={"fan_speed": 10}, device_number=1)
+    fan = mock_fan(test_state={"fan_speed": 10, "air_quality": 12}, device_number=1)
     fan.reachable = True
 
-    fan2 = mock_fan(test_state={"fan_speed": 10}, device_number=2)
+    fan2 = mock_fan(test_state={"fan_speed": 10, "air_quality": 12}, device_number=2)
     fan2.reachable = False
 
     mock_gateway.mock_devices.append(fan)
@@ -120,7 +103,7 @@ async def test_set_percentage(
 ):
     """Test setting speed of a fan."""
     # Note pytradfri style, not hass. Values not really important.
-    initial_state = {"percentage": 10, "fan_speed": 3}
+    initial_state = {"percentage": 10, "fan_speed": 3, "air_quality": 12}
     # Setup the gateway with a mock fan.
     fan = mock_fan(test_state=initial_state, device_number=0)
     mock_gateway.mock_devices.append(fan)
@@ -146,8 +129,8 @@ async def test_set_percentage(
     responses = mock_gateway.mock_responses
     mock_gateway_response = responses[0]
 
-    # A KeyError is raised if we don't add the 5908 response code
-    mock_gateway_response["15025"][0].update({"5908": 10})
+    # A KeyError is raised if we don't this to the response code
+    mock_gateway_response["15025"][0].update({"5908": 10, "5907": 12, "5910": 20})
 
     # Use the callback function to update the fan state.
     dev = Device(mock_gateway_response)

@@ -27,6 +27,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.setup import async_setup_component
 
@@ -50,6 +51,7 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_publishing_with_custom_encoding,
     help_test_reloadable,
+    help_test_reloadable_late,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -119,7 +121,7 @@ async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "state-topic", "StAtE_On")
@@ -193,6 +195,10 @@ async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
     state = hass.states.get("fan.test")
     assert state.attributes.get(fan.ATTR_PERCENTAGE) is None
     assert state.attributes.get(fan.ATTR_SPEED) is None
+
+    async_fire_mqtt_message(hass, "state-topic", "None")
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_controlling_state_via_topic_with_different_speed_range(
@@ -285,7 +291,7 @@ async def test_controlling_state_via_topic_no_percentage_topics(
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "preset-mode-state-topic", "smart")
@@ -349,12 +355,16 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock, cap
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "state-topic", '{"val":"ON"}')
     state = hass.states.get("fan.test")
     assert state.state == STATE_ON
+
+    async_fire_mqtt_message(hass, "state-topic", '{"val": null}')
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "state-topic", '{"val":"OFF"}')
     state = hass.states.get("fan.test")
@@ -449,7 +459,7 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(
@@ -527,7 +537,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_on(hass, "fan.test")
@@ -748,7 +758,7 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(hass, mqtt_mock, c
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_on(hass, "fan.test")
@@ -883,7 +893,7 @@ async def test_sending_mqtt_command_templates_(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_on(hass, "fan.test")
@@ -1022,7 +1032,7 @@ async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_set_preset_mode(hass, "fan.test", "medium")
@@ -1086,7 +1096,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_on(hass, "fan.test")
@@ -1344,7 +1354,7 @@ async def test_attributes(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     await common.async_turn_on(hass, "fan.test")
     state = hass.states.get("fan.test")
@@ -1715,7 +1725,7 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
 async def test_entity_debug_info_message(hass, mqtt_mock):
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
-        hass, mqtt_mock, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock, fan.DOMAIN, DEFAULT_CONFIG, fan.SERVICE_TURN_ON
     )
 
 
@@ -1794,3 +1804,10 @@ async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
     domain = fan.DOMAIN
     config = DEFAULT_CONFIG[domain]
     await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
+
+
+async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform with late entry setup."""
+    domain = fan.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
