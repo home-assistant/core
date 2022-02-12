@@ -121,6 +121,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
 
     async def _update_devices() -> list[dict[str, Any]]:
+        if not session.valid_token:
+            await session.async_ensure_token_valid()
+            await hass.async_add_executor_job(
+                spotify.set_auth, session.token["access_token"]
+            )
+
         try:
             devices: dict[str, Any] | None = await hass.async_add_executor_job(
                 spotify.devices
