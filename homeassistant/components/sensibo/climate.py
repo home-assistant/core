@@ -19,6 +19,9 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
+    SUPPORT_FAN_MODE,
+    SUPPORT_SWING_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -50,6 +53,11 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     }
 )
 
+FIELD_TO_FLAG = {
+    "fanLevel": SUPPORT_FAN_MODE,
+    "swing": SUPPORT_SWING_MODE,
+    "targetTemperature": SUPPORT_TARGET_TEMPERATURE,
+}
 
 SENSIBO_TO_HA = {
     "cool": HVAC_MODE_COOL,

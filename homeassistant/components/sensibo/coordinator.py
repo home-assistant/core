@@ -12,7 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, FIELD_TO_FLAG, LOGGER, TIMEOUT
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, TIMEOUT
+from .climate import FIELD_TO_FLAG
 
 
 class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
@@ -74,10 +75,7 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 temperature_step = temperatures_list[1] - temperatures_list[0]
 
             features_list = list(ac_states)
-            features = 0
-            for key in features_list:
-                if key in FIELD_TO_FLAG:
-                    features |= FIELD_TO_FLAG[key]
+            features = [key for key in features_list if key in FIELD_TO_FLAG]
 
             state = hvac_mode if hvac_mode else "off"
 
