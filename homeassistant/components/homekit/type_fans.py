@@ -170,6 +170,9 @@ class Fan(HomeAccessory):
             params[ATTR_PRESET_MODE] = self.preset_modes[0]
             self.async_call_service(DOMAIN, SERVICE_SET_PRESET_MODE, params)
         else:
+            current_state = self.hass.states.get(self.entity_id)
+            percentage = current_state.attributes.get(ATTR_PERCENTAGE) or 50
+            params[ATTR_PERCENTAGE] = percentage
             _LOGGER.debug("%s: Set auto to 0", self.entity_id)
             self.async_call_service(DOMAIN, SERVICE_TURN_ON, params)
 
