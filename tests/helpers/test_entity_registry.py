@@ -862,7 +862,7 @@ async def test_remove_config_entry_from_device_removes_entities(hass, registry):
     assert registry.async_is_registered(entry_2.entity_id)
 
     # Remove the second config entry from the device, the entity associated with it
-    # (and the device itself)should be removed
+    # (and the device itself) should be removed
     device_registry.async_update_device(
         device_entry.id, remove_config_entry_id=config_entry_2.entry_id
     )
