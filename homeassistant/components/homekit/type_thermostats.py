@@ -691,7 +691,7 @@ class Thermostat(HomeAccessory):
             swing = 1 if swing_mode in PRE_DEFINED_SWING_MODES else 0
             self.char_swing.set_value(swing)
 
-        fan_mode = attributes[ATTR_FAN_MODE]
+        fan_mode = attributes.get(ATTR_FAN_MODE)
         fan_mode_lower = fan_mode.lower() if isinstance(fan_mode, str) else None
         if fan_mode_lower:
             if (
