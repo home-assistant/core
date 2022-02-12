@@ -27,11 +27,13 @@ COMMON_ENTITY_DESCRIPTIONS = (
         entity_registry_enabled_default=False,
         key=ATTR_VERSION,
         name="Version",
+        icon="mdi:package-up",
     ),
     SensorEntityDescription(
         entity_registry_enabled_default=False,
         key=ATTR_VERSION_LATEST,
         name="Newest Version",
+        icon="mdi:package-up",
     ),
 )
 
