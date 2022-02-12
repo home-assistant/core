@@ -3,6 +3,7 @@ import asyncio
 from datetime import datetime, timedelta
 from functools import partial
 import json
+import logging
 import ssl
 from unittest.mock import ANY, AsyncMock, MagicMock, call, mock_open, patch
 
@@ -37,6 +38,8 @@ from tests.common import (
     mock_registry,
 )
 from tests.testing_config.custom_components.test.sensor import DEVICE_CLASSES
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class RecordCallsPartial(partial):
@@ -2283,3 +2286,32 @@ async def test_service_info_compatibility(hass, caplog):
     with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
         assert discovery_info["topic"] == "tasmota/discovery/DC4F220848A2/config"
     assert "Detected integration that accessed discovery_info['topic']" in caplog.text
+
+
+async def test_subscribe_connection_status(hass, caplog, mqtt_mock, mqtt_client_mock):
+    """Test connextion status subscription."""
+
+    @callback
+    async def async_mqtt_connected(status: bool) -> bool:
+        """Update state on connection/disconnection to MQTT broker."""
+        _LOGGER.info("connection status %s", status)
+        return True
+
+    mqtt_mock.connected = True
+    unsub = mqtt.async_subscribe_connection_status(hass, async_mqtt_connected)
+    await hass.async_block_till_done()
+
+    # Mock connection status
+    mqtt_mock._mqtt_on_connect(None, None, 0, 0)
+    await hass.async_block_till_done()
+    assert mqtt.is_connected(hass) is True
+    assert "connection status True" in caplog.text
+    caplog.clear()
+
+    # Mock disconnect status
+    mqtt_mock._mqtt_on_disconnect(None, None, 0)
+    await hass.async_block_till_done()
+    assert "connection status False" in caplog.text
+
+    # Unsubscribe
+    unsub()
