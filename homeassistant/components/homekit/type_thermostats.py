@@ -373,7 +373,9 @@ class Thermostat(HomeAccessory):
     def _set_fan_active(self, active) -> None:
         _LOGGER.debug("%s: Set fan active to %s", self.entity_id, active)
         if FAN_OFF not in self.fan_modes:
-            self.char_active.set_value(1)
+            self.char_active.value = 1
+            self.char_active.notify()
+            return
         if not active:
             mode = self.fan_modes[FAN_OFF]
         else:
