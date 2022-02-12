@@ -115,7 +115,7 @@ async def test_setup(hass: HomeAssistant, init_integration: MockConfigEntry) -> 
     assert device_entry.suggested_area is None
 
 
-@pytest.mark.parametrize("mock_roku", ["roku/roku3-idle.json"], indirect=True)
+@pytest.mark.parametrize("mock_device", ["roku/roku3-idle.json"], indirect=True)
 async def test_idle_setup(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -127,7 +127,7 @@ async def test_idle_setup(
     assert state.state == STATE_STANDBY
 
 
-@pytest.mark.parametrize("mock_roku", ["roku/rokutv-7820x.json"], indirect=True)
+@pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_tv_setup(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -215,7 +215,7 @@ async def test_supported_features(
     )
 
 
-@pytest.mark.parametrize("mock_roku", ["roku/rokutv-7820x.json"], indirect=True)
+@pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_tv_supported_features(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -254,7 +254,7 @@ async def test_attributes(
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "Roku"
 
 
-@pytest.mark.parametrize("mock_roku", ["roku/roku3-app.json"], indirect=True)
+@pytest.mark.parametrize("mock_device", ["roku/roku3-app.json"], indirect=True)
 async def test_attributes_app(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -271,7 +271,9 @@ async def test_attributes_app(
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "Netflix"
 
 
-@pytest.mark.parametrize("mock_roku", ["roku/roku3-media-playing.json"], indirect=True)
+@pytest.mark.parametrize(
+    "mock_device", ["roku/roku3-media-playing.json"], indirect=True
+)
 async def test_attributes_app_media_playing(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -290,7 +292,7 @@ async def test_attributes_app_media_playing(
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "Pluto TV - It's Free TV"
 
 
-@pytest.mark.parametrize("mock_roku", ["roku/roku3-media-paused.json"], indirect=True)
+@pytest.mark.parametrize("mock_device", ["roku/roku3-media-paused.json"], indirect=True)
 async def test_attributes_app_media_paused(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -309,7 +311,7 @@ async def test_attributes_app_media_paused(
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "Pluto TV - It's Free TV"
 
 
-@pytest.mark.parametrize("mock_roku", ["roku/roku3-screensaver.json"], indirect=True)
+@pytest.mark.parametrize("mock_device", ["roku/roku3-screensaver.json"], indirect=True)
 async def test_attributes_screensaver(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -326,7 +328,7 @@ async def test_attributes_screensaver(
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "Roku"
 
 
-@pytest.mark.parametrize("mock_roku", ["roku/rokutv-7820x.json"], indirect=True)
+@pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_tv_attributes(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
@@ -557,7 +559,7 @@ async def test_services_play_media_local_source(
     assert "/media/local/Epic%20Sax%20Guy%2010%20Hours.mp4?authSig=" in call_args[0]
 
 
-@pytest.mark.parametrize("mock_roku", ["roku/rokutv-7820x.json"], indirect=True)
+@pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_tv_services(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -836,7 +838,7 @@ async def test_media_browse_local_source(
     )
 
 
-@pytest.mark.parametrize("mock_roku", ["roku/rokutv-7820x.json"], indirect=True)
+@pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_tv_media_browse(
     hass,
     init_integration,
@@ -933,10 +935,10 @@ async def test_tv_media_browse(
     assert msg["result"]["children_media_class"] == MEDIA_CLASS_CHANNEL
     assert msg["result"]["can_expand"]
     assert not msg["result"]["can_play"]
-    assert len(msg["result"]["children"]) == 2
+    assert len(msg["result"]["children"]) == 4
     assert msg["result"]["children_media_class"] == MEDIA_CLASS_CHANNEL
 
-    assert msg["result"]["children"][0]["title"] == "WhatsOn"
+    assert msg["result"]["children"][0]["title"] == "WhatsOn (1.1)"
     assert msg["result"]["children"][0]["media_content_type"] == MEDIA_TYPE_CHANNEL
     assert msg["result"]["children"][0]["media_content_id"] == "1.1"
     assert msg["result"]["children"][0]["can_play"]
