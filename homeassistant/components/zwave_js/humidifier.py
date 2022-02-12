@@ -147,9 +147,6 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
             add_to_watched_value_ids=True,
         )
 
-        if not self._setpoint:
-            raise ValueError(f"setpoint {description.setpoint_type} is required")
-
     @property
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
@@ -200,7 +197,8 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
-        await self.info.node.async_set_value(self._setpoint, humidity)
+        if self._setpoint:
+            await self.info.node.async_set_value(self._setpoint, humidity)
 
     @property
     def min_humidity(self) -> int:

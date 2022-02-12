@@ -8,6 +8,8 @@ from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
+    DEFAULT_MAX_HUMIDITY,
+    DEFAULT_MIN_HUMIDITY,
     DOMAIN as HUMIDIFIER_DOMAIN,
     SERVICE_SET_HUMIDITY,
 )
@@ -493,6 +495,37 @@ async def test_humidifier(hass, client, climate_adc_t3000, integration):
         "value": int(HumidityControlMode.AUTO),
     }
     assert args["value"] == int(HumidityControlMode.HUMIDIFY)
+
+
+async def test_dehumidifier_missing_setpoint(
+    hass, client, climate_adc_t3000_missing_setpoint, integration
+):
+    """Test a humidity control command class entity."""
+
+    entity_id = "humidifier.adc_t3000_missing_setpoint_dehumidifier"
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert ATTR_HUMIDITY not in state.attributes
+    assert state.attributes[ATTR_MIN_HUMIDITY] == DEFAULT_MIN_HUMIDITY
+    assert state.attributes[ATTR_MAX_HUMIDITY] == DEFAULT_MAX_HUMIDITY
+
+    client.async_send_command.reset_mock()
+
+    # Test setting humidity
+    await hass.services.async_call(
+        HUMIDIFIER_DOMAIN,
+        SERVICE_SET_HUMIDITY,
+        {
+            ATTR_ENTITY_ID: HUMIDIFIER_ADC_T3000_ENTITY,
+            ATTR_HUMIDITY: 41,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 0
+
+    client.async_send_command.reset_mock()
 
 
 async def test_dehumidifier(hass, client, climate_adc_t3000, integration):

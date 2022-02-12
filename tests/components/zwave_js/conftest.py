@@ -282,6 +282,14 @@ def climate_adc_t3000_state_fixture():
     return json.loads(load_fixture("zwave_js/climate_adc_t3000_state.json"))
 
 
+@pytest.fixture(name="climate_adc_t3000_missing_setpoint_state", scope="session")
+def climate_adc_t3000_missing_setpoint_state_fixture():
+    """Load the climate ADC-T3000 node state (missing de-humidify setpoint) fixture data."""
+    return json.loads(
+        load_fixture("zwave_js/climate_adc_t3000_missing_setpoint_state.json")
+    )
+
+
 @pytest.fixture(name="climate_danfoss_lc_13_state", scope="session")
 def climate_danfoss_lc_13_state_fixture():
     """Load the climate Danfoss (LC-13) electronic radiator thermostat node state fixture data."""
@@ -620,6 +628,16 @@ def climate_radio_thermostat_ct100_plus_different_endpoints_fixture(
 def climate_adc_t3000_fixture(client, climate_adc_t3000_state):
     """Mock a climate ADC-T3000 node."""
     node = Node(client, copy.deepcopy(climate_adc_t3000_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="climate_adc_t3000_missing_setpoint")
+def climate_adc_t3000_missing_setpoint_fixture(
+    client, climate_adc_t3000_missing_setpoint_state
+):
+    """Mock a climate ADC-T3000 node."""
+    node = Node(client, copy.deepcopy(climate_adc_t3000_missing_setpoint_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
