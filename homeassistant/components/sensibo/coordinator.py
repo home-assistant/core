@@ -13,7 +13,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, TIMEOUT
-from .climate import FIELD_TO_FLAG
 
 
 class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
@@ -74,8 +73,27 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
             if temperatures_list:
                 temperature_step = temperatures_list[1] - temperatures_list[0]
 
-            features_list = list(ac_states)
-            features = [key for key in features_list if key in FIELD_TO_FLAG]
+            active_features = list(ac_states)
+            full_features = []
+            LOGGER.debug("Capa %s", capabilities["modes"])
+            for mode in capabilities["modes"]:
+                LOGGER.debug("mode %s", mode)
+                LOGGER.debug("Mode capa %s", capabilities["modes"][mode])
+                if (
+                    "temperatures" in capabilities["modes"][mode]
+                    and "targetTemperature" not in full_features
+                ):
+                    full_features.append("targetTemperature")
+                if (
+                    "swing" in capabilities["modes"][mode]
+                    and "swing" not in full_features
+                ):
+                    full_features.append("swing")
+                if (
+                    "fanLevels" in capabilities["modes"][mode]
+                    and "fanLevel" not in full_features
+                ):
+                    full_features.append("fanLevel")
 
             state = hvac_mode if hvac_mode else "off"
 
@@ -104,7 +122,8 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 "temp_unit": temperature_unit_key,
                 "temp_list": temperatures_list,
                 "temp_step": temperature_step,
-                "features": features,
+                "active_features": active_features,
+                "full_features": full_features,
                 "state": state,
                 "fw_ver": fw_ver,
                 "fw_type": fw_type,

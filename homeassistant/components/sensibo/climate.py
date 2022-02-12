@@ -142,6 +142,7 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
             if coordinator.data[device_id]["temp_unit"] == "C"
             else TEMP_FAHRENHEIT
         )
+        self._attr_supported_features = self.get_features()
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data[device_id]["id"])},
             name=coordinator.data[device_id]["name"],
@@ -153,10 +154,13 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
             suggested_area=coordinator.data[device_id]["name"],
         )
 
-    @property
-    def supported_features(self) -> int:
-        """Return supported features."""
-        return self.coordinator.data[self.unique_id]["features"]
+    def get_features(self) -> int:
+        """Get supported features."""
+        features = 0
+        for key in self.coordinator.data[self.unique_id]["full_features"]:
+            if key in FIELD_TO_FLAG:
+                features |= FIELD_TO_FLAG[key]
+        return features
 
     @property
     def current_humidity(self) -> int:
@@ -236,6 +240,14 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
+        if (
+            "targetTemperature"
+            not in self.coordinator.data[self.unique_id]["active_features"]
+        ):
+            raise HomeAssistantError(
+                "Current mode doesn't support setting Target Temperature"
+            )
+
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
@@ -257,6 +269,9 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
+        if "fanLevel" not in self.coordinator.data[self.unique_id]["active_features"]:
+            raise HomeAssistantError("Current mode doesn't support setting Fanlevel")
+
         await self._async_set_ac_state_property("fanLevel", fan_mode)
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
@@ -273,6 +288,9 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
+        if "swing" not in self.coordinator.data[self.unique_id]["active_features"]:
+            raise HomeAssistantError("Current mode doesn't support setting Swing")
+
         await self._async_set_ac_state_property("swing", swing_mode)
 
     async def async_turn_on(self) -> None:
