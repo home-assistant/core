@@ -89,6 +89,18 @@ async def test_one_security1(hass, rfxtrx, timestep):
     state = hass.states.get(entity_id)
     assert state.state == "on"
 
+    await hass.services.async_call(
+        "siren", "turn_off", {"entity_id": entity_id}, blocking=True
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        "siren", "turn_on", {"entity_id": entity_id}, blocking=True
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == "on"
+
     await timestep(11)
 
     state = hass.states.get(entity_id)
@@ -104,6 +116,8 @@ async def test_one_security1(hass, rfxtrx, timestep):
 
     assert rfxtrx.transport.send.mock_calls == [
         call(bytearray(b"\x08\x20\x03\x00\xa1\x09\x00\x06\x00")),
+        call(bytearray(b"\x08\x20\x03\x01\xa1\x09\x00\x07\x00")),
+        call(bytearray(b"\x08\x20\x03\x02\xa1\x09\x00\x06\x00")),
     ]
 
 

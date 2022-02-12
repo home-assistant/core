@@ -96,7 +96,6 @@ async def async_setup_entry(
                         auto,
                     )
                 ]
-        return None
 
     await async_setup_platform_entry(
         hass, config_entry, async_add_entities, supported, _constructor
