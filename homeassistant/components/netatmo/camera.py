@@ -55,9 +55,6 @@ async def async_setup_entry(
     """Set up the Netatmo camera platform."""
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
-    await data_handler.register_data_class(
-        CAMERA_DATA_CLASS_NAME, CAMERA_DATA_CLASS_NAME, None
-    )
     data_class = data_handler.data.get(CAMERA_DATA_CLASS_NAME)
 
     if not data_class or not data_class.raw_data:

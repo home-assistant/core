@@ -19,6 +19,7 @@ MOCK_SETTINGS = {
 }
 DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     host="1.1.1.1",
+    addresses=["1.1.1.1"],
     hostname="mock_hostname",
     name="shelly1pm-12345",
     port=None,

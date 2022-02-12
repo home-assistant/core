@@ -57,6 +57,9 @@ async def async_reconnect_client(hass, data) -> None:
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get(data[ATTR_DEVICE_ID])
 
+    if device_entry is None:
+        return
+
     mac = ""
     for connection in device_entry.connections:
         if connection[0] == CONNECTION_NETWORK_MAC:

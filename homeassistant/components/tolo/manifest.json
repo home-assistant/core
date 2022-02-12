@@ -10,5 +10,6 @@
     "@MatthiasLohr"
   ],
   "iot_class": "local_polling",
-  "dhcp": [{"hostname": "usr-tcp232-ed2"}]
+  "dhcp": [{"hostname": "usr-tcp232-ed2"}],
+  "loggers": ["tololib"]
 }

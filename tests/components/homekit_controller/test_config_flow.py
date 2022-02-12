@@ -141,6 +141,7 @@ def get_device_discovery_info(
     record = device.info
     result = zeroconf.ZeroconfServiceInfo(
         host=record["address"],
+        addresses=[record["address"]],
         hostname=record["name"],
         name=record["name"],
         port=record["port"],
@@ -180,6 +181,7 @@ def setup_mock_accessory(controller):
         serial_number="12345",
         firmware_revision="1.1",
     )
+    accessory.aid = 1
 
     service = accessory.add_service(ServicesTypes.LIGHTBULB)
     on_char = service.add_char(CharacteristicsTypes.ON)
@@ -842,7 +844,7 @@ async def test_unignore_ignores_missing_devices(hass, controller):
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == "no_devices"
+    assert result["reason"] == "accessory_not_found_error"
 
 
 async def test_discovery_dismiss_existing_flow_on_paired(hass, controller):

@@ -1514,3 +1514,34 @@ async def test_query_recover(hass, caplog):
             }
         },
     }
+
+
+async def test_proxy_selected(hass, caplog):
+    """Test that we handle proxy selected."""
+
+    result = await sh.async_handle_message(
+        hass,
+        BASIC_CONFIG,
+        "test-agent",
+        {
+            "requestId": REQ_ID,
+            "inputs": [
+                {
+                    "intent": "action.devices.PROXY_SELECTED",
+                    "payload": {
+                        "device": {
+                            "id": "abcdefg",
+                            "customData": {},
+                        },
+                        "structureData": {},
+                    },
+                }
+            ],
+        },
+        const.SOURCE_LOCAL,
+    )
+
+    assert result == {
+        "requestId": REQ_ID,
+        "payload": {},
+    }

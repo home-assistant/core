@@ -1,8 +1,24 @@
 {
     "options": {
         "step": {
+            "accessory": {
+                "data": {
+                    "entities": "\u041e\u0431\u0435\u043a\u0442"
+                }
+            },
+            "exclude": {
+                "data": {
+                    "entities": "\u041e\u0431\u0435\u043a\u0442\u0438"
+                }
+            },
+            "include": {
+                "data": {
+                    "entities": "\u041e\u0431\u0435\u043a\u0442\u0438"
+                }
+            },
             "include_exclude": {
                 "data": {
+                    "entities": "\u041e\u0431\u0435\u043a\u0442\u0438",
                     "mode": "\u0420\u0435\u0436\u0438\u043c"
                 }
             },

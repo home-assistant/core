@@ -13,6 +13,9 @@ from homeassistant.setup import async_setup_component
 
 SESSION_ID = "amzn1.echo-api.session.0000000-0000-0000-0000-00000000000"
 APPLICATION_ID = "amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00ebe"
+APPLICATION_ID_SESSION_OPEN = (
+    "amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00ebf"
+)
 REQUEST_ID = "amzn1.echo-api.request.0000000-0000-0000-0000-00000000000"
 AUTHORITY_ID = "amzn1.er-authority.000000-d0ed-0000-ad00-000000d00ebe.ZODIAC"
 BUILTIN_AUTH_ID = "amzn1.er-authority.000000-d0ed-0000-ad00-000000d00ebe.TEST"
@@ -102,6 +105,16 @@ def alexa_client(loop, hass, hass_client):
                             "text": "LaunchRequest has been received.",
                         }
                     },
+                    APPLICATION_ID_SESSION_OPEN: {
+                        "speech": {
+                            "type": "plain",
+                            "text": "LaunchRequest has been received.",
+                        },
+                        "reprompt": {
+                            "type": "plain",
+                            "text": "LaunchRequest has been received.",
+                        },
+                    },
                 }
             },
         )
@@ -139,6 +152,36 @@ async def test_intent_launch_request(alexa_client):
     data = await req.json()
     text = data.get("response", {}).get("outputSpeech", {}).get("text")
     assert text == "LaunchRequest has been received."
+    assert data.get("response", {}).get("shouldEndSession")
+
+
+async def test_intent_launch_request_with_session_open(alexa_client):
+    """Test the launch of a request."""
+    data = {
+        "version": "1.0",
+        "session": {
+            "new": True,
+            "sessionId": SESSION_ID,
+            "application": {"applicationId": APPLICATION_ID_SESSION_OPEN},
+            "attributes": {},
+            "user": {"userId": "amzn1.account.AM3B00000000000000000000000"},
+        },
+        "request": {
+            "type": "LaunchRequest",
+            "requestId": REQUEST_ID,
+            "timestamp": "2015-05-13T12:34:56Z",
+        },
+    }
+    req = await _intent_req(alexa_client, data)
+    assert req.status == HTTPStatus.OK
+    data = await req.json()
+    text = data.get("response", {}).get("outputSpeech", {}).get("text")
+    assert text == "LaunchRequest has been received."
+    text = (
+        data.get("response", {}).get("reprompt", {}).get("outputSpeech", {}).get("text")
+    )
+    assert text == "LaunchRequest has been received."
+    assert not data.get("response", {}).get("shouldEndSession")
 
 
 async def test_intent_launch_request_not_configured(alexa_client):

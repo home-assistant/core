@@ -12,6 +12,7 @@ from . import (
     dhcp,
     json,
     manifest,
+    metadata,
     mqtt,
     mypy_config,
     requirements,
@@ -41,6 +42,7 @@ INTEGRATION_PLUGINS = [
 HASS_PLUGINS = [
     coverage,
     mypy_config,
+    metadata,
 ]
 
 ALL_PLUGIN_NAMES = [

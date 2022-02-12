@@ -88,7 +88,7 @@
     {
       "label": "Install all Requirements",
       "type": "shell",
-      "command": "pip3 install -r requirements_all.txt",
+      "command": "pip3 install --use-deprecated=legacy-resolver -r requirements_all.txt",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -102,7 +102,7 @@
     {
       "label": "Install all Test Requirements",
       "type": "shell",
-      "command": "pip3 install -r requirements_test_all.txt",
+      "command": "pip3 install --use-deprecated=legacy-resolver -r requirements_test_all.txt",
       "group": {
         "kind": "build",
         "isDefault": true
