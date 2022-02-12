@@ -6,7 +6,6 @@ from typing import Any
 
 from pywizlight import PilotParser, wizlight
 from pywizlight.bulb import PIR_SOURCE
-from pywizlight.exceptions import WizLightNotKnownBulb
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
@@ -23,6 +22,7 @@ from .const import (
     DISCOVERY_INTERVAL,
     DOMAIN,
     SIGNAL_WIZ_PIR,
+    WIZ_CONNECT_EXCEPTIONS,
     WIZ_EXCEPTIONS,
 )
 from .discovery import async_discover_devices, async_trigger_discovery
@@ -56,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         scenes = await bulb.getSupportedScenes()
         await bulb.getMac()
-    except (WizLightNotKnownBulb, *WIZ_EXCEPTIONS) as err:
+    except WIZ_CONNECT_EXCEPTIONS as err:
         raise ConfigEntryNotReady(f"{ip_address}: {err}") from err
 
     async def _async_update() -> None:
