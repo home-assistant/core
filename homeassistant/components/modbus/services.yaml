@@ -8,8 +8,8 @@ write_coil:
       required: true
       selector:
         number:
-          min: 1
-          max: 32767
+          min: 0
+          max: 65536
     state:
       name: State
       description: State to write.
@@ -42,8 +42,8 @@ write_register:
       required: true
       selector:
         number:
-          min: 1
-          max: 32767
+          min: 0
+          max: 65536
     unit:
       name: Unit
       description: Address of the modbus unit.
