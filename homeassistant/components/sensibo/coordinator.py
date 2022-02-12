@@ -74,26 +74,14 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 temperature_step = temperatures_list[1] - temperatures_list[0]
 
             active_features = list(ac_states)
-            full_features = []
-            LOGGER.debug("Capa %s", capabilities["modes"])
+            full_features = set()
             for mode in capabilities["modes"]:
-                LOGGER.debug("mode %s", mode)
-                LOGGER.debug("Mode capa %s", capabilities["modes"][mode])
-                if (
-                    "temperatures" in capabilities["modes"][mode]
-                    and "targetTemperature" not in full_features
-                ):
-                    full_features.append("targetTemperature")
-                if (
-                    "swing" in capabilities["modes"][mode]
-                    and "swing" not in full_features
-                ):
-                    full_features.append("swing")
-                if (
-                    "fanLevels" in capabilities["modes"][mode]
-                    and "fanLevel" not in full_features
-                ):
-                    full_features.append("fanLevel")
+                if "temperatures" in capabilities["modes"][mode]:
+                    full_features.add("targetTemperature")
+                if "swing" in capabilities["modes"][mode]:
+                    full_features.add("swing")
+                if "fanLevels" in capabilities["modes"][mode]:
+                    full_features.add("fanLevel")
 
             state = hvac_mode if hvac_mode else "off"
 
