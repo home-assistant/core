@@ -5,7 +5,6 @@ import logging
 from typing import Any
 
 from pywizlight import wizlight
-from pywizlight.exceptions import WizLightNotKnownBulb
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
@@ -16,7 +15,13 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DISCOVER_SCAN_TIMEOUT, DISCOVERY_INTERVAL, DOMAIN, WIZ_EXCEPTIONS
+from .const import (
+    DISCOVER_SCAN_TIMEOUT,
+    DISCOVERY_INTERVAL,
+    DOMAIN,
+    WIZ_CONNECT_EXCEPTIONS,
+    WIZ_EXCEPTIONS,
+)
 from .discovery import async_discover_devices, async_trigger_discovery
 from .models import WizData
 
@@ -48,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         scenes = await bulb.getSupportedScenes()
         await bulb.getMac()
-    except (WizLightNotKnownBulb, *WIZ_EXCEPTIONS) as err:
+    except WIZ_CONNECT_EXCEPTIONS as err:
         raise ConfigEntryNotReady(f"{ip_address}: {err}") from err
 
     async def _async_update() -> None:
