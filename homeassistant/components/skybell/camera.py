@@ -3,9 +3,8 @@ from __future__ import annotations
 
 import logging
 
+from aiohttp import ClientConnectorError, ClientError, ClientResponse
 from aioskybell.device import SkybellDevice
-import requests
-from requests.models import Response
 import voluptuous as vol
 
 from homeassistant.components.camera import (
@@ -16,6 +15,7 @@ from homeassistant.components.camera import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -83,7 +83,7 @@ class SkybellCamera(SkybellEntity, Camera):
         self._attr_unique_id = f"{server_unique_id}/{description.key}"
 
         self._url = ""
-        self._response: Response | None = None
+        self._response: ClientResponse | None = None
 
     @property
     def image_url(self) -> str:
@@ -92,21 +92,19 @@ class SkybellCamera(SkybellEntity, Camera):
             return self._device.activity_image
         return self._device.image
 
-    def camera_image(
+    async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Get the latest camera image."""
-        if self._url != self.image_url:
+        if self._url != self.image_url or not self._response:
             self._url = self.image_url
 
             try:
-                self._response = requests.get(self._url, stream=True, timeout=10)
+                websession = async_get_clientsession(self.hass)
+                self._response = await websession.get(self._url, timeout=10)
 
-            except requests.HTTPError as err:
+            except (ClientConnectorError, ClientError) as err:
                 _LOGGER.warning("Failed to get camera image: %s", err)
-                self._response = None
+                return None
 
-        if not self._response:
-            return None
-
-        return self._response.content
+        return await self._response.read()
