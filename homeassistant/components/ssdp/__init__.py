@@ -12,7 +12,12 @@ import sys
 from typing import Any
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
-from async_upnp_client.const import DeviceOrServiceType, SsdpHeaders, SsdpSource
+from async_upnp_client.const import (
+    AddressTupleVXType,
+    DeviceOrServiceType,
+    SsdpHeaders,
+    SsdpSource,
+)
 from async_upnp_client.description_cache import DescriptionCache
 from async_upnp_client.ssdp import SSDP_PORT, determine_source_target
 from async_upnp_client.ssdp_listener import SsdpDevice, SsdpListener
@@ -423,14 +428,21 @@ class Scanner:
 
     async def _async_start_ssdp_listeners(self) -> None:
         """Start the SSDP Listeners."""
-        has_scope_id = sys.version_info >= (3, 9,)
+        has_scope_id = sys.version_info >= (
+            3,
+            9,
+        )
         for source_ip in await self._async_build_source_set():
             if source_ip.version == 6 and not has_scope_id:
                 continue
 
             source_ip_str = str(source_ip)
-            source = (source_ip_str, 0, 0, int(source_ip.scope_id)) if source_ip.version == 6 else (source_ip_str, 0)
-            source, target = determine_source_target(source)
+            source_tuple: AddressTupleVXType = (
+                (source_ip_str, 0, 0, int(getattr(source_ip, "scope_id")))
+                if source_ip.version == 6
+                else (source_ip_str, 0)
+            )
+            source, target = determine_source_target(source_tuple)
             self._ssdp_listeners.append(
                 SsdpListener(
                     async_callback=self._ssdp_listener_callback,
