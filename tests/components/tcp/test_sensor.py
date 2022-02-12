@@ -118,7 +118,7 @@ async def test_config_uses_defaults(hass, mock_socket):
     for key in KEYS_AND_DEFAULTS:
         del config[key]
 
-    with assert_setup_component(1) as result_config:
+    with assert_setup_component(1, "sensor") as result_config:
         assert await async_setup_component(hass, "sensor", {"sensor": config})
         await hass.async_block_till_done()
 

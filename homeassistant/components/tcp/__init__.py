@@ -86,6 +86,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the TCP component."""
+    if DOMAIN not in config:
+        return True
     for discovery_info in config[DOMAIN]:
         for platform in PLATFORMS:
             hass.async_create_task(
