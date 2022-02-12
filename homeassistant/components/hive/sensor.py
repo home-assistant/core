@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -13,7 +14,32 @@ from .const import DOMAIN
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
 DEVICETYPE = {
+    "Camera_Temp": {
+        "icon": "mdi:thermometer",
+        "unit": TEMP_CELSIUS,
+        "type": "temperature",
+    },
+    "Heating_Current_Temperature": {
+        "icon": "mdi:thermometer",
+        "unit": TEMP_CELSIUS,
+        "type": "temperature",
+    },
+    "Heating_Target_Temperature": {
+        "icon": "mdi:thermometer",
+        "unit": TEMP_CELSIUS,
+        "type": "temperature",
+    },
+    "Heating_State": {"icon": "mdi:radiator"},
+    "Heating_Mode": {"icon": "mdi:radiator"},
+    "Heating_Boost": {"icon": "mdi:radiator"},
+    "Hotwater_State": {"icon": "mdi:water-pump"},
+    "Hotwater_Mode": {"icon": "mdi:water-pump"},
+    "Hotwater_Boost": {"icon": "mdi:water-pump"},
+    "Mode": {"icon": "mdi:eye"},
     "Battery": {"unit": " % ", "type": SensorDeviceClass.BATTERY},
+    "Availability": {"icon": "mdi:check-circle"},
+    "Connectivity": {"icon": "mdi:check-circle"},
+    "Power": {"type": SensorDeviceClass.ENERGY},
 }
 
 
@@ -59,7 +85,7 @@ class HiveSensorEntity(HiveEntity, SensorEntity):
     @property
     def device_class(self):
         """Device class of the entity."""
-        return DEVICETYPE[self.device["hiveType"]].get("type")
+        return DEVICETYPE[self.device["hiveType"]].get("type", None)
 
     @property
     def native_unit_of_measurement(self):
