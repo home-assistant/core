@@ -125,10 +125,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self.controller is None:
             await self._async_setup_controller()
 
-        all_hosts = await self.controller.discover_ip()
-
         self.devices = {}
-        for host in all_hosts:
+
+        async for host in self.controller.async_discover():
             status_flags = int(host.info["sf"])
             paired = not status_flags & 0x01
             if paired:
@@ -155,7 +154,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self._async_setup_controller()
 
         try:
-            device = await self.controller.find_ip_by_device_id(unique_id)
+            device = await self.controller.async_find(unique_id)
         except aiohomekit.AccessoryNotFoundError:
             return self.async_abort(reason="accessory_not_found_error")
 
@@ -339,12 +338,12 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # If it doesn't have a screen then the pin is static.
 
         # If it has a display it will display a pin on that display. In
-        # this case the code is random. So we have to call the start_pairing
+        # this case the code is random. So we have to call the async_start_pairing
         # API before the user can enter a pin. But equally we don't want to
-        # call start_pairing when the device is discovered, only when they
+        # call async_start_pairing when the device is discovered, only when they
         # click on 'Configure' in the UI.
 
-        # start_pairing will make the device show its pin and return a
+        # async_start_pairing will make the device show its pin and return a
         # callable. We call the callable with the pin that the user has typed
         # in.
 
@@ -399,8 +398,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # we always check to see if self.finish_paring has been
             # set.
             try:
-                discovery = await self.controller.find_ip_by_device_id(self.hkid)
-                self.finish_pairing = await discovery.start_pairing(self.hkid)
+                discovery = await self.controller.async_find(self.hkid)
+                self.finish_pairing = await discovery.async_start_pairing(self.hkid)
 
             except aiohomekit.BusyError:
                 # Already performing a pair setup operation with a different
