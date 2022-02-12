@@ -1546,6 +1546,17 @@ async def test_mqtt_ws_subscription(hass, hass_ws_client, mqtt_mock):
     assert response["success"]
 
 
+async def test_mqtt_ws_subscription_not_admin(
+    hass, caplog, hass_ws_client, mqtt_mock, hass_read_only_access_token
+):
+    """Test MQTT websocket user is not admin."""
+    client = await hass_ws_client(hass, access_token=hass_read_only_access_token)
+    await client.send_json({"id": 5, "type": "mqtt/subscribe", "topic": "test-topic"})
+    response = await client.receive_json()
+    assert response["success"] is False
+    assert "Error handling message: Unauthorized" in caplog.text
+
+
 async def test_dump_service(hass, mqtt_mock):
     """Test that we can dump a topic."""
     mopen = mock_open()
