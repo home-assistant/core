@@ -1,7 +1,9 @@
 """Support for Xiaomi Aqara locks."""
 from homeassistant.components.lock import LockEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from . import XiaomiDevice
@@ -17,7 +19,11 @@ ATTR_VERIFIED_WRONG_TIMES = "verified_wrong_times"
 UNLOCK_MAINTAIN_TIME = 5
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Perform the setup for Xiaomi devices."""
     entities = []
     gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]

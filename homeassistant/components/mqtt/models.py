@@ -1,8 +1,9 @@
 """Modesl used by multiple MQTT modules."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 import datetime as dt
-from typing import Awaitable, Callable, Union
+from typing import Union
 
 import attr
 

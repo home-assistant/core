@@ -1,0 +1,27 @@
+{
+    "state": {
+        "climacell__health_concern": {
+            "good": "dobre",
+            "hazardous": "niebezpieczne",
+            "moderate": "umiarkowane",
+            "unhealthy": "niezdrowe",
+            "unhealthy_for_sensitive_groups": "niezdrowe dla grup wra\u017cliwych",
+            "very_unhealthy": "bardzo niezdrowe"
+        },
+        "climacell__pollen_index": {
+            "high": "wysokie",
+            "low": "niskie",
+            "medium": "\u015brednie",
+            "none": "brak",
+            "very_high": "bardzo wysokie",
+            "very_low": "bardzo niskie"
+        },
+        "climacell__precipitation_type": {
+            "freezing_rain": "marzn\u0105cy deszcz",
+            "ice_pellets": "granulki lodu",
+            "none": "brak",
+            "rain": "deszcz",
+            "snow": "\u015bnieg"
+        }
+    }
+}

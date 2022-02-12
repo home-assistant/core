@@ -4,8 +4,10 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.select import SelectEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ACTIVITY_POWER_OFF, DOMAIN, HARMONY_DATA
 from .data import HarmonyData
@@ -15,7 +17,9 @@ from .subscriber import HarmonyCallback
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up harmony activities select."""
     data = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
     _LOGGER.debug("creating select for %s hub activities", entry.data[CONF_NAME])

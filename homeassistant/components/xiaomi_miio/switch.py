@@ -15,6 +15,7 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -22,9 +23,10 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_TOKEN,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_DEVICE,
@@ -33,6 +35,8 @@ from .const import (
     CONF_MODEL,
     DOMAIN,
     FEATURE_FLAGS_AIRFRESH,
+    FEATURE_FLAGS_AIRFRESH_A1,
+    FEATURE_FLAGS_AIRFRESH_T2017,
     FEATURE_FLAGS_AIRHUMIDIFIER,
     FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
     FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
@@ -61,6 +65,8 @@ from .const import (
     FEATURE_SET_LED,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODEL_AIRFRESH_A1,
+    MODEL_AIRFRESH_T2017,
     MODEL_AIRFRESH_VA2,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CA4,
@@ -165,7 +171,9 @@ SERVICE_TO_METHOD = {
 }
 
 MODEL_TO_FEATURES_MAP = {
+    MODEL_AIRFRESH_A1: FEATURE_FLAGS_AIRFRESH_A1,
     MODEL_AIRFRESH_VA2: FEATURE_FLAGS_AIRFRESH,
+    MODEL_AIRFRESH_T2017: FEATURE_FLAGS_AIRFRESH_T2017,
     MODEL_AIRHUMIDIFIER_CA1: FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     MODEL_AIRHUMIDIFIER_CA4: FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1: FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
@@ -274,7 +282,11 @@ SWITCH_TYPES = (
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the switch from a config entry."""
     model = config_entry.data[CONF_MODEL]
     if model in (*MODELS_HUMIDIFIER, *MODELS_FAN):
@@ -405,7 +417,7 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
                 model,
             )
 
-        async def async_service_handler(service):
+        async def async_service_handler(service: ServiceCall) -> None:
             """Map services to methods on XiaomiPlugGenericSwitch."""
             method = SERVICE_TO_METHOD.get(service.service)
             params = {

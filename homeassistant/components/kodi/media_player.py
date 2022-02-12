@@ -1,4 +1,6 @@
 """Support for interfacing with the XBMC/Kodi JSON-RPC API."""
+from __future__ import annotations
+
 from datetime import timedelta
 from functools import wraps
 import logging
@@ -39,7 +41,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.media_player.errors import BrowseError
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -56,15 +58,17 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.core import CoreState, callback
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry,
     entity_platform,
 )
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import is_internal_request
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from .browse_media import build_item_response, get_media_info, library_payload
@@ -194,7 +198,12 @@ def find_matching_config_entries_for_host(hass, host):
     return None
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Kodi platform."""
     if discovery_info:
         # Now handled by zeroconf in the config flow
@@ -225,7 +234,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Kodi media player platform."""
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
@@ -900,8 +913,11 @@ class KodiEntity(MediaPlayerEntity):
         return response
 
     async def async_get_browse_image(
-        self, media_content_type, media_content_id, media_image_id=None
-    ):
+        self,
+        media_content_type: str,
+        media_content_id: str,
+        media_image_id: str | None = None,
+    ) -> tuple[bytes | None, str | None]:
         """Get media image from kodi server."""
         try:
             image_url, _, _ = await get_media_info(

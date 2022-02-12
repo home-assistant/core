@@ -12,7 +12,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -130,15 +130,15 @@ def _async_register_services(
 ) -> None:
     """Register integration-level services."""
 
-    def pause(call) -> None:
+    def pause(call: ServiceCall) -> None:
         """Service call to pause downloads in NZBGet."""
         coordinator.nzbget.pausedownload()
 
-    def resume(call) -> None:
+    def resume(call: ServiceCall) -> None:
         """Service call to resume downloads in NZBGet."""
         coordinator.nzbget.resumedownload()
 
-    def set_speed(call) -> None:
+    def set_speed(call: ServiceCall) -> None:
         """Service call to rate limit speeds in NZBGet."""
         coordinator.nzbget.rate(call.data[ATTR_SPEED])
 

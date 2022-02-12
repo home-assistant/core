@@ -14,7 +14,7 @@ class StrEnum(str, Enum):
         """Create a new StrEnum instance."""
         if not isinstance(value, str):
             raise TypeError(f"{value!r} is not a string")
-        return super().__new__(cls, value, *args, **kwargs)  # type: ignore[call-overload,no-any-return]
+        return super().__new__(cls, value, *args, **kwargs)
 
     def __str__(self) -> str:
         """Return self.value."""

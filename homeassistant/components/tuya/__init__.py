@@ -1,7 +1,6 @@
 """Support for Tuya Smart devices."""
 from __future__ import annotations
 
-import logging
 from typing import NamedTuple
 
 import requests
@@ -34,13 +33,12 @@ from .const import (
     CONF_PROJECT_TYPE,
     CONF_USERNAME,
     DOMAIN,
+    LOGGER,
     PLATFORMS,
     TUYA_DISCOVERY_NEW,
     TUYA_HA_SIGNAL_UPDATE_ENTITY,
     DPCode,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class HomeAssistantTuyaData(NamedTuple):
@@ -250,7 +248,7 @@ class DeviceListener(TuyaDeviceListener):
     def update_device(self, device: TuyaDevice) -> None:
         """Update device status."""
         if device.id in self.device_ids:
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Received update for device %s: %s",
                 device.id,
                 self.device_manager.device_map[device.id].status,
@@ -280,7 +278,7 @@ class DeviceListener(TuyaDeviceListener):
     @callback
     def async_remove_device(self, device_id: str) -> None:
         """Remove device from Home Assistant."""
-        _LOGGER.debug("Remove device: %s", device_id)
+        LOGGER.debug("Remove device: %s", device_id)
         device_registry = dr.async_get(self.hass)
         device_entry = device_registry.async_get_device(
             identifiers={(DOMAIN, device_id)}

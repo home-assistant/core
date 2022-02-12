@@ -1,4 +1,6 @@
 """Support for package tracking sensors from 17track.net."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -6,6 +8,7 @@ from py17track import Client as SeventeenTrackClient
 from py17track.errors import SeventeenTrackError
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -15,8 +18,11 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle, slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,7 +68,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Configure the platform and add the sensors."""
 
     session = aiohttp_client.async_get_clientsession(hass)
@@ -139,8 +150,9 @@ class SeventeenTrackSummarySensor(SensorEntity):
                 }
             )
 
-        if package_data:
-            self._attr_extra_state_attributes[ATTR_PACKAGES] = package_data
+        self._attr_extra_state_attributes[ATTR_PACKAGES] = (
+            package_data if package_data else None
+        )
 
         self._state = self._data.summary.get(self._status)
 
@@ -244,8 +256,8 @@ class SeventeenTrackPackageSensor(SensorEntity):
         title = NOTIFICATION_DELIVERED_TITLE.format(identification)
         notification_id = NOTIFICATION_DELIVERED_TITLE.format(self._tracking_number)
 
-        self.hass.components.persistent_notification.create(
-            message, title=title, notification_id=notification_id
+        persistent_notification.create(
+            self.hass, message, title=title, notification_id=notification_id
         )
 
 

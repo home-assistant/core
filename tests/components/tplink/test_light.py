@@ -1,6 +1,6 @@
 """Tests for light platform."""
+from __future__ import annotations
 
-from typing import Optional
 from unittest.mock import PropertyMock
 
 import pytest
@@ -48,7 +48,7 @@ async def test_light_unique_id(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("transition", [2.0, None])
-async def test_color_light(hass: HomeAssistant, transition: Optional[float]) -> None:
+async def test_color_light(hass: HomeAssistant, transition: float | None) -> None:
     """Test a color light and that all transitions are correctly passed."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS

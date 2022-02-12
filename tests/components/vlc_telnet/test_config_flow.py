@@ -79,38 +79,7 @@ async def test_user_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_import_flow(hass: HomeAssistant) -> None:
-    """Test successful import flow."""
-    test_data = {
-        "password": "test-password",
-        "host": "1.1.1.1",
-        "port": 8888,
-        "name": "custom name",
-    }
-    with patch("homeassistant.components.vlc_telnet.config_flow.Client.connect"), patch(
-        "homeassistant.components.vlc_telnet.config_flow.Client.login"
-    ), patch(
-        "homeassistant.components.vlc_telnet.config_flow.Client.disconnect"
-    ), patch(
-        "homeassistant.components.vlc_telnet.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=test_data,
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == test_data["name"]
-    assert result["data"] == test_data
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-@pytest.mark.parametrize(
-    "source", [config_entries.SOURCE_USER, config_entries.SOURCE_IMPORT]
-)
+@pytest.mark.parametrize("source", [config_entries.SOURCE_USER])
 async def test_abort_already_configured(hass: HomeAssistant, source: str) -> None:
     """Test we handle already configured host."""
     entry_data = {
@@ -133,9 +102,7 @@ async def test_abort_already_configured(hass: HomeAssistant, source: str) -> Non
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.parametrize(
-    "source", [config_entries.SOURCE_USER, config_entries.SOURCE_IMPORT]
-)
+@pytest.mark.parametrize("source", [config_entries.SOURCE_USER])
 @pytest.mark.parametrize(
     "error, connect_side_effect, login_side_effect",
     [

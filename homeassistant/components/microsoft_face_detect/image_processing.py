@@ -1,4 +1,6 @@
 """Component that will help set the Microsoft face detect processing."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -7,16 +9,16 @@ from homeassistant.components.image_processing import (
     ATTR_AGE,
     ATTR_GENDER,
     ATTR_GLASSES,
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    CONF_SOURCE,
     PLATFORM_SCHEMA,
     ImageProcessingFaceEntity,
 )
 from homeassistant.components.microsoft_face import DATA_MICROSOFT_FACE
-from homeassistant.core import split_entity_id
+from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_SOURCE
+from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +45,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Microsoft Face detection platform."""
     api = hass.data[DATA_MICROSOFT_FACE]
     attributes = config[CONF_ATTRIBUTES]

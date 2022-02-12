@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "server_failure": "RTSPtoWebRTC server returned an error. Check logs for more information.",
+            "server_unreachable": "Unable to communicate with RTSPtoWebRTC server. Check logs for more information.",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "error": {
+            "invalid_url": "Must be a valid RTSPtoWebRTC server URL e.g. https://example.com",
+            "server_failure": "RTSPtoWebRTC server returned an error. Check logs for more information.",
+            "server_unreachable": "Unable to communicate with RTSPtoWebRTC server. Check logs for more information."
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Do you want to configure Home Assistant to connect to the RTSPtoWebRTC server provided by the add-on: {addon}?",
+                "title": "RTSPtoWebRTC via Home Assistant add-on"
+            },
+            "user": {
+                "data": {
+                    "server_url": "RTSPtoWebRTC server URL e.g. https://example.com"
+                },
+                "description": "The RTSPtoWebRTC integration requires a server to translate RTSP streams into WebRTC. Enter the URL to the RTSPtoWebRTC server.",
+                "title": "Configure RTSPtoWebRTC"
+            }
+        }
+    }
+}

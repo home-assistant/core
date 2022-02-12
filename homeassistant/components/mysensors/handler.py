@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from mysensors import Message
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import decorator
@@ -66,7 +67,7 @@ async def handle_sketch_version(
 
 @callback
 def _handle_child_update(
-    hass: HomeAssistant, gateway_id: GatewayId, validated: dict[str, list[DevId]]
+    hass: HomeAssistant, gateway_id: GatewayId, validated: dict[Platform, list[DevId]]
 ) -> None:
     """Handle a child update."""
     signals: list[str] = []

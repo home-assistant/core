@@ -2,7 +2,8 @@
   "domain": "homematic",
   "name": "Homematic",
   "documentation": "https://www.home-assistant.io/integrations/homematic",
-  "requirements": ["pyhomematic==0.1.76"],
+  "requirements": ["pyhomematic==0.1.77"],
   "codeowners": ["@pvizeli", "@danielperna84"],
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "loggers": ["pyhomematic"]
 }

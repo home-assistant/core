@@ -2,14 +2,14 @@
     "config": {
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "invalid_api_key": "API \u5bc6\u9470\u7121\u6548",
+            "invalid_api_key": "API \u91d1\u9470\u7121\u6548",
             "rate_limited": "\u9054\u5230\u9650\u5236\u983b\u7387\u3001\u8acb\u7a0d\u5019\u518d\u8a66\u3002",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API \u5bc6\u9470",
+                    "api_key": "API \u91d1\u9470",
                     "api_version": "API \u7248\u672c",
                     "latitude": "\u7def\u5ea6",
                     "longitude": "\u7d93\u5ea6",

@@ -442,13 +442,13 @@ DISCOVERY_SCHEMAS = [
             dependent_value=ZwaveValueID(2, CommandClass.CONFIGURATION, endpoint=0),
         ),
     ),
-    # FortrezZ SSA1/SSA2
+    # FortrezZ SSA1/SSA2/SSA3
     ZWaveDiscoverySchema(
         platform="select",
         hint="multilevel_switch",
         manufacturer_id={0x0084},
         product_id={0x0107, 0x0108, 0x010B, 0x0205},
-        product_type={0x0311, 0x0313, 0x0341, 0x0343},
+        product_type={0x0311, 0x0313, 0x0331, 0x0341, 0x0343},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         data_template=BaseDiscoverySchemaDataTemplate(
             {

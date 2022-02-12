@@ -7,6 +7,7 @@ from homeassistant.const import ENERGY_KILO_WATT_HOUR, VOLUME_CUBIC_METERS, Plat
 DOMAIN = "vicare"
 
 PLATFORMS = [
+    Platform.BUTTON,
     Platform.CLIMATE,
     Platform.SENSOR,
     Platform.BINARY_SENSOR,
@@ -15,7 +16,7 @@ PLATFORMS = [
 
 VICARE_DEVICE_CONFIG = "device_conf"
 VICARE_API = "api"
-VICARE_CIRCUITS = "circuits"
+VICARE_NAME = "ViCare"
 
 CONF_CIRCUIT = "circuit"
 CONF_HEATING_TYPE = "heating_type"
@@ -45,6 +46,7 @@ class HeatingType(enum.Enum):
     pellets = "pellets"
     heatpump = "heatpump"
     fuelcell = "fuelcell"
+    hybrid = "hybrid"
 
 
 DEFAULT_HEATING_TYPE = HeatingType.auto
@@ -56,4 +58,5 @@ HEATING_TYPE_TO_CREATOR_METHOD = {
     HeatingType.heatpump: "asHeatPump",
     HeatingType.oil: "asOilBoiler",
     HeatingType.pellets: "asPelletsBoiler",
+    HeatingType.hybrid: "asHybridDevice",
 }

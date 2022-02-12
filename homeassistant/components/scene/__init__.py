@@ -4,7 +4,7 @@ from __future__ import annotations
 import functools as ft
 import importlib
 import logging
-from typing import Any
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -12,13 +12,14 @@ from homeassistant.components.light import ATTR_TRANSITION
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PLATFORM, SERVICE_TURN_ON
 from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 DOMAIN = "scene"
-STATE = "scening"
 STATES = "states"
 
 
@@ -58,7 +59,7 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the scenes."""
     component = hass.data[DOMAIN] = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass
@@ -70,7 +71,7 @@ async def async_setup(hass, config):
     component.async_register_entity_service(
         SERVICE_TURN_ON,
         {ATTR_TRANSITION: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=6553))},
-        "async_activate",
+        "_async_activate",
     )
 
     return True
@@ -88,18 +89,36 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-class Scene(Entity):
+class Scene(RestoreEntity):
     """A scene is a group of entities and the states we want them to be."""
 
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
+    _attr_should_poll = False
+    __last_activated: str | None = None
 
     @property
+    @final
     def state(self) -> str | None:
         """Return the state of the scene."""
-        return STATE
+        if self.__last_activated is None:
+            return None
+        return self.__last_activated
+
+    @final
+    async def _async_activate(self, **kwargs: Any) -> None:
+        """Activate scene.
+
+        Should not be overridden, handle setting last press timestamp.
+        """
+        self.__last_activated = dt_util.utcnow().isoformat()
+        self.async_write_ha_state()
+        await self.async_activate(**kwargs)
+
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the scene is added to hass."""
+        await super().async_internal_added_to_hass()
+        state = await self.async_get_last_state()
+        if state is not None and state.state is not None:
+            self.__last_activated = state.state
 
     def activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""

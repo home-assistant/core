@@ -3,7 +3,11 @@ from unittest.mock import patch
 
 from homeassistant.components import huisbaasje
 from homeassistant.components.huisbaasje.const import FLOW_CUBIC_METERS_PER_HOUR
-from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
@@ -11,9 +15,6 @@ from homeassistant.const import (
     CONF_ID,
     CONF_PASSWORD,
     CONF_USERNAME,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
     VOLUME_CUBIC_METERS,
@@ -58,7 +59,9 @@ async def test_setup_entry(hass: HomeAssistant):
         # Assert data is loaded
         current_power = hass.states.get("sensor.huisbaasje_current_power")
         assert current_power.state == "1012.0"
-        assert current_power.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
+        assert (
+            current_power.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
+        )
         assert current_power.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert (
             current_power.attributes.get(ATTR_STATE_CLASS)
@@ -68,7 +71,10 @@ async def test_setup_entry(hass: HomeAssistant):
 
         current_power_in = hass.states.get("sensor.huisbaasje_current_power_in_peak")
         assert current_power_in.state == "1012.0"
-        assert current_power_in.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
+        assert (
+            current_power_in.attributes.get(ATTR_DEVICE_CLASS)
+            == SensorDeviceClass.POWER
+        )
         assert current_power_in.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert (
             current_power_in.attributes.get(ATTR_STATE_CLASS)
@@ -81,7 +87,8 @@ async def test_setup_entry(hass: HomeAssistant):
         )
         assert current_power_in_low.state == "unknown"
         assert (
-            current_power_in_low.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
+            current_power_in_low.attributes.get(ATTR_DEVICE_CLASS)
+            == SensorDeviceClass.POWER
         )
         assert current_power_in_low.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert (
@@ -94,7 +101,10 @@ async def test_setup_entry(hass: HomeAssistant):
 
         current_power_out = hass.states.get("sensor.huisbaasje_current_power_out_peak")
         assert current_power_out.state == "unknown"
-        assert current_power_out.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
+        assert (
+            current_power_out.attributes.get(ATTR_DEVICE_CLASS)
+            == SensorDeviceClass.POWER
+        )
         assert current_power_out.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert (
             current_power_out.attributes.get(ATTR_STATE_CLASS)
@@ -108,7 +118,7 @@ async def test_setup_entry(hass: HomeAssistant):
         assert current_power_out_low.state == "unknown"
         assert (
             current_power_out_low.attributes.get(ATTR_DEVICE_CLASS)
-            == DEVICE_CLASS_POWER
+            == SensorDeviceClass.POWER
         )
         assert current_power_out_low.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert (
@@ -125,7 +135,7 @@ async def test_setup_entry(hass: HomeAssistant):
         assert energy_consumption_peak_today.state == "2.67"
         assert (
             energy_consumption_peak_today.attributes.get(ATTR_DEVICE_CLASS)
-            == DEVICE_CLASS_ENERGY
+            == SensorDeviceClass.ENERGY
         )
         assert (
             energy_consumption_peak_today.attributes.get(ATTR_ICON)
@@ -146,7 +156,7 @@ async def test_setup_entry(hass: HomeAssistant):
         assert energy_consumption_off_peak_today.state == "0.627"
         assert (
             energy_consumption_off_peak_today.attributes.get(ATTR_DEVICE_CLASS)
-            == DEVICE_CLASS_ENERGY
+            == SensorDeviceClass.ENERGY
         )
         assert (
             energy_consumption_off_peak_today.attributes.get(ATTR_ICON)
@@ -167,7 +177,7 @@ async def test_setup_entry(hass: HomeAssistant):
         assert energy_production_peak_today.state == "1.512"
         assert (
             energy_production_peak_today.attributes.get(ATTR_DEVICE_CLASS)
-            == DEVICE_CLASS_ENERGY
+            == SensorDeviceClass.ENERGY
         )
         assert (
             energy_production_peak_today.attributes.get(ATTR_ICON)
@@ -188,7 +198,7 @@ async def test_setup_entry(hass: HomeAssistant):
         assert energy_production_off_peak_today.state == "1.093"
         assert (
             energy_production_off_peak_today.attributes.get(ATTR_DEVICE_CLASS)
-            == DEVICE_CLASS_ENERGY
+            == SensorDeviceClass.ENERGY
         )
         assert (
             energy_production_off_peak_today.attributes.get(ATTR_ICON)
@@ -205,7 +215,9 @@ async def test_setup_entry(hass: HomeAssistant):
 
         energy_today = hass.states.get("sensor.huisbaasje_energy_today")
         assert energy_today.state == "3.3"
-        assert energy_today.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
+        assert (
+            energy_today.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
+        )
         assert energy_today.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert (
             energy_today.attributes.get(ATTR_STATE_CLASS)
@@ -218,7 +230,10 @@ async def test_setup_entry(hass: HomeAssistant):
 
         energy_this_week = hass.states.get("sensor.huisbaasje_energy_this_week")
         assert energy_this_week.state == "17.5"
-        assert energy_this_week.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
+        assert (
+            energy_this_week.attributes.get(ATTR_DEVICE_CLASS)
+            == SensorDeviceClass.ENERGY
+        )
         assert energy_this_week.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert (
             energy_this_week.attributes.get(ATTR_STATE_CLASS)
@@ -232,7 +247,8 @@ async def test_setup_entry(hass: HomeAssistant):
         energy_this_month = hass.states.get("sensor.huisbaasje_energy_this_month")
         assert energy_this_month.state == "103.3"
         assert (
-            energy_this_month.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
+            energy_this_month.attributes.get(ATTR_DEVICE_CLASS)
+            == SensorDeviceClass.ENERGY
         )
         assert energy_this_month.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert (
@@ -246,7 +262,10 @@ async def test_setup_entry(hass: HomeAssistant):
 
         energy_this_year = hass.states.get("sensor.huisbaasje_energy_this_year")
         assert energy_this_year.state == "673.0"
-        assert energy_this_year.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
+        assert (
+            energy_this_year.attributes.get(ATTR_DEVICE_CLASS)
+            == SensorDeviceClass.ENERGY
+        )
         assert energy_this_year.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert (
             energy_this_year.attributes.get(ATTR_STATE_CLASS)
@@ -271,7 +290,7 @@ async def test_setup_entry(hass: HomeAssistant):
 
         gas_today = hass.states.get("sensor.huisbaasje_gas_today")
         assert gas_today.state == "1.1"
-        assert gas_today.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
+        assert gas_today.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
         assert gas_today.attributes.get(ATTR_ICON) == "mdi:counter"
         assert (
             gas_today.attributes.get(ATTR_STATE_CLASS)
@@ -281,7 +300,7 @@ async def test_setup_entry(hass: HomeAssistant):
 
         gas_this_week = hass.states.get("sensor.huisbaasje_gas_this_week")
         assert gas_this_week.state == "5.6"
-        assert gas_this_week.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
+        assert gas_this_week.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
         assert gas_this_week.attributes.get(ATTR_ICON) == "mdi:counter"
         assert (
             gas_this_week.attributes.get(ATTR_STATE_CLASS)
@@ -294,7 +313,7 @@ async def test_setup_entry(hass: HomeAssistant):
 
         gas_this_month = hass.states.get("sensor.huisbaasje_gas_this_month")
         assert gas_this_month.state == "39.1"
-        assert gas_this_month.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
+        assert gas_this_month.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
         assert gas_this_month.attributes.get(ATTR_ICON) == "mdi:counter"
         assert (
             gas_this_month.attributes.get(ATTR_STATE_CLASS)
@@ -307,7 +326,7 @@ async def test_setup_entry(hass: HomeAssistant):
 
         gas_this_year = hass.states.get("sensor.huisbaasje_gas_this_year")
         assert gas_this_year.state == "116.7"
-        assert gas_this_year.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
+        assert gas_this_year.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
         assert gas_this_year.attributes.get(ATTR_ICON) == "mdi:counter"
         assert (
             gas_this_year.attributes.get(ATTR_STATE_CLASS)

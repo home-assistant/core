@@ -1,11 +1,9 @@
 """Elmax integration common classes and utilities."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import timedelta
 import logging
 from logging import Logger
-from typing import Any
 
 import async_timeout
 from elmax_api.exceptions import (
@@ -15,25 +13,29 @@ from elmax_api.exceptions import (
     ElmaxNetworkError,
 )
 from elmax_api.http import Elmax
+from elmax_api.model.actuator import Actuator
 from elmax_api.model.endpoint import DeviceEndpoint
 from elmax_api.model.panel import PanelEntry, PanelStatus
 
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import DEFAULT_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class ElmaxCoordinator(DataUpdateCoordinator):
+class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
     """Coordinator helper to handle Elmax API polling."""
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         logger: Logger,
         username: str,
         password: str,
@@ -57,16 +59,11 @@ class ElmaxCoordinator(DataUpdateCoordinator):
         """Return the panel entry."""
         return self._panel_entry
 
-    @property
-    def panel_status(self) -> PanelStatus | None:
-        """Return the last fetched panel status."""
-        return self.data
-
-    def get_endpoint_state(self, endpoint_id: str) -> DeviceEndpoint | None:
-        """Return the last fetched status for the given endpoint-id."""
+    def get_actuator_state(self, actuator_id: str) -> Actuator:
+        """Return state of a specific actuator."""
         if self._state_by_endpoint is not None:
-            return self._state_by_endpoint.get(endpoint_id)
-        return None
+            return self._state_by_endpoint.get(actuator_id)
+        raise HomeAssistantError("Unknown actuator")
 
     @property
     def http_client(self):
@@ -78,18 +75,17 @@ class ElmaxCoordinator(DataUpdateCoordinator):
             async with async_timeout.timeout(DEFAULT_TIMEOUT):
                 # Retrieve the panel online status first
                 panels = await self._client.list_control_panels()
-                panels = list(filter(lambda x: x.hash == self._panel_id, panels))
+                panel = next(
+                    (panel for panel in panels if panel.hash == self._panel_id), None
+                )
 
                 # If the panel is no more available within the given. Raise config error as the user must
                 # reconfigure it in order to  make it work again
-                if len(panels) < 1:
-                    _LOGGER.error(
-                        "Panel ID %s is no more linked to this user account",
-                        self._panel_id,
+                if not panel:
+                    raise ConfigEntryAuthFailed(
+                        f"Panel ID {self._panel_id} is no more linked to this user account"
                     )
-                    raise ConfigEntryAuthFailed()
 
-                panel = panels[0]
                 self._panel_entry = panel
 
                 # If the panel is online, proceed with fetching its state
@@ -109,26 +105,21 @@ class ElmaxCoordinator(DataUpdateCoordinator):
                 return None
 
         except ElmaxBadPinError as err:
-            _LOGGER.error("Control panel pin was refused")
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed("Control panel pin was refused") from err
         except ElmaxBadLoginError as err:
-            _LOGGER.error("Refused username/password")
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed("Refused username/password") from err
         except ElmaxApiError as err:
-            raise HomeAssistantError(
-                f"Error communicating with ELMAX API: {err}"
-            ) from err
+            raise UpdateFailed(f"Error communicating with ELMAX API: {err}") from err
         except ElmaxNetworkError as err:
-            raise HomeAssistantError(
-                "Network error occurred while contacting ELMAX cloud"
+            raise UpdateFailed(
+                "A network error occurred while communicating with Elmax cloud."
             ) from err
-        except Exception as err:
-            _LOGGER.exception("Unexpected exception")
-            raise HomeAssistantError("An unexpected error occurred") from err
 
 
-class ElmaxEntity(Entity):
+class ElmaxEntity(CoordinatorEntity):
     """Wrapper for Elmax entities."""
+
+    coordinator: ElmaxCoordinator
 
     def __init__(
         self,
@@ -138,21 +129,11 @@ class ElmaxEntity(Entity):
         coordinator: ElmaxCoordinator,
     ) -> None:
         """Construct the object."""
+        super().__init__(coordinator=coordinator)
         self._panel = panel
         self._device = elmax_device
         self._panel_version = panel_version
-        self._coordinator = coordinator
-        self._transitory_state = None
-
-    @property
-    def transitory_state(self) -> Any | None:
-        """Return the transitory state for this entity."""
-        return self._transitory_state
-
-    @transitory_state.setter
-    def transitory_state(self, value: Any) -> None:
-        """Set the transitory state value."""
-        self._transitory_state = value
+        self._client = coordinator.http_client
 
     @property
     def panel_id(self) -> str:
@@ -170,20 +151,12 @@ class ElmaxEntity(Entity):
         return self._device.name
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return extra attributes."""
-        return {
-            "index": self._device.index,
-            "visible": self._device.visible,
-        }
-
-    @property
     def device_info(self):
         """Return device specific attributes."""
         return {
             "identifiers": {(DOMAIN, self._panel.hash)},
             "name": self._panel.get_name_by_user(
-                self._coordinator.http_client.get_authenticated_username()
+                self.coordinator.http_client.get_authenticated_username()
             ),
             "manufacturer": "Elmax",
             "model": self._panel_version,
@@ -192,39 +165,5 @@ class ElmaxEntity(Entity):
 
     @property
     def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._panel.online
-
-    def _http_data_changed(self) -> None:
-        # Whenever new HTTP data is received from the coordinator we extract the stat of this
-        # device and store it locally for later use
-        device_state = self._coordinator.get_endpoint_state(self._device.endpoint_id)
-        if self._device is None or device_state.__dict__ != self._device.__dict__:
-            # If HTTP data has changed, we need to schedule a forced refresh
-            self._device = device_state
-            self.async_schedule_update_ha_state(force_refresh=True)
-
-        # Reset the transitory state as we did receive a fresh state
-        self._transitory_state = None
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return False
-
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass.
-
-        To be extended by integrations.
-        """
-        self._coordinator.async_add_listener(self._http_data_changed)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass.
-
-        To be extended by integrations.
-        """
-        self._coordinator.async_remove_listener(self._http_data_changed)
+        """Return if entity is available."""
+        return super().available and self._panel.online

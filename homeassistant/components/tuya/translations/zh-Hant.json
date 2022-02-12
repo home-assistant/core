@@ -3,7 +3,7 @@
         "abort": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
-            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
+            "single_instance_allowed": "\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3001\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
         },
         "error": {
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
@@ -14,7 +14,7 @@
             "login": {
                 "data": {
                     "access_id": "Access ID",
-                    "access_secret": "Access Secret",
+                    "access_secret": "\u5b58\u53d6\u79c1\u9470",
                     "country_code": "\u570b\u78bc",
                     "endpoint": "\u53ef\u7528\u5340\u57df",
                     "password": "\u5bc6\u78bc",
@@ -27,7 +27,7 @@
             "user": {
                 "data": {
                     "access_id": "Tuya IoT Access ID",
-                    "access_secret": "Tuya IoT Access Secret",
+                    "access_secret": "Tuya IoT \u5b58\u53d6\u79c1\u9470",
                     "country_code": "\u570b\u5bb6",
                     "password": "\u5bc6\u78bc",
                     "platform": "\u5e33\u6236\u8a3b\u518a\u6240\u5728\u4f4d\u7f6e",

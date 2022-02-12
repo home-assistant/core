@@ -3,8 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
-from collections.abc import Awaitable
-from typing import Callable
+from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import web

@@ -7,6 +7,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
@@ -15,6 +16,8 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TIME_SECONDS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, JUICENET_API, JUICENET_COORDINATOR
 from .entity import JuiceNetDevice
@@ -67,7 +70,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the JuiceNet Sensors."""
     juicenet_data = hass.data[DOMAIN][config_entry.entry_id]
     api = juicenet_data[JUICENET_API]

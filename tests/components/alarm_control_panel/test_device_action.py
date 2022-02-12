@@ -170,7 +170,7 @@ async def test_get_action_capabilities(
     assert {action["type"] for action in actions} == set(expected_capabilities)
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "action", action
+            hass, DeviceAutomationType.ACTION, action
         )
         assert capabilities == expected_capabilities[action["type"]]
 
@@ -222,7 +222,7 @@ async def test_get_action_capabilities_arm_code(
     assert {action["type"] for action in actions} == set(expected_capabilities)
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "action", action
+            hass, DeviceAutomationType.ACTION, action
         )
         assert capabilities == expected_capabilities[action["type"]]
 

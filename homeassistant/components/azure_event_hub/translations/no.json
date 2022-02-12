@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tjenesten er allerede konfigurert",
+            "cannot_connect": "Tilkobling med legitimasjonen fra configuration.yaml mislyktes. Fjern fra yaml og bruk konfigurasjonsflyten.",
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
+            "unknown": "Tilkobling med legitimasjonen fra configuration.yaml mislyktes med en ukjent feil. Fjern fra yaml og bruk konfigurasjonsflyten."
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "conn_string": {
+                "data": {
+                    "event_hub_connection_string": "Event Hub Connection String"
+                },
+                "description": "Vennligst skriv inn tilkoblingsstrengen for: {event_hub_instance_name}",
+                "title": "Metode for tilkoblingsstreng"
+            },
+            "sas": {
+                "data": {
+                    "event_hub_namespace": "Event Hub-navneomr\u00e5de",
+                    "event_hub_sas_key": "Event Hub SAS-n\u00f8kkel",
+                    "event_hub_sas_policy": "Event Hub SAS-policy"
+                },
+                "description": "Vennligst skriv inn SAS-legitimasjonen (delt tilgangssignatur) for: {event_hub_instance_name}",
+                "title": "SAS Credentials-metoden"
+            },
+            "user": {
+                "data": {
+                    "event_hub_instance_name": "Event Hub-forekomstnavn",
+                    "use_connection_string": "Bruk tilkoblingsstreng"
+                },
+                "title": "Konfigurer din Azure Event Hub-integrasjon"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "data": {
+                    "send_interval": "Intervall mellom sending av batcher til huben."
+                },
+                "title": "Alternativer for Azure Event Hub."
+            }
+        }
+    }
+}

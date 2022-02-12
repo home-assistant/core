@@ -71,6 +71,11 @@ async def test_lock_popp_electric_strike_lock_control(
     )
 
 
+async def test_fortrez_ssa3_siren(hass, client, fortrezz_ssa3_siren, integration):
+    """Test Fortrezz SSA3 siren gets discovered correctly."""
+    assert hass.states.get("select.siren_and_strobe_alarm") is not None
+
+
 async def test_firmware_version_range_exception(hass):
     """Test FirmwareVersionRange exception."""
     with pytest.raises(ValueError):

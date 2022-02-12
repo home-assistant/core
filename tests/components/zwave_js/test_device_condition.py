@@ -10,6 +10,7 @@ from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 
 from homeassistant.components import automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -60,7 +61,9 @@ async def test_get_conditions(hass, client, lock_schlage_be469, integration) -> 
             "device_id": device.id,
         },
     ]
-    conditions = await async_get_device_automations(hass, "condition", device.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device.id
+    )
     for condition in expected_conditions:
         assert condition in conditions
 
@@ -592,6 +595,23 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
         await device_condition.async_validate_condition_config(hass, INVALID_CONFIG)
         == INVALID_CONFIG
     )
+
+    # Test invalid device ID fails validation
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await device_condition.async_validate_condition_config(
+            hass,
+            {
+                "condition": "device",
+                "domain": DOMAIN,
+                "type": "value",
+                "device_id": "invalid_device_id",
+                "command_class": CommandClass.DOOR_LOCK.value,
+                "property": 9999,
+                "property_key": 9999,
+                "endpoint": 9999,
+                "value": 9999,
+            },
+        )
 
 
 async def test_get_value_from_config_failure(

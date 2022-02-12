@@ -34,6 +34,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
@@ -99,7 +100,7 @@ def is_closed(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_CLOSED)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for covers."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL

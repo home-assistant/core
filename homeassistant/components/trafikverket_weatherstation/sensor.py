@@ -5,7 +5,6 @@ import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
 
 import aiohttp
 from pytrafikverket.trafikverket_weather import TrafikverketWeather, WeatherStationInfo
@@ -20,7 +19,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_API_KEY,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
@@ -33,14 +31,20 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
-    ConfigType,
-    DiscoveryInfoType,
-)
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
-from .const import ATTR_ACTIVE, ATTR_MEASURE_TIME, ATTRIBUTION, CONF_STATION, DOMAIN
+from .const import (
+    ATTR_ACTIVE,
+    ATTR_MEASURE_TIME,
+    ATTRIBUTION,
+    CONF_STATION,
+    DOMAIN,
+    NONE_IS_ZERO_SENSORS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -163,7 +167,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import Trafikverket Weather configuration from YAML."""
     _LOGGER.warning(
@@ -201,6 +205,7 @@ class TrafikverketWeatherStation(SensorEntity):
     """Representation of a Trafikverket sensor."""
 
     entity_description: TrafikverketSensorEntityDescription
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
@@ -215,33 +220,34 @@ class TrafikverketWeatherStation(SensorEntity):
         self._attr_unique_id = f"{entry_id}_{description.key}"
         self._station = sensor_station
         self._weather_api = weather_api
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, entry_id)},
+            manufacturer="Trafikverket",
+            model="v1.2",
+            name=sensor_station,
+            configuration_url="https://api.trafikinfo.trafikverket.se/",
+        )
         self._weather: WeatherStationInfo | None = None
-        self._active: bool | None = None
-        self._measure_time: str | None = None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes of Trafikverket Weatherstation."""
-        _additional_attributes: dict[str, Any] = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }
-        if self._active:
-            _additional_attributes[ATTR_ACTIVE] = self._active
-        if self._measure_time:
-            _additional_attributes[ATTR_MEASURE_TIME] = self._measure_time
-
-        return _additional_attributes
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Get the latest data from Trafikverket and updates the states."""
         try:
             self._weather = await self._weather_api.async_get_weather(self._station)
-            self._attr_native_value = getattr(
-                self._weather, self.entity_description.api_key
-            )
         except (asyncio.TimeoutError, aiohttp.ClientError, ValueError) as error:
             _LOGGER.error("Could not fetch weather data: %s", error)
             return
-        self._active = self._weather.active
-        self._measure_time = self._weather.measure_time
+        self._attr_native_value = getattr(
+            self._weather, self.entity_description.api_key
+        )
+        if (
+            self._attr_native_value is None
+            and self.entity_description.key in NONE_IS_ZERO_SENSORS
+        ):
+            self._attr_native_value = 0
+
+        self._attr_extra_state_attributes = {
+            ATTR_ACTIVE: self._weather.active,
+            ATTR_MEASURE_TIME: self._weather.measure_time,
+        }

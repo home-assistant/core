@@ -8,7 +8,7 @@ from typing import Any
 from mysensors import BaseAsyncGateway, Sensor
 from mysensors.sensor import ChildSensor
 
-from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -209,7 +209,7 @@ class MySensorsDevice:
 
 
 def get_mysensors_devices(
-    hass: HomeAssistant, domain: str
+    hass: HomeAssistant, domain: Platform
 ) -> dict[DevId, MySensorsDevice]:
     """Return MySensors devices for a hass platform name."""
     if MYSENSORS_PLATFORM_DEVICES.format(domain) not in hass.data[DOMAIN]:

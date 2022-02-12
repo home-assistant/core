@@ -1,4 +1,5 @@
 """Tankerkoenig sensor integration."""
+from __future__ import annotations
 
 import logging
 
@@ -9,6 +10,9 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     CURRENCY_EURO,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -32,7 +36,12 @@ ATTRIBUTION = "Data provided by https://creativecommons.tankerkoenig.de"
 ICON = "mdi:gas-station"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the tankerkoenig sensors."""
 
     if discovery_info is None:

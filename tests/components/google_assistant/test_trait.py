@@ -13,6 +13,7 @@ from homeassistant.components import (
     fan,
     group,
     input_boolean,
+    input_button,
     input_select,
     light,
     lock,
@@ -768,24 +769,30 @@ async def test_light_modes(hass):
     }
 
 
-async def test_scene_button(hass):
-    """Test Scene trait support for the button domain."""
-    assert helpers.get_google_type(button.DOMAIN, None) is not None
-    assert trait.SceneTrait.supported(button.DOMAIN, 0, None, None)
+@pytest.mark.parametrize(
+    "component",
+    [button, input_button],
+)
+async def test_scene_button(hass, component):
+    """Test Scene trait support for the (input) button domain."""
+    assert helpers.get_google_type(component.DOMAIN, None) is not None
+    assert trait.SceneTrait.supported(component.DOMAIN, 0, None, None)
 
-    trt = trait.SceneTrait(hass, State("button.bla", STATE_UNKNOWN), BASIC_CONFIG)
+    trt = trait.SceneTrait(
+        hass, State(f"{component.DOMAIN}.bla", STATE_UNKNOWN), BASIC_CONFIG
+    )
     assert trt.sync_attributes() == {}
     assert trt.query_attributes() == {}
     assert trt.can_execute(trait.COMMAND_ACTIVATE_SCENE, {})
 
-    calls = async_mock_service(hass, button.DOMAIN, button.SERVICE_PRESS)
+    calls = async_mock_service(hass, component.DOMAIN, component.SERVICE_PRESS)
     await trt.execute(trait.COMMAND_ACTIVATE_SCENE, BASIC_DATA, {}, {})
 
     # We don't wait till button press is done.
     await hass.async_block_till_done()
 
     assert len(calls) == 1
-    assert calls[0].data == {ATTR_ENTITY_ID: "button.bla"}
+    assert calls[0].data == {ATTR_ENTITY_ID: f"{component.DOMAIN}.bla"}
 
 
 async def test_scene_scene(hass):
@@ -793,7 +800,7 @@ async def test_scene_scene(hass):
     assert helpers.get_google_type(scene.DOMAIN, None) is not None
     assert trait.SceneTrait.supported(scene.DOMAIN, 0, None, None)
 
-    trt = trait.SceneTrait(hass, State("scene.bla", scene.STATE), BASIC_CONFIG)
+    trt = trait.SceneTrait(hass, State("scene.bla", STATE_UNKNOWN), BASIC_CONFIG)
     assert trt.sync_attributes() == {}
     assert trt.query_attributes() == {}
     assert trt.can_execute(trait.COMMAND_ACTIVATE_SCENE, {})
@@ -3039,8 +3046,8 @@ async def test_sensorstate(hass):
     """Test SensorState trait support for sensor domain."""
     sensor_types = {
         sensor.SensorDeviceClass.AQI: ("AirQuality", "AQI"),
-        sensor.SensorDeviceClass.CO: ("CarbonDioxideLevel", "PARTS_PER_MILLION"),
-        sensor.SensorDeviceClass.CO2: ("CarbonMonoxideLevel", "PARTS_PER_MILLION"),
+        sensor.SensorDeviceClass.CO: ("CarbonMonoxideLevel", "PARTS_PER_MILLION"),
+        sensor.SensorDeviceClass.CO2: ("CarbonDioxideLevel", "PARTS_PER_MILLION"),
         sensor.SensorDeviceClass.PM25: ("PM2.5", "MICROGRAMS_PER_CUBIC_METER"),
         sensor.SensorDeviceClass.PM10: ("PM10", "MICROGRAMS_PER_CUBIC_METER"),
         sensor.SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: (

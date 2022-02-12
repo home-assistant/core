@@ -47,6 +47,16 @@ DHCP = [
         "macaddress": "B85F98*"
     },
     {
+        "domain": "blink",
+        "hostname": "blink*",
+        "macaddress": "00037F*"
+    },
+    {
+        "domain": "blink",
+        "hostname": "blink*",
+        "macaddress": "20A171*"
+    },
+    {
         "domain": "broadlink",
         "macaddress": "34EA34*"
     },
@@ -61,6 +71,10 @@ DHCP = [
     {
         "domain": "broadlink",
         "macaddress": "B4430D*"
+    },
+    {
+        "domain": "elkm1",
+        "macaddress": "00409D*"
     },
     {
         "domain": "emonitor",
@@ -89,7 +103,7 @@ DHCP = [
     {
         "domain": "flux_led",
         "macaddress": "ACCF23*",
-        "hostname": "[ba][lk]*"
+        "hostname": "[hba][flk]*"
     },
     {
         "domain": "flux_led",
@@ -99,7 +113,7 @@ DHCP = [
     {
         "domain": "flux_led",
         "macaddress": "F0FE6B*",
-        "hostname": "[ba][lk]*"
+        "hostname": "[hba][flk]*"
     },
     {
         "domain": "flux_led",
@@ -176,6 +190,18 @@ DHCP = [
         "macaddress": "18B430*"
     },
     {
+        "domain": "nest",
+        "macaddress": "641666*"
+    },
+    {
+        "domain": "nest",
+        "macaddress": "D8EB46*"
+    },
+    {
+        "domain": "nest",
+        "macaddress": "1C53F9*"
+    },
+    {
         "domain": "nexia",
         "hostname": "xl857-*",
         "macaddress": "000231*"
@@ -190,14 +216,18 @@ DHCP = [
         "hostname": "nuki_bridge_*"
     },
     {
-        "domain": "powerwall",
-        "hostname": "1118431-*",
-        "macaddress": "88DA1A*"
+        "domain": "oncue",
+        "hostname": "kohlergen*",
+        "macaddress": "00146F*"
+    },
+    {
+        "domain": "overkiz",
+        "hostname": "gateway*",
+        "macaddress": "F8811A*"
     },
     {
         "domain": "powerwall",
-        "hostname": "1118431-*",
-        "macaddress": "000145*"
+        "hostname": "1118431-*"
     },
     {
         "domain": "rachio",
@@ -232,6 +262,11 @@ DHCP = [
         "domain": "roomba",
         "hostname": "roomba-*",
         "macaddress": "80A589*"
+    },
+    {
+        "domain": "roomba",
+        "hostname": "roomba-*",
+        "macaddress": "DCF505*"
     },
     {
         "domain": "samsungtv",
@@ -272,6 +307,14 @@ DHCP = [
         "domain": "sense",
         "hostname": "sense-*",
         "macaddress": "A4D578*"
+    },
+    {
+        "domain": "senseme",
+        "macaddress": "20F85E*"
+    },
+    {
+        "domain": "sensibo",
+        "hostname": "sensibo*"
     },
     {
         "domain": "simplisafe",
@@ -317,6 +360,11 @@ DHCP = [
         "domain": "squeezebox",
         "hostname": "squeezebox*",
         "macaddress": "000420*"
+    },
+    {
+        "domain": "steamist",
+        "macaddress": "001E0C*",
+        "hostname": "my[45]50*"
     },
     {
         "domain": "tado",
@@ -365,6 +413,11 @@ DHCP = [
         "domain": "tplink",
         "hostname": "k[lp]*",
         "macaddress": "403F8C*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "C0C9E3*"
     },
     {
         "domain": "tplink",
@@ -525,12 +578,60 @@ DHCP = [
         "hostname": "twinkly_*"
     },
     {
+        "domain": "unifiprotect",
+        "macaddress": "B4FBE4*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "802AA8*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "F09FC2*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "68D79A*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "18E829*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "245A4C*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "784558*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "E063DA*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "265A4C*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "74ACB9*"
+    },
+    {
         "domain": "verisure",
         "macaddress": "0023C1*"
     },
     {
         "domain": "vicare",
         "macaddress": "B87424*"
+    },
+    {
+        "domain": "wiz",
+        "macaddress": "A8BB50*"
+    },
+    {
+        "domain": "wiz",
+        "hostname": "wiz_*"
     },
     {
         "domain": "yeelight",

@@ -13,13 +13,10 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.smartthings import binary_sensor
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_FRIENDLY_NAME,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import EntityCategory
 
 from .conftest import setup_platform
 
@@ -125,4 +122,4 @@ async def test_entity_category(hass, device_factory):
 
     entry = entity_registry.async_get("binary_sensor.tamper_sensor_2_tamper")
     assert entry
-    assert entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC

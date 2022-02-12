@@ -42,7 +42,7 @@
                 "data": {
                     "wait_for_push": "Attendi il push multicast all'aggiornamento"
                 },
-                "description": "Specificare le impostazioni opzionali",
+                "description": "Specifica le impostazioni opzionali",
                 "title": "Motion Blinds"
             }
         }

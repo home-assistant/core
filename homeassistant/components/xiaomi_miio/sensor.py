@@ -20,6 +20,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     ATTR_BATTERY_LEVEL,
@@ -37,8 +38,9 @@ from homeassistant.const import (
     TIME_SECONDS,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import VacuumCoordinatorDataAttributes
@@ -50,6 +52,8 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODEL_AIRFRESH_A1,
+    MODEL_AIRFRESH_T2017,
     MODEL_AIRFRESH_VA2,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CB1,
@@ -113,6 +117,8 @@ ATTR_DND_START = "start"
 ATTR_DND_END = "end"
 ATTR_LAST_CLEAN_TIME = "duration"
 ATTR_LAST_CLEAN_AREA = "area"
+ATTR_STATUS_CLEAN_TIME = "clean_time"
+ATTR_STATUS_CLEAN_AREA = "clean_area"
 ATTR_LAST_CLEAN_START = "start"
 ATTR_LAST_CLEAN_END = "end"
 ATTR_CLEAN_HISTORY_TOTAL_DURATION = "total_duration"
@@ -371,6 +377,14 @@ AIRFRESH_SENSORS = (
     ATTR_TEMPERATURE,
     ATTR_USE_TIME,
 )
+AIRFRESH_SENSORS_A1 = (
+    ATTR_CARBON_DIOXIDE,
+    ATTR_TEMPERATURE,
+)
+AIRFRESH_SENSORS_T2017 = (
+    ATTR_CARBON_DIOXIDE,
+    ATTR_TEMPERATURE,
+)
 FAN_V2_V3_SENSORS = (
     ATTR_BATTERY,
     ATTR_HUMIDITY,
@@ -380,7 +394,9 @@ FAN_V2_V3_SENSORS = (
 FAN_ZA5_SENSORS = (ATTR_HUMIDITY, ATTR_TEMPERATURE)
 
 MODEL_TO_SENSORS_MAP = {
+    MODEL_AIRFRESH_A1: AIRFRESH_SENSORS_A1,
     MODEL_AIRFRESH_VA2: AIRFRESH_SENSORS,
+    MODEL_AIRFRESH_T2017: AIRFRESH_SENSORS_T2017,
     MODEL_AIRHUMIDIFIER_CA1: HUMIDIFIER_CA1_CB1_SENSORS,
     MODEL_AIRHUMIDIFIER_CB1: HUMIDIFIER_CA1_CB1_SENSORS,
     MODEL_AIRPURIFIER_3C: PURIFIER_3C_SENSORS,
@@ -443,6 +459,22 @@ VACUUM_SENSORS = {
         parent_key=VacuumCoordinatorDataAttributes.last_clean_details,
         name="Last Clean Area",
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    f"current_{ATTR_STATUS_CLEAN_TIME}": XiaomiMiioSensorDescription(
+        native_unit_of_measurement=TIME_SECONDS,
+        icon="mdi:timer-sand",
+        key=ATTR_STATUS_CLEAN_TIME,
+        parent_key=VacuumCoordinatorDataAttributes.status,
+        name="Current Clean Duration",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    f"current_{ATTR_LAST_CLEAN_AREA}": XiaomiMiioSensorDescription(
+        native_unit_of_measurement=AREA_SQUARE_METERS,
+        icon="mdi:texture-box",
+        key=ATTR_STATUS_CLEAN_AREA,
+        parent_key=VacuumCoordinatorDataAttributes.status,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        name="Current Clean Area",
     ),
     f"clean_history_{ATTR_CLEAN_HISTORY_TOTAL_DURATION}": XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
@@ -550,7 +582,11 @@ def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Xiaomi sensor from a config entry."""
     entities = []
 
@@ -784,7 +820,6 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
 
     def __init__(self, gateway_device, gateway_name, gateway_device_id, description):
         """Initialize the entity."""
-
         self._attr_name = f"{gateway_name} {description.name}"
         self._attr_unique_id = f"{gateway_device_id}-{description.key}"
         self._attr_device_info = {"identifiers": {(DOMAIN, gateway_device_id)}}

@@ -2,6 +2,7 @@
     "config": {
         "error": {
             "cannot_connect": "Failed to connect",
+            "timeout": "Timeout establishing connection",
             "unknown": "Unexpected error"
         },
         "step": {

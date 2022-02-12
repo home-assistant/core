@@ -69,7 +69,8 @@
                 "data": {
                     "allow_hue_groups": "Consenti gruppi Hue",
                     "allow_hue_scenes": "Consenti scene Tonalit\u00e0",
-                    "allow_unreachable": "Consentire alle lampadine irraggiungibili di segnalare correttamente il loro stato"
+                    "allow_unreachable": "Consenti alle lampadine irraggiungibili di segnalare correttamente il loro stato",
+                    "ignore_availability": "Ignora lo stato di connettivit\u00e0 per i dispositivi indicati"
                 }
             }
         }

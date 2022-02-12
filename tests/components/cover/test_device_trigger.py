@@ -158,7 +158,7 @@ async def test_get_trigger_capabilities(
     assert len(triggers) == 4
     for trigger in triggers:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "trigger", trigger
+            hass, DeviceAutomationType.TRIGGER, trigger
         )
         assert capabilities == {
             "extra_fields": [
@@ -213,7 +213,7 @@ async def test_get_trigger_capabilities_set_pos(
     assert len(triggers) == 5
     for trigger in triggers:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "trigger", trigger
+            hass, DeviceAutomationType.TRIGGER, trigger
         )
         if trigger["type"] == "position":
             assert capabilities == expected_capabilities
@@ -275,7 +275,7 @@ async def test_get_trigger_capabilities_set_tilt_pos(
     assert len(triggers) == 5
     for trigger in triggers:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "trigger", trigger
+            hass, DeviceAutomationType.TRIGGER, trigger
         )
         if trigger["type"] == "tilt_position":
             assert capabilities == expected_capabilities

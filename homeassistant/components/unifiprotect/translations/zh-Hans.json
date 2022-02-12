@@ -1,0 +1,33 @@
+{
+    "config": {
+        "error": {
+            "protect_version": "\u8981\u6c42\u8f6f\u4ef6\u6700\u4f4e\u7248\u672c\u4e3a v1.20.0\u3002\u8bf7\u5347\u7ea7 UniFi Protect \u540e\u91cd\u8bd5\u3002"
+        },
+        "step": {
+            "discovery_confirm": {
+                "title": "UniFi Protect \u53d1\u73b0\u670d\u52a1"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "host": "UniFi Protect \u670d\u52a1\u5668\u4e3b\u673a\u5730\u5740"
+                },
+                "title": "UniFi Protect \u91cd\u9a8c\u8bc1"
+            },
+            "user": {
+                "title": "UniFi Protect \u914d\u7f6e"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "all_updates": "\u5b9e\u65f6\u6307\u6807\uff08\u8b66\u544a\uff1a\u5c06\u663e\u8457\u589e\u52a0 CPU \u5360\u7528\uff09",
+                    "disable_rtsp": "\u7981\u7528 RTSP \u6d41"
+                },
+                "description": "\u5f53\u60a8\u542f\u7528\u4e86\u8bca\u65ad\u4f20\u611f\u5668\u5e76\u5e0c\u671b\u5176\u5b9e\u65f6\u66f4\u65b0\u65f6\uff0c\u624d\u5e94\u542f\u7528\u5b9e\u65f6\u6307\u6807\u9009\u9879\u3002\n\u82e5\u672a\u542f\u7528\uff0c\u5219\u6bcf 15 \u5206\u949f\u66f4\u65b0\u4e00\u6b21\u6570\u636e\u3002",
+                "title": "UniFi Protect \u9009\u9879"
+            }
+        }
+    }
+}

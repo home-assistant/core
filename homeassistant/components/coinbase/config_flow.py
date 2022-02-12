@@ -51,6 +51,15 @@ async def validate_api(hass: core.HomeAssistant, data):
             get_user_from_client, data[CONF_API_KEY], data[CONF_API_TOKEN]
         )
     except AuthenticationError as error:
+        if "api key" in str(error):
+            _LOGGER.debug("Coinbase rejected API credentials due to an invalid API key")
+            raise InvalidKey from error
+        if "invalid signature" in str(error):
+            _LOGGER.debug(
+                "Coinbase rejected API credentials due to an invalid API secret"
+            )
+            raise InvalidSecret from error
+        _LOGGER.debug("Coinbase rejected API credentials due to an unknown error")
         raise InvalidAuth from error
     except ConnectionError as error:
         raise CannotConnect from error
@@ -76,12 +85,12 @@ async def validate_options(
     if CONF_CURRENCIES in options:
         for currency in options[CONF_CURRENCIES]:
             if currency not in accounts_currencies:
-                raise CurrencyUnavaliable
+                raise CurrencyUnavailable
 
     if CONF_EXCHANGE_RATES in options:
         for rate in options[CONF_EXCHANGE_RATES]:
             if rate not in available_rates[API_RATES]:
-                raise ExchangeRateUnavaliable
+                raise ExchangeRateUnavailable
 
     return True
 
@@ -110,6 +119,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = await validate_api(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"
+        except InvalidKey:
+            errors["base"] = "invalid_auth_key"
+        except InvalidSecret:
+            errors["base"] = "invalid_auth_secret"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
@@ -178,10 +191,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
             try:
                 await validate_options(self.hass, self.config_entry, user_input)
-            except CurrencyUnavaliable:
-                errors["base"] = "currency_unavaliable"
-            except ExchangeRateUnavaliable:
-                errors["base"] = "exchange_rate_unavaliable"
+            except CurrencyUnavailable:
+                errors["base"] = "currency_unavailable"
+            except ExchangeRateUnavailable:
+                errors["base"] = "exchange_rate_unavailable"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -218,13 +231,21 @@ class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
 
 
+class InvalidSecret(exceptions.HomeAssistantError):
+    """Error to indicate auth failed due to invalid secret."""
+
+
+class InvalidKey(exceptions.HomeAssistantError):
+    """Error to indicate auth failed due to invalid key."""
+
+
 class AlreadyConfigured(exceptions.HomeAssistantError):
     """Error to indicate Coinbase API Key is already configured."""
 
 
-class CurrencyUnavaliable(exceptions.HomeAssistantError):
+class CurrencyUnavailable(exceptions.HomeAssistantError):
     """Error to indicate the requested currency resource is not provided by the API."""
 
 
-class ExchangeRateUnavaliable(exceptions.HomeAssistantError):
+class ExchangeRateUnavailable(exceptions.HomeAssistantError):
     """Error to indicate the requested exchange rate resource is not provided by the API."""

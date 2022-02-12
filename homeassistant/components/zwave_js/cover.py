@@ -177,7 +177,7 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
 
 
 class ZWaveTiltCover(ZWaveCover):
-    """Representation of a Fibaro Z-Wave cover device."""
+    """Representation of a Z-Wave Cover device with tilt."""
 
     _attr_supported_features = (
         SUPPORT_OPEN

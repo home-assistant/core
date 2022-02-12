@@ -4,9 +4,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number.const import DOMAIN as PLATFORM_DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEGREE, TIME_MINUTES
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_DEVICE,
@@ -14,6 +18,8 @@ from .const import (
     CONF_MODEL,
     DOMAIN,
     FEATURE_FLAGS_AIRFRESH,
+    FEATURE_FLAGS_AIRFRESH_A1,
+    FEATURE_FLAGS_AIRFRESH_T2017,
     FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
     FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     FEATURE_FLAGS_AIRPURIFIER_2S,
@@ -41,6 +47,8 @@ from .const import (
     FEATURE_SET_VOLUME,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODEL_AIRFRESH_A1,
+    MODEL_AIRFRESH_T2017,
     MODEL_AIRFRESH_VA2,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CA4,
@@ -195,7 +203,9 @@ NUMBER_TYPES = {
 }
 
 MODEL_TO_FEATURES_MAP = {
+    MODEL_AIRFRESH_A1: FEATURE_FLAGS_AIRFRESH_A1,
     MODEL_AIRFRESH_VA2: FEATURE_FLAGS_AIRFRESH,
+    MODEL_AIRFRESH_T2017: FEATURE_FLAGS_AIRFRESH_T2017,
     MODEL_AIRHUMIDIFIER_CA1: FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     MODEL_AIRHUMIDIFIER_CA4: FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1: FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
@@ -228,7 +238,11 @@ OSCILLATION_ANGLE_VALUES = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Selectors from a config entry."""
     entities = []
     if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
@@ -246,6 +260,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         return
 
     for feature, description in NUMBER_TYPES.items():
+        if feature == FEATURE_SET_LED_BRIGHTNESS and model != MODEL_FAN_ZA5:
+            # Delete LED bightness entity created by mistake if it exists
+            entity_reg = er.async_get(hass)
+            entity_id = entity_reg.async_get_entity_id(
+                PLATFORM_DOMAIN, DOMAIN, f"{description.key}_{config_entry.unique_id}"
+            )
+            if entity_id:
+                entity_reg.async_remove(entity_id)
+            continue
         if feature & features:
             if (
                 description.key == ATTR_OSCILLATION_ANGLE

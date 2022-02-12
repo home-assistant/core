@@ -1,6 +1,10 @@
 """Support for Homekit lights."""
+from __future__ import annotations
+
+from typing import Any
+
 from aiohomekit.model.characteristics import CharacteristicsTypes
-from aiohomekit.model.services import ServicesTypes
+from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -11,19 +15,25 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     LightEntity,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Homekit lightbulb."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_service(service):
-        if service.short_type != ServicesTypes.LIGHTBULB:
+    def async_add_service(service: Service) -> bool:
+        if service.type != ServicesTypes.LIGHTBULB:
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([HomeKitLight(conn, info)], True)
@@ -35,7 +45,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class HomeKitLight(HomeKitEntity, LightEntity):
     """Representation of a Homekit light."""
 
-    def get_characteristic_types(self):
+    def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [
             CharacteristicsTypes.ON,
@@ -46,17 +56,17 @@ class HomeKitLight(HomeKitEntity, LightEntity):
         ]
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self.service.value(CharacteristicsTypes.ON)
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return self.service.value(CharacteristicsTypes.BRIGHTNESS) * 255 / 100
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[float, float]:
         """Return the color property."""
         return (
             self.service.value(CharacteristicsTypes.HUE),
@@ -64,12 +74,12 @@ class HomeKitLight(HomeKitEntity, LightEntity):
         )
 
     @property
-    def color_temp(self):
+    def color_temp(self) -> int:
         """Return the color temperature."""
         return self.service.value(CharacteristicsTypes.COLOR_TEMPERATURE)
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         features = 0
 
@@ -87,7 +97,7 @@ class HomeKitLight(HomeKitEntity, LightEntity):
 
         return features
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified light on."""
         hs_color = kwargs.get(ATTR_HS_COLOR)
         temperature = kwargs.get(ATTR_COLOR_TEMP)
@@ -115,6 +125,6 @@ class HomeKitLight(HomeKitEntity, LightEntity):
 
         await self.async_put_characteristics(characteristics)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the specified light off."""
         await self.async_put_characteristics({CharacteristicsTypes.ON: False})

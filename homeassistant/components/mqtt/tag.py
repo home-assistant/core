@@ -12,7 +12,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 
-from . import subscription
+from . import MqttValueTemplate, subscription
 from .. import mqtt
 from .const import (
     ATTR_DISCOVERY_HASH,
@@ -143,12 +143,10 @@ class MQTTTagScanner:
         )
 
     def _setup_from_config(self, config):
-        self._value_template = lambda value, error_value: value
-        if CONF_VALUE_TEMPLATE in config:
-            value_template = config.get(CONF_VALUE_TEMPLATE)
-            value_template.hass = self.hass
-
-            self._value_template = value_template.async_render_with_possible_json_value
+        self._value_template = MqttValueTemplate(
+            config.get(CONF_VALUE_TEMPLATE),
+            hass=self.hass,
+        ).async_render_with_possible_json_value
 
     async def setup(self):
         """Set up the MQTT tag scanner."""
@@ -171,13 +169,13 @@ class MQTTTagScanner:
         """Subscribe to MQTT topics."""
 
         async def tag_scanned(msg):
-            tag_id = self._value_template(msg.payload, error_value="").strip()
+            tag_id = self._value_template(msg.payload, "").strip()
             if not tag_id:  # No output from template, ignore
                 return
 
             await self.hass.components.tag.async_scan_tag(tag_id, self.device_id)
 
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
             self._sub_state,
             {
@@ -188,6 +186,7 @@ class MQTTTagScanner:
                 }
             },
         )
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     async def device_removed(self, event):
         """Handle the removal of a device."""
@@ -209,7 +208,7 @@ class MQTTTagScanner:
         self._remove_discovery()
 
         mqtt.publish(self.hass, discovery_topic, "", retain=True)
-        self._sub_state = await subscription.async_unsubscribe_topics(
+        self._sub_state = subscription.async_unsubscribe_topics(
             self.hass, self._sub_state
         )
         if self.device_id:

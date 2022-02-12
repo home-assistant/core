@@ -1,4 +1,6 @@
 """Support for interface with a Bose Soundtouch."""
+from __future__ import annotations
+
 import logging
 import re
 
@@ -30,8 +32,10 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     DOMAIN,
@@ -94,7 +98,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Bose Soundtouch platform."""
     if DATA_SOUNDTOUCH not in hass.data:
         hass.data[DATA_SOUNDTOUCH] = []
@@ -122,7 +131,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         hass.data[DATA_SOUNDTOUCH].append(bose_soundtouch_entity)
         add_entities([bose_soundtouch_entity], True)
 
-    def service_handle(service):
+    def service_handle(service: ServiceCall) -> None:
         """Handle the applying of a service."""
         master_device_id = service.data.get("master")
         slaves_ids = service.data.get("slaves")

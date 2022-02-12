@@ -622,7 +622,7 @@
             }
         ],
         "status_icons": [],
-        "icon": "assets/icons/streaming-camaera-new.svg",
+        "icon": "assets/icons/streaming-camera-new.svg",
         "control_url_snapshot": "api/v1/cams/XF:b0c5ba27592a/capture",
         "ptt_supported": true,
         "is_new_camera": 1,

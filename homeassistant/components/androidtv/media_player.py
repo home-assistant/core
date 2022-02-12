@@ -17,6 +17,7 @@ from androidtv.constants import APPS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
@@ -50,12 +51,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import get_androidtv_mac
 from .const import (
     ANDROID_DEV,
     ANDROID_DEV_OPT,
@@ -79,8 +81,6 @@ from .const import (
     DEVICE_ANDROIDTV,
     DEVICE_CLASSES,
     DOMAIN,
-    PROP_ETHMAC,
-    PROP_WIFIMAC,
     SIGNAL_CONFIG_ENTITY,
 )
 
@@ -124,37 +124,31 @@ SERVICE_UPLOAD = "upload"
 DEFAULT_NAME = "Android TV"
 
 # Deprecated in Home Assistant 2022.2
-PLATFORM_SCHEMA = cv.deprecated(
-    vol.All(
-        PLATFORM_SCHEMA=PLATFORM_SCHEMA.extend(
-            {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS): vol.In(
-                    DEVICE_CLASSES
-                ),
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_ADBKEY): cv.isfile,
-                vol.Optional(CONF_ADB_SERVER_IP): cv.string,
-                vol.Optional(
-                    CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT
-                ): cv.port,
-                vol.Optional(CONF_GET_SOURCES, default=DEFAULT_GET_SOURCES): cv.boolean,
-                vol.Optional(CONF_APPS, default={}): vol.Schema(
-                    {cv.string: vol.Any(cv.string, None)}
-                ),
-                vol.Optional(CONF_TURN_ON_COMMAND): cv.string,
-                vol.Optional(CONF_TURN_OFF_COMMAND): cv.string,
-                vol.Optional(CONF_STATE_DETECTION_RULES, default={}): vol.Schema(
-                    {cv.string: ha_state_detection_rules_validator(vol.Invalid)}
-                ),
-                vol.Optional(
-                    CONF_EXCLUDE_UNNAMED_APPS, default=DEFAULT_EXCLUDE_UNNAMED_APPS
-                ): cv.boolean,
-                vol.Optional(CONF_SCREENCAP, default=DEFAULT_SCREENCAP): cv.boolean,
-            }
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS): vol.In(
+            DEVICE_CLASSES
         ),
-    )
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_ADBKEY): cv.isfile,
+        vol.Optional(CONF_ADB_SERVER_IP): cv.string,
+        vol.Optional(CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT): cv.port,
+        vol.Optional(CONF_GET_SOURCES, default=DEFAULT_GET_SOURCES): cv.boolean,
+        vol.Optional(CONF_APPS, default={}): vol.Schema(
+            {cv.string: vol.Any(cv.string, None)}
+        ),
+        vol.Optional(CONF_TURN_ON_COMMAND): cv.string,
+        vol.Optional(CONF_TURN_OFF_COMMAND): cv.string,
+        vol.Optional(CONF_STATE_DETECTION_RULES, default={}): vol.Schema(
+            {cv.string: ha_state_detection_rules_validator(vol.Invalid)}
+        ),
+        vol.Optional(
+            CONF_EXCLUDE_UNNAMED_APPS, default=DEFAULT_EXCLUDE_UNNAMED_APPS
+        ): cv.boolean,
+        vol.Optional(CONF_SCREENCAP, default=DEFAULT_SCREENCAP): cv.boolean,
+    }
 )
 
 # Translate from `AndroidTV` / `FireTV` reported state to HA state.
@@ -171,7 +165,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info=None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Android TV / Fire TV platform."""
 
@@ -348,7 +342,7 @@ class ADBDevice(MediaPlayerEntity):
             self._attr_device_info[ATTR_MANUFACTURER] = manufacturer
         if sw_version := info.get(ATTR_SW_VERSION):
             self._attr_device_info[ATTR_SW_VERSION] = sw_version
-        if mac := format_mac(info.get(PROP_ETHMAC) or info.get(PROP_WIFIMAC, "")):
+        if mac := get_androidtv_mac(info):
             self._attr_device_info[ATTR_CONNECTIONS] = {(CONNECTION_NETWORK_MAC, mac)}
 
         self._app_id_to_name = {}
@@ -534,7 +528,8 @@ class ADBDevice(MediaPlayerEntity):
             self.async_write_ha_state()
 
             msg = f"Output from service '{SERVICE_LEARN_SENDEVENT}' from {self.entity_id}: '{output}'"
-            self.hass.components.persistent_notification.async_create(
+            persistent_notification.async_create(
+                self.hass,
                 msg,
                 title="Android TV",
             )
@@ -613,7 +608,11 @@ class AndroidTVDevice(ADBDevice):
     @adb_decorator()
     async def async_mute_volume(self, mute):
         """Mute the volume."""
-        await self.aftv.mute_volume()
+        is_muted = await self.aftv.is_volume_muted()
+
+        # `None` indicates that the muted status could not be determined
+        if is_muted is not None and is_muted != mute:
+            await self.aftv.mute_volume()
 
     @adb_decorator()
     async def async_set_volume_level(self, volume):

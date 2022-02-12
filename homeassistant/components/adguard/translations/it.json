@@ -19,7 +19,7 @@
                     "port": "Porta",
                     "ssl": "Utilizza un certificato SSL",
                     "username": "Nome utente",
-                    "verify_ssl": "Verificare il certificato SSL"
+                    "verify_ssl": "Verifica il certificato SSL"
                 },
                 "description": "Configura l'istanza di AdGuard Home per consentire il monitoraggio e il controllo."
             }

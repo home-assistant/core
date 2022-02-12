@@ -38,6 +38,16 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Smart Pet Feeder
+    # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
+    "cwwsq": (
+        SwitchEntityDescription(
+            key=DPCode.SLOW_FEED,
+            name="Slow Feed",
+            icon="mdi:speedometer-slow",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Pet Water Feeder
     # https://developer.tuya.com/en/docs/iot/f?id=K9gf46aewxem5
     "cwysj": (
@@ -84,7 +94,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
-            key=DPCode.SWITCH_1,
+            key=DPCode.SWITCH,
             name="Switch",
         ),
     ),
@@ -188,6 +198,12 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             icon="mdi:water-percent",
             entity_category=EntityCategory.CONFIG,
         ),
+        SwitchEntityDescription(
+            key=DPCode.UV,
+            name="UV Sterilization",
+            icon="mdi:minus-circle-outline",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     # Air conditioner
     # https://developer.tuya.com/en/docs/iot/categorykt?id=Kaiuz0z71ov2n
@@ -274,6 +290,15 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             device_class=SwitchDeviceClass.OUTLET,
         ),
     ),
+    # Unknown product with switch capabilities
+    # Fond in some diffusers, plugs and PIR flood lights
+    # Not documented
+    "qjdcz": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            name="Switch",
+        ),
+    ),
     # Heater
     # https://developer.tuya.com/en/docs/iot/categoryqn?id=Kaiuz18kih0sm
     "qn": (
@@ -301,7 +326,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         ),
         SwitchEntityDescription(
             key=DPCode.VOICE_SWITCH,
-            name="Voice",
+            name="Mute Voice",
             icon="mdi:account-voice",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -412,6 +437,11 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
+            key=DPCode.SWITCH_4,
+            name="Switch 4",
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        SwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
             name="Child Lock",
             icon="mdi:account-lock",
@@ -425,6 +455,22 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.SWITCH_SAVE_ENERGY,
             name="Energy Saving",
             icon="mdi:leaf",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Thermostatic Radiator Valve
+    # Not documented
+    "wkf": (
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            name="Child Lock",
+            icon="mdi:account-lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.WINDOW_CHECK,
+            name="Open Window Detection",
+            icon="mdi:window-open",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -465,6 +511,84 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             name="Switch",
         ),
     ),
+    # Fan
+    # https://developer.tuya.com/en/docs/iot/categoryfs?id=Kaiuz1xweel1c
+    "fs": (
+        SwitchEntityDescription(
+            key=DPCode.ANION,
+            name="Anion",
+            icon="mdi:atom",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.HUMIDIFIER,
+            name="Humidification",
+            icon="mdi:air-humidifier",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.OXYGEN,
+            name="Oxygen Bar",
+            icon="mdi:molecule",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.FAN_COOL,
+            name="Natural Wind",
+            icon="mdi:weather-windy",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.FAN_BEEP,
+            name="Sound",
+            icon="mdi:minus-circle",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            name="Child Lock",
+            icon="mdi:account-lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Curtain
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46o5mtfyc
+    "cl": (
+        SwitchEntityDescription(
+            key=DPCode.CONTROL_BACK,
+            name="Reverse",
+            icon="mdi:swap-horizontal",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.OPPOSITE,
+            name="Reverse",
+            icon="mdi:swap-horizontal",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Humidifier
+    # https://developer.tuya.com/en/docs/iot/categoryjsq?id=Kaiuz1smr440b
+    "jsq": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_SOUND,
+            name="Voice",
+            icon="mdi:account-voice",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SLEEP,
+            name="Sleep",
+            icon="mdi:power-sleep",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.STERILIZATION,
+            name="Sterilization",
+            icon="mdi:minus-circle-outline",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
 }
 
 # Socket (duplicate of `pc`)
@@ -486,10 +610,7 @@ async def async_setup_entry(
             device = hass_data.device_manager.device_map[device_id]
             if descriptions := SWITCHES.get(device.category):
                 for description in descriptions:
-                    if (
-                        description.key in device.function
-                        or description.key in device.status
-                    ):
+                    if description.key in device.status:
                         entities.append(
                             TuyaSwitchEntity(
                                 device, hass_data.device_manager, description

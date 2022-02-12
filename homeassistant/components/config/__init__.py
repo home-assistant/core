@@ -6,10 +6,12 @@ import os
 
 import voluptuous as vol
 
+from homeassistant.components import frontend
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_ID, EVENT_COMPONENT_LOADED
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import ATTR_COMPONENT
 from homeassistant.util.file import write_utf8_file_atomic
 from homeassistant.util.yaml import dump, load_yaml
@@ -24,7 +26,6 @@ SECTIONS = (
     "core",
     "device_registry",
     "entity_registry",
-    "group",
     "script",
     "scene",
 )
@@ -33,10 +34,10 @@ ACTION_CREATE_UPDATE = "create_update"
 ACTION_DELETE = "delete"
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the config component."""
-    hass.components.frontend.async_register_built_in_panel(
-        "config", "config", "hass:cog", require_admin=True
+    frontend.async_register_built_in_panel(
+        hass, "config", "config", "hass:cog", require_admin=True
     )
 
     async def setup_panel(panel_name):

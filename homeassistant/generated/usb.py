@@ -12,10 +12,36 @@ USB = [
         "pid": "1340"
     },
     {
+        "domain": "velbus",
+        "vid": "10CF",
+        "pid": "0B1B"
+    },
+    {
+        "domain": "velbus",
+        "vid": "10CF",
+        "pid": "0516"
+    },
+    {
+        "domain": "velbus",
+        "vid": "10CF",
+        "pid": "0517"
+    },
+    {
+        "domain": "velbus",
+        "vid": "10CF",
+        "pid": "0518"
+    },
+    {
         "domain": "zha",
         "vid": "10C4",
         "pid": "EA60",
         "description": "*2652*"
+    },
+    {
+        "domain": "zha",
+        "vid": "10C4",
+        "pid": "EA60",
+        "description": "*sonoff*plus*"
     },
     {
         "domain": "zha",

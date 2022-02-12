@@ -5,6 +5,7 @@ import pytest
 import voluptuous_serialize
 
 from homeassistant.components import automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.select import DOMAIN
 from homeassistant.components.select.device_trigger import (
     async_get_trigger_capabilities,
@@ -64,7 +65,9 @@ async def test_get_triggers(
             "entity_id": f"{DOMAIN}.test_5678",
         }
     ]
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert_lists_same(triggers, expected_triggers)
 
 

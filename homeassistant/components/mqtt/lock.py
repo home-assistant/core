@@ -1,21 +1,35 @@
 """Support for MQTT locks."""
+from __future__ import annotations
+
 import functools
 
 import voluptuous as vol
 
 from homeassistant.components import lock
 from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import PLATFORMS, subscription
+from . import MqttValueTemplate, subscription
 from .. import mqtt
-from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
+from .const import (
+    CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
+    CONF_QOS,
+    CONF_RETAIN,
+    CONF_STATE_TOPIC,
+)
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+    async_setup_platform_helper,
+)
 
 CONF_PAYLOAD_LOCK = "payload_lock"
 CONF_PAYLOAD_UNLOCK = "payload_unlock"
@@ -56,14 +70,22 @@ DISCOVERY_SCHEMA = PLATFORM_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA)
 
 
 async def async_setup_platform(
-    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
-):
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up MQTT lock panel through configuration.yaml."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(hass, async_add_entities, config)
+    await async_setup_platform_helper(
+        hass, lock.DOMAIN, config, async_add_entities, _async_setup_entity
+    )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up MQTT lock dynamically through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
@@ -100,21 +122,19 @@ class MqttLock(MqttEntity, LockEntity):
         """(Re)Setup the entity."""
         self._optimistic = config[CONF_OPTIMISTIC]
 
-        value_template = self._config.get(CONF_VALUE_TEMPLATE)
-        if value_template is not None:
-            value_template.hass = self.hass
+        self._value_template = MqttValueTemplate(
+            self._config.get(CONF_VALUE_TEMPLATE),
+            entity=self,
+        ).async_render_with_possible_json_value
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
         @callback
         @log_messages(self.hass, self.entity_id)
         def message_received(msg):
             """Handle new MQTT messages."""
-            payload = msg.payload
-            value_template = self._config.get(CONF_VALUE_TEMPLATE)
-            if value_template is not None:
-                payload = value_template.async_render_with_possible_json_value(payload)
+            payload = self._value_template(msg.payload)
             if payload == self._config[CONF_STATE_LOCKED]:
                 self._state = True
             elif payload == self._config[CONF_STATE_UNLOCKED]:
@@ -126,7 +146,7 @@ class MqttLock(MqttEntity, LockEntity):
             # Force into optimistic mode.
             self._optimistic = True
         else:
-            self._sub_state = await subscription.async_subscribe_topics(
+            self._sub_state = subscription.async_prepare_subscribe_topics(
                 self.hass,
                 self._sub_state,
                 {
@@ -134,9 +154,14 @@ class MqttLock(MqttEntity, LockEntity):
                         "topic": self._config.get(CONF_STATE_TOPIC),
                         "msg_callback": message_received,
                         "qos": self._config[CONF_QOS],
+                        "encoding": self._config[CONF_ENCODING] or None,
                     }
                 },
             )
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
     def is_locked(self):
@@ -158,12 +183,12 @@ class MqttLock(MqttEntity, LockEntity):
 
         This method is a coroutine.
         """
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._config[CONF_COMMAND_TOPIC],
             self._config[CONF_PAYLOAD_LOCK],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
         if self._optimistic:
             # Optimistically assume that the lock has changed state.
@@ -175,12 +200,12 @@ class MqttLock(MqttEntity, LockEntity):
 
         This method is a coroutine.
         """
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._config[CONF_COMMAND_TOPIC],
             self._config[CONF_PAYLOAD_UNLOCK],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
         if self._optimistic:
             # Optimistically assume that the lock has changed state.
@@ -192,12 +217,12 @@ class MqttLock(MqttEntity, LockEntity):
 
         This method is a coroutine.
         """
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._config[CONF_COMMAND_TOPIC],
             self._config[CONF_PAYLOAD_OPEN],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
         if self._optimistic:
             # Optimistically assume that the lock unlocks when opened.

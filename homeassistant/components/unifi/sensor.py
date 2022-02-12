@@ -3,14 +3,15 @@
 Support for bandwidth sensors of network clients.
 Support for uptime sensors of network clients.
 """
-
 from datetime import datetime, timedelta
 
 from homeassistant.components.sensor import DOMAIN, SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_MEGABYTES
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN as UNIFI_DOMAIN
@@ -21,7 +22,11 @@ TX_SENSOR = "tx"
 UPTIME_SENSOR = "uptime"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up sensors for UniFi Network integration."""
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     controller.entities[DOMAIN] = {
@@ -110,8 +115,8 @@ class UniFiRxBandwidthSensor(UniFiBandwidthSensor):
     def native_value(self) -> int:
         """Return the state of the sensor."""
         if self._is_wired:
-            return self.client.wired_rx_bytes / 1000000
-        return self.client.rx_bytes / 1000000
+            return self.client.wired_rx_bytes_r / 1000000
+        return self.client.rx_bytes_r / 1000000
 
 
 class UniFiTxBandwidthSensor(UniFiBandwidthSensor):
@@ -123,8 +128,8 @@ class UniFiTxBandwidthSensor(UniFiBandwidthSensor):
     def native_value(self) -> int:
         """Return the state of the sensor."""
         if self._is_wired:
-            return self.client.wired_tx_bytes / 1000000
-        return self.client.tx_bytes / 1000000
+            return self.client.wired_tx_bytes_r / 1000000
+        return self.client.tx_bytes_r / 1000000
 
 
 class UniFiUpTimeSensor(UniFiClient, SensorEntity):

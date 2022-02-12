@@ -13,13 +13,14 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 DOMAIN = "ffmpeg"
@@ -54,7 +55,7 @@ CONFIG_SCHEMA = vol.Schema(
 SERVICE_FFMPEG_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the FFmpeg component."""
     conf = config.get(DOMAIN, {})
 
@@ -63,7 +64,7 @@ async def async_setup(hass, config):
     await manager.async_get_version()
 
     # Register service
-    async def async_service_handle(service):
+    async def async_service_handle(service: ServiceCall) -> None:
         """Handle service ffmpeg process."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
 
@@ -88,6 +89,14 @@ async def async_setup(hass, config):
 
     hass.data[DATA_FFMPEG] = manager
     return True
+
+
+@bind_hass
+def get_ffmpeg_manager(hass: HomeAssistant) -> FFmpegManager:
+    """Return the FFmpegManager."""
+    if DATA_FFMPEG not in hass.data:
+        raise ValueError("ffmpeg component not initialized")
+    return hass.data[DATA_FFMPEG]
 
 
 @bind_hass

@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from itertools import chain, groupby
 import json
 import logging
+import os
 import re
 from statistics import mean
 from typing import TYPE_CHECKING, Any, Literal
@@ -29,6 +30,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.storage import STORAGE_DIR
 import homeassistant.util.dt as dt_util
 import homeassistant.util.pressure as pressure_util
 import homeassistant.util.temperature as temperature_util
@@ -116,8 +118,6 @@ QUERY_STATISTIC_META_ID = [
     StatisticsMeta.id,
     StatisticsMeta.statistic_id,
 ]
-
-MAX_DUPLICATES = 1000000
 
 STATISTICS_BAKERY = "recorder_statistics_bakery"
 STATISTICS_META_BAKERY = "recorder_statistics_meta_bakery"
@@ -290,7 +290,7 @@ def _find_duplicates(
         )
         .filter(subquery.c.is_duplicate == 1)
         .order_by(table.metadata_id, table.start, table.id.desc())
-        .limit(MAX_ROWS_TO_PURGE)
+        .limit(1000 * MAX_ROWS_TO_PURGE)
     )
     duplicates = execute(query)
     original_as_dict = {}
@@ -325,7 +325,9 @@ def _find_duplicates(
         duplicate_as_dict = columns_to_dict(duplicate)
         duplicate_ids.append(duplicate.id)
         if not compare_statistic_rows(original_as_dict, duplicate_as_dict):
-            non_identical_duplicates_as_dict.append(duplicate_as_dict)
+            non_identical_duplicates_as_dict.append(
+                {"duplicate": duplicate_as_dict, "original": original_as_dict}
+            )
 
     return (duplicate_ids, non_identical_duplicates_as_dict)
 
@@ -341,14 +343,13 @@ def _delete_duplicates_from_table(
         if not duplicate_ids:
             break
         all_non_identical_duplicates.extend(non_identical_duplicates)
-        deleted_rows = (
-            session.query(table)
-            .filter(table.id.in_(duplicate_ids))
-            .delete(synchronize_session=False)
-        )
-        total_deleted_rows += deleted_rows
-        if total_deleted_rows >= MAX_DUPLICATES:
-            break
+        for i in range(0, len(duplicate_ids), MAX_ROWS_TO_PURGE):
+            deleted_rows = (
+                session.query(table)
+                .filter(table.id.in_(duplicate_ids[i : i + MAX_ROWS_TO_PURGE]))
+                .delete(synchronize_session=False)
+            )
+            total_deleted_rows += deleted_rows
     return (total_deleted_rows, all_non_identical_duplicates)
 
 
@@ -366,7 +367,9 @@ def delete_duplicates(instance: Recorder, session: scoped_session) -> None:
     if non_identical_duplicates:
         isotime = dt_util.utcnow().isoformat()
         backup_file_name = f"deleted_statistics.{isotime}.json"
-        backup_path = instance.hass.config.path(backup_file_name)
+        backup_path = instance.hass.config.path(STORAGE_DIR, backup_file_name)
+
+        os.makedirs(os.path.dirname(backup_path), exist_ok=True)
         with open(backup_path, "w", encoding="utf8") as backup_file:
             json.dump(
                 non_identical_duplicates,
@@ -381,13 +384,6 @@ def delete_duplicates(instance: Recorder, session: scoped_session) -> None:
             len(non_identical_duplicates),
             Statistics.__tablename__,
             backup_path,
-        )
-
-    if deleted_statistics_rows >= MAX_DUPLICATES:
-        _LOGGER.warning(
-            "Found more than %s duplicated statistic rows, please report at "
-            'https://github.com/home-assistant/core/issues?q=is%%3Aissue+label%%3A"integration%%3A+recorder"+',
-            MAX_DUPLICATES - 1,
         )
 
     deleted_short_term_statistics_rows, _ = _delete_duplicates_from_table(
@@ -1051,7 +1047,7 @@ def _statistics_at_time(
     table: type[Statistics | StatisticsShortTerm],
     start_time: datetime,
 ) -> list | None:
-    """Return last known statics, earlier than start_time, for the metadata_ids."""
+    """Return last known statistics, earlier than start_time, for the metadata_ids."""
     # Fetch metadata for the given (or all) statistic_ids
     if table == StatisticsShortTerm:
         base_query = QUERY_STATISTICS_SHORT_TERM

@@ -1,4 +1,6 @@
 """Support for Ubiquiti mFi switches."""
+from __future__ import annotations
+
 import logging
 
 from mficlient.client import FailedToLogin, MFiClient
@@ -14,7 +16,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +40,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up mFi sensors."""
     host = config.get(CONF_HOST)
     username = config.get(CONF_USERNAME)
@@ -51,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         )
     except (FailedToLogin, requests.exceptions.ConnectionError) as ex:
         _LOGGER.error("Unable to connect to mFi: %s", str(ex))
-        return False
+        return
 
     add_entities(
         MfiSwitch(port)

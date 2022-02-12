@@ -91,7 +91,7 @@ async def test_get_condition_capabilities(hass, device_reg, entity_reg):
     )
     for condition in conditions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "condition", condition
+            hass, DeviceAutomationType.CONDITION, condition
         )
         assert capabilities == expected_capabilities
 

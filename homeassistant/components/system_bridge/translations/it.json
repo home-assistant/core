@@ -16,7 +16,7 @@
                 "data": {
                     "api_key": "Chiave API"
                 },
-                "description": "Immettere la chiave API impostata nella configurazione per {name} ."
+                "description": "Immetti la chiave API impostata nella configurazione per {name} ."
             },
             "user": {
                 "data": {

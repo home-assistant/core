@@ -5,7 +5,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from . import get_somecomfort_client
-from .const import CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE, DOMAIN
+from .const import DOMAIN
 
 
 class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -42,14 +42,3 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return client is not None
-
-    async def async_step_import(self, import_data):
-        """Import entry from configuration.yaml."""
-        return await self.async_step_user(
-            {
-                CONF_USERNAME: import_data[CONF_USERNAME],
-                CONF_PASSWORD: import_data[CONF_PASSWORD],
-                CONF_COOL_AWAY_TEMPERATURE: import_data[CONF_COOL_AWAY_TEMPERATURE],
-                CONF_HEAT_AWAY_TEMPERATURE: import_data[CONF_HEAT_AWAY_TEMPERATURE],
-            }
-        )

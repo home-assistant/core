@@ -158,13 +158,6 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="edit", data_schema=self.data_schema, errors=errors
         )
 
-    async def async_step_import(self, config):
-        """Import a config flow from configuration."""
-        error = await self._validate_input(config)
-        if error:
-            return self.async_abort(reason=error)
-        return self.async_create_entry(title=config[CONF_HOST], data=config)
-
     async def async_step_integration_discovery(self, discovery_info):
         """Handle discovery of a server."""
         _LOGGER.debug("Reached server discovery flow with info: %s", discovery_info)

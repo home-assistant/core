@@ -2,7 +2,8 @@
 import pytest
 
 import homeassistant.components.automation as automation
-from homeassistant.components.sensor import DEVICE_CLASSES, DOMAIN, SensorDeviceClass
+from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.sensor import DOMAIN, SensorDeviceClass
 from homeassistant.components.sensor.device_condition import ENTITY_CONDITIONS
 from homeassistant.const import CONF_PLATFORM, PERCENTAGE, STATE_UNKNOWN
 from homeassistant.helpers import device_registry
@@ -49,7 +50,7 @@ async def test_get_conditions(hass, device_reg, entity_reg, enable_custom_integr
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    for device_class in DEVICE_CLASSES:
+    for device_class in SensorDeviceClass:
         entity_reg.async_get_or_create(
             DOMAIN,
             "test",
@@ -68,12 +69,15 @@ async def test_get_conditions(hass, device_reg, entity_reg, enable_custom_integr
             "device_id": device_entry.id,
             "entity_id": platform.ENTITIES[device_class].entity_id,
         }
-        for device_class in DEVICE_CLASSES
+        for device_class in SensorDeviceClass
         if device_class in UNITS_OF_MEASUREMENT
         for condition in ENTITY_CONDITIONS[device_class]
         if device_class != "none"
     ]
-    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
+    assert len(conditions) == 26
     assert conditions == expected_conditions
 
 
@@ -86,7 +90,7 @@ async def test_get_conditions_no_state(hass, device_reg, entity_reg):
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entity_ids = {}
-    for device_class in DEVICE_CLASSES:
+    for device_class in SensorDeviceClass:
         entity_ids[device_class] = entity_reg.async_get_or_create(
             DOMAIN,
             "test",
@@ -106,12 +110,14 @@ async def test_get_conditions_no_state(hass, device_reg, entity_reg):
             "device_id": device_entry.id,
             "entity_id": entity_ids[device_class],
         }
-        for device_class in DEVICE_CLASSES
+        for device_class in SensorDeviceClass
         if device_class in UNITS_OF_MEASUREMENT
         for condition in ENTITY_CONDITIONS[device_class]
         if device_class != "none"
     ]
-    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
     assert conditions == expected_conditions
 
 
@@ -173,11 +179,13 @@ async def test_get_condition_capabilities(
             },
         ]
     }
-    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
     assert len(conditions) == 1
     for condition in conditions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "condition", condition
+            hass, DeviceAutomationType.CONDITION, condition
         )
         assert capabilities == expected_capabilities
 
@@ -215,7 +223,7 @@ async def test_get_condition_capabilities_none(
     expected_capabilities = {}
     for condition in conditions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "condition", condition
+            hass, DeviceAutomationType.CONDITION, condition
         )
         assert capabilities == expected_capabilities
 

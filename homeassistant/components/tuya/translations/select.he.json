@@ -8,6 +8,11 @@
             "1": "\u05db\u05d1\u05d5\u05d9",
             "2": "\u05de\u05d5\u05e4\u05e2\u05dc"
         },
+        "tuya__fan_angle": {
+            "30": "30\u00b0",
+            "60": "60\u00b0",
+            "90": "90\u00b0"
+        },
         "tuya__fingerbot_mode": {
             "click": "\u05d3\u05d7\u05d9\u05e4\u05d4",
             "switch": "\u05de\u05ea\u05d2"

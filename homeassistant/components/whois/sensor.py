@@ -1,24 +1,42 @@
 """Get WHOIS information for a given host."""
-from datetime import timedelta
-import logging
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from typing import cast
 
 import voluptuous as vol
-import whois
+from whois import Domain
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_DOMAIN, CONF_NAME, TIME_DAYS
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
-_LOGGER = logging.getLogger(__name__)
-
-DEFAULT_NAME = "Whois"
-
-ATTR_EXPIRES = "expires"
-ATTR_NAME_SERVERS = "name_servers"
-ATTR_REGISTRAR = "registrar"
-ATTR_UPDATED = "updated"
-
-SCAN_INTERVAL = timedelta(hours=24)
+from .const import (
+    ATTR_EXPIRES,
+    ATTR_NAME_SERVERS,
+    ATTR_REGISTRAR,
+    ATTR_UPDATED,
+    DEFAULT_NAME,
+    DOMAIN,
+    LOGGER,
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -28,88 +46,207 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+@dataclass
+class WhoisSensorEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[Domain], datetime | int | str | None]
+
+
+@dataclass
+class WhoisSensorEntityDescription(
+    SensorEntityDescription, WhoisSensorEntityDescriptionMixin
+):
+    """Describes a Whois sensor entity."""
+
+
+def _days_until_expiration(domain: Domain) -> int | None:
+    """Calculate days left until domain expires."""
+    if domain.expiration_date is None:
+        return None
+    # We need to cast here, as (unlike Pyright) mypy isn't able to determine the type.
+    return cast(int, (domain.expiration_date - domain.expiration_date.utcnow()).days)
+
+
+def _ensure_timezone(timestamp: datetime | None) -> datetime | None:
+    """Calculate days left until domain expires."""
+    if timestamp is None:
+        return None
+
+    # If timezone info isn't provided by the Whois, assume UTC.
+    if timestamp.tzinfo is None:
+        return timestamp.replace(tzinfo=timezone.utc)
+
+    return timestamp
+
+
+SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
+    WhoisSensorEntityDescription(
+        key="admin",
+        name="Admin",
+        icon="mdi:account-star",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda domain: getattr(domain, "admin", None),
+    ),
+    WhoisSensorEntityDescription(
+        key="creation_date",
+        name="Created",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda domain: _ensure_timezone(domain.creation_date),
+    ),
+    WhoisSensorEntityDescription(
+        key="days_until_expiration",
+        name="Days Until Expiration",
+        icon="mdi:calendar-clock",
+        native_unit_of_measurement=TIME_DAYS,
+        value_fn=_days_until_expiration,
+    ),
+    WhoisSensorEntityDescription(
+        key="expiration_date",
+        name="Expires",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda domain: _ensure_timezone(domain.expiration_date),
+    ),
+    WhoisSensorEntityDescription(
+        key="last_updated",
+        name="Last Updated",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda domain: _ensure_timezone(domain.last_updated),
+    ),
+    WhoisSensorEntityDescription(
+        key="owner",
+        name="Owner",
+        icon="mdi:account",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda domain: getattr(domain, "owner", None),
+    ),
+    WhoisSensorEntityDescription(
+        key="registrant",
+        name="Registrant",
+        icon="mdi:account-edit",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda domain: getattr(domain, "registrant", None),
+    ),
+    WhoisSensorEntityDescription(
+        key="registrar",
+        name="Registrar",
+        icon="mdi:store",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda domain: domain.registrar if domain.registrar else None,
+    ),
+    WhoisSensorEntityDescription(
+        key="reseller",
+        name="Reseller",
+        icon="mdi:store",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda domain: getattr(domain, "reseller", None),
+    ),
+)
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the WHOIS sensor."""
-    domain = config.get(CONF_DOMAIN)
-    name = config.get(CONF_NAME)
+    LOGGER.warning(
+        "Configuration of the Whois platform in YAML is deprecated and will be "
+        "removed in Home Assistant 2022.4; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_DOMAIN: config[CONF_DOMAIN], CONF_NAME: config[CONF_NAME]},
+        )
+    )
 
-    try:
-        if "expiration_date" in whois.whois(domain):
-            add_entities([WhoisSensor(name, domain)], True)
-        else:
-            _LOGGER.error(
-                "WHOIS lookup for %s didn't contain an expiration date", domain
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the platform from config_entry."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
+        [
+            WhoisSensorEntity(
+                coordinator=coordinator,
+                description=description,
+                domain=entry.data[CONF_DOMAIN],
             )
-            return
-    except whois.BaseException as ex:  # pylint: disable=broad-except
-        _LOGGER.error("Exception %s occurred during WHOIS lookup for %s", ex, domain)
-        return
+            for description in SENSORS
+        ],
+    )
 
 
-class WhoisSensor(SensorEntity):
+class WhoisSensorEntity(CoordinatorEntity, SensorEntity):
     """Implementation of a WHOIS sensor."""
 
-    _attr_icon = "mdi:calendar-clock"
-    _attr_native_unit_of_measurement = TIME_DAYS
+    entity_description: WhoisSensorEntityDescription
 
-    def __init__(self, name, domain):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        description: WhoisSensorEntityDescription,
+        domain: str,
+    ) -> None:
         """Initialize the sensor."""
-        self.whois = whois.whois
+        super().__init__(coordinator=coordinator)
+        self.entity_description = description
+        self._attr_name = f"{domain} {description.name}"
+        self._attr_unique_id = f"{domain}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, domain)},
+            entry_type=DeviceEntryType.SERVICE,
+        )
         self._domain = domain
-        self._attr_name = name
 
-    def _empty_value_and_attributes(self):
-        """Empty the state and attributes on an error."""
-        self._attr_native_value = None
-        self._attr_extra_state_attributes = None
+    @property
+    def native_value(self) -> datetime | int | str | None:
+        """Return the state of the sensor."""
+        if self.coordinator.data is None:
+            return None
+        return self.entity_description.value_fn(self.coordinator.data)
 
-    def update(self):
-        """Get the current WHOIS data for the domain."""
-        try:
-            response = self.whois(self._domain)
-        except whois.BaseException as ex:  # pylint: disable=broad-except
-            _LOGGER.error("Exception %s occurred during WHOIS lookup", ex)
-            self._empty_value_and_attributes()
-            return
+    @property
+    def extra_state_attributes(self) -> dict[str, int | float | None] | None:
+        """Return the state attributes of the monitored installation."""
 
-        if response:
-            if "expiration_date" not in response:
-                _LOGGER.error(
-                    "Failed to find expiration_date in whois lookup response. "
-                    "Did find: %s",
-                    ", ".join(response.keys()),
-                )
-                self._empty_value_and_attributes()
-                return
+        # Only add attributes to the original sensor
+        if self.entity_description.key != "days_until_expiration":
+            return None
 
-            if not response["expiration_date"]:
-                _LOGGER.error("Whois response contains empty expiration_date")
-                self._empty_value_and_attributes()
-                return
+        if self.coordinator.data is None:
+            return None
 
-            attrs = {}
+        attrs = {}
+        if expiration_date := self.coordinator.data.expiration_date:
+            attrs[ATTR_EXPIRES] = expiration_date.isoformat()
 
-            expiration_date = response["expiration_date"]
-            if isinstance(expiration_date, list):
-                attrs[ATTR_EXPIRES] = expiration_date[0].isoformat()
-                expiration_date = expiration_date[0]
-            else:
-                attrs[ATTR_EXPIRES] = expiration_date.isoformat()
+        if name_servers := self.coordinator.data.name_servers:
+            attrs[ATTR_NAME_SERVERS] = " ".join(name_servers)
 
-            if "nameservers" in response:
-                attrs[ATTR_NAME_SERVERS] = " ".join(response["nameservers"])
+        if last_updated := self.coordinator.data.last_updated:
+            attrs[ATTR_UPDATED] = last_updated.isoformat()
 
-            if "updated_date" in response:
-                update_date = response["updated_date"]
-                if isinstance(update_date, list):
-                    attrs[ATTR_UPDATED] = update_date[0].isoformat()
-                else:
-                    attrs[ATTR_UPDATED] = update_date.isoformat()
+        if registrar := self.coordinator.data.registrar:
+            attrs[ATTR_REGISTRAR] = registrar
 
-            if "registrar" in response:
-                attrs[ATTR_REGISTRAR] = response["registrar"]
+        if not attrs:
+            return None
 
-            time_delta = expiration_date - expiration_date.now()
-
-            self._attr_extra_state_attributes = attrs
-            self._attr_native_value = time_delta.days
+        return attrs

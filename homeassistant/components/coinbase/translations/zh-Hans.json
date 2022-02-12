@@ -5,13 +5,13 @@
         },
         "error": {
             "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
-            "invalid_auth": "\u9a8c\u8bc1\u65e0\u6548",
-            "unknown": "\u672a\u77e5\u9519\u8bef"
+            "invalid_auth": "\u8eab\u4efd\u8ba4\u8bc1\u65e0\u6548",
+            "unknown": "\u975e\u9884\u671f\u7684\u9519\u8bef"
         },
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API Key",
+                    "api_key": "API \u5bc6\u94a5",
                     "api_token": "API Token",
                     "currencies": "\u8d26\u6237\u4f59\u989d",
                     "exchange_rates": "\u6c47\u7387"

@@ -17,7 +17,7 @@
                     "port": "Porta",
                     "username": "Nome utente"
                 },
-                "title": "Configurare il router Keenetic NDMS2"
+                "title": "Configura il router Keenetic NDMS2"
             }
         }
     },
@@ -25,7 +25,7 @@
         "step": {
             "user": {
                 "data": {
-                    "consider_home": "Considerare in casa nell'intervallo di",
+                    "consider_home": "Considera in casa nell'intervallo di",
                     "include_arp": "Usa i dati ARP (ignorati se vengono utilizzati i dati dell'hotspot)",
                     "include_associated": "Usa i dati delle associazioni WiFi AP (ignorati se si usano i dati dell'hotspot)",
                     "interfaces": "Scegli le interfacce da scansionare",

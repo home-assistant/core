@@ -6,7 +6,7 @@
             "usb_setup_unsuccessful": "La configurazione USB di Crownstone non ha avuto successo."
         },
         "error": {
-            "account_not_verified": "Account non verificato. Attiva il tuo account tramite l'e-mail di attivazione di Crownstone.",
+            "account_not_verified": "Account non verificato. Attiva il tuo account tramite l'email di attivazione di Crownstone.",
             "invalid_auth": "Autenticazione non valida",
             "unknown": "Errore imprevisto"
         },
@@ -22,7 +22,7 @@
                 "data": {
                     "usb_manual_path": "Percorso del dispositivo USB"
                 },
-                "description": "Immettere manualmente il percorso di una chiavetta USB Crownstone.",
+                "description": "Immetti manualmente il percorso di una chiavetta USB Crownstone.",
                 "title": "Percorso manuale della chiavetta USB Crownstone"
             },
             "usb_sphere_config": {
@@ -34,7 +34,7 @@
             },
             "user": {
                 "data": {
-                    "email": "E-mail",
+                    "email": "Email",
                     "password": "Password"
                 },
                 "title": "Account Crownstone"
@@ -46,7 +46,7 @@
             "init": {
                 "data": {
                     "usb_sphere_option": "Sfera di Crownstone dove si trova l'USB",
-                    "use_usb_option": "Utilizzare una chiavetta USB Crownstone per la trasmissione locale dei dati"
+                    "use_usb_option": "Utilizza una chiavetta USB Crownstone per la trasmissione locale dei dati"
                 }
             },
             "usb_config": {
@@ -74,7 +74,7 @@
                 "data": {
                     "usb_manual_path": "Percorso del dispositivo USB"
                 },
-                "description": "Immettere manualmente il percorso di una chiavetta USB Crownstone.",
+                "description": "Immetti manualmente il percorso di una chiavetta USB Crownstone.",
                 "title": "Percorso manuale della chiavetta USB Crownstone"
             },
             "usb_sphere_config": {

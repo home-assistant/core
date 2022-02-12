@@ -1,10 +1,13 @@
 """Support for Homekit cameras."""
 from __future__ import annotations
 
+from aiohomekit.model import Accessory
 from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.camera import Camera
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KNOWN_DEVICES, AccessoryEntity
 
@@ -14,7 +17,7 @@ class HomeKitCamera(AccessoryEntity, Camera):
 
     # content_type = "image/jpeg"
 
-    def get_characteristic_types(self):
+    def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return []
 
@@ -29,18 +32,22 @@ class HomeKitCamera(AccessoryEntity, Camera):
         )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Homekit sensors."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_accessory(accessory):
+    def async_add_accessory(accessory: Accessory) -> bool:
         stream_mgmt = accessory.services.first(
             service_type=ServicesTypes.CAMERA_RTP_STREAM_MANAGEMENT
         )
         if not stream_mgmt:
-            return
+            return False
 
         info = {"aid": accessory.aid, "iid": stream_mgmt.iid}
         async_add_entities([HomeKitCamera(conn, info)], True)

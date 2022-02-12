@@ -38,6 +38,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     STATE_IDLE,
@@ -46,7 +47,8 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_STANDBY,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from . import AppleTVEntity
@@ -100,7 +102,11 @@ SUPPORT_FEATURE_MAPPING = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Load Apple TV media player based on a config entry."""
     name = config_entry.data[CONF_NAME]
     manager = hass.data[DOMAIN][config_entry.unique_id]
@@ -156,15 +162,15 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         except exceptions.ProtocolError:
             _LOGGER.exception("Failed to update app list")
         else:
-            self._app_list = {app.name: app.identifier for app in apps}
+            self._app_list = {
+                app.name: app.identifier
+                for app in sorted(apps, key=lambda app: app.name.lower())
+            }
             self.async_write_ha_state()
 
     @callback
     def async_device_disconnected(self):
         """Handle when connection was lost to device."""
-        self.atv.push_updater.stop()
-        self.atv.push_updater.listener = None
-        self.atv.power.listener = None
         self._attr_supported_features = SUPPORT_APPLE_TV
 
     @property

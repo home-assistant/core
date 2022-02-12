@@ -5,9 +5,11 @@
         },
         "error": {
             "bad_auth": "Vigane autentimine",
+            "invalid_auth": "Tuvastamine nurjus",
             "invalid_pin": "Sisestatud pin on kehtetu",
             "network_error": "Ilmnes v\u00f5rgut\u00f5rge",
             "no_panel_online": "V\u00f5rgus olevat Elmaxi juhtpaneeli ei leitud.",
+            "unknown": "Ootamatu t\u00f5rge",
             "unknown_error": "Ilmnes ootamatu t\u00f5rge"
         },
         "step": {

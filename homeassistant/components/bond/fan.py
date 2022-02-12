@@ -35,6 +35,8 @@ from .utils import BondDevice, BondHub
 
 _LOGGER = logging.getLogger(__name__)
 
+PRESET_MODE_BREEZE = "Breeze"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -74,11 +76,15 @@ class BondFan(BondEntity, FanEntity):
         self._power: bool | None = None
         self._speed: int | None = None
         self._direction: int | None = None
+        if self._device.has_action(Action.BREEZE_ON):
+            self._attr_preset_modes = [PRESET_MODE_BREEZE]
 
     def _apply_state(self, state: dict) -> None:
         self._power = state.get("power")
         self._speed = state.get("speed")
         self._direction = state.get("direction")
+        breeze = state.get("breeze", [0, 0, 0])
+        self._attr_preset_mode = PRESET_MODE_BREEZE if breeze[0] else None
 
     @property
     def supported_features(self) -> int:
@@ -185,13 +191,27 @@ class BondFan(BondEntity, FanEntity):
         """Turn on the fan."""
         _LOGGER.debug("Fan async_turn_on called with percentage %s", percentage)
 
-        if percentage is not None:
+        if preset_mode is not None:
+            await self.async_set_preset_mode(preset_mode)
+        elif percentage is not None:
             await self.async_set_percentage(percentage)
         else:
             await self._hub.bond.action(self._device.device_id, Action.turn_on())
 
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset mode of the fan."""
+        if preset_mode != PRESET_MODE_BREEZE or not self._device.has_action(
+            Action.BREEZE_ON
+        ):
+            raise ValueError(f"Invalid preset mode: {preset_mode}")
+        await self._hub.bond.action(self._device.device_id, Action(Action.BREEZE_ON))
+
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
+        if self.preset_mode == PRESET_MODE_BREEZE:
+            await self._hub.bond.action(
+                self._device.device_id, Action(Action.BREEZE_OFF)
+            )
         await self._hub.bond.action(self._device.device_id, Action.turn_off())
 
     async def async_set_direction(self, direction: str) -> None:

@@ -12,7 +12,8 @@ from homeassistant.const import (
     CONF_TYPE,
     SERVICE_TURN_ON,
 )
-from homeassistant.core import Context, HomeAssistant, HomeAssistantError
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType

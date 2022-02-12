@@ -6,7 +6,6 @@ import pytest
 
 from homeassistant.components.onewire.const import (
     CONF_MOUNT_DIR,
-    CONF_NAMES,
     CONF_TYPE_OWSERVER,
     CONF_TYPE_SYSBUS,
     DEFAULT_SYSBUS_MOUNT_DIR,
@@ -37,9 +36,6 @@ def get_config_entry(hass: HomeAssistant) -> ConfigEntry:
             CONF_TYPE: CONF_TYPE_OWSERVER,
             CONF_HOST: "1.2.3.4",
             CONF_PORT: 1234,
-            CONF_NAMES: {
-                "10.111111111111": "My DS18B20",
-            },
         },
         options={},
         entry_id="2",
@@ -57,9 +53,6 @@ def get_sysbus_config_entry(hass: HomeAssistant) -> ConfigEntry:
         data={
             CONF_TYPE: CONF_TYPE_SYSBUS,
             CONF_MOUNT_DIR: DEFAULT_SYSBUS_MOUNT_DIR,
-            CONF_NAMES: {
-                "10-111111111111": "My DS18B20",
-            },
         },
         unique_id=f"{CONF_TYPE_SYSBUS}:{DEFAULT_SYSBUS_MOUNT_DIR}",
         options={},

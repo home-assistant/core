@@ -11,7 +11,8 @@ from pyhap.camera import (
 )
 from pyhap.const import CATEGORY_CAMERA
 
-from homeassistant.components.ffmpeg import DATA_FFMPEG
+from homeassistant.components import camera
+from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.const import STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.event import (
@@ -139,7 +140,7 @@ class Camera(HomeAccessory, PyhapCamera):
 
     def __init__(self, hass, driver, name, entity_id, aid, config):
         """Initialize a Camera accessory object."""
-        self._ffmpeg = hass.data[DATA_FFMPEG]
+        self._ffmpeg = get_ffmpeg_manager(hass)
         for config_key, conf in CONFIG_DEFAULTS.items():
             if config_key not in config:
                 config[config_key] = conf
@@ -317,8 +318,8 @@ class Camera(HomeAccessory, PyhapCamera):
         if stream_source := self.config.get(CONF_STREAM_SOURCE):
             return stream_source
         try:
-            stream_source = await self.hass.components.camera.async_get_stream_source(
-                self.entity_id
+            stream_source = await camera.async_get_stream_source(
+                self.hass, self.entity_id
             )
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
@@ -471,7 +472,8 @@ class Camera(HomeAccessory, PyhapCamera):
 
     async def async_get_snapshot(self, image_size):
         """Return a jpeg of a snapshot from the camera."""
-        image = await self.hass.components.camera.async_get_image(
+        image = await camera.async_get_image(
+            self.hass,
             self.entity_id,
             width=image_size["image-width"],
             height=image_size["image-height"],

@@ -20,6 +20,7 @@ from .migrate import async_add_migration_entity_value
 LOGGER = logging.getLogger(__name__)
 
 EVENT_VALUE_UPDATED = "value updated"
+EVENT_VALUE_REMOVED = "value removed"
 EVENT_DEAD = "dead"
 EVENT_ALIVE = "alive"
 
@@ -47,7 +48,7 @@ class ZWaveBaseEntity(Entity):
         # Entity class attributes
         self._attr_name = self.generate_name()
         self._attr_unique_id = get_unique_id(
-            self.client.driver.controller.home_id, self.info.primary_value.value_id
+            self.client, self.info.primary_value.value_id
         )
         self._attr_entity_registry_enabled_default = (
             self.info.entity_registry_enabled_default
@@ -99,6 +100,10 @@ class ZWaveBaseEntity(Entity):
         self.async_on_remove(
             self.info.node.on(EVENT_VALUE_UPDATED, self._value_changed)
         )
+        self.async_on_remove(
+            self.info.node.on(EVENT_VALUE_REMOVED, self._value_removed)
+        )
+
         for status_event in (EVENT_ALIVE, EVENT_DEAD):
             self.async_on_remove(
                 self.info.node.on(status_event, self._node_status_alive_or_dead)
@@ -171,7 +176,7 @@ class ZWaveBaseEntity(Entity):
 
     @callback
     def _value_changed(self, event_data: dict) -> None:
-        """Call when (one of) our watched values changes.
+        """Call when a value associated with our node changes.
 
         Should not be overridden by subclasses.
         """
@@ -192,6 +197,25 @@ class ZWaveBaseEntity(Entity):
 
         self.on_value_update()
         self.async_write_ha_state()
+
+    @callback
+    def _value_removed(self, event_data: dict) -> None:
+        """Call when a value associated with our node is removed.
+
+        Should not be overridden by subclasses.
+        """
+        value_id = event_data["value"].value_id
+
+        if value_id != self.info.primary_value.value_id:
+            return
+
+        LOGGER.debug(
+            "[%s] Primary value %s is being removed",
+            self.entity_id,
+            value_id,
+        )
+
+        self.hass.async_create_task(self.async_remove())
 
     @callback
     def get_zwave_value(

@@ -5,9 +5,11 @@
         },
         "error": {
             "bad_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "invalid_pin": "A megadott PIN-k\u00f3d \u00e9rv\u00e9nytelen",
             "network_error": "H\u00e1l\u00f3zati hiba t\u00f6rt\u00e9nt",
             "no_panel_online": "Nem tal\u00e1lhat\u00f3 online Elmax vez\u00e9rl\u0151panel.",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt",
             "unknown_error": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "step": {

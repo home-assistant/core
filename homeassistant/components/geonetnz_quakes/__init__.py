@@ -5,7 +5,7 @@ import logging
 from aio_geojson_geonetnz_quakes import GeonetnzQuakesFeedManager
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -14,10 +14,11 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_MILES,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
@@ -58,7 +59,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the GeoNet NZ Quakes component."""
     if DOMAIN not in config:
         return True
@@ -87,7 +88,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the GeoNet NZ Quakes component as config entry."""
     hass.data.setdefault(DOMAIN, {})
     feeds = hass.data[DOMAIN].setdefault(FEED, {})
@@ -103,7 +104,7 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an GeoNet NZ Quakes component config entry."""
     manager = hass.data[DOMAIN][FEED].pop(entry.entry_id)
     await manager.async_stop()

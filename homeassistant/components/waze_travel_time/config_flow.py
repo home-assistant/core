@@ -1,14 +1,11 @@
 """Config flow for Waze Travel Time integration."""
 from __future__ import annotations
 
-import logging
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, CONF_REGION
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -22,64 +19,13 @@ from .const import (
     CONF_REALTIME,
     CONF_UNITS,
     CONF_VEHICLE_TYPE,
-    DEFAULT_AVOID_FERRIES,
-    DEFAULT_AVOID_SUBSCRIPTION_ROADS,
-    DEFAULT_AVOID_TOLL_ROADS,
     DEFAULT_NAME,
-    DEFAULT_REALTIME,
-    DEFAULT_VEHICLE_TYPE,
     DOMAIN,
     REGIONS,
     UNITS,
     VEHICLE_TYPES,
 )
 from .helpers import is_valid_config_entry
-
-_LOGGER = logging.getLogger(__name__)
-
-
-def is_dupe_import(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry, user_input: dict[str, Any]
-) -> bool:
-    """Return whether imported config already exists."""
-    entry_data = {**entry.data, **entry.options}
-    defaults = {
-        CONF_REALTIME: DEFAULT_REALTIME,
-        CONF_VEHICLE_TYPE: DEFAULT_VEHICLE_TYPE,
-        CONF_UNITS: hass.config.units.name,
-        CONF_AVOID_FERRIES: DEFAULT_AVOID_FERRIES,
-        CONF_AVOID_SUBSCRIPTION_ROADS: DEFAULT_AVOID_SUBSCRIPTION_ROADS,
-        CONF_AVOID_TOLL_ROADS: DEFAULT_AVOID_TOLL_ROADS,
-    }
-
-    for key in (
-        CONF_ORIGIN,
-        CONF_DESTINATION,
-        CONF_REGION,
-        CONF_INCL_FILTER,
-        CONF_EXCL_FILTER,
-        CONF_REALTIME,
-        CONF_VEHICLE_TYPE,
-        CONF_UNITS,
-        CONF_AVOID_FERRIES,
-        CONF_AVOID_SUBSCRIPTION_ROADS,
-        CONF_AVOID_TOLL_ROADS,
-    ):
-        # If the key is present the check is simple
-        if key in user_input and user_input[key] != entry_data[key]:
-            return False
-
-        # If the key is not present, then we have to check if the key has a default and
-        # if the default is in the options. If it doesn't have a default, we have to check
-        # if the key is in the options
-        if key not in user_input:
-            if key in defaults and defaults[key] != entry_data[key]:
-                return False
-
-            if key not in defaults and key in entry_data:
-                return False
-
-    return True
 
 
 class WazeOptionsFlow(config_entries.OptionsFlow):
@@ -159,23 +105,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
 
         if user_input:
-            # We need to prevent duplicate imports
-            if self.source == config_entries.SOURCE_IMPORT and any(
-                is_dupe_import(self.hass, entry, user_input)
-                for entry in self.hass.config_entries.async_entries(DOMAIN)
-                if entry.source == config_entries.SOURCE_IMPORT
-            ):
-                return self.async_abort(reason="already_configured")
-
-            if (
-                self.source == config_entries.SOURCE_IMPORT
-                or await self.hass.async_add_executor_job(
-                    is_valid_config_entry,
-                    self.hass,
-                    user_input[CONF_ORIGIN],
-                    user_input[CONF_DESTINATION],
-                    user_input[CONF_REGION],
-                )
+            if await self.hass.async_add_executor_job(
+                is_valid_config_entry,
+                self.hass,
+                user_input[CONF_ORIGIN],
+                user_input[CONF_DESTINATION],
+                user_input[CONF_REGION],
             ):
                 return self.async_create_entry(
                     title=user_input.get(CONF_NAME, DEFAULT_NAME),

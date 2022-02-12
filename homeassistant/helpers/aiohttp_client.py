@@ -18,9 +18,10 @@ import async_timeout
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers.frame import warn_use
 from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
+
+from .frame import warn_use
 
 DATA_CONNECTOR = "aiohttp_connector"
 DATA_CONNECTOR_NOTVERIFY = "aiohttp_connector_notverify"

@@ -11,7 +11,7 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import Any, Final, Literal, TypedDict, final
+from typing import Any, Literal, TypedDict, final
 
 import voluptuous as vol
 
@@ -35,15 +35,17 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Context, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity_platform import EntityPlatform
-from homeassistant.helpers.event import Event, async_track_entity_registry_updated_event
-from homeassistant.helpers.typing import StateType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
+
+from . import entity_registry as er
+from .device_registry import DeviceEntryType
+from .entity_platform import EntityPlatform
+from .event import async_track_entity_registry_updated_event
+from .frame import report
+from .typing import StateType
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -56,7 +58,13 @@ SOURCE_PLATFORM_CONFIG = "platform_config"
 FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
 
 
-ENTITY_CATEGORIES_SCHEMA: Final = vol.In(ENTITY_CATEGORIES)
+def validate_entity_category(value: Any | None) -> EntityCategory:
+    """Validate entity category configuration."""
+    value = vol.In(ENTITY_CATEGORIES)(value)
+    return EntityCategory(value)
+
+
+ENTITY_CATEGORIES_SCHEMA = validate_entity_category
 
 
 @callback
@@ -199,6 +207,29 @@ class EntityCategory(StrEnum):
     SYSTEM = "system"
 
 
+def convert_to_entity_category(
+    value: EntityCategory | str | None, raise_report: bool = True
+) -> EntityCategory | None:
+    """Force incoming entity_category to be an enum."""
+
+    if value is None:
+        return value
+
+    if not isinstance(value, EntityCategory):
+        if raise_report:
+            report(
+                "uses %s (%s) for entity category. This is deprecated and will "
+                "stop working in Home Assistant 2022.4, it should be updated to use "
+                "EntityCategory instead" % (type(value).__name__, value),
+                error_if_core=False,
+            )
+        try:
+            return EntityCategory(value)
+        except ValueError:
+            return None
+    return value
+
+
 @dataclass
 class EntityDescription:
     """A class that describes Home Assistant entities."""
@@ -207,6 +238,7 @@ class EntityDescription:
     key: str
 
     device_class: str | None = None
+    # Type string is deprecated as of 2021.12, use EntityCategory
     entity_category: EntityCategory | Literal[
         "config", "diagnostic", "system"
     ] | None = None
@@ -271,7 +303,7 @@ class Entity(ABC):
     _attr_context_recent_time: timedelta = timedelta(seconds=5)
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
-    _attr_entity_category: EntityCategory | str | None
+    _attr_entity_category: EntityCategory | None
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
     _attr_extra_state_attributes: MutableMapping[str, Any]
@@ -438,6 +470,7 @@ class Entity(ABC):
         """Return the attribution."""
         return self._attr_attribution
 
+    # Type str is deprecated as of 2021.12, use EntityCategory
     @property
     def entity_category(self) -> EntityCategory | str | None:
         """Return the category of the entity, if any."""
@@ -926,17 +959,19 @@ class ToggleEntity(Entity):
     """An abstract class for entities that can be turned on and off."""
 
     entity_description: ToggleEntityDescription
-    _attr_is_on: bool
+    _attr_is_on: bool | None = None
     _attr_state: None = None
 
     @property
     @final
-    def state(self) -> str | None:
+    def state(self) -> Literal["on", "off"] | None:
         """Return the state."""
-        return STATE_ON if self.is_on else STATE_OFF
+        if (is_on := self.is_on) is None:
+            return None
+        return STATE_ON if is_on else STATE_OFF
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self._attr_is_on
 

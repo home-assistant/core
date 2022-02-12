@@ -1,6 +1,11 @@
 """Support for monitoring an SABnzbd NZB client."""
+from __future__ import annotations
+
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     DATA_SABNZBD,
@@ -10,7 +15,12 @@ from . import (
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the SABnzbd sensors."""
     if discovery_info is None:
         return

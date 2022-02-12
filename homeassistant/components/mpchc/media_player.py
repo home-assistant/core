@@ -1,4 +1,6 @@
 """Support to interface with the MPC-HC Web API."""
+from __future__ import annotations
+
 import logging
 import re
 
@@ -24,7 +26,10 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,8 +55,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the MPC-HC platform."""
+    _LOGGER.warning(
+        "The Media Player Classic Home Cinema integration is now deprecated "
+        "and will be removed in Home Assistant Core 2022.4; "
+        "this integration is removed under Architectural Decision Record 0004, "
+        "more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0004-webscraping.md"
+    )
+
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)

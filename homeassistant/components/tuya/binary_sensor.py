@@ -71,6 +71,16 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TAMPER_BINARY_SENSOR,
     ),
+    # Smart Pet Feeder
+    # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
+    "cwwsq": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.FEED_STATE,
+            name="Feeding",
+            icon="mdi:information",
+            on_value="feeding",
+        ),
+    ),
     # Human Presence Sensor
     # https://developer.tuya.com/en/docs/iot/categoryhps?id=Kaiuz42yhn1hs
     "hps": (
@@ -99,6 +109,14 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             on_value="alarm",
         ),
         TAMPER_BINARY_SENSOR,
+    ),
+    # Door and Window Controller
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r5zjsy9
+    "mc": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.DOORCONTACT_STATE,
+            device_class=BinarySensorDeviceClass.DOOR,
+        ),
     ),
     # Door Window Sensor
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
@@ -183,6 +201,16 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             on_value="alarm",
         ),
         TAMPER_BINARY_SENSOR,
+    ),
+    # Thermostatic Radiator Valve
+    # Not documented
+    "wkf": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.WINDOW_STATE,
+            name="Window",
+            device_class=BinarySensorDeviceClass.WINDOW,
+            on_value="opened",
+        ),
     ),
     # Temperature and Humidity Sensor
     # https://developer.tuya.com/en/docs/iot/categorywsdcg?id=Kaiuz3hinij34

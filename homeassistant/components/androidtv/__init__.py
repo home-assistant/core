@@ -18,8 +18,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ANDROID_DEV,
@@ -32,14 +34,28 @@ from .const import (
     DEVICE_ANDROIDTV,
     DEVICE_FIRETV,
     DOMAIN,
+    PROP_ETHMAC,
     PROP_SERIALNO,
+    PROP_WIFIMAC,
     SIGNAL_CONFIG_ENTITY,
 )
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 RELOAD_OPTIONS = [CONF_STATE_DETECTION_RULES]
 
+_INVALID_MACS = {"ff:ff:ff:ff:ff:ff"}
+
 _LOGGER = logging.getLogger(__name__)
+
+
+def get_androidtv_mac(dev_props):
+    """Return formatted mac from device properties."""
+    for prop_mac in (PROP_ETHMAC, PROP_WIFIMAC):
+        if if_mac := dev_props.get(prop_mac):
+            mac = format_mac(if_mac)
+            if mac not in _INVALID_MACS:
+                return mac
+    return None
 
 
 def _setup_androidtv(hass, config):
@@ -125,7 +141,7 @@ def _migrate_aftv_entity(hass, aftv, entry_unique_id):
         _LOGGER.warning("Migration of old entity failed: %s", exp)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Android TV integration."""
     return True
 
@@ -163,7 +179,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         aftv = hass.data[DOMAIN][entry.entry_id][ANDROID_DEV]
@@ -173,7 +189,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update when config_entry options update."""
     reload_opt = False
     old_options = hass.data[DOMAIN][entry.entry_id][ANDROID_DEV_OPT]

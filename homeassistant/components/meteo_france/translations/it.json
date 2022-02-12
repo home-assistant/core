@@ -5,7 +5,7 @@
             "unknown": "Errore imprevisto"
         },
         "error": {
-            "empty": "Nessun risultato nella ricerca della citt\u00e0: si prega di controllare il campo citt\u00e0"
+            "empty": "Nessun risultato nella ricerca della citt\u00e0: controlla il campo citt\u00e0"
         },
         "step": {
             "cities": {

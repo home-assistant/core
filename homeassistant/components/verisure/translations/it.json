@@ -18,14 +18,14 @@
             "reauth_confirm": {
                 "data": {
                     "description": "Autenticati nuovamente con il tuo account Verisure My Pages.",
-                    "email": "E-mail",
+                    "email": "Email",
                     "password": "Password"
                 }
             },
             "user": {
                 "data": {
                     "description": "Accedi con il tuo account Verisure My Pages.",
-                    "email": "E-mail",
+                    "email": "Email",
                     "password": "Password"
                 }
             }

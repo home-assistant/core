@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "email": "Correo electr\u00f3nico",
-                    "password": "Contrase\u00f1a"
+                    "password": "Contrase\u00f1a",
+                    "timeout": "Timeout"
                 },
                 "title": "Conectar a tu Sense Energy Monitor"
             }

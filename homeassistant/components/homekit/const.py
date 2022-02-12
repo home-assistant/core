@@ -92,7 +92,6 @@ DEFAULT_HOMEKIT_MODE = HOMEKIT_MODE_BRIDGE
 HOMEKIT_MODES = [HOMEKIT_MODE_BRIDGE, HOMEKIT_MODE_ACCESSORY]
 
 # #### HomeKit Component Services ####
-SERVICE_HOMEKIT_START = "start"
 SERVICE_HOMEKIT_RESET_ACCESSORY = "reset_accessory"
 SERVICE_HOMEKIT_UNPAIR = "unpair"
 
@@ -167,6 +166,7 @@ CHAR_CONTACT_SENSOR_STATE = "ContactSensorState"
 CHAR_COOLING_THRESHOLD_TEMPERATURE = "CoolingThresholdTemperature"
 CHAR_CURRENT_AMBIENT_LIGHT_LEVEL = "CurrentAmbientLightLevel"
 CHAR_CURRENT_DOOR_STATE = "CurrentDoorState"
+CHAR_CURRENT_FAN_STATE = "CurrentFanState"
 CHAR_CURRENT_HEATING_COOLING = "CurrentHeatingCoolingState"
 CHAR_CURRENT_HUMIDIFIER_DEHUMIDIFIER = "CurrentHumidifierDehumidifierState"
 CHAR_CURRENT_POSITION = "CurrentPosition"
@@ -177,6 +177,7 @@ CHAR_CURRENT_TILT_ANGLE = "CurrentHorizontalTiltAngle"
 CHAR_CURRENT_VISIBILITY_STATE = "CurrentVisibilityState"
 CHAR_DEHUMIDIFIER_THRESHOLD_HUMIDITY = "RelativeHumidityDehumidifierThreshold"
 CHAR_FIRMWARE_REVISION = "FirmwareRevision"
+CHAR_HARDWARE_REVISION = "HardwareRevision"
 CHAR_HEATING_THRESHOLD_TEMPERATURE = "HeatingThresholdTemperature"
 CHAR_HUE = "Hue"
 CHAR_HUMIDIFIER_THRESHOLD_HUMIDITY = "RelativeHumidityHumidifierThreshold"

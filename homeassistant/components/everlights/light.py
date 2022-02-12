@@ -18,9 +18,12 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import CONF_HOSTS
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,7 +47,12 @@ def color_int_to_rgb(value: int) -> tuple[int, int, int]:
     return (value >> 16, (value >> 8) & 0xFF, value & 0xFF)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the EverLights lights from configuration.yaml."""
     lights = []
 

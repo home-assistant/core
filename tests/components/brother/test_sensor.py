@@ -309,7 +309,7 @@ async def test_availability(hass):
 
 
 async def test_manual_update_entity(hass):
-    """Test manual update entity via service homeasasistant/update_entity."""
+    """Test manual update entity via service homeassistant/update_entity."""
     await init_integration(hass)
 
     data = json.loads(load_fixture("printer_data.json", "brother"))

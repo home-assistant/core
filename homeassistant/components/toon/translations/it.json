@@ -13,11 +13,11 @@
                 "data": {
                     "agreement": "Accordo"
                 },
-                "description": "Selezionare l'indirizzo del contratto che si desidera aggiungere.",
+                "description": "Seleziona l'indirizzo del contratto che si desidera aggiungere.",
                 "title": "Seleziona il tuo contratto"
             },
             "pick_implementation": {
-                "title": "Scegliere il tenant con cui eseguire l'autenticazione"
+                "title": "Scegli il tenant con cui eseguire l'autenticazione"
             }
         }
     }

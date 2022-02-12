@@ -67,6 +67,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_STATE,
     CONF_STATE_TEMPLATE,
+    EVENT_HOMEASSISTANT_START,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -89,12 +90,14 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import EVENT_HOMEASSISTANT_START, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import TrackTemplate, async_track_template_result
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.service import async_call_from_config
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 ATTR_ACTIVE_CHILD = "active_child"
 
@@ -122,7 +125,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the universal media players."""
     await async_setup_reload_service(hass, "universal", ["media_player"])
 

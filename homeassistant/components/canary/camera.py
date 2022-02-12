@@ -15,7 +15,7 @@ from homeassistant.components.camera import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     Camera,
 )
-from homeassistant.components.ffmpeg import DATA_FFMPEG, FFmpegManager
+from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -94,7 +94,7 @@ class CanaryCamera(CoordinatorEntity, Camera):
         """Initialize a Canary security camera."""
         super().__init__(coordinator)
         Camera.__init__(self)
-        self._ffmpeg: FFmpegManager = hass.data[DATA_FFMPEG]
+        self._ffmpeg: FFmpegManager = get_ffmpeg_manager(hass)
         self._ffmpeg_arguments = ffmpeg_args
         self._location_id = location_id
         self._device = device

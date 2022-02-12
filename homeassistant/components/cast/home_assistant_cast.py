@@ -6,14 +6,16 @@ import voluptuous as vol
 
 from homeassistant import auth, config_entries, core
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, dispatcher
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from .const import DOMAIN, SIGNAL_HASS_CAST_SHOW_VIEW
 
 SERVICE_SHOW_VIEW = "show_lovelace_view"
 ATTR_VIEW_PATH = "view_path"
 ATTR_URL_PATH = "dashboard_path"
+NO_URL_AVAILABLE_ERROR = "Home Assistant Cast requires your instance to be reachable via HTTPS. Enable Home Assistant Cloud or set up an external URL with valid SSL certificates"
 
 
 async def async_setup_ha_cast(
@@ -28,7 +30,7 @@ async def async_setup_ha_cast(
 
     if user is None:
         user = await hass.auth.async_create_system_user(
-            "Home Assistant Cast", group_ids=[auth.GROUP_ID_ADMIN]
+            "Home Assistant Cast", group_ids=[auth.const.GROUP_ID_ADMIN]
         )
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, "user_id": user.id}
@@ -39,9 +41,12 @@ async def async_setup_ha_cast(
     else:
         refresh_token = await hass.auth.async_create_refresh_token(user)
 
-    async def handle_show_view(call: core.ServiceCall):
+    async def handle_show_view(call: core.ServiceCall) -> None:
         """Handle a Show View service call."""
-        hass_url = get_url(hass, require_ssl=True, prefer_external=True)
+        try:
+            hass_url = get_url(hass, require_ssl=True, prefer_external=True)
+        except NoURLAvailableError as err:
+            raise HomeAssistantError(NO_URL_AVAILABLE_ERROR) from err
 
         controller = HomeAssistantController(
             # If you are developing Home Assistant Cast, uncomment and set to your dev app id.

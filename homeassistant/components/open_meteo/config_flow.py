@@ -22,21 +22,20 @@ class OpenMeteoFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
-        if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_ZONE])
-            self._abort_if_unique_id_configured()
-
-            zone = self.hass.states.get(user_input[CONF_ZONE])
-            return self.async_create_entry(
-                title=zone.name if zone else "Open-Meteo",
-                data={CONF_ZONE: user_input[CONF_ZONE]},
-            )
-
         zones: dict[str, str] = {
             entity_id: state.name
             for entity_id in self.hass.states.async_entity_ids(ZONE_DOMAIN)
             if (state := self.hass.states.get(entity_id)) is not None
         }
+
+        if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_ZONE])
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(
+                title=zones[user_input[CONF_ZONE]],
+                data={CONF_ZONE: user_input[CONF_ZONE]},
+            )
+
         zones = dict(sorted(zones.items(), key=lambda x: x[1], reverse=True))
 
         return self.async_show_form(

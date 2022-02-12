@@ -36,7 +36,7 @@
                     "dnsmasq": "The location in the router of the dnsmasq.leases files",
                     "interface": "The interface that you want statistics from (e.g. eth0,eth1 etc)",
                     "require_ip": "Devices must have IP (for access point mode)",
-                    "track_unknown": "Track unknown / unamed devices"
+                    "track_unknown": "Track unknown / unnamed devices"
                 },
                 "title": "AsusWRT Options"
             }

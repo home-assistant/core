@@ -13,10 +13,10 @@ from plexwebsocket import (
 )
 import requests.exceptions
 
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, BrowseError
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_URL, CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dev_reg, entity_registry as ent_reg
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -25,6 +25,8 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.network import is_internal_request
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_SERVER,
@@ -38,17 +40,42 @@ from .const import (
     PLEX_SERVER_CONFIG,
     PLEX_UPDATE_LIBRARY_SIGNAL,
     PLEX_UPDATE_PLATFORMS_SIGNAL,
+    PLEX_URI_SCHEME,
     SERVERS,
     WEBSOCKETS,
 )
 from .errors import ShouldUpdateConfigEntry
+from .media_browser import browse_media
 from .server import PlexServer
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__package__)
 
 
-async def async_setup(hass, config):
+def is_plex_media_id(media_content_id):
+    """Return whether the media_content_id is a valid Plex media_id."""
+    return media_content_id and media_content_id.startswith(PLEX_URI_SCHEME)
+
+
+async def async_browse_media(hass, media_content_type, media_content_id, platform=None):
+    """Browse Plex media."""
+    plex_server = next(iter(hass.data[PLEX_DOMAIN][SERVERS].values()), None)
+    if not plex_server:
+        raise BrowseError("No Plex servers available")
+    is_internal = is_internal_request(hass)
+    return await hass.async_add_executor_job(
+        partial(
+            browse_media,
+            plex_server,
+            is_internal,
+            media_content_type,
+            media_content_id,
+            platform=platform,
+        )
+    )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Plex component."""
     hass.data.setdefault(
         PLEX_DOMAIN,
@@ -74,7 +101,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Plex from a config entry."""
     server_config = entry.data[PLEX_SERVER_CONFIG]
 
@@ -220,7 +247,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     server_id = entry.data[CONF_SERVER_IDENTIFIER]
 
@@ -238,7 +265,7 @@ async def async_unload_entry(hass, entry):
     return unload_ok
 
 
-async def async_options_updated(hass, entry):
+async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Triggered by config entry options updates."""
     server_id = entry.data[CONF_SERVER_IDENTIFIER]
 

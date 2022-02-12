@@ -4,7 +4,8 @@
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi"
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida"
         },
         "step": {
             "user": {
@@ -13,7 +14,7 @@
                     "username": "Nome utente"
                 },
                 "description": "Inserisci il nome utente e la password del tuo account iAqualink.",
-                "title": "Collegati a iAqualink"
+                "title": "Connettiti a iAqualink"
             }
         }
     }

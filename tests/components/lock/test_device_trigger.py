@@ -116,7 +116,7 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
     assert len(triggers) == 5
     for trigger in triggers:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "trigger", trigger
+            hass, DeviceAutomationType.TRIGGER, trigger
         )
         assert capabilities == {
             "extra_fields": [

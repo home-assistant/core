@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/meteoalarm",
   "requirements": ["meteoalertapi==0.2.0"],
   "codeowners": ["@rolfberkenbosch"],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["meteoalertapi"]
 }

@@ -35,7 +35,7 @@ DATA_TASK = "task"
 DEVICE_NAME_ENERGY = "Energy Meter"
 DEVICE_NAME_GAS = "Gas Meter"
 
-DSMR_VERSIONS = {"2.2", "4", "5", "5B", "5L", "5S"}
+DSMR_VERSIONS = {"2.2", "4", "5", "5B", "5L", "5S", "Q3D"}
 
 SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
@@ -242,41 +242,17 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
-        key=obis_references.LUXEMBOURG_ELECTRICITY_USED_TARIFF_GLOBAL,
-        name="Energy Consumption (total)",
-        dsmr_versions={"5L"},
-        force_update=True,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    DSMRSensorEntityDescription(
-        key=obis_references.LUXEMBOURG_ELECTRICITY_DELIVERED_TARIFF_GLOBAL,
-        name="Energy Production (total)",
-        dsmr_versions={"5L"},
-        force_update=True,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    DSMRSensorEntityDescription(
-        key=obis_references.SWEDEN_ELECTRICITY_USED_TARIFF_GLOBAL,
-        name="Energy Consumption (total)",
-        dsmr_versions={"5S"},
-        force_update=True,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    DSMRSensorEntityDescription(
-        key=obis_references.SWEDEN_ELECTRICITY_DELIVERED_TARIFF_GLOBAL,
-        name="Energy Production (total)",
-        dsmr_versions={"5S"},
-        force_update=True,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    DSMRSensorEntityDescription(
         key=obis_references.ELECTRICITY_IMPORTED_TOTAL,
         name="Energy Consumption (total)",
-        dsmr_versions={"2.2", "4", "5", "5B"},
+        dsmr_versions={"5", "5B", "5L", "5S", "Q3D"},
+        force_update=True,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.ELECTRICITY_EXPORTED_TOTAL,
+        name="Energy Production (total)",
+        dsmr_versions={"5L", "5S", "Q3D"},
         force_update=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,

@@ -4,6 +4,8 @@ import threading
 import time
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,17 +31,24 @@ I2C_HAT_NAMES = [
 I2C_HATS_MANAGER = "I2CH_MNG"
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the raspihats component."""
-    hass.data[I2C_HATS_MANAGER] = I2CHatsManager()
+    _LOGGER.warning(
+        "The Raspihats pHAT integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
+
+    hass.data[DOMAIN] = {I2C_HATS_MANAGER: I2CHatsManager()}
 
     def start_i2c_hats_keep_alive(event):
         """Start I2C-HATs keep alive."""
-        hass.data[I2C_HATS_MANAGER].start_keep_alive()
+        hass.data[DOMAIN][I2C_HATS_MANAGER].start_keep_alive()
 
     def stop_i2c_hats_keep_alive(event):
         """Stop I2C-HATs keep alive."""
-        hass.data[I2C_HATS_MANAGER].stop_keep_alive()
+        hass.data[DOMAIN][I2C_HATS_MANAGER].stop_keep_alive()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_i2c_hats_keep_alive)
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_i2c_hats_keep_alive)
