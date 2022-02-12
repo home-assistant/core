@@ -11,7 +11,7 @@
             "unknown": "Unexpected error"
         },
         "step": {
-            "authenticate": {
+            "user": {
                 "data": {
                     "country_code": "Country code",
                     "password": "Password",
