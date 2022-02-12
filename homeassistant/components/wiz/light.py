@@ -4,7 +4,6 @@ from __future__ import annotations
 from typing import Any
 
 from pywizlight import PilotBuilder
-from pywizlight.bulb import PIR_SOURCE
 from pywizlight.bulblibrary import BulbClass, BulbType, Features
 from pywizlight.scenes import get_id_from_scene_name
 
@@ -22,7 +21,6 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import (
@@ -33,8 +31,6 @@ from homeassistant.util.color import (
 from .const import DOMAIN
 from .entity import WizToggleEntity
 from .models import WizData
-
-ATTR_OCCUPANCY = "occupancy"
 
 
 def _async_pilot_builder(**kwargs: Any) -> PilotBuilder:
@@ -102,7 +98,6 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
             )
         if bulb_type.features.effect:
             self._attr_supported_features = SUPPORT_EFFECT
-        self._attr_extra_state_attributes = {ATTR_OCCUPANCY: STATE_UNKNOWN}
         self._async_update_attrs()
 
     @callback
@@ -129,8 +124,6 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         else:
             self._attr_color_mode = COLOR_MODE_BRIGHTNESS
         self._attr_effect = state.get_scene()
-        if self._device.state.get_source() == PIR_SOURCE:
-            self._attr_extra_state_attributes = {ATTR_OCCUPANCY: self._device.status}
         super()._async_update_attrs()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
