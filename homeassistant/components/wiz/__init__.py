@@ -76,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
     )
 
-    await bulb.start_push(lambda state: coordinator.async_set_updated_data(None))
+    await bulb.start_push(lambda _: coordinator.async_set_updated_data(None))
     bulb.set_discovery_callback(lambda bulb: async_trigger_discovery(hass, [bulb]))
     await coordinator.async_config_entry_first_refresh()
 
