@@ -274,10 +274,8 @@ class SubaruSensor(SubaruEntity, SensorEntity):
 
     def get_current_value(self):
         """Get raw value from the coordinator."""
-        if isinstance(self.coordinator.data, dict):
-            value = self.coordinator.data.get(self.vin)[VEHICLE_STATUS].get(
-                self.data_field
-            )
+        if isinstance(data := self.coordinator.data, dict):
+            value = data.get(self.vin)[VEHICLE_STATUS].get(self.data_field)
             if value in sc.BAD_SENSOR_VALUES:
                 value = None
             if isinstance(value, str):
