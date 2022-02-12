@@ -119,6 +119,7 @@ class TelnetSwitch(SwitchEntity):
         self._value_template = value_template
         self._timeout = timeout
         self._attr_should_poll = bool(command_state)
+        self._attr_assumed_state = bool(command_state is None)
 
     def _telnet_command(self, command: str) -> str | None:
         try:
@@ -144,11 +145,6 @@ class TelnetSwitch(SwitchEntity):
             _LOGGER.warning("Empty response for command: %s", self._command_state)
             return None
         self._attr_is_on = rendered == "True"
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if no state command is defined, false otherwise."""
-        return self._command_state is None
 
     def turn_on(self, **kwargs) -> None:
         """Turn the device on."""
