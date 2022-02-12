@@ -285,7 +285,10 @@ class Thermostat(HomeAccessory):
                 CHAR_CURRENT_HUMIDITY, value=50
             )
 
-        fan_modes = self.fan_modes = attributes.get(ATTR_FAN_MODES, [])
+        fan_modes = self.fan_modes = {
+            fan_mode.lower(): fan_mode
+            for fan_mode in attributes.get(ATTR_FAN_MODES, [])
+        }
         if (
             features & SUPPORT_FAN_MODE
             and fan_modes
@@ -372,10 +375,10 @@ class Thermostat(HomeAccessory):
         if FAN_OFF not in self.fan_modes:
             return
         if not active:
-            mode = FAN_OFF
+            mode = self.fan_modes[FAN_OFF]
         else:
             mode = percentage_to_ordered_list_item(self.ordered_fan_speeds, 50)
-        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: mode}
+        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: self.fan_modes[mode]}
         self.async_call_service(DOMAIN_CLIMATE, SERVICE_SET_FAN_MODE, params)
 
     def _set_fan_auto(self, auto) -> None:
@@ -386,7 +389,7 @@ class Thermostat(HomeAccessory):
             mode = FAN_ON
         elif self.ordered_fan_speeds:
             mode = percentage_to_ordered_list_item(self.ordered_fan_speeds, 50)
-        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: mode}
+        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: self.fan_modes[mode]}
         self.async_call_service(DOMAIN_CLIMATE, SERVICE_SET_FAN_MODE, params)
 
     def _temperature_to_homekit(self, temp):
@@ -686,16 +689,22 @@ class Thermostat(HomeAccessory):
             swing = 1 if swing_mode in PRE_DEFINED_SWING_MODES else 0
             self.char_swing.set_value(swing)
 
-        if fan_mode := attributes.get(ATTR_FAN_MODE):
+        fan_mode = attributes[ATTR_FAN_MODE]
+        fan_mode_lower = fan_mode.lower() if isinstance(fan_mode, str) else None
+        if fan_mode_lower:
             if (
                 CHAR_ROTATION_SPEED in self.fan_chars
-                and fan_mode in self.ordered_fan_speeds
+                and fan_mode_lower in self.ordered_fan_speeds
             ):
                 self.char_speed.set_value(
-                    ordered_list_item_to_percentage(self.ordered_fan_speeds, fan_mode)
+                    ordered_list_item_to_percentage(
+                        self.ordered_fan_speeds, fan_mode_lower
+                    )
                 )
             if CHAR_TARGET_FAN_STATE in self.fan_chars:
-                self.char_target_fan_state.set_value(1 if fan_mode == FAN_AUTO else 0)
+                self.char_target_fan_state.set_value(
+                    1 if fan_mode_lower == FAN_AUTO else 0
+                )
 
         if CHAR_CURRENT_FAN_STATE in self.fan_chars and (
             hvac_action := attributes.get(ATTR_HVAC_ACTION)
@@ -706,7 +715,7 @@ class Thermostat(HomeAccessory):
 
         hvac_mode = new_state.state
         self.char_active.set_value(
-            int(hvac_mode != HVAC_MODE_OFF and fan_mode != FAN_OFF)
+            int(hvac_mode != HVAC_MODE_OFF and fan_mode_lower != FAN_OFF)
         )
 
 
