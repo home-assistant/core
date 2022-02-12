@@ -695,7 +695,6 @@ class Thermostat(HomeAccessory):
         fan_mode_lower = fan_mode.lower() if isinstance(fan_mode, str) else None
         if (
             CHAR_ROTATION_SPEED in self.fan_chars
-            and fan_mode_lower
             and fan_mode_lower in self.ordered_fan_speeds
         ):
             self.char_speed.set_value(
