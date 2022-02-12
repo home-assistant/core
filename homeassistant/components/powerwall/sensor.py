@@ -170,12 +170,12 @@ class PowerWallBackupReserveSensor(PowerWallEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.BATTERY
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Device Uniqueid."""
         return f"{self.base_unique_id}_backup_reserve"
 
     @property
-    def native_value(self):
+    def native_value(self) -> int:
         """Get the current value in percentage."""
         return round(self.coordinator.data[POWERWALL_API_BACKUP_RESERVE])
 
