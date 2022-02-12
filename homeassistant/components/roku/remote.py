@@ -1,6 +1,7 @@
 """Support for the Roku remote."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import Any
 
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
@@ -56,7 +57,7 @@ class RokuRemote(RokuEntity, RemoteEntity):
         await self.coordinator.async_request_refresh()
 
     @roku_exception_handler
-    async def async_send_command(self, command: list, **kwargs: Any) -> None:
+    async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
         num_repeats = kwargs[ATTR_NUM_REPEATS]
 
