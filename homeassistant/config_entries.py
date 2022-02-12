@@ -1195,11 +1195,11 @@ class ConfigEntries:
                 self.hass, config_entry.domain
             )
         except loader.IntegrationNotFound as exc:
-            raise HomeAssistantError from exc
+            raise HomeAssistantError("Integration not found") from exc
         try:
             component = integration.get_component()
         except ImportError as exc:
-            raise HomeAssistantError from exc
+            raise HomeAssistantError("Component not found") from exc
 
         # Check with the config entry if it can be removed from the device
         if not await component.async_remove_config_entry_device(
