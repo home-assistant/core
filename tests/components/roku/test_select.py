@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 from rokuecp import Application, Device as RokuDevice, RokuError
 
+from homeassistant.components.roku.const import DOMAIN
 from homeassistant.components.roku.coordinator import SCAN_INTERVAL
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.select.const import ATTR_OPTION, ATTR_OPTIONS
@@ -17,12 +18,24 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_application_state(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_device: RokuDevice,
     mock_roku: MagicMock,
 ) -> None:
     """Test the creation and values of the Roku selects."""
     entity_registry = er.async_get(hass)
+
+    entity_registry.async_get_or_create(
+        SELECT_DOMAIN,
+        DOMAIN,
+        "1GU48T017973_application",
+        suggested_object_id="my_roku_3_application",
+        disabled_by=None,
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     state = hass.states.get("select.my_roku_3_application")
     assert state
@@ -91,11 +104,25 @@ async def test_application_state(
 
 async def test_application_select_error(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_roku: MagicMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error handling of the Roku selects."""
+    entity_registry = er.async_get(hass)
+
+    entity_registry.async_get_or_create(
+        SELECT_DOMAIN,
+        DOMAIN,
+        "1GU48T017973_application",
+        suggested_object_id="my_roku_3_application",
+        disabled_by=None,
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     mock_roku.launch.side_effect = RokuError
 
     await hass.services.async_call(

@@ -75,7 +75,7 @@ async def _tune_channel(device: RokuDevice, roku: Roku, value: str) -> None:
             for channel in device.channels
             if (
                 channel.name is not None
-                and value == f"{channel.name} ({channel.number})"
+                and value == format_channel_name(channel.number, channel.name)
             )
             or value == channel.number
         ),
@@ -101,6 +101,7 @@ ENTITIES: tuple[RokuSelectEntityDescription, ...] = (
         set_fn=_launch_application,
         value_fn=_get_application_name,
         options_fn=_get_applications,
+        entity_registry_enabled_default=False,
     ),
 )
 
