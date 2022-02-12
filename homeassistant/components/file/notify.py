@@ -49,15 +49,17 @@ class FileNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs) -> None:
         """Send a message to a file."""
         file: TextIO
-        if self.hass.config.config_dir:
-            filepath: str = os.path.join(self.hass.config.config_dir, self.filename)
-            with open(filepath, "a", encoding="utf8") as file:
-                if os.stat(filepath).st_size == 0:
-                    title = f"{kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)} notifications (Log started: {dt_util.utcnow().isoformat()})\n{'-' * 80}\n"
-                    file.write(title)
+        if not self.hass.config.config_dir:
+            return
 
-                if self.add_timestamp:
-                    text = f"{dt_util.utcnow().isoformat()} {message}\n"
-                else:
-                    text = f"{message}\n"
-                file.write(text)
+        filepath: str = os.path.join(self.hass.config.config_dir, self.filename)
+        with open(filepath, "a", encoding="utf8") as file:
+            if os.stat(filepath).st_size == 0:
+                title = f"{kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)} notifications (Log started: {dt_util.utcnow().isoformat()})\n{'-' * 80}\n"
+                file.write(title)
+
+            if self.add_timestamp:
+                text = f"{dt_util.utcnow().isoformat()} {message}\n"
+            else:
+                text = f"{message}\n"
+            file.write(text)
