@@ -17,10 +17,16 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityCategory
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS
+
+ENTITY_CATEGORY = {
+    "config": EntityCategory.CONFIG,
+    "diagnostic": EntityCategory.DIAGNOSTIC,
+    "system": EntityCategory.SYSTEM,
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,6 +130,8 @@ class HiveEntity(Entity):
         self.device = hive_device
         self.attributes = {}
         self._unique_id = f'{self.device["hiveID"]}-{self.device["hiveType"]}'
+        if "category" in hive_device:
+            self._attr_entity_category = ENTITY_CATEGORY.get(hive_device["category"])
 
     async def async_added_to_hass(self):
         """When entity is added to Home Assistant."""

@@ -41,16 +41,14 @@ class HiveDevicePlug(HiveEntity, SwitchEntity):
     @property
     def device_info(self) -> DeviceInfo | None:
         """Return device information."""
-        if self.device["hiveType"] == "activeplug":
-            return DeviceInfo(
-                identifiers={(DOMAIN, self.device["device_id"])},
-                manufacturer=self.device["deviceData"]["manufacturer"],
-                model=self.device["deviceData"]["model"],
-                name=self.device["device_name"],
-                sw_version=self.device["deviceData"]["version"],
-                via_device=(DOMAIN, self.device["parentDevice"]),
-            )
-        return None
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.device["device_id"])},
+            manufacturer=self.device["deviceData"]["manufacturer"],
+            model=self.device["deviceData"]["model"],
+            name=self.device["device_name"],
+            sw_version=self.device["deviceData"]["version"],
+            via_device=(DOMAIN, self.device["parentDevice"]),
+        )
 
     @property
     def name(self):
