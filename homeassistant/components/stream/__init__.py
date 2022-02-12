@@ -312,7 +312,9 @@ class Stream:
 
     def update_source(self, new_source: str) -> None:
         """Restart the stream with a new stream source."""
-        self._logger.debug("Updating stream source %s", new_source)
+        self._logger.debug(
+            "Updating stream source %s", redact_credentials(str(new_source))
+        )
         self.source = new_source
         self._fast_restart_once = True
         self._thread_quit.set()
@@ -359,7 +361,7 @@ class Stream:
             self._logger.debug(
                 "Restarting stream worker in %d seconds: %s",
                 wait_timeout,
-                self.source,
+                redact_credentials(str(self.source)),
             )
         self._worker_finished()
 
