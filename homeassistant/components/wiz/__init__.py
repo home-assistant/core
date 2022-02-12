@@ -6,7 +6,6 @@ from typing import Any
 
 from pywizlight import PilotParser, wizlight
 from pywizlight.bulb import PIR_SOURCE
-from pywizlight.exceptions import WizLightNotKnownBulb
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
