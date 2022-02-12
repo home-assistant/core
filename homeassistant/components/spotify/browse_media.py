@@ -143,19 +143,18 @@ async def async_browse_media(
     media_content_id: str | None,
     *,
     can_play_artist: bool = True,
-) -> BrowseMedia | list[BrowseMedia]:
+) -> BrowseMedia:
     """Browse Spotify media."""
     parsed_url = None
     info = None
 
     # Check if caller is requesting the root nodes
     if media_content_type is None and media_content_id is None:
-        items = []
+        children = []
         for config_entry_id, info in hass.data[DOMAIN].items():
             config_entry = hass.config_entries.async_get_entry(config_entry_id)
-            if not config_entry:
-                raise BrowseError("No config entry found for spotify account")
-            items.append(
+            assert config_entry is not None
+            children.append(
                 BrowseMedia(
                     title=config_entry.title,
                     media_class=MEDIA_CLASS_APP,
@@ -166,6 +165,16 @@ async def async_browse_media(
                     can_expand=True,
                 )
             )
+        return BrowseMedia(
+            title="Spotify",
+            media_class=MEDIA_CLASS_APP,
+            media_content_id="spotify://",
+            media_content_type="spotify",
+            thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
+            can_play=False,
+            can_expand=True,
+            children=children,
+        )
 
     # Check for config entry specifier, and extract Spotify URI
     if media_content_id and media_content_id.startswith(MEDIA_PLAYER_PREFIX):
