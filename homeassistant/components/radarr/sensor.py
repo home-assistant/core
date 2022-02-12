@@ -1,7 +1,7 @@
 """Support for Radarr."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import Any, cast
 
@@ -211,8 +211,12 @@ class RadarrSensor(SensorEntity):
                     f"{to_unit(space, self.native_unit_of_measurement):.2f}"
                 )
             if self.entity_description.key == "upcoming":
-                end = dt_util.now() + timedelta(days=self.days)
-                self.data = await self.radarr.async_get_calendar(end_date=end)
+                local = dt_util.start_of_local_day().replace(microsecond=0)
+                start = dt_util.as_utc(local)
+                end = start + timedelta(days=self.days)
+                self.data = await self.radarr.async_get_calendar(
+                    start_date=start, end_date=end
+                )
                 self._attr_native_value = len(self.data)
             if self.entity_description.key == "commands":
                 self.data = await self.radarr.async_get_commands()
@@ -230,9 +234,7 @@ class RadarrSensor(SensorEntity):
 
 def release_date(movie: RadarrMovie) -> str:
     """Get release date."""
-    date = cast(
-        datetime, movie.physicalRelease or movie.digitalRelease or movie.inCinemas
-    )
+    date = movie.physicalRelease or movie.digitalRelease or movie.inCinemas
     return date.isoformat()
 
 

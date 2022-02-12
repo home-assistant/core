@@ -2,7 +2,7 @@
   "domain": "radarr",
   "name": "Radarr",
   "documentation": "https://www.home-assistant.io/integrations/radarr",
-  "requirements": ["aiopyarr==22.1.3"],
+  "requirements": ["aiopyarr==22.2.1"],
   "codeowners": ["@tkdrob"],
   "iot_class": "local_polling"
 }
