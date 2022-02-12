@@ -12,12 +12,13 @@ from homeassistant.components.config import config_entries
 from homeassistant.config_entries import HANDLERS
 from homeassistant.core import callback
 from homeassistant.generated import config_flows
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
     MockModule,
+    mock_device_registry,
     mock_entity_platform,
     mock_integration,
 )
@@ -94,6 +95,7 @@ async def test_get_entries(hass, client):
                 "source": "bla",
                 "state": core_ce.ConfigEntryState.NOT_LOADED.value,
                 "supports_options": True,
+                "supports_remove_device": False,
                 "supports_unload": True,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
@@ -106,6 +108,7 @@ async def test_get_entries(hass, client):
                 "source": "bla2",
                 "state": core_ce.ConfigEntryState.SETUP_ERROR.value,
                 "supports_options": False,
+                "supports_remove_device": False,
                 "supports_unload": False,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
@@ -118,6 +121,7 @@ async def test_get_entries(hass, client):
                 "source": "bla3",
                 "state": core_ce.ConfigEntryState.NOT_LOADED.value,
                 "supports_options": False,
+                "supports_remove_device": False,
                 "supports_unload": False,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
@@ -370,6 +374,7 @@ async def test_create_account(hass, client, enable_custom_integrations):
             "source": core_ce.SOURCE_USER,
             "state": core_ce.ConfigEntryState.LOADED.value,
             "supports_options": False,
+            "supports_remove_device": False,
             "supports_unload": False,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
@@ -443,6 +448,7 @@ async def test_two_step_flow(hass, client, enable_custom_integrations):
                 "source": core_ce.SOURCE_USER,
                 "state": core_ce.ConfigEntryState.LOADED.value,
                 "supports_options": False,
+                "supports_remove_device": False,
                 "supports_unload": False,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
@@ -1028,3 +1034,104 @@ async def test_ignore_flow_nonexisting(hass, hass_ws_client):
 
     assert not response["success"]
     assert response["error"]["code"] == "not_found"
+
+
+async def test_remove_config_entry_from_device(hass, hass_ws_client):
+    """Test removing config entry from device."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+    device_registry = mock_device_registry(hass)
+
+    can_remove = False
+
+    async def async_remove_config_entry_device(hass, config_entry, device_entry):
+        return can_remove
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp1", async_remove_config_entry_device=async_remove_config_entry_device
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            "comp2", async_remove_config_entry_device=async_remove_config_entry_device
+        ),
+    )
+
+    entry_1 = MockConfigEntry(
+        domain="comp1",
+        title="Test 1",
+        source="bla",
+    )
+    entry_1.supports_remove_device = True
+    entry_1.add_to_hass(hass)
+
+    entry_2 = MockConfigEntry(
+        domain="comp1",
+        title="Test 1",
+        source="bla",
+    )
+    entry_2.supports_remove_device = True
+    entry_2.add_to_hass(hass)
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    assert device_entry.config_entries == {entry_1.entry_id, entry_2.entry_id}
+
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config_entries/remove_device",
+            "entry_id": entry_1.entry_id,
+            "device_id": device_entry.id,
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "unknown_error"
+
+    can_remove = True
+    # Remove the 1st config entry
+    await ws_client.send_json(
+        {
+            "id": 6,
+            "type": "config_entries/remove_device",
+            "entry_id": entry_1.entry_id,
+            "device_id": device_entry.id,
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] is True
+
+    # This was the last config entry, the device is removed
+    assert device_registry.async_get(device_entry.id).config_entries == {
+        entry_2.entry_id
+    }
+
+    # Remove the 2nd config entry
+    await ws_client.send_json(
+        {
+            "id": 7,
+            "type": "config_entries/remove_device",
+            "entry_id": entry_2.entry_id,
+            "device_id": device_entry.id,
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] is True
+
+    # This was the last config entry, the device is removed
+    assert not device_registry.async_get(device_entry.id)
