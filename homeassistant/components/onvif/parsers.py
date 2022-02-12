@@ -17,7 +17,7 @@ def datetime_or_zero(value: str):
     """Convert strings to datetimes, if invalid, return datetime.min."""
     # To handle cameras that return times like '0000-00-00T00:00:00Z' (e.g. hikvision)
     try:
-        return dt_util.as_local(dt_util.parse_datetime(value))
+        return dt_util.parse_datetime(value)
     except (ValueError):
         return datetime.datetime.min
 
