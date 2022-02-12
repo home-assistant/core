@@ -48,8 +48,8 @@ HOST_SCHEMA = vol.Schema(
 
 BASE_SENSOR_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PAYLOAD): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Required(CONF_PAYLOAD): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
 )
