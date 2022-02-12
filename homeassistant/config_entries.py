@@ -1183,7 +1183,6 @@ class ConfigEntries:
             raise HomeAssistantError("Config entry does not support device removal")
 
         dev_reg = device_registry.async_get(self.hass)
-        ent_reg = entity_registry.async_get(self.hass)
 
         if (device_entry := dev_reg.async_get(device_id)) is None:
             raise HomeAssistantError("Unknown device")
@@ -1207,14 +1206,6 @@ class ConfigEntries:
             self.hass, config_entry, device_entry
         ):
             return False
-
-        # Remove device entities which belong to the config entry
-        entity_entries = entity_registry.async_entries_for_device(
-            ent_reg, device_id, True
-        )
-        for entity_entry in entity_entries:
-            if entity_entry.config_entry_id == entry_id:
-                ent_reg.async_remove(entity_entry.entity_id)
 
         # Remove the config entry from the device, this will also remove the device
         # if it was the only config entry.
