@@ -22,5 +22,4 @@ WIZ_EXCEPTIONS = (
 )
 WIZ_CONNECT_EXCEPTIONS = (WizLightNotKnownBulb, *WIZ_EXCEPTIONS)
 
-
 SIGNAL_WIZ_PIR = "wiz_pir_{}"
