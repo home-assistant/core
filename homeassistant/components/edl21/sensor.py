@@ -38,13 +38,14 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "edl21"
 CONF_SERIAL_PORT = "serial_port"
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+CONF_MIN_TIME_BETWEEN_UPDATES = "min_time_between_updates"
 SIGNAL_EDL21_TELEGRAM = "edl21_telegram"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SERIAL_PORT): cv.string,
         vol.Optional(CONF_NAME, default=""): cv.string,
+        vol.Optional(CONF_MIN_TIME_BETWEEN_UPDATES, default = 60): cv.positive_int,
     },
 )
 
@@ -286,6 +287,7 @@ class EDL21:
         self._name = config[CONF_NAME]
         self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
         self._proto.add_listener(self.event, ["SmlGetListResponse"])
+        self._min_time = timedelta(seconds = config[CONF_MIN_TIME_BETWEEN_UPDATES])
 
     async def connect(self):
         """Connect to an EDL21 reader."""
@@ -323,7 +325,7 @@ class EDL21:
 
                     new_entities.append(
                         EDL21Entity(
-                            electricity_id, obis, name, entity_description, telegram
+                            electricity_id, obis, name, entity_description, telegram, self._min_time
                         )
                     )
                     self._registered_obis.add((electricity_id, obis))
@@ -365,14 +367,14 @@ class EDL21:
 class EDL21Entity(SensorEntity):
     """Entity reading values from EDL21 telegram."""
 
-    def __init__(self, electricity_id, obis, name, entity_description, telegram):
+    def __init__(self, electricity_id, obis, name, entity_description, telegram, min_time):
         """Initialize an EDL21Entity."""
         self._electricity_id = electricity_id
         self._obis = obis
         self._name = name
         self._unique_id = f"{electricity_id}_{obis}"
         self._telegram = telegram
-        self._min_time = MIN_TIME_BETWEEN_UPDATES
+        self._min_time = min_time
         self._last_update = utcnow()
         self._state_attrs = {
             "status": "status",
