@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from ipaddress import IPv4Address, IPv6Address, ip_interface
 import logging
+import sys
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -56,16 +57,24 @@ async def async_get_enabled_source_ips(
     """Build the list of enabled source ips."""
     adapters = await async_get_adapters(hass)
     sources: list[IPv4Address | IPv6Address] = []
+    has_scope_id = sys.version_info >= (3, 9,)
     for adapter in adapters:
         if not adapter["enabled"]:
             continue
         if adapter["ipv4"]:
-            sources.extend(IPv4Address(ipv4["address"]) for ipv4 in adapter["ipv4"])
+            addrs = [IPv4Address(ipv4["address"]) for ipv4 in adapter["ipv4"]]
+            sources.extend(addrs)
         if adapter["ipv6"]:
             # With python 3.9 add scope_ids can be
             # added by enumerating adapter["ipv6"]s
             # IPv6Address(f"::%{ipv6['scope_id']}")
-            sources.extend(IPv6Address(ipv6["address"]) for ipv6 in adapter["ipv6"])
+            addrs = [
+                IPv6Address(f"::%{ipv6['scope_id']}")
+                if has_scope_id
+                else IPv6Address(ipv6["address"])
+                for ipv6 in adapter["ipv6"]
+            ]
+            sources.extend(addrs)
 
     return sources
 

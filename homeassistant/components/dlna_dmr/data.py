@@ -76,14 +76,14 @@ class DlnaDmrData:
                 return self.event_notifiers[listen_addr].event_handler
 
             # Start event handler
+            source = (listen_addr.host, listen_addr.port)
             server = AiohttpNotifyServer(
                 requester=self.requester,
-                listen_port=listen_addr.port,
-                listen_host=listen_addr.host,
+                source=source,
                 callback_url=listen_addr.callback_url,
                 loop=hass.loop,
             )
-            await server.start_server()
+            await server.async_start_server()
             LOGGER.debug("Started event handler at %s", server.callback_url)
 
             self.event_notifiers[listen_addr] = server
