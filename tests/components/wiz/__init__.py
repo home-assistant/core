@@ -13,6 +13,7 @@ from pywizlight.discovery import DiscoveredBulb
 from homeassistant.components.wiz.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -110,6 +111,15 @@ FAKE_DIMMABLE_BULB = BulbType(
     white_channels=1,
     white_to_color_ratio=80,
 )
+FAKE_TURNABLE_BULB = BulbType(
+    bulb_type=BulbClass.TW,
+    name="ESP01_TW_03",
+    features=FEATURE_MAP[BulbClass.TW],
+    kelvin_range=KelvinRange(2700, 6500),
+    fw_version="1.0.0",
+    white_channels=1,
+    white_to_color_ratio=80,
+)
 FAKE_SOCKET = BulbType(
     bulb_type=BulbClass.SOCKET,
     name="ESP01_SOCKET_03",
@@ -154,6 +164,8 @@ def _mocked_wizlight(device, extended_white_range, bulb_type) -> wizlight:
         return_value=extended_white_range or FAKE_EXTENDED_WHITE_RANGE
     )
     bulb.getMac = AsyncMock(return_value=FAKE_MAC)
+    bulb.turn_on = AsyncMock()
+    bulb.turn_off = AsyncMock()
     bulb.updateState = AsyncMock(return_value=FAKE_STATE)
     bulb.getSupportedScenes = AsyncMock(return_value=list(SCENES))
     bulb.start_push = AsyncMock(side_effect=_save_setup_callback)
@@ -189,3 +201,28 @@ def _patch_discovery():
             yield
 
     return _patcher()
+
+
+async def async_setup_integration(
+    hass, device=None, extended_white_range=None, bulb_type=None
+):
+    """Set up the integration with a mock device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FAKE_MAC,
+        data={CONF_HOST: FAKE_IP},
+    )
+    entry.add_to_hass(hass)
+    bulb = _mocked_wizlight(device, extended_white_range, bulb_type)
+    with _patch_discovery(), _patch_wizlight(device=bulb):
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        await hass.async_block_till_done()
+    return bulb, entry
+
+
+async def async_push_update(hass, device, params):
+    """Push an update to the device."""
+    device.state = PilotParser(params)
+    device.status = params["state"]
+    device.push_callback(device.state)
+    await hass.async_block_till_done()
