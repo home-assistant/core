@@ -1,6 +1,6 @@
 """Tests for light platform."""
 
-from pywizlight import PilotBuilder, PilotParser
+from pywizlight import PilotBuilder
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -54,10 +54,7 @@ async def test_light_operation(hass: HomeAssistant) -> None:
     )
     bulb.turn_off.assert_called_once()
 
-    bulb.status = False
-    bulb.state = PilotParser({"mac": FAKE_MAC, "state": False})
-    bulb.push_callback(bulb.state)
-    await hass.async_block_till_done()
+    await async_push_update(hass, bulb, {"mac": FAKE_MAC, "state": False})
     assert hass.states.get(entity_id).state == STATE_OFF
 
     await hass.services.async_call(
@@ -65,10 +62,7 @@ async def test_light_operation(hass: HomeAssistant) -> None:
     )
     bulb.turn_on.assert_called_once()
 
-    bulb.status = True
-    bulb.state = PilotParser({"mac": FAKE_MAC, "state": True})
-    bulb.push_callback(bulb.state)
-    await hass.async_block_till_done()
+    await async_push_update(hass, bulb, {"mac": FAKE_MAC, "state": True})
     assert hass.states.get(entity_id).state == STATE_ON
 
 
