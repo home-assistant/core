@@ -105,7 +105,7 @@ class CommandBinarySensor(BinarySensorEntity):
         self.data = data
         self._attr_name = name
         self._attr_device_class = device_class
-        self._attr_is_on = False
+        self._attr_is_on = None
         self._payload_on = payload_on
         self._payload_off = payload_off
         self._value_template = value_template
