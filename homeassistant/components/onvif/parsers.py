@@ -3,6 +3,8 @@ from collections.abc import Callable, Coroutine
 import datetime
 from typing import Any
 
+import datetime
+
 from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
 
@@ -15,7 +17,7 @@ def datetime_or_zero(value: str):
     """Convert strings to datetimes, if invalid, return datetime.min."""
     # To handle cameras that return times like '0000-00-00T00:00:00Z' (e.g. hikvision)
     try:
-        return dt_util.parse_datetime(value)
+        return dt_util.as_local(dt_util.parse_datetime(value))
     except (ValueError):
         return datetime.datetime.min
 
@@ -258,6 +260,37 @@ async def async_parse_motion_region_detector(uid: str, msg) -> Event:
         return None
 
 
+@PARSERS.register("tns1:RuleEngine/LineDetector/Crossed")
+# pylint: disable=protected-access
+async def async_parse_line_crossed_detector(uid: str, msg) -> Event:
+    """Handle parsing event message.
+
+    Topic: tns1:RuleEngine/LineDetector/Crossed
+    """
+    try:
+        video_source = ""
+        video_analytics = ""
+        rule = ""
+        for source in msg.Message._value_1.Source.SimpleItem:
+            if source.Name == "VideoSourceConfigurationToken":
+                video_source = source.Value
+            if source.Name == "VideoAnalyticsConfigurationToken":
+                video_analytics = source.Value
+            if source.Name == "Rule":
+                rule = source.Value
+
+        return Event(
+            f"{uid}_{msg.Topic._value_1}_{video_source}_{video_analytics}_{rule}",
+            f"{rule} Line Crossed Detection",
+            "binary_sensor",
+            "motion",
+            None,
+            msg.Message._value_1.Data.SimpleItem[0].Value == "true",
+        )
+    except (AttributeError, KeyError):
+        return None
+
+
 @PARSERS.register("tns1:RuleEngine/TamperDetector/Tamper")
 # pylint: disable=protected-access
 async def async_parse_tamper_detector(uid: str, msg) -> Event:
@@ -377,29 +410,6 @@ async def async_parse_last_reset(uid: str, msg) -> Event:
         return None
 
 
-@PARSERS.register("tns1:Monitoring/Backup/Last")
-# pylint: disable=protected-access
-async def async_parse_backup_last(uid: str, msg) -> Event:
-    """Handle parsing event message.
-
-    Topic: tns1:Monitoring/Backup/Last
-    """
-
-    date_time = datetime_or_zero(msg.Message._value_1.Data.SimpleItem[0].Value)
-    try:
-        return Event(
-            f"{uid}_{msg.Topic._value_1}",
-            "Last Backup",
-            "sensor",
-            "timestamp",
-            None,
-            date_time,
-            entity_enabled=False,
-        )
-    except (AttributeError, KeyError, ValueError):
-        return None
-
-
 @PARSERS.register("tns1:Monitoring/OperatingTime/LastClockSynchronization")
 # pylint: disable=protected-access
 async def async_parse_last_clock_sync(uid: str, msg) -> Event:
@@ -441,4 +451,27 @@ async def async_parse_jobstate(uid: str, msg) -> Event:
             msg.Message._value_1.Data.SimpleItem[0].Value == "Active",
         )
     except (AttributeError, KeyError):
+        return None
+
+
+@PARSERS.register("tns1:Monitoring/Backup/Last")
+# pylint: disable=protected-access
+async def async_parse_backup_last(uid: str, msg) -> Event:
+    """Handle parsing event message.
+
+    Topic: tns1:Monitoring/Backup/Last
+    """
+
+    date_time = datetime_or_zero(msg.Message._value_1.Data.SimpleItem[0].Value)
+    try:
+        return Event(
+            f"{uid}_{msg.Topic._value_1}",
+            "Last Backup",
+            "sensor",
+            "timestamp",
+            None,
+            date_time,
+            entity_enabled=False,
+        )
+    except (AttributeError, KeyError, ValueError):
         return None
