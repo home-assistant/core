@@ -134,7 +134,7 @@ aioguardian==2021.11.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.7.11
+aiohomekit==0.7.14
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -1453,7 +1453,7 @@ tololib==0.1.0b3
 toonapi==0.2.1
 
 # homeassistant.components.totalconnect
-total_connect_client==2022.1
+total_connect_client==2022.2
 
 # homeassistant.components.transmission
 transmissionrpc==0.11
