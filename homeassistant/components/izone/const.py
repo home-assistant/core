@@ -10,5 +10,6 @@ DISPATCH_CONTROLLER_DISCONNECTED = "izone_controller_disconnected"
 DISPATCH_CONTROLLER_RECONNECTED = "izone_controller_reconnected"
 DISPATCH_CONTROLLER_UPDATE = "izone_controller_update"
 DISPATCH_ZONE_UPDATE = "izone_zone_update"
+DISPATCH_POWER_UPDATE = "izone_power_update"
 
 TIMEOUT_DISCOVERY = 20

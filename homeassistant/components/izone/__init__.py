@@ -11,7 +11,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DATA_CONFIG, IZONE
 from .discovery import async_start_discovery_service, async_stop_discovery_service
 
-PLATFORMS = [Platform.CLIMATE]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
 
 CONFIG_SCHEMA = vol.Schema(
     {
