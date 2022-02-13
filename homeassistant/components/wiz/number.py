@@ -1,7 +1,6 @@
 """Support for WiZ effect speed numbers."""
 from __future__ import annotations
 
-from pywizlight import PilotBuilder
 from pywizlight.bulblibrary import BulbClass
 
 from homeassistant.components.number import NumberEntity, NumberMode
@@ -32,7 +31,7 @@ class WizSpeedNumber(WizEntity, NumberEntity):
 
     _attr_min_value = 10
     _attr_max_value = 200
-    _attr_step = 10
+    _attr_step = 1
     _attr_mode = NumberMode.SLIDER
     _attr_icon = "mdi:speedometer"
 
@@ -55,5 +54,5 @@ class WizSpeedNumber(WizEntity, NumberEntity):
 
     async def async_set_value(self, value: float) -> None:
         """Set the speed value."""
-        await self._device.turn_on(PilotBuilder(speed=value))
+        await self._device.set_speed(int(value))
         await self.coordinator.async_request_refresh()
