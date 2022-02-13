@@ -146,10 +146,12 @@ class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         )
 
     async def _async_update_data(self) -> dict[str, dict]:
+        return await self.hass.async_add_executor_job(self.update_data)
+
+    def update_data(self) -> dict[str, dict]:
+        """Get latest data from the client."""
         data = {}
-        for bed in await self.hass.async_add_executor_job(
-            self.client.beds_with_sleeper_status
-        ):
+        for bed in self.client.beds_with_sleeper_status():
             data[bed.bed_id] = {BED: bed}
 
         return data
