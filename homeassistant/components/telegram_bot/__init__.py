@@ -9,16 +9,16 @@ import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from telegram import (
     Bot,
+    CallbackQuery,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    Message,
     ReplyKeyboardMarkup,
     ReplyKeyboardRemove,
     Update,
-    Message,
-    CallbackQuery,
 )
 from telegram.error import TelegramError
-from telegram.ext import Filters, TypeHandler, CallbackContext
+from telegram.ext import CallbackContext, Filters, TypeHandler
 from telegram.parsemode import ParseMode
 from telegram.utils.request import Request
 import voluptuous as vol

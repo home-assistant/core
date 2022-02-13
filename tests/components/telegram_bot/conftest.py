@@ -1,35 +1,22 @@
 """Tests for the telegram_bot component."""
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 
 import pytest
-from telegram import Update
 
-from homeassistant import config as hass_config, config_entries
-from homeassistant.core import HomeAssistant, callback
-import homeassistant.components.notify as notify
 from homeassistant.components.telegram_bot import (
-    DOMAIN,
-    SERVICE_SEND_MESSAGE,
     CONF_TRUSTED_NETWORKS,
+    DOMAIN,
     initialize_bot,
 )
 from homeassistant.components.telegram_bot.polling import PollBot
-from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL, PushBot
-from homeassistant.const import (
-    SERVICE_RELOAD,
-    CONF_HOST,
-    CONF_SCAN_INTERVAL,
-    CONF_URL,
-    CONF_PLATFORM,
-    CONF_API_KEY,
-)
+from homeassistant.components.telegram_bot.webhooks import PushBot
+from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.setup import async_setup_component
-
-from tests.common import get_fixture_path, MockConfigEntry, async_mock_service
 
 
 @pytest.fixture
 def config_webhooks():
+    """Fixture for a webhooks platform configuration."""
     return {
         DOMAIN: [
             {
@@ -50,6 +37,7 @@ def config_webhooks():
 
 @pytest.fixture
 def config_polling():
+    """Fixture for a polling platform configuration."""
     return {
         DOMAIN: [
             {
@@ -68,6 +56,7 @@ def config_polling():
 
 @pytest.fixture
 def mock_register_webhook():
+    """Mock calls made by telegram_bot when (de)registering webhook."""
     with patch(
         "homeassistant.components.telegram_bot.webhooks.PushBot.register_webhook",
         return_value=True,
@@ -80,6 +69,7 @@ def mock_register_webhook():
 
 @pytest.fixture
 def update_message_command():
+    """Fixture for mocking an incoming update of type message/command."""
     return {
         "update_id": 1,
         "message": {
@@ -112,6 +102,7 @@ def update_message_command():
 
 @pytest.fixture
 def update_message_text():
+    """Fixture for mocking an incoming update of type message/text."""
     return {
         "update_id": 1,
         "message": {
@@ -138,6 +129,7 @@ def update_message_text():
 
 @pytest.fixture
 def update_callback_query():
+    """Fixture for mocking an incoming update of type callback_query."""
     return {
         "update_id": 1,
         "callback_query": {
@@ -159,6 +151,7 @@ def update_callback_query():
 
 @pytest.fixture
 async def webhook_platform(hass, config_webhooks, mock_register_webhook):
+    """Fixture for setting up the webhooks platform using appropriate config and mocks."""
     await async_setup_component(
         hass,
         DOMAIN,
@@ -169,6 +162,7 @@ async def webhook_platform(hass, config_webhooks, mock_register_webhook):
 
 @pytest.fixture
 async def polling_platform(hass, config_polling):
+    """Fixture for setting up the polliong platform using appropriate config and mocks."""
     await async_setup_component(
         hass,
         DOMAIN,
@@ -179,6 +173,7 @@ async def polling_platform(hass, config_polling):
 
 @pytest.fixture
 def pushbot(hass, config_webhooks):
+    """Fixture for an initialized `PushBot`."""
     platform_config = config_webhooks[DOMAIN][0]
     bot = initialize_bot(platform_config)
     pushbot = PushBot(hass, bot, platform_config)
@@ -187,6 +182,7 @@ def pushbot(hass, config_webhooks):
 
 @pytest.fixture
 def pollbot(hass, config_polling):
+    """Fixture for an initialized `PollBot`."""
     platform_config = config_polling[DOMAIN][0]
     bot = initialize_bot(platform_config)
     pollbot = PollBot(hass, bot, platform_config)

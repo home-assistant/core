@@ -8,16 +8,19 @@ from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
 
 
 async def test_webhook_platform_init(hass, webhook_platform):
+    """Test initialization of the webhooks platform."""
     assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
 
 
 async def test_polling_platform_init(hass, polling_platform):
+    """Test initialization of the polling platform."""
     assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
 
 
 async def test_webhook_endpoint_generates_event(
     hass, webhook_platform, hass_client, update_message_text
 ):
+    """Make a request towards the configured webhook endpoint and assert event has been triggered."""
     client = await hass_client()
 
     listener = Mock()
@@ -34,6 +37,7 @@ async def test_webhook_endpoint_generates_event(
 
 
 async def test_pollbot_update_generates_event(hass, pollbot, update_message_text):
+    """Provide the PollBot Dispatcher with an Update and assert event has been triggered."""
     listener = Mock()
     hass.bus.async_listen_once("telegram_text", listener)
 
@@ -47,6 +51,7 @@ async def test_pollbot_update_generates_event(hass, pollbot, update_message_text
 
 
 async def test_message_text(hass, pushbot, update_message_text):
+    """Test update of type message with text."""
     listener = Mock()
     hass.bus.async_listen_once("telegram_text", listener)
 
@@ -62,6 +67,7 @@ async def test_message_text(hass, pushbot, update_message_text):
 
 
 async def test_message_command(hass, pushbot, update_message_command):
+    """Test update of type message with command."""
     listener = Mock()
     hass.bus.async_listen_once("telegram_command", listener)
 
@@ -77,6 +83,7 @@ async def test_message_command(hass, pushbot, update_message_command):
 
 
 async def test_callback_query(hass, pushbot, update_callback_query):
+    """Test update of type callback_query."""
     listener = Mock()
     hass.bus.async_listen_once("telegram_callback", listener)
 
