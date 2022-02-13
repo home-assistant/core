@@ -189,7 +189,7 @@ async def test_off_delay(hass, legacy_patchable_time, monkeypatch):
 async def test_restore_state(hass, monkeypatch):
     """Ensure states are restored on startup."""
     mock_restore_cache(
-        hass, (State(f"{DOMAIN}.test", STATE_ON), State(f"{DOMAIN}.test2", STATE_OFF))
+        hass, (State(f"{DOMAIN}.test", STATE_ON), State(f"{DOMAIN}.test2", STATE_ON))
     )
 
     hass.state = CoreState.starting
@@ -201,6 +201,7 @@ async def test_restore_state(hass, monkeypatch):
     assert state
     assert state.state == STATE_ON
 
+    # off_delay config must restore to off
     state = hass.states.get(f"{DOMAIN}.test2")
     assert state
     assert state.state == STATE_OFF

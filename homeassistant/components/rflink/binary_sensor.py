@@ -87,7 +87,10 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):
         """Restore RFLink BinarySensor state."""
         await super().async_added_to_hass()
         if (old_state := await self.async_get_last_state()) is not None:
-            self._state = old_state.state == STATE_ON
+            if self._off_delay is None:
+                self._state = old_state.state == STATE_ON
+            else:
+                self._state = False
 
     def _handle_event(self, event):
         """Domain specific event handler."""
