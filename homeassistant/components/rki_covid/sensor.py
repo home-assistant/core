@@ -1,26 +1,18 @@
 """RKI Covid numbers sensor."""
 from __future__ import annotations
 
-from datetime import datetime
 import logging
 from typing import Any
 
 from homeassistant import config_entries, core
-from .coordinator import RkiCovidDataUpdateCoordinator
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-)
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import ATTR_COUNTY, ATTRIBUTION, CONF_DISTRICT_NAME, CONF_DISTRICTS, DOMAIN
+from .const import ATTR_COUNTY, ATTRIBUTION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,44 +43,11 @@ DISTRICT_SENSORS = {
 }
 
 
-async def async_setup_platform(
-    hass: HomeAssistantType,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the sensor platform."""
-    coordinator = RkiCovidDataUpdateCoordinator(hass)
-    await coordinator.async_config_entry_first_refresh()
-
-    if coordinator is None or coordinator.data is None:
-        raise PlatformNotReady("Data coordinator could not be initialized!")
-
-    districts = config[CONF_DISTRICTS]
-
-    # district sensors
-    sensors = [
-        RKICovidNumbersSensor(coordinator, district[CONF_DISTRICT_NAME], info_type)
-        for info_type in SENSORS
-        for district in districts
-    ]
-    async_add_entities(sensors, update_before_add=True)
-
-    # sensors on state level (additional sensors)
-    for district in districts:
-        if district.startswith("BL"):
-            district_sensors = [
-                RKICovidNumbersSensor(coordinator, district, info_type)
-                for info_type in DISTRICT_SENSORS
-            ]
-            async_add_entities(district_sensors, update_before_add=True)
-
-
 async def async_setup_entry(
     hass: core.HomeAssistant,
     config_entry: config_entries.ConfigEntry,
-    async_add_entities,
-):
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Create sensors from a config entry in the integrations UI."""
     _LOGGER.debug("create sensor from config entry %s", config_entry.data)
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
@@ -145,10 +104,7 @@ class RKICovidNumbersSensor(SensorEntity, CoordinatorEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return (
-            super().available
-            and self.district in self.coordinator.data
-        )
+        return super().available and self.district in self.coordinator.data
 
     def _measurement_unit(self) -> str:
         """Return unit of measurement."""
