@@ -22,5 +22,29 @@
         "title": "Set up 1-Wire"
       }
     }
+  },
+  "options": {
+    "step": {
+      "ack_no_options": {
+        "data": { },
+        "description": "There are no options for the SysBus implementation",
+        "title": "OneWire SysBus Options"
+      },
+      "device_selection": {
+        "data": {
+          "clear_device_options": "Clear all device configurations",
+          "device_selection": "Select devices to configure"
+        },
+        "description": "Select what configuration steps to process",
+        "title": "OneWire Device Options"
+      },
+      "precision_config": {
+        "data": {
+          "precision": "Sensor Precision"
+        },
+        "description": "Select sensor precision for {sens_id}",
+        "title": "OneWire Sensor Precision"
+      }
+    }
   }
 }

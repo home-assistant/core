@@ -37,6 +37,20 @@ DEVICE_SUPPORT_OWSERVER = {
 }
 DEVICE_SUPPORT_SYSBUS = ["10", "22", "28", "3B", "42"]
 
+DEVICE_SUPPORT_PRECISION_MAPPING = ["28"]
+
+PRECISION_MAPPING_FAMILY_28 = {
+    "Default": "temperature",
+    "9 Bits": "temperature9",
+    "10 Bits": "temperature10",
+    "11 Bits": "temperature11",
+    "12 Bits": "temperature12",
+}
+
+OPTION_ENTRY_DEVICE_OPTIONS = "device_options"
+OPTION_ENTRY_SENSOR_PRECISION = "precision"
+INPUT_ENTRY_CLEAR_OPTIONS = "clear_device_options"
+INPUT_ENTRY_DEVICE_SELECTION = "device_selection"
 
 MANUFACTURER_MAXIM = "Maxim Integrated"
 MANUFACTURER_HOBBYBOARDS = "Hobby Boards"
