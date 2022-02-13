@@ -43,12 +43,15 @@ class WizSpeedNumber(WizEntity, NumberEntity):
         self._attr_name = f"{name} Effect Speed"
         self._async_update_attrs()
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self._device.state.get_speed() is not None
+
     @callback
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
-        speed = self._device.state.get_speed()
-        self._attr_value = speed
-        self._attr_available = speed is not None
+        self._attr_value = self._device.state.get_speed()
 
     async def async_set_value(self, value: float) -> None:
         """Set the speed value."""
