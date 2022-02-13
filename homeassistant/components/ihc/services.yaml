@@ -9,7 +9,6 @@ set_runtime_value_bool:
       description: |
         The controller ID is the serial number of the IHC controller.
         If you have only one controller you can skip this parameter
-      example: CN1234
       selector:
         text:
     ihc_id:
@@ -37,7 +36,6 @@ set_runtime_value_int:
       description: |
         The controller ID is the serial number of the IHC controller.
         If you have only one controller you can skip this parameter
-      example: CN1234
       selector:
         text:
     ihc_id:
@@ -68,7 +66,6 @@ set_runtime_value_float:
       description: |
         The controller ID is the serial number of the IHC controller.
         If you have only one controller you can skip this parameter
-      example: CN1234
       selector:
         text:
     ihc_id:
@@ -100,7 +97,6 @@ pulse:
       description: |
         The controller ID is the serial number of the IHC controller.
         If you have only one controller you can skip this parameter
-      example: CN1234
       selector:
         text:
     ihc_id:

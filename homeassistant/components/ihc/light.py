@@ -1,4 +1,6 @@
 """Support for IHC lights."""
+from ihcsdk.ihccontroller import IHCController
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     SUPPORT_BRIGHTNESS,
@@ -17,12 +19,12 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Load IHC lights based on a config entry."""
-    controller_id = entry.unique_id
-    data = hass.data[DOMAIN][controller_id]
-    ihc_controller = data[IHC_CONTROLLER]
+    controller_id: str = str(entry.unique_id)
+    controller_data = hass.data[DOMAIN][controller_id]
+    ihc_controller: IHCController = controller_data[IHC_CONTROLLER]
     lights = []
-    if "light" in data and data["light"]:
-        for name, device in data["light"].items():
+    if "light" in controller_data and controller_data["light"]:
+        for name, device in controller_data["light"].items():
             ihc_id = device["ihc_id"]
             product_cfg = device["product_cfg"]
             product = device["product"]
@@ -53,9 +55,9 @@ class IhcLight(IHCDevice, LightEntity):
 
     def __init__(
         self,
-        ihc_controller,
-        controller_id,
-        name,
+        ihc_controller: IHCController,
+        controller_id: str,
+        name: str,
         ihc_id: int,
         ihc_off_id: int,
         ihc_on_id: int,

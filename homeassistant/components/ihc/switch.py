@@ -23,12 +23,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Load IHC switches based on a config entry."""
-    controller_id = config_entry.unique_id
-    data = hass.data[DOMAIN][controller_id]
-    ihc_controller = data[IHC_CONTROLLER]
+    controller_id: str = str(config_entry.unique_id)
+    controller_data = hass.data[DOMAIN][controller_id]
+    ihc_controller: IHCController = controller_data[IHC_CONTROLLER]
     switches = []
-    if "switch" in data and data["switch"]:
-        for name, device in data["switch"].items():
+    if "switch" in controller_data and controller_data["switch"]:
+        for name, device in controller_data["switch"].items():
             ihc_id = device["ihc_id"]
             product_cfg = device["product_cfg"]
             product = device["product"]
@@ -52,8 +52,8 @@ class IHCSwitch(IHCDevice, SwitchEntity):
 
     def __init__(
         self,
-        ihc_controller,
-        controller_id,
+        ihc_controller: IHCController,
+        controller_id: str,
         name: str,
         ihc_id: int,
         ihc_off_id: int,

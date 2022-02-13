@@ -1,4 +1,7 @@
 """Support for IHC binary sensors."""
+
+from ihcsdk.ihccontroller import IHCController
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TYPE
@@ -13,12 +16,12 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Load IHC switches based on a config entry."""
-    controller_id = entry.unique_id
-    data = hass.data[DOMAIN][controller_id]
-    ihc_controller = data[IHC_CONTROLLER]
+    controller_id: str = str(entry.unique_id)
+    controller_data = hass.data[DOMAIN][controller_id]
+    ihc_controller: IHCController = controller_data[IHC_CONTROLLER]
     sensors = []
-    if "binary_sensor" in data and data["binary_sensor"]:
-        for name, device in data["binary_sensor"].items():
+    if "binary_sensor" in controller_data and controller_data["binary_sensor"]:
+        for name, device in controller_data["binary_sensor"].items():
             ihc_id = device["ihc_id"]
             product_cfg = device["product_cfg"]
             product = device["product"]
@@ -44,9 +47,9 @@ class IHCBinarySensor(IHCDevice, BinarySensorEntity):
 
     def __init__(
         self,
-        ihc_controller,
-        controller_id,
-        name,
+        ihc_controller: IHCController,
+        controller_id: str,
+        name: str,
         ihc_id: int,
         sensor_type: str,
         inverting: bool,

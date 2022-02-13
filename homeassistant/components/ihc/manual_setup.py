@@ -114,7 +114,7 @@ MANUAL_SETUP_SCHEMA = vol.Schema(
 )
 
 
-def manual_setup(hass: HomeAssistant, controller_id):
+def manual_setup(hass: HomeAssistant, controller_id: str) -> None:
     """Manual setup of IHC devices."""
     yaml_path = hass.config.path(MANUAL_SETUP_YAML)
     if not os.path.isfile(yaml_path):

@@ -1,6 +1,8 @@
 """Implementation of a base class for all IHC devices."""
 import logging
 
+from ihcsdk.ihccontroller import IHCController
+
 from homeassistant.helpers.entity import Entity
 
 from .const import CONF_INFO, DOMAIN
@@ -19,7 +21,12 @@ class IHCDevice(Entity):
     _attr_should_poll = False
 
     def __init__(
-        self, ihc_controller, controller_id: str, name: str, ihc_id: int, product=None
+        self,
+        ihc_controller: IHCController,
+        controller_id: str,
+        name: str,
+        ihc_id: int,
+        product=None,
     ) -> None:
         """Initialize IHC attributes."""
         self.ihc_controller = ihc_controller
@@ -60,13 +67,12 @@ class IHCDevice(Entity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return f"ihc{self.controller_id}{self.ihc_id}"
+        return f"{self.controller_id}-{self.ihc_id}"
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        info = self.hass.data[DOMAIN][self.controller_id][CONF_INFO]
-        if not info:
+        if not self.hass.data[DOMAIN][self.controller_id][CONF_INFO]:
             return {}
         attributes = {
             "ihc_id": self.ihc_id,
@@ -74,9 +80,8 @@ class IHCDevice(Entity):
             "ihc_note": self.ihc_note,
             "ihc_position": self.ihc_position,
         }
-        multicontroller: bool = len(self.hass.data[DOMAIN]) > 1
-        # We only want to show the controller id if we have more than one
-        if multicontroller:
+        if len(self.hass.data[DOMAIN]) > 1:
+            # We only want to show the controller id if we have more than one
             attributes["ihc_controller"] = self.controller_id
         return attributes
 

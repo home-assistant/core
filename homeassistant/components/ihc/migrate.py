@@ -72,12 +72,14 @@ def get_controller_serial(controllerconf):
     username = controllerconf[CONF_USERNAME]
     password = controllerconf[CONF_PASSWORD]
     controller = IHCController(url, username, password)
-    if not IHCController.is_ihc_controller(url):
-        raise Exception("IHC controller not available at specified url")
-    if not controller.authenticate():
-        raise Exception("unable to authencitate on IHC controller")
-    system_info = controller.client.get_system_info()
-    _LOGGER.debug("IHC system info %s", system_info)
-    serial = system_info["serial_number"]
-    controller.disconnect()
+    try:
+        if not IHCController.is_ihc_controller(url):
+            raise Exception("IHC controller not available at specified url")
+        if not controller.authenticate():
+            raise Exception("unable to authencitate on IHC controller")
+        system_info = controller.client.get_system_info()
+        _LOGGER.debug("IHC system info %s", system_info)
+        serial = system_info["serial_number"]
+    finally:
+        controller.disconnect()
     return serial
