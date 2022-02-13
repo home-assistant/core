@@ -7,7 +7,7 @@ pubsub subscriber.
 
 import datetime
 from http import HTTPStatus
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 from google_nest_sdm.device import Device
@@ -57,7 +57,6 @@ EVENT_SESSION_ID = "CjY5Y3VKaTZwR3o4Y19YbTVfMF..."
 # Tests can assert that image bytes came from an event or was decoded
 # from the live stream.
 IMAGE_BYTES_FROM_EVENT = b"test url image bytes"
-IMAGE_BYTES_FROM_FFMPEG = b"test ffmpeg image bytes"
 IMAGE_BYTES_FROM_STREAM = b"test stream image bytes"
 
 TEST_IMAGE_URL = "https://domain/sdm_event_snapshot/dGTZwR3o4Y1..."
@@ -117,6 +116,21 @@ def make_stream_url_response(
     )
 
 
+@pytest.fixture
+async def mock_create_stream(hass) -> Mock:
+    """Fixture to mock out the create stream call."""
+    assert await async_setup_component(hass, "stream", {})
+    with patch(
+        "homeassistant.components.camera.create_stream", autospec=True
+    ) as mock_stream:
+        mock_stream.return_value.endpoint_url.return_value = (
+            "http://home.assistant/playlist.m3u8"
+        )
+        mock_stream.return_value.async_get_image = AsyncMock()
+        mock_stream.return_value.async_get_image.return_value = IMAGE_BYTES_FROM_STREAM
+        yield mock_stream
+
+
 async def async_setup_camera(hass, traits={}, auth=None):
     """Set up the platform and prerequisites."""
     devices = {}
@@ -141,17 +155,9 @@ async def fire_alarm(hass, point_in_time):
 
 async def async_get_image(hass, width=None, height=None):
     """Get image from the camera, a wrapper around camera.async_get_image."""
-    # Note: this patches ImageFrame to simulate decoding an image from a live
-    # stream, however the test may not use it. Tests assert on the image
-    # contents to determine if the image came from the live stream or event.
-    with patch(
-        "homeassistant.components.ffmpeg.ImageFrame.get_image",
-        autopatch=True,
-        return_value=IMAGE_BYTES_FROM_FFMPEG,
-    ):
-        return await camera.async_get_image(
-            hass, "camera.my_camera", width=width, height=height
-        )
+    return await camera.async_get_image(
+        hass, "camera.my_camera", width=width, height=height
+    )
 
 
 async def test_no_devices(hass):
@@ -195,7 +201,7 @@ async def test_camera_device(hass):
     assert device.identifiers == {("nest", DEVICE_ID)}
 
 
-async def test_camera_stream(hass, auth):
+async def test_camera_stream(hass, auth, mock_create_stream):
     """Test a basic camera and fetch its live stream."""
     auth.responses = [make_stream_url_response()]
     await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
@@ -210,10 +216,10 @@ async def test_camera_stream(hass, auth):
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
 
     image = await async_get_image(hass)
-    assert image.content == IMAGE_BYTES_FROM_FFMPEG
+    assert image.content == IMAGE_BYTES_FROM_STREAM
 
 
-async def test_camera_ws_stream(hass, auth, hass_ws_client):
+async def test_camera_ws_stream(hass, auth, hass_ws_client, mock_create_stream):
     """Test a basic camera that supports web rtc."""
     auth.responses = [make_stream_url_response()]
     await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
@@ -224,33 +230,23 @@ async def test_camera_ws_stream(hass, auth, hass_ws_client):
     assert cam.state == STATE_STREAMING
     assert cam.attributes["frontend_stream_type"] == STREAM_TYPE_HLS
 
-    with patch(
-        "homeassistant.components.camera.create_stream", autospec=True
-    ) as mock_stream:
-        mock_stream.return_value.endpoint_url.return_value = (
-            "http://home.assistant/playlist.m3u8"
-        )
-        client = await hass_ws_client(hass)
-        await client.send_json(
-            {
-                "id": 2,
-                "type": "camera/stream",
-                "entity_id": "camera.my_camera",
-            }
-        )
-        msg = await client.receive_json()
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "camera/stream",
+            "entity_id": "camera.my_camera",
+        }
+    )
+    msg = await client.receive_json()
 
-        assert msg["id"] == 2
-        assert msg["type"] == TYPE_RESULT
-        assert msg["success"]
-        assert msg["result"]["url"] == "http://home.assistant/playlist.m3u8"
+    assert msg["id"] == 2
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"]["url"] == "http://home.assistant/playlist.m3u8"
 
-        # Getting an image now pulls from the active stream instead of ffmpeg
-        mock_stream.return_value.get_image = AsyncMock()
-        mock_stream.return_value.get_image.return_value = IMAGE_BYTES_FROM_STREAM
-
-        image = await async_get_image(hass)
-        assert image.content == IMAGE_BYTES_FROM_STREAM
+    image = await async_get_image(hass)
+    assert image.content == IMAGE_BYTES_FROM_STREAM
 
 
 async def test_camera_ws_stream_failure(hass, auth, hass_ws_client):
@@ -434,16 +430,6 @@ async def test_camera_removed(hass, auth):
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
 
-    # Fetch an event image, exercising cleanup on remove
-    await subscriber.async_receive_event(make_motion_event())
-    await hass.async_block_till_done()
-    auth.responses = [
-        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
-        aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
-    ]
-    image = await async_get_image(hass)
-    assert image.content == IMAGE_BYTES_FROM_EVENT
-
     for config_entry in hass.config_entries.async_entries(DOMAIN):
         await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -527,160 +513,6 @@ async def test_refresh_expired_stream_failure(hass, auth):
         assert hls_url != hls_url2
         assert hls_url2.startswith("/api/hls/")  # Includes access token
         assert create_stream.called
-
-
-async def test_camera_image_from_last_event(hass, auth):
-    """Test an image generated from an event."""
-    # The subscriber receives a message related to an image event. The camera
-    # holds on to the event message. When the test asks for a capera snapshot
-    # it exchanges the event id for an image url and fetches the image.
-    subscriber = await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
-    assert len(hass.states.async_all()) == 1
-    assert hass.states.get("camera.my_camera")
-
-    # Simulate a pubsub message received by the subscriber with a motion event.
-    await subscriber.async_receive_event(make_motion_event())
-    await hass.async_block_till_done()
-
-    auth.responses = [
-        # Fake response from API that returns url image
-        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
-        # Fake response for the image content fetch
-        aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
-    ]
-
-    image = await async_get_image(hass)
-    assert image.content == IMAGE_BYTES_FROM_EVENT
-    # Verify expected image fetch request was captured
-    assert auth.url == TEST_IMAGE_URL
-    assert auth.headers == IMAGE_AUTHORIZATION_HEADERS
-
-    # An additional fetch uses the cache and does not send another RPC
-    image = await async_get_image(hass)
-    assert image.content == IMAGE_BYTES_FROM_EVENT
-    # Verify expected image fetch request was captured
-    assert auth.url == TEST_IMAGE_URL
-    assert auth.headers == IMAGE_AUTHORIZATION_HEADERS
-
-
-async def test_camera_image_from_event_not_supported(hass, auth):
-    """Test fallback to stream image when event images are not supported."""
-    # Create a device that does not support the CameraEventImgae trait
-    traits = DEVICE_TRAITS.copy()
-    del traits["sdm.devices.traits.CameraEventImage"]
-    subscriber = await async_setup_camera(hass, traits, auth=auth)
-    assert len(hass.states.async_all()) == 1
-    assert hass.states.get("camera.my_camera")
-
-    await subscriber.async_receive_event(make_motion_event())
-    await hass.async_block_till_done()
-
-    # Camera fetches a stream url since CameraEventImage is not supported
-    auth.responses = [make_stream_url_response()]
-
-    image = await async_get_image(hass)
-    assert image.content == IMAGE_BYTES_FROM_FFMPEG
-
-
-async def test_generate_event_image_url_failure(hass, auth):
-    """Test fallback to stream on failure to create an image url."""
-    subscriber = await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
-    assert len(hass.states.async_all()) == 1
-    assert hass.states.get("camera.my_camera")
-
-    await subscriber.async_receive_event(make_motion_event())
-    await hass.async_block_till_done()
-
-    auth.responses = [
-        # Fail to generate the image url
-        aiohttp.web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR),
-        # Camera fetches a stream url as a fallback
-        make_stream_url_response(),
-    ]
-
-    image = await async_get_image(hass)
-    assert image.content == IMAGE_BYTES_FROM_FFMPEG
-
-
-async def test_fetch_event_image_failure(hass, auth):
-    """Test fallback to a stream on image download failure."""
-    subscriber = await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
-    assert len(hass.states.async_all()) == 1
-    assert hass.states.get("camera.my_camera")
-
-    await subscriber.async_receive_event(make_motion_event())
-    await hass.async_block_till_done()
-
-    auth.responses = [
-        # Fake response from API that returns url image
-        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
-        # Fail to download the image
-        aiohttp.web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR),
-        # Camera fetches a stream url as a fallback
-        make_stream_url_response(),
-    ]
-
-    image = await async_get_image(hass)
-    assert image.content == IMAGE_BYTES_FROM_FFMPEG
-
-
-async def test_event_image_expired(hass, auth):
-    """Test fallback for an event event image that has expired."""
-    subscriber = await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
-    assert len(hass.states.async_all()) == 1
-    assert hass.states.get("camera.my_camera")
-
-    # Simulate a pubsub message has already expired
-    event_timestamp = utcnow() - datetime.timedelta(seconds=40)
-    await subscriber.async_receive_event(make_motion_event(timestamp=event_timestamp))
-    await hass.async_block_till_done()
-
-    # Fallback to a stream url since the event message is expired.
-    auth.responses = [make_stream_url_response()]
-
-    image = await async_get_image(hass)
-    assert image.content == IMAGE_BYTES_FROM_FFMPEG
-
-
-async def test_multiple_event_images(hass, auth):
-    """Test fallback for an event event image that has been cleaned up on expiration."""
-    subscriber = await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
-    # Simplify test setup
-    subscriber.cache_policy.fetch = False
-    assert len(hass.states.async_all()) == 1
-    assert hass.states.get("camera.my_camera")
-
-    event_timestamp = utcnow()
-    await subscriber.async_receive_event(
-        make_motion_event(event_session_id="event-session-1", timestamp=event_timestamp)
-    )
-    await hass.async_block_till_done()
-
-    auth.responses = [
-        # Fake response from API that returns url image
-        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
-        # Fake response for the image content fetch
-        aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
-        # Image is refetched after being cleared by expiration alarm
-        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
-        aiohttp.web.Response(body=b"updated image bytes"),
-    ]
-
-    image = await async_get_image(hass)
-    assert image.content == IMAGE_BYTES_FROM_EVENT
-
-    next_event_timestamp = event_timestamp + datetime.timedelta(seconds=25)
-    await subscriber.async_receive_event(
-        make_motion_event(
-            event_id="updated-event-id",
-            event_session_id="event-session-2",
-            timestamp=next_event_timestamp,
-        )
-    )
-    await hass.async_block_till_done()
-
-    image = await async_get_image(hass)
-    assert image.content == b"updated image bytes"
 
 
 async def test_camera_web_rtc(hass, auth, hass_ws_client):
@@ -814,7 +646,7 @@ async def test_camera_web_rtc_offer_failure(hass, auth, hass_ws_client):
     assert msg["error"]["message"].startswith("Nest API error")
 
 
-async def test_camera_multiple_streams(hass, auth, hass_ws_client):
+async def test_camera_multiple_streams(hass, auth, hass_ws_client, mock_create_stream):
     """Test a camera supporting multiple stream types."""
     expiration = utcnow() + datetime.timedelta(seconds=100)
     auth.responses = [
@@ -859,7 +691,7 @@ async def test_camera_multiple_streams(hass, auth, hass_ws_client):
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
 
     image = await async_get_image(hass)
-    assert image.content == IMAGE_BYTES_FROM_FFMPEG
+    assert image.content == IMAGE_BYTES_FROM_STREAM
 
     # WebRTC stream
     client = await hass_ws_client(hass)
