@@ -1398,7 +1398,6 @@ omit =
     homeassistant/components/wiffi/sensor.py
     homeassistant/components/wiffi/wiffi_strings.py
     homeassistant/components/wirelesstag/*
-    homeassistant/components/wiz/discovery.py
     homeassistant/components/wolflink/__init__.py
     homeassistant/components/wolflink/sensor.py
     homeassistant/components/wolflink/const.py

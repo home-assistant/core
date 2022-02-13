@@ -20,14 +20,10 @@ async def async_discover_devices(
     hass: HomeAssistant, timeout: int, address: str | None = None
 ) -> list[DiscoveredBulb]:
     """Discover wiz devices."""
-    if address:
-        targets = [address]
-    else:
-        targets = [
-            str(address)
-            for address in await network.async_get_ipv4_broadcast_addresses(hass)
-        ]
-
+    targets = [
+        str(address)
+        for address in await network.async_get_ipv4_broadcast_addresses(hass)
+    ]
     combined_discoveries: dict[str, DiscoveredBulb] = {}
     for idx, discovered in enumerate(
         await asyncio.gather(
