@@ -34,8 +34,8 @@ def get_config_parameter_value_schema(node: Node, value_id: str) -> vol.Schema |
     return None
 
 
-def generate_config_parameter_name(config_value: ConfigurationValue) -> str:
-    """Generate a config parameter name."""
+def generate_config_parameter_subtype(config_value: ConfigurationValue) -> str:
+    """Generate the config parameter name used in a device automation subtype."""
     parameter = str(config_value.property_)
     if config_value.property_key:
         parameter = f"{parameter}.{hex(config_value.property_key)}"
