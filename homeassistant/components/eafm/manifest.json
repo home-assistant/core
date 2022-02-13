@@ -5,5 +5,6 @@
   "config_flow": true,
   "codeowners": ["@Jc2k"],
   "requirements": ["aioeafm==0.1.2"],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["aioeafm"]
 }

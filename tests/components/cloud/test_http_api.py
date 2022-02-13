@@ -427,6 +427,7 @@ async def test_websocket_status(
         "remote_domain": None,
         "remote_connected": False,
         "remote_certificate": None,
+        "http_use_ssl": False,
     }
 
 

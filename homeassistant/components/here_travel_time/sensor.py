@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.location import find_coordinates
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
@@ -143,7 +143,7 @@ PLATFORM_SCHEMA = vol.All(
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: dict[str, str | bool],
+    config: ConfigType,
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:

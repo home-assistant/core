@@ -7,7 +7,7 @@ from typing import Any
 
 from pydeconz.group import DeconzScene as PydeconzScene
 
-from homeassistant.components.scene import Scene
+from homeassistant.components.scene import DOMAIN, Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -23,6 +23,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up scenes for deCONZ component."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
+    gateway.entities[DOMAIN] = set()
 
     @callback
     def async_add_scene(
@@ -30,7 +31,11 @@ async def async_setup_entry(
         | ValuesView[PydeconzScene] = gateway.api.scenes.values(),
     ) -> None:
         """Add scene from deCONZ."""
-        entities = [DeconzScene(scene, gateway) for scene in scenes]
+        entities = [
+            DeconzScene(scene, gateway)
+            for scene in scenes
+            if scene.deconz_id not in gateway.entities[DOMAIN]
+        ]
 
         if entities:
             async_add_entities(entities)
@@ -59,10 +64,12 @@ class DeconzScene(Scene):
     async def async_added_to_hass(self) -> None:
         """Subscribe to sensors events."""
         self.gateway.deconz_ids[self.entity_id] = self._scene.deconz_id
+        self.gateway.entities[DOMAIN].add(self._scene.deconz_id)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect scene object when removed."""
         del self.gateway.deconz_ids[self.entity_id]
+        self.gateway.entities[DOMAIN].remove(self._scene.deconz_id)
         self._scene = None
 
     async def async_activate(self, **kwargs: Any) -> None:

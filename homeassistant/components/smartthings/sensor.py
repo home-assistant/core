@@ -628,7 +628,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         default_unit: str,
         device_class: str,
         state_class: str | None,
-        entity_category: str | None,
+        entity_category: EntityCategory | None,
     ) -> None:
         """Init the class."""
         super().__init__(device)

@@ -1,24 +1,23 @@
 """Represent the Freebox router and its devices and sensors."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
-import logging
+from collections.abc import Mapping
+from contextlib import suppress
+from datetime import datetime
 import os
 from pathlib import Path
 from typing import Any
 
 from freebox_api import Freepybox
 from freebox_api.api.wifi import Wifi
-from freebox_api.exceptions import HttpRequestError
+from freebox_api.exceptions import NotOpenError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import slugify
 
 from .const import (
@@ -29,10 +28,6 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
-
-_LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(seconds=30)
 
 
 async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
@@ -50,49 +45,29 @@ async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
 class FreeboxRouter:
     """Representation of a Freebox router."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        api: Freepybox,
+        freebox_config: Mapping[str, Any],
+    ) -> None:
         """Initialize a Freebox router."""
         self.hass = hass
-        self._entry = entry
         self._host = entry.data[CONF_HOST]
         self._port = entry.data[CONF_PORT]
 
-        self._api: Freepybox = None
-        self.name = None
-        self.mac = None
-        self._sw_v = None
-        self._attrs = {}
+        self._api: Freepybox = api
+        self.name: str = freebox_config["model_info"]["pretty_name"]
+        self.mac: str = freebox_config["mac"]
+        self._sw_v: str = freebox_config["firmware_version"]
+        self._attrs: dict[str, Any] = {}
 
         self.devices: dict[str, dict[str, Any]] = {}
         self.disks: dict[int, dict[str, Any]] = {}
         self.sensors_temperature: dict[str, int] = {}
         self.sensors_connection: dict[str, float] = {}
         self.call_list: list[dict[str, Any]] = []
-
-        self._unsub_dispatcher = None
-        self.listeners = []
-
-    async def setup(self) -> None:
-        """Set up a Freebox router."""
-        self._api = await get_api(self.hass, self._host)
-
-        try:
-            await self._api.open(self._host, self._port)
-        except HttpRequestError:
-            _LOGGER.exception("Failed to connect to Freebox")
-            return ConfigEntryNotReady
-
-        # System
-        fbx_config = await self._api.system.get_config()
-        self.mac = fbx_config["mac"]
-        self.name = fbx_config["model_info"]["pretty_name"]
-        self._sw_v = fbx_config["firmware_version"]
-
-        # Devices & sensors
-        await self.update_all()
-        self._unsub_dispatcher = async_track_time_interval(
-            self.hass, self.update_all, SCAN_INTERVAL
-        )
 
     async def update_all(self, now: datetime | None = None) -> None:
         """Update all Freebox platforms."""
@@ -102,7 +77,7 @@ class FreeboxRouter:
     async def update_device_trackers(self) -> None:
         """Update Freebox devices."""
         new_device = False
-        fbx_devices: [dict[str, Any]] = await self._api.lan.get_hosts_list()
+        fbx_devices: list[dict[str, Any]] = await self._api.lan.get_hosts_list()
 
         # Adds the Freebox itself
         fbx_devices.append(
@@ -164,7 +139,7 @@ class FreeboxRouter:
     async def _update_disks_sensors(self) -> None:
         """Update Freebox disks."""
         # None at first request
-        fbx_disks: [dict[str, Any]] = await self._api.storage.get_disks() or []
+        fbx_disks: list[dict[str, Any]] = await self._api.storage.get_disks() or []
 
         for fbx_disk in fbx_disks:
             self.disks[fbx_disk["id"]] = fbx_disk
@@ -175,10 +150,8 @@ class FreeboxRouter:
 
     async def close(self) -> None:
         """Close the connection."""
-        if self._api is not None:
+        with suppress(NotOpenError):
             await self._api.close()
-            self._unsub_dispatcher()
-        self._api = None
 
     @property
     def device_info(self) -> DeviceInfo:

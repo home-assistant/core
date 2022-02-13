@@ -169,8 +169,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 await asyncio.sleep(wait_time)
             except WebOsTvPairError:
                 return
-            else:
-                break
 
         ent_reg = entity_registry.async_get(hass)
         if not (

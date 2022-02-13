@@ -215,6 +215,9 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
             "cloud" in self.hass.config.components
             and self.hass.components.cloud.async_active_subscription()
         ):
+            if not self.hass.components.cloud.async_is_connected():
+                return self.async_abort(reason="cloud_not_connected")
+
             webhook_url = await self.hass.components.cloud.async_create_cloudhook(
                 webhook_id
             )

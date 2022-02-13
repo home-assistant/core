@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'account \u00e8 gi\u00e0 configurato"
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente",
+            "reauth_wrong_account": "Puoi riautenticare questa voce solo con lo stesso account e hub Overkiz"
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
@@ -10,6 +12,7 @@
             "too_many_requests": "Troppe richieste, riprova pi\u00f9 tardi.",
             "unknown": "Errore imprevisto"
         },
+        "flow_title": "Gateway: {gateway_id}",
         "step": {
             "user": {
                 "data": {

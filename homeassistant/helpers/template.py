@@ -1302,7 +1302,7 @@ def forgiving_round(value, precision=0, method="common", default=_SENTINEL):
     """Filter to round a value."""
     try:
         # support rounding methods like jinja
-        multiplier = float(10 ** precision)
+        multiplier = float(10**precision)
         if method == "ceil":
             value = math.ceil(float(value) * multiplier) / multiplier
         elif method == "floor":

@@ -13,6 +13,7 @@ from aioesphomeapi import (
     APIConnectionError,
     APIIntEnum,
     APIVersion,
+    BadNameAPIError,
     DeviceInfo as EsphomeDeviceInfo,
     EntityCategory as EsphomeEntityCategory,
     EntityInfo,
@@ -269,6 +270,7 @@ async def async_setup_entry(  # noqa: C901
             entry_data.api_version = cli.api_version
             entry_data.available = True
             if entry_data.device_info.name:
+                cli.expected_name = entry_data.device_info.name
                 reconnect_logic.name = entry_data.device_info.name
             device_id = _async_setup_device_registry(
                 hass, entry, entry_data.device_info
@@ -300,6 +302,12 @@ async def async_setup_entry(  # noqa: C901
         """Start reauth flow if appropriate connect error type."""
         if isinstance(err, (RequiresEncryptionAPIError, InvalidEncryptionKeyAPIError)):
             entry.async_start_reauth(hass)
+        if isinstance(err, BadNameAPIError):
+            _LOGGER.warning(
+                "Name of device %s changed to %s, potentially due to IP reassignment",
+                cli.expected_name,
+                err.received_name,
+            )
 
     reconnect_logic = ReconnectLogic(
         client=cli,
@@ -317,6 +325,7 @@ async def async_setup_entry(  # noqa: C901
         await _setup_services(hass, entry_data, services)
 
         if entry_data.device_info is not None and entry_data.device_info.name:
+            cli.expected_name = entry_data.device_info.name
             reconnect_logic.name = entry_data.device_info.name
 
         await reconnect_logic.start()
@@ -334,18 +343,30 @@ def _async_setup_device_registry(
     sw_version = device_info.esphome_version
     if device_info.compilation_time:
         sw_version += f" ({device_info.compilation_time})"
+
     configuration_url = None
     if device_info.webserver_port > 0:
         configuration_url = f"http://{entry.data['host']}:{device_info.webserver_port}"
+
+    manufacturer = "espressif"
+    model = device_info.model
+    hw_version = None
+    if device_info.project_name:
+        project_name = device_info.project_name.split(".")
+        manufacturer = project_name[0]
+        model = project_name[1]
+        hw_version = device_info.project_version
+
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         configuration_url=configuration_url,
         connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
         name=device_info.name,
-        manufacturer="espressif",
-        model=device_info.model,
+        manufacturer=manufacturer,
+        model=model,
         sw_version=sw_version,
+        hw_version=hw_version,
     )
     return device_entry.id
 
@@ -436,7 +457,7 @@ async def _register_service(
         }
 
     async def execute_service(call: ServiceCall) -> None:
-        await entry_data.client.execute_service(service, call.data)  # type: ignore[arg-type]
+        await entry_data.client.execute_service(service, call.data)
 
     hass.services.async_register(
         DOMAIN, service_name, execute_service, vol.Schema(schema)

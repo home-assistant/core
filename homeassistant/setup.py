@@ -18,7 +18,7 @@ from .const import (
     Platform,
 )
 from .core import CALLBACK_TYPE
-from .exceptions import HomeAssistantError
+from .exceptions import DependencyError, HomeAssistantError
 from .helpers.typing import ConfigType
 from .util import dt as dt_util, ensure_unique_string
 
@@ -83,8 +83,11 @@ async def async_setup_component(
 
 async def _async_process_dependencies(
     hass: core.HomeAssistant, config: ConfigType, integration: loader.Integration
-) -> bool:
-    """Ensure all dependencies are set up."""
+) -> list[str]:
+    """Ensure all dependencies are set up.
+
+    Returns a list of dependencies which failed to set up.
+    """
     dependencies_tasks = {
         dep: hass.loop.create_task(async_setup_component(hass, dep, config))
         for dep in integration.dependencies
@@ -104,7 +107,7 @@ async def _async_process_dependencies(
             )
 
     if not dependencies_tasks and not after_dependencies_tasks:
-        return True
+        return []
 
     if dependencies_tasks:
         _LOGGER.debug(
@@ -135,8 +138,7 @@ async def _async_process_dependencies(
             ", ".join(failed),
         )
 
-        return False
-    return True
+    return failed
 
 
 async def _async_setup_component(
@@ -180,9 +182,6 @@ async def _async_setup_component(
         component = integration.get_component()
     except ImportError as err:
         log_error(f"Unable to import component: {err}", integration.documentation)
-        return False
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception("Setup failed for %s: unknown error", domain)
         return False
 
     processed_config = await conf_util.async_process_component_config(
@@ -344,8 +343,8 @@ async def async_process_deps_reqs(
     elif integration.domain in processed:
         return
 
-    if not await _async_process_dependencies(hass, config, integration):
-        raise HomeAssistantError("Could not set up all dependencies.")
+    if failed_deps := await _async_process_dependencies(hass, config, integration):
+        raise DependencyError(failed_deps)
 
     if not hass.config.skip_pip and integration.requirements:
         async with hass.timeout.async_freeze(integration.domain):

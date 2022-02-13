@@ -5,10 +5,11 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Generic
 
-from pyunifiprotect.data.devices import Camera, Light
+from pyunifiprotect.data.devices import Camera, Doorlock, Light
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import TIME_SECONDS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -41,6 +42,14 @@ def _get_pir_duration(obj: Light) -> int:
 
 async def _set_pir_duration(obj: Light, value: float) -> None:
     await obj.set_duration(timedelta(seconds=value))
+
+
+def _get_auto_close(obj: Doorlock) -> int:
+    return int(obj.auto_close_time.total_seconds())
+
+
+async def _set_auto_close(obj: Doorlock, value: float) -> None:
+    await obj.set_auto_close_time(timedelta(seconds=value))
 
 
 CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
@@ -100,6 +109,7 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         name="Auto-shutoff Duration",
         icon="mdi:camera-timer",
         entity_category=EntityCategory.CONFIG,
+        unit_of_measurement=TIME_SECONDS,
         ufp_min=15,
         ufp_max=900,
         ufp_step=15,
@@ -124,6 +134,22 @@ SENSE_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ),
 )
 
+DOORLOCK_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
+    ProtectNumberEntityDescription[Doorlock](
+        key="auto_lock_time",
+        name="Auto-lock Timeout",
+        icon="mdi:walk",
+        entity_category=EntityCategory.CONFIG,
+        unit_of_measurement=TIME_SECONDS,
+        ufp_min=0,
+        ufp_max=3600,
+        ufp_step=15,
+        ufp_required_field=None,
+        ufp_value_fn=_get_auto_close,
+        ufp_set_method_fn=_set_auto_close,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -138,6 +164,7 @@ async def async_setup_entry(
         camera_descs=CAMERA_NUMBERS,
         light_descs=LIGHT_NUMBERS,
         sense_descs=SENSE_NUMBERS,
+        lock_descs=DOORLOCK_NUMBERS,
     )
 
     async_add_entities(entities)
