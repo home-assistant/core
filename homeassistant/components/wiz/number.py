@@ -32,7 +32,7 @@ class WizSpeedNumber(WizEntity, NumberEntity):
 
     _attr_min_value = 10
     _attr_max_value = 200
-    _attr_step = 1
+    _attr_step = 10
     _attr_mode = NumberMode.SLIDER
     _attr_icon = "mdi:speedometer"
 
