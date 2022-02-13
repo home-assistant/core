@@ -203,13 +203,11 @@ class NestCamera(Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
-        # Use the thumbnail from RTSP stream
+        # Use the thumbnail from RTSP stream, or a placeholder if stream is
+        # not supported (e.g. WebRTC)
         stream = await self.async_create_stream()
         if stream:
             return await stream.async_get_image(width, height)
-        if self.frontend_stream_type != STREAM_TYPE_WEB_RTC:
-            return None
-        # Use a placeholder image for WebRTC cameras with no thumbnail
         if not self._placeholder_image:
             self._placeholder_image = await self.hass.async_add_executor_job(
                 PLACEHOLDER.read_bytes

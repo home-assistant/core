@@ -22,7 +22,6 @@ from homeassistant.components.camera import (
     STREAM_TYPE_WEB_RTC,
 )
 from homeassistant.components.websocket_api.const import TYPE_RESULT
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -128,6 +127,25 @@ async def mock_create_stream(hass) -> Mock:
         yield mock_stream
 
 
+async def async_get_image(hass, width=None, height=None):
+    """Get the camera image."""
+    return await camera.async_get_image(
+        hass, "camera.my_camera", width=width, height=height
+    )
+
+
+def assert_stream_image(image):
+    """Assert the image returned is from the stream component."""
+    assert image.content_type == "image/jpeg"
+    assert image.content == IMAGE_BYTES_FROM_STREAM
+
+
+def assert_placeholder_image(image):
+    """Assert the image returned is a placeholder, not from stream."""
+    assert image.content_type == "image/jpeg"
+    assert image.content != IMAGE_BYTES_FROM_STREAM
+
+
 async def async_setup_camera(hass, traits={}, auth=None):
     """Set up the platform and prerequisites."""
     devices = {}
@@ -148,13 +166,6 @@ async def fire_alarm(hass, point_in_time):
     with patch("homeassistant.util.dt.utcnow", return_value=point_in_time):
         async_fire_time_changed(hass, point_in_time)
         await hass.async_block_till_done()
-
-
-async def async_get_image(hass, width=None, height=None):
-    """Get image from the camera, a wrapper around camera.async_get_image."""
-    return await camera.async_get_image(
-        hass, "camera.my_camera", width=width, height=height
-    )
 
 
 async def test_no_devices(hass):
@@ -212,8 +223,7 @@ async def test_camera_stream(hass, auth, mock_create_stream):
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
 
-    image = await async_get_image(hass)
-    assert image.content == IMAGE_BYTES_FROM_STREAM
+    assert_stream_image(await async_get_image(hass))
 
 
 async def test_camera_ws_stream(hass, auth, hass_ws_client, mock_create_stream):
@@ -242,8 +252,7 @@ async def test_camera_ws_stream(hass, auth, hass_ws_client, mock_create_stream):
     assert msg["success"]
     assert msg["result"]["url"] == "http://home.assistant/playlist.m3u8"
 
-    image = await async_get_image(hass)
-    assert image.content == IMAGE_BYTES_FROM_STREAM
+    assert_stream_image(await async_get_image(hass))
 
 
 async def test_camera_ws_stream_failure(hass, auth, hass_ws_client):
@@ -297,9 +306,8 @@ async def test_camera_stream_missing_trait(hass, auth):
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source is None
 
-    # Unable to get an image from the live stream
-    with pytest.raises(HomeAssistantError):
-        await async_get_image(hass)
+    # Fallback to placeholder image
+    assert_placeholder_image(await async_get_image(hass))
 
 
 async def test_refresh_expired_stream_token(hass, auth):
@@ -565,10 +573,8 @@ async def test_camera_web_rtc(hass, auth, hass_ws_client):
     assert msg["result"]["answer"] == "v=0\r\ns=-\r\n"
 
     # Nest WebRTC cameras return a placeholder
-    content = await async_get_image(hass)
-    assert content.content_type == "image/jpeg"
-    content = await async_get_image(hass, width=1024, height=768)
-    assert content.content_type == "image/jpeg"
+    assert_placeholder_image(await async_get_image(hass))
+    assert_placeholder_image(await async_get_image(hass, width=1024, height=768))
 
 
 async def test_camera_web_rtc_unsupported(hass, auth, hass_ws_client):
@@ -687,8 +693,7 @@ async def test_camera_multiple_streams(hass, auth, hass_ws_client, mock_create_s
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
 
-    image = await async_get_image(hass)
-    assert image.content == IMAGE_BYTES_FROM_STREAM
+    assert_stream_image(await async_get_image(hass))
 
     # WebRTC stream
     client = await hass_ws_client(hass)
