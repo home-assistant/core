@@ -32,6 +32,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.template import is_number
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
@@ -321,6 +322,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                 self._last_period = (
                     float(state.attributes.get(ATTR_LAST_PERIOD))
                     if state.attributes.get(ATTR_LAST_PERIOD)
+                    and is_number(state.attributes.get(ATTR_LAST_PERIOD))
                     else 0
                 )
                 self._last_reset = dt_util.as_utc(
