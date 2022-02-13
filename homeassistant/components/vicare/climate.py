@@ -218,6 +218,7 @@ class ViCareClimate(ClimateEntity):
                 ] = self._circuit.getHeatingCurveShift()
 
             self._attributes["vicare_modes"] = self._circuit.getModes()
+            self._attributes["vicare_programs"] = self._circuit.getPrograms()
 
             self._current_action = False
             # Update the specific device attributes
