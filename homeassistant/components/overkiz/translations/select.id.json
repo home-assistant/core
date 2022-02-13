@@ -1,0 +1,13 @@
+{
+    "state": {
+        "overkiz__memorized_simple_volume": {
+            "highest": "Tertinggi",
+            "standard": "Standar"
+        },
+        "overkiz__open_closed_pedestrian": {
+            "closed": "Tertutup",
+            "open": "Buka",
+            "pedestrian": "Pejalan Kaki"
+        }
+    }
+}

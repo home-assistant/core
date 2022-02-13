@@ -151,7 +151,7 @@ async def test_config_entry(hass: HomeAssistant, hass_client: ClientSession, utc
                     },
                     {
                         "iid": 13,
-                        "type": "4aaaf940-0dec-11e5-b939-0800200c9a66",
+                        "type": "4AAAF940-0DEC-11E5-B939-0800200C9A66",
                         "characteristics": [
                             {
                                 "type": "4AAAF942-0DEC-11E5-B939-0800200C9A66",
@@ -235,26 +235,6 @@ async def test_config_entry(hass: HomeAssistant, hass_client: ClientSession, utc
                 "hw_version": "",
                 "entities": [
                     {
-                        "device_class": None,
-                        "disabled": False,
-                        "disabled_by": None,
-                        "entity_category": "diagnostic",
-                        "icon": None,
-                        "original_device_class": None,
-                        "original_icon": None,
-                        "original_name": "Koogeek-LS1-20833F Identify",
-                        "state": {
-                            "attributes": {
-                                "friendly_name": "Koogeek-LS1-20833F Identify"
-                            },
-                            "entity_id": "button.koogeek_ls1_20833f_identify",
-                            "last_changed": "2023-01-01T00:00:00+00:00",
-                            "last_updated": "2023-01-01T00:00:00+00:00",
-                            "state": "unknown",
-                        },
-                        "unit_of_measurement": None,
-                    },
-                    {
                         "original_name": "Koogeek-LS1-20833F",
                         "disabled": False,
                         "disabled_by": None,
@@ -275,6 +255,26 @@ async def test_config_entry(hass: HomeAssistant, hass_client: ClientSession, utc
                             "last_changed": "2023-01-01T00:00:00+00:00",
                             "last_updated": "2023-01-01T00:00:00+00:00",
                         },
+                    },
+                    {
+                        "device_class": None,
+                        "disabled": False,
+                        "disabled_by": None,
+                        "entity_category": "diagnostic",
+                        "icon": None,
+                        "original_device_class": None,
+                        "original_icon": None,
+                        "original_name": "Koogeek-LS1-20833F Identify",
+                        "state": {
+                            "attributes": {
+                                "friendly_name": "Koogeek-LS1-20833F Identify"
+                            },
+                            "entity_id": "button.koogeek_ls1_20833f_identify",
+                            "last_changed": "2023-01-01T00:00:00+00:00",
+                            "last_updated": "2023-01-01T00:00:00+00:00",
+                            "state": "unknown",
+                        },
+                        "unit_of_measurement": None,
                     },
                 ],
             }
@@ -422,7 +422,7 @@ async def test_device(hass: HomeAssistant, hass_client: ClientSession, utcnow):
                     },
                     {
                         "iid": 13,
-                        "type": "4aaaf940-0dec-11e5-b939-0800200c9a66",
+                        "type": "4AAAF940-0DEC-11E5-B939-0800200C9A66",
                         "characteristics": [
                             {
                                 "type": "4AAAF942-0DEC-11E5-B939-0800200C9A66",
@@ -505,24 +505,6 @@ async def test_device(hass: HomeAssistant, hass_client: ClientSession, utcnow):
             "hw_version": "",
             "entities": [
                 {
-                    "device_class": None,
-                    "disabled": False,
-                    "disabled_by": None,
-                    "entity_category": "diagnostic",
-                    "icon": None,
-                    "original_device_class": None,
-                    "original_icon": None,
-                    "original_name": "Koogeek-LS1-20833F Identify",
-                    "state": {
-                        "attributes": {"friendly_name": "Koogeek-LS1-20833F Identify"},
-                        "entity_id": "button.koogeek_ls1_20833f_identify",
-                        "last_changed": "2023-01-01T00:00:00+00:00",
-                        "last_updated": "2023-01-01T00:00:00+00:00",
-                        "state": "unknown",
-                    },
-                    "unit_of_measurement": None,
-                },
-                {
                     "original_name": "Koogeek-LS1-20833F",
                     "disabled": False,
                     "disabled_by": None,
@@ -543,6 +525,24 @@ async def test_device(hass: HomeAssistant, hass_client: ClientSession, utcnow):
                         "last_changed": "2023-01-01T00:00:00+00:00",
                         "last_updated": "2023-01-01T00:00:00+00:00",
                     },
+                },
+                {
+                    "device_class": None,
+                    "disabled": False,
+                    "disabled_by": None,
+                    "entity_category": "diagnostic",
+                    "icon": None,
+                    "original_device_class": None,
+                    "original_icon": None,
+                    "original_name": "Koogeek-LS1-20833F Identify",
+                    "state": {
+                        "attributes": {"friendly_name": "Koogeek-LS1-20833F Identify"},
+                        "entity_id": "button.koogeek_ls1_20833f_identify",
+                        "last_changed": "2023-01-01T00:00:00+00:00",
+                        "last_updated": "2023-01-01T00:00:00+00:00",
+                        "state": "unknown",
+                    },
+                    "unit_of_measurement": None,
                 },
             ],
         },

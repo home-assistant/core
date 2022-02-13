@@ -50,6 +50,8 @@ from .typing import UNDEFINED, UndefinedType
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
 
+    from .entity import EntityCategory
+
 PATH_REGISTRY = "entity_registry.yaml"
 DATA_REGISTRY = "entity_registry"
 EVENT_ENTITY_REGISTRY_UPDATED = "entity_registry_updated"
@@ -91,6 +93,16 @@ DISABLED_INTEGRATION = RegistryEntryDisabler.INTEGRATION.value
 DISABLED_USER = RegistryEntryDisabler.USER.value
 
 
+def _convert_to_entity_category(
+    value: EntityCategory | str | None, raise_report: bool = True
+) -> EntityCategory | None:
+    """Force incoming entity_category to be an enum."""
+    # pylint: disable=import-outside-toplevel
+    from .entity import convert_to_entity_category
+
+    return convert_to_entity_category(value, raise_report=raise_report)
+
+
 @attr.s(slots=True, frozen=True)
 class RegistryEntry:
     """Entity Registry Entry."""
@@ -105,7 +117,9 @@ class RegistryEntry:
     device_id: str | None = attr.ib(default=None)
     domain: str = attr.ib(init=False, repr=False)
     disabled_by: RegistryEntryDisabler | None = attr.ib(default=None)
-    entity_category: str | None = attr.ib(default=None)
+    entity_category: EntityCategory | None = attr.ib(
+        default=None, converter=_convert_to_entity_category
+    )
     icon: str | None = attr.ib(default=None)
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
     name: str | None = attr.ib(default=None)
@@ -320,7 +334,8 @@ class EntityRegistry:
         capabilities: Mapping[str, Any] | None = None,
         config_entry: ConfigEntry | None = None,
         device_id: str | None = None,
-        entity_category: str | None = None,
+        # Type str (ENTITY_CATEG*) is deprecated as of 2021.12, use EntityCategory
+        entity_category: EntityCategory | str | None = None,
         original_device_class: str | None = None,
         original_icon: str | None = None,
         original_name: str | None = None,
@@ -383,7 +398,7 @@ class EntityRegistry:
             config_entry_id=config_entry_id,
             device_id=device_id,
             disabled_by=disabled_by,
-            entity_category=entity_category,
+            entity_category=_convert_to_entity_category(entity_category),
             entity_id=entity_id,
             original_device_class=original_device_class,
             original_icon=original_icon,
@@ -431,13 +446,31 @@ class EntityRegistry:
             return
 
         if event.data["action"] != "update":
+            # Ignore "create" action
             return
 
         device_registry = dr.async_get(self.hass)
         device = device_registry.async_get(event.data["device_id"])
 
-        # The device may be deleted already if the event handling is late
-        if not device or not device.disabled:
+        # The device may be deleted already if the event handling is late, do nothing
+        # in that case. Entities will be removed when we get the "remove" event.
+        if not device:
+            return
+
+        # Remove entities which belong to config entries no longer associated with the
+        # device
+        entities = async_entries_for_device(
+            self, event.data["device_id"], include_disabled_entities=True
+        )
+        for entity in entities:
+            if (
+                entity.config_entry_id is not None
+                and entity.config_entry_id not in device.config_entries
+            ):
+                self.async_remove(entity.entity_id)
+
+        # Re-enable disabled entities if the device is no longer disabled
+        if not device.disabled:
             entities = async_entries_for_device(
                 self, event.data["device_id"], include_disabled_entities=True
             )
@@ -447,11 +480,12 @@ class EntityRegistry:
                 self.async_update_entity(entity.entity_id, disabled_by=None)
             return
 
+        # Ignore device disabled by config entry, this is handled by
+        # async_config_entry_disabled
         if device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY:
-            # Handled by async_config_entry_disabled
             return
 
-        # Fetch entities which are not already disabled
+        # Fetch entities which are not already disabled and disable them
         entities = async_entries_for_device(self, event.data["device_id"])
         for entity in entities:
             self.async_update_entity(
@@ -469,7 +503,8 @@ class EntityRegistry:
         device_class: str | None | UndefinedType = UNDEFINED,
         device_id: str | None | UndefinedType = UNDEFINED,
         disabled_by: RegistryEntryDisabler | None | UndefinedType = UNDEFINED,
-        entity_category: str | None | UndefinedType = UNDEFINED,
+        # Type str (ENTITY_CATEG*) is deprecated as of 2021.12, use EntityCategory
+        entity_category: EntityCategory | str | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
         new_entity_id: str | UndefinedType = UNDEFINED,
@@ -612,7 +647,9 @@ class EntityRegistry:
                     disabled_by=RegistryEntryDisabler(entity["disabled_by"])
                     if entity["disabled_by"]
                     else None,
-                    entity_category=entity["entity_category"],
+                    entity_category=_convert_to_entity_category(
+                        entity["entity_category"], raise_report=False
+                    ),
                     entity_id=entity["entity_id"],
                     icon=entity["icon"],
                     id=entity["id"],

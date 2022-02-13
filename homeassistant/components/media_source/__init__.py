@@ -12,6 +12,7 @@ from homeassistant.components import frontend, websocket_api
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
+    CONTENT_AUTH_EXPIRY_TIME,
     BrowseError,
     BrowseMedia,
 )
@@ -27,8 +28,6 @@ from . import local_source
 from .const import DOMAIN, URI_SCHEME, URI_SCHEME_REGEX
 from .error import MediaSourceError, Unresolvable
 from .models import BrowseMediaSource, MediaSourceItem, PlayMedia
-
-DEFAULT_EXPIRY_TIME = 3600 * 24
 
 __all__ = [
     "DOMAIN",
@@ -147,7 +146,7 @@ async def websocket_browse_media(
     {
         vol.Required("type"): "media_source/resolve_media",
         vol.Required(ATTR_MEDIA_CONTENT_ID): str,
-        vol.Optional("expires", default=DEFAULT_EXPIRY_TIME): int,
+        vol.Optional("expires", default=CONTENT_AUTH_EXPIRY_TIME): int,
     }
 )
 @websocket_api.async_response

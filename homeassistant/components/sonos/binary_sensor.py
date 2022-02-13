@@ -64,7 +64,7 @@ class SonosPowerEntity(SonosEntity, BinarySensorEntity):
         self._attr_unique_id = f"{self.soco.uid}-power"
         self._attr_name = f"{self.speaker.zone_name} Power"
 
-    async def _async_poll(self) -> None:
+    async def _async_fallback_poll(self) -> None:
         """Poll the device for the current state."""
         await self.speaker.async_poll_battery()
 
@@ -98,7 +98,7 @@ class SonosMicrophoneSensorEntity(SonosEntity, BinarySensorEntity):
         self._attr_unique_id = f"{self.soco.uid}-microphone"
         self._attr_name = f"{self.speaker.zone_name} Microphone"
 
-    async def _async_poll(self) -> None:
+    async def _async_fallback_poll(self) -> None:
         """Stub for abstract class implementation. Not a pollable attribute."""
 
     @property

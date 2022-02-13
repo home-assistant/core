@@ -55,5 +55,6 @@
       "deviceType": "urn:schemas-denon-com:device:AiosDevice:1"
     }
   ],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["denonavr"]
 }

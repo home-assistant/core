@@ -4,7 +4,7 @@ from __future__ import annotations
 from http import HTTPStatus
 import json
 import logging
-from typing import Protocol
+from typing import Any, Protocol
 
 from aiohttp import web
 import voluptuous as vol
@@ -51,12 +51,12 @@ class DiagnosticsProtocol(Protocol):
 
     async def async_get_config_entry_diagnostics(
         self, hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> dict:
+    ) -> Any:
         """Return diagnostics for a config entry."""
 
     async def async_get_device_diagnostics(
         self, hass: HomeAssistant, config_entry: ConfigEntry, device: DeviceEntry
-    ) -> dict:
+    ) -> Any:
         """Return diagnostics for a device."""
 
 
@@ -125,7 +125,7 @@ def handle_get(
 
 async def _async_get_json_file_response(
     hass: HomeAssistant,
-    data: dict | list,
+    data: Any,
     filename: str,
     domain: str,
     d_type: DiagnosticsType,
@@ -143,8 +143,8 @@ async def _async_get_json_file_response(
     all_custom_components = await async_get_custom_components(hass)
     for cc_domain, cc_obj in all_custom_components.items():
         custom_components[cc_domain] = {
-            "version": cc_obj.manifest["version"],
-            "requirements": cc_obj.manifest["requirements"],
+            "version": cc_obj.version,
+            "requirements": cc_obj.requirements,
         }
     try:
         json_data = json.dumps(
@@ -170,7 +170,7 @@ async def _async_get_json_file_response(
     return web.Response(
         body=json_data,
         content_type="application/json",
-        headers={"Content-Disposition": f'attachment; filename="{filename}.json"'},
+        headers={"Content-Disposition": f'attachment; filename="{filename}.json.txt"'},
     )
 
 

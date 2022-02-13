@@ -77,6 +77,17 @@ body:
         # Details
   - type: textarea
     attributes:
+      label: Diagnostics information
+      description: >-
+        Many integrations provide the ability to download diagnostic data
+        on the device page (and on the integration dashboard).
+
+        **It would really help if you could download the diagnostics data for the device you are having issues with,
+        and drag-and-drop that file into the textbox below.**
+
+        It generally allows pinpointing defects and thus resolving issues faster.
+  - type: textarea
+    attributes:
       label: Example YAML snippet
       description: |
         If applicable, please provide an example piece of YAML that can help reproduce this problem.

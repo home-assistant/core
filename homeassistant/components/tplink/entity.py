@@ -54,6 +54,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity):
             model=self.device.model,
             name=self.device.alias,
             sw_version=self.device.hw_info["sw_ver"],
+            hw_version=self.device.hw_info["hw_ver"],
         )
 
     @property

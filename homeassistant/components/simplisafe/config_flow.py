@@ -1,7 +1,7 @@
 """Config flow to configure the SimpliSafe component."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import Any, NamedTuple
 
 from simplipy import API
 from simplipy.errors import InvalidCredentialsError, SimplipyError
@@ -18,7 +18,6 @@ from homeassistant.const import CONF_CODE, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_USER_ID, DOMAIN, LOGGER
 
@@ -85,7 +84,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_reauth(self, config: ConfigType) -> FlowResult:
+    async def async_step_reauth(self, config: dict[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         self._username = config.get(CONF_USERNAME)
         self._reauth = True
@@ -98,8 +97,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self._async_show_form()
 
-        if TYPE_CHECKING:
-            assert self._oauth_values
+        assert self._oauth_values
 
         errors = {}
         session = aiohttp_client.async_get_clientsession(self.hass)

@@ -46,6 +46,7 @@ from .const import (
     PLEX_UPDATE_MEDIA_PLAYER_SESSION_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
+    PLEX_URI_SCHEME,
     SERVERS,
     TRANSIENT_DEVICE_MODELS,
 )
@@ -486,6 +487,19 @@ class PlexMediaPlayer(MediaPlayerEntity):
                 "Plex integration configured without a token, playback may fail"
             )
 
+        if media_id.startswith(PLEX_URI_SCHEME):
+            media_id = media_id[len(PLEX_URI_SCHEME) :]
+
+        if media_type == "station":
+            playqueue = self.plex_server.create_station_playqueue(media_id)
+            try:
+                self.device.playMedia(playqueue)
+            except requests.exceptions.ConnectTimeout as exc:
+                raise HomeAssistantError(
+                    f"Request failed when playing on {self.name}"
+                ) from exc
+            return
+
         src = json.loads(media_id)
         if isinstance(src, int):
             src = {"plex_key": src}
@@ -566,7 +580,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
         is_internal = is_internal_request(self.hass)
         return await self.hass.async_add_executor_job(
             browse_media,
-            self,
+            self.plex_server,
             is_internal,
             media_content_type,
             media_content_id,

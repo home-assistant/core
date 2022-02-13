@@ -39,7 +39,7 @@
     },
     "system_health": {
         "info": {
-            "device_connected": "ISY\u63a5\u7d9a\u6e08",
+            "device_connected": "ISY\u63a5\u7d9a\u6e08\u307f",
             "host_reachable": "\u30db\u30b9\u30c8\u306b\u30a2\u30af\u30bb\u30b9\u53ef\u80fd",
             "last_heartbeat": "\u6700\u5f8c\u306e\u30cf\u30fc\u30c8\u30d3\u30fc\u30c8\u30bf\u30a4\u30e0",
             "websocket_status": "\u30a4\u30d9\u30f3\u30c8\u30bd\u30b1\u30c3\u30c8 \u30b9\u30c6\u30fc\u30bf\u30b9"

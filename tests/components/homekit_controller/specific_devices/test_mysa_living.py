@@ -46,7 +46,7 @@ async def test_mysa_living_setup(hass):
                 ),
                 EntityTestInfo(
                     entity_id="sensor.mysa_85dda9_current_humidity",
-                    friendly_name="Mysa-85dda9 - Current Humidity",
+                    friendly_name="Mysa-85dda9 Current Humidity",
                     unique_id="homekit-AAAAAAA000-aid:1-sid:20-cid:27",
                     unit_of_measurement=PERCENTAGE,
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
@@ -54,7 +54,7 @@ async def test_mysa_living_setup(hass):
                 ),
                 EntityTestInfo(
                     entity_id="sensor.mysa_85dda9_current_temperature",
-                    friendly_name="Mysa-85dda9 - Current Temperature",
+                    friendly_name="Mysa-85dda9 Current Temperature",
                     unique_id="homekit-AAAAAAA000-aid:1-sid:20-cid:25",
                     unit_of_measurement=TEMP_CELSIUS,
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},

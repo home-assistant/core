@@ -64,6 +64,7 @@
             "init": {
                 "data": {
                     "scan_interval": "Interval pemindaian dalam menit",
+                    "snap_profile_type": "Tingkat kualitas snapshot kamera (0:tinggi, 1:sedang, 2:rendah)",
                     "timeout": "Tenggang waktu (detik)"
                 }
             }

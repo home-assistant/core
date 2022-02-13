@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "Gateway: {gateway_id}",
     "step": {
       "user": {
         "description": "The Overkiz platform is used by various vendors like Somfy (Connexoon / TaHoma), Hitachi (Hi Kumo), Rexel (Energeasy Connect) and Atlantic (Cozytouch). Enter your application credentials and select your hub.",
@@ -19,7 +20,9 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reauth_wrong_account": "You can only reauthenticate this entry with the same Overkiz account and hub"
     }
   }
 }

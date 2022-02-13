@@ -11,7 +11,8 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_KILOBYTES, DATA_MEGABYTES, TIME_DAYS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -105,7 +106,7 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-):
+) -> None:
     """Set up the Aussie Broadband sensor platform from a config entry."""
 
     async_add_entities(
@@ -116,7 +117,6 @@ async def async_setup_entry(
             if description.key in service["coordinator"].data
         ]
     )
-    return True
 
 
 class AussieBroadandSensorEntity(CoordinatorEntity, SensorEntity):
