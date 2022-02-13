@@ -386,13 +386,13 @@ class Thermostat(HomeAccessory):
             self.char_active.notify()
             return
         mode = self._get_on_mode() if active else self.fan_modes[FAN_OFF]
-        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: self.fan_modes[mode]}
+        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: mode}
         self.async_call_service(DOMAIN_CLIMATE, SERVICE_SET_FAN_MODE, params)
 
     def _set_fan_auto(self, auto) -> None:
         _LOGGER.debug("%s: Set fan auto to %s", self.entity_id, auto)
         mode = self.fan_modes[FAN_AUTO] if auto else self._get_on_mode()
-        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: self.fan_modes[mode]}
+        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: mode}
         self.async_call_service(DOMAIN_CLIMATE, SERVICE_SET_FAN_MODE, params)
 
     def _temperature_to_homekit(self, temp):
