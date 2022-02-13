@@ -79,7 +79,7 @@ class BackupManager:
             ]
         )
 
-        LOGGER.info("Loaded %s backups", len(backups.values()))
+        LOGGER.debug("Loaded %s backups", len(backups.values()))
         self._backups = backups
 
     def get_backup(self, slug: str) -> Backup | None:
@@ -91,7 +91,7 @@ class BackupManager:
         if (backup := self.get_backup(slug)) is None:
             return
         backup.path.unlink(missing_ok=True)
-        LOGGER.info("Removed backup located at %s", backup.path)
+        LOGGER.debug("Removed backup located at %s", backup.path)
         self._backups.pop(slug, None)
 
     async def generate_backup(self) -> Backup:
@@ -140,7 +140,7 @@ class BackupManager:
         finally:
             self.backing_up = False
 
-        LOGGER.info("Generated new backup with slug %s", slug)
+        LOGGER.debug("Generated new backup with slug %s", slug)
 
         return backup
 
