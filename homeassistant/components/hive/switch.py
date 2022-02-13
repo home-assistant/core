@@ -1,7 +1,6 @@
 """Support for the Hive switches."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -17,16 +16,11 @@ PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
 
 
-@dataclass
-class HiveSwitchrEntityDescription(SwitchEntityDescription):
-    """Class describing Hive sensor entities."""
-
-
-SWITCH_TYPES: tuple[HiveSwitchrEntityDescription, ...] = (
-    HiveSwitchrEntityDescription(
+SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
+    SwitchEntityDescription(
         key="activeplug",
     ),
-    HiveSwitchrEntityDescription(
+    SwitchEntityDescription(
         key="Heating_Heat_On_Demand", entity_category=EntityCategory.CONFIG
     ),
 )
@@ -51,7 +45,7 @@ async def async_setup_entry(
 class HiveSwitch(HiveEntity, SwitchEntity):
     """Hive Active Plug."""
 
-    entity_description: HiveSwitchrEntityDescription
+    entity_description: SwitchEntityDescription
 
     def __init__(self, hive, hive_device, description):
         """Intiate Hive Switch."""

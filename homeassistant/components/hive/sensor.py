@@ -1,5 +1,4 @@
 """Support for the Hive sensors."""
-from dataclasses import dataclass
 from datetime import timedelta
 
 from homeassistant.components.sensor import (
@@ -20,76 +19,71 @@ PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
 
 
-@dataclass
-class HiveSensorEntityDescription(SensorEntityDescription):
-    """Class describing Hive sensor entities."""
-
-
-SENSOR_TYPES: tuple[HiveSensorEntityDescription, ...] = (
-    HiveSensorEntityDescription(
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
         key="Heating_Current_Temperature",
         icon="mdi:thermometer",
         device_class="temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    HiveSensorEntityDescription(
+    SensorEntityDescription(
         key="Heating_Target_Temperature",
         icon="mdi:thermometer",
         device_class="temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    HiveSensorEntityDescription(
+    SensorEntityDescription(
         key="Heating_State",
         icon="mdi:radiator",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    HiveSensorEntityDescription(
+    SensorEntityDescription(
         key="Heating_Mode",
         icon="mdi:radiator",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    HiveSensorEntityDescription(
+    SensorEntityDescription(
         key="Heating_Boost",
         icon="mdi:radiator",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    HiveSensorEntityDescription(
+    SensorEntityDescription(
         key="Hotwater_State",
         icon="mdi:water-pump",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    HiveSensorEntityDescription(
+    SensorEntityDescription(
         key="Hotwater_Mode",
         icon="mdi:water-pump",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    HiveSensorEntityDescription(
+    SensorEntityDescription(
         key="Hotwater_Boost",
         icon="mdi:water-pump",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    HiveSensorEntityDescription(
+    SensorEntityDescription(
         key="Mode", icon="mdi:eye", entity_category=EntityCategory.DIAGNOSTIC
     ),
-    HiveSensorEntityDescription(
+    SensorEntityDescription(
         key="Battery",
         native_unit_of_measurement="%",
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    HiveSensorEntityDescription(
+    SensorEntityDescription(
         key="Availability",
         icon="mdi:check-circle",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    HiveSensorEntityDescription(
+    SensorEntityDescription(
         key="Connectivity",
         icon="mdi:check-circle",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    HiveSensorEntityDescription(
+    SensorEntityDescription(
         key="Power",
         device_class=SensorDeviceClass.ENERGY,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -116,7 +110,7 @@ async def async_setup_entry(
 class HiveSensorEntity(HiveEntity, SensorEntity):
     """Hive Sensor Entity."""
 
-    entity_description: HiveSensorEntityDescription
+    entity_description: SensorEntityDescription
 
     def __init__(self, hive, hive_device, description):
         """Intiate Hive Sensor."""
