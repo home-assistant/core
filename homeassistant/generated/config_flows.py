@@ -174,6 +174,7 @@ FLOWS = [
     "kraken",
     "kulersky",
     "launch_library",
+    "lidarr",
     "life360",
     "lifx",
     "litejet",
