@@ -1,7 +1,6 @@
 """Support for the Hive switches."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -12,7 +11,7 @@ from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HiveEntity, refresh_system
-from .const import ATTR_MODE, DOMAIN
+from .const import DOMAIN
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
@@ -21,8 +20,6 @@ SCAN_INTERVAL = timedelta(seconds=15)
 @dataclass
 class HiveSwitchrEntityDescription(SwitchEntityDescription):
     """Class describing Hive sensor entities."""
-
-    value: Callable = round
 
 
 SWITCH_TYPES: tuple[HiveSwitchrEntityDescription, ...] = (
@@ -74,13 +71,6 @@ class HiveSwitch(HiveEntity, SwitchEntity):
     def available(self):
         """Return if the device is available."""
         return self.device["deviceData"].get("online")
-
-    @property
-    def extra_state_attributes(self):
-        """Show Device Attributes."""
-        return {
-            ATTR_MODE: self.attributes.get(ATTR_MODE),
-        }
 
     @property
     def current_power_w(self):

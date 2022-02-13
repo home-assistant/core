@@ -1,5 +1,4 @@
 """Support for the Hive sensors."""
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -24,8 +23,6 @@ SCAN_INTERVAL = timedelta(seconds=15)
 @dataclass
 class HiveSensorEntityDescription(SensorEntityDescription):
     """Class describing Hive sensor entities."""
-
-    value: Callable = round
 
 
 SENSOR_TYPES: tuple[HiveSensorEntityDescription, ...] = (
