@@ -43,11 +43,11 @@ class IntegerTypeData:
         """Return the step scaled."""
         return self.scale_value(self.step)
 
-    def scale_value(self, value: float | int, with_step: bool = False ) -> float:
+    def scale_value(self, value: float | int, with_step: bool = False) -> float:
         """Scale a value."""
         return value * (self.step if with_step else 1.0) / (10 ** self.scale)
 
-    def scale_value_back(self, value: float | int, with_step: bool = False ) -> int:
+    def scale_value_back(self, value: float | int, with_step: bool = False) -> int:
         """Return raw value for scaled."""
         return int(value / ((self.step if with_step else 1)) * (10 ** self.scale))
 

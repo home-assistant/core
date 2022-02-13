@@ -402,7 +402,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         return round(self._set_humidity.scale_value(humidity))
 
     def need_use_step_in_scale(self) -> bool :
-        """Return if calc values for this device needed with step scaled"""
+        """Return if calc values for this device needed with step scaled."""
         return self.device.product_id in PRODUCT_ID_FOR_STEP_SCALING
 
     @property
