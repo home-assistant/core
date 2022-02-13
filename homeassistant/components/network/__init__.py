@@ -56,7 +56,6 @@ async def async_get_enabled_source_ips(
     """Build the list of enabled source ips."""
     adapters = await async_get_adapters(hass)
     sources: list[IPv4Address | IPv6Address] = []
-    has_scope_id = hasattr(IPv6Address, "scope_id")
     for adapter in adapters:
         if not adapter["enabled"]:
             continue
@@ -66,8 +65,6 @@ async def async_get_enabled_source_ips(
         if adapter["ipv6"]:
             addrs_ipv6 = [
                 IPv6Address(f"{ipv6['address']}%{ipv6['scope_id']}")
-                if has_scope_id
-                else IPv6Address(ipv6["address"])
                 for ipv6 in adapter["ipv6"]
             ]
             sources.extend(addrs_ipv6)
