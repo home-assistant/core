@@ -137,7 +137,9 @@ def _add_directory_to_tarfile(
 ) -> None:
     """Add a directory to a tarfile."""
     for directory_item in origin_path.iterdir():
-        if any(directory_item.match(exclude) for exclude in EXCLUDE_FROM_BACKUP):
+        if directory_item.is_file() and any(
+            directory_item.match(exclude) for exclude in EXCLUDE_FROM_BACKUP
+        ):
             continue
 
         arcpath = Path(arcname, directory_item.name).as_posix()
