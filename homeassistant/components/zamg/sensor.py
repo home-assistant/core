@@ -1,4 +1,4 @@
-"""Sensor for the Austrian "Zentralanstalt für Meteorologie und Geodynamik"."""
+"""Sensor for zamg the Austrian "Zentralanstalt für Meteorologie und Geodynamik" integration."""
 from __future__ import annotations
 
 import csv
@@ -18,6 +18,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     CONF_LATITUDE,
@@ -34,22 +35,25 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import Throttle, dt as dt_util
 
+from .const import (
+    ATTR_STATION,
+    ATTR_UPDATED,
+    ATTRIBUTION,
+    CONF_STATION_ID,
+    DEFAULT_NAME,
+    DOMAIN,
+    MIN_TIME_BETWEEN_UPDATES,
+    VIENNA_TIME_ZONE,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_STATION = "station"
-ATTR_UPDATED = "updated"
-ATTRIBUTION = "Data provided by ZAMG"
-
-CONF_STATION_ID = "station_id"
-
-DEFAULT_NAME = "zamg"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
-VIENNA_TIME_ZONE = dt_util.get_time_zone("Europe/Vienna")
 
 _DType = Union[type[int], type[float], type[str]]
 
@@ -225,7 +229,7 @@ def setup_platform(
     try:
         probe.update()
     except (ValueError, TypeError) as err:
-        _LOGGER.error("Received error from ZAMG: %s", err)
+        _LOGGER.error("Sensor: Received error from ZAMG: %s", err)
         return
 
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
@@ -239,36 +243,73 @@ def setup_platform(
     )
 
 
-class ZamgSensor(SensorEntity):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the ZAMG sensor platform."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    if coordinator.config_entry is None:
+        coordinator.config_entry = entry
+
+    async_add_entities(
+        [
+            ZamgSensor(coordinator, entry.title, description)
+            for description in SENSOR_TYPES
+        ],
+        False,
+    )
+
+
+class ZamgSensor(CoordinatorEntity, SensorEntity):
     """Implementation of a ZAMG sensor."""
 
     _attr_attribution = ATTRIBUTION
     entity_description: ZamgSensorEntityDescription
 
-    def __init__(self, probe, name, description: ZamgSensorEntityDescription):
+    def __init__(self, coordinator, name, description: ZamgSensorEntityDescription):
         """Initialize the sensor."""
+        super().__init__(coordinator)
         self.entity_description = description
-        self.probe = probe
+        self.coordinator = coordinator
         self._attr_name = f"{name} {description.key}"
+        self._attr_unique_id = f"{self.coordinator.data.station_id()}_{description.key}"
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
+            # manufacturer=,
+            # model=MODEL,
+            name=self.coordinator.name,
+        )
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return self.probe.get_data(self.entity_description.key)
+        return self.coordinator.data.get(self.entity_description.key)
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
+        update_time = datetime.strptime(
+            f"{self.coordinator.data.get('update_date')} {self.coordinator.data.get('update_time')}",
+            "%d-%m-%Y %H:%M",
+        )
         return {
-            ATTR_STATION: self.probe.get_data("station_name"),
-            ATTR_UPDATED: self.probe.last_update.isoformat(),
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_STATION: self.coordinator.data.get("station_name"),
+            CONF_STATION_ID: self.coordinator.config_entry.unique_id,
+            ATTR_UPDATED: update_time.isoformat(),
         }
 
     def update(self) -> None:
         """Delegate update to probe."""
-        self.probe.update()
+        self.coordinator.data.update()
 
 
+@dataclass
 class ZamgData:
     """The class for handling the data retrieval."""
 
@@ -288,6 +329,11 @@ class ZamgData:
             return datetime.strptime(date + time, "%d-%m-%Y%H:%M").replace(
                 tzinfo=VIENNA_TIME_ZONE
             )
+
+    @property
+    def station_id(self) -> str:
+        """Return the station id."""
+        return self._station_id
 
     @classmethod
     def current_observations(cls):

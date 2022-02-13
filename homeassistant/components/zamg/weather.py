@@ -1,4 +1,4 @@
-"""Sensor for data from Austrian Zentralanstalt für Meteorologie."""
+"""Sensor for zamg the Austrian "Zentralanstalt für Meteorologie und Geodynamik" integration."""
 from __future__ import annotations
 
 import logging
@@ -26,15 +26,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-# Reuse data and API logic from the sensor implementation
-from .sensor import (
-    ATTRIBUTION,
-    CONF_STATION_ID,
-    ZamgData,
-    closest_station,
-    zamg_stations,
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
 )
+
+from .const import ATTRIBUTION, CONF_STATION_ID, DOMAIN
+from .sensor import closest_station
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,39 +50,47 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the ZAMG weather platform."""
-    name = config.get(CONF_NAME)
+    _LOGGER.warning(
+        "Configuration of the zamg integration in YAML is deprecated and "
+        "will be removed in a further release of Home Assistant; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
+
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-
-    station_id = config.get(CONF_STATION_ID) or closest_station(
-        latitude, longitude, hass.config.config_dir
+    station_id = config.get(CONF_STATION_ID) or await hass.async_add_executor_job(
+        closest_station,
+        latitude,
+        longitude,
+        hass.config.config_dir,
     )
-    if station_id not in zamg_stations(hass.config.config_dir):
-        _LOGGER.error(
-            "Configured ZAMG %s (%s) is not a known station",
-            CONF_STATION_ID,
-            station_id,
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_STATION_ID: station_id},
         )
-        return
-
-    probe = ZamgData(station_id=station_id)
-    try:
-        probe.update()
-    except (ValueError, TypeError) as err:
-        _LOGGER.error("Received error from ZAMG: %s", err)
-        return
-
-    add_entities([ZamgWeather(probe, name)], True)
+    )
 
 
-class ZamgWeather(WeatherEntity):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the ZAMG weather platform."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+
+    async_add_entities([ZamgWeather(coordinator)], False)
+
+
+class ZamgWeather(CoordinatorEntity, WeatherEntity):
     """Representation of a weather condition."""
 
     _attr_native_pressure_unit = PRESSURE_HPA
@@ -93,16 +99,13 @@ class ZamgWeather(WeatherEntity):
 
     def __init__(self, zamg_data, stationname=None):
         """Initialise the platform with a data instance and station name."""
-        self.zamg_data = zamg_data
-        self.stationname = stationname
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{self.coordinator.data.station_id()}"
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return (
-            self.stationname
-            or f"ZAMG {self.zamg_data.data.get('Name') or '(unknown station)'}"
-        )
+        return f"ZAMG {self.coordinator.config_entry.title}"
 
     @property
     def condition(self):
@@ -117,28 +120,28 @@ class ZamgWeather(WeatherEntity):
     @property
     def native_temperature(self):
         """Return the platform temperature."""
-        return self.zamg_data.get_data(ATTR_WEATHER_TEMPERATURE)
+        return self.coordinator.data.get(ATTR_WEATHER_TEMPERATURE)
 
     @property
     def native_pressure(self):
         """Return the pressure."""
-        return self.zamg_data.get_data(ATTR_WEATHER_PRESSURE)
+        return self.coordinator.data.get(ATTR_WEATHER_PRESSURE)
 
     @property
     def humidity(self):
         """Return the humidity."""
-        return self.zamg_data.get_data(ATTR_WEATHER_HUMIDITY)
+        return self.coordinator.data.get(ATTR_WEATHER_HUMIDITY)
 
     @property
     def native_wind_speed(self):
         """Return the wind speed."""
-        return self.zamg_data.get_data(ATTR_WEATHER_WIND_SPEED)
+        return self.coordinator.data.get(ATTR_WEATHER_WIND_SPEED)
 
     @property
     def wind_bearing(self):
         """Return the wind bearing."""
-        return self.zamg_data.get_data(ATTR_WEATHER_WIND_BEARING)
+        return self.coordinator.data.get(ATTR_WEATHER_WIND_BEARING)
 
     def update(self) -> None:
         """Update current conditions."""
-        self.zamg_data.update()
+        self.coordinator.data.update()
