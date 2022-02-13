@@ -160,10 +160,25 @@ async def test_pm10(hass, hk_driver):
     assert acc.char_density.value == 34
     assert acc.char_quality.value == 1
 
+    hass.states.async_set(entity_id, "70")
+    await hass.async_block_till_done()
+    assert acc.char_density.value == 70
+    assert acc.char_quality.value == 2
+
+    hass.states.async_set(entity_id, "110")
+    await hass.async_block_till_done()
+    assert acc.char_density.value == 110
+    assert acc.char_quality.value == 3
+
     hass.states.async_set(entity_id, "200")
     await hass.async_block_till_done()
     assert acc.char_density.value == 200
     assert acc.char_quality.value == 4
+
+    hass.states.async_set(entity_id, "400")
+    await hass.async_block_till_done()
+    assert acc.char_density.value == 400
+    assert acc.char_quality.value == 5
 
 
 async def test_pm25(hass, hk_driver):
@@ -187,15 +202,30 @@ async def test_pm25(hass, hk_driver):
     assert acc.char_density.value == 0
     assert acc.char_quality.value == 0
 
+    hass.states.async_set(entity_id, "23")
+    await hass.async_block_till_done()
+    assert acc.char_density.value == 23
+    assert acc.char_quality.value == 1
+
     hass.states.async_set(entity_id, "34")
     await hass.async_block_till_done()
     assert acc.char_density.value == 34
     assert acc.char_quality.value == 2
 
+    hass.states.async_set(entity_id, "90")
+    await hass.async_block_till_done()
+    assert acc.char_density.value == 90
+    assert acc.char_quality.value == 3
+
     hass.states.async_set(entity_id, "200")
     await hass.async_block_till_done()
     assert acc.char_density.value == 200
     assert acc.char_quality.value == 4
+
+    hass.states.async_set(entity_id, "400")
+    await hass.async_block_till_done()
+    assert acc.char_density.value == 400
+    assert acc.char_quality.value == 5
 
 
 async def test_co(hass, hk_driver):
