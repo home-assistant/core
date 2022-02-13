@@ -342,9 +342,11 @@ class Stream:
                 self._logger.error("Error from stream worker: %s", str(err))
 
             stream_state.discontinuity()
-            if not self.keepalive or self._thread_quit.is_set():
+            if not _should_retry() or self._thread_quit.is_set():
                 if self._fast_restart_once:
-                    # The stream source is updated, restart without any delay.
+                    # The stream source is updated, restart without any delay and reset the retry
+                    # backoff for the new url.
+                    wait_timeout = 0
                     self._fast_restart_once = False
                     self._thread_quit.clear()
                     continue
@@ -446,3 +448,8 @@ class Stream:
         return await self._keyframe_converter.async_get_image(
             width=width, height=height
         )
+
+
+def _should_retry() -> bool:
+    """Return true if worker failures should be retried, for disabling during tests."""
+    return True
