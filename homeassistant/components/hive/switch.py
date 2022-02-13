@@ -1,12 +1,14 @@
 """Support for the Hive switches."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import timedelta
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HiveEntity, refresh_system
@@ -14,6 +16,23 @@ from .const import ATTR_MODE, DOMAIN
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
+
+
+@dataclass
+class HiveSwitchrEntityDescription(SwitchEntityDescription):
+    """Class describing Hive sensor entities."""
+
+    value: Callable = round
+
+
+SWITCH_TYPES: tuple[HiveSwitchrEntityDescription, ...] = (
+    HiveSwitchrEntityDescription(
+        key="activeplug",
+    ),
+    HiveSwitchrEntityDescription(
+        key="Heating_Heat_On_Demand", entity_category=EntityCategory.CONFIG
+    ),
+)
 
 
 async def async_setup_entry(
@@ -25,23 +44,22 @@ async def async_setup_entry(
     devices = hive.session.deviceList.get("switch")
     entities = []
     if devices:
-        for dev in devices:
-            entities.append(HiveDevicePlug(hive, dev))
+        for description in SWITCH_TYPES:
+            for dev in devices:
+                if dev["hiveType"] == description.key:
+                    entities.append(HiveSwitch(hive, dev, description))
     async_add_entities(entities, True)
 
 
-class HiveDevicePlug(HiveEntity, SwitchEntity):
+class HiveSwitch(HiveEntity, SwitchEntity):
     """Hive Active Plug."""
 
-    @property
-    def unique_id(self):
-        """Return unique ID of entity."""
-        return self._unique_id
+    entity_description: HiveSwitchrEntityDescription
 
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return device information."""
-        return DeviceInfo(
+    def __init__(self, hive, hive_device, description):
+        """Intiate Hive Switch."""
+        super().__init__(hive, hive_device)
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.device["device_id"])},
             manufacturer=self.device["deviceData"]["manufacturer"],
             model=self.device["deviceData"]["model"],
@@ -49,11 +67,8 @@ class HiveDevicePlug(HiveEntity, SwitchEntity):
             sw_version=self.device["deviceData"]["version"],
             via_device=(DOMAIN, self.device["parentDevice"]),
         )
-
-    @property
-    def name(self):
-        """Return the name of this Switch device if any."""
-        return self.device["haName"]
+        self._attr_name = self.device["haName"]
+        self.entity_description = description
 
     @property
     def available(self):

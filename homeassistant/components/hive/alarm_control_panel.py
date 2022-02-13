@@ -49,11 +49,6 @@ class HiveAlarmControlPanelEntity(HiveEntity, AlarmControlPanelEntity):
     _attr_icon = ICON
 
     @property
-    def unique_id(self):
-        """Return unique ID of entity."""
-        return self._unique_id
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this AdGuard Home instance."""
         return DeviceInfo(

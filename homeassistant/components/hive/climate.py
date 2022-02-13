@@ -118,11 +118,6 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         self.temperature_type = TEMP_UNIT.get(hive_device["temperatureunit"])
 
     @property
-    def unique_id(self):
-        """Return unique ID of entity."""
-        return self._unique_id
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return device information."""
         return DeviceInfo(
