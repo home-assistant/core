@@ -51,10 +51,7 @@ CONF_RULE_VALUES = "rule_values"
 RESULT_CONN_ERROR = "cannot_connect"
 RESULT_UNKNOWN = "unknown"
 
-PROP_AUTOMAC = "auto"
-
 NETWORK_ADP_TYPES = {
-    PROP_AUTOMAC: "Auto",
     PROP_ETHMAC: "Wired",
     PROP_WIFIMAC: "Wireless",
 }
@@ -107,9 +104,7 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT
                     ): cv.port,
-                    vol.Required(CONF_NETWORK_ADAPTER, default=PROP_AUTOMAC): vol.In(
-                        NETWORK_ADP_TYPES
-                    ),
+                    vol.Optional(CONF_NETWORK_ADAPTER): vol.In(NETWORK_ADP_TYPES),
                 }
             )
 
@@ -153,9 +148,6 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             host = user_input[CONF_HOST]
-            net_adp = user_input.get(CONF_NETWORK_ADAPTER)
-            if net_adp and net_adp == PROP_AUTOMAC:
-                user_input.pop(CONF_NETWORK_ADAPTER, None)
             adb_key = user_input.get(CONF_ADBKEY)
             adb_server = user_input.get(CONF_ADB_SERVER_IP)
             if not adb_server:

@@ -10,7 +10,7 @@
           "adb_server_ip": "IP address of the ADB server (leave empty to not use)",
           "adb_server_port": "Port of the ADB server",
           "device_class": "The type of device",
-          "network_adapter": "Used network adapter",
+          "network_adapter": "Used network adapter (leave empty for auto detect)",
           "port": "[%key:common::config_flow::data::port%]"
         }
       }
