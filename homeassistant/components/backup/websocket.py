@@ -67,7 +67,5 @@ async def handle_create(
 ):
     """Generate a backup."""
     manager: BackupManager = hass.data[DOMAIN]
-    slug = await manager.generate_backup()
-    connection.send_message(
-        websocket_api.result_message(msg["id"], manager.get_backup(slug))
-    )
+    backup = await manager.generate_backup()
+    connection.send_message(websocket_api.result_message(msg["id"], backup))

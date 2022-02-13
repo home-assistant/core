@@ -94,23 +94,24 @@ class BackupManager:
         LOGGER.info("Removed backup located at %s", backup.path)
         self._backups.pop(slug, None)
 
-    async def generate_backup(self) -> str:
+    async def generate_backup(self) -> Backup:
         """Generate a backup."""
         if self.backing_up:
-            raise HomeAssistantError("Backup in progress")
+            raise HomeAssistantError("Backup already in progress")
 
         self.backing_up = True
         backup_name = f"Core {HA_VERSION_OBJ}"
         date_str = now().isoformat()
         slug = _generate_slug(date_str, backup_name)
 
+        backup_data = _generate_backup_data(slug, backup_name, date_str, HA_VERSION_OBJ)
+        tar_file = Path(self.backup_dir, f"{slug}.tar")
+
         def _create_backup() -> None:
             with TemporaryDirectory() as tmp_dir:
-                tar_file = Path(self.backup_dir, f"{slug}.tar")
-
                 json_util.save_json(
                     Path(tmp_dir, "backup.json").as_posix(),
-                    _generate_backup_data(slug, backup_name, date_str, HA_VERSION_OBJ),
+                    backup_data,
                 )
 
                 with tarfile.open(Path(tmp_dir, "homeassistant.tar.gz"), "w:gz") as tar:
@@ -123,11 +124,18 @@ class BackupManager:
                     tar.add(tmp_dir, arcname=".")
 
         await self.hass.async_add_executor_job(_create_backup)
-        await self.load_backups()
+        backup = Backup(
+            slug=slug,
+            name=backup_name,
+            date=date_str,
+            path=tar_file,
+            size=round(tar_file.stat().st_size / 1_048_576, 2),
+        )
+        self._backups[slug] = backup
         self.backing_up = False
         LOGGER.info("Generated new backup with slug %s", slug)
 
-        return slug
+        return backup
 
 
 def _add_directory_to_tarfile(
