@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_discover_devices(
-    hass: HomeAssistant, timeout: int, address: str | None = None
+    hass: HomeAssistant, timeout: int
 ) -> list[DiscoveredBulb]:
     """Discover wiz devices."""
     targets = [
