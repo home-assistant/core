@@ -209,8 +209,7 @@ class NestCamera(Camera):
             return await stream.async_get_image(width, height)
         if self.frontend_stream_type != STREAM_TYPE_WEB_RTC:
             return None
-        # Nest Web RTC cams only have image previews for events, and not
-        # for "now" by design to save battery, and need a placeholder.
+        # Use a placeholder image for WebRTC cameras with no thumbnail
         if not self._placeholder_image:
             self._placeholder_image = await self.hass.async_add_executor_job(
                 PLACEHOLDER.read_bytes
