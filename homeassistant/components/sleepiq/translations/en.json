@@ -1,17 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This SleepIQ account is already configured"
+            "already_configured": "Account is already configured"
         },
         "error": {
-            "cannot_connect": "Failed to connect, double check your username and password"
+            "cannot_connect": "Failed to connect"
         },
         "step": {
             "user": {
                 "data": {
                     "password": "Password",
-                    "username": "Username",
-                    "scan_interval": "Scan Interval"
+                    "username": "Username"
                 }
             }
         }

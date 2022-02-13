@@ -23,7 +23,7 @@ async def async_setup_entry(
             if getattr(coordinator.data[bed_id][BED], side) is not None:
                 entities.append(SleepNumberSensor(coordinator, bed_id, side))
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class SleepNumberSensor(SleepIQSensor, SensorEntity):

@@ -86,8 +86,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    hass.data[DATA_SLEEPIQ] = SleepIQHassData()
-    hass.data[DATA_SLEEPIQ].coordinators[entry.data[CONF_USERNAME]] = coordinator
+    hass.data[DATA_SLEEPIQ] = SleepIQHassData(
+        coordinators={entry.data[CONF_USERNAME]: coordinator}
+    )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -107,7 +108,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 def _config_entry_update_signal_name(config_entry: ConfigEntry) -> str:
     """Get signal name for updates to a config entry."""
-    return CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE.format(config_entry.unique_id)
+    return CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE.format(DOMAIN, config_entry.unique_id)
 
 
 async def _async_signal_options_update(
