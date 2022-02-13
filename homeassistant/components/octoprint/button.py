@@ -80,8 +80,6 @@ class OctoprintPauseJobButton(OctoprintButton):
     async def async_press(self) -> None:
         """Handle the button press."""
         printer: OctoprintPrinterInfo = self.coordinator.data["printer"]
-        if not printer:
-            raise InvalidPrinterState("Printer is offline")
 
         if printer.state.flags.printing:
             await self.client.pause_job()
@@ -104,8 +102,6 @@ class OctoprintResumeJobButton(OctoprintButton):
     async def async_press(self) -> None:
         """Handle the button press."""
         printer: OctoprintPrinterInfo = self.coordinator.data["printer"]
-        if not printer:
-            raise InvalidPrinterState("Printer is offline")
 
         if printer.state.flags.paused:
             await self.client.resume_job()
@@ -128,8 +124,6 @@ class OctoprintStopJobButton(OctoprintButton):
     async def async_press(self) -> None:
         """Handle the button press."""
         printer: OctoprintPrinterInfo = self.coordinator.data["printer"]
-        if not printer:
-            raise InvalidPrinterState("Printer is offline")
 
         if printer.state.flags.printing or printer.state.flags.paused:
             await self.client.cancel_job()
