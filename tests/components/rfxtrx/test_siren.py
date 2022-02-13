@@ -1,4 +1,4 @@
-"""The tests for the Rfxtrx light platform."""
+"""The tests for the Rfxtrx siren platform."""
 from unittest.mock import call
 
 from homeassistant.components.rfxtrx import DOMAIN
@@ -9,7 +9,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_one_chime(hass, rfxtrx, timestep):
-    """Test with 1 light."""
+    """Test with 1 entity."""
     entry_data = create_rfx_test_cfg(
         devices={"0a16000000000000000000": {"signal_repetitions": 1}}
     )
@@ -65,7 +65,7 @@ async def test_one_chime(hass, rfxtrx, timestep):
 
 
 async def test_one_security1(hass, rfxtrx, timestep):
-    """Test with 1 light."""
+    """Test with 1 entity."""
     entry_data = create_rfx_test_cfg(
         devices={"08200300a109000670": {"signal_repetitions": 1}}
     )
@@ -122,7 +122,7 @@ async def test_one_security1(hass, rfxtrx, timestep):
 
 
 async def test_discover_siren(hass, rfxtrx_automatic):
-    """Test with discovery of lights."""
+    """Test with discovery."""
     rfxtrx = rfxtrx_automatic
 
     await rfxtrx.signal("0a16000000000000000000")

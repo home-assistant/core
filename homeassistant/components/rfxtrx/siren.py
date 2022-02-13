@@ -1,4 +1,4 @@
-"""Support for RFXtrx lights."""
+"""Support for RFXtrx sirens."""
 from __future__ import annotations
 
 from typing import Any, Final
@@ -34,7 +34,7 @@ SECURITY_PANIC_ALL = {SECURITY_PANIC_ON, SECURITY_PANIC_OFF}
 
 
 def supported(event: rfxtrxmod.RFXtrxEvent):
-    """Return whether an event supports switch."""
+    """Return whether an event supports sirens."""
     device = event.device
 
     if isinstance(device, rfxtrxmod.ChimeDevice):
@@ -123,12 +123,12 @@ class RfxtrxTimeoutMixin(Entity):
 
 
 class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxTimeoutMixin):
-    """Representation of a RFXtrx light."""
+    """Representation of a RFXtrx chime."""
 
     _device: rfxtrxmod.ChimeDevice
 
     def __init__(self, device, device_id, signal_repetitions=1, event=None):
-        """Initialzie a switch or light device."""
+        """Initialize the entity."""
         super().__init__(device, device_id, signal_repetitions, event)
         self._attr_available_tones = list(self._device.COMMANDS.values())
         self._attr_supported_features = SUPPORT_TURN_ON | SUPPORT_TONES
@@ -173,12 +173,12 @@ class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxTimeoutMixin):
 
 
 class RfxtrxSecurityPanic(RfxtrxCommandEntity, SirenEntity, RfxtrxTimeoutMixin):
-    """Representation of a RFXtrx light."""
+    """Representation of a security device."""
 
     _device: rfxtrxmod.SecurityDevice
 
     def __init__(self, device, device_id, signal_repetitions=1, event=None):
-        """Initialzie a switch or light device."""
+        """Initialize the entity."""
         super().__init__(device, device_id, signal_repetitions, event)
         self._attr_supported_features = SUPPORT_TURN_ON | SUPPORT_TURN_OFF
         self._on_value = get_first_key(self._device.STATUS, SECURITY_PANIC_ON)
