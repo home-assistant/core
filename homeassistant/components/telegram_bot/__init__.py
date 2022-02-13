@@ -13,8 +13,12 @@ from telegram import (
     InlineKeyboardMarkup,
     ReplyKeyboardMarkup,
     ReplyKeyboardRemove,
+    Update,
+    Message,
+    CallbackQuery,
 )
 from telegram.error import TelegramError
+from telegram.ext import Filters, TypeHandler, CallbackContext
 from telegram.parsemode import ParseMode
 from telegram.utils.request import Request
 import voluptuous as vol
@@ -311,14 +315,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return False
 
     for p_config in config[DOMAIN]:
-
+        # Each platform config gets its own bot
+        bot = initialize_bot(p_config)
         p_type = p_config.get(CONF_PLATFORM)
 
         platform = importlib.import_module(f".{p_config[CONF_PLATFORM]}", __name__)
 
         _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
         try:
-            receiver_service = await platform.async_setup_platform(hass, p_config)
+            receiver_service = await platform.async_setup_platform(hass, bot, p_config)
             if receiver_service is False:
                 _LOGGER.error("Failed to initialize Telegram bot %s", p_type)
                 return False
@@ -327,7 +332,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.exception("Error setting up platform %s", p_type)
             return False
 
-        bot = initialize_bot(p_config)
         notify_service = TelegramNotificationService(
             hass, bot, p_config.get(CONF_ALLOWED_CHAT_IDS), p_config.get(ATTR_PARSER)
         )
@@ -857,131 +861,99 @@ class TelegramNotificationService:
 class BaseTelegramBotEntity:
     """The base class for the telegram bot."""
 
-    def __init__(self, hass, allowed_chat_ids):
+    def __init__(self, hass, config):
         """Initialize the bot base class."""
-        self.allowed_chat_ids = allowed_chat_ids
+        self.allowed_chat_ids = config[CONF_ALLOWED_CHAT_IDS]
         self.hass = hass
+        # Dispatcher is set up in platform subclass
+        self.dispatcher.add_handler(
+            TypeHandler(Update, self.handle_update)
+        )  # pylint: disable=no-member
 
-    def _get_message_data(self, msg_data):
-        """Return boolean msg_data_is_ok and dict msg_data."""
-        if not msg_data:
-            return False, None
-        bad_fields = (
-            "text" not in msg_data and "data" not in msg_data and "chat" not in msg_data
-        )
-        if bad_fields or "from" not in msg_data:
-            # Message is not correct.
-            _LOGGER.error("Incoming message does not have required data (%s)", msg_data)
-            return False, None
+    def handle_update(self, update: Update, context: CallbackContext):
+        """Handle updates from bot dispatcher set up by the respective platform."""
+        _LOGGER.debug("Handling update %s", update)
+        if not self.authorize_update(update):
+            return
 
-        if (
-            msg_data["from"].get("id") not in self.allowed_chat_ids
-            and msg_data["message"]["chat"].get("id") not in self.allowed_chat_ids
-        ):
-            # Neither from id nor chat id was in allowed_chat_ids,
-            # origin is not allowed.
-            _LOGGER.error("Incoming message is not allowed (%s)", msg_data)
-            return True, None
-
-        data = {
-            ATTR_USER_ID: msg_data["from"]["id"],
-            ATTR_FROM_FIRST: msg_data["from"]["first_name"],
-        }
-        if "message_id" in msg_data:
-            data[ATTR_MSGID] = msg_data["message_id"]
-        if "last_name" in msg_data["from"]:
-            data[ATTR_FROM_LAST] = msg_data["from"]["last_name"]
-        if "chat" in msg_data:
-            data[ATTR_CHAT_ID] = msg_data["chat"]["id"]
-        elif ATTR_MESSAGE in msg_data and "chat" in msg_data[ATTR_MESSAGE]:
-            data[ATTR_CHAT_ID] = msg_data[ATTR_MESSAGE]["chat"]["id"]
-
-        return True, data
-
-    def _get_channel_post_data(self, msg_data):
-        """Return boolean msg_data_is_ok and dict msg_data."""
-        if not msg_data:
-            return False, None
-
-        if "sender_chat" in msg_data and "chat" in msg_data and "text" in msg_data:
-            if (
-                msg_data["sender_chat"].get("id") not in self.allowed_chat_ids
-                and msg_data["chat"].get("id") not in self.allowed_chat_ids
-            ):
-                # Neither sender_chat id nor chat id was in allowed_chat_ids,
-                # origin is not allowed.
-                _LOGGER.error("Incoming message is not allowed (%s)", msg_data)
-                return True, None
-
-            data = {
-                ATTR_MSGID: msg_data["message_id"],
-                ATTR_CHAT_ID: msg_data["chat"]["id"],
-                ATTR_TEXT: msg_data["text"],
-            }
-            return True, data
-
-        _LOGGER.error("Incoming message does not have required data (%s)", msg_data)
-        return False, None
-
-    def process_message(self, data):
-        """Check for basic message rules and fire an event if message is ok."""
-        if ATTR_MSG in data or ATTR_EDITED_MSG in data:
-            event = EVENT_TELEGRAM_COMMAND
-            if ATTR_MSG in data:
-                data = data.get(ATTR_MSG)
-            else:
-                data = data.get(ATTR_EDITED_MSG)
-            message_ok, event_data = self._get_message_data(data)
-            if event_data is None:
-                return message_ok
-
-            if ATTR_MSGID in data:
-                event_data[ATTR_MSGID] = data[ATTR_MSGID]
-
-            if "text" in data:
-                if data["text"][0] == "/":
-                    pieces = data["text"].split(" ")
-                    event_data[ATTR_COMMAND] = pieces[0]
-                    event_data[ATTR_ARGS] = pieces[1:]
-                else:
-                    event_data[ATTR_TEXT] = data["text"]
-                    event = EVENT_TELEGRAM_TEXT
-            else:
-                _LOGGER.warning("Message without text data received: %s", data)
-                event_data[ATTR_TEXT] = str(data)
-                event = EVENT_TELEGRAM_TEXT
-
-            self.hass.bus.async_fire(event, event_data)
-            return True
-        if ATTR_CALLBACK_QUERY in data:
-            event = EVENT_TELEGRAM_CALLBACK
-            data = data.get(ATTR_CALLBACK_QUERY)
-            message_ok, event_data = self._get_message_data(data)
-            if event_data is None:
-                return message_ok
-
-            query_data = event_data[ATTR_DATA] = data[ATTR_DATA]
-
-            if query_data[0] == "/":
-                pieces = query_data.split(" ")
-                event_data[ATTR_COMMAND] = pieces[0]
-                event_data[ATTR_ARGS] = pieces[1:]
-
-            event_data[ATTR_MSG] = data[ATTR_MSG]
-            event_data[ATTR_CHAT_INSTANCE] = data[ATTR_CHAT_INSTANCE]
-            event_data[ATTR_MSGID] = data[ATTR_MSGID]
-
-            self.hass.bus.async_fire(event, event_data)
-            return True
-        if ATTR_CHANNEL_POST in data:
-            event = EVENT_TELEGRAM_TEXT
-            data = data.get(ATTR_CHANNEL_POST)
-            message_ok, event_data = self._get_channel_post_data(data)
-            if event_data is None:
-                return message_ok
-
-            self.hass.bus.async_fire(event, event_data)
+        # establish event type: text, command or callback_query
+        if update.callback_query:
+            # NOTE: Check for callback query first since effective message will be populated with the message
+            # in .callback_query (python-telegram-bot docs are wrong)
+            event_type, event_data = self._get_callback_query_event_data(
+                update.callback_query
+            )
+        elif update.effective_message:
+            event_type, event_data = self._get_message_event_data(
+                update.effective_message
+            )
+        else:
+            _LOGGER.warning("Unhandled update: %s", update)
             return True
 
-        _LOGGER.warning("Message with unknown data received: %s", data)
+        _LOGGER.debug("Firing event %s: %s", event_type, event_data)
+        self.hass.bus.async_fire(event_type, event_data)
         return True
+
+    @staticmethod
+    def _get_command_event_data(command_text: str):
+        if not command_text.startswith("/"):
+            return {}
+        command_parts = command_text.split()
+        command = command_parts[0]
+        args = command_parts[1:]
+        return {ATTR_COMMAND: command, ATTR_ARGS: args}
+
+    def _get_message_event_data(self, message: Message):
+        event_data = {ATTR_MSGID: message.message_id, ATTR_CHAT_ID: message.chat.id}
+        if Filters.command.filter(message):
+            # This is a command message - set event type to command and split data into command and args
+            event_type = EVENT_TELEGRAM_COMMAND
+            event_data.update(self._get_command_event_data(message.text))
+        else:
+            event_type = EVENT_TELEGRAM_TEXT
+            event_data[ATTR_TEXT] = message.text
+
+        if message.from_user:
+            event_data.update(
+                {
+                    ATTR_USER_ID: message.from_user.id,
+                    ATTR_FROM_FIRST: message.from_user.first_name,
+                    ATTR_FROM_LAST: message.from_user.last_name,
+                }
+            )
+
+        return event_type, event_data
+
+    def _get_callback_query_event_data(self, callback_query: CallbackQuery):
+        event_type = EVENT_TELEGRAM_CALLBACK
+        event_data = {
+            ATTR_MSGID: callback_query.id,
+            ATTR_CHAT_INSTANCE: callback_query.chat_instance,
+            ATTR_DATA: callback_query.data,
+            ATTR_MSG: callback_query.message.to_dict()
+            if callback_query.message
+            else None,
+            ATTR_CHAT_ID: callback_query.message.chat.id
+            if callback_query.message
+            else None,
+        }
+
+        # Split data into command and args if possible
+        event_data.update(self._get_command_event_data(callback_query.data))
+
+        return event_type, event_data
+
+    def authorize_update(self, update: Update):
+        """Make sure either user or chat is in allowed_chat_ids."""
+        from_user = update.effective_user.id if update.effective_user else None
+        from_chat = update.effective_chat.id if update.effective_chat else None
+        if from_user in self.allowed_chat_ids or from_chat in self.allowed_chat_ids:
+            return True
+        _LOGGER.error(
+            "Unauthorized update - neither user id %s nor chat id %s is in allowed chats: %s",
+            from_user,
+            from_chat,
+            self.allowed_chat_ids,
+        )
+        return False
