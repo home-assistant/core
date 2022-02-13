@@ -96,43 +96,50 @@ class BackupManager:
 
     async def generate_backup(self) -> Backup:
         """Generate a backup."""
-        if self.backing_up:
-            raise HomeAssistantError("Backup already in progress")
+        try:
+            if self.backing_up:
+                raise HomeAssistantError("Backup already in progress")
 
-        self.backing_up = True
-        backup_name = f"Core {HA_VERSION_OBJ}"
-        date_str = now().isoformat()
-        slug = _generate_slug(date_str, backup_name)
+            self.backing_up = True
+            backup_name = f"Core {HA_VERSION_OBJ}"
+            date_str = now().isoformat()
+            slug = _generate_slug(date_str, backup_name)
 
-        backup_data = _generate_backup_data(slug, backup_name, date_str, HA_VERSION_OBJ)
-        tar_file = Path(self.backup_dir, f"{slug}.tar")
+            backup_data = _generate_backup_data(
+                slug, backup_name, date_str, HA_VERSION_OBJ
+            )
+            tar_file = Path(self.backup_dir, f"{slug}.tar")
 
-        def _create_backup() -> None:
-            with TemporaryDirectory() as tmp_dir:
-                json_util.save_json(
-                    Path(tmp_dir, "backup.json").as_posix(),
-                    backup_data,
-                )
-
-                with tarfile.open(Path(tmp_dir, "homeassistant.tar.gz"), "w:gz") as tar:
-                    _add_directory_to_tarfile(
-                        tar_file=tar,
-                        origin_path=Path(self.hass.config.path()),
+            def _create_backup() -> None:
+                with TemporaryDirectory() as tmp_dir:
+                    json_util.save_json(
+                        Path(tmp_dir, "backup.json").as_posix(),
+                        backup_data,
                     )
 
-                with tarfile.open(tar_file, "w:") as tar:
-                    tar.add(tmp_dir, arcname=".")
+                    with tarfile.open(
+                        Path(tmp_dir, "homeassistant.tar.gz"), "w:gz"
+                    ) as tar:
+                        _add_directory_to_tarfile(
+                            tar_file=tar,
+                            origin_path=Path(self.hass.config.path()),
+                        )
 
-        await self.hass.async_add_executor_job(_create_backup)
-        backup = Backup(
-            slug=slug,
-            name=backup_name,
-            date=date_str,
-            path=tar_file,
-            size=round(tar_file.stat().st_size / 1_048_576, 2),
-        )
-        self._backups[slug] = backup
-        self.backing_up = False
+                    with tarfile.open(tar_file, "w:") as tar:
+                        tar.add(tmp_dir, arcname=".")
+
+            await self.hass.async_add_executor_job(_create_backup)
+            backup = Backup(
+                slug=slug,
+                name=backup_name,
+                date=date_str,
+                path=tar_file,
+                size=round(tar_file.stat().st_size / 1_048_576, 2),
+            )
+            self._backups[slug] = backup
+        finally:
+            self.backing_up = False
+
         LOGGER.info("Generated new backup with slug %s", slug)
 
         return backup
