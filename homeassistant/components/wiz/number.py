@@ -30,7 +30,7 @@ async def async_setup_entry(
 class WizSpeedNumber(WizEntity, NumberEntity):
     """Defines a WiZ speed number."""
 
-    _attr_min_value = 20
+    _attr_min_value = 10
     _attr_max_value = 200
     _attr_step = 1
     _attr_mode = NumberMode.SLIDER
