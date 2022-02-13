@@ -377,17 +377,10 @@ class Scanner:
 
     async def _async_build_source_set(self) -> set[IPv4Address | IPv6Address]:
         """Build the list of ssdp sources."""
-        adapters = await network.async_get_adapters(self.hass)
-        sources: set[IPv4Address | IPv6Address] = set()
-        if network.async_only_default_interface_enabled(adapters):
-            sources.add(IPv4Address("0.0.0.0"))
-            return sources
-
         return {
             source_ip
             for source_ip in await network.async_get_enabled_source_ips(self.hass)
-            if not source_ip.is_loopback
-            and not (isinstance(source_ip, IPv6Address) and source_ip.is_global)
+            if not source_ip.is_loopback and not source_ip.is_global
         }
 
     async def async_scan(self, *_: Any) -> None:
