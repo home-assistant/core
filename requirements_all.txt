@@ -2514,7 +2514,7 @@ xmltodict==0.12.0
 xs1-api-client==3.0.0
 
 # homeassistant.components.yale_smart_alarm
-yalesmartalarmclient==0.3.7
+yalesmartalarmclient==0.3.8
 
 # homeassistant.components.august
 yalexs==1.1.22
@@ -2553,7 +2553,7 @@ zigpy-deconz==0.14.0
 zigpy-xbee==0.14.0
 
 # homeassistant.components.zha
-zigpy-zigate==0.7.3
+zigpy-zigate==0.8.0
 
 # homeassistant.components.zha
 zigpy-znp==0.7.0
