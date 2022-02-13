@@ -37,7 +37,10 @@ def aiohttp_notify_servers_mock() -> Iterable[Mock]:
 
         # Every server must be stopped if it was started
         for server in servers:
-            assert server.async_start_server.call_count == server.async_stop_server.call_count
+            assert (
+                server.async_start_server.call_count
+                == server.async_stop_server.call_count
+            )
 
 
 async def test_get_domain_data(hass: HomeAssistant) -> None:

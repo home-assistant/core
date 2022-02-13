@@ -427,7 +427,7 @@ class Scanner:
 
     async def _async_start_ssdp_listeners(self) -> None:
         """Start the SSDP Listeners."""
-        has_scope_id = hasattr(IPv6Address, 'scope_id')
+        has_scope_id = hasattr(IPv6Address, "scope_id")
         for source_ip in await self._async_build_source_set():
             if source_ip.version == 6 and not has_scope_id:
                 continue

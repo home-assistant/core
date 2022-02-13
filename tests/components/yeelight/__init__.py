@@ -1,7 +1,6 @@
 """Tests for the Yeelight integration."""
 import asyncio
 from datetime import timedelta
-from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from async_upnp_client.search import SsdpSearchListener
