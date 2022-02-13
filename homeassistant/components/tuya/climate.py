@@ -45,6 +45,8 @@ TUYA_HVAC_TO_HA = {
     "wind": HVAC_MODE_FAN_ONLY,
 }
 
+PRODUCT_ID_FOR_STEP_SCALING = ['IAYz2WK1th0cMLmL']
+
 
 @dataclass
 class TuyaClimateSensorDescriptionMixin:
@@ -186,8 +188,8 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # it to define min, max & step temperatures
         if self._set_temperature:
             self._attr_supported_features |= SUPPORT_TARGET_TEMPERATURE
-            self._attr_max_temp = self._set_temperature.max_scaled
-            self._attr_min_temp = self._set_temperature.min_scaled
+            self._attr_max_temp = self._set_temperature.max_scaled * (self._set_temperature.step if self.need_use_step_in_scale() else 1.0)
+            self._attr_min_temp = self._set_temperature.min_scaled * (self._set_temperature.step if self.need_use_step_in_scale() else 1.0)
             self._attr_target_temperature_step = self._set_temperature.step_scaled
 
         # Determine HVAC modes
@@ -331,7 +333,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 {
                     "code": self._set_temperature.dpcode,
                     "value": round(
-                        self._set_temperature.scale_value_back(kwargs["temperature"])
+                        self._set_temperature.scale_value_back(kwargs["temperature"], self.need_use_step_in_scale())
                     ),
                 }
             ]
@@ -347,7 +349,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         if temperature is None:
             return None
 
-        return self._current_temperature.scale_value(temperature)
+        return self._current_temperature.scale_value(temperature, self.need_use_step_in_scale())
 
     @property
     def current_humidity(self) -> int | None:
@@ -371,7 +373,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         if temperature is None:
             return None
 
-        return self._set_temperature.scale_value(temperature)
+        return self._set_temperature.scale_value(temperature, self.need_use_step_in_scale())
 
     @property
     def target_humidity(self) -> int | None:
@@ -384,6 +386,10 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             return None
 
         return round(self._set_humidity.scale_value(humidity))
+
+    def need_use_step_in_scale(self) -> bool :
+        """Return if calc values for this device needed with step scaled"""
+        return self.device.product_id in PRODUCT_ID_FOR_STEP_SCALING
 
     @property
     def hvac_mode(self) -> str:
