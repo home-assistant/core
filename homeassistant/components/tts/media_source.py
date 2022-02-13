@@ -1,0 +1,115 @@
+"""Text-to-speech media source."""
+from __future__ import annotations
+
+from os.path import splitext
+from typing import TYPE_CHECKING
+
+from yarl import URL
+
+from homeassistant.components.media_player.const import MEDIA_CLASS_APP
+from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_source.error import Unresolvable
+from homeassistant.components.media_source.models import (
+    BrowseMediaSource,
+    MediaSource,
+    MediaSourceItem,
+    PlayMedia,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+
+from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from . import SpeechManager
+
+
+async def async_get_media_source(hass: HomeAssistant) -> TTSMediaSource:
+    """Set up tts media source."""
+    return TTSMediaSource(hass)
+
+
+class TTSMediaSource(MediaSource):
+    """Provide text-to-speech providers as media sources."""
+
+    name: str = "Text to Speech"
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize TTSMediaSource."""
+        super().__init__(DOMAIN)
+        self.hass = hass
+
+    async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
+        """Resolve media to a url."""
+        parsed = URL(item.identifier)
+        if "message" not in parsed.query:
+            raise Unresolvable("No message specified.")
+
+        options = dict(parsed.query)
+        kwargs = {
+            "engine": parsed.name,
+            "message": options.pop("message"),
+            "language": options.pop("language", None),
+            "options": options,
+        }
+
+        manager: SpeechManager = self.hass.data[DOMAIN]
+
+        try:
+            url = await manager.async_get_url_path(**kwargs)  # type: ignore
+        except HomeAssistantError as err:
+            raise Unresolvable(str(err)) from err
+
+        resolved_parsed = URL(url)
+        _, extension = splitext(resolved_parsed.name)
+        if extension:
+            extension = f"audio/{extension[1:]}"
+        else:
+            # We really don't know, fallback to mp3
+            extension = "audio/mp3"
+
+        return PlayMedia(url, extension)
+
+    async def async_browse_media(
+        self,
+        item: MediaSourceItem,
+    ) -> BrowseMediaSource:
+        """Return media."""
+        if item.identifier:
+            provider, _, _ = item.identifier.partition("?")
+            return self._provider_item(provider)
+
+        # Root. List providers.
+        manager: SpeechManager = self.hass.data[DOMAIN]
+        children = [self._provider_item(provider) for provider in manager.providers]
+        return BrowseMediaSource(
+            domain=DOMAIN,
+            identifier=None,
+            media_class=MEDIA_CLASS_APP,
+            media_content_type="",
+            title=self.name,
+            can_play=False,
+            can_expand=True,
+            children_media_class=MEDIA_CLASS_APP,
+            children=children,
+        )
+
+    @callback
+    def _provider_item(self, provider_domain: str) -> BrowseMediaSource:
+        """Return provider item."""
+        manager: SpeechManager = self.hass.data[DOMAIN]
+        provider = manager.providers.get(provider_domain)
+
+        if provider is None:
+            raise BrowseError("Unknown provider")
+
+        return BrowseMediaSource(
+            domain=DOMAIN,
+            identifier=provider_domain,
+            media_class=MEDIA_CLASS_APP,
+            media_content_type="provider",
+            title=provider.name,
+            thumbnail=f"https://brands.home-assistant.io/_/{provider_domain}/logo.png",
+            can_play=False,
+            can_expand=True,
+        )
