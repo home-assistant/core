@@ -1,7 +1,6 @@
 """Backup manager for the Backup integration."""
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 import hashlib
 import json
@@ -55,7 +54,7 @@ class BackupManager:
         """Return a dict of backups."""
         return self._backups
 
-    async def load_backups(self) -> None:
+    def load_backups(self) -> None:
         """Load data of stored backup files."""
         backups = {}
 
@@ -72,14 +71,10 @@ class BackupManager:
                     )
                     backups[backup.slug] = backup
 
-        await asyncio.gather(
-            *[
-                self.hass.async_add_executor_job(_read_backup_info, backup)
-                for backup in self.backup_dir.glob("*.tar")
-            ]
-        )
+        for backup_path in self.backup_dir.glob("*.tar"):
+            _read_backup_info(backup_path)
 
-        LOGGER.debug("Loaded %s backups", len(backups.values()))
+        LOGGER.debug("Loaded %s backups", len(backups))
         self._backups = backups
 
     def get_backup(self, slug: str) -> Backup | None:
@@ -137,12 +132,10 @@ class BackupManager:
                 size=round(tar_file.stat().st_size / 1_048_576, 2),
             )
             self._backups[slug] = backup
+            LOGGER.debug("Generated new backup with slug %s", slug)
+            return backup
         finally:
             self.backing_up = False
-
-        LOGGER.debug("Generated new backup with slug %s", slug)
-
-        return backup
 
 
 def _add_directory_to_tarfile(

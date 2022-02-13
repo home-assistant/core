@@ -66,7 +66,7 @@ async def test_generate(
         return_value=TEST_BACKUP,
     ), patch(
         "homeassistant.components.backup.websocket.BackupManager.generate_backup",
-        return_value=TEST_BACKUP.slug,
+        return_value=TEST_BACKUP,
     ):
         await client.send_json({"id": 1, "type": "backup/generate"})
         msg = await client.receive_json()

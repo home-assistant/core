@@ -18,8 +18,8 @@ def async_register_websocket_handlers(hass: HomeAssistant) -> None:
 
 @websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): "backup/info"})
-@callback
-def handle_info(
+@websocket_api.async_response
+async def handle_info(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict,
@@ -27,10 +27,13 @@ def handle_info(
     """List all stored backups."""
     manager: BackupManager = hass.data[DOMAIN]
 
+    if not manager.backups:
+        await hass.async_add_executor_job(manager.load_backups)
+
     connection.send_result(
         msg["id"],
         {
-            "backups": list(manager.backups.values()),
+            "backups": list(manager.backups),
             "backing_up": manager.backing_up,
         },
     )

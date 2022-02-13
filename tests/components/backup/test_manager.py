@@ -34,7 +34,7 @@ async def test_load_backups(hass: HomeAssistant) -> None:
     ), patch(
         "pathlib.Path.stat", return_value=MagicMock(st_size=123)
     ):
-        await manager.load_backups()
+        await hass.async_add_executor_job(manager.load_backups)
         assert manager.backups == {TEST_BACKUP.slug: TEST_BACKUP}
 
 
@@ -101,5 +101,5 @@ async def test_generate_backup_when_backing_up(hass: HomeAssistant) -> None:
     """Test generate backup."""
     manager = BackupManager(hass)
     manager.backing_up = True
-    with pytest.raises(HomeAssistantError, match="Backup in progress"):
+    with pytest.raises(HomeAssistantError, match="Backup already in progress"):
         await manager.generate_backup()

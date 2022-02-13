@@ -24,8 +24,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         LOGGER.debug("Creating backup directory")
         hass.async_add_executor_job(manager.backup_dir.mkdir)
 
-    await manager.load_backups()
-
     async_register_websocket_handlers(hass)
     async_register_http_views(hass)
 
