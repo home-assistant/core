@@ -6,7 +6,7 @@ from awesomeversion import AwesomeVersion
 from homeassistant.const import __version__ as HAVERSION
 
 DOMAIN = "backup"
-HA_VERSION_OBJ = AwesomeVersion(HAVERSION)
+VERSION = AwesomeVersion(HAVERSION)
 LOGGER = getLogger(__package__)
 
 EXCLUDE_FROM_BACKUP = [

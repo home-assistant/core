@@ -50,16 +50,40 @@ async def test_removing_non_existing_backup(
     assert "Removed backup located at" not in caplog.text
 
 
-async def test_generate_backup_for_non_dev(
+async def test_generate_backup_when_backing_up(hass: HomeAssistant) -> None:
+    """Test generate backup."""
+    manager = BackupManager(hass)
+    manager.backing_up = True
+    with pytest.raises(HomeAssistantError, match="Backup already in progress"):
+        await manager.generate_backup()
+
+
+async def test_generate_backup(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test generate backup."""
     manager = BackupManager(hass)
-    with patch("tarfile.open", return_value=MagicMock()) as mocked_tarfile, patch(
+
+    def _mock_iterdir(path: Path) -> list[Path]:
+        if not path.name.endswith("testing_config"):
+            return []
+        return [
+            Path("test.txt"),
+            Path(".DS_Store"),
+            Path(".storage"),
+        ]
+
+    with patch("tarfile.open", MagicMock()) as mocked_tarfile, patch(
+        "pathlib.Path.iterdir", _mock_iterdir
+    ), patch("pathlib.Path.stat", MagicMock(st_size=123)), patch(
+        "pathlib.Path.is_file", lambda x: x.name != ".storage"
+    ), patch(
+        "pathlib.Path.is_dir", lambda x: x.name == ".storage"
+    ), patch(
         "homeassistant.components.backup.manager.json_util.save_json"
     ) as mocked_json_util, patch(
-        "homeassistant.components.backup.manager.HA_VERSION_OBJ",
+        "homeassistant.components.backup.manager.VERSION",
         AwesomeVersion("2025.1.0"),
     ):
         await manager.generate_backup()
@@ -75,31 +99,3 @@ async def test_generate_backup_for_non_dev(
         )
 
     assert "Generated new backup with slug " in caplog.text
-
-
-async def test_generate_backup_for_dev(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test generate backup."""
-    manager = BackupManager(hass)
-    with patch("tarfile.open", return_value=MagicMock()), patch(
-        "homeassistant.components.backup.manager.json_util.save_json"
-    ) as mocked_json_util, patch(
-        "homeassistant.components.backup.manager.HA_VERSION_OBJ",
-        AwesomeVersion("2025.1.0dev0"),
-    ):
-        await manager.generate_backup()
-
-        assert mocked_json_util.call_count == 1
-        assert mocked_json_util.call_args[0][1]["homeassistant"] == {}
-
-    assert "Generated new backup with slug " in caplog.text
-
-
-async def test_generate_backup_when_backing_up(hass: HomeAssistant) -> None:
-    """Test generate backup."""
-    manager = BackupManager(hass)
-    manager.backing_up = True
-    with pytest.raises(HomeAssistantError, match="Backup already in progress"):
-        await manager.generate_backup()

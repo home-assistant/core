@@ -8,14 +8,12 @@ from pathlib import Path
 import tarfile
 from tempfile import TemporaryDirectory
 
-from awesomeversion import AwesomeVersion
-
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import json as json_util
 from homeassistant.util.dt import now
 
-from .const import EXCLUDE_FROM_BACKUP, HA_VERSION_OBJ, LOGGER
+from .const import EXCLUDE_FROM_BACKUP, LOGGER, VERSION
 
 
 @dataclass
@@ -96,13 +94,19 @@ class BackupManager:
                 raise HomeAssistantError("Backup already in progress")
 
             self.backing_up = True
-            backup_name = f"Core {HA_VERSION_OBJ}"
+            backup_name = f"Core {VERSION}"
             date_str = now().isoformat()
             slug = _generate_slug(date_str, backup_name)
 
-            backup_data = _generate_backup_data(
-                slug, backup_name, date_str, HA_VERSION_OBJ
-            )
+            backup_data = {
+                "slug": slug,
+                "name": backup_name,
+                "date": date_str,
+                "type": "partial",
+                "folders": ["homeassistant"],
+                "homeassistant": {} if VERSION.dev else {"version": VERSION},
+                "compressed": True,
+            }
             tar_file = Path(self.backup_dir, f"{slug}.tar")
 
             def _create_backup() -> None:
@@ -161,24 +165,3 @@ def _add_directory_to_tarfile(
 def _generate_slug(date: str, name: str) -> str:
     """Generate a backup slug."""
     return hashlib.sha1(f"{date} - {name}".lower().encode()).hexdigest()[:8]
-
-
-def _generate_backup_data(
-    slug: str,
-    name: str,
-    date: str,
-    version: AwesomeVersion,
-) -> dict:
-    """Generate a backup data."""
-    data = {
-        "slug": slug,
-        "name": name,
-        "date": date,
-        "type": "partial",
-        "folders": ["homeassistant"],
-        "homeassistant": {},
-        "compressed": True,
-    }
-    if not version.dev:
-        data["homeassistant"] = {"version": version}
-    return data
