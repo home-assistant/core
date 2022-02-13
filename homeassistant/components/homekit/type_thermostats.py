@@ -289,6 +289,7 @@ class Thermostat(HomeAccessory):
             fan_mode.lower(): fan_mode
             for fan_mode in attributes.get(ATTR_FAN_MODES, [])
         }
+        self.ordered_fan_speeds = []
         if (
             features & SUPPORT_FAN_MODE
             and fan_modes
@@ -370,27 +371,27 @@ class Thermostat(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: mode}
         self.async_call_service(DOMAIN_CLIMATE, SERVICE_SET_FAN_MODE, params)
 
+    def _get_on_mode(self) -> str:
+        if self.ordered_fan_speeds:
+            return percentage_to_ordered_list_item(self.ordered_fan_speeds, 50)
+        return self.fan_modes[FAN_ON]
+
     def _set_fan_active(self, active) -> None:
         _LOGGER.debug("%s: Set fan active to %s", self.entity_id, active)
         if FAN_OFF not in self.fan_modes:
+            _LOGGER.debug(
+                "%s: Fan does not support off, resetting to on", self.entity_id
+            )
             self.char_active.value = 1
             self.char_active.notify()
             return
-        if not active:
-            mode = self.fan_modes[FAN_OFF]
-        else:
-            mode = percentage_to_ordered_list_item(self.ordered_fan_speeds, 50)
+        mode = self._get_on_mode() if active else self.fan_modes[FAN_OFF]
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: self.fan_modes[mode]}
         self.async_call_service(DOMAIN_CLIMATE, SERVICE_SET_FAN_MODE, params)
 
     def _set_fan_auto(self, auto) -> None:
         _LOGGER.debug("%s: Set fan auto to %s", self.entity_id, auto)
-        if auto:
-            mode = FAN_AUTO
-        elif FAN_ON in self.fan_modes:
-            mode = FAN_ON
-        elif self.ordered_fan_speeds:
-            mode = percentage_to_ordered_list_item(self.ordered_fan_speeds, 50)
+        mode = self.fan_modes[FAN_AUTO] if auto else self._get_on_mode()
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: self.fan_modes[mode]}
         self.async_call_service(DOMAIN_CLIMATE, SERVICE_SET_FAN_MODE, params)
 
