@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -49,6 +50,7 @@ from .const import (
     CONF_STATION_ID,
     DEFAULT_NAME,
     DOMAIN,
+    MANUFACTURER_URL,
     MIN_TIME_BETWEEN_UPDATES,
     VIENNA_TIME_ZONE,
 )
@@ -76,6 +78,8 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         key="pressure",
         name="Pressure",
         native_unit_of_measurement=PRESSURE_HPA,
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
         col_heading="LDstat hPa",
         dtype=float,
     ),
@@ -83,6 +87,8 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         key="pressure_sealevel",
         name="Pressure at Sea Level",
         native_unit_of_measurement=PRESSURE_HPA,
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
         col_heading="LDred hPa",
         dtype=float,
     ),
@@ -90,6 +96,8 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         key="humidity",
         name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
         col_heading="RF %",
         dtype=int,
     ),
@@ -97,6 +105,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         key="wind_speed",
         name="Wind Speed",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
         col_heading=f"WG {SPEED_KILOMETERS_PER_HOUR}",
         dtype=float,
     ),
@@ -104,6 +113,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         key="wind_bearing",
         name="Wind Bearing",
         native_unit_of_measurement=DEGREE,
+        state_class=SensorStateClass.MEASUREMENT,
         col_heading=f"WR {DEGREE}",
         dtype=int,
     ),
@@ -111,6 +121,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         key="wind_max_speed",
         name="Top Wind Speed",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
         col_heading=f"WSG {SPEED_KILOMETERS_PER_HOUR}",
         dtype=float,
     ),
@@ -118,6 +129,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         key="wind_max_bearing",
         name="Top Wind Bearing",
         native_unit_of_measurement=DEGREE,
+        state_class=SensorStateClass.MEASUREMENT,
         col_heading=f"WSR {DEGREE}",
         dtype=int,
     ),
@@ -125,6 +137,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         key="sun_last_hour",
         name="Sun Last Hour",
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         col_heading=f"SO {PERCENTAGE}",
         dtype=int,
     ),
@@ -133,6 +146,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         col_heading=f"T {TEMP_CELSIUS}",
         dtype=float,
     ),
@@ -140,6 +154,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         key="precipitation",
         name="Precipitation",
         native_unit_of_measurement=f"l/{AREA_SQUARE_METERS}",
+        state_class=SensorStateClass.MEASUREMENT,
         col_heading=f"N l/{AREA_SQUARE_METERS}",
         dtype=float,
     ),
@@ -148,6 +163,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         name="Dew Point",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         col_heading=f"TP {TEMP_CELSIUS}",
         dtype=float,
     ),
@@ -176,6 +192,12 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         key="update_time",
         name="Update Time",
         col_heading="Zeit",
+        dtype=str,
+    ),
+    ZamgSensorEntityDescription(
+        key="station_id",
+        name="Station id",
+        col_heading="Station",
         dtype=str,
     ),
 )
@@ -271,8 +293,10 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self.coordinator = coordinator
-        self._attr_name = f"{name} {description.key}"
-        self._attr_unique_id = f"{self.coordinator.data.station_id()}_{description.key}"
+        self._attr_name = f"{name} {description.name}"
+        self._attr_unique_id = (
+            f"{self.coordinator.data.get('station_id')}_{description.key}"
+        )
 
     @property
     def device_info(self):
@@ -280,8 +304,8 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
-            # manufacturer=,
-            # model=MODEL,
+            manufacturer=DOMAIN,
+            configuration_url=MANUFACTURER_URL,
             name=self.coordinator.name,
         )
 

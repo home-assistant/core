@@ -24,6 +24,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
@@ -31,7 +33,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import ATTRIBUTION, CONF_STATION_ID, DOMAIN
+from .const import ATTRIBUTION, CONF_STATION_ID, DOMAIN, MANUFACTURER_URL
 from .sensor import closest_station
 
 _LOGGER = logging.getLogger(__name__)
@@ -100,12 +102,24 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
     def __init__(self, zamg_data, stationname=None):
         """Initialise the platform with a data instance and station name."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{self.coordinator.data.station_id()}"
+        self._attr_unique_id = f"{self.coordinator.data.get('station_id')}"
+        self._attr_name = f"{self.coordinator.data.get('station_name')}"
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
+            manufacturer=ATTRIBUTION,
+            configuration_url=MANUFACTURER_URL,
+            name=self.coordinator.name,
+        )
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"ZAMG {self.coordinator.config_entry.title}"
+        return f"ZAMG {self.coordinator.data.get('station_name')}"
 
     @property
     def condition(self):
