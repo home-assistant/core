@@ -217,6 +217,7 @@ class ViCareClimate(ClimateEntity):
                     "heating_curve_shift"
                 ] = self._circuit.getHeatingCurveShift()
 
+            # Provide vicare_modes and vicare_programs for debugging purposes
             self._attributes["vicare_modes"] = self._circuit.getModes()
             self._attributes["vicare_programs"] = self._circuit.getPrograms()
 
