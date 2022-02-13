@@ -54,9 +54,6 @@ DOMAIN = "nest"
 MOTION_EVENT_ID = "FWWVQVUdGNUlTU2V4MGV2aTNXV..."
 EVENT_SESSION_ID = "CjY5Y3VKaTZwR3o4Y19YbTVfMF..."
 
-# Tests can assert that image bytes came from an event or was decoded
-# from the live stream.
-IMAGE_BYTES_FROM_EVENT = b"test url image bytes"
 IMAGE_BYTES_FROM_STREAM = b"test stream image bytes"
 
 TEST_IMAGE_URL = "https://domain/sdm_event_snapshot/dGTZwR3o4Y1..."
