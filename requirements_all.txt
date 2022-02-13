@@ -184,7 +184,7 @@ aioguardian==2021.11.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.7.7
+aiohomekit==0.7.11
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -2117,7 +2117,7 @@ rjpl==0.3.6
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-rokuecp==0.13.1
+rokuecp==0.13.2
 
 # homeassistant.components.roomba
 roombapy==1.6.5
@@ -2517,7 +2517,7 @@ xmltodict==0.12.0
 xs1-api-client==3.0.0
 
 # homeassistant.components.yale_smart_alarm
-yalesmartalarmclient==0.3.7
+yalesmartalarmclient==0.3.8
 
 # homeassistant.components.august
 yalexs==1.1.22
@@ -2556,7 +2556,7 @@ zigpy-deconz==0.14.0
 zigpy-xbee==0.14.0
 
 # homeassistant.components.zha
-zigpy-zigate==0.7.3
+zigpy-zigate==0.8.0
 
 # homeassistant.components.zha
 zigpy-znp==0.7.0

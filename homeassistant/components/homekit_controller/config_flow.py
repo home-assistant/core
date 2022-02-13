@@ -154,34 +154,16 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self.controller is None:
             await self._async_setup_controller()
 
-        devices = await self.controller.discover_ip(max_seconds=5)
-        for device in devices:
-            if normalize_hkid(device.device_id) != unique_id:
-                continue
-            record = device.info
-            return await self.async_step_zeroconf(
-                zeroconf.ZeroconfServiceInfo(
-                    host=record["address"],
-                    addresses=[record["address"]],
-                    port=record["port"],
-                    hostname=record["name"],
-                    type="_hap._tcp.local.",
-                    name=record["name"],
-                    properties={
-                        "md": record["md"],
-                        "pv": record["pv"],
-                        zeroconf.ATTR_PROPERTIES_ID: unique_id,
-                        "c#": record["c#"],
-                        "s#": record["s#"],
-                        "ff": record["ff"],
-                        "ci": record["ci"],
-                        "sf": record["sf"],
-                        "sh": "",
-                    },
-                )
-            )
+        try:
+            device = await self.controller.find_ip_by_device_id(unique_id)
+        except aiohomekit.AccessoryNotFoundError:
+            return self.async_abort(reason="accessory_not_found_error")
 
-        return self.async_abort(reason="no_devices")
+        self.name = device.info["name"].replace("._hap._tcp.local.", "")
+        self.model = device.info["md"]
+        self.hkid = normalize_hkid(device.info["id"])
+
+        return self._async_step_pair_show_form()
 
     async def _hkid_is_homekit(self, hkid):
         """Determine if the device is a homekit bridge or accessory."""
