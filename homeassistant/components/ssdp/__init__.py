@@ -8,7 +8,6 @@ from datetime import timedelta
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
 import logging
-import sys
 from typing import Any
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
@@ -428,10 +427,7 @@ class Scanner:
 
     async def _async_start_ssdp_listeners(self) -> None:
         """Start the SSDP Listeners."""
-        has_scope_id = sys.version_info >= (
-            3,
-            9,
-        )
+        has_scope_id = hasattr(IPv6Address, 'scope_id')
         for source_ip in await self._async_build_source_set():
             if source_ip.version == 6 and not has_scope_id:
                 continue
