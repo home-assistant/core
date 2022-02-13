@@ -35,7 +35,7 @@ async def async_setup_entry(
 
 
 class OctoprintButton(CoordinatorEntity, ButtonEntity):
-    """Representation an OctoPrint binary sensor."""
+    """Represent an OctoPrint binary sensor."""
 
     coordinator: OctoprintDataUpdateCoordinator
     client: OctoprintClient
@@ -47,7 +47,7 @@ class OctoprintButton(CoordinatorEntity, ButtonEntity):
         device_id: str,
         client: OctoprintClient,
     ) -> None:
-        """Initialize a new OctoPrint sensor."""
+        """Initialize a new OctoPrint button."""
         super().__init__(coordinator)
         self.client = client
         self._device_id = device_id
