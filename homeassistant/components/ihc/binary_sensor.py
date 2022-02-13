@@ -15,7 +15,7 @@ from .ihcdevice import IHCDevice
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Load IHC switches based on a config entry."""
+    """Load IHC binary sensors based on a config entry."""
     controller_id: str = str(entry.unique_id)
     controller_data = hass.data[DOMAIN][controller_id]
     ihc_controller: IHCController = controller_data[IHC_CONTROLLER]
