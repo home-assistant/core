@@ -49,7 +49,7 @@ CONFIG_SCHEMA = vol.Schema(
 DATA_SLEEPIQ = "data_sleepiq"
 
 DEFAULT_COMPONENT_NAME = "SleepIQ {}"
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
+UPDATE_INTERVAL = timedelta(seconds=60)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -66,15 +66,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("SleepIQ login failed, double check your username and password")
         return False
 
-    if CONF_SCAN_INTERVAL in entry.data:
-        update_interval = timedelta(seconds=entry.data[CONF_SCAN_INTERVAL])
-    else:
-        update_interval = DEFAULT_SCAN_INTERVAL
-
     coordinator = SleepIQDataUpdateCoordinator(
         hass,
         client=client,
-        update_interval=update_interval,
+        update_interval=UPDATE_INTERVAL,
         username=entry.data[CONF_USERNAME],
     )
 
