@@ -148,7 +148,7 @@ def _add_directory_to_tarfile(
             continue
 
         arcpath = Path(arcname, directory_item.name).as_posix()
-        if directory_item.is_dir() and not directory_item.is_symlink():
+        if directory_item.is_dir():
             _add_directory_to_tarfile(tar_file, directory_item, arcpath)
             continue
 
