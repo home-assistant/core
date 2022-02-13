@@ -1,6 +1,6 @@
 """Test the Anthem A/V Receivers config flow."""
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.anthemav.const import DOMAIN, EMPTY_MAC, UNKNOWN_MODEL
@@ -9,7 +9,7 @@ from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_
 
 
 async def test_form_with_valid_connection(
-    hass: HomeAssistant, mock_connection_create: AsyncMock, mock_anthemav: MagicMock
+    hass: HomeAssistant, mock_connection_create: AsyncMock, mock_anthemav: AsyncMock
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -70,7 +70,7 @@ async def test_form_timeout_device_info(hass: HomeAssistant) -> None:
 
 
 async def test_form_invalid_macaddress(
-    hass: HomeAssistant, mock_connection_create: AsyncMock, mock_anthemav: MagicMock
+    hass: HomeAssistant, mock_connection_create: AsyncMock, mock_anthemav: AsyncMock
 ) -> None:
     """Test we handle when receiving invalid mac address."""
     result = await hass.config_entries.flow.async_init(
@@ -101,7 +101,7 @@ async def test_form_invalid_macaddress(
 
 
 async def test_form_invalid_model(
-    hass: HomeAssistant, mock_connection_create: AsyncMock, mock_anthemav: MagicMock
+    hass: HomeAssistant, mock_connection_create: AsyncMock, mock_anthemav: AsyncMock
 ) -> None:
     """Test we handle when receiving and invalid AVR model."""
     result = await hass.config_entries.flow.async_init(
@@ -182,7 +182,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
 
 
 async def test_import_configuration(
-    hass: HomeAssistant, mock_connection_create: AsyncMock, mock_anthemav: MagicMock
+    hass: HomeAssistant, mock_connection_create: AsyncMock, mock_anthemav: AsyncMock
 ) -> None:
     """Test we import existing configuration."""
     config = {

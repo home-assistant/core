@@ -1,5 +1,5 @@
 """Test the Anthem A/V Receivers config flow."""
-from unittest.mock import ANY, AsyncMock, MagicMock, patch
+from unittest.mock import ANY, AsyncMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.anthemav.const import CONF_MODEL, DOMAIN
@@ -10,7 +10,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(
-    hass: HomeAssistant, mock_connection_create: AsyncMock, mock_anthemav: MagicMock
+    hass: HomeAssistant, mock_connection_create: AsyncMock, mock_anthemav: AsyncMock
 ) -> None:
     """Test load and unload AnthemAv component."""
     mock_config_entry = MockConfigEntry(

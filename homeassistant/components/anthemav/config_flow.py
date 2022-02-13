@@ -11,7 +11,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT
-from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
@@ -38,27 +37,11 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def connect_device(user_input: dict[str, Any]) -> Connection:
     """Connect to the AVR device."""
-
-    @callback
-    def async_anthemav_update_callback(message):
-        """Receive notification from transport that new data exists."""
-        _LOGGER.debug("Received update callback from AVR: %s", message)
-        if "IDN" in message:
-            user_input[CONF_MAC] = None
-        elif "IDM" in message:
-            user_input[CONF_MODEL] = None
-        if CONF_MAC in user_input and CONF_MODEL in user_input:
-            deviceinfo_received.set()
-
-    deviceinfo_received = asyncio.Event()
     avr = await anthemav.Connection.create(
-        host=user_input[CONF_HOST],
-        port=user_input[CONF_PORT],
-        auto_reconnect=False,
-        update_callback=async_anthemav_update_callback,
+        host=user_input[CONF_HOST], port=user_input[CONF_PORT], auto_reconnect=False
     )
     await avr.reconnect()
-    await asyncio.wait_for(deviceinfo_received.wait(), 5)
+    await avr.protocol.wait_for_device_initialised(4)
     return avr
 
 
