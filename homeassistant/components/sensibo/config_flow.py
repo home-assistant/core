@@ -7,7 +7,7 @@ import logging
 import aiohttp
 import async_timeout
 from pysensibov2 import SensiboClient
-from pysensibov2.exceptions import SensiboError
+from pysensibov2.exceptions import AuthenticationError, SensiboError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -41,6 +41,7 @@ async def async_validate_api(hass: HomeAssistant, api_key: str) -> bool:
             if await client.async_get_devices():
                 return True
     except (
+        AuthenticationError,
         aiohttp.ClientConnectionError,
         asyncio.TimeoutError,
         SensiboError,

@@ -1157,7 +1157,7 @@ pyrituals==0.0.6
 pyruckus==0.12
 
 # homeassistant.components.sensibo
-pysensibov2==1.0.0
+pysensibov2==1.0.1
 
 # homeassistant.components.serial
 # homeassistant.components.zha

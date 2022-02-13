@@ -5,7 +5,7 @@ from datetime import timedelta
 from typing import Any
 
 from pysensibov2 import SensiboClient
-from pysensibov2.exceptions import SensiboError
+from pysensibov2.exceptions import AuthenticationError, SensiboError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
@@ -40,7 +40,7 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             for dev in await self.client.async_get_devices():
                 devices.append(dev)
-        except (SensiboError) as error:
+        except (AuthenticationError, SensiboError) as error:
             raise UpdateFailed from error
 
         device_data: dict[str, dict[str, Any]] = {}

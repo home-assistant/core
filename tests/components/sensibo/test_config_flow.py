@@ -5,7 +5,7 @@ import asyncio
 from unittest.mock import patch
 
 import aiohttp
-from pysensibo import SensiboError
+from pysensibov2.exceptions import SensiboError
 import pytest
 
 from homeassistant import config_entries
