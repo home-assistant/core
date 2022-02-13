@@ -4,6 +4,7 @@ import importlib
 import io
 from ipaddress import ip_network
 import logging
+from typing import Any
 
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
@@ -420,7 +421,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 def initialize_bot(p_config):
     """Initialize telegram bot with proxy support."""
-
     api_key = p_config.get(CONF_API_KEY)
     proxy_url = p_config.get(CONF_PROXY_URL)
     proxy_params = p_config.get(CONF_PROXY_PARAMS)
@@ -439,7 +439,6 @@ class TelegramNotificationService:
 
     def __init__(self, hass, bot, allowed_chat_ids, parser):
         """Initialize the service."""
-
         self.allowed_chat_ids = allowed_chat_ids
         self._default_user = self.allowed_chat_ids[0]
         self._last_message_id = {user: None for user in self.allowed_chat_ids}
@@ -499,7 +498,6 @@ class TelegramNotificationService:
               - a string like: `/cmd1, /cmd2, /cmd3`
               - or a string like: `text_b1:/cmd1, text_b2:/cmd2`
             """
-
             buttons = []
             if isinstance(row_keyboard, str):
                 for key in row_keyboard.split(","):
@@ -570,7 +568,6 @@ class TelegramNotificationService:
 
     def _send_msg(self, func_send, msg_error, message_tag, *args_msg, **kwargs_msg):
         """Send one message."""
-
         try:
             out = func_send(*args_msg, **kwargs_msg)
             if not isinstance(out, bool) and hasattr(out, ATTR_MESSAGEID):
@@ -866,9 +863,9 @@ class BaseTelegramBotEntity:
         self.allowed_chat_ids = config[CONF_ALLOWED_CHAT_IDS]
         self.hass = hass
         # Dispatcher is set up in platform subclass
-        self.dispatcher.add_handler(
+        self.dispatcher.add_handler(  # pylint: disable=no-member
             TypeHandler(Update, self.handle_update)
-        )  # pylint: disable=no-member
+        )
 
     def handle_update(self, update: Update, context: CallbackContext):
         """Handle updates from bot dispatcher set up by the respective platform."""
@@ -905,7 +902,10 @@ class BaseTelegramBotEntity:
         return {ATTR_COMMAND: command, ATTR_ARGS: args}
 
     def _get_message_event_data(self, message: Message):
-        event_data = {ATTR_MSGID: message.message_id, ATTR_CHAT_ID: message.chat.id}
+        event_data: dict[str, Any] = {
+            ATTR_MSGID: message.message_id,
+            ATTR_CHAT_ID: message.chat.id,
+        }
         if Filters.command.filter(message):
             # This is a command message - set event type to command and split data into command and args
             event_type = EVENT_TELEGRAM_COMMAND
@@ -927,7 +927,7 @@ class BaseTelegramBotEntity:
 
     def _get_callback_query_event_data(self, callback_query: CallbackQuery):
         event_type = EVENT_TELEGRAM_CALLBACK
-        event_data = {
+        event_data: dict[str, Any] = {
             ATTR_MSGID: callback_query.id,
             ATTR_CHAT_INSTANCE: callback_query.chat_instance,
             ATTR_DATA: callback_query.data,

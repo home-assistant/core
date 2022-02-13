@@ -22,7 +22,6 @@ REMOVE_WEBHOOK_URL = ""
 
 async def async_setup_platform(hass, bot, config):
     """Set up the Telegram webhooks platform."""
-
     pushbot = PushBot(hass, bot, config)
 
     if not pushbot.webhook_url.startswith("https"):

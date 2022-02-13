@@ -14,7 +14,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, bot, config):
     """Set up the Telegram polling platform."""
-
     pollbot = PollBot(hass, bot, config)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, pollbot.start_polling)
