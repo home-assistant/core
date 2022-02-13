@@ -4,14 +4,21 @@
             "already_configured": "Device is already configured"
         },
         "error": {
-            "cannot_connect": "Failed to connect",
-            "unknown": "Unexpected error"
+            "cannot_connect": "Failed to connect to intellifire on local network - check host and try agian.",
+            "api_error": "API Error",
+            "iftapi_connect": "IFTAPI Connection Error. Perhaps try insecure (http) mode."
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Host"
-                }
+                    "host": "Host",
+                    "password": "Password",
+                    "username": "Username (email)",
+                    "ssl": "Uncheck to enable HTTP communications with IFTAPI. In some cases such as SSL Inspection or perhaps behind a corporate proxy you may need to do this.",
+                    "verify_ssl": "Uncheck to disable client certificate verification SSL (https) mode"
+                },
+                "description": "Username and password are the same information used in your IntelliFire Android/iOS application.",
+                "title": "IntelliFire Config"
             }
         }
     }
