@@ -5,7 +5,7 @@ import asyncio
 
 from aiohttp.client_exceptions import ClientConnectionError
 import async_timeout
-from pysensibo import SensiboError
+from pysensibov2.exceptions import SensiboError
 import voluptuous as vol
 
 from homeassistant.components.climate import (

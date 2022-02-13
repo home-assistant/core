@@ -6,7 +6,8 @@ import logging
 
 import aiohttp
 import async_timeout
-from pysensibo import SensiboClient, SensiboError
+from pysensibov2 import SensiboClient
+from pysensibov2.exceptions import SensiboError
 import voluptuous as vol
 
 from homeassistant import config_entries
