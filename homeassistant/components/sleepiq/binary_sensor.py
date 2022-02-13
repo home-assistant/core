@@ -1,13 +1,11 @@
 """Support for SleepIQ sensors."""
-from typing import cast
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DATA_SLEEPIQ, SleepIQDataUpdateCoordinator, SleepIQSensor
@@ -28,7 +26,7 @@ async def async_setup_entry(
             if getattr(coordinator.data[bed_id][BED], side) is not None:
                 entities.append(IsInBedBinarySensor(coordinator, bed_id, side))
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class IsInBedBinarySensor(SleepIQSensor, BinarySensorEntity):
@@ -43,15 +41,11 @@ class IsInBedBinarySensor(SleepIQSensor, BinarySensorEntity):
         side: str,
     ) -> None:
         """Initialize the SleepIQ bed side binary sensor."""
-        super().__init__(coordinator, bed_id, side)
-        self._name = IS_IN_BED
+        super().__init__(coordinator, bed_id, side, IS_IN_BED)
 
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend, if any."""
-        return ICON_OCCUPIED if self.is_on else ICON_EMPTY
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if the side is occupied."""
-        return cast(bool, getattr(self._side, IS_IN_BED))
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update sensor attributes."""
+        super()._async_update_attrs()
+        self._attr_is_on = getattr(self._side, IS_IN_BED)
+        self._attr_icon = ICON_OCCUPIED if self.is_on else ICON_EMPTY

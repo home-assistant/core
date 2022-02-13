@@ -5,7 +5,7 @@ import dataclasses
 from datetime import timedelta
 import logging
 
-from sleepyq import Bed, SideStatus, Sleepyq
+from sleepyq import Sleepyq
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -178,31 +178,26 @@ class SleepIQSensor(CoordinatorEntity):
         coordinator: SleepIQDataUpdateCoordinator,
         bed_id: str,
         side: str,
+        name: str,
     ) -> None:
         """Initialize the SleepIQ side entity."""
         super().__init__(coordinator)
         self.bed_id = bed_id
         self.side = side
 
-        # Added by subclass.
-        self._name: str | None = None
+        self._async_update_attrs()
 
-    @property
-    def _bed(self) -> Bed:
-        return self.coordinator.data[self.bed_id][BED]
+        self._attr_name = f"SleepNumber {self._bed.name} {self._side.sleeper.first_name} {SENSOR_TYPES[name]}"
+        self._attr_unique_id = f"{self.bed_id}_{self._side.sleeper.first_name}_{name}"
 
-    @property
-    def _side(self) -> SideStatus:
-        return getattr(self._bed, self.side)
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._async_update_attrs()
+        super()._handle_coordinator_update()
 
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID for the entity."""
-        assert self._name is not None
-        return f"{self.bed_id}_{self._side.sleeper.first_name}_{self._name}"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        assert self._name is not None
-        return f"SleepNumber {self._bed.name} {self._side.sleeper.first_name} {SENSOR_TYPES[self._name]}"
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update sensor attributes."""
+        self._bed = self.coordinator.data[self.bed_id][BED]
+        self._side = getattr(self._bed, self.side)

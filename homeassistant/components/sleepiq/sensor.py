@@ -1,10 +1,8 @@
 """Support for SleepIQ sensors."""
-from typing import cast
-
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DATA_SLEEPIQ, SleepIQDataUpdateCoordinator, SleepIQSensor
@@ -38,10 +36,10 @@ class SleepNumberSensor(SleepIQSensor, SensorEntity):
         side: str,
     ) -> None:
         """Initialize the SleepIQ sleep number sensor."""
-        super().__init__(coordinator, bed_id, side)
-        self._name = SLEEP_NUMBER
+        super().__init__(coordinator, bed_id, side, SLEEP_NUMBER)
 
-    @property
-    def native_value(self) -> int:
-        """Return the state of the sensor."""
-        return cast(int, self._side.sleep_number)
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update sensor attributes."""
+        super()._async_update_attrs()
+        self._attr_native_value = self._side.sleep_number
