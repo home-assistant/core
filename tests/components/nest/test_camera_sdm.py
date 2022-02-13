@@ -129,21 +129,11 @@ async def mock_create_stream(hass) -> Mock:
 
 async def async_get_image(hass, width=None, height=None):
     """Get the camera image."""
-    return await camera.async_get_image(
+    image = await camera.async_get_image(
         hass, "camera.my_camera", width=width, height=height
     )
-
-
-def assert_stream_image(image):
-    """Assert the image returned is from the stream component."""
     assert image.content_type == "image/jpeg"
-    assert image.content == IMAGE_BYTES_FROM_STREAM
-
-
-def assert_placeholder_image(image):
-    """Assert the image returned is a placeholder, not from stream."""
-    assert image.content_type == "image/jpeg"
-    assert image.content != IMAGE_BYTES_FROM_STREAM
+    return image.content
 
 
 async def async_setup_camera(hass, traits={}, auth=None):
@@ -223,7 +213,7 @@ async def test_camera_stream(hass, auth, mock_create_stream):
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
 
-    assert_stream_image(await async_get_image(hass))
+    assert await async_get_image(hass) == IMAGE_BYTES_FROM_STREAM
 
 
 async def test_camera_ws_stream(hass, auth, hass_ws_client, mock_create_stream):
@@ -252,7 +242,7 @@ async def test_camera_ws_stream(hass, auth, hass_ws_client, mock_create_stream):
     assert msg["success"]
     assert msg["result"]["url"] == "http://home.assistant/playlist.m3u8"
 
-    assert_stream_image(await async_get_image(hass))
+    assert await async_get_image(hass) == IMAGE_BYTES_FROM_STREAM
 
 
 async def test_camera_ws_stream_failure(hass, auth, hass_ws_client):
@@ -307,7 +297,7 @@ async def test_camera_stream_missing_trait(hass, auth):
     assert stream_source is None
 
     # Fallback to placeholder image
-    assert_placeholder_image(await async_get_image(hass))
+    await async_get_image(hass)
 
 
 async def test_refresh_expired_stream_token(hass, auth):
@@ -573,8 +563,8 @@ async def test_camera_web_rtc(hass, auth, hass_ws_client):
     assert msg["result"]["answer"] == "v=0\r\ns=-\r\n"
 
     # Nest WebRTC cameras return a placeholder
-    assert_placeholder_image(await async_get_image(hass))
-    assert_placeholder_image(await async_get_image(hass, width=1024, height=768))
+    await async_get_image(hass)
+    await async_get_image(hass, width=1024, height=768)
 
 
 async def test_camera_web_rtc_unsupported(hass, auth, hass_ws_client):
@@ -693,7 +683,7 @@ async def test_camera_multiple_streams(hass, auth, hass_ws_client, mock_create_s
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
 
-    assert_stream_image(await async_get_image(hass))
+    assert await async_get_image(hass) == IMAGE_BYTES_FROM_STREAM
 
     # WebRTC stream
     client = await hass_ws_client(hass)
