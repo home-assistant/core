@@ -21,6 +21,7 @@ from .const import (
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_GET_SOURCES,
     CONF_MIGRATION_OPTIONS,
+    CONF_NETWORK_ADAPTER,
     CONF_SCREENCAP,
     CONF_STATE_DETECTION_RULES,
     CONF_TURN_OFF_COMMAND,
@@ -49,6 +50,14 @@ CONF_RULE_VALUES = "rule_values"
 
 RESULT_CONN_ERROR = "cannot_connect"
 RESULT_UNKNOWN = "unknown"
+
+PROP_AUTOMAC = "auto"
+
+NETWORK_ADP_TYPES = {
+    PROP_AUTOMAC: "Auto",
+    PROP_ETHMAC: "Wired",
+    PROP_WIFIMAC: "Wireless",
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,6 +107,9 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT
                     ): cv.port,
+                    vol.Required(CONF_NETWORK_ADAPTER, default=PROP_AUTOMAC): vol.In(
+                        NETWORK_ADP_TYPES
+                    ),
                 }
             )
 
@@ -131,7 +143,7 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             PROP_WIFIMAC,
             dev_prop.get(PROP_WIFIMAC),
         )
-        unique_id = get_androidtv_mac(dev_prop)
+        unique_id = get_androidtv_mac(dev_prop, user_input.get(CONF_NETWORK_ADAPTER))
         await aftv.adb_close()
         return None, unique_id
 
@@ -141,8 +153,13 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             host = user_input[CONF_HOST]
+            net_adp = user_input.get(CONF_NETWORK_ADAPTER)
+            if net_adp and net_adp == PROP_AUTOMAC:
+                user_input.pop(CONF_NETWORK_ADAPTER, None)
             adb_key = user_input.get(CONF_ADBKEY)
             adb_server = user_input.get(CONF_ADB_SERVER_IP)
+            if not adb_server:
+                user_input.pop(CONF_ADB_SERVER_PORT, None)
 
             if adb_key and adb_server:
                 return self._show_setup_form(user_input, "key_and_server")
@@ -166,7 +183,7 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="invalid_unique_id")
 
                 await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
+                self._abort_if_unique_id_configured({CONF_HOST: host})
 
                 return self.async_create_entry(
                     title=user_input.get(CONF_NAME) or host,

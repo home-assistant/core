@@ -48,9 +48,10 @@ _INVALID_MACS = {"ff:ff:ff:ff:ff:ff"}
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_androidtv_mac(dev_props):
+def get_androidtv_mac(dev_props, search_prop=None):
     """Return formatted mac from device properties."""
-    for prop_mac in (PROP_ETHMAC, PROP_WIFIMAC):
+    props_list = [search_prop] if search_prop else [PROP_ETHMAC, PROP_WIFIMAC]
+    for prop_mac in props_list:
         if if_mac := dev_props.get(prop_mac):
             mac = format_mac(if_mac)
             if mac not in _INVALID_MACS:

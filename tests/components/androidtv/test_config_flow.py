@@ -23,6 +23,7 @@ from homeassistant.components.androidtv.const import (
     CONF_APPS,
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_GET_SOURCES,
+    CONF_NETWORK_ADAPTER,
     CONF_SCREENCAP,
     CONF_STATE_DETECTION_RULES,
     CONF_TURN_OFF_COMMAND,
@@ -52,8 +53,10 @@ CONFIG_PYTHON_ADB = {
     CONF_HOST: HOST,
     CONF_PORT: DEFAULT_PORT,
     CONF_DEVICE_CLASS: "androidtv",
-    CONF_ADB_SERVER_PORT: DEFAULT_ADB_SERVER_PORT,
 }
+
+CONFIG_PYTHON_ADB_ETH = {**CONFIG_PYTHON_ADB, CONF_NETWORK_ADAPTER: PROP_ETHMAC}
+CONFIG_PYTHON_ADB_WIFI = {**CONFIG_PYTHON_ADB, CONF_NETWORK_ADAPTER: PROP_WIFIMAC}
 
 # Android TV device with ADB server
 CONFIG_ADB_SERVER = {
@@ -105,6 +108,8 @@ class MockConfigDevice:
         (CONFIG_ADB_SERVER, None, WIFI_MAC),
         (CONFIG_PYTHON_ADB, ETH_MAC, WIFI_MAC),
         (CONFIG_ADB_SERVER, ETH_MAC, WIFI_MAC),
+        (CONFIG_PYTHON_ADB_ETH, ETH_MAC, None),
+        (CONFIG_PYTHON_ADB_WIFI, None, WIFI_MAC),
     ],
 )
 async def test_user(hass, config, eth_mac, wifi_mac):
@@ -281,16 +286,24 @@ async def test_error_invalid_host(hass):
         assert result2["data"] == CONFIG_ADB_SERVER
 
 
-async def test_invalid_serial(hass):
-    """Test for invalid serialno."""
+@pytest.mark.parametrize(
+    ["config", "eth_mac", "wifi_mac"],
+    [
+        (CONFIG_PYTHON_ADB, None, None),
+        (CONFIG_PYTHON_ADB_ETH, None, WIFI_MAC),
+        (CONFIG_PYTHON_ADB_WIFI, ETH_MAC, None),
+    ],
+)
+async def test_invalid_mac(hass, config, eth_mac, wifi_mac):
+    """Test for invalid mac address."""
     with patch(
         CONNECT_METHOD,
-        return_value=(MockConfigDevice(eth_mac=None), None),
+        return_value=(MockConfigDevice(eth_mac, wifi_mac), None),
     ), PATCH_GET_HOST_IP:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": SOURCE_USER},
-            data=CONFIG_ADB_SERVER,
+            context={"source": SOURCE_USER, "show_advanced_options": True},
+            data=config,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
