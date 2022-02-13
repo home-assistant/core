@@ -90,6 +90,7 @@ omit =
     homeassistant/components/aurora/binary_sensor.py
     homeassistant/components/aurora/const.py
     homeassistant/components/aurora/sensor.py
+    homeassistant/components/aussie_broadband/diagnostics.py
     homeassistant/components/avea/light.py
     homeassistant/components/avion/light.py
     homeassistant/components/azure_devops/__init__.py
@@ -1008,7 +1009,6 @@ omit =
     homeassistant/components/samsungtv/diagnostics.py
     homeassistant/components/satel_integra/*
     homeassistant/components/schluter/*
-    homeassistant/components/scrape/sensor.py
     homeassistant/components/screenlogic/__init__.py
     homeassistant/components/screenlogic/binary_sensor.py
     homeassistant/components/screenlogic/climate.py
@@ -1447,6 +1447,7 @@ omit =
     homeassistant/components/yale_smart_alarm/binary_sensor.py
     homeassistant/components/yale_smart_alarm/const.py
     homeassistant/components/yale_smart_alarm/coordinator.py
+    homeassistant/components/yale_smart_alarm/diagnostics.py
     homeassistant/components/yale_smart_alarm/entity.py
     homeassistant/components/yale_smart_alarm/lock.py
     homeassistant/components/yamaha_musiccast/__init__.py

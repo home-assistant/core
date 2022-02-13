@@ -158,6 +158,8 @@ class SignalUpdateCallback:
                 "timestamp": event_message.timestamp,
                 "nest_event_id": image_event.event_token,
             }
+            if image_event.zones:
+                message["zones"] = image_event.zones
             self._hass.bus.async_fire(NEST_EVENT, message)
 
 
