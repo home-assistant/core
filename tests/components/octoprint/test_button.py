@@ -159,7 +159,7 @@ async def test_stop_job(hass: HomeAssistant):
 
         assert len(stop_command.mock_calls) == 1
 
-    # Test resuming the printer when it is printing
+    # Test stopping the printer when it is printing
     with patch("pyoctoprintapi.OctoprintClient.cancel_job") as stop_command:
         corrdinator.data["printer"] = OctoprintPrinterInfo(
             {"state": {"flags": {"printing": True, "paused": False}}, "temperature": []}
@@ -175,7 +175,7 @@ async def test_stop_job(hass: HomeAssistant):
 
         assert len(stop_command.mock_calls) == 1
 
-    # Test resuming the printer when it is stopped
+    # Test stopping the printer when it is stopped
     with patch("pyoctoprintapi.OctoprintClient.cancel_job") as stop_command:
         corrdinator.data["printer"] = OctoprintPrinterInfo(
             {
