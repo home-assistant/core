@@ -13,6 +13,8 @@ from .const import DOMAIN
 from .entity import WizEntity
 from .models import WizData
 
+EFFECT_SPEED_UNIQUE_ID = "{}_effect_speed"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -33,6 +35,13 @@ class WizSpeedNumber(WizEntity, NumberEntity):
     _attr_step = 1
     _attr_mode = NumberMode.SLIDER
     _attr_icon = "mdi:speedometer"
+
+    def __init__(self, wiz_data: WizData, name: str) -> None:
+        """Initialize an WiZ device."""
+        super().__init__(wiz_data, name)
+        self._attr_unique_id = EFFECT_SPEED_UNIQUE_ID.format(self._device.mac)
+        self._attr_name = f"{name} Effect Speed"
+        self._async_update_attrs()
 
     @callback
     def _async_update_attrs(self) -> None:
