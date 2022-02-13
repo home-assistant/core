@@ -204,7 +204,7 @@ def _patch_discovery():
 
 
 async def async_setup_integration(
-    hass, device=None, extended_white_range=None, bulb_type=None
+    hass, wizlight=None, device=None, extended_white_range=None, bulb_type=None
 ):
     """Set up the integration with a mock device."""
     entry = MockConfigEntry(
@@ -213,7 +213,7 @@ async def async_setup_integration(
         data={CONF_HOST: FAKE_IP},
     )
     entry.add_to_hass(hass)
-    bulb = _mocked_wizlight(device, extended_white_range, bulb_type)
+    bulb = wizlight or _mocked_wizlight(device, extended_white_range, bulb_type)
     with _patch_discovery(), _patch_wizlight(device=bulb):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
