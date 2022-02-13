@@ -46,7 +46,9 @@ class WizSpeedNumber(WizEntity, NumberEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
-        self._attr_value = self._device.state.get_speed()
+        speed = self._device.state.get_speed()
+        self._attr_value = speed
+        self._attr_available = speed is not None
 
     async def async_set_value(self, value: float) -> None:
         """Set the speed value."""
