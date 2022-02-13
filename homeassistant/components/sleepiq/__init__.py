@@ -169,6 +169,8 @@ class SleepIQHassData:
 class SleepIQSensor(CoordinatorEntity):
     """Implementation of a SleepIQ sensor."""
 
+    _attr_icon = ICON_OCCUPIED
+
     def __init__(
         self,
         coordinator: SleepIQDataUpdateCoordinator,
@@ -200,8 +202,3 @@ class SleepIQSensor(CoordinatorEntity):
     def name(self) -> str:
         """Return the name of the sensor."""
         return f"SleepNumber {self._bed.name} {self._side.sleeper.first_name} {SENSOR_TYPES[self._name]}"
-
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend."""
-        return ICON_OCCUPIED
