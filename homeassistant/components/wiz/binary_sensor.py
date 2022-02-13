@@ -14,7 +14,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, SIGNAL_WIZ_PIR
@@ -70,16 +69,9 @@ class WizOccupancyEntity(WizEntity, BinarySensorEntity):
 
     def __init__(self, wiz_data: WizData, name: str) -> None:
         """Initialize an WiZ device."""
-        super().__init__(wiz_data.coordinator)
-        self._device = wiz_data.bulb
+        super().__init__(wiz_data, name)
         self._attr_unique_id = OCCUPANCY_UNIQUE_ID.format(self._device.mac)
         self._attr_name = f"{name} Occupancy"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            name=self._attr_name,
-            manufacturer="WiZ",
-            via_device=(DOMAIN, self._device.mac),
-        )
         self._async_update_attrs()
 
     @callback
