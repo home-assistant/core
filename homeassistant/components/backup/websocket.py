@@ -43,14 +43,16 @@ def handle_info(
         vol.Required("slug"): str,
     }
 )
-def handle_remove(
+@websocket_api.async_response
+async def handle_remove(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict,
 ):
     """Remove a backup."""
     manager: BackupManager = hass.data[DOMAIN]
-    manager.remove_backup(msg["slug"])
+
+    await hass.async_add_executor_job(manager.remove_backup, msg["slug"])
 
     connection.send_message(websocket_api.result_message(msg["id"]))
 
