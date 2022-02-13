@@ -1,4 +1,6 @@
 """Support for SleepIQ from SleepNumber."""
+from __future__ import annotations
+
 import dataclasses
 from datetime import timedelta
 import logging
@@ -183,7 +185,7 @@ class SleepIQSensor(CoordinatorEntity):
         self.side = side
 
         # Added by subclass.
-        self._name = ""
+        self._name: str | None = None
 
     @property
     def _bed(self) -> Bed:
@@ -196,9 +198,11 @@ class SleepIQSensor(CoordinatorEntity):
     @property
     def unique_id(self) -> str:
         """Return unique ID for the entity."""
+        assert self._name is not None
         return f"{self.bed_id}_{self._side.sleeper.first_name}_{self._name}"
 
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
+        assert self._name is not None
         return f"SleepNumber {self._bed.name} {self._side.sleeper.first_name} {SENSOR_TYPES[self._name]}"
