@@ -46,14 +46,19 @@ class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             errors["base"] = "cannot_connect"
 
-        data_schema = {
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
-        }
-
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(data_schema),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME,
+                        default=user_input.get(CONF_USERNAME)
+                        if user_input is not None
+                        else "",
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
             errors=errors,
             last_step=True,
         )
