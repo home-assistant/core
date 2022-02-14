@@ -10,10 +10,11 @@ BASE = """
 
 To update, run python3 -m script.hassfest
 \"\"\"
+from __future__ import annotations
 
 # fmt: off
 
-DHCP = {}
+DHCP: list[dict[str, str | bool]] = {}
 """.strip()
 
 
