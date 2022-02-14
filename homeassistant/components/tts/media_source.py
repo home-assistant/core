@@ -1,7 +1,7 @@
 """Text-to-speech media source."""
 from __future__ import annotations
 
-from os.path import splitext
+import mimetypes
 from typing import TYPE_CHECKING
 
 from yarl import URL
@@ -60,15 +60,9 @@ class TTSMediaSource(MediaSource):
         except HomeAssistantError as err:
             raise Unresolvable(str(err)) from err
 
-        resolved_parsed = URL(url)
-        _, extension = splitext(resolved_parsed.name)
-        if extension:
-            extension = f"audio/{extension[1:]}"
-        else:
-            # We really don't know, fallback to mp3
-            extension = "audio/mp3"
+        mime_type = mimetypes.guess_type(url)[0] or "audio/mpeg"
 
-        return PlayMedia(url, extension)
+        return PlayMedia(url, mime_type)
 
     async def async_browse_media(
         self,

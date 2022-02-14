@@ -57,7 +57,7 @@ async def test_resolving(hass, mock_get_tts_audio):
         hass, "media-source://tts/demo?message=Hello%20World"
     )
     assert media.url.startswith("/api/tts_proxy/")
-    assert media.mime_type == "audio/mp3"
+    assert media.mime_type == "audio/mpeg"
 
     assert len(mock_get_tts_audio.mock_calls) == 1
     message, language = mock_get_tts_audio.mock_calls[0][1]
@@ -71,7 +71,7 @@ async def test_resolving(hass, mock_get_tts_audio):
         hass, "media-source://tts/demo?message=Bye%20World&language=de&voice=Paulus"
     )
     assert media.url.startswith("/api/tts_proxy/")
-    assert media.mime_type == "audio/mp3"
+    assert media.mime_type == "audio/mpeg"
 
     assert len(mock_get_tts_audio.mock_calls) == 1
     message, language = mock_get_tts_audio.mock_calls[0][1]
