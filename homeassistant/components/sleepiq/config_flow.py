@@ -35,7 +35,7 @@ class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             # Don't allow multiple instances with the same username
-            await self.async_set_unique_id(user_input[CONF_USERNAME])
+            await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
             self._abort_if_unique_id_configured()
 
             valid = await self.hass.async_add_executor_job(try_connection, user_input)
