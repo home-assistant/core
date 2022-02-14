@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -68,6 +69,7 @@ def setup_platform(
         board = i2c_hat_config[CONF_BOARD]
         address = i2c_hat_config[CONF_ADDRESS]
         try:
+            assert I2CHatSwitch.I2C_HATS_MANAGER
             I2CHatSwitch.I2C_HATS_MANAGER.register_board(board, address)
             for channel_config in i2c_hat_config[CONF_CHANNELS]:
                 switches.append(
@@ -90,7 +92,7 @@ def setup_platform(
 class I2CHatSwitch(SwitchEntity):
     """Representation  a switch that uses a I2C-HAT digital output."""
 
-    I2C_HATS_MANAGER: I2CHatsManager
+    I2C_HATS_MANAGER: I2CHatsManager | None = None
 
     def __init__(self, board, address, channel, name, invert_logic, initial_state):
         """Initialize switch."""
@@ -109,6 +111,9 @@ class I2CHatSwitch(SwitchEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+        if TYPE_CHECKING:
+            assert self.I2C_HATS_MANAGER
+
         await self.hass.async_add_executor_job(
             self.I2C_HATS_MANAGER.register_online_callback,
             self._address,
