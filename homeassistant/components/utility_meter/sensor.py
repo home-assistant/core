@@ -170,10 +170,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         self._last_period = 0
         self._last_reset = dt_util.utcnow()
         self._collecting = None
-        if name:
-            self._name = name
-        else:
-            self._name = f"{source_entity} meter"
+        self._name = name
         self._unit_of_measurement = None
         self._period = meter_type
         if meter_type is not None:
