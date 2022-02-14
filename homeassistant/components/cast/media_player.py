@@ -411,7 +411,7 @@ class CastDevice(MediaPlayerEntity):
 
         # The only way we can turn the Chromecast is on is by launching an app
         if self._chromecast.cast_type == pychromecast.const.CAST_TYPE_CHROMECAST:
-            self._chromecast.play_media(CAST_SPLASH, pychromecast.STREAM_TYPE_BUFFERED)
+            self._chromecast.play_media(CAST_SPLASH, "image/png")
         else:
             self._chromecast.start_app(pychromecast.config.APP_MEDIA_RECEIVER)
 
