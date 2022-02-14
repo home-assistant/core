@@ -420,7 +420,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
                 mime_type, _ = mimetypes.guess_type(parsed.path)
 
             if stream_format is None:
-                stream_format = guess_stream_format(parsed.path, mime_type)
+                stream_format = guess_stream_format(media_id, mime_type)
 
             if extra.get(ATTR_FORMAT) is None:
                 extra[ATTR_FORMAT] = stream_format
