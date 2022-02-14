@@ -188,13 +188,18 @@ class WatcherBase:
         )
 
         matched_domains = set()
+        device_domains = set()
+
         dev_reg: DeviceRegistry = async_get(self.hass)
-        device = dev_reg.async_get_device(
+        if device := dev_reg.async_get_device(
             identifiers=set(), connections={(CONNECTION_NETWORK_MAC, uppercase_mac)}
-        )
+        ):
+            for entry_id in device.config_entries:
+                if entry := self.hass.config_entries.async_get_entry(entry_id):
+                    device_domains.add(entry.domain)
 
         for entry in self._integration_matchers:
-            if entry.get(REGISTERED_DEVICES) and not device:
+            if entry.get(REGISTERED_DEVICES) and not entry["domain"] in device_domains:
                 continue
 
             if MAC_ADDRESS in entry and not fnmatch.fnmatch(
