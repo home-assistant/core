@@ -50,6 +50,7 @@ def mock_try_connection_time_out():
 
     with patch("paho.mqtt.client.Client") as mock_client:
         mock_client().loop_start = lambda *args: 1
+        # To prevent waiting 5 sec for a timeout
         with patch("queue.Queue.get", side_effect=queue.Empty):
             yield mock_client()
 
