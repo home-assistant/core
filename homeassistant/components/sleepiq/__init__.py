@@ -103,11 +103,9 @@ class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
     def update_data(self) -> dict[str, dict]:
         """Get latest data from the client."""
-        data = {}
-        for bed in self.client.beds_with_sleeper_status():
-            data[bed.bed_id] = {BED: bed}
-
-        return data
+        return {
+            bed.bed_id: {BED: bed} for bed in self.client.beds_with_sleeper_status()
+        }
 
 
 @dataclasses.dataclass
