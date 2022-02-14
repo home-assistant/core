@@ -88,13 +88,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if state.get_source() == PIR_SOURCE:
             async_dispatcher_send(hass, SIGNAL_WIZ_PIR.format(bulb.mac))
 
-    await bulb.start_push(_async_push_update)
-    bulb.set_discovery_callback(lambda bulb: async_trigger_discovery(hass, [bulb]))
     try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady as err:
         await bulb.async_close()
         raise err
+
+    await bulb.start_push(_async_push_update)
+    bulb.set_discovery_callback(lambda bulb: async_trigger_discovery(hass, [bulb]))
 
     async def _async_shutdown_on_stop(event: Event) -> None:
         await bulb.async_close()
