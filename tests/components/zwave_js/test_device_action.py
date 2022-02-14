@@ -67,7 +67,7 @@ async def test_get_actions(
             "device_id": device.id,
             "parameter": 3,
             "bitmask": None,
-            "subtype": f"{node.node_id}-112-0-3 (Beeper)",
+            "subtype": "3 (Beeper)",
         },
     ]
     actions = await async_get_device_automations(
@@ -161,7 +161,7 @@ async def test_actions(
                         "device_id": device.id,
                         "parameter": 1,
                         "bitmask": None,
-                        "subtype": "2-112-0-3 (Beeper)",
+                        "subtype": "3 (Beeper)",
                         "value": 1,
                     },
                 },
@@ -328,7 +328,6 @@ async def test_get_action_capabilities(
     integration: ConfigEntry,
 ):
     """Test we get the expected action capabilities."""
-    node = climate_radio_thermostat_ct100_plus
     dev_reg = device_registry.async_get(hass)
     device = device_registry.async_entries_for_config_entry(
         dev_reg, integration.entry_id
@@ -423,7 +422,7 @@ async def test_get_action_capabilities(
             "type": "set_config_parameter",
             "parameter": 1,
             "bitmask": None,
-            "subtype": f"{node.node_id}-112-0-1 (Temperature Reporting Threshold)",
+            "subtype": "1 (Temperature Reporting Threshold)",
         },
     )
     assert capabilities and "extra_fields" in capabilities
@@ -455,7 +454,7 @@ async def test_get_action_capabilities(
             "type": "set_config_parameter",
             "parameter": 10,
             "bitmask": None,
-            "subtype": f"{node.node_id}-112-0-10 (Temperature Reporting Filter)",
+            "subtype": "10 (Temperature Reporting Filter)",
         },
     )
     assert capabilities and "extra_fields" in capabilities
@@ -482,7 +481,7 @@ async def test_get_action_capabilities(
             "type": "set_config_parameter",
             "parameter": 2,
             "bitmask": None,
-            "subtype": f"{node.node_id}-112-0-2 (HVAC Settings)",
+            "subtype": "2 (HVAC Settings)",
         },
     )
     assert not capabilities
