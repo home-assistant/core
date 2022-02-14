@@ -77,7 +77,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         gateway.load_auth(access_token, user_id, monitor_id)
         await gateway.get_monitor_data()
-        await gateway.update_realtime()
     except (SenseAuthenticationException, SenseMFARequiredException) as err:
         _LOGGER.warning("Sense authentication expired")
         raise ConfigEntryAuthFailed(err) from err
