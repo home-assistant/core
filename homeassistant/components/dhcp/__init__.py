@@ -69,11 +69,6 @@ DHCP_ENABLED_DEVICE_FLOWS = "dhcp_enabled_device_flows"
 _LOGGER = logging.getLogger(__name__)
 
 
-def _format_mac(mac_address: str) -> str:
-    """Format a mac address for matching."""
-    return format_mac(mac_address).replace(":", "")
-
-
 @callback
 def async_enable_device_flows(hass: HomeAssistant) -> None:
     """Request to get discovery flows for devices with mac addresses.
@@ -466,6 +461,11 @@ def _decode_dhcp_option(dhcp_options, key):
             return value.decode()
         except (AttributeError, UnicodeDecodeError):
             return None
+
+
+def _format_mac(mac_address: str) -> str:
+    """Format a mac address for matching."""
+    return format_mac(mac_address).replace(":", "")
 
 
 def _verify_l2socket_setup(cap_filter):
