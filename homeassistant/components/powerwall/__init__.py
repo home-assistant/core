@@ -202,7 +202,6 @@ def _login_and_fetch_base_info(
     """Login to the powerwall and fetch the base info."""
     if password is not None:
         power_wall.login(password)
-    power_wall.detect_and_pin_version()
     return call_base_info(power_wall, host)
 
 

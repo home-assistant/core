@@ -30,7 +30,6 @@ def _login_and_fetch_site_info(
     """Login to the powerwall and fetch the base info."""
     if password is not None:
         power_wall.login(password)
-    power_wall.detect_and_pin_version()
     return power_wall.get_site_info(), power_wall.get_gateway_din()
 
 
