@@ -38,6 +38,6 @@ def generate_config_parameter_subtype(config_value: ConfigurationValue) -> str:
     """Generate the config parameter name used in a device automation subtype."""
     parameter = str(config_value.property_)
     if config_value.property_key:
-        parameter = f"{parameter}.{hex(config_value.property_key)}"
+        parameter = f"{parameter}[{hex(config_value.property_key)}]"
 
     return f"{parameter} ({config_value.property_name})"
