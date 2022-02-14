@@ -2320,15 +2320,17 @@ async def test_service_info_compatibility(hass, caplog):
     assert "Detected integration that accessed discovery_info['topic']" in caplog.text
 
 
-async def test_subscribe_connection_status(hass, caplog, mqtt_mock, mqtt_client_mock):
+async def test_subscribe_connection_status(hass, mqtt_mock, mqtt_client_mock):
     """Test connextion status subscription."""
+    mqtt_connected_calls = []
 
     @callback
     async def async_mqtt_connected(status):
         """Update state on connection/disconnection to MQTT broker."""
-        _LOGGER.info("connection status %s", status)
+        mqtt_connected_calls.append(status)
 
     mqtt_mock.connected = True
+
     unsub = mqtt.async_subscribe_connection_status(hass, async_mqtt_connected)
     await hass.async_block_till_done()
 
@@ -2336,13 +2338,18 @@ async def test_subscribe_connection_status(hass, caplog, mqtt_mock, mqtt_client_
     mqtt_mock._mqtt_on_connect(None, None, 0, 0)
     await hass.async_block_till_done()
     assert mqtt.is_connected(hass) is True
-    assert "connection status True" in caplog.text
-    caplog.clear()
 
     # Mock disconnect status
     mqtt_mock._mqtt_on_disconnect(None, None, 0)
     await hass.async_block_till_done()
-    assert "connection status False" in caplog.text
 
     # Unsubscribe
     unsub()
+
+    mqtt_mock._mqtt_on_connect(None, None, 0, 0)
+    await hass.async_block_till_done()
+
+    # Check calls
+    assert len(mqtt_connected_calls) == 2
+    assert mqtt_connected_calls[0] is True
+    assert mqtt_connected_calls[1] is False
