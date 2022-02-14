@@ -59,7 +59,7 @@ COOLDOWN_TIME = 60
 MAX_LOAD_CONCURRENTLY = 6
 
 DEBUGGER_INTEGRATIONS = {"debugpy"}
-CORE_INTEGRATIONS = ("homeassistant", "persistent_notification")
+CORE_INTEGRATIONS = {"homeassistant", "persistent_notification"}
 LOGGING_INTEGRATIONS = {
     # Set log levels
     "logger",
@@ -69,7 +69,14 @@ LOGGING_INTEGRATIONS = {
     # To record data
     "recorder",
 }
+DISCOVERY_INTEGRATIONS = ("dhcp", "ssdp", "usb", "zeroconf")
 STAGE_1_INTEGRATIONS = {
+    # We need to make sure discovery integrations
+    # update their deps before stage 2 integrations
+    # load them inadvertently before their deps have
+    # been updated which leads to using an old version
+    # of the dep, or worse (import errors).
+    *DISCOVERY_INTEGRATIONS,
     # To make sure we forward data to other instances
     "mqtt_eventstream",
     # To provide account link implementations
