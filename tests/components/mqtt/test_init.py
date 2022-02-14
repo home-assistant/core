@@ -1195,6 +1195,7 @@ async def test_setup_override_configuration(hass, caplog, tmp_path):
     # Mock password setup from config
     config = {
         "password": "someyamlconfiguredpassword",
+        "protocol": "3.1",
     }
     new_yaml_config_file = tmp_path / "configuration.yaml"
     new_yaml_config = yaml.dump({mqtt.DOMAIN: config})
@@ -1214,10 +1215,16 @@ async def test_setup_override_configuration(hass, caplog, tmp_path):
             await entry.async_setup(hass)
             await hass.async_block_till_done()
 
-            assert (
-                "Data in your configuration entry is going to override your configuration.yaml:"
-                in caplog.text
-            )
+        assert (
+            "Data in your configuration entry is going to override your configuration.yaml:"
+            in caplog.text
+        )
+
+        # Check if the protocol was set from configuration.yaml
+        assert hass.data["mqtt"].conf["protocol"] == "3.1"
+
+        # Check if the password override worked
+        assert hass.data["mqtt"].conf["password"] == "somepassword"
 
 
 async def test_setup_mqtt_client_protocol(hass):
