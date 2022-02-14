@@ -9,7 +9,6 @@ import voluptuous as vol
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import mqtt
 from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.components.mqtt.config_flow import try_connection
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -30,6 +29,29 @@ def mock_try_connection():
     """Mock the try connection method."""
     with patch("homeassistant.components.mqtt.config_flow.try_connection") as mock_try:
         yield mock_try
+
+
+@pytest.fixture
+def mock_try_connection_success():
+    """Mock the try connection method with success."""
+
+    def loop_start():
+        """Simulate connect on loop start."""
+        mock_client().on_connect(mock_client, None, None, 0)
+
+    with patch("paho.mqtt.client.Client") as mock_client:
+        mock_client().loop_start = loop_start
+        yield mock_client()
+
+
+@pytest.fixture
+def mock_try_connection_time_out():
+    """Mock the try connection method with a time out."""
+
+    with patch("paho.mqtt.client.Client") as mock_client:
+        mock_client().loop_start = lambda *args: 1
+        with patch("queue.Queue.get", side_effect=queue.Empty):
+            yield mock_client()
 
 
 async def test_user_connection_works(
@@ -59,10 +81,10 @@ async def test_user_connection_works(
     assert len(mock_finish_setup.mock_calls) == 1
 
 
-async def test_user_connection_fails(hass, mock_try_connection, mock_finish_setup):
+async def test_user_connection_fails(
+    hass, mock_try_connection_time_out, mock_finish_setup
+):
     """Test if connection cannot be made."""
-    mock_try_connection.return_value = False
-
     result = await hass.config_entries.flow.async_init(
         "mqtt", context={"source": config_entries.SOURCE_USER}
     )
@@ -76,7 +98,7 @@ async def test_user_connection_fails(hass, mock_try_connection, mock_finish_setu
     assert result["errors"]["base"] == "cannot_connect"
 
     # Check we tried the connection
-    assert len(mock_try_connection.mock_calls) == 1
+    assert len(mock_try_connection_time_out.mock_calls) >= 1
     # Check config entry did not setup
     assert len(mock_finish_setup.mock_calls) == 0
 
@@ -370,10 +392,9 @@ def get_suggested(schema, key):
 
 
 async def test_option_flow_default_suggested_values(
-    hass, mqtt_mock, mock_try_connection
+    hass, mqtt_mock, mock_try_connection_success
 ):
     """Test config flow options has default/suggested values."""
-    mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     config_entry.data = {
         mqtt.CONF_BROKER: "test-broker",
@@ -518,7 +539,7 @@ async def test_option_flow_default_suggested_values(
     await hass.async_block_till_done()
 
 
-async def test_options_user_connection_fails(hass, mock_try_connection):
+async def test_options_user_connection_fails(hass, mock_try_connection_time_out):
     """Test if connection cannot be made."""
     config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
     config_entry.add_to_hass(hass)
@@ -526,9 +547,6 @@ async def test_options_user_connection_fails(hass, mock_try_connection):
         mqtt.CONF_BROKER: "test-broker",
         mqtt.CONF_PORT: 1234,
     }
-
-    mock_try_connection.return_value = False
-
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == "form"
 
@@ -541,7 +559,7 @@ async def test_options_user_connection_fails(hass, mock_try_connection):
     assert result["errors"]["base"] == "cannot_connect"
 
     # Check we tried the connection
-    assert len(mock_try_connection.mock_calls) == 1
+    assert len(mock_try_connection_time_out.mock_calls) >= 1
     # Check config entry did not update
     assert config_entry.data == {
         mqtt.CONF_BROKER: "test-broker",
@@ -619,30 +637,3 @@ async def test_options_bad_will_message_fails(hass, mock_try_connection):
         mqtt.CONF_BROKER: "test-broker",
         mqtt.CONF_PORT: 1234,
     }
-
-
-async def test_try_connection(hass, mqtt_mock):
-    """Test try connection."""
-
-    def loop_start():
-        """Simulate connect on loop start."""
-        mock_client().on_connect(mock_client, None, None, 0)
-
-    with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client().loop_start = loop_start
-
-        assert try_connection("test-broker", 1234, "username", "")
-        assert try_connection("test-broker", 1234, "username", "password")
-        assert try_connection(
-            "test-broker", 1234, "username", "password", protocol="3.1.1"
-        )
-
-        # test time out
-        mock_client().loop_start = lambda *args: 1
-        with patch("queue.Queue.get", side_effect=queue.Empty):
-            assert (
-                try_connection(
-                    "test-broker", 1234, "username", "password", protocol="3.1.1"
-                )
-                is False
-            )
