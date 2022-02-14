@@ -111,25 +111,11 @@ class I2CHatBinarySensor(BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        _LOGGER.debug(
-            "I2CHatBinarySensor added to hass: %s : %s : %s : %s",
-            self._address,
-            self._channel,
-            self._name,
-            self._state,
-        )
         if TYPE_CHECKING:
             assert self.I2C_HATS_MANAGER
 
         def online_callback():
             """Call fired when board is online."""
-            _LOGGER.debug(
-                "I2CHatBinarySensor online_callback: %s : %s : %s : %s",
-                self._address,
-                self._channel,
-                self._name,
-                self._state,
-            )
             self.schedule_update_ha_state()
 
         await self.hass.async_add_executor_job(
@@ -141,13 +127,6 @@ class I2CHatBinarySensor(BinarySensorEntity):
 
         def edge_callback(state):
             """Read digital input state."""
-            _LOGGER.debug(
-                "I2CHatBinarySensor edge_callback: %s : %s : %s : %s",
-                self._address,
-                self._channel,
-                self._name,
-                state,
-            )
             self._state = state
             self.schedule_update_ha_state()
 
