@@ -111,6 +111,14 @@ class I2CHatSwitch(SwitchEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+        _LOGGER.debug(
+            "I2CHatSwitch added to hass: %s : %s : %s : %s",
+            self._address,
+            self._channel,
+            self._name,
+            self._state,
+        )
+
         if TYPE_CHECKING:
             assert self.I2C_HATS_MANAGER
 
@@ -123,6 +131,13 @@ class I2CHatSwitch(SwitchEntity):
 
     def online_callback(self):
         """Call fired when board is online."""
+        _LOGGER.debug(
+            "I2CHatSwitch online_callback: %s : %s : %s : %s",
+            self._address,
+            self._channel,
+            self._name,
+            self._state,
+        )
         try:
             self._state = self.I2C_HATS_MANAGER.read_dq(self._address, self._channel)
         except I2CHatsException as ex:
