@@ -90,12 +90,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await bulb.start_push(_async_push_update)
     bulb.set_discovery_callback(lambda bulb: async_trigger_discovery(hass, [bulb]))
-    await coordinator.async_refresh()
-    if not coordinator.last_update_success:
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady as err:
         await bulb.async_close()
-        raise ConfigEntryNotReady(
-            f"{ip_address}: {coordinator.last_exception}"
-        ) from coordinator.last_exception
+        raise err
 
     async def _async_shutdown_on_stop(event: Event) -> None:
         await bulb.async_close()
