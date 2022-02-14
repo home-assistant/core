@@ -64,6 +64,7 @@
             "init": {
                 "data": {
                     "scan_interval": "Minutes entre les scans",
+                    "snap_profile_type": "Niveau de qualit\u00e9 des instantan\u00e9s de la cam\u00e9ra (0 : \u00e9lev\u00e9 1 : moyen 2 : faible)",
                     "timeout": "D\u00e9lai d'expiration (secondes)"
                 }
             }
