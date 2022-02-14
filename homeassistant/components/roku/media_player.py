@@ -390,6 +390,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         """Play media from a URL or file, launch an application, or tune to a channel."""
         extra: dict[str, Any] = kwargs.get(ATTR_MEDIA_EXTRA) or {}
         original_media_type: str = media_type
+        original_media_id: str = media_id
         mime_type: str | None = None
         stream_name: str | None = None
         stream_format: str | None = extra.get(ATTR_FORMAT)
