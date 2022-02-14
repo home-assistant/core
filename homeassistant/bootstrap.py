@@ -59,7 +59,7 @@ COOLDOWN_TIME = 60
 MAX_LOAD_CONCURRENTLY = 6
 
 DEBUGGER_INTEGRATIONS = {"debugpy"}
-CORE_INTEGRATIONS = ("homeassistant", "persistent_notification")
+CORE_INTEGRATIONS = {"homeassistant", "persistent_notification"}
 LOGGING_INTEGRATIONS = {
     # Set log levels
     "logger",
@@ -69,6 +69,11 @@ LOGGING_INTEGRATIONS = {
     # To record data
     "recorder",
 }
+# We need to make sure discovery integrations
+# update their deps or they could have an import error
+# as allow them to be imported without being added as a dep
+# to manifest.json
+DISCOVERY_INTEGRATIONS = {"dhcp", "ssdp", "usb", "zeroconf"}
 STAGE_1_INTEGRATIONS = {
     # To make sure we forward data to other instances
     "mqtt_eventstream",
@@ -507,6 +512,15 @@ async def _async_set_up_integrations(
         _LOGGER.debug("Setting up debuggers: %s", debuggers)
         await async_setup_multi_components(hass, debuggers, config)
 
+    # Set up discovery integrations.
+    # Make sure we do these first since integrations
+    # are allowed to import them without adding them to their
+    # manifest.json, and we want to make sure their deps are up
+    # to date before integrations get a shot at importing them
+    if discovery := domains_to_setup & DISCOVERY_INTEGRATIONS:
+        _LOGGER.debug("Setting up discovery integrations: %s", discovery)
+        await async_setup_multi_components(hass, discovery, config)
+
     # calculate what components to setup in what stage
     stage_1_domains: set[str] = set()
 
@@ -528,7 +542,9 @@ async def _async_set_up_integrations(
 
             deps_promotion.update(dep_itg.all_dependencies)
 
-    stage_2_domains = domains_to_setup - logging_domains - debuggers - stage_1_domains
+    stage_2_domains = (
+        domains_to_setup - logging_domains - debuggers - discovery - stage_1_domains
+    )
 
     # Load the registries
     await asyncio.gather(
