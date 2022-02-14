@@ -23,6 +23,9 @@ class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         This flow is triggered by 'async_setup' for configured accounts.
         """
+        await self.async_set_unique_id(import_config[CONF_USERNAME].lower())
+        self._abort_if_unique_id_configured()
+
         return self.async_create_entry(
             title=import_config[CONF_USERNAME], data=import_config
         )
