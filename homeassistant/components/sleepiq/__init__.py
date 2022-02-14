@@ -9,30 +9,15 @@ from sleepyq import Sleepyq
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-    Platform,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import (
-    BED,
-    CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE,
-    DOMAIN,
-    ICON_OCCUPIED,
-    SENSOR_TYPES,
-)
+from .const import BED, DOMAIN, ICON_OCCUPIED, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,16 +61,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Call the SleepIQ API to refresh data
     await coordinator.async_config_entry_first_refresh()
 
-    # Listen to config entry updates
-    entry.async_on_unload(entry.add_update_listener(_async_signal_options_update))
-    entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            _config_entry_update_signal_name(entry),
-            coordinator.async_update_config,
-        )
-    )
-
     hass.data[DATA_SLEEPIQ] = SleepIQHassData(
         coordinators={entry.data[CONF_USERNAME]: coordinator}
     )
@@ -106,20 +81,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
-def _config_entry_update_signal_name(config_entry: ConfigEntry) -> str:
-    """Get signal name for updates to a config entry."""
-    return CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE.format(DOMAIN, config_entry.unique_id)
-
-
-async def _async_signal_options_update(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> None:
-    """Signal config entry options update."""
-    async_dispatcher_send(
-        hass, _config_entry_update_signal_name(config_entry), config_entry
-    )
-
-
 class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     """SleepIQ data update coordinator."""
 
@@ -136,12 +97,6 @@ class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             hass, _LOGGER, name=f"{username}@SleepIQ", update_interval=update_interval
         )
         self.client = client
-
-    async def async_update_config(self, config_entry: ConfigEntry) -> None:
-        """Handle config update."""
-        self.update_interval = timedelta(
-            seconds=config_entry.options[CONF_SCAN_INTERVAL]
-        )
 
     async def _async_update_data(self) -> dict[str, dict]:
         return await self.hass.async_add_executor_job(self.update_data)

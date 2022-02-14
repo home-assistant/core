@@ -3,7 +3,6 @@
 DOMAIN = "sleepiq"
 
 BED = "bed"
-CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE = "{}_config_entry_update_{}"
 ICON_EMPTY = "mdi:bed-empty"
 ICON_OCCUPIED = "mdi:bed"
 IS_IN_BED = "is_in_bed"
