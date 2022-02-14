@@ -26,7 +26,7 @@ from pycec.const import (
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
-    DOMAIN,
+    DOMAIN as MP_DOMAIN,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY_MEDIA,
@@ -48,11 +48,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ATTR_NEW, CecEntity
+from . import ATTR_NEW, DOMAIN, CecEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
+ENTITY_ID_FORMAT = MP_DOMAIN + ".{}"
 
 
 def setup_platform(
@@ -77,7 +77,7 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
     def __init__(self, device, logical) -> None:
         """Initialize the HDMI device."""
         CecEntity.__init__(self, device, logical)
-        self.entity_id = f"{DOMAIN}.hdmi_{hex(self._logical_address)[2:]}"
+        self.entity_id = f"{MP_DOMAIN}.hdmi_{hex(self._logical_address)[2:]}"
 
     def send_keypress(self, key):
         """Send keypress to CEC adapter."""
