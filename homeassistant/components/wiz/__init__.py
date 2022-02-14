@@ -4,13 +4,15 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pywizlight import wizlight
+from pywizlight import PilotParser, wizlight
+from pywizlight.bulb import PIR_SOURCE
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -19,6 +21,7 @@ from .const import (
     DISCOVER_SCAN_TIMEOUT,
     DISCOVERY_INTERVAL,
     DOMAIN,
+    SIGNAL_WIZ_PIR,
     WIZ_CONNECT_EXCEPTIONS,
     WIZ_EXCEPTIONS,
 )
@@ -27,7 +30,7 @@ from .models import WizData
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.LIGHT, Platform.SWITCH]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.LIGHT, Platform.SWITCH]
 
 REQUEST_REFRESH_DELAY = 0.35
 
@@ -76,7 +79,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
     )
 
-    await bulb.start_push(lambda _: coordinator.async_set_updated_data(None))
+    @callback
+    def _async_push_update(state: PilotParser) -> None:
+        """Receive a push update."""
+        _LOGGER.debug("%s: Got push update: %s", bulb.mac, state.pilotResult)
+        coordinator.async_set_updated_data(None)
+        if state.get_source() == PIR_SOURCE:
+            async_dispatcher_send(hass, SIGNAL_WIZ_PIR.format(bulb.mac))
+
+    await bulb.start_push(_async_push_update)
     bulb.set_discovery_callback(lambda bulb: async_trigger_discovery(hass, [bulb]))
     await coordinator.async_config_entry_first_refresh()
 
