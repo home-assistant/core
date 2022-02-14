@@ -23,7 +23,8 @@ class AisNbpConfigFlow(config_entries.ConfigFlow, domain="ais_easy"):
         if user_input is not None:
             # token i host
             return self.async_show_form(
-                step_id="settings", data_schema=vol.Schema({"host": str, "token": str})
+                step_id="settings",
+                data_schema=vol.Schema({"host": str, "user": str, "pass": str}),
             )
 
         return self.async_show_form(step_id="confirm")

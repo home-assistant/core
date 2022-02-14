@@ -1,4 +1,5 @@
 """ais easy sensor"""
+from base64 import b64encode
 from datetime import timedelta
 import json
 import logging
@@ -20,13 +21,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Konfiguracja za pomcą przepływu konfiguracji."""
-    # Aktualnie obowiązująca cena złota
+    # Status PLC EASY
     async_add_entities(
         [
             AisEasySensor(
                 hass,
                 config_entry.data["host"],
-                config_entry.data["token"],
+                config_entry.data["user"],
+                config_entry.data["pass"],
                 "ais_easy_state",
             )
         ]
@@ -47,11 +49,12 @@ async def async_unload_entry(hass, entry):
 class AisEasySensor(Entity):
     """Reprezentacja sensora AisHelloSensor."""
 
-    def __init__(self, hass, easy_host, easy_token, easy_entity_id):
+    def __init__(self, hass, easy_host, easy_user, easy_pass, easy_entity_id):
         """Inicjalizacja sensora."""
         self.hass = hass
         self._host = easy_host
-        self._token = easy_token
+        self._user = easy_user
+        self._pass = easy_pass
         self._state = None
         self._status_on_start = True
         self._entity_id = easy_entity_id
@@ -93,8 +96,12 @@ class AisEasySensor(Entity):
 
     async def async_ask_easy(self):
         web_session = aiohttp_client.async_get_clientsession(self.hass)
+        encoded_credentials = b64encode(
+            bytes(f"{self._user}:{self._pass}", encoding="ascii")
+        ).decode("ascii")
+
         header = {
-            "Authorization": "Bearer %s" % self._token,
+            "Authorization": "Basic %s" % encoded_credentials,
             "Content-Type": "application/json",
         }
         url = "http://" + self._host + "/api/get/data?elm=STATE"
@@ -107,7 +114,7 @@ class AisEasySensor(Entity):
                 return info_json["SYSINFO"]["STATE"]
 
         except Exception as e:
-            _LOGGER.info("Ask Easy timeout error: " + str(e))
+            _LOGGER.error("Ask Easy error: " + str(e))
 
     async def async_update(self):
         """Pobranie aktualnego statusu sensora
