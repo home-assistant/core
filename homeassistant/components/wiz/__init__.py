@@ -94,15 +94,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await bulb.async_close()
         raise err
 
-    await bulb.start_push(_async_push_update)
-    bulb.set_discovery_callback(lambda bulb: async_trigger_discovery(hass, [bulb]))
-
     async def _async_shutdown_on_stop(event: Event) -> None:
         await bulb.async_close()
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown_on_stop)
     )
+
+    await bulb.start_push(_async_push_update)
+    bulb.set_discovery_callback(lambda bulb: async_trigger_discovery(hass, [bulb]))
+
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = WizData(
         coordinator=coordinator, bulb=bulb, scenes=scenes
     )
