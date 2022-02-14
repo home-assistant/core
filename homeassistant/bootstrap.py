@@ -69,16 +69,14 @@ LOGGING_INTEGRATIONS = {
     # To record data
     "recorder",
 }
-
+DISCOVERY_INTEGRATIONS = ("dhcp", "ssdp", "usb", "zeroconf")
 STAGE_1_INTEGRATIONS = {
     # We need to make sure discovery integrations
-    # update their deps or they could have an import error
-    # as allow them to be imported without being added as a dep
-    # to manifest.json
-    "dhcp",
-    "ssdp",
-    "usb",
-    "zeroconf"
+    # update their deps before stage 2 integrations
+    # load them inadvertently before their deps have
+    # been updated which leads to using an old version
+    # of the dep, or worse (import errors).
+    *DISCOVERY_INTEGRATIONS,
     # To make sure we forward data to other instances
     "mqtt_eventstream",
     # To provide account link implementations
