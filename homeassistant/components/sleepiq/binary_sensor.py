@@ -41,7 +41,8 @@ class IsInBedBinarySensor(SleepIQSensor, BinarySensorEntity):
         """Initialize the sensor."""
         super().__init__(sleepiq_data, bed_id, side)
         self._state = None
-        self._name = SENSOR_TYPES[IS_IN_BED]
+        self.type = IS_IN_BED
+        self._name = SENSOR_TYPES[self.type]
         self.update()
 
     @property
