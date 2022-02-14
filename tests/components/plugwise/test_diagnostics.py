@@ -5,18 +5,20 @@ from aiohttp import ClientSession
 
 from homeassistant.core import HomeAssistant
 
+from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.components.plugwise.common import async_init_integration
 
 
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSession,
     mock_smile_adam: MagicMock,
-):
+    init_integration: MockConfigEntry,
+) -> None:
     """Test diagnostics."""
-    entry = await async_init_integration(hass, mock_smile_adam)
-    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == {
+    assert await get_diagnostics_for_config_entry(
+        hass, hass_client, init_integration
+    ) == {
         "gateway": {
             "active_device": True,
             "cooling_present": None,

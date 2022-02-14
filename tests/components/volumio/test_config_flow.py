@@ -19,6 +19,7 @@ TEST_CONNECTION = {
 
 TEST_DISCOVERY = zeroconf.ZeroconfServiceInfo(
     host="1.1.1.1",
+    addresses=["1.1.1.1"],
     hostname="mock_hostname",
     name="mock_name",
     port=3000,

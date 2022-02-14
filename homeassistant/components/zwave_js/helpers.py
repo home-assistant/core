@@ -60,10 +60,9 @@ def get_valueless_base_unique_id(client: ZwaveClient, node: ZwaveNode) -> str:
     return f"{client.driver.controller.home_id}.{node.node_id}"
 
 
-@callback
-def get_unique_id(home_id: str, value_id: str) -> str:
-    """Get unique ID from home ID and value ID."""
-    return f"{home_id}.{value_id}"
+def get_unique_id(client: ZwaveClient, value_id: str) -> str:
+    """Get unique ID from client and value ID."""
+    return f"{client.driver.controller.home_id}.{value_id}"
 
 
 @callback

@@ -199,6 +199,7 @@ FLOWS = [
     "mobile_app",
     "modem_callerid",
     "modern_forms",
+    "moehlenhoff_alpha2",
     "monoprice",
     "motion_blinds",
     "motioneye",

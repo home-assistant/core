@@ -17,6 +17,7 @@
                 "data": {
                     "password": "Password",
                     "protocol": "Protocol",
+                    "temperature_unit": "The temperature unit ElkM1 uses.",
                     "username": "Username"
                 },
                 "description": "Connect to the discovered system: {mac_address} ({host})",
@@ -28,6 +29,7 @@
                     "password": "Password",
                     "prefix": "A unique prefix (leave blank if you only have one ElkM1).",
                     "protocol": "Protocol",
+                    "temperature_unit": "The temperature unit ElkM1 uses.",
                     "username": "Username"
                 },
                 "description": "The address string must be in the form 'address[:port]' for 'secure' and 'non-secure'. Example: '192.168.1.1'. The port is optional and defaults to 2101 for 'non-secure' and 2601 for 'secure'. For the serial protocol, the address must be in the form 'tty[:baud]'. Example: '/dev/ttyS1'. The baud is optional and defaults to 115200.",
@@ -35,7 +37,13 @@
             },
             "user": {
                 "data": {
-                    "device": "Device"
+                    "address": "The IP address or domain or serial port if connecting via serial.",
+                    "device": "Device",
+                    "password": "Password",
+                    "prefix": "A unique prefix (leave blank if you only have one ElkM1).",
+                    "protocol": "Protocol",
+                    "temperature_unit": "The temperature unit ElkM1 uses.",
+                    "username": "Username"
                 },
                 "description": "Choose a discovered system or 'Manual Entry' if no devices have been discovered.",
                 "title": "Connect to Elk-M1 Control"
