@@ -429,7 +429,7 @@ def _decode_dhcp_option(dhcp_options, key):
             return None
 
 
-def _format_mac(mac_address: str) -> str:
+def _format_mac(mac_address):
     """Format a mac address for matching."""
     return format_mac(mac_address).replace(":", "")
 
