@@ -60,7 +60,6 @@ class LidarrConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
-        placeholders = {CONF_URL: self.entry.data[CONF_URL]} if self.entry else None
         errors = {}
 
         if user_input is None:
@@ -106,7 +105,6 @@ class LidarrConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-            description_placeholders=placeholders,
         )
 
 

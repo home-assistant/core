@@ -13,7 +13,7 @@ from homeassistant.components.lidarr.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
-from homeassistant.const import CONF_SOURCE
+from homeassistant.const import CONF_API_KEY, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 
 from . import CONF_DATA, MOCK_USER_INPUT, create_entry, mock_connection
@@ -138,10 +138,11 @@ async def test_flow_reauth(
     assert result["step_id"] == "user"
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input=CONF_DATA,
+        user_input={CONF_API_KEY: "abc123"},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_API_KEY] == "abc123"
 
 
 async def test_options_flow(
