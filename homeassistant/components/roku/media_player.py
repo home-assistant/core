@@ -390,7 +390,6 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         """Play media from a URL or file, launch an application, or tune to a channel."""
         extra: dict[str, Any] = kwargs.get(ATTR_MEDIA_EXTRA) or {}
         original_media_type: str = media_type
-        original_media_id: str = media_id
         mime_type: str | None = None
         stream_name: str | None = None
         stream_format: str | None = extra.get(ATTR_FORMAT)
@@ -426,7 +425,6 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
                 extra[ATTR_FORMAT] = stream_format
 
             if extra[ATTR_FORMAT] not in STREAM_FORMAT_TO_MEDIA_TYPE:
-                print(original_media_id)
                 _LOGGER.error(
                     "Media type %s is not supported with format %s (mime: %s)",
                     original_media_type,
