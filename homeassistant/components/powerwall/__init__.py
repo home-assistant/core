@@ -91,7 +91,7 @@ class PowerwallDataManager:
         http_session = requests.Session()
         self.runtime_data[POWERWALL_HTTP_SESSION] = http_session
         self.power_wall = Powerwall(self.ip_address, http_session=http_session)
-        self.power_wall.login(self.password)
+        self.power_wall.login(self.password or "")
 
     async def async_update_data(self) -> PowerwallData:
         """Fetch data from API endpoint."""
