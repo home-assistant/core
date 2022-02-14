@@ -207,6 +207,43 @@ async def test_dhcp_renewal_match_hostname_and_macaddress(hass):
     )
 
 
+async def test_registering_mac_address(hass):
+    """Test discovery callbacks happen when registering a mac address."""
+    integration_matchers = []
+
+    packet = Ether(RAW_DHCP_RENEWAL)
+
+    cancel = dhcp.async_register_mac(hass, "50147903852c", "mock-domain")
+
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
+        hass, integration_matchers
+    )
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
+        await async_handle_dhcp_packet(packet)
+        # Ensure no change is ignored
+        await async_handle_dhcp_packet(packet)
+
+    assert len(mock_init.mock_calls) == 1
+    assert mock_init.mock_calls[0][1][0] == "mock-domain"
+    assert mock_init.mock_calls[0][2]["context"] == {
+        "source": config_entries.SOURCE_DHCP
+    }
+    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.1.120",
+        hostname="irobot-ae9ec12dd3b04885bcbfa36afb01e1cc",
+        macaddress="50147903852c",
+    )
+
+    cancel()
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
+        hass, integration_matchers
+    )
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
+        await async_handle_dhcp_packet(packet)
+
+    assert len(mock_init.mock_calls) == 0
+
+
 async def test_dhcp_match_hostname(hass):
     """Test matching based on hostname only."""
     integration_matchers = [{"domain": "mock-domain", "hostname": "connect"}]

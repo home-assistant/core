@@ -1,5 +1,7 @@
 """The dhcp integration."""
+from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import fnmatch
@@ -57,7 +59,42 @@ IP_ADDRESS: Final = "ip"
 DHCP_REQUEST = 3
 SCAN_INTERVAL = timedelta(minutes=60)
 
+DHCP_REGISTRATONS = "dhcp_registrations"
+
 _LOGGER = logging.getLogger(__name__)
+
+
+def _format_mac(mac_address: str) -> str:
+    """Format a mac address for matching."""
+    return format_mac(mac_address).replace(":", "")
+
+
+@callback
+def async_register_mac(
+    hass: HomeAssistant, mac: str, integration: str
+) -> Callable[[], None]:
+    """Register to get discovery flows for a mac address.
+
+    If the mac address is registered to multiple vendors
+    or the hostname is not sent with dhcp, the mac can be
+    registered which allows discovery flows to still be
+    created to update the ip address when it changes.
+
+    It is recommended to wrap this call in entry.async_on_unload
+
+    Example:
+    entry.async_on_unload(dhcp.async_register_mac(hass, "50147903852c", 'integration'))
+    """
+    registrations: dict[str, set[str]] = hass.data.setdefault(DHCP_REGISTRATONS, {})
+    formatted_mac = _format_mac(mac).upper()
+    registrations.setdefault(formatted_mac, set()).add(integration)
+
+    def _unregister() -> None:
+        registrations[formatted_mac].remove(integration)
+        if not registrations[formatted_mac]:
+            del registrations[formatted_mac]
+
+    return _unregister
 
 
 @dataclass
@@ -179,7 +216,15 @@ class WatcherBase:
             lowercase_hostname,
         )
 
+        registrations: dict[str, set[str]] = self.hass.data.setdefault(
+            DHCP_REGISTRATONS, {}
+        )
         matched_domains = set()
+
+        if domains := registrations.get(uppercase_mac):
+            _LOGGER.debug("Matched %s via registered mac address: %s", data, domains)
+            matched_domains |= domains
+
         for entry in self._integration_matchers:
             if MAC_ADDRESS in entry and not fnmatch.fnmatch(
                 uppercase_mac, entry[MAC_ADDRESS]
@@ -192,14 +237,12 @@ class WatcherBase:
                 continue
 
             _LOGGER.debug("Matched %s against %s", data, entry)
-            if entry["domain"] in matched_domains:
-                # Only match once per domain
-                continue
-
             matched_domains.add(entry["domain"])
+
+        for domain in matched_domains:
             discovery_flow.async_create_flow(
                 self.hass,
-                entry["domain"],
+                domain,
                 {"source": config_entries.SOURCE_DHCP},
                 DhcpServiceInfo(
                     ip=ip_address,
@@ -413,11 +456,6 @@ def _decode_dhcp_option(dhcp_options, key):
             return value.decode()
         except (AttributeError, UnicodeDecodeError):
             return None
-
-
-def _format_mac(mac_address):
-    """Format a mac address for matching."""
-    return format_mac(mac_address).replace(":", "")
 
 
 def _verify_l2socket_setup(cap_filter):
