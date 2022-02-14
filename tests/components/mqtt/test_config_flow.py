@@ -1,6 +1,4 @@
 """Test config flow."""
-
-import queue
 from unittest.mock import patch
 
 import pytest
@@ -48,11 +46,12 @@ def mock_try_connection_success():
 def mock_try_connection_time_out():
     """Mock the try connection method with a time out."""
 
-    with patch("paho.mqtt.client.Client") as mock_client:
+    # Patch prevent waiting 5 sec for a timeout
+    with patch("paho.mqtt.client.Client") as mock_client, patch(
+        "homeassistant.components.mqtt.config_flow.MQTT_TIMEOUT", 0
+    ):
         mock_client().loop_start = lambda *args: 1
-        # To prevent waiting 5 sec for a timeout
-        with patch("queue.Queue.get", side_effect=queue.Empty):
-            yield mock_client()
+        yield mock_client()
 
 
 async def test_user_connection_works(
