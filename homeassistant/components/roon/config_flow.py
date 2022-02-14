@@ -128,7 +128,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._servers = []
 
     async def async_step_user(self, user_input=None):
-        """Handle getting host details from the user."""
+        """Get roon core details via discovery."""
 
         self._servers = await discover(self.hass)
 
@@ -139,7 +139,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_fallback()
 
     async def async_step_fallback(self, user_input=None):
-        """Handle getting host details from the user."""
+        """Get host and port details from the user."""
         errors = {}
 
         if user_input is not None:
