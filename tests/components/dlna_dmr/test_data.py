@@ -37,7 +37,10 @@ def aiohttp_notify_servers_mock() -> Iterable[Mock]:
 
         # Every server must be stopped if it was started
         for server in servers:
-            assert server.start_server.call_count == server.stop_server.call_count
+            assert (
+                server.async_start_server.call_count
+                == server.async_stop_server.call_count
+            )
 
 
 async def test_get_domain_data(hass: HomeAssistant) -> None:
@@ -60,7 +63,7 @@ async def test_event_notifier(
 
     # Check that the parameters were passed through to the AiohttpNotifyServer
     aiohttp_notify_servers_mock.assert_called_with(
-        requester=ANY, listen_port=0, listen_host=None, callback_url=None, loop=ANY
+        requester=ANY, source=("0.0.0.0", 0), callback_url=None, loop=ANY
     )
 
     # Same address should give same notifier
@@ -79,8 +82,7 @@ async def test_event_notifier(
     # Check that the parameters were passed through to the AiohttpNotifyServer
     aiohttp_notify_servers_mock.assert_called_with(
         requester=ANY,
-        listen_port=9999,
-        listen_host="192.88.99.4",
+        source=("192.88.99.4", 9999),
         callback_url="http://192.88.99.4:9999/notify",
         loop=ANY,
     )

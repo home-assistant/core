@@ -2,7 +2,7 @@
 # pylint: disable=protected-access
 
 from datetime import datetime, timedelta
-from ipaddress import IPv4Address, IPv6Address
+from ipaddress import IPv4Address
 from unittest.mock import ANY, AsyncMock, patch
 
 from async_upnp_client.ssdp import udn_from_headers
@@ -386,7 +386,7 @@ async def test_discovery_from_advertisement_sets_ssdp_st(
     # End compatibility checks
 
 
-@patch(  # XXX TODO: Isn't this duplicate with mock_get_source_ip?
+@patch(
     "homeassistant.components.ssdp.Scanner._async_build_source_set",
     return_value={IPv4Address("192.168.1.1")},
 )
@@ -711,7 +711,7 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
 @patch(
     "homeassistant.components.ssdp.network.async_get_adapters",
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
-)  # XXX TODO: Isn't this duplicate with mock_get_source_ip?
+)
 async def test_async_detect_interfaces_setting_empty_route(
     mock_get_adapters, mock_get_ssdp, hass
 ):
@@ -719,8 +719,8 @@ async def test_async_detect_interfaces_setting_empty_route(
     await init_ssdp_component(hass)
 
     ssdp_listeners = hass.data[ssdp.DOMAIN]._ssdp_listeners
-    source_ips = {ssdp_listener.source_ip for ssdp_listener in ssdp_listeners}
-    assert source_ips == {IPv6Address("2001:db8::"), IPv4Address("192.168.1.5")}
+    sources = {ssdp_listener.source for ssdp_listener in ssdp_listeners}
+    assert sources == {("2001:db8::%1", 0, 0, 1), ("192.168.1.5", 0)}
 
 
 @pytest.mark.usefixtures("mock_get_source_ip")
@@ -737,14 +737,14 @@ async def test_async_detect_interfaces_setting_empty_route(
 @patch(
     "homeassistant.components.ssdp.network.async_get_adapters",
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
-)  # XXX TODO: Isn't this duplicate with mock_get_source_ip?
+)
 async def test_bind_failure_skips_adapter(
     mock_get_adapters, mock_get_ssdp, hass, caplog
 ):
     """Test that an adapter with a bind failure is skipped."""
 
     async def _async_start(self):
-        if self.source_ip == IPv6Address("2001:db8::"):
+        if self.source == ("2001:db8::%1", 0, 0, 1):
             raise OSError
 
     SsdpListener.async_start = _async_start
@@ -753,10 +753,8 @@ async def test_bind_failure_skips_adapter(
     assert "Failed to setup listener for" in caplog.text
 
     ssdp_listeners = hass.data[ssdp.DOMAIN]._ssdp_listeners
-    source_ips = {ssdp_listener.source_ip for ssdp_listener in ssdp_listeners}
-    assert source_ips == {
-        IPv4Address("192.168.1.5")
-    }  # Note no SsdpListener for IPv6 address.
+    sources = {ssdp_listener.source for ssdp_listener in ssdp_listeners}
+    assert sources == {("192.168.1.5", 0)}  # Note no SsdpListener for IPv6 address.
 
 
 @pytest.mark.usefixtures("mock_get_source_ip")
@@ -773,7 +771,7 @@ async def test_bind_failure_skips_adapter(
 @patch(
     "homeassistant.components.ssdp.network.async_get_adapters",
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
-)  # XXX TODO: Isn't this duplicate with mock_get_source_ip?
+)
 async def test_ipv4_does_additional_search_for_sonos(
     mock_get_adapters, mock_get_ssdp, hass
 ):
