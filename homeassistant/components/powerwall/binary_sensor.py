@@ -1,5 +1,4 @@
 """Support for powerwall binary sensors."""
-from typing import cast
 
 from tesla_powerwall import GridStatus, MeterType
 
@@ -51,7 +50,7 @@ class PowerWallRunningSensor(PowerWallEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Get the powerwall running state."""
-        return cast(bool, self.data.site_master.is_running)
+        return self.data.site_master.is_running
 
 
 class PowerWallConnectedSensor(PowerWallEntity, BinarySensorEntity):
@@ -68,7 +67,7 @@ class PowerWallConnectedSensor(PowerWallEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Get the powerwall connected to tesla state."""
-        return cast(bool, self.data.site_master.is_connected_to_tesla)
+        return self.data.site_master.is_connected_to_tesla
 
 
 class PowerWallGridServicesActiveSensor(PowerWallEntity, BinarySensorEntity):
@@ -102,7 +101,7 @@ class PowerWallGridStatusSensor(PowerWallEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Grid is online."""
-        return cast(bool, self.data.grid_status == GridStatus.CONNECTED)
+        return self.data.grid_status == GridStatus.CONNECTED
 
 
 class PowerWallChargingStatusSensor(PowerWallEntity, BinarySensorEntity):
@@ -120,4 +119,4 @@ class PowerWallChargingStatusSensor(PowerWallEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         """Powerwall is charging."""
         # is_sending_to returns true for values greater than 100 watts
-        return cast(bool, self.data.meters.get_meter(MeterType.BATTERY).is_sending_to())
+        return self.data.meters.get_meter(MeterType.BATTERY).is_sending_to()
