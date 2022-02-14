@@ -522,6 +522,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """
         if spotify.is_spotify_media_type(media_type):
             media_type = spotify.resolve_spotify_media_type(media_type)
+            media_id = spotify.spotify_uri_from_media_browser_url(media_id)
 
         if media_source.is_media_source_id(media_id):
             media_type = MEDIA_TYPE_MUSIC
