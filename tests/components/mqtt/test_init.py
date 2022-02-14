@@ -723,12 +723,12 @@ async def test_subscribe_bad_topic(hass, mqtt_mock, calls, record_calls):
 
 async def test_subscribe_deprecated(hass, mqtt_mock):
     """Test the subscription of a topic using deprecated callback signature."""
-    calls = []
 
     async def record_calls(topic, payload, qos):
         """Record calls."""
         calls.append((topic, payload, qos))
 
+    calls = []
     unsub = await mqtt.async_subscribe(hass, "test-topic", record_calls)
 
     async_fire_mqtt_message(hass, "test-topic", "test-payload")
@@ -1121,7 +1121,7 @@ async def test_connection_error(hass, caplog):
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
 
     with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client().connect = lambda *args: 0
+        mock_client.on_connect(return_value=0)
         assert await mqtt.async_setup_entry(hass, entry)
         await hass.async_block_till_done()
         component = hass.data["mqtt"]
@@ -1134,7 +1134,7 @@ async def test_handle_mid_event(hass, caplog):
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
 
     with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client().connect = lambda *args: 0
+        mock_client.on_connect(return_value=0)
         assert await mqtt.async_setup_entry(hass, entry)
         await hass.async_block_till_done()
         mid = 123
@@ -1227,8 +1227,11 @@ async def test_setup_mqtt_client_protocol(hass):
         data={mqtt.CONF_BROKER: "test-broker", mqtt.CONF_PROTOCOL: "3.1"},
     )
     with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client().connect = lambda *args: 1
+        mock_client.on_connect(return_value=0)
         assert await mqtt.async_setup_entry(hass, entry)
+
+    # check if protocol setup was correctly
+    assert hass.data["mqtt"].conf["protocol"] == "3.1"
 
 
 async def test_setup_raises_ConfigEntryNotReady_if_no_connect_broker(hass, caplog):
@@ -1247,15 +1250,20 @@ async def test_setup_uses_certificate_on_certificate_set_to_auto_and_insecure(
 ):
     """Test setup uses bundled certs when certificate is set to auto and insecure."""
     calls = []
+    insecure_check = {"insecure": "not set"}
 
     def mock_tls_set(certificate, certfile=None, keyfile=None, tls_version=None):
         calls.append((certificate, certfile, keyfile, tls_version))
+
+    def mock_tls_insecure_set(insecure_param):
+        insecure_check["insecure"] = insecure_param
 
     config_item_data = {mqtt.CONF_BROKER: "test-broker", "certificate": "auto"}
     if insecure is not None:
         config_item_data["tls_insecure"] = insecure
     with patch("paho.mqtt.client.Client") as mock_client:
         mock_client().tls_set = mock_tls_set
+        mock_client().tls_insecure_set = mock_tls_insecure_set
         entry = MockConfigEntry(
             domain=mqtt.DOMAIN,
             data=config_item_data,
@@ -1270,6 +1278,13 @@ async def test_setup_uses_certificate_on_certificate_set_to_auto_and_insecure(
         expectedCertificate = certifi.where()
         # assert mock_mqtt.mock_calls[0][1][2]["certificate"] == expectedCertificate
         assert calls[0][0] == expectedCertificate
+
+        # test if insecure is set
+        assert (
+            insecure_check["insecure"] == insecure
+            if insecure is not None
+            else insecure_check["insecure"] == "not set"
+        )
 
 
 async def test_setup_without_tls_config_uses_tlsv1_under_python36(hass):
@@ -1566,14 +1581,15 @@ async def test_mqtt_ws_subscription(hass, hass_ws_client, mqtt_mock):
 
 
 async def test_mqtt_ws_subscription_not_admin(
-    hass, caplog, hass_ws_client, mqtt_mock, hass_read_only_access_token
+    hass, hass_ws_client, mqtt_mock, hass_read_only_access_token
 ):
     """Test MQTT websocket user is not admin."""
     client = await hass_ws_client(hass, access_token=hass_read_only_access_token)
     await client.send_json({"id": 5, "type": "mqtt/subscribe", "topic": "test-topic"})
     response = await client.receive_json()
     assert response["success"] is False
-    assert "Error handling message: Unauthorized" in caplog.text
+    assert response["error"]["code"] == "unauthorized"
+    assert response["error"]["message"] == "Unauthorized"
 
 
 async def test_dump_service(hass, mqtt_mock):
@@ -2308,10 +2324,9 @@ async def test_subscribe_connection_status(hass, caplog, mqtt_mock, mqtt_client_
     """Test connextion status subscription."""
 
     @callback
-    async def async_mqtt_connected(status: bool) -> bool:
+    async def async_mqtt_connected(status):
         """Update state on connection/disconnection to MQTT broker."""
         _LOGGER.info("connection status %s", status)
-        return True
 
     mqtt_mock.connected = True
     unsub = mqtt.async_subscribe_connection_status(hass, async_mqtt_connected)
