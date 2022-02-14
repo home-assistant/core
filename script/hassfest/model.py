@@ -133,6 +133,10 @@ class Integration:
             self.add_error("model", f"Manifest contains invalid JSON: {err}")
             return
 
+        import pprint
+
+        if self.domain == "flux_led":
+            pprint.pprint([manifest, manifest.get("dhcp")])
         self.manifest = manifest
 
     def import_pkg(self, platform=None):

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import contextlib
+import logging
 from typing import Any, Final, cast
 
 from flux_led.const import (
@@ -46,6 +47,7 @@ from .discovery import (
 from .util import format_as_flux_mac
 
 CONF_DEVICE: Final = "device"
+_LOGGER = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -66,6 +68,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle discovery via dhcp."""
+        _LOGGER.debug("Discovered via dhcp: %s", discovery_info)
         self._discovered_device = FluxLEDDiscovery(
             ipaddr=discovery_info.ip,
             model=None,
