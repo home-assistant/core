@@ -2535,7 +2535,7 @@ youtube_dl==2021.12.17
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.38.2
+zeroconf==0.38.1
 
 # homeassistant.components.zha
 zha-quirks==0.0.66
