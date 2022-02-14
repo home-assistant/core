@@ -410,6 +410,27 @@ async def test_setup_via_discovery_cannot_connect(hass):
     assert result3["reason"] == "cannot_connect"
 
 
+async def test_setup_via_discovery_exception_finds_nothing(hass):
+    """Test we do not find anything if discovery throws."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    with patch(
+        "homeassistant.components.wiz.discovery.find_wizlights",
+        side_effect=OSError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["reason"] == "no_devices_found"
+
+
 async def test_discovery_with_firmware_update(hass):
     """Test we check the device again between first discovery and config entry creation."""
     with _patch_wizlight(
