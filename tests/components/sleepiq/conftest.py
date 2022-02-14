@@ -1,34 +1,42 @@
 """Common fixtures for sleepiq tests."""
+import json
+from unittest.mock import patch
 
 import pytest
+from sleepyq import Bed, FamilyStatus, Sleeper
 
 from homeassistant.components.sleepiq.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry, load_fixture
 
-BASE_URL = "https://prod-api.sleepiq.sleepnumber.com/rest/"
+
+def mock_beds(account_type):
+    """Mock sleepnumber bed data."""
+    return [
+        Bed(bed)
+        for bed in json.loads(load_fixture(f"bed{account_type}.json", "sleepiq"))[
+            "beds"
+        ]
+    ]
 
 
-@pytest.fixture
-def requests_mock_fixture(request, requests_mock):
-    """Mock responses for SleepIQ API."""
-    requests_mock.put(
-        BASE_URL + "login", text=load_fixture("login.json", integration=DOMAIN)
-    )
-    requests_mock.get(
-        BASE_URL + "bed?_k=0987",
-        text=load_fixture(f"bed{request.param}.json", integration=DOMAIN),
-    )
-    requests_mock.get(
-        BASE_URL + "sleeper?_k=0987",
-        text=load_fixture("sleeper.json", integration=DOMAIN),
-    )
-    requests_mock.get(
-        BASE_URL + "bed/familyStatus?_k=0987",
-        text=load_fixture(f"familystatus{request.param}.json", integration=DOMAIN),
-    )
-    return request.param
+def mock_sleepers():
+    """Mock sleeper data."""
+    return [
+        Sleeper(sleeper)
+        for sleeper in json.loads(load_fixture("sleeper.json", "sleepiq"))["sleepers"]
+    ]
+
+
+def mock_bed_family_status(account_type):
+    """Mock family status data."""
+    return [
+        FamilyStatus(status)
+        for status in json.loads(
+            load_fixture(f"familystatus{account_type}.json", "sleepiq")
+        )["beds"]
+    ]
 
 
 @pytest.fixture
@@ -37,7 +45,6 @@ def config_data():
     return {
         CONF_USERNAME: "username",
         CONF_PASSWORD: "password",
-        CONF_SCAN_INTERVAL: 60,
     }
 
 
@@ -51,9 +58,18 @@ def config_entry(config_data):
     )
 
 
-@pytest.fixture
-async def setup_entry(hass, config_entry):
+@pytest.fixture(params=["-single", ""])
+async def setup_entry(hass, request, config_entry):
     """Initialize the config entry."""
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("sleepyq.Sleepyq.beds", return_value=mock_beds(request.param)), patch(
+        "sleepyq.Sleepyq.sleepers", return_value=mock_sleepers()
+    ), patch(
+        "sleepyq.Sleepyq.bed_family_status",
+        return_value=mock_bed_family_status(request.param),
+    ), patch(
+        "sleepyq.Sleepyq.login"
+    ):
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        return request.param
