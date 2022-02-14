@@ -8,8 +8,8 @@ from pywizlight import PilotParser, wizlight
 from pywizlight.bulb import PIR_SOURCE
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -57,6 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         scenes = await bulb.getSupportedScenes()
         await bulb.getMac()
     except WIZ_CONNECT_EXCEPTIONS as err:
+        await bulb.async_close()
         raise ConfigEntryNotReady(f"{ip_address}: {err}") from err
 
     async def _async_update() -> None:
@@ -79,6 +80,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
     )
 
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady as err:
+        await bulb.async_close()
+        raise err
+
+    async def _async_shutdown_on_stop(event: Event) -> None:
+        await bulb.async_close()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown_on_stop)
+    )
+
     @callback
     def _async_push_update(state: PilotParser) -> None:
         """Receive a push update."""
@@ -89,7 +103,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await bulb.start_push(_async_push_update)
     bulb.set_discovery_callback(lambda bulb: async_trigger_discovery(hass, [bulb]))
-    await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = WizData(
         coordinator=coordinator, bulb=bulb, scenes=scenes
