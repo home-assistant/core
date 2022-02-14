@@ -47,5 +47,5 @@ class IsInBedBinarySensor(SleepIQSensor, BinarySensorEntity):
     def _async_update_attrs(self) -> None:
         """Update sensor attributes."""
         super()._async_update_attrs()
-        self._attr_is_on = getattr(self._side, IS_IN_BED)
+        self._attr_is_on = getattr(self.side_data, IS_IN_BED)
         self._attr_icon = ICON_OCCUPIED if self.is_on else ICON_EMPTY

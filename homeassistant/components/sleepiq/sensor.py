@@ -42,4 +42,4 @@ class SleepNumberSensor(SleepIQSensor, SensorEntity):
     def _async_update_attrs(self) -> None:
         """Update sensor attributes."""
         super()._async_update_attrs()
-        self._attr_native_value = self._side.sleep_number
+        self._attr_native_value = self.side_data.sleep_number

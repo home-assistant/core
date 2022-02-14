@@ -136,8 +136,10 @@ class SleepIQSensor(CoordinatorEntity):
 
         self._async_update_attrs()
 
-        self._attr_name = f"SleepNumber {self._bed.name} {self._side.sleeper.first_name} {SENSOR_TYPES[name]}"
-        self._attr_unique_id = f"{self.bed_id}_{self._side.sleeper.first_name}_{name}"
+        self._attr_name = f"SleepNumber {self.bed_data.name} {self.side_data.sleeper.first_name} {SENSOR_TYPES[name]}"
+        self._attr_unique_id = (
+            f"{self.bed_id}_{self.side_data.sleeper.first_name}_{name}"
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -148,5 +150,5 @@ class SleepIQSensor(CoordinatorEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update sensor attributes."""
-        self._bed = self.coordinator.data[self.bed_id][BED]
-        self._side = getattr(self._bed, self.side)
+        self.bed_data = self.coordinator.data[self.bed_id][BED]
+        self.side_data = getattr(self.bed_data, self.side)
