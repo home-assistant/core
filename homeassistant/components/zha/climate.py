@@ -756,3 +756,18 @@ class BecaThermostat(Thermostat):
             )
 
         return False
+
+
+@MULTI_MATCH(
+    channel_names=CHANNEL_THERMOSTAT,
+    manufacturers="Stelpro",
+    models={"SORB"},
+    stop_on_match_group=CHANNEL_THERMOSTAT,
+)
+class StelproFanHeater(Thermostat):
+    """Stelpro Fan Heater implementation."""
+
+    @property
+    def hvac_modes(self) -> tuple[str, ...]:
+        """Return only the heat mode, because the device can't be turned off."""
+        return (HVAC_MODE_HEAT,)
