@@ -62,7 +62,12 @@ async def test_services(hass):
                 "source": "sensor.energy",
                 "cycle": "hourly",
                 "tariffs": ["peak", "offpeak"],
-            }
+            },
+            "energy_bill2": {
+                "source": "sensor.energy",
+                "cycle": "hourly",
+                "tariffs": ["peak", "offpeak"],
+            },
         }
     }
 
