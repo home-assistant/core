@@ -28,7 +28,6 @@ class WizEntity(CoordinatorEntity, Entity):
         board = hw_data.pop(0)
         model = hw_data.pop(0)
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._device.mac)},
             connections={(CONNECTION_NETWORK_MAC, self._device.mac)},
             name=name,
             manufacturer="WiZ",
