@@ -38,7 +38,6 @@ from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
-    DeviceEntry,
     DeviceRegistry,
     async_get,
     format_mac,
@@ -61,40 +60,12 @@ MESSAGE_TYPE = "message-type"
 HOSTNAME: Final = "hostname"
 MAC_ADDRESS: Final = "macaddress"
 IP_ADDRESS: Final = "ip"
+REGISTERED_DEVICES: Final = "registered_devices"
 DHCP_REQUEST = 3
 SCAN_INTERVAL = timedelta(minutes=60)
 
-DHCP_ENABLED_DEVICE_FLOWS = "dhcp_enabled_device_flows"
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@callback
-def async_enable_device_flows(hass: HomeAssistant) -> None:
-    """Request to get discovery flows for devices with mac addresses.
-
-    Must be called from async_setup_entry, and should
-    only be enabled if the integration implements
-    async_step_dhcp in the config flow.
-
-    This method is irreversible since the code for the integration
-    cannot change once its been loaded (async_step_dhcp does
-    not go away)
-
-    By enabling device flows, when the mac address bound to a DeviceEntry
-    that references an integration that has enabled device flow, a dhcp
-    discovery flow will created for the discovered device.
-
-    This is most useful when a mac address is registered to multiple vendors
-    or the hostname is not sent with dhcp, but the mac address is registered
-    in the device registry.
-
-    Example:
-    dhcp.async_enable_device_flows(hass)
-    """
-    entry = config_entries.current_entry.get()
-    assert entry is not None
-    hass.data.setdefault(DHCP_ENABLED_DEVICE_FLOWS, set()).add(entry.domain)
 
 
 @dataclass
@@ -216,21 +187,16 @@ class WatcherBase:
             lowercase_hostname,
         )
 
-        enabled: set[str] = self.hass.data.setdefault(DHCP_ENABLED_DEVICE_FLOWS, set())
         matched_domains = set()
         dev_reg: DeviceRegistry = async_get(self.hass)
-        if device := dev_reg.async_get_device(
+        device = dev_reg.async_get_device(
             identifiers=set(), connections={(CONNECTION_NETWORK_MAC, uppercase_mac)}
-        ):
-            assert isinstance(device, DeviceEntry)
-            for entry_id in device.config_entries:
-                if (
-                    entry := self.hass.config_entries.async_get_entry(entry_id)
-                ) and entry.domain in enabled:
-                    _LOGGER.debug("Matched %s from device: %s", data, device)
-                    matched_domains.add(entry.domain)
+        )
 
         for entry in self._integration_matchers:
+            if entry.get(REGISTERED_DEVICES) and not device:
+                continue
+
             if MAC_ADDRESS in entry and not fnmatch.fnmatch(
                 uppercase_mac, entry[MAC_ADDRESS]
             ):
