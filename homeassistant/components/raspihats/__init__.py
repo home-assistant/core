@@ -199,32 +199,12 @@ class I2CHatsManager(threading.Thread):
         """Register I2C-HAT digital input edge callback."""
         with self._lock:
             i2c_hat = self._i2c_hats[address]
-            _LOGGER.debug(
-                log_message(
-                    self,
-                    i2c_hat,
-                    "register_di_callback",
-                    address,
-                    channel,
-                    callback,
-                )
-            )
             self._di_scanner.register_callback(i2c_hat, channel, callback)
 
     def register_online_callback(self, address, channel, callback):
         """Register I2C-HAT online callback."""
         with self._lock:
             i2c_hat = self._i2c_hats[address]
-            _LOGGER.debug(
-                log_message(
-                    self,
-                    i2c_hat,
-                    "register_online_callback",
-                    address,
-                    channel,
-                    callback,
-                )
-            )
             callbacks = getattr(i2c_hat, self._CALLBACKS)
             callbacks[channel] = callback
             setattr(i2c_hat, self._CALLBACKS, callbacks)
@@ -238,7 +218,6 @@ class I2CHatsManager(threading.Thread):
 
         with self._lock:
             i2c_hat = self._i2c_hats[address]
-            _LOGGER.debug(log_message(self, i2c_hat, "read_di", address, channel))
             try:
                 value = i2c_hat.di.value
                 return (value >> channel) & 0x01
@@ -254,9 +233,6 @@ class I2CHatsManager(threading.Thread):
 
         with self._lock:
             i2c_hat = self._i2c_hats[address]
-            _LOGGER.debug(
-                log_message(self, i2c_hat, "write_dq", address, channel, value)
-            )
             try:
                 i2c_hat.dq.channels[channel] = value
             except ResponseException as ex:
@@ -271,7 +247,6 @@ class I2CHatsManager(threading.Thread):
 
         with self._lock:
             i2c_hat = self._i2c_hats[address]
-            _LOGGER.debug(log_message(self, i2c_hat, "read_dq", address, channel))
             try:
                 return i2c_hat.dq.channels[channel]
             except ResponseException as ex:
