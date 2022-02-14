@@ -25,10 +25,11 @@ from homeassistant.const import (
     STATE_HOME,
     STATE_NOT_HOME,
 )
+import homeassistant.helpers.device_registry as dr
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 # connect b8:b7:f1:6d:b5:33 192.168.210.56
 RAW_DHCP_REQUEST = (
@@ -213,12 +214,25 @@ async def test_registering_mac_address(hass):
 
     packet = Ether(RAW_DHCP_RENEWAL)
 
-    # Make sure we can register multiple times since
-    # this is usually wrapped in entry.async_on_remove
-    # which may run many times as config retry happens
-    cancel = dhcp.async_register_mac(hass, "50147903852c", "mock-domain")
-    cancel = dhcp.async_register_mac(hass, "50147903852c", "mock-domain")
-    cancel = dhcp.async_register_mac(hass, "50147903852c", "mock-domain")
+    registry = dr.async_get(hass)
+    config_entry = MockConfigEntry(domain="mock-domain", data={})
+    config_entries.current_entry.set(config_entry)
+    dhcp.async_enable_device_flows(hass)
+
+    config_entry.add_to_hass(hass)
+    registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "50147903852c")},
+        name="name",
+    )
+    # Not enabled should not get flows
+    config_entry2 = MockConfigEntry(domain="mock-domain", data={})
+    config_entry2.add_to_hass(hass)
+    registry.async_get_or_create(
+        config_entry_id=config_entry2.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "50147903852c")},
+        name="name",
+    )
 
     async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
         hass, integration_matchers
@@ -238,15 +252,6 @@ async def test_registering_mac_address(hass):
         hostname="irobot-ae9ec12dd3b04885bcbfa36afb01e1cc",
         macaddress="50147903852c",
     )
-
-    cancel()
-    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
-        hass, integration_matchers
-    )
-    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        await async_handle_dhcp_packet(packet)
-
-    assert len(mock_init.mock_calls) == 0
 
 
 async def test_dhcp_match_hostname(hass):

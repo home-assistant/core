@@ -1,7 +1,6 @@
 """The dhcp integration."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import fnmatch
@@ -37,7 +36,13 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceEntry,
+    DeviceRegistry,
+    async_get,
+    format_mac,
+)
 from homeassistant.helpers.event import (
     async_track_state_added_domain,
     async_track_time_interval,
@@ -59,7 +64,7 @@ IP_ADDRESS: Final = "ip"
 DHCP_REQUEST = 3
 SCAN_INTERVAL = timedelta(minutes=60)
 
-DHCP_REGISTRATONS = "dhcp_registrations"
+DHCP_ENABLED_DEVICE_FLOWS = "dhcp_enabled_device_flows"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,31 +75,34 @@ def _format_mac(mac_address: str) -> str:
 
 
 @callback
-def async_register_mac(
-    hass: HomeAssistant, mac: str, integration: str
-) -> Callable[[], None]:
-    """Register to get discovery flows for a mac address.
+def async_enable_device_flows(hass: HomeAssistant) -> None:
+    """Request to get discovery flows for devices with mac addresses.
 
-    If the mac address is registered to multiple vendors
-    or the hostname is not sent with dhcp, the mac can be
-    registered which allows discovery flows to still be
-    created to update the ip address when it changes.
+    Must be called from async_setup_entry, and should
+    only be enabled if the integration implements
+    async_step_dhcp in the config flow.
 
-    It is recommended to wrap this call in entry.async_on_remove
+    This method is irreversible since the code for the integration
+    cannot change once its been loaded (async_step_dhcp does
+    not go away)
+
+    Devices that are bound to config entries for the integration
+    with a matching mac address will matched for discovery flows.
+
+    by enabling device flows, when the mac address bound to a device
+    that references an integration that has enabled device flow, a dhcp
+    discovery flow will created for the discovered device.
+
+    This is most useful when a mac address is registered to multiple vendors
+    or the hostname is not sent with dhcp, but the mac address is registered
+    in the device registry.
 
     Example:
-    entry.async_on_remove(dhcp.async_register_mac(hass, "50147903852c", 'integration'))
+    dhcp.async_enable_device_flows(hass)
     """
-    registrations: dict[str, set[str]] = hass.data.setdefault(DHCP_REGISTRATONS, {})
-    formatted_mac = _format_mac(mac).upper()
-    registrations.setdefault(formatted_mac, set()).add(integration)
-
-    def _unregister() -> None:
-        registrations[formatted_mac].remove(integration)
-        if not registrations[formatted_mac]:
-            del registrations[formatted_mac]
-
-    return _unregister
+    entry = config_entries.current_entry.get()
+    assert entry is not None
+    hass.data.setdefault(DHCP_ENABLED_DEVICE_FLOWS, set()).add(entry.domain)
 
 
 @dataclass
@@ -216,14 +224,19 @@ class WatcherBase:
             lowercase_hostname,
         )
 
-        registrations: dict[str, set[str]] = self.hass.data.setdefault(
-            DHCP_REGISTRATONS, {}
-        )
+        enabled: set[str] = self.hass.data.setdefault(DHCP_ENABLED_DEVICE_FLOWS, set())
         matched_domains = set()
-
-        if domains := registrations.get(uppercase_mac):
-            _LOGGER.debug("Matched %s via registered mac address: %s", data, domains)
-            matched_domains |= domains
+        dev_reg: DeviceRegistry = async_get(self.hass)
+        if device := dev_reg.async_get_device(
+            identifiers=set(), connections={(CONNECTION_NETWORK_MAC, uppercase_mac)}
+        ):
+            assert isinstance(device, DeviceEntry)
+            for entry_id in device.config_entries:
+                if (
+                    entry := self.hass.config_entries.async_get_entry(entry_id)
+                ) and entry.domain in enabled:
+                    _LOGGER.debug("Matched %s from device: %s", data, device)
+                    matched_domains.add(entry.domain)
 
         for entry in self._integration_matchers:
             if MAC_ADDRESS in entry and not fnmatch.fnmatch(
