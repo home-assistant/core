@@ -210,15 +210,12 @@ async def test_dhcp_renewal_match_hostname_and_macaddress(hass):
 
 async def test_registering_mac_address(hass):
     """Test discovery callbacks happen when registering a mac address."""
-    integration_matchers = []
+    integration_matchers = [{"domain": "mock-domain", "registered_devices": True}]
 
     packet = Ether(RAW_DHCP_RENEWAL)
 
     registry = dr.async_get(hass)
     config_entry = MockConfigEntry(domain="mock-domain", data={})
-    config_entries.current_entry.set(config_entry)
-    dhcp.async_enable_device_flows(hass)
-
     config_entry.add_to_hass(hass)
     registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
