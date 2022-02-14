@@ -11,7 +11,7 @@
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "area_id": "ID de la zone",
+                    "area_id": "ID de zone",
                     "name": "Nom",
                     "password": "Mot de passe",
                     "username": "Nom d'utilisateur"

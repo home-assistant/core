@@ -26,7 +26,7 @@
                     "timestep": "Min. Entre les pr\u00e9visions NowCast"
                 },
                 "description": "Si vous choisissez d'activer l'entit\u00e9 de pr\u00e9vision \u00abnowcast\u00bb, vous pouvez configurer le nombre de minutes entre chaque pr\u00e9vision. Le nombre de pr\u00e9visions fournies d\u00e9pend du nombre de minutes choisies entre les pr\u00e9visions.",
-                "title": "Mettre \u00e0 jour les options de ClimaCell"
+                "title": "Mettre \u00e0 jour les options ClimaCell"
             }
         }
     },
