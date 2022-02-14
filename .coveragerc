@@ -319,6 +319,7 @@ omit =
     homeassistant/components/esphome/entry_data.py
     homeassistant/components/esphome/fan.py
     homeassistant/components/esphome/light.py
+    homeassistant/components/esphome/lock.py
     homeassistant/components/esphome/number.py
     homeassistant/components/esphome/select.py
     homeassistant/components/esphome/sensor.py
@@ -1338,6 +1339,7 @@ omit =
     homeassistant/components/velbus/climate.py
     homeassistant/components/velbus/const.py
     homeassistant/components/velbus/cover.py
+    homeassistant/components/velbus/diagnostics.py
     homeassistant/components/velbus/light.py
     homeassistant/components/velbus/sensor.py
     homeassistant/components/velbus/switch.py
