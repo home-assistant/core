@@ -305,6 +305,10 @@ async def test_restore_state(hass):
                 },
             ),
             State(
+                "sensor.energy_bill_midpeak",
+                "error",
+            ),
+            State(
                 "sensor.energy_bill_offpeak",
                 "6",
                 attributes={
@@ -325,6 +329,9 @@ async def test_restore_state(hass):
     assert state.attributes.get("status") == PAUSED
     assert state.attributes.get("last_reset") == last_reset
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+
+    state = hass.states.get("sensor.energy_bill_midpeak")
+    assert state.state == STATE_UNKNOWN
 
     state = hass.states.get("sensor.energy_bill_offpeak")
     assert state.state == "6"
