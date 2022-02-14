@@ -238,9 +238,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
     @callback
     def async_tariff_change(self, event):
         """Handle tariff changes."""
-        if (new_state := event.data.get("new_state")) is None:
-            return
-
+        new_state = event.data.get("new_state")
         self._change_status(new_state.state)
 
     def _change_status(self, tariff):
