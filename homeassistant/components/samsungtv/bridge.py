@@ -365,6 +365,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                         self._remote.token,
                     )
                     self.token = self._remote.token
+                    # TODO: copy the new token into the config entry
         return self._remote
 
     def stop(self) -> None:
