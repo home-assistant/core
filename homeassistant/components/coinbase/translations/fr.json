@@ -25,7 +25,9 @@
     },
     "options": {
         "error": {
+            "currency_unavailable": "Un ou plusieurs des soldes de devises demand\u00e9s ne sont pas fournis par votre API Coinbase.",
             "currency_unavaliable": "Un ou plusieurs des soldes de devises demand\u00e9s ne sont pas fournis par votre API Coinbase.",
+            "exchange_rate_unavailable": "Un ou plusieurs des taux de change demand\u00e9s ne sont pas fournis par Coinbase.",
             "exchange_rate_unavaliable": "Un ou plusieurs des taux de change demand\u00e9s ne sont pas fournis par Coinbase.",
             "unknown": "Erreur inattendue"
         },

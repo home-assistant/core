@@ -18,23 +18,8 @@ from .models import WizData
 class WizEntity(CoordinatorEntity, Entity):
     """Representation of WiZ entity."""
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._async_update_attrs()
-        super()._handle_coordinator_update()
-
-    @callback
-    @abstractmethod
-    def _async_update_attrs(self) -> None:
-        """Handle updating _attr values."""
-
-
-class WizToggleEntity(WizEntity, ToggleEntity):
-    """Representation of WiZ toggle entity."""
-
     def __init__(self, wiz_data: WizData, name: str) -> None:
-        """Initialize an WiZ device."""
+        """Initialize a WiZ entity."""
         super().__init__(wiz_data.coordinator)
         self._device = wiz_data.bulb
         bulb_type: BulbType = self._device.bulbtype
@@ -52,6 +37,21 @@ class WizToggleEntity(WizEntity, ToggleEntity):
             hw_version=f"{board} {hw_data[0]}" if hw_data else board,
             sw_version=bulb_type.fw_version,
         )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._async_update_attrs()
+        super()._handle_coordinator_update()
+
+    @callback
+    @abstractmethod
+    def _async_update_attrs(self) -> None:
+        """Handle updating _attr values."""
+
+
+class WizToggleEntity(WizEntity, ToggleEntity):
+    """Representation of WiZ toggle entity."""
 
     @callback
     def _async_update_attrs(self) -> None:
