@@ -1120,7 +1120,7 @@ async def test_entity_control(hass: HomeAssistant):
     # Turn on
     await common.async_turn_on(hass, entity_id)
     chromecast.play_media.assert_called_once_with(
-        "https://www.home-assistant.io/images/cast/splash.png", ANY
+        "https://www.home-assistant.io/images/cast/splash.png", "image/png"
     )
     chromecast.quit_app.reset_mock()
 
