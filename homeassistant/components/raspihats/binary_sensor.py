@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -75,6 +76,7 @@ def setup_platform(
         address = i2c_hat_config[CONF_ADDRESS]
         board = i2c_hat_config[CONF_BOARD]
         try:
+            assert I2CHatBinarySensor.I2C_HATS_MANAGER
             I2CHatBinarySensor.I2C_HATS_MANAGER.register_board(board, address)
             for channel_config in i2c_hat_config[CONF_CHANNELS]:
                 binary_sensors.append(
@@ -96,7 +98,7 @@ def setup_platform(
 class I2CHatBinarySensor(BinarySensorEntity):
     """Representation of a binary sensor that uses a I2C-HAT digital input."""
 
-    I2C_HATS_MANAGER: I2CHatsManager
+    I2C_HATS_MANAGER: I2CHatsManager | None = None
 
     def __init__(self, address, channel, name, invert_logic, device_class):
         """Initialize the raspihats sensor."""
@@ -109,6 +111,8 @@ class I2CHatBinarySensor(BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+        if TYPE_CHECKING:
+            assert self.I2C_HATS_MANAGER
 
         def online_callback():
             """Call fired when board is online."""
