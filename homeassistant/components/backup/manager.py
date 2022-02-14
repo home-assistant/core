@@ -109,6 +109,10 @@ class BackupManager:
             }
             tar_file = Path(self.backup_dir, f"{slug}.tar")
 
+            if not self.backup_dir.exists():
+                LOGGER.debug("Creating backup directory")
+                self.hass.async_add_executor_job(self.backup_dir.mkdir)
+
             def _create_backup() -> None:
                 with TemporaryDirectory() as tmp_dir:
                     json_util.save_json(
