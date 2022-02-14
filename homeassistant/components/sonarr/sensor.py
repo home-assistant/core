@@ -245,7 +245,7 @@ class SonarrSensor(SonarrEntity, SensorEntity):
                 identifier = f"S{item.seasonNumber:02d}E{item.episodeNumber:02d}"
 
                 name = f"{item.series.title} {identifier}"
-                attrs[name] = item.airDate
+                attrs[name] = item.airDate.strftime("%Y-%m-%d")
 
         return attrs
 
