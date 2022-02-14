@@ -170,6 +170,7 @@ def _mocked_wizlight(device, extended_white_range, bulb_type) -> wizlight:
     bulb.getSupportedScenes = AsyncMock(return_value=list(SCENES))
     bulb.start_push = AsyncMock(side_effect=_save_setup_callback)
     bulb.async_close = AsyncMock()
+    bulb.set_speed = AsyncMock()
     bulb.state = FAKE_STATE
     bulb.mac = FAKE_MAC
     bulb.bulbtype = bulb_type or FAKE_DIMMABLE_BULB
@@ -223,6 +224,6 @@ async def async_setup_integration(
 async def async_push_update(hass, device, params):
     """Push an update to the device."""
     device.state = PilotParser(params)
-    device.status = params["state"]
+    device.status = params.get("state")
     device.push_callback(device.state)
     await hass.async_block_till_done()
