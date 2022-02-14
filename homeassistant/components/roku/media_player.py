@@ -4,16 +4,15 @@ from __future__ import annotations
 import datetime as dt
 import logging
 from typing import Any
-from urllib.parse import quote
 
 import voluptuous as vol
 
 from homeassistant.components import media_source
-from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player import (
     BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
+    async_process_play_media_url,
 )
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_EXTRA,
@@ -46,7 +45,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.network import get_url
 
 from . import roku_exception_handler
 from .browse_media import async_browse_media
@@ -60,6 +58,7 @@ from .const import (
 )
 from .coordinator import RokuDataUpdateCoordinator
 from .entity import RokuEntity
+from .helpers import format_channel_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,7 +116,9 @@ async def async_setup_entry(
 class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     """Representation of a Roku media player on the network."""
 
-    def __init__(self, unique_id: str, coordinator: RokuDataUpdateCoordinator) -> None:
+    def __init__(
+        self, unique_id: str | None, coordinator: RokuDataUpdateCoordinator
+    ) -> None:
         """Initialize the Roku device."""
         super().__init__(
             coordinator=coordinator,
@@ -212,10 +213,9 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         if self.app_id != "tvinput.dtv" or self.coordinator.data.channel is None:
             return None
 
-        if self.coordinator.data.channel.name is not None:
-            return f"{self.coordinator.data.channel.name} ({self.coordinator.data.channel.number})"
+        channel = self.coordinator.data.channel
 
-        return self.coordinator.data.channel.number
+        return format_channel_name(channel.number, channel.name)
 
     @property
     def media_title(self) -> str | None:
@@ -231,7 +231,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @property
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
-        if self._media_playback_trackable():
+        if self.coordinator.data.media is not None and self._media_playback_trackable():
             return self.coordinator.data.media.duration
 
         return None
@@ -239,7 +239,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        if self._media_playback_trackable():
+        if self.coordinator.data.media is not None and self._media_playback_trackable():
             return self.coordinator.data.media.position
 
         return None
@@ -247,7 +247,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @property
     def media_position_updated_at(self) -> dt.datetime | None:
         """When was the position of the current playing media valid."""
-        if self._media_playback_trackable():
+        if self.coordinator.data.media is not None and self._media_playback_trackable():
             return self.coordinator.data.media.at
 
         return None
@@ -263,10 +263,12 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @property
     def source_list(self) -> list:
         """List of available input sources."""
-        return ["Home"] + sorted(app.name for app in self.coordinator.data.apps)
+        return ["Home"] + sorted(
+            app.name for app in self.coordinator.data.apps if app.name is not None
+        )
 
     @roku_exception_handler
-    async def search(self, keyword):
+    async def search(self, keyword: str) -> None:
         """Emulate opening the search screen and entering the search keyword."""
         await self.coordinator.roku.search(keyword)
 
@@ -343,7 +345,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         await self.coordinator.async_request_refresh()
 
     @roku_exception_handler
-    async def async_mute_volume(self, mute) -> None:
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         await self.coordinator.roku.remote("volume_mute")
         await self.coordinator.async_request_refresh()
@@ -359,7 +361,9 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         await self.coordinator.roku.remote("volume_down")
 
     @roku_exception_handler
-    async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play media from a URL or file, launch an application, or tune to a channel."""
         extra: dict[str, Any] = kwargs.get(ATTR_MEDIA_EXTRA) or {}
 
@@ -369,17 +373,8 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             media_type = MEDIA_TYPE_URL
             media_id = sourced_media.url
 
-        # Sign and prefix with URL if playing a relative URL
-        if media_id[0] == "/":
-            media_id = async_sign_path(
-                self.hass,
-                quote(media_id),
-                dt.timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
-            )
-
-            # prepend external URL
-            hass_url = get_url(self.hass)
-            media_id = f"{hass_url}{media_id}"
+        # If media ID is a relative URL, we serve it from HA.
+        media_id = async_process_play_media_url(self.hass, media_id)
 
         if media_type not in PLAY_MEDIA_SUPPORTED_TYPES:
             _LOGGER.error(
@@ -433,7 +428,6 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             None,
         )
 
-        if appl is not None:
+        if appl is not None and appl.app_id is not None:
             await self.coordinator.roku.launch(appl.app_id)
-
-        await self.coordinator.async_request_refresh()
+            await self.coordinator.async_request_refresh()

@@ -52,6 +52,8 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODEL_AIRFRESH_A1,
+    MODEL_AIRFRESH_T2017,
     MODEL_AIRFRESH_VA2,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CB1,
@@ -375,6 +377,14 @@ AIRFRESH_SENSORS = (
     ATTR_TEMPERATURE,
     ATTR_USE_TIME,
 )
+AIRFRESH_SENSORS_A1 = (
+    ATTR_CARBON_DIOXIDE,
+    ATTR_TEMPERATURE,
+)
+AIRFRESH_SENSORS_T2017 = (
+    ATTR_CARBON_DIOXIDE,
+    ATTR_TEMPERATURE,
+)
 FAN_V2_V3_SENSORS = (
     ATTR_BATTERY,
     ATTR_HUMIDITY,
@@ -384,7 +394,9 @@ FAN_V2_V3_SENSORS = (
 FAN_ZA5_SENSORS = (ATTR_HUMIDITY, ATTR_TEMPERATURE)
 
 MODEL_TO_SENSORS_MAP = {
+    MODEL_AIRFRESH_A1: AIRFRESH_SENSORS_A1,
     MODEL_AIRFRESH_VA2: AIRFRESH_SENSORS,
+    MODEL_AIRFRESH_T2017: AIRFRESH_SENSORS_T2017,
     MODEL_AIRHUMIDIFIER_CA1: HUMIDIFIER_CA1_CB1_SENSORS,
     MODEL_AIRHUMIDIFIER_CB1: HUMIDIFIER_CA1_CB1_SENSORS,
     MODEL_AIRPURIFIER_3C: PURIFIER_3C_SENSORS,
@@ -808,7 +820,6 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
 
     def __init__(self, gateway_device, gateway_name, gateway_device_id, description):
         """Initialize the entity."""
-
         self._attr_name = f"{gateway_name} {description.name}"
         self._attr_unique_id = f"{gateway_device_id}-{description.key}"
         self._attr_device_info = {"identifiers": {(DOMAIN, gateway_device_id)}}

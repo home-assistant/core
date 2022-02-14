@@ -52,6 +52,11 @@ DHCP = [
         "macaddress": "00037F*"
     },
     {
+        "domain": "blink",
+        "hostname": "blink*",
+        "macaddress": "20A171*"
+    },
+    {
         "domain": "broadlink",
         "macaddress": "34EA34*"
     },
@@ -66,6 +71,10 @@ DHCP = [
     {
         "domain": "broadlink",
         "macaddress": "B4430D*"
+    },
+    {
+        "domain": "elkm1",
+        "macaddress": "00409D*"
     },
     {
         "domain": "emonitor",
@@ -302,6 +311,10 @@ DHCP = [
     {
         "domain": "senseme",
         "macaddress": "20F85E*"
+    },
+    {
+        "domain": "sensibo",
+        "hostname": "sensibo*"
     },
     {
         "domain": "simplisafe",
@@ -601,12 +614,24 @@ DHCP = [
         "macaddress": "265A4C*"
     },
     {
+        "domain": "unifiprotect",
+        "macaddress": "74ACB9*"
+    },
+    {
         "domain": "verisure",
         "macaddress": "0023C1*"
     },
     {
         "domain": "vicare",
         "macaddress": "B87424*"
+    },
+    {
+        "domain": "wiz",
+        "macaddress": "A8BB50*"
+    },
+    {
+        "domain": "wiz",
+        "hostname": "wiz_*"
     },
     {
         "domain": "yeelight",

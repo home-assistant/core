@@ -22,7 +22,8 @@
             "accessory": {
                 "data": {
                     "entities": "Entit\u00e9"
-                }
+                },
+                "title": "S\u00e9lectionnez l'entit\u00e9 pour l'accessoire"
             },
             "advanced": {
                 "data": {
@@ -44,6 +45,7 @@
                 "data": {
                     "entities": "Entit\u00e9s"
                 },
+                "description": "Toutes les entit\u00e9s \u00ab {domains}\u00a0\u00bb seront incluses, \u00e0 l'exception des entit\u00e9s exclues et des entit\u00e9s cat\u00e9goris\u00e9es.",
                 "title": "S\u00e9lectionnez les entit\u00e9s \u00e0 exclure"
             },
             "include": {
@@ -66,10 +68,10 @@
                     "domains": "Domaines \u00e0 inclure",
                     "include_domains": "Domaines \u00e0 inclure",
                     "include_exclude_mode": "Mode d'inclusion",
-                    "mode": "Mode"
+                    "mode": "Mode HomeKit"
                 },
                 "description": "Les entit\u00e9s des \u00abdomaines \u00e0 inclure\u00bb seront pont\u00e9es vers HomeKit. Vous pourrez s\u00e9lectionner les entit\u00e9s \u00e0 exclure de cette liste sur l'\u00e9cran suivant.",
-                "title": "S\u00e9lectionnez les domaines \u00e0 relier."
+                "title": "S\u00e9lectionnez le mode et les domaines."
             },
             "yaml": {
                 "description": "Cette entr\u00e9e est contr\u00f4l\u00e9e via YAML",

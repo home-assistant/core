@@ -1,4 +1,5 @@
 """Config flow for SONOS."""
+from collections.abc import Awaitable
 import dataclasses
 
 from homeassistant import config_entries
@@ -16,7 +17,7 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
     return bool(await ssdp.async_get_discovery_info_by_st(hass, UPNP_ST))
 
 
-class SonosDiscoveryFlowHandler(DiscoveryFlowHandler):
+class SonosDiscoveryFlowHandler(DiscoveryFlowHandler[Awaitable[bool]]):
     """Sonos discovery flow that callsback zeroconf updates."""
 
     def __init__(self) -> None:

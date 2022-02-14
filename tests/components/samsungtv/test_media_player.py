@@ -713,9 +713,9 @@ async def test_play_media(hass, remote):
     asyncio_sleep = asyncio.sleep
     sleeps = []
 
-    async def sleep(duration, loop):
+    async def sleep(duration):
         sleeps.append(duration)
-        await asyncio_sleep(0, loop=loop)
+        await asyncio_sleep(0)
 
     await setup_samsungtv(hass, MOCK_CONFIG)
     with patch("asyncio.sleep", new=sleep):

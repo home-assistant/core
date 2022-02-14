@@ -77,7 +77,7 @@ async def test_init_accepts_and_migrates_old_entry(aioclient_mock, hass):
 
     # Add original entry
     original_entry = MockConfigEntry(
-        domain=DOMAIN,
+        domain="homewizard_energy",
         data={CONF_IP_ADDRESS: "1.2.3.4"},
         entry_id="old_id",
     )
@@ -121,6 +121,9 @@ async def test_init_accepts_and_migrates_old_entry(aioclient_mock, hass):
         entry_id="new_id",
     )
     imported_entry.add_to_hass(hass)
+
+    assert imported_entry.domain == DOMAIN
+    assert imported_entry.domain != original_entry.domain
 
     # Add the entry_id to trigger migration
     with patch(

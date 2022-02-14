@@ -2,13 +2,23 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from typing import Any, TypeVar, cast
+from typing import Any, TypeVar, cast, overload
 
 from homeassistant.core import callback
 
 from .const import REDACTED
 
 T = TypeVar("T")
+
+
+@overload
+def async_redact_data(data: Mapping, to_redact: Iterable[Any]) -> dict:  # type: ignore
+    ...
+
+
+@overload
+def async_redact_data(data: T, to_redact: Iterable[Any]) -> T:
+    ...
 
 
 @callback
@@ -25,7 +35,7 @@ def async_redact_data(data: T, to_redact: Iterable[Any]) -> T:
     for key, value in redacted.items():
         if key in to_redact:
             redacted[key] = REDACTED
-        elif isinstance(value, dict):
+        elif isinstance(value, Mapping):
             redacted[key] = async_redact_data(value, to_redact)
         elif isinstance(value, list):
             redacted[key] = [async_redact_data(item, to_redact) for item in value]

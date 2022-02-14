@@ -446,13 +446,31 @@ class EntityRegistry:
             return
 
         if event.data["action"] != "update":
+            # Ignore "create" action
             return
 
         device_registry = dr.async_get(self.hass)
         device = device_registry.async_get(event.data["device_id"])
 
-        # The device may be deleted already if the event handling is late
-        if not device or not device.disabled:
+        # The device may be deleted already if the event handling is late, do nothing
+        # in that case. Entities will be removed when we get the "remove" event.
+        if not device:
+            return
+
+        # Remove entities which belong to config entries no longer associated with the
+        # device
+        entities = async_entries_for_device(
+            self, event.data["device_id"], include_disabled_entities=True
+        )
+        for entity in entities:
+            if (
+                entity.config_entry_id is not None
+                and entity.config_entry_id not in device.config_entries
+            ):
+                self.async_remove(entity.entity_id)
+
+        # Re-enable disabled entities if the device is no longer disabled
+        if not device.disabled:
             entities = async_entries_for_device(
                 self, event.data["device_id"], include_disabled_entities=True
             )
@@ -462,11 +480,12 @@ class EntityRegistry:
                 self.async_update_entity(entity.entity_id, disabled_by=None)
             return
 
+        # Ignore device disabled by config entry, this is handled by
+        # async_config_entry_disabled
         if device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY:
-            # Handled by async_config_entry_disabled
             return
 
-        # Fetch entities which are not already disabled
+        # Fetch entities which are not already disabled and disable them
         entities = async_entries_for_device(self, event.data["device_id"])
         for entity in entities:
             self.async_update_entity(
