@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+import datetime as dt
 import json
 import logging
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -314,7 +315,9 @@ async def handle_integration_setup_info(
         msg["id"],
         [
             {"domain": integration, "seconds": timedelta.total_seconds()}
-            for integration, timedelta in hass.data[DATA_SETUP_TIME].items()
+            for integration, timedelta in cast(
+                dict[str, dt.timedelta], hass.data[DATA_SETUP_TIME]
+            ).items()
         ],
     )
 
