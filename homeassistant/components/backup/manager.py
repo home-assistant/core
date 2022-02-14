@@ -89,9 +89,10 @@ class BackupManager:
 
     async def generate_backup(self) -> Backup:
         """Generate a backup."""
+        if self.backing_up:
+            raise HomeAssistantError("Backup already in progress")
+
         try:
-            if self.backing_up:
-                raise HomeAssistantError("Backup already in progress")
 
             self.backing_up = True
             backup_name = f"Core {VERSION}"
