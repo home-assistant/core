@@ -5,5 +5,6 @@
   "requirements": ["sense_energy==0.9.6"],
   "codeowners": ["@kbickar"],
   "quality_scale": "internal",
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "loggers": ["sense_energy"]
 }

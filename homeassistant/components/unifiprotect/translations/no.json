@@ -18,7 +18,8 @@
                     "username": "Brukernavn",
                     "verify_ssl": "Verifisere SSL-sertifikat"
                 },
-                "description": "Vil du konfigurere {name} ( {ip_address} )?"
+                "description": "Vil du konfigurere {name} ( {ip_address} )? Du trenger en lokal bruker opprettet i UniFi OS-konsollen for \u00e5 logge p\u00e5. Ubiquiti Cloud-brukere vil ikke fungere. For mer informasjon: {local_user_documentation_url}",
+                "title": "UniFi Protect oppdaget"
             },
             "reauth_confirm": {
                 "data": {
@@ -37,6 +38,7 @@
                     "username": "Brukernavn",
                     "verify_ssl": "Verifisere SSL-sertifikat"
                 },
+                "description": "Du trenger en lokal bruker opprettet i UniFi OS-konsollen for \u00e5 logge p\u00e5. Ubiquiti Cloud-brukere vil ikke fungere. For mer informasjon: {local_user_documentation_url}",
                 "title": "UniFi Protect-oppsett"
             }
         }

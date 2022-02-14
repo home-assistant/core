@@ -1825,5 +1825,6 @@
             }
         }
     ],
-    "highestSecurityClass": 7
+    "highestSecurityClass": 7,
+    "isControllerNode": false
 }

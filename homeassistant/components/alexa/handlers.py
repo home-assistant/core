@@ -212,20 +212,14 @@ async def async_api_adjust_brightness(hass, config, directive, context):
     entity = directive.entity
     brightness_delta = int(directive.payload["brightnessDelta"])
 
-    # read current state
-    try:
-        current = math.floor(
-            int(entity.attributes.get(light.ATTR_BRIGHTNESS)) / 255 * 100
-        )
-    except ZeroDivisionError:
-        current = 0
-
     # set brightness
-    brightness = max(0, brightness_delta + current)
     await hass.services.async_call(
         entity.domain,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_BRIGHTNESS_PCT: brightness},
+        {
+            ATTR_ENTITY_ID: entity.entity_id,
+            light.ATTR_BRIGHTNESS_STEP_PCT: brightness_delta,
+        },
         blocking=False,
         context=context,
     )

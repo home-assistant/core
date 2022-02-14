@@ -95,6 +95,7 @@ FLOWS = [
     "ezviz",
     "faa_delays",
     "fireservicerota",
+    "fivem",
     "fjaraskupan",
     "flick_electric",
     "flipr",
@@ -160,6 +161,7 @@ FLOWS = [
     "ipp",
     "iqvia",
     "islamic_prayer_times",
+    "iss",
     "isy994",
     "izone",
     "jellyfin",
@@ -198,6 +200,7 @@ FLOWS = [
     "mobile_app",
     "modem_callerid",
     "modern_forms",
+    "moehlenhoff_alpha2",
     "monoprice",
     "motion_blinds",
     "motioneye",
@@ -365,6 +368,7 @@ FLOWS = [
     "wiffi",
     "wilight",
     "withings",
+    "wiz",
     "wled",
     "wolflink",
     "xbox",
@@ -377,5 +381,6 @@ FLOWS = [
     "zerproc",
     "zha",
     "zwave",
-    "zwave_js"
+    "zwave_js",
+    "zwave_me"
 ]

@@ -1,0 +1,8 @@
+{
+    "state": {
+        "tuya__air_quality": {
+            "good": "\u05d8\u05d5\u05d1",
+            "great": "\u05e0\u05d4\u05d3\u05e8"
+        }
+    }
+}

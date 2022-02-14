@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Puerto adaptador RS485 o USB-RS485"
+                },
+                "description": "El inversor debe estar conectado a trav\u00e9s de un adaptador RS485, seleccione el puerto serie y la direcci\u00f3n del inversor seg\u00fan lo configurado en el panel LCD"
+            }
+        }
+    }
+}

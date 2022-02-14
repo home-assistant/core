@@ -38,3 +38,4 @@ KEY_MOISTURE: Final = "moisture"
 KEY_POWER: Final = "power"
 
 PREVIOUS_STATE: Final = "previous_state"
+AVAILABILITY_EVENT_CODE: Final = "RP"

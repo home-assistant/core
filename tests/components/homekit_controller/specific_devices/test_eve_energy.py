@@ -59,9 +59,9 @@ async def test_eve_degree_setup(hass):
                     state="0.400000005960464",
                 ),
                 EntityTestInfo(
-                    entity_id="sensor.eve_energy_50ff_real_time_energy",
+                    entity_id="sensor.eve_energy_50ff_power",
                     unique_id="homekit-AA00A0A00000-aid:1-sid:28-cid:34",
-                    friendly_name="Eve Energy 50FF Real Time Energy",
+                    friendly_name="Eve Energy 50FF Power",
                     unit_of_measurement=POWER_WATT,
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     state="0",

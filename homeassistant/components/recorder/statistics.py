@@ -119,8 +119,6 @@ QUERY_STATISTIC_META_ID = [
     StatisticsMeta.statistic_id,
 ]
 
-MAX_DUPLICATES = 1000000
-
 STATISTICS_BAKERY = "recorder_statistics_bakery"
 STATISTICS_META_BAKERY = "recorder_statistics_meta_bakery"
 STATISTICS_SHORT_TERM_BAKERY = "recorder_statistics_short_term_bakery"
@@ -292,7 +290,7 @@ def _find_duplicates(
         )
         .filter(subquery.c.is_duplicate == 1)
         .order_by(table.metadata_id, table.start, table.id.desc())
-        .limit(MAX_ROWS_TO_PURGE)
+        .limit(1000 * MAX_ROWS_TO_PURGE)
     )
     duplicates = execute(query)
     original_as_dict = {}
@@ -345,14 +343,13 @@ def _delete_duplicates_from_table(
         if not duplicate_ids:
             break
         all_non_identical_duplicates.extend(non_identical_duplicates)
-        deleted_rows = (
-            session.query(table)
-            .filter(table.id.in_(duplicate_ids))
-            .delete(synchronize_session=False)
-        )
-        total_deleted_rows += deleted_rows
-        if total_deleted_rows >= MAX_DUPLICATES:
-            break
+        for i in range(0, len(duplicate_ids), MAX_ROWS_TO_PURGE):
+            deleted_rows = (
+                session.query(table)
+                .filter(table.id.in_(duplicate_ids[i : i + MAX_ROWS_TO_PURGE]))
+                .delete(synchronize_session=False)
+            )
+            total_deleted_rows += deleted_rows
     return (total_deleted_rows, all_non_identical_duplicates)
 
 
@@ -387,13 +384,6 @@ def delete_duplicates(instance: Recorder, session: scoped_session) -> None:
             len(non_identical_duplicates),
             Statistics.__tablename__,
             backup_path,
-        )
-
-    if deleted_statistics_rows >= MAX_DUPLICATES:
-        _LOGGER.warning(
-            "Found more than %s duplicated statistic rows, please report at "
-            'https://github.com/home-assistant/core/issues?q=is%%3Aissue+label%%3A"integration%%3A+recorder"+',
-            MAX_DUPLICATES - 1,
         )
 
     deleted_short_term_statistics_rows, _ = _delete_duplicates_from_table(

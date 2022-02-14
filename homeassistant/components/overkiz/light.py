@@ -79,8 +79,9 @@ class OverkizLight(OverkizEntity, LightEntity):
     @property
     def brightness(self) -> int | None:
         """Return the brightness of this light (0-255)."""
-        if brightness := self.executor.select_state(OverkizState.CORE_LIGHT_INTENSITY):
-            return round(cast(int, brightness) * 255 / 100)
+        value = self.executor.select_state(OverkizState.CORE_LIGHT_INTENSITY)
+        if value is not None:
+            return round(cast(int, value) * 255 / 100)
 
         return None
 

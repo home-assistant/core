@@ -38,6 +38,7 @@ pytest.register_assert_rewrite("tests.common")
 from tests.common import (  # noqa: E402, isort:skip
     CLIENT_ID,
     INSTANCES,
+    MockConfigEntry,
     MockUser,
     async_fire_mqtt_message,
     async_test_home_assistant,
@@ -590,17 +591,22 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     if mqtt_config is None:
         mqtt_config = {mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}
 
-    result = await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: mqtt_config})
-    assert result
     await hass.async_block_till_done()
 
-    # Workaround: asynctest==0.13 fails on @functools.lru_cache
-    spec = dir(hass.data["mqtt"])
-    spec.remove("_matching_subscriptions")
+    entry = MockConfigEntry(
+        data=mqtt_config,
+        domain=mqtt.DOMAIN,
+        title="Tasmota",
+    )
+
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     mqtt_component_mock = MagicMock(
         return_value=hass.data["mqtt"],
-        spec_set=spec,
+        spec_set=hass.data["mqtt"],
         wraps=hass.data["mqtt"],
     )
     mqtt_component_mock._mqttc = mqtt_client_mock

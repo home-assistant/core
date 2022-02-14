@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "unknown": "Erro inesperado"
+        },
+        "flow_title": "{serial} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nome do host",
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
+                },
+                "description": "Para modelos mais novos, digite o nome de usu\u00e1rio `envoy` sem uma senha. Para modelos mais antigos, digite o nome de usu\u00e1rio `installer` sem uma senha. Para todos os outros modelos, insira um nome de usu\u00e1rio e senha v\u00e1lidos."
+            }
+        }
+    }
+}

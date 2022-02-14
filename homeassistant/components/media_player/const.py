@@ -1,4 +1,6 @@
 """Provides the constants needed for component."""
+# How long our auth signature on the content should be valid for
+CONTENT_AUTH_EXPIRY_TIME = 3600 * 24
 
 ATTR_APP_ID = "app_id"
 ATTR_APP_NAME = "app_name"

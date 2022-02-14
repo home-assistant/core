@@ -1,4 +1,13 @@
 {
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "username": "\u038c\u03bd\u03bf\u03bc\u03b1 \u03c7\u03c1\u03ae\u03c3\u03c4\u03b7"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {
