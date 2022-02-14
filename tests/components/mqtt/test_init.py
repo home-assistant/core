@@ -725,8 +725,7 @@ async def test_subscribe_deprecated(hass, mqtt_mock):
     """Test the subscription of a topic using deprecated callback signature."""
     calls = []
 
-    @callback
-    def record_calls(topic, payload, qos):
+    async def record_calls(topic, payload, qos):
         """Record calls."""
         calls.append((topic, payload, qos))
 
