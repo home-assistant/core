@@ -86,10 +86,7 @@ def async_enable_device_flows(hass: HomeAssistant) -> None:
     cannot change once its been loaded (async_step_dhcp does
     not go away)
 
-    Devices that are bound to config entries for the integration
-    with a matching mac address will matched for discovery flows.
-
-    by enabling device flows, when the mac address bound to a device
+    By enabling device flows, when the mac address bound to a DeviceEntry
     that references an integration that has enabled device flow, a dhcp
     discovery flow will created for the discovered device.
 
