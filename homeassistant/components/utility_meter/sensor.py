@@ -229,8 +229,6 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                 return
             self._state += adjustment
 
-        except ValueError as err:
-            _LOGGER.warning("While processing state changes: %s", err)
         except DecimalException as err:
             _LOGGER.warning(
                 "Invalid state (%s > %s): %s", old_state.state, new_state.state, err
