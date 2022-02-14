@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 import logging.handlers
 import os
@@ -450,7 +450,7 @@ async def _async_set_up_integrations(
 ) -> None:
     """Set up all the integrations."""
     hass.data[DATA_SETUP_STARTED] = {}
-    setup_time = hass.data[DATA_SETUP_TIME] = {}
+    setup_time: dict[str, timedelta] = hass.data.setdefault(DATA_SETUP_TIME, {})
 
     watch_task = asyncio.create_task(_async_watch_pending_setups(hass))
 
@@ -459,9 +459,9 @@ async def _async_set_up_integrations(
     # Resolve all dependencies so we know all integrations
     # that will have to be loaded and start rightaway
     integration_cache: dict[str, loader.Integration] = {}
-    to_resolve = domains_to_setup
+    to_resolve: set[str] = domains_to_setup
     while to_resolve:
-        old_to_resolve = to_resolve
+        old_to_resolve: set[str] = to_resolve
         to_resolve = set()
 
         integrations_to_process = [
@@ -508,11 +508,11 @@ async def _async_set_up_integrations(
         await async_setup_multi_components(hass, debuggers, config)
 
     # calculate what components to setup in what stage
-    stage_1_domains = set()
+    stage_1_domains: set[str] = set()
 
     # Find all dependencies of any dependency of any stage 1 integration that
     # we plan on loading and promote them to stage 1
-    deps_promotion = STAGE_1_INTEGRATIONS
+    deps_promotion: set[str] = STAGE_1_INTEGRATIONS
     while deps_promotion:
         old_deps_promotion = deps_promotion
         deps_promotion = set()
@@ -577,7 +577,7 @@ async def _async_set_up_integrations(
         {
             integration: timedelta.total_seconds()
             for integration, timedelta in sorted(
-                setup_time.items(), key=lambda item: item[1].total_seconds()  # type: ignore
+                setup_time.items(), key=lambda item: item[1].total_seconds()
             )
         },
     )
