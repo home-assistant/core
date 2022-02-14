@@ -158,8 +158,8 @@ async def async_browse_media(
                 BrowseMedia(
                     title=config_entry.title,
                     media_class=MEDIA_CLASS_APP,
-                    media_content_id=f"spotify://{config_entry_id}",
-                    media_content_type="spotify",
+                    media_content_id=f"{MEDIA_PLAYER_PREFIX}{config_entry_id}",
+                    media_content_type=f"{MEDIA_PLAYER_PREFIX}library",
                     thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
                     can_play=False,
                     can_expand=True,
@@ -168,7 +168,7 @@ async def async_browse_media(
         return BrowseMedia(
             title="Spotify",
             media_class=MEDIA_CLASS_APP,
-            media_content_id="spotify://",
+            media_content_id=MEDIA_PLAYER_PREFIX,
             media_content_type="spotify",
             thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
             can_play=False,
@@ -176,16 +176,14 @@ async def async_browse_media(
             children=children,
         )
 
-    # Check for config entry specifier, and extract Spotify URI
-    if media_content_id and media_content_id.startswith(MEDIA_PLAYER_PREFIX):
-        parsed_url = yarl.URL(media_content_id)
-        if (info := hass.data[DOMAIN].get(parsed_url.host)) is None:
-            raise BrowseError("Invalid Spotify account specified")
-        media_content_id = parsed_url.name
+    if media_content_id is None or not media_content_id.startswith(MEDIA_PLAYER_PREFIX):
+        raise BrowseError("Invalid Spotify URL specified")
 
-    if info is None:
-        if not (info := next(iter(hass.data[DOMAIN].values()), None)):
-            raise BrowseError("No Spotify accounts available")
+    # Check for config entry specifier, and extract Spotify URI
+    parsed_url = yarl.URL(media_content_id)
+    if (info := hass.data[DOMAIN].get(parsed_url.host)) is None:
+        raise BrowseError("Invalid Spotify account specified")
+    media_content_id = parsed_url.name
 
     result = await async_browse_media_internal(
         hass,
@@ -198,13 +196,10 @@ async def async_browse_media(
     )
 
     # Build new URLs with config entry specifyers
-    if parsed_url is not None:
-        result.media_content_id = str(parsed_url.with_name(result.media_content_id))
-        if result.children:
-            for child in result.children:
-                child.media_content_id = str(
-                    parsed_url.with_name(child.media_content_id)
-                )
+    result.media_content_id = str(parsed_url.with_name(result.media_content_id))
+    if result.children:
+        for child in result.children:
+            child.media_content_id = str(parsed_url.with_name(child.media_content_id))
     return result
 
 
