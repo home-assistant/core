@@ -218,13 +218,11 @@ class MpdDevice(MediaPlayerEntity):
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
         time_from_status = self._status.get("time")
-        time = None
-        if (
-            time_from_status
-            and isinstance(time_from_status, str)
-            and ":" in time_from_status
-        ):
-            time = time_from_status.split(":")[1]
+        time = (
+            time_from_status.split(":")[1]
+            if isinstance(time_from_status, str) and ":" in time_from_status
+            else None
+        )
         return self._currentsong.get("time", time)
 
     @property
