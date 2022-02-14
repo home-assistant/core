@@ -1111,7 +1111,7 @@ async def test_setup_logs_error_if_no_connect_broker(hass, caplog):
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
 
     with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client().connect = lambda *args: 1
+        mock_client.on_connect(return_value=0)
         assert await mqtt.async_setup_entry(hass, entry)
         assert "Failed to connect to MQTT server:" in caplog.text
 
@@ -1178,7 +1178,7 @@ async def test_handle_message_callback(hass, caplog):
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
     msg = ReceiveMessage("some-topic", b"test-payload", 0, False)
     with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client().connect = lambda *args: 0
+        mock_client().on_connect(return_value=1)
         assert await mqtt.async_setup_entry(hass, entry)
         await hass.async_block_till_done()
         await mqtt.async_subscribe(hass, "some-topic", lambda *args: 0)
@@ -1209,7 +1209,7 @@ async def test_setup_override_configuration(hass, caplog, tmp_path):
         )
 
         with patch("paho.mqtt.client.Client") as mock_client:
-            mock_client().connect = lambda *args: 1
+            mock_client.on_connect(return_value=0)
             await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
             await entry.async_setup(hass)
             await hass.async_block_till_done()
