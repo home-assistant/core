@@ -4,7 +4,7 @@ from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.helpers import entity_registry as er
 
 
-async def test_binary_sensors(hass, setup_entry):
+async def test_binary_sensors(hass, request, setup_entry):
     """Test the SleepIQ binary sensors."""
     entity_registry = er.async_get(hass)
 
@@ -20,7 +20,7 @@ async def test_binary_sensors(hass, setup_entry):
 
     # Test the second binary sensor when the fixture is not loading the
     # -single bed data
-    if not setup_entry:
+    if not setup_entry["account_type"]:
         entry = entity_registry.async_get(
             "binary_sensor.sleepnumber_ile_test2_is_in_bed"
         )

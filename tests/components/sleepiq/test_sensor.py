@@ -18,7 +18,7 @@ async def test_sensors(hass, setup_entry):
     assert entry
     assert entry.unique_id == "-31_Test1_sleep_number"
 
-    if not setup_entry:
+    if not setup_entry["account_type"]:
         state = hass.states.get("sensor.sleepnumber_ile_test2_sleepnumber")
         assert state.state == "80"
         assert state.attributes.get(ATTR_ICON) == "mdi:bed"
