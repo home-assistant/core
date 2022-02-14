@@ -208,8 +208,8 @@ async def test_dhcp_renewal_match_hostname_and_macaddress(hass):
     )
 
 
-async def test_registering_mac_address(hass):
-    """Test discovery callbacks happen when registering a mac address."""
+async def test_registered_devices(hass):
+    """Test discovery flows are created for registered devices."""
     integration_matchers = [{"domain": "mock-domain", "registered_devices": True}]
 
     packet = Ether(RAW_DHCP_RENEWAL)
