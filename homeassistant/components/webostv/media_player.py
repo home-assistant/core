@@ -138,6 +138,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         """Initialize the webos device."""
         self._wrapper = wrapper
         self._client: WebOsClient = wrapper.client
+        self._attr_assumed_state = True
         self._attr_name = name
         self._attr_unique_id = unique_id
         self._sources = sources
