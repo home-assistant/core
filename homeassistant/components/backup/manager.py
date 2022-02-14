@@ -40,15 +40,16 @@ class Backup:
 class BackupManager:
     """Backup manager for the Backup integration."""
 
+    _backups: dict[str, Backup] | None = None
+
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the backup manager."""
-        self._backups: dict[str, Backup] = {}
         self.hass = hass
         self.backup_dir = Path(hass.config.path("backups"))
         self.backing_up = False
 
     @property
-    def backups(self) -> dict[str, Backup]:
+    def backups(self) -> dict[str, Backup] | None:
         """Return a dict of backups."""
         return self._backups
 
@@ -77,23 +78,26 @@ class BackupManager:
 
     def get_backup(self, slug: str) -> Backup | None:
         """Return a backup."""
-        return self._backups.get(slug)
+        return None if self._backups is None else self._backups.get(slug)
 
     def remove_backup(self, slug: str) -> None:
         """Remove a backup."""
-        if (backup := self.get_backup(slug)) is None:
+        LOGGER.error(self._backups)
+        if self._backups is None or (backup := self.get_backup(slug)) is None:
             return
         backup.path.unlink(missing_ok=True)
         LOGGER.debug("Removed backup located at %s", backup.path)
-        self._backups.pop(slug, None)
+        self._backups.pop(slug)
 
     async def generate_backup(self) -> Backup:
         """Generate a backup."""
         if self.backing_up:
             raise HomeAssistantError("Backup already in progress")
 
-        try:
+        if self._backups is None:
+            self._backups = {}
 
+        try:
             self.backing_up = True
             backup_name = f"Core {VERSION}"
             date_str = now().isoformat()
@@ -154,12 +158,14 @@ def _add_directory_to_tarfile(
 ) -> None:
     """Add a directory to a tarfile."""
     for directory_item in origin_path.iterdir():
-        if directory_item.is_file() and any(
-            directory_item.match(exclude) for exclude in EXCLUDE_FROM_BACKUP
-        ):
+        arcpath = Path(arcname, directory_item.name).as_posix()
+
+        if directory_item.is_file():
+            if any(directory_item.match(exclude) for exclude in EXCLUDE_FROM_BACKUP):
+                continue
+            tar_file.add(directory_item.as_posix(), arcname=arcpath, recursive=False)
             continue
 
-        arcpath = Path(arcname, directory_item.name).as_posix()
         if directory_item.is_dir():
             _add_directory_to_tarfile(tar_file, directory_item, arcpath)
             continue

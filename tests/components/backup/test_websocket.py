@@ -40,8 +40,8 @@ async def test_remove(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.backup.websocket.BackupManager.get_backup",
-        return_value=TEST_BACKUP,
+        "homeassistant.components.backup.websocket.BackupManager._backups",
+        {TEST_BACKUP.slug: TEST_BACKUP},
     ), patch("pathlib.Path.unlink"):
         await client.send_json({"id": 1, "type": "backup/remove", "slug": "abc123"})
         msg = await client.receive_json()
@@ -62,8 +62,8 @@ async def test_generate(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.backup.websocket.BackupManager.get_backup",
-        return_value=TEST_BACKUP,
+        "homeassistant.components.backup.websocket.BackupManager._backups",
+        {TEST_BACKUP.slug: TEST_BACKUP},
     ), patch(
         "homeassistant.components.backup.websocket.BackupManager.generate_backup",
         return_value=TEST_BACKUP,

@@ -27,13 +27,13 @@ async def handle_info(
     """List all stored backups."""
     manager: BackupManager = hass.data[DOMAIN]
 
-    if not manager.backups:
+    if manager.backups is None:
         await hass.async_add_executor_job(manager.load_backups)
 
     connection.send_result(
         msg["id"],
         {
-            "backups": list(manager.backups),
+            "backups": list(manager.backups or []),
             "backing_up": manager.backing_up,
         },
     )
@@ -57,7 +57,7 @@ async def handle_remove(
 
     await hass.async_add_executor_job(manager.remove_backup, msg["slug"])
 
-    connection.send_message(websocket_api.result_message(msg["id"]))
+    connection.send_result(msg["id"])
 
 
 @websocket_api.require_admin
@@ -71,4 +71,4 @@ async def handle_create(
     """Generate a backup."""
     manager: BackupManager = hass.data[DOMAIN]
     backup = await manager.generate_backup()
-    connection.send_message(websocket_api.result_message(msg["id"], backup))
+    connection.send_result(msg["id"], backup)
