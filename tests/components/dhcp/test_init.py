@@ -213,6 +213,11 @@ async def test_registering_mac_address(hass):
 
     packet = Ether(RAW_DHCP_RENEWAL)
 
+    # Make sure we can register multiple times since
+    # this is usually wrapped in entry.async_on_remove
+    # which may run many times as config retry happens
+    cancel = dhcp.async_register_mac(hass, "50147903852c", "mock-domain")
+    cancel = dhcp.async_register_mac(hass, "50147903852c", "mock-domain")
     cancel = dhcp.async_register_mac(hass, "50147903852c", "mock-domain")
 
     async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(

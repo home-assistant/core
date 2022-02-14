@@ -80,10 +80,10 @@ def async_register_mac(
     registered which allows discovery flows to still be
     created to update the ip address when it changes.
 
-    It is recommended to wrap this call in entry.async_on_unload
+    It is recommended to wrap this call in entry.async_on_remove
 
     Example:
-    entry.async_on_unload(dhcp.async_register_mac(hass, "50147903852c", 'integration'))
+    entry.async_on_remove(dhcp.async_register_mac(hass, "50147903852c", 'integration'))
     """
     registrations: dict[str, set[str]] = hass.data.setdefault(DHCP_REGISTRATONS, {})
     formatted_mac = _format_mac(mac).upper()
