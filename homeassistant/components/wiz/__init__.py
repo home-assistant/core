@@ -80,16 +80,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
     )
 
-    @callback
-    def _async_push_update(state: PilotParser) -> None:
-        """Receive a push update."""
-        _LOGGER.debug("%s: Got push update: %s", bulb.mac, state.pilotResult)
-        coordinator.async_set_updated_data(None)
-        if state.get_source() == PIR_SOURCE:
-            async_dispatcher_send(hass, SIGNAL_WIZ_PIR.format(bulb.mac))
-
-    await bulb.start_push(_async_push_update)
-    bulb.set_discovery_callback(lambda bulb: async_trigger_discovery(hass, [bulb]))
     try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady as err:
@@ -102,6 +92,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown_on_stop)
     )
+
+    @callback
+    def _async_push_update(state: PilotParser) -> None:
+        """Receive a push update."""
+        _LOGGER.debug("%s: Got push update: %s", bulb.mac, state.pilotResult)
+        coordinator.async_set_updated_data(None)
+        if state.get_source() == PIR_SOURCE:
+            async_dispatcher_send(hass, SIGNAL_WIZ_PIR.format(bulb.mac))
+
+    await bulb.start_push(_async_push_update)
+    bulb.set_discovery_callback(lambda bulb: async_trigger_discovery(hass, [bulb]))
+
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = WizData(
         coordinator=coordinator, bulb=bulb, scenes=scenes
     )
