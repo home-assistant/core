@@ -1,8 +1,7 @@
 """Support for powerwall sensors."""
 from __future__ import annotations
 
-import logging
-from typing import Any, cast
+from typing import Any
 
 from tesla_powerwall import MeterType
 
@@ -32,9 +31,6 @@ _METER_DIRECTION_IMPORT = "import"
 _METER_DIRECTIONS = [_METER_DIRECTION_EXPORT, _METER_DIRECTION_IMPORT]
 
 
-_LOGGER = logging.getLogger(__name__)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -44,7 +40,7 @@ async def async_setup_entry(
     powerwall_data: PowerwallRuntimeData = hass.data[DOMAIN][config_entry.entry_id]
     coordinator = powerwall_data[POWERWALL_COORDINATOR]
     assert coordinator is not None
-    data = cast(PowerwallData, coordinator.data)
+    data: PowerwallData = coordinator.data
     entities: list[
         PowerWallEnergySensor | PowerWallEnergyDirectionSensor | PowerWallChargeSensor
     ] = []
@@ -102,9 +98,7 @@ class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
     @property
     def native_value(self) -> float:
         """Get the current value in kW."""
-        return cast(
-            float, self.data.meters.get_meter(self._meter).get_power(precision=3)
-        )
+        return self.data.meters.get_meter(self._meter).get_power(precision=3)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -147,5 +141,5 @@ class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
         """Get the current value in kWh."""
         meter = self.data.meters.get_meter(self._meter)
         if self._meter_direction == _METER_DIRECTION_EXPORT:
-            return cast(float, meter.get_energy_exported())
-        return cast(float, meter.get_energy_imported())
+            return meter.get_energy_exported()
+        return meter.get_energy_imported()
