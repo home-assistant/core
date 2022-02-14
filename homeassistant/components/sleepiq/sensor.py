@@ -15,15 +15,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SleepIQ bed sensors."""
-    coordinator = hass.data[DATA_SLEEPIQ].coordinators[config_entry.data[CONF_USERNAME]]
-    entities = []
-
-    for bed_id in coordinator.data:
-        for side in SIDES:
-            if getattr(coordinator.data[bed_id][BED], side) is not None:
-                entities.append(SleepNumberSensor(coordinator, bed_id, side))
-
-    async_add_entities(entities)
+    coordinator: SleepIQDataUpdateCoordinator = hass.data[DATA_SLEEPIQ].coordinators[
+        config_entry.data[CONF_USERNAME]
+    ]
+    async_add_entities(
+        SleepNumberSensor(coordinator, bed_id, side)
+        for side in SIDES
+        for bed_id in coordinator.data
+        if getattr(coordinator.data[bed_id][BED], side) is not None
+    )
 
 
 class SleepNumberSensor(SleepIQSensor, SensorEntity):
