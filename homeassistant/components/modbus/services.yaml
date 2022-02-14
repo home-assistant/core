@@ -9,7 +9,7 @@ write_coil:
       selector:
         number:
           min: 0
-          max: 65536
+          max: 65535
     state:
       name: State
       description: State to write.
@@ -43,7 +43,7 @@ write_register:
       selector:
         number:
           min: 0
-          max: 65536
+          max: 65535
     unit:
       name: Unit
       description: Address of the modbus unit.
