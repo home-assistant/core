@@ -73,6 +73,17 @@ SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
         entity_category=EntityCategory.CONFIG,
         device_class=OverkizDeviceClass.MEMORIZED_SIMPLE_VOLUME,
     ),
+    # SomfyHeatingTemperatureInterface
+    OverkizSelectDescription(
+        key=OverkizState.OVP_HEATING_TEMPERATURE_INTERFACE_OPERATING_MODE,
+        name="Operating Mode",
+        icon="mdi:sun-snowflake",
+        options=[OverkizCommandParam.HEATING, OverkizCommandParam.COOLING],
+        select_option=lambda option, execute_command: execute_command(
+            OverkizCommand.SET_OPERATING_MODE, option
+        ),
+        entity_category=EntityCategory.CONFIG,
+    ),
 ]
 
 SUPPORTED_STATES = {description.key: description for description in SELECT_DESCRIPTIONS}
