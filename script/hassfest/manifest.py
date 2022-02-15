@@ -218,6 +218,7 @@ MANIFEST_SCHEMA = vol.Schema(
                         str, verify_uppercase, verify_wildcard
                     ),
                     vol.Optional("hostname"): vol.All(str, verify_lowercase),
+                    vol.Optional("registered_devices"): cv.boolean,
                 }
             )
         ],
