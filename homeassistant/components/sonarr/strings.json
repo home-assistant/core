@@ -11,7 +11,7 @@
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Sonarr integration needs to be manually re-authenticated with the Sonarr API"
+        "description": "The Sonarr integration needs to be manually re-authenticated with the Sonarr API  hosted at: {url}"
       }
     },
     "error": {

@@ -8,6 +8,7 @@ from aiopyarr import ArrAuthenticationException, ArrException
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.sonarr_client import SonarrClient
 import voluptuous as vol
+import yarl
 
 from homeassistant.config_entries import ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
@@ -74,6 +75,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
+                description_placeholders={"url": self.entry.data[CONF_URL]},
                 data_schema=vol.Schema({}),
                 errors={},
             )
@@ -106,8 +108,10 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
                 if self.entry:
                     return await self._async_reauth_update_entry(user_input)
 
+                parsed = yarl.URL(user_input[CONF_URL])
+
                 return self.async_create_entry(
-                    title=user_input[CONF_URL], data=user_input
+                    title=parsed.host or "Sonarr", data=user_input
                 )
 
         data_schema = self._get_user_data_schema()
