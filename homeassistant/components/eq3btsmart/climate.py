@@ -61,6 +61,10 @@ HA_TO_EQ_HVAC = {
 EQ_TO_HA_PRESET = {
     eq3.Mode.Boost: PRESET_BOOST,
     eq3.Mode.Away: PRESET_AWAY,
+    eq3.Mode.Manual: PRESET_PERMANENT_HOLD,
+    eq3.Mode.Auto: PRESET_NO_HOLD,
+    eq3.Mode.Open: PRESET_OPEN,
+    eq3.Mode.Closed: PRESET_CLOSED,
 }
 
 HA_TO_EQ_PRESET = {
