@@ -10,7 +10,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN
+from .const import DOMAIN, SLEEPYQ_INVALID_CREDENTIALS_MESSAGE
 
 
 class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -41,13 +41,18 @@ class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
             self._abort_if_unique_id_configured()
 
-            valid = await self.hass.async_add_executor_job(try_connection, user_input)
-            if valid:
+            login_error = await self.hass.async_add_executor_job(
+                try_connection, user_input
+            )
+            if not login_error:
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )
 
-            errors["base"] = "cannot_connect"
+            if SLEEPYQ_INVALID_CREDENTIALS_MESSAGE in login_error:
+                errors["base"] = "invalid_auth"
+            else:
+                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",
@@ -67,14 +72,14 @@ class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-def try_connection(user_input: dict[str, Any]) -> bool:
+def try_connection(user_input: dict[str, Any]) -> str:
     """Test if the given credentials can successfully login to SleepIQ."""
 
     client = Sleepyq(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
 
     try:
         client.login()
-    except ValueError:
-        return False
+    except ValueError as error:
+        return str(error)
 
-    return True
+    return ""

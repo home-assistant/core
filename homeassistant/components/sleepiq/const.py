@@ -2,6 +2,8 @@
 
 DOMAIN = "sleepiq"
 
+SLEEPYQ_INVALID_CREDENTIALS_MESSAGE = "username or password"
+
 BED = "bed"
 ICON_EMPTY = "mdi:bed-empty"
 ICON_OCCUPIED = "mdi:bed"

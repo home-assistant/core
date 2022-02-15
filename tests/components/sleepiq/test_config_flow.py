@@ -2,7 +2,10 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.sleepiq.const import DOMAIN
+from homeassistant.components.sleepiq.const import (
+    DOMAIN,
+    SLEEPYQ_INVALID_CREDENTIALS_MESSAGE,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -35,9 +38,27 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
         assert result["step_id"] == "user"
 
 
-async def test_login_error(hass: HomeAssistant) -> None:
+async def test_login_invalid_auth(hass: HomeAssistant) -> None:
     """Test we show user form with appropriate error on login failure."""
-    with patch("sleepyq.Sleepyq.login", side_effect=ValueError()):
+    with patch(
+        "sleepyq.Sleepyq.login",
+        side_effect=ValueError(SLEEPYQ_INVALID_CREDENTIALS_MESSAGE),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=SLEEPIQ_CONFIG
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_login_cannot_connect(hass: HomeAssistant) -> None:
+    """Test we show user form with appropriate error on login failure."""
+    with patch(
+        "sleepyq.Sleepyq.login",
+        side_effect=ValueError("Unexpected response code"),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=SLEEPIQ_CONFIG
         )
