@@ -48,16 +48,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         server = SUPPORTED_SERVERS[user_input[CONF_HUB]]
         session = async_create_clientsession(self.hass)
 
-        client = OverkizClient(
+        async with OverkizClient(
             username=username, password=password, server=server, session=session
-        )
+        ) as client:
+            await client.login()
 
-        await client.login()
-
-        # Set first gateway id as unique id
-        if gateways := await client.get_gateways():
-            gateway_id = gateways[0].id
-            await self.async_set_unique_id(gateway_id)
+            # Set first gateway id as unique id
+            if gateways := await client.get_gateways():
+                gateway_id = gateways[0].id
+                await self.async_set_unique_id(gateway_id)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
