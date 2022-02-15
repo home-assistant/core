@@ -422,11 +422,15 @@ class Scanner:
         """Start the SSDP Listeners."""
         for source_ip in await self._async_build_source_set():
             source_ip_str = str(source_ip)
-            source_tuple: AddressTupleVXType = (
-                (source_ip_str, 0, 0, int(getattr(source_ip, "scope_id")))
-                if source_ip.version == 6
-                else (source_ip_str, 0)
-            )
+            if source_ip.version == 6:
+                source_tuple: AddressTupleVXType = (
+                    source_ip_str,
+                    0,
+                    0,
+                    int(getattr(source_ip, "scope_id")),
+                )
+            else:
+                source_tuple = (source_ip_str, 0)
             source, target = determine_source_target(source_tuple)
             self._ssdp_listeners.append(
                 SsdpListener(
