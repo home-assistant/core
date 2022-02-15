@@ -769,7 +769,7 @@ async def test_play_media(hass: HomeAssistant, remote: Mock) -> None:
         assert len(sleeps) == 3
 
 
-async def test_play_media_invalid_type(hass: HomeAssistant, remote: Mock) -> None:
+async def test_play_media_invalid_type(hass: HomeAssistant) -> None:
     """Test for play_media with invalid media type."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         url = "https://example.com"
@@ -791,7 +791,7 @@ async def test_play_media_invalid_type(hass: HomeAssistant, remote: Mock) -> Non
         assert remote.call_count == 1
 
 
-async def test_play_media_channel_as_string(hass: HomeAssistant, remote: Mock) -> None:
+async def test_play_media_channel_as_string(hass: HomeAssistant) -> None:
     """Test for play_media with invalid channel as string."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         url = "https://example.com"
@@ -813,9 +813,7 @@ async def test_play_media_channel_as_string(hass: HomeAssistant, remote: Mock) -
         assert remote.call_count == 1
 
 
-async def test_play_media_channel_as_non_positive(
-    hass: HomeAssistant, remote: Mock
-) -> None:
+async def test_play_media_channel_as_non_positive(hass: HomeAssistant) -> None:
     """Test for play_media with invalid channel as non positive integer."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         await setup_samsungtv(hass, MOCK_CONFIG)
@@ -852,7 +850,7 @@ async def test_select_source(hass: HomeAssistant, remote: Mock) -> None:
     assert remote.close.call_args_list == [call()]
 
 
-async def test_select_source_invalid_source(hass: HomeAssistant, remote: Mock) -> None:
+async def test_select_source_invalid_source(hass: HomeAssistant) -> None:
     """Test for select_source with invalid source."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         await setup_samsungtv(hass, MOCK_CONFIG)

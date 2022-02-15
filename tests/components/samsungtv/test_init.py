@@ -58,27 +58,21 @@ REMOTE_CALL = {
 @pytest.mark.usefixtures("remotews", "no_mac_address")
 async def test_setup(hass: HomeAssistant) -> None:
     """Test Samsung TV integration is setup."""
-    with patch(
-        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
-        return_value="fake_host",
-    ):
+    await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
 
-        await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
-        await hass.async_block_till_done()
-        state = hass.states.get(ENTITY_ID)
+    # test name and turn_on
+    assert state
+    assert state.name == "fake_name"
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON
+    )
 
-        # test name and turn_on
-        assert state
-        assert state.name == "fake_name"
-        assert (
-            state.attributes[ATTR_SUPPORTED_FEATURES]
-            == SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON
-        )
-
-        # test host and port
-        assert await hass.services.async_call(
-            DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
-        )
+    # test host and port
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
 
 
 async def test_setup_from_yaml_without_port_device_offline(hass: HomeAssistant) -> None:
@@ -91,9 +85,6 @@ async def test_setup_from_yaml_without_port_device_offline(hass: HomeAssistant) 
     ), patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.device_info",
         return_value=None,
-    ), patch(
-        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
-        return_value="fake_host",
     ):
         await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
         await hass.async_block_till_done()
@@ -106,12 +97,8 @@ async def test_setup_from_yaml_without_port_device_offline(hass: HomeAssistant) 
 @pytest.mark.usefixtures("remotews")
 async def test_setup_from_yaml_without_port_device_online(hass: HomeAssistant) -> None:
     """Test import from yaml when the device is online."""
-    with patch(
-        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
-        return_value="fake_host",
-    ):
-        await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
-        await hass.async_block_till_done()
+    await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
+    await hass.async_block_till_done()
 
     config_entries_domain = hass.config_entries.async_entries(SAMSUNGTV_DOMAIN)
     assert len(config_entries_domain) == 1
