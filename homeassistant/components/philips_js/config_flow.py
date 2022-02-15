@@ -122,8 +122,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if hub.system.get("serialnumber"):
-                    await self.async_set_unique_id(hub.system["serialnumber"])
+                if serialnumber := hub.system.get("serialnumber"):
+                    await self.async_set_unique_id(serialnumber)
                     self._abort_if_unique_id_configured()
 
                 self._current[CONF_SYSTEM] = hub.system
