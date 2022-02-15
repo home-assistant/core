@@ -1,6 +1,6 @@
 """Tests for samsungtv component."""
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from unittest.mock import DEFAULT as DEFAULT_MOCK, Mock, PropertyMock, call, patch
 
@@ -55,8 +55,6 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -132,28 +130,25 @@ def delay_fixture():
         yield delay
 
 
-async def setup_samsungtv(hass: HomeAssistant, config: ConfigType) -> None:
+async def setup_samsungtv(hass, config):
     """Set up mock Samsung TV."""
     await async_setup_component(hass, SAMSUNGTV_DOMAIN, config)
     await hass.async_block_till_done()
 
 
-@pytest.mark.usefixtures("remote")
-async def test_setup_with_turnon(hass: HomeAssistant) -> None:
+async def test_setup_with_turnon(hass, remote):
     """Test setup of platform."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     assert hass.states.get(ENTITY_ID)
 
 
-@pytest.mark.usefixtures("remote")
-async def test_setup_without_turnon(hass: HomeAssistant) -> None:
+async def test_setup_without_turnon(hass, remote):
     """Test setup of platform."""
     await setup_samsungtv(hass, MOCK_CONFIG_NOTURNON)
     assert hass.states.get(ENTITY_ID_NOTURNON)
 
 
-@pytest.mark.usefixtures("remotews")
-async def test_setup_websocket(hass: HomeAssistant) -> None:
+async def test_setup_websocket(hass, remotews):
     """Test setup of platform."""
     with patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remote_class:
         enter = Mock()
@@ -189,7 +184,7 @@ async def test_setup_websocket(hass: HomeAssistant) -> None:
         assert config_entries[0].data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
 
 
-async def test_setup_websocket_2(hass: HomeAssistant, mock_now: datetime) -> None:
+async def test_setup_websocket_2(hass, mock_now):
     """Test setup of platform from config entry."""
     entity_id = f"{DOMAIN}.fake"
 
@@ -237,8 +232,7 @@ async def test_setup_websocket_2(hass: HomeAssistant, mock_now: datetime) -> Non
     assert remote_class.call_args_list[0] == call(**MOCK_CALLS_WS)
 
 
-@pytest.mark.usefixtures("remote")
-async def test_update_on(hass: HomeAssistant, mock_now: datetime) -> None:
+async def test_update_on(hass, remote, mock_now):
     """Testing update tv on."""
     await setup_samsungtv(hass, MOCK_CONFIG)
 
@@ -251,8 +245,7 @@ async def test_update_on(hass: HomeAssistant, mock_now: datetime) -> None:
     assert state.state == STATE_ON
 
 
-@pytest.mark.usefixtures("remote")
-async def test_update_off(hass: HomeAssistant, mock_now: datetime) -> None:
+async def test_update_off(hass, remote, mock_now):
     """Testing update tv off."""
     await setup_samsungtv(hass, MOCK_CONFIG)
 
@@ -270,8 +263,7 @@ async def test_update_off(hass: HomeAssistant, mock_now: datetime) -> None:
         assert state.state == STATE_OFF
 
 
-@pytest.mark.usefixtures("remote")
-async def test_update_access_denied(hass: HomeAssistant, mock_now: datetime) -> None:
+async def test_update_access_denied(hass, remote, mock_now):
     """Testing update tv access denied exception."""
     await setup_samsungtv(hass, MOCK_CONFIG)
 
@@ -297,10 +289,7 @@ async def test_update_access_denied(hass: HomeAssistant, mock_now: datetime) -> 
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.usefixtures("remotews")
-async def test_update_connection_failure(
-    hass: HomeAssistant, mock_now: datetime
-) -> None:
+async def test_update_connection_failure(hass, remotews, mock_now):
     """Testing update tv connection failure exception."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -330,10 +319,7 @@ async def test_update_connection_failure(
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.usefixtures("remote")
-async def test_update_unhandled_response(
-    hass: HomeAssistant, mock_now: datetime
-) -> None:
+async def test_update_unhandled_response(hass, remote, mock_now):
     """Testing update tv unhandled response exception."""
     await setup_samsungtv(hass, MOCK_CONFIG)
 
@@ -351,10 +337,7 @@ async def test_update_unhandled_response(
         assert state.state == STATE_ON
 
 
-@pytest.mark.usefixtures("remote")
-async def test_connection_closed_during_update_can_recover(
-    hass: HomeAssistant, mock_now: datetime
-) -> None:
+async def test_connection_closed_during_update_can_recover(hass, remote, mock_now):
     """Testing update tv connection closed exception can recover."""
     await setup_samsungtv(hass, MOCK_CONFIG)
 
@@ -380,7 +363,7 @@ async def test_connection_closed_during_update_can_recover(
         assert state.state == STATE_ON
 
 
-async def test_send_key(hass: HomeAssistant, remote: Mock) -> None:
+async def test_send_key(hass, remote):
     """Test for send key."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     assert await hass.services.async_call(
@@ -395,7 +378,7 @@ async def test_send_key(hass: HomeAssistant, remote: Mock) -> None:
     assert state.state == STATE_ON
 
 
-async def test_send_key_broken_pipe(hass: HomeAssistant, remote: Mock) -> None:
+async def test_send_key_broken_pipe(hass, remote):
     """Testing broken pipe Exception."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     remote.control = Mock(side_effect=BrokenPipeError("Boom"))
@@ -406,9 +389,7 @@ async def test_send_key_broken_pipe(hass: HomeAssistant, remote: Mock) -> None:
     assert state.state == STATE_ON
 
 
-async def test_send_key_connection_closed_retry_succeed(
-    hass: HomeAssistant, remote: Mock
-) -> None:
+async def test_send_key_connection_closed_retry_succeed(hass, remote):
     """Test retry on connection closed."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     remote.control = Mock(
@@ -429,7 +410,7 @@ async def test_send_key_connection_closed_retry_succeed(
     assert state.state == STATE_ON
 
 
-async def test_send_key_unhandled_response(hass: HomeAssistant, remote: Mock) -> None:
+async def test_send_key_unhandled_response(hass, remote):
     """Testing unhandled response exception."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     remote.control = Mock(side_effect=exceptions.UnhandledResponse("Boom"))
@@ -440,7 +421,7 @@ async def test_send_key_unhandled_response(hass: HomeAssistant, remote: Mock) ->
     assert state.state == STATE_ON
 
 
-async def test_send_key_websocketexception(hass: HomeAssistant, remote: Mock) -> None:
+async def test_send_key_websocketexception(hass, remote):
     """Testing unhandled response exception."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     remote.control = Mock(side_effect=WebSocketException("Boom"))
@@ -451,7 +432,7 @@ async def test_send_key_websocketexception(hass: HomeAssistant, remote: Mock) ->
     assert state.state == STATE_ON
 
 
-async def test_send_key_os_error(hass: HomeAssistant, remote: Mock) -> None:
+async def test_send_key_os_error(hass, remote):
     """Testing broken pipe Exception."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     remote.control = Mock(side_effect=OSError("Boom"))
@@ -462,16 +443,14 @@ async def test_send_key_os_error(hass: HomeAssistant, remote: Mock) -> None:
     assert state.state == STATE_ON
 
 
-@pytest.mark.usefixtures("remote")
-async def test_name(hass: HomeAssistant) -> None:
+async def test_name(hass, remote):
     """Test for name property."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_FRIENDLY_NAME] == "fake"
 
 
-@pytest.mark.usefixtures("remote")
-async def test_state_with_turnon(hass: HomeAssistant, delay: Mock) -> None:
+async def test_state_with_turnon(hass, remote, delay):
     """Test for state property."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     assert await hass.services.async_call(
@@ -488,8 +467,7 @@ async def test_state_with_turnon(hass: HomeAssistant, delay: Mock) -> None:
     assert state.state == STATE_OFF
 
 
-@pytest.mark.usefixtures("remote")
-async def test_state_without_turnon(hass: HomeAssistant) -> None:
+async def test_state_without_turnon(hass, remote):
     """Test for state property."""
     await setup_samsungtv(hass, MOCK_CONFIG_NOTURNON)
     assert await hass.services.async_call(
@@ -517,8 +495,7 @@ async def test_state_without_turnon(hass: HomeAssistant) -> None:
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.usefixtures("remote")
-async def test_supported_features_with_turnon(hass: HomeAssistant) -> None:
+async def test_supported_features_with_turnon(hass, remote):
     """Test for supported_features property."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     state = hass.states.get(ENTITY_ID)
@@ -527,23 +504,21 @@ async def test_supported_features_with_turnon(hass: HomeAssistant) -> None:
     )
 
 
-@pytest.mark.usefixtures("remote")
-async def test_supported_features_without_turnon(hass: HomeAssistant) -> None:
+async def test_supported_features_without_turnon(hass, remote):
     """Test for supported_features property."""
     await setup_samsungtv(hass, MOCK_CONFIG_NOTURNON)
     state = hass.states.get(ENTITY_ID_NOTURNON)
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_SAMSUNGTV
 
 
-@pytest.mark.usefixtures("remote")
-async def test_device_class(hass: HomeAssistant) -> None:
+async def test_device_class(hass, remote):
     """Test for device_class property."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_DEVICE_CLASS] is MediaPlayerDeviceClass.TV.value
 
 
-async def test_turn_off_websocket(hass: HomeAssistant, remotews: Mock) -> None:
+async def test_turn_off_websocket(hass, remotews):
     """Test for turn_off."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -558,7 +533,7 @@ async def test_turn_off_websocket(hass: HomeAssistant, remotews: Mock) -> None:
         assert remotews.send_key.call_args_list == [call("KEY_POWER")]
 
 
-async def test_turn_off_legacy(hass: HomeAssistant, remote: Mock) -> None:
+async def test_turn_off_legacy(hass, remote):
     """Test for turn_off."""
     await setup_samsungtv(hass, MOCK_CONFIG_NOTURNON)
     assert await hass.services.async_call(
@@ -569,9 +544,7 @@ async def test_turn_off_legacy(hass: HomeAssistant, remote: Mock) -> None:
     assert remote.control.call_args_list == [call("KEY_POWEROFF")]
 
 
-async def test_turn_off_os_error(
-    hass: HomeAssistant, remote: Mock, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_turn_off_os_error(hass, remote, caplog):
     """Test for turn_off with OSError."""
     caplog.set_level(logging.DEBUG)
     await setup_samsungtv(hass, MOCK_CONFIG)
@@ -582,7 +555,7 @@ async def test_turn_off_os_error(
     assert "Could not establish connection" in caplog.text
 
 
-async def test_volume_up(hass: HomeAssistant, remote: Mock) -> None:
+async def test_volume_up(hass, remote):
     """Test for volume_up."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     assert await hass.services.async_call(
@@ -595,7 +568,7 @@ async def test_volume_up(hass: HomeAssistant, remote: Mock) -> None:
     assert remote.close.call_args_list == [call()]
 
 
-async def test_volume_down(hass: HomeAssistant, remote: Mock) -> None:
+async def test_volume_down(hass, remote):
     """Test for volume_down."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     assert await hass.services.async_call(
@@ -608,7 +581,7 @@ async def test_volume_down(hass: HomeAssistant, remote: Mock) -> None:
     assert remote.close.call_args_list == [call()]
 
 
-async def test_mute_volume(hass: HomeAssistant, remote: Mock) -> None:
+async def test_mute_volume(hass, remote):
     """Test for mute_volume."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     assert await hass.services.async_call(
@@ -624,7 +597,7 @@ async def test_mute_volume(hass: HomeAssistant, remote: Mock) -> None:
     assert remote.close.call_args_list == [call()]
 
 
-async def test_media_play(hass: HomeAssistant, remote: Mock) -> None:
+async def test_media_play(hass, remote):
     """Test for media_play."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     assert await hass.services.async_call(
@@ -646,7 +619,7 @@ async def test_media_play(hass: HomeAssistant, remote: Mock) -> None:
     assert remote.close.call_args_list == [call(), call()]
 
 
-async def test_media_pause(hass: HomeAssistant, remote: Mock) -> None:
+async def test_media_pause(hass, remote):
     """Test for media_pause."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     assert await hass.services.async_call(
@@ -668,7 +641,7 @@ async def test_media_pause(hass: HomeAssistant, remote: Mock) -> None:
     assert remote.close.call_args_list == [call(), call()]
 
 
-async def test_media_next_track(hass: HomeAssistant, remote: Mock) -> None:
+async def test_media_next_track(hass, remote):
     """Test for media_next_track."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     assert await hass.services.async_call(
@@ -681,7 +654,7 @@ async def test_media_next_track(hass: HomeAssistant, remote: Mock) -> None:
     assert remote.close.call_args_list == [call()]
 
 
-async def test_media_previous_track(hass: HomeAssistant, remote: Mock) -> None:
+async def test_media_previous_track(hass, remote):
     """Test for media_previous_track."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     assert await hass.services.async_call(
@@ -694,8 +667,7 @@ async def test_media_previous_track(hass: HomeAssistant, remote: Mock) -> None:
     assert remote.close.call_args_list == [call()]
 
 
-@pytest.mark.usefixtures("remote")
-async def test_turn_on_with_turnon(hass: HomeAssistant, delay: Mock) -> None:
+async def test_turn_on_with_turnon(hass, remote, delay):
     """Test turn on."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     assert await hass.services.async_call(
@@ -704,8 +676,7 @@ async def test_turn_on_with_turnon(hass: HomeAssistant, delay: Mock) -> None:
     assert delay.call_count == 1
 
 
-@pytest.mark.usefixtures("remotews")
-async def test_turn_on_wol(hass: HomeAssistant) -> None:
+async def test_turn_on_wol(hass, remotews):
     """Test turn on."""
     entry = MockConfigEntry(
         domain=SAMSUNGTV_DOMAIN,
@@ -725,7 +696,7 @@ async def test_turn_on_wol(hass: HomeAssistant) -> None:
     assert mock_send_magic_packet.called
 
 
-async def test_turn_on_without_turnon(hass: HomeAssistant, remote: Mock) -> None:
+async def test_turn_on_without_turnon(hass, remote):
     """Test turn on."""
     await setup_samsungtv(hass, MOCK_CONFIG_NOTURNON)
     assert await hass.services.async_call(
@@ -735,7 +706,7 @@ async def test_turn_on_without_turnon(hass: HomeAssistant, remote: Mock) -> None
     assert remote.control.call_count == 0
 
 
-async def test_play_media(hass: HomeAssistant, remote: Mock) -> None:
+async def test_play_media(hass, remote):
     """Test for play_media."""
     asyncio_sleep = asyncio.sleep
     sleeps = []
@@ -769,7 +740,7 @@ async def test_play_media(hass: HomeAssistant, remote: Mock) -> None:
         assert len(sleeps) == 3
 
 
-async def test_play_media_invalid_type(hass: HomeAssistant) -> None:
+async def test_play_media_invalid_type(hass):
     """Test for play_media with invalid media type."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         url = "https://example.com"
@@ -791,7 +762,7 @@ async def test_play_media_invalid_type(hass: HomeAssistant) -> None:
         assert remote.call_count == 1
 
 
-async def test_play_media_channel_as_string(hass: HomeAssistant) -> None:
+async def test_play_media_channel_as_string(hass):
     """Test for play_media with invalid channel as string."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         url = "https://example.com"
@@ -813,7 +784,7 @@ async def test_play_media_channel_as_string(hass: HomeAssistant) -> None:
         assert remote.call_count == 1
 
 
-async def test_play_media_channel_as_non_positive(hass: HomeAssistant) -> None:
+async def test_play_media_channel_as_non_positive(hass):
     """Test for play_media with invalid channel as non positive integer."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         await setup_samsungtv(hass, MOCK_CONFIG)
@@ -834,7 +805,7 @@ async def test_play_media_channel_as_non_positive(hass: HomeAssistant) -> None:
         assert remote.call_count == 1
 
 
-async def test_select_source(hass: HomeAssistant, remote: Mock) -> None:
+async def test_select_source(hass, remote):
     """Test for select_source."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     assert await hass.services.async_call(
@@ -850,7 +821,7 @@ async def test_select_source(hass: HomeAssistant, remote: Mock) -> None:
     assert remote.close.call_args_list == [call()]
 
 
-async def test_select_source_invalid_source(hass: HomeAssistant) -> None:
+async def test_select_source_invalid_source(hass):
     """Test for select_source with invalid source."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         await setup_samsungtv(hass, MOCK_CONFIG)
