@@ -1135,16 +1135,31 @@ async def test_logs_error_if_no_connect_broker(
     )
 
 
-async def test_handle_mid_event(hass, caplog, mqtt_mock):
-    """Test handling of the mid event."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
-
-    assert await mqtt.async_setup_entry(hass, entry)
-    await hass.async_block_till_done()
-    mid = 123
+async def test_handle_mqtt_on_callback(hass, caplog, mqtt_mock, mqtt_client_mock):
+    """Test handling of an ACK callback."""
     mqtt_mock()._pending_operations = {}
-    mqtt_mock._mqtt_handle_mid(mid)
+
+    mid = 1
+    mqtt_client_mock.on_publish(mqtt_client_mock, None, mid)
+    # mqtt_mock._mqtt_handle_mid(mid)
     await hass.async_block_till_done()
+    await asyncio.sleep(0.2)
+    assert mid in mqtt_mock()._pending_operations
+    del mqtt_mock()._pending_operations[mid]
+
+    mid = 2
+    mqtt_client_mock.on_subscribe(mqtt_client_mock, None, mid)
+    # mqtt_mock._mqtt_handle_mid(mid)
+    await hass.async_block_till_done()
+    await asyncio.sleep(0.2)
+    assert mid in mqtt_mock()._pending_operations
+    del mqtt_mock()._pending_operations[mid]
+
+    mid = 3
+    mqtt_client_mock.on_unsubscribe(mqtt_client_mock, None, mid)
+    # mqtt_mock._mqtt_handle_mid(mid)
+    await hass.async_block_till_done()
+    await asyncio.sleep(0.2)
     assert mid in mqtt_mock()._pending_operations
     del mqtt_mock()._pending_operations[mid]
 
