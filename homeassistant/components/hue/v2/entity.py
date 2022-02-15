@@ -23,8 +23,6 @@ if TYPE_CHECKING:
     from aiohue.v2.models.motion import Motion
 
     HueResource = Union[Light, DevicePower, GroupedLight, LightLevel, Motion]
-# else:
-#     HueResource = Any
 
 
 RESOURCE_TYPE_NAMES = {
