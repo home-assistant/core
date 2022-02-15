@@ -129,7 +129,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         if self.entry:
             return {vol.Required(CONF_API_KEY): str}
 
-        data_schema = {
+        data_schema: dict[str, Any] = {
             vol.Required(CONF_URL): str,
             vol.Required(CONF_API_KEY): str,
         }
