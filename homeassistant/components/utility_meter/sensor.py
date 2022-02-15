@@ -167,7 +167,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         self._parent_meter = parent_meter
         self._sensor_source_id = source_entity
         self._state = None
-        self._last_period = 0
+        self._last_period = Decimal(0)
         self._last_reset = dt_util.utcnow()
         self._collecting = None
         self._name = name
@@ -278,7 +278,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
             return
         _LOGGER.debug("Reset utility meter <%s>", self.entity_id)
         self._last_reset = dt_util.utcnow()
-        self._last_period = str(self._state) if self._state else 0
+        self._last_period = Decimal(self._state) if self._state else Decimal(0)
         self._state = 0
         self.async_write_ha_state()
 
@@ -315,10 +315,10 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                     ATTR_UNIT_OF_MEASUREMENT
                 )
                 self._last_period = (
-                    float(state.attributes[ATTR_LAST_PERIOD])
+                    Decimal(state.attributes[ATTR_LAST_PERIOD])
                     if state.attributes.get(ATTR_LAST_PERIOD)
                     and is_number(state.attributes[ATTR_LAST_PERIOD])
-                    else 0
+                    else Decimal(0)
                 )
                 self._last_reset = dt_util.as_utc(
                     dt_util.parse_datetime(state.attributes.get(ATTR_LAST_RESET))
@@ -396,7 +396,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         state_attr = {
             ATTR_SOURCE_ID: self._sensor_source_id,
             ATTR_STATUS: PAUSED if self._collecting is None else COLLECTING,
-            ATTR_LAST_PERIOD: self._last_period,
+            ATTR_LAST_PERIOD: str(self._last_period),
         }
         if self._period is not None:
             state_attr[ATTR_PERIOD] = self._period

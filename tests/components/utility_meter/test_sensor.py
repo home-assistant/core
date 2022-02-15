@@ -537,7 +537,7 @@ async def _test_self_reset(hass, config, start_time, expect_reset=True):
         assert state.attributes.get("last_reset") == now.isoformat()
         assert state.state == "3"
     else:
-        assert state.attributes.get("last_period") == 0
+        assert state.attributes.get("last_period") == "0"
         assert state.state == "5"
         start_time_str = dt_util.parse_datetime(start_time).isoformat()
         assert state.attributes.get("last_reset") == start_time_str
@@ -566,7 +566,7 @@ async def _test_self_reset(hass, config, start_time, expect_reset=True):
         assert state.attributes.get("last_period") == "2"
         assert state.state == "7"
     else:
-        assert state.attributes.get("last_period") == 0
+        assert state.attributes.get("last_period") == "0"
         assert state.state == "9"
 
 
