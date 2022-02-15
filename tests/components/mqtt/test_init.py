@@ -724,7 +724,8 @@ async def test_subscribe_bad_topic(hass, mqtt_mock, calls, record_calls):
 async def test_subscribe_deprecated(hass, mqtt_mock):
     """Test the subscription of a topic using deprecated callback signature."""
 
-    async def record_calls(topic, payload, qos):
+    @callback
+    def record_calls(topic, payload, qos):
         """Record calls."""
         calls.append((topic, payload, qos))
 
@@ -768,14 +769,14 @@ async def test_subscribe_deprecated(hass, mqtt_mock):
 
 
 async def test_subscribe_deprecated_async(hass, mqtt_mock):
-    """Test the subscription of a topic using deprecated callback signature."""
-    calls = []
+    """Test the subscription of a topic using deprecated coroutine signature."""
 
-    async def record_calls(topic, payload, qos):
+    def async_record_calls(topic, payload, qos):
         """Record calls."""
         calls.append((topic, payload, qos))
 
-    unsub = await mqtt.async_subscribe(hass, "test-topic", record_calls)
+    calls = []
+    unsub = await mqtt.async_subscribe(hass, "test-topic", async_record_calls)
 
     async_fire_mqtt_message(hass, "test-topic", "test-payload")
 
@@ -795,7 +796,7 @@ async def test_subscribe_deprecated_async(hass, mqtt_mock):
     # Test with partial wrapper
     calls = []
     unsub = await mqtt.async_subscribe(
-        hass, "test-topic", RecordCallsPartial(record_calls)
+        hass, "test-topic", RecordCallsPartial(async_record_calls)
     )
 
     async_fire_mqtt_message(hass, "test-topic", "test-payload")
@@ -806,6 +807,11 @@ async def test_subscribe_deprecated_async(hass, mqtt_mock):
     assert calls[0][1] == "test-payload"
 
     unsub()
+
+    async_fire_mqtt_message(hass, "test-topic", "test-payload")
+
+    await hass.async_block_till_done()
+    assert len(calls) == 1
 
 
 async def test_subscribe_topic_not_match(hass, mqtt_mock, calls, record_calls):
@@ -1113,19 +1119,11 @@ async def test_setup_logs_error_if_no_connect_broker(hass, caplog):
     with patch("paho.mqtt.client.Client") as mock_client:
         mock_client.on_connect(return_value=0)
         assert await mqtt.async_setup_entry(hass, entry)
-        assert "Failed to connect to MQTT server:" in caplog.text
-
-
-async def test_connection_error(hass, caplog):
-    """Test for connection error handling."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
-
-    with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client.on_connect(return_value=0)
-        assert await mqtt.async_setup_entry(hass, entry)
         await hass.async_block_till_done()
+        assert "Failed to connect to MQTT server:" in caplog.text
         component = hass.data["mqtt"]
         component._mqtt_on_connect(mock_client, None, None, 3)
+        await hass.async_block_till_done()
         assert "Unable to connect to the MQTT broker:" in caplog.text
 
 
