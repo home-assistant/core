@@ -528,7 +528,7 @@ habitipy==0.2.0
 hangups==0.4.17
 
 # homeassistant.components.cloud
-hass-nabucasa==0.52.0
+hass-nabucasa==0.52.1
 
 # homeassistant.components.tasmota
 hatasmota==0.3.1
@@ -549,7 +549,7 @@ hole==0.7.0
 holidays==0.12
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220203.0
+home-assistant-frontend==20220214.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -592,7 +592,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.intellifire
-intellifire4py==0.6
+intellifire4py==0.9.8
 
 # homeassistant.components.iotawatt
 iotawattpy==0.1.0
@@ -887,7 +887,7 @@ pyatmo==6.2.4
 pyatv==0.10.0
 
 # homeassistant.components.aussie_broadband
-pyaussiebb==0.0.9
+pyaussiebb==0.0.11
 
 # homeassistant.components.balboa
 pybalboa==0.13

@@ -788,10 +788,10 @@ async def test_remove_entry(
     assert "Failed to uninstall the Z-Wave JS add-on" in caplog.text
 
 
-async def test_removed_device(hass, client, multiple_devices, integration):
+async def test_removed_device(
+    hass, client, climate_radio_thermostat_ct100_plus, lock_schlage_be469, integration
+):
     """Test that the device registry gets updated when a device gets removed."""
-    nodes = multiple_devices
-
     # Verify how many nodes are available
     assert len(client.driver.controller.nodes) == 2
 
@@ -803,10 +803,10 @@ async def test_removed_device(hass, client, multiple_devices, integration):
     # Check how many entities there are
     ent_reg = er.async_get(hass)
     entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
-    assert len(entity_entries) == 26
+    assert len(entity_entries) == 28
 
     # Remove a node and reload the entry
-    old_node = nodes.pop(13)
+    old_node = client.driver.controller.nodes.pop(13)
     await hass.config_entries.async_reload(integration.entry_id)
     await hass.async_block_till_done()
 
@@ -815,7 +815,7 @@ async def test_removed_device(hass, client, multiple_devices, integration):
     device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
     assert len(device_entries) == 1
     entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
-    assert len(entity_entries) == 16
+    assert len(entity_entries) == 17
     assert dev_reg.async_get_device({get_device_id(client, old_node)}) is None
 
 
