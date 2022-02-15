@@ -65,12 +65,9 @@ class SIABaseEntity(RestoreEntity):
         self.entity_description = entity_description
 
         self.ping_interval: int = next(
-            (
-                account[CONF_PING_INTERVAL]
-                for account in entry.data[CONF_ACCOUNTS]
-                if account[CONF_ACCOUNT] == account
-            ),
-            1,
+            acc[CONF_PING_INTERVAL]
+            for acc in entry.data[CONF_ACCOUNTS]
+            if acc[CONF_ACCOUNT] == account
         )
         self._attr_unique_id, self._attr_name = get_unique_id_and_name(
             entry.entry_id, entry.data[CONF_PORT], account, zone, entity_description.key
