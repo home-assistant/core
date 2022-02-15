@@ -152,7 +152,7 @@ class IntentHandler:
                 extra=vol.ALLOW_EXTRA,
             )
 
-        return self._slot_schema(slots)  # type: ignore
+        return self._slot_schema(slots)  # type: ignore[no-any-return]
 
     async def async_handle(self, intent_obj: Intent) -> IntentResponse:
         """Handle the intent."""
