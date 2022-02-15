@@ -4,7 +4,7 @@ from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.helpers import entity_registry as er
 
 
-async def test_binary_sensors(hass, request, setup_entry):
+async def test_binary_sensors(hass, setup_entry):
     """Test the SleepIQ binary sensors."""
     entity_registry = er.async_get(hass)
 

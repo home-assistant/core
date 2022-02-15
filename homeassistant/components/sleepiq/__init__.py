@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import dataclasses
-from datetime import timedelta
 import logging
 
 from sleepyq import Sleepyq
@@ -13,12 +12,10 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import BED, DOMAIN, ICON_OCCUPIED, SENSOR_TYPES
+from .coordinator import SleepIQDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +32,7 @@ CONFIG_SCHEMA = vol.Schema(
 DATA_SLEEPIQ = "data_sleepiq"
 
 DEFAULT_COMPONENT_NAME = "SleepIQ {}"
-UPDATE_INTERVAL = timedelta(seconds=60)
+
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -67,7 +64,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = SleepIQDataUpdateCoordinator(
         hass,
         client=client,
-        update_interval=UPDATE_INTERVAL,
         username=entry.data[CONF_USERNAME],
     )
 
@@ -92,33 +88,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     hass.data[DATA_SLEEPIQ].coordinators.pop(config_entry.data[CONF_USERNAME])
 
     return unload_ok
-
-
-class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
-    """SleepIQ data update coordinator."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        *,
-        client: Sleepyq,
-        update_interval: timedelta,
-        username: str,
-    ) -> None:
-        """Initialize coordinator."""
-        super().__init__(
-            hass, _LOGGER, name=f"{username}@SleepIQ", update_interval=update_interval
-        )
-        self.client = client
-
-    async def _async_update_data(self) -> dict[str, dict]:
-        return await self.hass.async_add_executor_job(self.update_data)
-
-    def update_data(self) -> dict[str, dict]:
-        """Get latest data from the client."""
-        return {
-            bed.bed_id: {BED: bed} for bed in self.client.beds_with_sleeper_status()
-        }
 
 
 @dataclasses.dataclass
