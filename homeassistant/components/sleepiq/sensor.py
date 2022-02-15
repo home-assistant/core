@@ -2,24 +2,16 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, SLEEPIQ_DATA, SLEEPIQ_STATUS_COORDINATOR
-from .device import SleepNumberCoordinatorEntity
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the sleep numbers."""
-    data = hass.data[DOMAIN][config_entry.entry_id][SLEEPIQ_DATA]
-    status_coordinator = hass.data[DOMAIN][config_entry.entry_id][
-        SLEEPIQ_STATUS_COORDINATOR
-    ]
+    entry_id = discovery_info["email"]
+    data = hass.data[DOMAIN][entry_id][SLEEPIQ_DATA]
+    status_coordinator = hass.data[DOMAIN][entry_id][SLEEPIQ_STATUS_COORDINATOR]
 
     entities: list[SleepNumberSensorEntity] = []
     for bed in data.beds.values():
@@ -29,14 +21,14 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SleepNumberSensorEntity(SleepNumberCoordinatorEntity, SensorEntity):
-    """Representation of a sleep number."""
+class SleepNumberSensorEntity(CoordinatorEntity, SensorEntity):
+    """Representation of an SleepIQ Entity with CoordinatorEntity."""
 
     _attr_icon = "mdi:gauge"
 
     def __init__(self, sleeper, bed, status_coordinator):
         """Initialize the sensor."""
-        super().__init__(bed, status_coordinator)
+        super().__init__(status_coordinator)
         self._sleeper = sleeper
         self._attr_name = f"SleepNumber {bed.name} {sleeper.name} SleepNumber"
         self._attr_unique_id = f"{bed.id}-{sleeper.side}-SN"
