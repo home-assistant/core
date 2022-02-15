@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, ValuesView
 from dataclasses import dataclass
+from datetime import datetime
 
 from pydeconz.sensor import (
     AirQuality,
@@ -293,7 +294,7 @@ class DeconzSensor(DeconzDevice, SensorEntity):
         description: DeconzSensorDescription,
     ) -> None:
         """Initialize deCONZ sensor."""
-        self.entity_description: DeconzSensorDescription = description
+        self.entity_description = description
         super().__init__(device, gateway)
 
         if description.suffix:
@@ -329,7 +330,7 @@ class DeconzSensor(DeconzDevice, SensorEntity):
             super().async_update_callback()
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         if self.entity_description.device_class is SensorDeviceClass.TIMESTAMP:
             return dt_util.parse_datetime(
