@@ -1,4 +1,5 @@
 """Test samsungtv diagnostics."""
+from aiohttp import ClientSession
 import pytest
 
 from homeassistant.components.diagnostics import REDACTED
@@ -26,8 +27,8 @@ def get_config_entry(hass: HomeAssistant) -> ConfigEntry:
 
 @pytest.mark.usefixtures("remotews")
 async def test_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry, hass_client
-):
+    hass: HomeAssistant, config_entry: ConfigEntry, hass_client: ClientSession
+) -> None:
     """Test config entry diagnostics."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
