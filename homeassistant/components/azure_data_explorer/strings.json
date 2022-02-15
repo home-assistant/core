@@ -9,7 +9,7 @@
           "database": "Database name",
           "table": "Table name",
           "client_id": "Client ID",
-          "client_secret": "Client  secret",
+          "client_secret": "Client secret",
           "authority_id": "Authority ID"
         }
       }
