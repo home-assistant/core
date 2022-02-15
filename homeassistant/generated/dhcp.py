@@ -24,6 +24,7 @@ DHCP: list[dict[str, str | bool]] = [
     {'domain': 'elkm1', 'macaddress': '00409D*'},
     {'domain': 'emonitor', 'hostname': 'emonitor*', 'macaddress': '0090C2*'},
     {'domain': 'flume', 'hostname': 'flume-gw-*'},
+    {'domain': 'flux_led', 'registered_devices': True},
     {'domain': 'flux_led', 'hostname': '[ba][lk]*', 'macaddress': '18B905*'},
     {'domain': 'flux_led', 'hostname': '[ba][lk]*', 'macaddress': '249494*'},
     {'domain': 'flux_led', 'hostname': '[ba][lk]*', 'macaddress': '7CB94C*'},
