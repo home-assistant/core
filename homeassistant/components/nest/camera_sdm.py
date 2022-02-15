@@ -127,6 +127,15 @@ class NestCamera(Camera):
             return STREAM_TYPE_WEB_RTC
         return super().frontend_stream_type
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        # Cameras are marked unavailable on stream errors in #54659 however nest streams have
+        # a high error rate (#60353). Given nest streams are so flaky, marking the stream
+        # unavailable has other side effects like not showing the camera image which sometimes
+        # are still able to work. Until the streams are fixed, just leave the streams as available.
+        return True
+
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
         if not self.supported_features & SUPPORT_STREAM:
