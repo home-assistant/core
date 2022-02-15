@@ -45,6 +45,7 @@ DHCP: list[dict[str, str | bool]] = [
     {'domain': 'guardian', 'hostname': 'gvc*', 'macaddress': '30AEA4*'},
     {'domain': 'guardian', 'hostname': 'gvc*', 'macaddress': 'B4E62D*'},
     {'domain': 'guardian', 'hostname': 'guardian*', 'macaddress': '30AEA4*'},
+    {'domain': 'hunterdouglas_powerview', 'registered_devices': True},
     {'domain': 'hunterdouglas_powerview',
      'hostname': 'hunter*',
      'macaddress': '002674*'},
