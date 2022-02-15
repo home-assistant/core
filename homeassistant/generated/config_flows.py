@@ -196,6 +196,7 @@ FLOWS = [
     "mikrotik",
     "mill",
     "minecraft_server",
+    "mjpeg",
     "mobile_app",
     "modem_callerid",
     "modern_forms",
