@@ -1,7 +1,6 @@
 """Support for Twilio."""
 from aiohttp import web
 from twilio.rest import Client
-from twilio.twiml import TwiML
 import voluptuous as vol
 
 from homeassistant.components import webhook
@@ -52,7 +51,7 @@ async def handle_webhook(hass, webhook_id, request):
     data["webhook_id"] = webhook_id
     hass.bus.async_fire(RECEIVED_DATA, dict(data))
 
-    return web.Response(text=TwiML().to_xml(), content_type="text/xml")
+    return web.Response(text="")
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
