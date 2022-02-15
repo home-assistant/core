@@ -125,10 +125,13 @@ def async_update_entry_from_discovery(
     if model_num and entry.data.get(CONF_MODEL_NUM) != model_num:
         data_updates[CONF_MODEL_NUM] = model_num
     async_populate_data_from_discovery(entry.data, data_updates, device)
-    if not entry.data.get(CONF_NAME) or is_ip_address(entry.data[CONF_NAME]):
-        updates["title"] = data_updates[CONF_NAME] = async_name_from_discovery(device)
-    if data_updates:
+    if is_ip_address(entry.title):
+        updates["title"] = async_name_from_discovery(device)
+    title_matches_name = entry.title == entry.data.get(CONF_NAME)
+    if data_updates or title_matches_name:
         updates["data"] = {**entry.data, **data_updates}
+        if title_matches_name:
+            del updates["data"][CONF_NAME]
     if updates:
         return hass.config_entries.async_update_entry(entry, **updates)
     return False

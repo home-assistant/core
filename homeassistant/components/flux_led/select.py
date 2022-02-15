@@ -53,7 +53,7 @@ async def async_setup_entry(
         | FluxRemoteConfigSelect
         | FluxWhiteChannelSelect
     ] = []
-    name = entry.data[CONF_NAME]
+    name = entry.data.get(CONF_NAME, entry.title)
     base_unique_id = entry.unique_id or entry.entry_id
 
     if device.device_type == DeviceType.Switch:
