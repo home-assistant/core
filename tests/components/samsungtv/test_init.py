@@ -1,5 +1,7 @@
 """Tests for the Samsung TV Integration."""
-from unittest.mock import Mock, patch
+from unittest.mock import patch
+
+import pytest
 
 from homeassistant.components.media_player.const import DOMAIN, SUPPORT_TURN_ON
 from homeassistant.components.samsungtv.const import (
@@ -53,7 +55,8 @@ REMOTE_CALL = {
 }
 
 
-async def test_setup(hass: HomeAssistant, remotews: Mock, no_mac_address: Mock):
+@pytest.mark.usefixtures("remotews", "no_mac_address")
+async def test_setup(hass: HomeAssistant) -> None:
     """Test Samsung TV integration is setup."""
     with patch(
         "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
@@ -78,7 +81,7 @@ async def test_setup(hass: HomeAssistant, remotews: Mock, no_mac_address: Mock):
         )
 
 
-async def test_setup_from_yaml_without_port_device_offline(hass: HomeAssistant):
+async def test_setup_from_yaml_without_port_device_offline(hass: HomeAssistant) -> None:
     """Test import from yaml when the device is offline."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError
@@ -100,9 +103,8 @@ async def test_setup_from_yaml_without_port_device_offline(hass: HomeAssistant):
     assert config_entries_domain[0].state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_from_yaml_without_port_device_online(
-    hass: HomeAssistant, remotews: Mock
-):
+@pytest.mark.usefixtures("remotews")
+async def test_setup_from_yaml_without_port_device_online(hass: HomeAssistant) -> None:
     """Test import from yaml when the device is online."""
     with patch(
         "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
@@ -116,7 +118,10 @@ async def test_setup_from_yaml_without_port_device_online(
     assert config_entries_domain[0].data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
 
 
-async def test_setup_duplicate_config(hass: HomeAssistant, remote: Mock, caplog):
+@pytest.mark.usefixtures("remote")
+async def test_setup_duplicate_config(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test duplicate setup of platform."""
     DUPLICATE = {
         SAMSUNGTV_DOMAIN: [
@@ -131,9 +136,8 @@ async def test_setup_duplicate_config(hass: HomeAssistant, remote: Mock, caplog)
     assert "duplicate host entries found" in caplog.text
 
 
-async def test_setup_duplicate_entries(
-    hass: HomeAssistant, remote: Mock, remotews: Mock, no_mac_address: Mock, caplog
-):
+@pytest.mark.usefixtures("remote", "remotews", "no_mac_address")
+async def test_setup_duplicate_entries(hass: HomeAssistant) -> None:
     """Test duplicate setup of platform."""
     await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
     await hass.async_block_till_done()
