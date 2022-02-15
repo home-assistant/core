@@ -44,11 +44,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the SleepIQ config entry."""
     client = Sleepyq(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
-    try:
-        await hass.async_add_executor_job(client.login)
-    except ValueError:
-        _LOGGER.error("SleepIQ login failed, double check your username and password")
-        return False
+
+    await hass.async_add_executor_job(client.login)
 
     coordinator = SleepIQDataUpdateCoordinator(
         hass,
