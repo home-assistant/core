@@ -96,8 +96,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         new_path = ""
 
-        if entry.data[CONF_BASE_PATH] not in ("", "/", "/api"):
-            new_path = entry.data[CONF_BASE_PATH]
+        if entry.data[CONF_BASE_PATH].rstrip("/") not in ("", "/", "/api"):
+            new_path = entry.data[CONF_BASE_PATH].rstrip("/")
 
         data = {
             **entry.data,
