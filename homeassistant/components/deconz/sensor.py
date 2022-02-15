@@ -73,7 +73,6 @@ ATTR_EVENT_ID = "event_id"
 class DeconzSensorDescriptionMixin:
     """Required values when describing secondary sensor attributes."""
 
-    suffix: str
     update_key: str
     value_fn: Callable[[PydeconzSensor], float | int | None]
 
@@ -85,13 +84,14 @@ class DeconzSensorDescription(
 ):
     """Class describing deCONZ binary sensor entities."""
 
+    suffix: str = ""
+
 
 ENTITY_DESCRIPTIONS = {
     AirQuality: [
         DeconzSensorDescription(
             key="air_quality",
             value_fn=lambda device: device.air_quality,  # type: ignore[no-any-return]
-            suffix="",
             update_key="airquality",
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -109,7 +109,6 @@ ENTITY_DESCRIPTIONS = {
         DeconzSensorDescription(
             key="consumption",
             value_fn=lambda device: device.scaled_consumption,  # type: ignore[no-any-return]
-            suffix="",
             update_key="consumption",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
@@ -120,7 +119,6 @@ ENTITY_DESCRIPTIONS = {
         DeconzSensorDescription(
             key="status",
             value_fn=lambda device: device.status,  # type: ignore[no-any-return]
-            suffix="",
             update_key="status",
             icon="mdi:white-balance-sunny",
             entity_registry_enabled_default=False,
@@ -130,7 +128,6 @@ ENTITY_DESCRIPTIONS = {
         DeconzSensorDescription(
             key="status",
             value_fn=lambda device: device.status,  # type: ignore[no-any-return]
-            suffix="",
             update_key="status",
         )
     ],
@@ -138,7 +135,6 @@ ENTITY_DESCRIPTIONS = {
         DeconzSensorDescription(
             key="humidity",
             value_fn=lambda device: device.scaled_humidity,  # type: ignore[no-any-return]
-            suffix="",
             update_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
@@ -149,7 +145,6 @@ ENTITY_DESCRIPTIONS = {
         DeconzSensorDescription(
             key="light_level",
             value_fn=lambda device: device.scaled_light_level,  # type: ignore[no-any-return]
-            suffix="",
             update_key="lightlevel",
             device_class=SensorDeviceClass.ILLUMINANCE,
             native_unit_of_measurement=LIGHT_LUX,
@@ -159,7 +154,6 @@ ENTITY_DESCRIPTIONS = {
         DeconzSensorDescription(
             key="power",
             value_fn=lambda device: device.power,  # type: ignore[no-any-return]
-            suffix="",
             update_key="power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
@@ -170,7 +164,6 @@ ENTITY_DESCRIPTIONS = {
         DeconzSensorDescription(
             key="pressure",
             value_fn=lambda device: device.pressure,  # type: ignore[no-any-return]
-            suffix="",
             update_key="pressure",
             device_class=SensorDeviceClass.PRESSURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -181,7 +174,6 @@ ENTITY_DESCRIPTIONS = {
         DeconzSensorDescription(
             key="temperature",
             value_fn=lambda device: device.temperature,  # type: ignore[no-any-return]
-            suffix="",
             update_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -192,7 +184,6 @@ ENTITY_DESCRIPTIONS = {
         DeconzSensorDescription(
             key="last_set",
             value_fn=lambda device: device.last_set,  # type: ignore[no-any-return]
-            suffix="",
             update_key="lastset",
             device_class=SensorDeviceClass.TIMESTAMP,
             state_class=SensorStateClass.TOTAL_INCREASING,
