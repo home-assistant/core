@@ -77,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await adx.test_connection()
     except Exception as exp:  # pylint: disable=broad-except
         _LOGGER.error(exp)
-        raise ConfigEntryNotReady("Could not connect to Azure Data Exlorer") from exp
+        raise ConfigEntryNotReady("Could not connect to Azure Data Explorer") from exp
     hass.data[DOMAIN][DATA_HUB] = adx
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
     await adx.async_start()
