@@ -52,6 +52,11 @@ DHCP = [
         "macaddress": "00037F*"
     },
     {
+        "domain": "blink",
+        "hostname": "blink*",
+        "macaddress": "20A171*"
+    },
+    {
         "domain": "broadlink",
         "macaddress": "34EA34*"
     },
@@ -306,6 +311,10 @@ DHCP = [
     {
         "domain": "senseme",
         "macaddress": "20F85E*"
+    },
+    {
+        "domain": "sensibo",
+        "hostname": "sensibo*"
     },
     {
         "domain": "simplisafe",
@@ -603,6 +612,10 @@ DHCP = [
     {
         "domain": "unifiprotect",
         "macaddress": "265A4C*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "74ACB9*"
     },
     {
         "domain": "verisure",

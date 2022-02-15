@@ -276,7 +276,7 @@ class UploadMediaView(HomeAssistantView):
 
         uploaded_file: FileField = data["file"]
 
-        if not uploaded_file.content_type.startswith(("image/", "video/")):
+        if not uploaded_file.content_type.startswith(("image/", "video/", "audio/")):
             LOGGER.error("Content type not allowed")
             raise vol.Invalid("Only images and video are allowed")
 

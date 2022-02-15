@@ -15,7 +15,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.util.network import is_ip_address
 
-from .const import DEFAULT_NAME, DISCOVER_SCAN_TIMEOUT, DOMAIN, WIZ_EXCEPTIONS
+from .const import DEFAULT_NAME, DISCOVER_SCAN_TIMEOUT, DOMAIN, WIZ_CONNECT_EXCEPTIONS
 from .discovery import async_discover_devices
 from .utils import _short_mac, name_from_bulb_type_and_mac
 
@@ -70,7 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         bulb = wizlight(device.ip_address)
         try:
             bulbtype = await bulb.get_bulbtype()
-        except WIZ_EXCEPTIONS as ex:
+        except WIZ_CONNECT_EXCEPTIONS as ex:
             raise AbortFlow("cannot_connect") from ex
         self._name = name_from_bulb_type_and_mac(bulbtype, device.mac_address)
 
@@ -110,7 +110,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             bulb = wizlight(device.ip_address)
             try:
                 bulbtype = await bulb.get_bulbtype()
-            except WIZ_EXCEPTIONS:
+            except WIZ_CONNECT_EXCEPTIONS:
                 return self.async_abort(reason="cannot_connect")
             else:
                 return self.async_create_entry(

@@ -737,18 +737,6 @@ def null_name_check_fixture(client, null_name_check_state):
     return node
 
 
-@pytest.fixture(name="multiple_devices")
-def multiple_devices_fixture(
-    client, climate_radio_thermostat_ct100_plus_state, lock_schlage_be469_state
-):
-    """Mock a client with multiple devices."""
-    node = Node(client, copy.deepcopy(climate_radio_thermostat_ct100_plus_state))
-    client.driver.controller.nodes[node.node_id] = node
-    node = Node(client, copy.deepcopy(lock_schlage_be469_state))
-    client.driver.controller.nodes[node.node_id] = node
-    return client.driver.controller.nodes
-
-
 @pytest.fixture(name="gdc_zw062")
 def motorized_barrier_cover_fixture(client, gdc_zw062_state):
     """Mock a motorized barrier node."""

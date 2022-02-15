@@ -1,12 +1,13 @@
 """Config flow flow LIFX."""
 import aiolifx
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow
 
 from .const import DOMAIN
 
 
-async def _async_has_devices(hass):
+async def _async_has_devices(hass: HomeAssistant) -> bool:
     """Return if there are devices that can be discovered."""
     lifx_ip_addresses = await aiolifx.LifxScan(hass.loop).scan()
     return len(lifx_ip_addresses) > 0
