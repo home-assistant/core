@@ -149,6 +149,7 @@ DHCP: list[dict[str, str | bool]] = [
     {'domain': 'unifiprotect', 'macaddress': '74ACB9*'},
     {'domain': 'verisure', 'macaddress': '0023C1*'},
     {'domain': 'vicare', 'macaddress': 'B87424*'},
+    {'domain': 'wiz', 'registered_devices': True},
     {'domain': 'wiz', 'macaddress': 'A8BB50*'},
     {'domain': 'wiz', 'hostname': 'wiz_*'},
     {'domain': 'yeelight', 'hostname': 'yeelink-*'}]

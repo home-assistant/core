@@ -3,6 +3,7 @@
   "name": "WiZ",
   "config_flow": true,
   "dhcp": [
+    {"registered_devices": true},
     {"macaddress":"A8BB50*"},
     {"hostname":"wiz_*"}
   ],
