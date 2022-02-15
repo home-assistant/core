@@ -2,7 +2,6 @@
 import socket
 from unittest.mock import Mock, PropertyMock, call, patch
 
-import pytest
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from websocket import WebSocketException, WebSocketProtocolException
@@ -182,8 +181,7 @@ DEVICEINFO_WEBSOCKET_SSL = {
 }
 
 
-@pytest.mark.usefixtures("remote")
-async def test_user_legacy(hass: HomeAssistant) -> None:
+async def test_user_legacy(hass: HomeAssistant, remote: Mock):
     """Test starting a flow by user."""
     # show form
     result = await hass.config_entries.flow.async_init(
@@ -207,8 +205,7 @@ async def test_user_legacy(hass: HomeAssistant) -> None:
     assert result["result"].unique_id is None
 
 
-@pytest.mark.usefixtures("remotews")
-async def test_user_websocket(hass: HomeAssistant) -> None:
+async def test_user_websocket(hass: HomeAssistant, remotews: Mock):
     """Test starting a flow by user."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom")
@@ -235,8 +232,7 @@ async def test_user_websocket(hass: HomeAssistant) -> None:
         assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remotews")
-async def test_user_legacy_missing_auth(hass: HomeAssistant) -> None:
+async def test_user_legacy_missing_auth(hass: HomeAssistant, remotews: Mock):
     """Test starting a flow by user with authentication."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -250,7 +246,7 @@ async def test_user_legacy_missing_auth(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_AUTH_MISSING
 
 
-async def test_user_legacy_not_supported(hass: HomeAssistant) -> None:
+async def test_user_legacy_not_supported(hass: HomeAssistant):
     """Test starting a flow by user for not supported device."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -264,7 +260,7 @@ async def test_user_legacy_not_supported(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
-async def test_user_websocket_not_supported(hass: HomeAssistant) -> None:
+async def test_user_websocket_not_supported(hass: HomeAssistant):
     """Test starting a flow by user for not supported device."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -281,7 +277,7 @@ async def test_user_websocket_not_supported(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
-async def test_user_not_successful(hass: HomeAssistant) -> None:
+async def test_user_not_successful(hass: HomeAssistant):
     """Test starting a flow by user but no connection found."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -297,7 +293,7 @@ async def test_user_not_successful(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_CANNOT_CONNECT
 
 
-async def test_user_not_successful_2(hass: HomeAssistant) -> None:
+async def test_user_not_successful_2(hass: HomeAssistant):
     """Test starting a flow by user but no connection found."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -313,8 +309,7 @@ async def test_user_not_successful_2(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_CANNOT_CONNECT
 
 
-@pytest.mark.usefixtures("remote")
-async def test_ssdp(hass: HomeAssistant, no_mac_address: Mock) -> None:
+async def test_ssdp(hass: HomeAssistant, remote: Mock, no_mac_address: Mock):
     """Test starting a flow from discovery."""
 
     no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
@@ -342,8 +337,7 @@ async def test_ssdp(hass: HomeAssistant, no_mac_address: Mock) -> None:
         assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
-@pytest.mark.usefixtures("remote")
-async def test_ssdp_noprefix(hass: HomeAssistant, no_mac_address: Mock) -> None:
+async def test_ssdp_noprefix(hass: HomeAssistant, remote: Mock, no_mac_address: Mock):
     """Test starting a flow from discovery without prefixes."""
 
     no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
@@ -378,8 +372,7 @@ async def test_ssdp_noprefix(hass: HomeAssistant, no_mac_address: Mock) -> None:
             assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172df"
 
 
-@pytest.mark.usefixtures("remotews")
-async def test_ssdp_legacy_missing_auth(hass: HomeAssistant) -> None:
+async def test_ssdp_legacy_missing_auth(hass: HomeAssistant, remotews: Mock):
     """Test starting a flow from discovery with authentication."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -406,8 +399,9 @@ async def test_ssdp_legacy_missing_auth(hass: HomeAssistant) -> None:
             assert result["reason"] == RESULT_AUTH_MISSING
 
 
-@pytest.mark.usefixtures("remote", "remotews")
-async def test_ssdp_legacy_not_supported(hass: HomeAssistant) -> None:
+async def test_ssdp_legacy_not_supported(
+    hass: HomeAssistant, remote: Mock, remotews: Mock
+):
     """Test starting a flow from discovery for not supported device."""
 
     # confirm to add the entry
@@ -429,10 +423,9 @@ async def test_ssdp_legacy_not_supported(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
-@pytest.mark.usefixtures("remote", "remotews")
 async def test_ssdp_websocket_success_populates_mac_address(
-    hass: HomeAssistant,
-) -> None:
+    hass: HomeAssistant, remote: Mock, remotews: Mock
+):
     """Test starting a flow from ssdp for a supported device populates the mac."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
@@ -453,7 +446,7 @@ async def test_ssdp_websocket_success_populates_mac_address(
     assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
-async def test_ssdp_websocket_not_supported(hass: HomeAssistant) -> None:
+async def test_ssdp_websocket_not_supported(hass: HomeAssistant):
     """Test starting a flow from discovery for not supported device."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -470,8 +463,7 @@ async def test_ssdp_websocket_not_supported(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
-@pytest.mark.usefixtures("remote")
-async def test_ssdp_model_not_supported(hass: HomeAssistant) -> None:
+async def test_ssdp_model_not_supported(hass: HomeAssistant, remote: Mock):
     """Test starting a flow from discovery."""
 
     # confirm to add the entry
@@ -484,8 +476,7 @@ async def test_ssdp_model_not_supported(hass: HomeAssistant) -> None:
     assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
-@pytest.mark.usefixtures("no_mac_address")
-async def test_ssdp_not_successful(hass: HomeAssistant) -> None:
+async def test_ssdp_not_successful(hass: HomeAssistant, no_mac_address: Mock):
     """Test starting a flow from discovery but no device found."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -513,8 +504,7 @@ async def test_ssdp_not_successful(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_CANNOT_CONNECT
 
 
-@pytest.mark.usefixtures("no_mac_address")
-async def test_ssdp_not_successful_2(hass: HomeAssistant) -> None:
+async def test_ssdp_not_successful_2(hass: HomeAssistant, no_mac_address: Mock):
     """Test starting a flow from discovery but no device found."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -542,10 +532,9 @@ async def test_ssdp_not_successful_2(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_CANNOT_CONNECT
 
 
-@pytest.mark.usefixtures("remote")
 async def test_ssdp_already_in_progress(
-    hass: HomeAssistant, no_mac_address: Mock
-) -> None:
+    hass: HomeAssistant, remote: Mock, no_mac_address: Mock
+):
     """Test starting a flow from discovery twice."""
 
     no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
@@ -569,10 +558,9 @@ async def test_ssdp_already_in_progress(
         assert result["reason"] == RESULT_ALREADY_IN_PROGRESS
 
 
-@pytest.mark.usefixtures("remote")
 async def test_ssdp_already_configured(
-    hass: HomeAssistant, no_mac_address: Mock
-) -> None:
+    hass: HomeAssistant, remote: Mock, no_mac_address: Mock
+):
     """Test starting a flow from discovery when already configured."""
 
     no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
@@ -602,8 +590,7 @@ async def test_ssdp_already_configured(
         assert entry.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
-@pytest.mark.usefixtures("remote")
-async def test_import_legacy(hass: HomeAssistant, no_mac_address: Mock) -> None:
+async def test_import_legacy(hass: HomeAssistant, remote: Mock, no_mac_address: Mock):
     """Test importing from yaml with hostname."""
 
     no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
@@ -626,8 +613,12 @@ async def test_import_legacy(hass: HomeAssistant, no_mac_address: Mock) -> None:
     assert entries[0].data[CONF_PORT] == LEGACY_PORT
 
 
-@pytest.mark.usefixtures("remote", "remotews_no_device_info", "no_mac_address")
-async def test_import_legacy_without_name(hass: HomeAssistant) -> None:
+async def test_import_legacy_without_name(
+    hass: HomeAssistant,
+    remote: Mock,
+    remotews_no_device_info: Mock,
+    no_mac_address: Mock,
+):
     """Test importing from yaml without a name."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -647,8 +638,7 @@ async def test_import_legacy_without_name(hass: HomeAssistant) -> None:
     assert entries[0].data[CONF_PORT] == LEGACY_PORT
 
 
-@pytest.mark.usefixtures("remotews")
-async def test_import_websocket(hass: HomeAssistant):
+async def test_import_websocket(hass: HomeAssistant, remotews: Mock):
     """Test importing from yaml with hostname."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -666,8 +656,7 @@ async def test_import_websocket(hass: HomeAssistant):
     assert result["result"].unique_id is None
 
 
-@pytest.mark.usefixtures("remotews")
-async def test_import_websocket_without_port(hass: HomeAssistant):
+async def test_import_websocket_without_port(hass: HomeAssistant, remotews: Mock):
     """Test importing from yaml with hostname by no port."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -688,8 +677,7 @@ async def test_import_websocket_without_port(hass: HomeAssistant):
     assert entries[0].data[CONF_PORT] == 8002
 
 
-@pytest.mark.usefixtures("remotews")
-async def test_import_unknown_host(hass: HomeAssistant):
+async def test_import_unknown_host(hass: HomeAssistant, remotews: Mock):
     """Test importing from yaml with hostname that does not resolve."""
     with patch(
         "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
@@ -705,8 +693,7 @@ async def test_import_unknown_host(hass: HomeAssistant):
     assert result["reason"] == RESULT_UNKNOWN_HOST
 
 
-@pytest.mark.usefixtures("remote", "remotews")
-async def test_dhcp(hass: HomeAssistant) -> None:
+async def test_dhcp(hass: HomeAssistant, remote: Mock, remotews: Mock):
     """Test starting a flow from dhcp."""
     # confirm to add the entry
     result = await hass.config_entries.flow.async_init(
@@ -732,8 +719,7 @@ async def test_dhcp(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remote", "remotews")
-async def test_zeroconf(hass: HomeAssistant) -> None:
+async def test_zeroconf(hass: HomeAssistant, remote: Mock, remotews: Mock):
     """Test starting a flow from zeroconf."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -758,8 +744,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remotews_soundbar")
-async def test_zeroconf_ignores_soundbar(hass: HomeAssistant) -> None:
+async def test_zeroconf_ignores_soundbar(hass: HomeAssistant, remotews_soundbar: Mock):
     """Test starting a flow from zeroconf where the device is actually a soundbar."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -771,8 +756,9 @@ async def test_zeroconf_ignores_soundbar(hass: HomeAssistant) -> None:
     assert result["reason"] == "not_supported"
 
 
-@pytest.mark.usefixtures("remote", "remotews_no_device_info")
-async def test_zeroconf_no_device_info(hass: HomeAssistant) -> None:
+async def test_zeroconf_no_device_info(
+    hass: HomeAssistant, remote: Mock, remotews_no_device_info: Mock
+):
     """Test starting a flow from zeroconf where device_info returns None."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -784,8 +770,7 @@ async def test_zeroconf_no_device_info(hass: HomeAssistant) -> None:
     assert result["reason"] == "not_supported"
 
 
-@pytest.mark.usefixtures("remotews")
-async def test_zeroconf_and_dhcp_same_time(hass: HomeAssistant) -> None:
+async def test_zeroconf_and_dhcp_same_time(hass: HomeAssistant, remotews: Mock):
     """Test starting a flow from zeroconf and dhcp."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -806,7 +791,7 @@ async def test_zeroconf_and_dhcp_same_time(hass: HomeAssistant) -> None:
     assert result2["reason"] == "already_in_progress"
 
 
-async def test_autodetect_websocket(hass: HomeAssistant) -> None:
+async def test_autodetect_websocket(hass: HomeAssistant):
     """Test for send key with autodetection of protocol."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -849,7 +834,7 @@ async def test_autodetect_websocket(hass: HomeAssistant) -> None:
     assert entries[0].data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
 
 
-async def test_websocket_no_mac(hass: HomeAssistant) -> None:
+async def test_websocket_no_mac(hass: HomeAssistant):
     """Test for send key with autodetection of protocol."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -895,7 +880,7 @@ async def test_websocket_no_mac(hass: HomeAssistant) -> None:
     assert entries[0].data[CONF_MAC] == "gg:hh:ii:ll:mm:nn"
 
 
-async def test_autodetect_auth_missing(hass: HomeAssistant) -> None:
+async def test_autodetect_auth_missing(hass: HomeAssistant):
     """Test for send key with autodetection of protocol."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -910,7 +895,7 @@ async def test_autodetect_auth_missing(hass: HomeAssistant) -> None:
         assert remote.call_args_list == [call(AUTODETECT_LEGACY)]
 
 
-async def test_autodetect_not_supported(hass: HomeAssistant) -> None:
+async def test_autodetect_not_supported(hass: HomeAssistant):
     """Test for send key with autodetection of protocol."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -925,8 +910,7 @@ async def test_autodetect_not_supported(hass: HomeAssistant) -> None:
         assert remote.call_args_list == [call(AUTODETECT_LEGACY)]
 
 
-@pytest.mark.usefixtures("remote")
-async def test_autodetect_legacy(hass: HomeAssistant) -> None:
+async def test_autodetect_legacy(hass: HomeAssistant, remote: Mock):
     """Test for send key with autodetection of protocol."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
@@ -938,7 +922,7 @@ async def test_autodetect_legacy(hass: HomeAssistant) -> None:
     assert result["data"][CONF_PORT] == LEGACY_PORT
 
 
-async def test_autodetect_none(hass: HomeAssistant) -> None:
+async def test_autodetect_none(hass: HomeAssistant):
     """Test for send key with autodetection of protocol."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -963,8 +947,7 @@ async def test_autodetect_none(hass: HomeAssistant) -> None:
         ]
 
 
-@pytest.mark.usefixtures("remotews")
-async def test_update_old_entry(hass: HomeAssistant) -> None:
+async def test_update_old_entry(hass: HomeAssistant, remotews: Mock):
     """Test update of old entry."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         remote().rest_device_info.return_value = {
@@ -1005,10 +988,10 @@ async def test_update_old_entry(hass: HomeAssistant) -> None:
         assert entry2.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
-@pytest.mark.usefixtures("remotews")
 async def test_update_missing_mac_unique_id_added_from_dhcp(
     hass: HomeAssistant,
-) -> None:
+    remotews: Mock,
+):
     """Test missing mac and unique id added."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY, unique_id=None)
     entry.add_to_hass(hass)
@@ -1034,10 +1017,10 @@ async def test_update_missing_mac_unique_id_added_from_dhcp(
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remotews")
 async def test_update_missing_mac_unique_id_added_from_zeroconf(
     hass: HomeAssistant,
-) -> None:
+    remotews: Mock,
+):
     """Test missing mac and unique id added."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY, unique_id=None)
     entry.add_to_hass(hass)
@@ -1062,10 +1045,10 @@ async def test_update_missing_mac_unique_id_added_from_zeroconf(
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remotews")
 async def test_update_missing_mac_unique_id_added_from_ssdp(
     hass: HomeAssistant,
-) -> None:
+    remotews: Mock,
+):
     """Test missing mac and unique id added via ssdp."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY, unique_id=None)
     entry.add_to_hass(hass)
@@ -1091,10 +1074,10 @@ async def test_update_missing_mac_unique_id_added_from_ssdp(
     assert entry.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
-@pytest.mark.usefixtures("remotews")
 async def test_update_missing_mac_added_unique_id_preserved_from_zeroconf(
     hass: HomeAssistant,
-) -> None:
+    remotews: Mock,
+):
     """Test missing mac and unique id added."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -1123,8 +1106,7 @@ async def test_update_missing_mac_added_unique_id_preserved_from_zeroconf(
     assert entry.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
-@pytest.mark.usefixtures("remote")
-async def test_update_legacy_missing_mac_from_dhcp(hass: HomeAssistant) -> None:
+async def test_update_legacy_missing_mac_from_dhcp(hass: HomeAssistant, remote: Mock):
     """Test missing mac added."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -1155,10 +1137,10 @@ async def test_update_legacy_missing_mac_from_dhcp(hass: HomeAssistant) -> None:
     assert entry.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
-@pytest.mark.usefixtures("remote")
 async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(
     hass: HomeAssistant,
-) -> None:
+    remote: Mock,
+):
     """Test missing mac added when there is no unique id."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -1194,8 +1176,7 @@ async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(
     assert entry.unique_id is None
 
 
-@pytest.mark.usefixtures("remote")
-async def test_form_reauth_legacy(hass: HomeAssistant) -> None:
+async def test_form_reauth_legacy(hass: HomeAssistant, remote: Mock):
     """Test reauthenticate legacy."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY)
     entry.add_to_hass(hass)
@@ -1216,8 +1197,7 @@ async def test_form_reauth_legacy(hass: HomeAssistant) -> None:
     assert result2["reason"] == "reauth_successful"
 
 
-@pytest.mark.usefixtures("remotews")
-async def test_form_reauth_websocket(hass: HomeAssistant) -> None:
+async def test_form_reauth_websocket(hass: HomeAssistant, remotews: Mock):
     """Test reauthenticate websocket."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_WS_ENTRY)
     entry.add_to_hass(hass)
@@ -1241,8 +1221,9 @@ async def test_form_reauth_websocket(hass: HomeAssistant) -> None:
     assert entry.state == config_entries.ConfigEntryState.LOADED
 
 
-@pytest.mark.usefixtures("remotews")
-async def test_form_reauth_websocket_cannot_connect(hass: HomeAssistant) -> None:
+async def test_form_reauth_websocket_cannot_connect(
+    hass: HomeAssistant, remotews: Mock
+):
     """Test reauthenticate websocket when we cannot connect on the first attempt."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_WS_ENTRY)
     entry.add_to_hass(hass)
@@ -1277,7 +1258,7 @@ async def test_form_reauth_websocket_cannot_connect(hass: HomeAssistant) -> None
     assert result3["reason"] == "reauth_successful"
 
 
-async def test_form_reauth_websocket_not_supported(hass: HomeAssistant) -> None:
+async def test_form_reauth_websocket_not_supported(hass: HomeAssistant):
     """Test reauthenticate websocket when the device is not supported."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_WS_ENTRY)
     entry.add_to_hass(hass)
