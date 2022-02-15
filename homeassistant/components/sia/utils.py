@@ -14,7 +14,7 @@ from .const import (
     ATTR_MESSAGE,
     ATTR_TIMESTAMP,
     ATTR_ZONE,
-    KEY_ALARM_NAME,
+    KEY_ALARM,
     SIA_HUB_ZONE,
 )
 
@@ -32,7 +32,7 @@ def get_unique_id_and_name(
     return (
         (
             f"{entry_id}_{account}_{zone}"
-            if entity_key == KEY_ALARM_NAME
+            if entity_key == KEY_ALARM
             else f"{entry_id}_{account}_{zone}_{entity_key}"
         ),
         (
