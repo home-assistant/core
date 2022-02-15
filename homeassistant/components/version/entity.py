@@ -11,7 +11,6 @@ from .coordinator import VersionDataUpdateCoordinator
 class VersionEntity(CoordinatorEntity):
     """Common entity class for Version integration."""
 
-    _attr_icon = "mdi:package-up"
     _attr_device_info = DeviceInfo(
         name=f"{HOME_ASSISTANT} {DOMAIN.title()}",
         identifiers={(HOME_ASSISTANT, DOMAIN)},
