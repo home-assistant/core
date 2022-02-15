@@ -17,6 +17,7 @@
     {"type":"_airplay._tcp.local.","properties":{"manufacturer":"samsung*"}}
   ],
   "dhcp": [
+    {"registered_devices": true},    
     {
       "hostname": "tizen*"
     },
