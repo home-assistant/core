@@ -10,9 +10,8 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_SLEEPIQ, DOMAIN
+from .const import DOMAIN
 from .coordinator import SleepIQDataUpdateCoordinator
-from .models import SleepIQHassData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,10 +26,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-PLATFORMS = [
-    Platform.BINARY_SENSOR,
-    Platform.SENSOR,
-]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -63,21 +59,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Call the SleepIQ API to refresh data
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DATA_SLEEPIQ] = SleepIQHassData(
-        coordinators={entry.data[CONF_USERNAME]: coordinator}
-    )
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload the config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-
-    hass.data[DATA_SLEEPIQ].coordinators.pop(config_entry.data[CONF_USERNAME])
-
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok

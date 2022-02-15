@@ -1,24 +1,21 @@
 """Support for SleepIQ sensors."""
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import BED, DATA_SLEEPIQ, SIDES, SLEEP_NUMBER
+from .const import BED, DOMAIN, SIDES, SLEEP_NUMBER
 from .coordinator import SleepIQDataUpdateCoordinator
 from .entity import SleepIQSensor
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SleepIQ bed sensors."""
-    coordinator: SleepIQDataUpdateCoordinator = hass.data[DATA_SLEEPIQ].coordinators[
-        config_entry.data[CONF_USERNAME]
-    ]
+    coordinator: SleepIQDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         SleepNumberSensor(coordinator, bed_id, side)
         for side in SIDES
