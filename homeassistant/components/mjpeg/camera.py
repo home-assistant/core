@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_PASSWORD, default=""): cv.string,
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }
@@ -71,13 +71,13 @@ async def async_setup_platform(
     async_add_entities(
         [
             MjpegCamera(
-                config[CONF_NAME],
-                config[CONF_AUTHENTICATION],
-                config.get(CONF_USERNAME),
-                config.get(CONF_PASSWORD),
-                config[CONF_MJPEG_URL],
-                config.get(CONF_STILL_IMAGE_URL),
-                config[CONF_VERIFY_SSL],
+                name=config[CONF_NAME],
+                authentication=config[CONF_AUTHENTICATION],
+                username=config.get(CONF_USERNAME),
+                password=config[CONF_PASSWORD],
+                mjpeg_url=config[CONF_MJPEG_URL],
+                still_image_url=config.get(CONF_STILL_IMAGE_URL),
+                verify_ssl=config[CONF_VERIFY_SSL],
             )
         ]
     )
@@ -116,13 +116,14 @@ class MjpegCamera(Camera):
 
     def __init__(
         self,
+        *,
         name: str,
-        authentication: str,
-        username: str | None,
-        password: str | None,
         mjpeg_url: str,
         still_image_url: str | None,
-        verify_ssl: bool,
+        authentication: str | None = None,
+        username: str | None = None,
+        password: str = "",
+        verify_ssl: bool = True,
     ) -> None:
         """Initialize a MJPEG camera."""
         super().__init__()

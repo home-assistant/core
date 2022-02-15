@@ -76,6 +76,7 @@ components: &components
   - homeassistant/components/logger/*
   - homeassistant/components/lovelace/*
   - homeassistant/components/media_source/*
+  - homeassistant/components/mjpeg/*
   - homeassistant/components/mqtt/*
   - homeassistant/components/network/*
   - homeassistant/components/onboarding/*
