@@ -1,12 +1,11 @@
 """Config flow for Azure Data Explorer integration."""
-# pylint: disable=no-member
 from __future__ import annotations
 
 from copy import deepcopy
 import logging
 from typing import Any
 
-from azure.kusto.data.exceptions import KustoAuthenticationError
+from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -58,6 +57,10 @@ async def validate_input(
     except KustoAuthenticationError as exp:
         _LOGGER.error(exp)
         return {"base": "invalid_auth"}
+
+    except KustoServiceError as exp:
+        _LOGGER.error(exp)
+        return {"base": "cannot_connect"}
 
     except Exception as exp:  # pylint: disable=broad-except
         _LOGGER.error(exp)

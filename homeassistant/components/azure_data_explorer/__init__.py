@@ -1,5 +1,4 @@
 """The Azure Data Explorer integration."""
-# pylint: disable=no-member
 from __future__ import annotations
 
 import asyncio
@@ -7,14 +6,20 @@ from collections.abc import Callable
 from datetime import datetime
 import json
 import logging
+from multiprocessing import AuthenticationError
 from typing import Any
 
+from azure.kusto.data.exceptions import KustoServiceError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import Event, HomeAssistant, State
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    IntegrationError,
+)
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.json import JSONEncoder
@@ -66,7 +71,6 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Do the setup based on the config entry and the filter from yaml."""
-    hass.data.setdefault(DOMAIN, {DATA_FILTER: FILTER_SCHEMA({})})
 
     adx = AzureDataExplorer(
         hass,
@@ -75,10 +79,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     try:
         await adx.test_connection()
+    except KustoServiceError as exp:
+        _LOGGER.error(exp)
+        raise IntegrationError(
+            "Could not find Azure Data Explorer database or table"
+        ) from exp
+    except AuthenticationError as exp:
+        _LOGGER.error(exp)
+        raise ConfigEntryAuthFailed(
+            "Could not authenticate to Azure Data Explorer"
+        ) from exp
     except Exception as exp:  # pylint: disable=broad-except
         _LOGGER.error(exp)
         raise ConfigEntryNotReady("Could not connect to Azure Data Explorer") from exp
-    hass.data[DOMAIN][DATA_HUB] = adx
+    hass.data.setdefault(DOMAIN, {})[DATA_HUB] = adx
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
     await adx.async_start()
     return True
