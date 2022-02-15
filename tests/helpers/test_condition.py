@@ -46,8 +46,11 @@ def setup_comp(hass):
     )
 
 
+@pytest.fixture(autouse=True)
 def teardown():
     """Restore."""
+    yield
+
     dt_util.set_default_time_zone(ORIG_TIME_ZONE)
 
 

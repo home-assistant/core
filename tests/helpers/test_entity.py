@@ -6,6 +6,7 @@ import threading
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -829,3 +830,27 @@ async def test_entity_category_property(hass):
     )
     mock_entity2.entity_id = "hello.world"
     assert mock_entity2.entity_category == "config"
+
+
+@pytest.mark.parametrize(
+    "value,expected",
+    (
+        ("config", entity.EntityCategory.CONFIG),
+        ("diagnostic", entity.EntityCategory.DIAGNOSTIC),
+        ("system", entity.EntityCategory.SYSTEM),
+    ),
+)
+def test_entity_category_schema(value, expected):
+    """Test entity category schema."""
+    schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
+    result = schema(value)
+    assert result == expected
+    assert isinstance(result, entity.EntityCategory)
+
+
+@pytest.mark.parametrize("value", (None, "non_existing"))
+def test_entity_category_schema_error(value):
+    """Test entity category schema."""
+    schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
+    with pytest.raises(vol.Invalid):
+        schema(value)

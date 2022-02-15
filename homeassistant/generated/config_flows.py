@@ -95,6 +95,7 @@ FLOWS = [
     "ezviz",
     "faa_delays",
     "fireservicerota",
+    "fivem",
     "fjaraskupan",
     "flick_electric",
     "flipr",
@@ -198,6 +199,7 @@ FLOWS = [
     "mobile_app",
     "modem_callerid",
     "modern_forms",
+    "moehlenhoff_alpha2",
     "monoprice",
     "motion_blinds",
     "motioneye",
@@ -378,5 +380,6 @@ FLOWS = [
     "zerproc",
     "zha",
     "zwave",
-    "zwave_js"
+    "zwave_js",
+    "zwave_me"
 ]

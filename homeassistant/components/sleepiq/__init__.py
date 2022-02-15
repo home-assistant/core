@@ -99,6 +99,11 @@ class SleepIQSensor(Entity):
             self.bed.name, self.side.sleeper.first_name, self._name
         )
 
+    @property
+    def unique_id(self):
+        """Return a unique ID for the bed."""
+        return f"{self._bed_id}-{self._side}-{self.type}"
+
     def update(self):
         """Get the latest data from SleepIQ and updates the states."""
         # Call the API for new sleepiq data. Each sensor will re-trigger this

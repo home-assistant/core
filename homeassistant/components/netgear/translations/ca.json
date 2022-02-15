@@ -15,7 +15,7 @@
                     "ssl": "Utilitza un certificat SSL",
                     "username": "Nom d'usuari (opcional)"
                 },
-                "description": "Amfitri\u00f3 predeterminat: {host}\nPort predeterminat: {port}\nNom d'usuari predeterminat: {username}",
+                "description": "Amfitri\u00f3 predeterminat: {host}\nNom d'usuari predeterminat: {username}",
                 "title": "Netgear"
             }
         }

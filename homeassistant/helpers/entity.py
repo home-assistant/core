@@ -11,7 +11,7 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import Any, Final, Literal, TypedDict, final
+from typing import Any, Literal, TypedDict, final
 
 import voluptuous as vol
 
@@ -58,7 +58,13 @@ SOURCE_PLATFORM_CONFIG = "platform_config"
 FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
 
 
-ENTITY_CATEGORIES_SCHEMA: Final = vol.In(ENTITY_CATEGORIES)
+def validate_entity_category(value: Any | None) -> EntityCategory:
+    """Validate entity category configuration."""
+    value = vol.In(ENTITY_CATEGORIES)(value)
+    return EntityCategory(value)
+
+
+ENTITY_CATEGORIES_SCHEMA = validate_entity_category
 
 
 @callback
@@ -217,7 +223,10 @@ def convert_to_entity_category(
                 "EntityCategory instead" % (type(value).__name__, value),
                 error_if_core=False,
             )
-        return EntityCategory(value)
+        try:
+            return EntityCategory(value)
+        except ValueError:
+            return None
     return value
 
 
@@ -665,7 +674,7 @@ class Entity(ABC):
         If state is changed more than once before the ha state change task has
         been executed, the intermediate state transitions will be missed.
         """
-        self.hass.add_job(self.async_update_ha_state(force_refresh))  # type: ignore
+        self.hass.add_job(self.async_update_ha_state(force_refresh))
 
     @callback
     def async_schedule_update_ha_state(self, force_refresh: bool = False) -> None:

@@ -19,6 +19,7 @@ from .test_common import (
     help_test_discovery_update,
     help_test_discovery_update_unchanged,
     help_test_reloadable,
+    help_test_reloadable_late,
     help_test_unique_id,
 )
 
@@ -183,3 +184,10 @@ async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
     domain = scene.DOMAIN
     config = DEFAULT_CONFIG[domain]
     await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
+
+
+async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform with late entry setup."""
+    domain = scene.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)

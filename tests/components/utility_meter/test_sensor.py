@@ -305,6 +305,10 @@ async def test_restore_state(hass):
                 },
             ),
             State(
+                "sensor.energy_bill_midpeak",
+                "error",
+            ),
+            State(
                 "sensor.energy_bill_offpeak",
                 "6",
                 attributes={
@@ -325,6 +329,9 @@ async def test_restore_state(hass):
     assert state.attributes.get("status") == PAUSED
     assert state.attributes.get("last_reset") == last_reset
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+
+    state = hass.states.get("sensor.energy_bill_midpeak")
+    assert state.state == STATE_UNKNOWN
 
     state = hass.states.get("sensor.energy_bill_offpeak")
     assert state.state == "6"
@@ -530,7 +537,7 @@ async def _test_self_reset(hass, config, start_time, expect_reset=True):
         assert state.attributes.get("last_reset") == now.isoformat()
         assert state.state == "3"
     else:
-        assert state.attributes.get("last_period") == 0
+        assert state.attributes.get("last_period") == "0"
         assert state.state == "5"
         start_time_str = dt_util.parse_datetime(start_time).isoformat()
         assert state.attributes.get("last_reset") == start_time_str
@@ -559,7 +566,7 @@ async def _test_self_reset(hass, config, start_time, expect_reset=True):
         assert state.attributes.get("last_period") == "2"
         assert state.state == "7"
     else:
-        assert state.attributes.get("last_period") == 0
+        assert state.attributes.get("last_period") == "0"
         assert state.state == "9"
 
 
