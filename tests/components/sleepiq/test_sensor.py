@@ -18,15 +18,18 @@ async def test_sensors(hass, setup_entry):
     assert entry
     assert entry.unique_id == "-31_Test1_sleep_number"
 
-    if not setup_entry["account_type"]:
-        state = hass.states.get("sensor.sleepnumber_ile_test2_sleepnumber")
-        assert state.state == "80"
-        assert state.attributes.get(ATTR_ICON) == "mdi:bed"
-        assert (
-            state.attributes.get(ATTR_FRIENDLY_NAME)
-            == "SleepNumber ILE Test2 SleepNumber"
-        )
+    # If account type is set, only a single bed account was created and there will
+    # not be a second entity
+    if setup_entry["account_type"]:
+        return
 
-        entry = entity_registry.async_get("sensor.sleepnumber_ile_test2_sleepnumber")
-        assert entry
-        assert entry.unique_id == "-31_Test2_sleep_number"
+    state = hass.states.get("sensor.sleepnumber_ile_test2_sleepnumber")
+    assert state.state == "80"
+    assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME) == "SleepNumber ILE Test2 SleepNumber"
+    )
+
+    entry = entity_registry.async_get("sensor.sleepnumber_ile_test2_sleepnumber")
+    assert entry
+    assert entry.unique_id == "-31_Test2_sleep_number"

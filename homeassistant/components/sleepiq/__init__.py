@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DATA_SLEEPIQ, DOMAIN
 from .coordinator import SleepIQDataUpdateCoordinator
 from .models import SleepIQHassData
 
@@ -25,10 +25,6 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-DATA_SLEEPIQ = "data_sleepiq"
-
-DEFAULT_COMPONENT_NAME = "SleepIQ {}"
 
 
 PLATFORMS = [

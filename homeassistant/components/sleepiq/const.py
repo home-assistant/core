@@ -1,7 +1,7 @@
 """Define constants for the SleepIQ component."""
 
+DATA_SLEEPIQ = "data_sleepiq"
 DOMAIN = "sleepiq"
-
 SLEEPYQ_INVALID_CREDENTIALS_MESSAGE = "username or password"
 
 BED = "bed"
