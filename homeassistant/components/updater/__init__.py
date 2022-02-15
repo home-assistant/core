@@ -87,7 +87,6 @@ def _get_update_details(
 
 def _filtered_updates(updater_data: UpdaterData) -> list[dict]:
     """Return a list of updates that are not skipped."""
-    _LOGGER.error(updater_data.skip)
     return [
         {
             "domain": domain,
