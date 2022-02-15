@@ -315,9 +315,9 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                     ATTR_UNIT_OF_MEASUREMENT
                 )
                 self._last_period = (
-                    float(state.attributes.get(ATTR_LAST_PERIOD))
+                    float(state.attributes[ATTR_LAST_PERIOD])
                     if state.attributes.get(ATTR_LAST_PERIOD)
-                    and is_number(state.attributes.get(ATTR_LAST_PERIOD))
+                    and is_number(state.attributes[ATTR_LAST_PERIOD])
                     else 0
                 )
                 self._last_reset = dt_util.as_utc(
