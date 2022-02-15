@@ -1,4 +1,5 @@
 """The dhcp integration."""
+from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
@@ -35,7 +36,12 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceRegistry,
+    async_get,
+    format_mac,
+)
 from homeassistant.helpers.event import (
     async_track_state_added_domain,
     async_track_time_interval,
@@ -54,8 +60,10 @@ MESSAGE_TYPE = "message-type"
 HOSTNAME: Final = "hostname"
 MAC_ADDRESS: Final = "macaddress"
 IP_ADDRESS: Final = "ip"
+REGISTERED_DEVICES: Final = "registered_devices"
 DHCP_REQUEST = 3
 SCAN_INTERVAL = timedelta(minutes=60)
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -180,7 +188,20 @@ class WatcherBase:
         )
 
         matched_domains = set()
+        device_domains = set()
+
+        dev_reg: DeviceRegistry = async_get(self.hass)
+        if device := dev_reg.async_get_device(
+            identifiers=set(), connections={(CONNECTION_NETWORK_MAC, uppercase_mac)}
+        ):
+            for entry_id in device.config_entries:
+                if entry := self.hass.config_entries.async_get_entry(entry_id):
+                    device_domains.add(entry.domain)
+
         for entry in self._integration_matchers:
+            if entry.get(REGISTERED_DEVICES) and not entry["domain"] in device_domains:
+                continue
+
             if MAC_ADDRESS in entry and not fnmatch.fnmatch(
                 uppercase_mac, entry[MAC_ADDRESS]
             ):
@@ -192,14 +213,12 @@ class WatcherBase:
                 continue
 
             _LOGGER.debug("Matched %s against %s", data, entry)
-            if entry["domain"] in matched_domains:
-                # Only match once per domain
-                continue
-
             matched_domains.add(entry["domain"])
+
+        for domain in matched_domains:
             discovery_flow.async_create_flow(
                 self.hass,
-                entry["domain"],
+                domain,
                 {"source": config_entries.SOURCE_DHCP},
                 DhcpServiceInfo(
                     ip=ip_address,
