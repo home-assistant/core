@@ -98,6 +98,7 @@ DHCP: list[dict[str, str | bool]] = [
      'macaddress': '4CFCAA*'},
     {'domain': 'tolo', 'hostname': 'usr-tcp232-ed2'},
     {'domain': 'toon', 'hostname': 'eneco-*', 'macaddress': '74C63B*'},
+    {'domain': 'tplink', 'registered_devices': True},
     {'domain': 'tplink', 'hostname': 'k[lp]*', 'macaddress': '60A4B7*'},
     {'domain': 'tplink', 'hostname': 'k[lp]*', 'macaddress': '005F67*'},
     {'domain': 'tplink', 'hostname': 'k[lp]*', 'macaddress': '1027F5*'},
