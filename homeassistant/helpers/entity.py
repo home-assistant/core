@@ -12,7 +12,7 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import Any, Literal, TypedDict, final
+from typing import Any, Final, Literal, TypedDict, final
 
 import voluptuous as vol
 
@@ -28,7 +28,6 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_DEFAULT_NAME,
-    ENTITY_CATEGORIES,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -63,15 +62,6 @@ SOURCE_PLATFORM_CONFIG = "platform_config"
 # Used when converting float states to string: limit precision according to machine
 # epsilon to make the string representation readable
 FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
-
-
-def validate_entity_category(value: Any | None) -> EntityCategory:
-    """Validate entity category configuration."""
-    value = vol.In(ENTITY_CATEGORIES)(value)
-    return EntityCategory(value)
-
-
-ENTITY_CATEGORIES_SCHEMA = validate_entity_category
 
 
 @callback
@@ -212,6 +202,9 @@ class EntityCategory(StrEnum):
 
     # System: An entity which is not useful for the user to interact with
     SYSTEM = "system"
+
+
+ENTITY_CATEGORIES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(EntityCategory))
 
 
 class EntityPlatformState(Enum):
