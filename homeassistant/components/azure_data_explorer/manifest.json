@@ -4,10 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/azure_data_explorer",
   "requirements": ["azure-kusto-ingest==3.0.1","azure-kusto-data[aio]==3.0.1"],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@kaareseras"
   ],
