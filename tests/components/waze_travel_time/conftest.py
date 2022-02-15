@@ -47,9 +47,10 @@ def bypass_platform_setup_fixture():
 def mock_update_fixture():
     """Mock an update to the sensor."""
     with patch(
-        "homeassistant.components.waze_travel_time.sensor.WazeRouteCalculator.calc_all_routes_info",
-        return_value={"My route": (150, 300)},
-    ):
+        "homeassistant.components.waze_travel_time.sensor.WazeRouteCalculator"
+    ) as mock_wrc:
+        obj = mock_wrc.return_value
+        obj.calc_all_routes_info.return_value = {"My route": (150, 300)}
         yield
 
 
