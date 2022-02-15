@@ -95,7 +95,7 @@ async def test_migrate_config_entry(hass: HomeAssistant):
         CONF_PORT: 8989,
         CONF_SSL: False,
         CONF_VERIFY_SSL: False,
-        CONF_BASE_PATH: "/base",
+        CONF_BASE_PATH: "/base/",
     }
     entry = MockConfigEntry(domain=DOMAIN, data=legacy_config)
 
@@ -112,7 +112,7 @@ async def test_migrate_config_entry(hass: HomeAssistant):
         CONF_SSL: False,
         CONF_VERIFY_SSL: False,
         CONF_BASE_PATH: "/api",
-        CONF_URL: "http://1.2.3.4:8989",
+        CONF_URL: "http://1.2.3.4:8989/base",
     }
     assert entry.version == 2
     assert not entry.unique_id
