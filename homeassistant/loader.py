@@ -82,7 +82,7 @@ class Manifest(TypedDict, total=False):
     mqtt: list[str]
     ssdp: list[dict[str, str]]
     zeroconf: list[str | dict[str, str]]
-    dhcp: list[dict[str, str | bool]]
+    dhcp: list[dict[str, bool | str]]
     usb: list[dict[str, str]]
     homekit: dict[str, list[str]]
     is_built_in: bool
