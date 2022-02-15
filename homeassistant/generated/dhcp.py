@@ -84,6 +84,7 @@ DHCP: list[dict[str, str | bool]] = [
     {'domain': 'sense', 'hostname': 'sense-*', 'macaddress': '009D6B*'},
     {'domain': 'sense', 'hostname': 'sense-*', 'macaddress': 'DCEFCA*'},
     {'domain': 'sense', 'hostname': 'sense-*', 'macaddress': 'A4D578*'},
+    {'domain': 'senseme', 'registered_devices': True},
     {'domain': 'senseme', 'macaddress': '20F85E*'},
     {'domain': 'sensibo', 'hostname': 'sensibo*'},
     {'domain': 'simplisafe', 'hostname': 'simplisafe*', 'macaddress': '30AEA4*'},
