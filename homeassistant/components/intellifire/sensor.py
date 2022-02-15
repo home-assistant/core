@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
@@ -84,6 +85,42 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=_time_remaining_to_timestamp,
+    ),
+    IntellifireSensorEntityDescription(
+        key="downtime",
+        name="Downtime",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.downtime,
+    ),
+    IntellifireSensorEntityDescription(
+        key="uptime",
+        name="Uptime",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.uptime,
+    ),
+    IntellifireSensorEntityDescription(
+        key="connection_quality",
+        name="Connection Quality",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.connection_quality,
+    ),
+    IntellifireSensorEntityDescription(
+        key="ecm_latency",
+        name="ECM Latency",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.ecm_latency,
+    ),
+    IntellifireSensorEntityDescription(
+        key="ipv4_address",
+        name="IP",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.ipv4_address,
+    ),
+    IntellifireSensorEntityDescription(
+        key="serial",
+        name="Serial",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.serial,
     ),
 )
 
