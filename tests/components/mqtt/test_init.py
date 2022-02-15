@@ -1122,14 +1122,12 @@ async def test_initial_setup_logs_error(hass, caplog, mqtt_client_mock):
     assert "Failed to connect to MQTT server:" in caplog.text
 
 
-async def test_logs_error_if_no_connect_broker(hass, caplog, mqtt_mock):
+async def test_logs_error_if_no_connect_broker(
+    hass, caplog, mqtt_mock, mqtt_client_mock
+):
     """Test for setup failure if connection to broker is missing."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
-
-    assert await mqtt.async_setup_entry(hass, entry)
-    await hass.async_block_till_done()
     # test with rc = 3 -> broker unavailable
-    mqtt_mock._mqtt_on_connect(mqtt_mock, None, None, 3)
+    mqtt_client_mock.on_connect(mqtt_client_mock, None, None, 3)
     await hass.async_block_till_done()
     assert (
         "Unable to connect to the MQTT broker: Connection Refused: broker unavailable."
