@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 from contextlib import closing
 import logging
 
 import aiohttp
+from aiohttp import web
 import async_timeout
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
@@ -65,17 +67,30 @@ async def async_setup_platform(
 
     if discovery_info:
         config = PLATFORM_SCHEMA(discovery_info)
-    async_add_entities([MjpegCamera(config)])
+
+    async_add_entities(
+        [
+            MjpegCamera(
+                config[CONF_NAME],
+                config[CONF_AUTHENTICATION],
+                config.get(CONF_USERNAME),
+                config.get(CONF_PASSWORD),
+                config[CONF_MJPEG_URL],
+                config.get(CONF_STILL_IMAGE_URL),
+                config[CONF_VERIFY_SSL],
+            )
+        ]
+    )
 
 
-def filter_urllib3_logging():
+def filter_urllib3_logging() -> None:
     """Filter header errors from urllib3 due to a urllib3 bug."""
     urllib3_logger = logging.getLogger("urllib3.connectionpool")
     if not any(isinstance(x, NoHeaderErrorFilter) for x in urllib3_logger.filters):
         urllib3_logger.addFilter(NoHeaderErrorFilter())
 
 
-def extract_image_from_mjpeg(stream):
+def extract_image_from_mjpeg(stream: Iterable[bytes]) -> bytes | None:
     """Take in a MJPEG stream object, return the jpg from it."""
     data = b""
 
@@ -93,19 +108,30 @@ def extract_image_from_mjpeg(stream):
 
         return data[jpg_start : jpg_end + 2]
 
+    return None
+
 
 class MjpegCamera(Camera):
     """An implementation of an IP camera that is reachable over a URL."""
 
-    def __init__(self, device_info):
+    def __init__(
+        self,
+        name: str,
+        authentication: str,
+        username: str | None,
+        password: str | None,
+        mjpeg_url: str,
+        still_image_url: str | None,
+        verify_ssl: bool,
+    ) -> None:
         """Initialize a MJPEG camera."""
         super().__init__()
-        self._name = device_info.get(CONF_NAME)
-        self._authentication = device_info.get(CONF_AUTHENTICATION)
-        self._username = device_info.get(CONF_USERNAME)
-        self._password = device_info.get(CONF_PASSWORD)
-        self._mjpeg_url = device_info[CONF_MJPEG_URL]
-        self._still_image_url = device_info.get(CONF_STILL_IMAGE_URL)
+        self._attr_name = name
+        self._authentication = authentication
+        self._username = username
+        self._password = password
+        self._mjpeg_url = mjpeg_url
+        self._still_image_url = still_image_url
 
         self._auth = None
         if (
@@ -114,7 +140,7 @@ class MjpegCamera(Camera):
             and self._authentication == HTTP_BASIC_AUTHENTICATION
         ):
             self._auth = aiohttp.BasicAuth(self._username, password=self._password)
-        self._verify_ssl = device_info.get(CONF_VERIFY_SSL)
+        self._verify_ssl = verify_ssl
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
@@ -137,10 +163,10 @@ class MjpegCamera(Camera):
                 return image
 
         except asyncio.TimeoutError:
-            _LOGGER.error("Timeout getting camera image from %s", self._name)
+            _LOGGER.error("Timeout getting camera image from %s", self.name)
 
         except aiohttp.ClientError as err:
-            _LOGGER.error("Error getting new camera image from %s: %s", self._name, err)
+            _LOGGER.error("Error getting new camera image from %s: %s", self.name, err)
 
         return None
 
@@ -168,7 +194,9 @@ class MjpegCamera(Camera):
         with closing(req) as response:
             return extract_image_from_mjpeg(response.iter_content(102400))
 
-    async def handle_async_mjpeg_stream(self, request):
+    async def handle_async_mjpeg_stream(
+        self, request: web.Request
+    ) -> web.StreamResponse | None:
         """Generate an HTTP MJPEG stream from the camera."""
         # aiohttp don't support DigestAuth -> Fallback
         if self._authentication == HTTP_DIGEST_AUTHENTICATION:
@@ -180,15 +208,10 @@ class MjpegCamera(Camera):
 
         return await async_aiohttp_proxy_web(self.hass, request, stream_coro)
 
-    @property
-    def name(self):
-        """Return the name of this camera."""
-        return self._name
-
 
 class NoHeaderErrorFilter(logging.Filter):
     """Filter out urllib3 Header Parsing Errors due to a urllib3 bug."""
 
-    def filter(self, record):
+    def filter(self, record: logging.LogRecord) -> bool:
         """Filter out Header Parsing Errors."""
         return "Failed to parse headers" not in record.getMessage()

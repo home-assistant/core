@@ -49,7 +49,11 @@ from .const import (
     ZWAVE_JS_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
 )
-from .device_automation_helpers import CONF_SUBTYPE, NODE_STATUSES
+from .device_automation_helpers import (
+    CONF_SUBTYPE,
+    NODE_STATUSES,
+    generate_config_parameter_subtype,
+)
 from .helpers import (
     async_get_node_from_device_id,
     async_get_node_status_sensor_entity_id,
@@ -353,7 +357,7 @@ async def async_get_triggers(
                 ATTR_PROPERTY_KEY: config_value.property_key,
                 ATTR_ENDPOINT: config_value.endpoint,
                 ATTR_COMMAND_CLASS: config_value.command_class,
-                CONF_SUBTYPE: f"{config_value.value_id} ({config_value.property_name})",
+                CONF_SUBTYPE: generate_config_parameter_subtype(config_value),
             }
             for config_value in node.get_configuration_values().values()
         ]

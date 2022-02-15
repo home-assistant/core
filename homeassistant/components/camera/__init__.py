@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import collections
-from collections.abc import Awaitable, Callable, Iterable, Mapping
+from collections.abc import Awaitable, Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -26,7 +26,6 @@ from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_EXTRA,
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
@@ -49,7 +48,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import Entity, EntityDescription, entity_sources
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
@@ -222,7 +221,12 @@ async def async_get_mjpeg_stream(
     """Fetch an mjpeg stream from a camera entity."""
     camera = _get_camera_from_entity_id(hass, entity_id)
 
-    return await camera.handle_async_mjpeg_stream(request)
+    try:
+        stream = await camera.handle_async_mjpeg_stream(request)
+    except ConnectionResetError:
+        stream = None
+        _LOGGER.debug("Error while writing MJPEG stream to transport")
+    return stream
 
 
 async def async_get_still_stream(
@@ -784,7 +788,11 @@ class CameraMjpegStream(CameraView):
     async def handle(self, request: web.Request, camera: Camera) -> web.StreamResponse:
         """Serve camera stream, possibly with interval."""
         if (interval_str := request.query.get("interval")) is None:
-            stream = await camera.handle_async_mjpeg_stream(request)
+            try:
+                stream = await camera.handle_async_mjpeg_stream(request)
+            except ConnectionResetError:
+                stream = None
+                _LOGGER.debug("Error while writing MJPEG stream to transport")
             if stream is None:
                 raise web.HTTPBadGateway()
             return stream
@@ -970,56 +978,22 @@ async def async_handle_play_stream_service(
     camera: Camera, service_call: ServiceCall
 ) -> None:
     """Handle play stream services calls."""
+    hass = camera.hass
     fmt = service_call.data[ATTR_FORMAT]
     url = await _async_stream_endpoint_url(camera.hass, camera, fmt)
+    url = f"{get_url(hass)}{url}"
 
-    hass = camera.hass
-    data: Mapping[str, str] = {
-        ATTR_MEDIA_CONTENT_ID: f"{get_url(hass)}{url}",
-        ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[fmt],
-    }
-
-    # It is required to send a different payload for cast media players
-    entity_ids = service_call.data[ATTR_MEDIA_PLAYER]
-    sources = entity_sources(hass)
-    cast_entity_ids = [
-        entity
-        for entity in entity_ids
-        # All entities should be in sources. This extra guard is to
-        # avoid people writing to the state machine and breaking it.
-        if entity in sources and sources[entity]["domain"] == "cast"
-    ]
-    other_entity_ids = list(set(entity_ids) - set(cast_entity_ids))
-
-    if cast_entity_ids:
-        await hass.services.async_call(
-            DOMAIN_MP,
-            SERVICE_PLAY_MEDIA,
-            {
-                ATTR_ENTITY_ID: cast_entity_ids,
-                **data,
-                ATTR_MEDIA_EXTRA: {
-                    "stream_type": "LIVE",
-                    "media_info": {
-                        "hlsVideoSegmentFormat": "fmp4",
-                    },
-                },
-            },
-            blocking=True,
-            context=service_call.context,
-        )
-
-    if other_entity_ids:
-        await hass.services.async_call(
-            DOMAIN_MP,
-            SERVICE_PLAY_MEDIA,
-            {
-                ATTR_ENTITY_ID: other_entity_ids,
-                **data,
-            },
-            blocking=True,
-            context=service_call.context,
-        )
+    await hass.services.async_call(
+        DOMAIN_MP,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: service_call.data[ATTR_MEDIA_PLAYER],
+            ATTR_MEDIA_CONTENT_ID: url,
+            ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[fmt],
+        },
+        blocking=True,
+        context=service_call.context,
+    )
 
 
 async def _async_stream_endpoint_url(

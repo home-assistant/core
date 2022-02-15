@@ -44,7 +44,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import BLOCK_LOG_TIMEOUT, HomeAssistant, State
+from homeassistant.core import BLOCK_LOG_TIMEOUT, HomeAssistant
 from homeassistant.helpers import (
     area_registry,
     device_registry,
@@ -937,8 +937,33 @@ def mock_restore_cache(hass, states):
                 json.dumps(restored_state["attributes"], cls=JSONEncoder)
             ),
         }
-        last_states[state.entity_id] = restore_state.StoredState(
-            State.from_dict(restored_state), now
+        last_states[state.entity_id] = restore_state.StoredState.from_dict(
+            {"state": restored_state, "last_seen": now}
+        )
+    data.last_states = last_states
+    _LOGGER.debug("Restore cache: %s", data.last_states)
+    assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
+
+    hass.data[key] = data
+
+
+def mock_restore_cache_with_extra_data(hass, states):
+    """Mock the DATA_RESTORE_CACHE."""
+    key = restore_state.DATA_RESTORE_STATE_TASK
+    data = restore_state.RestoreStateData(hass)
+    now = date_util.utcnow()
+
+    last_states = {}
+    for state, extra_data in states:
+        restored_state = state.as_dict()
+        restored_state = {
+            **restored_state,
+            "attributes": json.loads(
+                json.dumps(restored_state["attributes"], cls=JSONEncoder)
+            ),
+        }
+        last_states[state.entity_id] = restore_state.StoredState.from_dict(
+            {"state": restored_state, "extra_data": extra_data, "last_seen": now}
         )
     data.last_states = last_states
     _LOGGER.debug("Restore cache: %s", data.last_states)

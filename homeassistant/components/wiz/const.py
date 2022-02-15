@@ -1,7 +1,11 @@
 """Constants for the WiZ Platform integration."""
 from datetime import timedelta
 
-from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
+from pywizlight.exceptions import (
+    WizLightConnectionError,
+    WizLightNotKnownBulb,
+    WizLightTimeOutError,
+)
 
 DOMAIN = "wiz"
 DEFAULT_NAME = "WiZ"
@@ -16,3 +20,6 @@ WIZ_EXCEPTIONS = (
     WizLightConnectionError,
     ConnectionRefusedError,
 )
+WIZ_CONNECT_EXCEPTIONS = (WizLightNotKnownBulb, *WIZ_EXCEPTIONS)
+
+SIGNAL_WIZ_PIR = "wiz_pir_{}"

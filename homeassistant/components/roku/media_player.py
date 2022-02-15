@@ -4,16 +4,15 @@ from __future__ import annotations
 import datetime as dt
 import logging
 from typing import Any
-from urllib.parse import quote
 
 import voluptuous as vol
 
 from homeassistant.components import media_source
-from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player import (
     BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
+    async_process_play_media_url,
 )
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_EXTRA,
@@ -46,7 +45,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.network import get_url
 
 from . import roku_exception_handler
 from .browse_media import async_browse_media
@@ -60,6 +58,7 @@ from .const import (
 )
 from .coordinator import RokuDataUpdateCoordinator
 from .entity import RokuEntity
+from .helpers import format_channel_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -214,10 +213,9 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         if self.app_id != "tvinput.dtv" or self.coordinator.data.channel is None:
             return None
 
-        if self.coordinator.data.channel.name is not None:
-            return f"{self.coordinator.data.channel.name} ({self.coordinator.data.channel.number})"
+        channel = self.coordinator.data.channel
 
-        return self.coordinator.data.channel.number
+        return format_channel_name(channel.number, channel.name)
 
     @property
     def media_title(self) -> str | None:
@@ -375,17 +373,8 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             media_type = MEDIA_TYPE_URL
             media_id = sourced_media.url
 
-        # Sign and prefix with URL if playing a relative URL
-        if media_id[0] == "/":
-            media_id = async_sign_path(
-                self.hass,
-                quote(media_id),
-                dt.timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
-            )
-
-            # prepend external URL
-            hass_url = get_url(self.hass)
-            media_id = f"{hass_url}{media_id}"
+        # If media ID is a relative URL, we serve it from HA.
+        media_id = async_process_play_media_url(self.hass, media_id)
 
         if media_type not in PLAY_MEDIA_SUPPORTED_TYPES:
             _LOGGER.error(

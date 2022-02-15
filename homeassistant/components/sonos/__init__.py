@@ -119,6 +119,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Sonos from a config entry."""
     soco_config.EVENTS_MODULE = events_asyncio
+    soco_config.REQUEST_TIMEOUT = 9.5
 
     if DATA_SONOS not in hass.data:
         hass.data[DATA_SONOS] = SonosData()
@@ -342,7 +343,6 @@ class SonosDiscoveryManager:
                 )
             )
             await self.hass.async_add_executor_job(self._manual_hosts)
-            return
 
         self.entry.async_on_unload(
             await ssdp.async_register_callback(
