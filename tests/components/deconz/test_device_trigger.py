@@ -120,7 +120,7 @@ async def test_get_triggers(hass, aioclient_mock):
         {
             CONF_DEVICE_ID: device.id,
             CONF_DOMAIN: SENSOR_DOMAIN,
-            ATTR_ENTITY_ID: "sensor.tradfri_on_off_switch_battery_level",
+            ATTR_ENTITY_ID: "sensor.tradfri_on_off_switch_battery",
             CONF_PLATFORM: "device",
             CONF_TYPE: ATTR_BATTERY_LEVEL,
         },
