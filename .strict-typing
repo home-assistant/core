@@ -20,6 +20,7 @@ homeassistant.helpers.entity_values
 homeassistant.helpers.reload
 homeassistant.helpers.script_variables
 homeassistant.helpers.translation
+homeassistant.util.async_
 homeassistant.util.color
 homeassistant.util.process
 homeassistant.util.unit_system
@@ -118,6 +119,7 @@ homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
 homeassistant.components.mailbox.*
 homeassistant.components.media_player.*
+homeassistant.components.mjpeg.*
 homeassistant.components.modbus.*
 homeassistant.components.modem_callerid.*
 homeassistant.components.media_source.*

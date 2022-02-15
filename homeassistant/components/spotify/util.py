@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import yarl
+
 from .const import MEDIA_PLAYER_PREFIX
 
 
@@ -22,3 +24,11 @@ def fetch_image_url(item: dict[str, Any], key="images") -> str | None:
         return item.get(key, [])[0].get("url")
     except IndexError:
         return None
+
+
+def spotify_uri_from_media_browser_url(media_content_id: str) -> str:
+    """Extract spotify URI from media browser URL."""
+    if media_content_id and media_content_id.startswith(MEDIA_PLAYER_PREFIX):
+        parsed_url = yarl.URL(media_content_id)
+        media_content_id = parsed_url.name
+    return media_content_id

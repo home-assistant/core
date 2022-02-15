@@ -349,7 +349,9 @@ class HomeAssistant:
         self.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         _async_create_timer(self)
 
-    def add_job(self, target: Callable[..., Any], *args: Any) -> None:
+    def add_job(
+        self, target: Callable[..., Any] | Coroutine[Any, Any, Any], *args: Any
+    ) -> None:
         """Add a job to be executed by the event loop or by an executor.
 
         If the job is either a coroutine or decorated with @callback, it will be

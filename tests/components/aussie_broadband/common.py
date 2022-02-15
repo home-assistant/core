@@ -5,7 +5,7 @@ from homeassistant.components.aussie_broadband.const import (
     CONF_SERVICES,
     DOMAIN as AUSSIE_BROADBAND_DOMAIN,
 )
-from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -22,6 +22,12 @@ FAKE_SERVICES = [
         "type": "PhoneMobile",
         "name": "Mobile",
     },
+    {
+        "service_id": "23456789",
+        "description": "Fake ABB VOIP Service",
+        "type": "VOIP",
+        "name": "VOIP",
+    },
 ]
 
 FAKE_DATA = {
@@ -30,12 +36,16 @@ FAKE_DATA = {
 }
 
 
-async def setup_platform(hass, platforms=[], side_effect=None, usage={}):
+async def setup_platform(
+    hass, platforms=[], side_effect=None, usage={}, usage_effect=None
+):
     """Set up the Aussie Broadband platform."""
     mock_entry = MockConfigEntry(
         domain=AUSSIE_BROADBAND_DOMAIN,
         data=FAKE_DATA,
-        options={CONF_SERVICES: ["12345678", "87654321"], CONF_SCAN_INTERVAL: 30},
+        options={
+            CONF_SERVICES: ["12345678", "87654321", "23456789", "98765432"],
+        },
     )
     mock_entry.add_to_hass(hass)
 
@@ -50,7 +60,9 @@ async def setup_platform(hass, platforms=[], side_effect=None, usage={}):
         return_value=FAKE_SERVICES,
         side_effect=side_effect,
     ), patch(
-        "aussiebb.asyncio.AussieBB.get_usage", return_value=usage
+        "aussiebb.asyncio.AussieBB.get_usage",
+        return_value=usage,
+        side_effect=usage_effect,
     ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()

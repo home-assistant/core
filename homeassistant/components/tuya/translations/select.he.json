@@ -8,6 +8,23 @@
             "1": "\u05db\u05d1\u05d5\u05d9",
             "2": "\u05de\u05d5\u05e4\u05e2\u05dc"
         },
+        "tuya__countdown": {
+            "1h": "\u05e9\u05e2\u05d4",
+            "2h": "\u05e9\u05e2\u05ea\u05d9\u05d9\u05dd",
+            "3h": "3 \u05e9\u05e2\u05d5\u05ea",
+            "4h": "4 \u05e9\u05e2\u05d5\u05ea",
+            "5h": "5 \u05e9\u05e2\u05d5\u05ea",
+            "6h": "6 \u05e9\u05e2\u05d5\u05ea",
+            "cancel": "\u05d1\u05d9\u05d8\u05d5\u05dc"
+        },
+        "tuya__curtain_mode": {
+            "morning": "\u05d1\u05d5\u05e7\u05e8",
+            "night": "\u05dc\u05d9\u05dc\u05d4"
+        },
+        "tuya__curtain_motor_mode": {
+            "back": "\u05d7\u05d6\u05d5\u05e8",
+            "forward": "\u05e7\u05d3\u05d9\u05de\u05d4"
+        },
         "tuya__fan_angle": {
             "30": "30\u00b0",
             "60": "60\u00b0",
@@ -16,6 +33,32 @@
         "tuya__fingerbot_mode": {
             "click": "\u05d3\u05d7\u05d9\u05e4\u05d4",
             "switch": "\u05de\u05ea\u05d2"
+        },
+        "tuya__humidifier_level": {
+            "level_1": "\u05e8\u05de\u05d4 1",
+            "level_10": "\u05e8\u05de\u05d4 10",
+            "level_2": "\u05e8\u05de\u05d4 2",
+            "level_3": "\u05e8\u05de\u05d4 3",
+            "level_4": "\u05e8\u05de\u05d4 4",
+            "level_5": "\u05e8\u05de\u05d4 5",
+            "level_6": "\u05e8\u05de\u05d4 6",
+            "level_7": "\u05e8\u05de\u05d4 7",
+            "level_8": "\u05e8\u05de\u05d4 8",
+            "level_9": "\u05e8\u05de\u05d4 9"
+        },
+        "tuya__humidifier_moodlighting": {
+            "1": "\u05de\u05e6\u05d1 \u05e8\u05d5\u05d7 1",
+            "2": "\u05de\u05e6\u05d1 \u05e8\u05d5\u05d7 2",
+            "3": "\u05de\u05e6\u05d1 \u05e8\u05d5\u05d7 3",
+            "4": "\u05de\u05e6\u05d1 \u05e8\u05d5\u05d7 4",
+            "5": "\u05de\u05e6\u05d1 \u05e8\u05d5\u05d7 5"
+        },
+        "tuya__humidifier_spray_mode": {
+            "auto": "\u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9",
+            "health": "\u05d1\u05e8\u05d9\u05d0\u05d5\u05ea",
+            "humidity": "\u05dc\u05d7\u05d5\u05ea",
+            "sleep": "\u05e9\u05d9\u05e0\u05d4",
+            "work": "\u05e2\u05d1\u05d5\u05d3\u05d4"
         },
         "tuya__led_type": {
             "led": "\u05dc\u05d3"

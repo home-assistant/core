@@ -168,6 +168,7 @@ async def test_node_status(hass, multisensor_6, integration, hass_ws_client):
     assert result["status"] == 1
     assert result["zwave_plus_version"] == 1
     assert result["highest_security_class"] == SecurityClass.S0_LEGACY
+    assert not result["is_controller_node"]
 
     # Test getting non-existent node fails
     await ws_client.send_json(
