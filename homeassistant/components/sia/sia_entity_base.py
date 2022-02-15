@@ -18,6 +18,7 @@ from homeassistant.helpers.typing import StateType
 
 from .const import (
     AVAILABILITY_EVENT_CODE,
+    CONF_ACCOUNT,
     CONF_ACCOUNTS,
     CONF_PING_INTERVAL,
     DOMAIN,
@@ -63,7 +64,11 @@ class SIABaseEntity(RestoreEntity):
         self.zone = zone
         self.entity_description = entity_description
 
-        self.ping_interval = entry.data[CONF_ACCOUNTS][account][CONF_PING_INTERVAL]
+        self.ping_interval = next(
+            account[CONF_PING_INTERVAL]
+            for account in entry.data[CONF_ACCOUNTS]
+            if account[CONF_ACCOUNT] == account
+        )
         self._attr_unique_id, self._attr_name = get_unique_id_and_name(
             entry.entry_id, entry.data[CONF_PORT], account, zone, entity_description.key
         )
