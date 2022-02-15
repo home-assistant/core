@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.telegram_bot import (
+    CONF_ALLOWED_CHAT_IDS,
     CONF_TRUSTED_NETWORKS,
     DOMAIN,
     initialize_bot,
@@ -24,7 +25,7 @@ def config_webhooks():
                 CONF_URL: "https://test",
                 CONF_TRUSTED_NETWORKS: ["127.0.0.1"],
                 CONF_API_KEY: "1234567890:ABC",
-                "allowed_chat_ids": [
+                CONF_ALLOWED_CHAT_IDS: [
                     # "me"
                     12345678,
                     # Some chat
@@ -43,7 +44,7 @@ def config_polling():
             {
                 CONF_PLATFORM: "polling",
                 CONF_API_KEY: "1234567890:ABC",
-                "allowed_chat_ids": [
+                CONF_ALLOWED_CHAT_IDS: [
                     # "me"
                     12345678,
                     # Some chat

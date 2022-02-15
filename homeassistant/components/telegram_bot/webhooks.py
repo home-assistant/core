@@ -80,7 +80,7 @@ class PushBot(BaseTelegramBotEntity):
                 current_status,
             )
         else:
-            _LOGGER.debug("telegram webhook Status: %s", current_status)
+            _LOGGER.debug("telegram webhook status: %s", current_status)
 
         if current_status and current_status["url"] != self.webhook_url:
             result = await self.hass.async_add_executor_job(self._try_to_set_webhook)
