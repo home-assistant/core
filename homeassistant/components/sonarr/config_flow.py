@@ -10,23 +10,14 @@ from aiopyarr.sonarr_client import SonarrClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, OptionsFlow
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
-    CONF_BASE_PATH,
     CONF_UPCOMING_DAYS,
     CONF_WANTED_MAX_ITEMS,
-    DEFAULT_PORT,
-    DEFAULT_SSL,
     DEFAULT_UPCOMING_DAYS,
     DEFAULT_VERIFY_SSL,
     DEFAULT_WANTED_MAX_ITEMS,
@@ -41,18 +32,10 @@ async def validate_input(hass: HomeAssistant, data: dict) -> None:
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    base_api_path = data[CONF_BASE_PATH]
-
-    if base_api_path in ("", "/", "/api"):
-        base_api_path = None
-
     host_configuration = PyArrHostConfiguration(
         api_token=data[CONF_API_KEY],
-        ipaddress=data[CONF_HOST],
-        port=data[CONF_PORT],
-        ssl=data[CONF_SSL],
+        url=data[CONF_URL],
         verify_ssl=data[CONF_VERIFY_SSL],
-        base_api_path=base_api_path,
     )
 
     sonarr = SonarrClient(
@@ -66,7 +49,7 @@ async def validate_input(hass: HomeAssistant, data: dict) -> None:
 class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Sonarr."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self):
         """Initialize the flow."""
@@ -91,7 +74,6 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                description_placeholders={"host": self.entry.data[CONF_HOST]},
                 data_schema=vol.Schema({}),
                 errors={},
             )
@@ -125,7 +107,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
                     return await self._async_reauth_update_entry(user_input)
 
                 return self.async_create_entry(
-                    title=user_input[CONF_HOST], data=user_input
+                    title=user_input[CONF_URL], data=user_input
                 )
 
         data_schema = self._get_user_data_schema()
@@ -148,11 +130,8 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
             return {vol.Required(CONF_API_KEY): str}
 
         data_schema = {
-            vol.Required(CONF_HOST): str,
+            vol.Required(CONF_URL): str,
             vol.Required(CONF_API_KEY): str,
-            vol.Optional(CONF_BASE_PATH, default=""): str,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-            vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
         }
 
         if self.show_advanced_options:

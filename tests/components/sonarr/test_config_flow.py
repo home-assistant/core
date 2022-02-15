@@ -11,7 +11,7 @@ from homeassistant.components.sonarr.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_SOURCE, CONF_VERIFY_SSL
+from homeassistant.const import CONF_API_KEY, CONF_SOURCE, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -152,10 +152,10 @@ async def test_full_user_flow_implementation(
     )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "192.168.1.189"
+    assert result["title"] == "http://192.168.1.189:8989"
 
     assert result["data"]
-    assert result["data"][CONF_HOST] == "192.168.1.189"
+    assert result["data"][CONF_URL] == "http://192.168.1.189:8989"
 
 
 async def test_full_user_flow_advanced_options(
@@ -182,10 +182,10 @@ async def test_full_user_flow_advanced_options(
     )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "192.168.1.189"
+    assert result["title"] == "http://192.168.1.189:8989"
 
     assert result["data"]
-    assert result["data"][CONF_HOST] == "192.168.1.189"
+    assert result["data"][CONF_URL] == "http://192.168.1.189:8989"
     assert result["data"][CONF_VERIFY_SSL]
 
 

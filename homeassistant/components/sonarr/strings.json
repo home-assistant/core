@@ -6,15 +6,13 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "base_path": "Path to Sonarr",
-          "port": "[%key:common::config_flow::data::port%]",
-          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "url": "[%key:common::config_flow::data::url%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Sonarr integration needs to be manually re-authenticated with the Sonarr API hosted at: {host}"
+        "description": "The Sonarr integration needs to be manually re-authenticated with the Sonarr API"
       }
     },
     "error": {

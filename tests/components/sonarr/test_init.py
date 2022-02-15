@@ -3,9 +3,17 @@ from unittest.mock import MagicMock, patch
 
 from aiopyarr import ArrAuthenticationException, ArrException
 
-from homeassistant.components.sonarr.const import DOMAIN
+from homeassistant.components.sonarr.const import CONF_BASE_PATH, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_SOURCE
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_PORT,
+    CONF_SOURCE,
+    CONF_SSL,
+    CONF_URL,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -77,3 +85,34 @@ async def test_unload_config_entry(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     assert mock_config_entry.entry_id not in hass.data[DOMAIN]
+
+
+async def test_migrate_config_entry(hass: HomeAssistant):
+    """Test successful migration of entry data."""
+    legacy_config = {
+        CONF_API_KEY: "MOCK_API_KEY",
+        CONF_HOST: "1.2.3.4",
+        CONF_PORT: 8989,
+        CONF_SSL: False,
+        CONF_VERIFY_SSL: False,
+        CONF_BASE_PATH: "/api",
+    }
+    entry = MockConfigEntry(domain=DOMAIN, data=legacy_config)
+
+    assert entry.data == legacy_config
+    assert entry.version == 1
+    assert not entry.unique_id
+
+    await entry.async_migrate(hass)
+
+    assert entry.data == {
+        CONF_API_KEY: "MOCK_API_KEY",
+        CONF_HOST: "1.2.3.4",
+        CONF_PORT: 8989,
+        CONF_SSL: False,
+        CONF_VERIFY_SSL: False,
+        CONF_BASE_PATH: "/api",
+        CONF_URL: "http://1.2.3.4:8989",
+    }
+    assert entry.version == 2
+    assert not entry.unique_id

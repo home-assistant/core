@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import logging
 
 from aiopyarr import ArrAuthenticationException, ArrException
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
@@ -13,6 +14,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     CONF_SSL,
+    CONF_URL,
     CONF_VERIFY_SSL,
     Platform,
 )
@@ -34,6 +36,7 @@ from .const import (
 
 PLATFORMS = [Platform.SENSOR]
 SCAN_INTERVAL = timedelta(seconds=30)
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -49,18 +52,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         }
         hass.config_entries.async_update_entry(entry, options=options)
 
-    base_api_path = entry.data[CONF_BASE_PATH]
-
-    if base_api_path in ("", "/", "/api"):
-        base_api_path = None
-
     host_configuration = PyArrHostConfiguration(
         api_token=entry.data[CONF_API_KEY],
-        ipaddress=entry.data[CONF_HOST],
-        port=entry.data[CONF_PORT],
-        ssl=entry.data[CONF_SSL],
+        url=entry.data[CONF_URL],
         verify_ssl=entry.data[CONF_VERIFY_SSL],
-        base_api_path=base_api_path,
     )
 
     sonarr = SonarrClient(
@@ -87,6 +82,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", entry.version)
+
+    if entry.version == 1:
+        new_proto = "https" if entry.data[CONF_SSL] else "http"
+        new_host_port = f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+
+        new_path = ""
+
+        if entry.data[CONF_BASE_PATH] not in ("", "/", "/api"):
+            new_path = entry.data[CONF_BASE_PATH]
+
+        data = {
+            **entry.data,
+            CONF_URL: f"{new_proto}://{new_host_port}{new_path}",
+        }
+        hass.config_entries.async_update_entry(entry, data=data)
+        entry.version = 2
+
+    _LOGGER.info("Migration to version %s successful", entry.version)
 
     return True
 
