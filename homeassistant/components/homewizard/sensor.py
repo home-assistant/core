@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Final
+from typing import Final, cast
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER, DeviceResponseEntry
+from .const import DOMAIN, MANUFACTURER, SERVICE_DATA, SERVICE_DEVICE
 from .coordinator import HWEnergyDeviceUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -134,16 +134,15 @@ async def async_setup_entry(
     entities = []
     if coordinator.api.data is not None:
         for description in SENSORS:
-            if (
-                description.key in coordinator.api.data.available_datapoints
-                and getattr(coordinator.api.data, description.key) is not None
-            ):
+            if getattr(coordinator.data[SERVICE_DATA], description.key) is not None:
                 entities.append(HWEnergySensor(coordinator, entry, description))
     async_add_entities(entities)
 
 
-class HWEnergySensor(CoordinatorEntity[DeviceResponseEntry], SensorEntity):
+class HWEnergySensor(CoordinatorEntity, SensorEntity):
     """Representation of a HomeWizard Sensor."""
+
+    coordinator: HWEnergyDeviceUpdateCoordinator
 
     def __init__(
         self,
@@ -164,9 +163,9 @@ class HWEnergySensor(CoordinatorEntity[DeviceResponseEntry], SensorEntity):
         self._attr_device_info = {
             "name": entry.title,
             "manufacturer": MANUFACTURER,
-            "sw_version": coordinator.api.device.firmware_version,
-            "model": coordinator.api.device.product_type,
-            "identifiers": {(DOMAIN, coordinator.api.device.serial)},
+            "sw_version": coordinator.data[SERVICE_DEVICE].firmware_version,
+            "model": coordinator.data[SERVICE_DEVICE].product_type,
+            "identifiers": {(DOMAIN, coordinator.data[SERVICE_DEVICE].serial)},
         }
 
         # Special case for export, not everyone has solarpanels
@@ -175,20 +174,20 @@ class HWEnergySensor(CoordinatorEntity[DeviceResponseEntry], SensorEntity):
             "total_power_export_t1_kwh",
             "total_power_export_t2_kwh",
         ]:
-            if self.data["data"][self.data_type] == 0:
+            if self.native_value == 0:
                 self._attr_entity_registry_enabled_default = False
-
-    @property
-    def data(self) -> DeviceResponseEntry:
-        """Return data object from DataUpdateCoordinator."""
-        return self.coordinator.data
 
     @property
     def native_value(self) -> StateType:
         """Return state of meter."""
-        return self.data["data"][self.data_type]
+        try:
+            return cast(
+                StateType, getattr(self.coordinator.data[SERVICE_DATA], self.data_type)
+            )
+        except TypeError:
+            return None
 
     @property
     def available(self) -> bool:
         """Return availability of meter."""
-        return super().available and self.data_type in self.data["data"]
+        return super().available and self.native_value is not None

@@ -1,28 +1,23 @@
 """Constants for the Homewizard integration."""
 from __future__ import annotations
 
-from datetime import timedelta
-from typing import TypedDict
+from typing import Final
 
 # Set up.
 from homeassistant.const import Platform
-from homeassistant.helpers.typing import StateType
 
 DOMAIN = "homewizard"
 MANUFACTURER = "HomeWizard"
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
 # Platform config.
-CONF_SERIAL = "serial"
-CONF_PRODUCT_NAME = "product_name"
-CONF_PRODUCT_TYPE = "product_type"
-CONF_DEVICE = "device"
-CONF_DATA = "data"
+CONF_SERIAL: Final = "serial"
+CONF_PRODUCT_NAME: Final = "product_name"
+CONF_PRODUCT_TYPE: Final = "product_type"
+CONF_DEVICE: Final = "device"
+CONF_DATA: Final = "data"
 
-UPDATE_INTERVAL = timedelta(seconds=5)
-
-
-class DeviceResponseEntry(TypedDict):
-    """Dict describing a single response entry."""
-
-    data: dict[str, StateType]
+# Services
+SERVICE_DEVICE: Final = "device"
+SERVICE_DATA: Final = "data"
+SERVICE_STATE: Final = "state"
