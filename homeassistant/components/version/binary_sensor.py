@@ -28,7 +28,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up version binary_sensors."""
     coordinator: VersionDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    if (source := config_entry.data.get(CONF_SOURCE)) == "local":
+    if (source := config_entry.data[CONF_SOURCE]) == "local":
         return
 
     if (entity_name := config_entry.data[CONF_NAME]) == DEFAULT_NAME:
