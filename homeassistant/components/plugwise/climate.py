@@ -51,8 +51,6 @@ async def async_setup_entry(
 class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     """Representation of an Plugwise thermostat."""
 
-    _attr_max_temp = DEFAULT_MAX_TEMP
-    _attr_min_temp = DEFAULT_MIN_TEMP
     _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(
@@ -78,6 +76,10 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
             self._attr_hvac_modes.append(HVAC_MODE_COOL)
         if self.device.get("available_schedules") != ["None"]:
             self._attr_hvac_modes.append(HVAC_MODE_AUTO)
+
+        self._attr_min_temp = self.device.get("lower_bound", DEFAULT_MIN_TEMP)
+        self._attr_max_temp = self.device.get("upper_bound", DEFAULT_MAX_TEMP)
+        self._attr_target_temperature_step = self.device.get("resolution")
 
     @property
     def current_temperature(self) -> float | None:

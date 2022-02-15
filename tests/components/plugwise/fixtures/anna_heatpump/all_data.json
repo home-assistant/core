@@ -53,6 +53,9 @@
       "model": "Anna",
       "name": "Anna",
       "vendor": "Plugwise",
+      "lower_bound": 5,
+      "upper_bound": 31,
+      "resolution": 0.1,
       "preset_modes": ["no_frost", "home", "away", "asleep", "vacation"],
       "active_preset": "home",
       "presets": {
