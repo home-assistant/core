@@ -1,1 +1,1 @@
-"""Tests for the updater component."""
+"""Tests for the Updater integration."""
