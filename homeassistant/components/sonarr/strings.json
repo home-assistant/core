@@ -4,9 +4,8 @@
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]",
           "url": "[%key:common::config_flow::data::url%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       },
