@@ -112,7 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await yolinkMQTTClient.async_connect()
         # yolinkMQTTClient.subHomeEvents(hass.data[DOMAIN][entry.entry_id]["homeId"])
     except BaseException as err:
-        _LOGGER.warning("Call yolink api failed %s", err)
+        _LOGGER.warning("Call yolink api failed: %s", err)
         return False
 
     # If using an aiohttp-based API lib
