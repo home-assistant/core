@@ -9,7 +9,14 @@ from unittest.mock import call, patch
 import pytest
 from pytest import raises
 from pyvizio.api.apps import AppConfig
-from pyvizio.const import APPS, INPUT_APPS, MAX_VOLUME, UNKNOWN_APP
+from pyvizio.const import (
+    APPS,
+    DEVICE_CLASS_SPEAKER as VIZIO_DEVICE_CLASS_SPEAKER,
+    DEVICE_CLASS_TV as VIZIO_DEVICE_CLASS_TV,
+    INPUT_APPS,
+    MAX_VOLUME,
+    UNKNOWN_APP,
+)
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -145,7 +152,7 @@ async def _test_setup_tv(hass: HomeAssistant, vizio_power_state: bool | None) ->
     )
 
     async with _cm_for_test_setup_without_apps(
-        {"volume": int(MAX_VOLUME[MediaPlayerDeviceClass.TV] / 2), "mute": "Off"},
+        {"volume": int(MAX_VOLUME[VIZIO_DEVICE_CLASS_TV] / 2), "mute": "Off"},
         vizio_power_state,
     ):
         await _add_config_entry_to_hass(hass, config_entry)
@@ -154,7 +161,7 @@ async def _test_setup_tv(hass: HomeAssistant, vizio_power_state: bool | None) ->
             hass, MediaPlayerDeviceClass.TV, ha_power_state
         )
         if ha_power_state == STATE_ON:
-            _assert_sources_and_volume(attr, MediaPlayerDeviceClass.TV)
+            _assert_sources_and_volume(attr, VIZIO_DEVICE_CLASS_TV)
             assert "sound_mode" not in attr
 
 
@@ -171,7 +178,7 @@ async def _test_setup_speaker(
     )
 
     audio_settings = {
-        "volume": int(MAX_VOLUME[MediaPlayerDeviceClass.SPEAKER] / 2),
+        "volume": int(MAX_VOLUME[VIZIO_DEVICE_CLASS_SPEAKER] / 2),
         "mute": "Off",
         "eq": CURRENT_EQ,
     }
@@ -189,7 +196,7 @@ async def _test_setup_speaker(
                 hass, MediaPlayerDeviceClass.SPEAKER, ha_power_state
             )
             if ha_power_state == STATE_ON:
-                _assert_sources_and_volume(attr, MediaPlayerDeviceClass.SPEAKER)
+                _assert_sources_and_volume(attr, VIZIO_DEVICE_CLASS_SPEAKER)
                 assert not service_call.called
                 assert "sound_mode" in attr
 
@@ -204,7 +211,7 @@ async def _cm_for_test_setup_tv_with_apps(
     )
 
     async with _cm_for_test_setup_without_apps(
-        {"volume": int(MAX_VOLUME[MediaPlayerDeviceClass.TV] / 2), "mute": "Off"},
+        {"volume": int(MAX_VOLUME[VIZIO_DEVICE_CLASS_TV] / 2), "mute": "Off"},
         True,
     ):
         with patch(
@@ -218,8 +225,8 @@ async def _cm_for_test_setup_tv_with_apps(
             )
             assert (
                 attr["volume_level"]
-                == float(int(MAX_VOLUME[MediaPlayerDeviceClass.TV] / 2))
-                / MAX_VOLUME[MediaPlayerDeviceClass.TV]
+                == float(int(MAX_VOLUME[VIZIO_DEVICE_CLASS_TV] / 2))
+                / MAX_VOLUME[VIZIO_DEVICE_CLASS_TV]
             )
 
             yield
@@ -705,13 +712,14 @@ async def test_setup_tv_without_mute(
     )
 
     async with _cm_for_test_setup_without_apps(
-        {"volume": int(MAX_VOLUME[MediaPlayerDeviceClass.TV] / 2)},
+        {"volume": int(MAX_VOLUME[VIZIO_DEVICE_CLASS_TV] / 2)},
         STATE_ON,
     ):
         await _add_config_entry_to_hass(hass, config_entry)
 
         attr = _get_attr_and_assert_base_attr(hass, MediaPlayerDeviceClass.TV, STATE_ON)
         _assert_sources_and_volume(attr, MediaPlayerDeviceClass.TV)
+        _assert_sources_and_volume(attr, VIZIO_DEVICE_CLASS_TV)
         assert "sound_mode" not in attr
         assert "is_volume_muted" not in attr
 
