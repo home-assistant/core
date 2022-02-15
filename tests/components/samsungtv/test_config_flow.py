@@ -424,7 +424,9 @@ async def test_ssdp_legacy_not_supported(
 
 
 async def test_ssdp_websocket_success_populates_mac_address(
-    hass: HomeAssistant, remote: Mock, remotews: Mock
+    hass: HomeAssistant,
+    remote: Mock,
+    remotews: Mock,
 ):
     """Test starting a flow from ssdp for a supported device populates the mac."""
     result = await hass.config_entries.flow.async_init(
@@ -988,10 +990,7 @@ async def test_update_old_entry(hass: HomeAssistant, remotews: Mock):
         assert entry2.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
-async def test_update_missing_mac_unique_id_added_from_dhcp(
-    hass: HomeAssistant,
-    remotews: Mock,
-):
+async def test_update_missing_mac_unique_id_added_from_dhcp(hass, remotews: Mock):
     """Test missing mac and unique id added."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY, unique_id=None)
     entry.add_to_hass(hass)
@@ -1017,10 +1016,7 @@ async def test_update_missing_mac_unique_id_added_from_dhcp(
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-async def test_update_missing_mac_unique_id_added_from_zeroconf(
-    hass: HomeAssistant,
-    remotews: Mock,
-):
+async def test_update_missing_mac_unique_id_added_from_zeroconf(hass, remotews: Mock):
     """Test missing mac and unique id added."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY, unique_id=None)
     entry.add_to_hass(hass)
@@ -1045,10 +1041,7 @@ async def test_update_missing_mac_unique_id_added_from_zeroconf(
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-async def test_update_missing_mac_unique_id_added_from_ssdp(
-    hass: HomeAssistant,
-    remotews: Mock,
-):
+async def test_update_missing_mac_unique_id_added_from_ssdp(hass, remotews: Mock):
     """Test missing mac and unique id added via ssdp."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY, unique_id=None)
     entry.add_to_hass(hass)
@@ -1075,8 +1068,7 @@ async def test_update_missing_mac_unique_id_added_from_ssdp(
 
 
 async def test_update_missing_mac_added_unique_id_preserved_from_zeroconf(
-    hass: HomeAssistant,
-    remotews: Mock,
+    hass, remotews: Mock
 ):
     """Test missing mac and unique id added."""
     entry = MockConfigEntry(
@@ -1106,7 +1098,7 @@ async def test_update_missing_mac_added_unique_id_preserved_from_zeroconf(
     assert entry.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
-async def test_update_legacy_missing_mac_from_dhcp(hass: HomeAssistant, remote: Mock):
+async def test_update_legacy_missing_mac_from_dhcp(hass, remote: Mock):
     """Test missing mac added."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -1137,10 +1129,7 @@ async def test_update_legacy_missing_mac_from_dhcp(hass: HomeAssistant, remote: 
     assert entry.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
-async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(
-    hass: HomeAssistant,
-    remote: Mock,
-):
+async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(hass, remote: Mock):
     """Test missing mac added when there is no unique id."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -1176,7 +1165,7 @@ async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(
     assert entry.unique_id is None
 
 
-async def test_form_reauth_legacy(hass: HomeAssistant, remote: Mock):
+async def test_form_reauth_legacy(hass, remote: Mock):
     """Test reauthenticate legacy."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY)
     entry.add_to_hass(hass)
@@ -1197,7 +1186,7 @@ async def test_form_reauth_legacy(hass: HomeAssistant, remote: Mock):
     assert result2["reason"] == "reauth_successful"
 
 
-async def test_form_reauth_websocket(hass: HomeAssistant, remotews: Mock):
+async def test_form_reauth_websocket(hass, remotews: Mock):
     """Test reauthenticate websocket."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_WS_ENTRY)
     entry.add_to_hass(hass)
@@ -1221,9 +1210,7 @@ async def test_form_reauth_websocket(hass: HomeAssistant, remotews: Mock):
     assert entry.state == config_entries.ConfigEntryState.LOADED
 
 
-async def test_form_reauth_websocket_cannot_connect(
-    hass: HomeAssistant, remotews: Mock
-):
+async def test_form_reauth_websocket_cannot_connect(hass, remotews: Mock):
     """Test reauthenticate websocket when we cannot connect on the first attempt."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_WS_ENTRY)
     entry.add_to_hass(hass)
@@ -1258,7 +1245,7 @@ async def test_form_reauth_websocket_cannot_connect(
     assert result3["reason"] == "reauth_successful"
 
 
-async def test_form_reauth_websocket_not_supported(hass: HomeAssistant):
+async def test_form_reauth_websocket_not_supported(hass):
     """Test reauthenticate websocket when the device is not supported."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_WS_ENTRY)
     entry.add_to_hass(hass)
