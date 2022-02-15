@@ -1228,13 +1228,11 @@ async def test_setup_override_configuration(hass, caplog, tmp_path):
             )
 
             # Check if the protocol was set to 3.1 from configuration.yaml
-            mock_client.call_args[1]["protocol"] = 3
-            assert hass.data["mqtt"].conf["protocol"] == "3.1"
+            assert mock_client.call_args[1]["protocol"] == 3
 
             # Check if the password override worked
             assert calls_username_password_set[0][0] == "someuser"
             assert calls_username_password_set[0][1] == "somepassword"
-            assert hass.data["mqtt"].conf["password"] == "somepassword"
 
 
 async def test_setup_mqtt_client_protocol(hass):
@@ -1249,7 +1247,6 @@ async def test_setup_mqtt_client_protocol(hass):
 
         # check if protocol setup was correctly
         assert mock_client.call_args[1]["protocol"] == 3
-        assert hass.data["mqtt"].conf["protocol"] == "3.1"
 
 
 async def test_setup_raises_ConfigEntryNotReady_if_no_connect_broker(hass, caplog):
