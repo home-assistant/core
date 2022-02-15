@@ -7,6 +7,8 @@ import logging
 
 from pysiaalarm import SIAEvent
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PORT
 from homeassistant.core import CALLBACK_TYPE, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
@@ -14,8 +16,19 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 
-from .const import AVAILABILITY_EVENT_CODE, DOMAIN, SIA_EVENT, SIA_HUB_ZONE
-from .utils import get_attr_from_sia_event, get_unavailability_interval
+from .const import (
+    AVAILABILITY_EVENT_CODE,
+    CONF_ACCOUNTS,
+    CONF_PING_INTERVAL,
+    DOMAIN,
+    SIA_EVENT,
+    SIA_HUB_ZONE,
+)
+from .utils import (
+    get_attr_from_sia_event,
+    get_unavailability_interval,
+    get_unique_id_and_name,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,25 +52,25 @@ class SIABaseEntity(RestoreEntity):
 
     def __init__(
         self,
-        port: int,
+        entry: ConfigEntry,
         account: str,
-        zone: int | None,
-        ping_interval: int,
+        zone: int,
         entity_description: SIAEntityDescription,
-        unique_id_and_name: tuple[str, str],
     ) -> None:
         """Create SIABaseEntity object."""
-        self.port = port
+        self.port = entry.data[CONF_PORT]
         self.account = account
         self.zone = zone
-        self.ping_interval = ping_interval
         self.entity_description = entity_description
-        self._attr_unique_id = unique_id_and_name[0]
-        self._attr_name = unique_id_and_name[1]
+
+        self.ping_interval = entry.data[CONF_ACCOUNTS][account][CONF_PING_INTERVAL]
+        self._attr_unique_id, self._attr_name = get_unique_id_and_name(
+            entry.entry_id, entry.data[CONF_PORT], account, zone, entity_description.key
+        )
         self._attr_device_info = DeviceInfo(
-            name=unique_id_and_name[1],
-            identifiers={(DOMAIN, unique_id_and_name[0])},
-            via_device=(DOMAIN, f"{port}_{account}"),
+            name=self._attr_name,
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            via_device=(DOMAIN, f"{entry.data[CONF_PORT]}_{account}"),
         )
 
         self._post_interval_update_cb_canceller: CALLBACK_TYPE | None = None

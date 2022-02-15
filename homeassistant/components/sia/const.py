@@ -27,8 +27,7 @@ CONF_ZONES: Final = "zones"
 SIA_HUB_ZONE: Final = 0
 SIA_EVENT: Final = "sia_event_{}_{}"
 
-KEY_ALARM: Final = "alarm_control_panel"
-KEY_ALARM_NAME: Final = "alarm"
+KEY_ALARM: Final = "alarm"
 KEY_SMOKE: Final = "smoke"
 KEY_MOISTURE: Final = "moisture"
 KEY_POWER: Final = "power"

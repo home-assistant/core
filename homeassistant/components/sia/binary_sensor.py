@@ -13,7 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PORT, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -21,7 +21,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     CONF_ACCOUNT,
     CONF_ACCOUNTS,
-    CONF_PING_INTERVAL,
     CONF_ZONES,
     KEY_CONNECTIVITY,
     KEY_MOISTURE,
@@ -30,7 +29,6 @@ from .const import (
     SIA_HUB_ZONE,
 )
 from .sia_entity_base import SIABaseEntity, SIAEntityDescription
-from .utils import get_unique_id_and_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,71 +83,23 @@ ENTITY_DESCRIPTION_CONNECTIVITY = SIABinarySensorEntityDescription(
 )
 
 
-def generate_binary_sensors(entry) -> Iterable[SIABinarySensor]:
+def generate_binary_sensors(entry: ConfigEntry) -> Iterable[SIABinarySensor]:
     """Generate binary sensors.
 
     For each Account there is one power sensor with zone == 0.
     For each Zone in each Account there is one smoke and one moisture sensor.
     """
     for account_data in entry.data[CONF_ACCOUNTS]:
+        account = account_data[CONF_ACCOUNT]
+        zones = entry.options[CONF_ACCOUNTS][account][CONF_ZONES]
+
         yield SIABinarySensorConnectivity(
-            port=entry.data[CONF_PORT],
-            account=account_data[CONF_ACCOUNT],
-            zone=SIA_HUB_ZONE,
-            ping_interval=account_data[CONF_PING_INTERVAL],
-            entity_description=ENTITY_DESCRIPTION_CONNECTIVITY,
-            unique_id_and_name=get_unique_id_and_name(
-                entry.entry_id,
-                entry.data[CONF_PORT],
-                account_data[CONF_ACCOUNT],
-                SIA_HUB_ZONE,
-                ENTITY_DESCRIPTION_CONNECTIVITY.key,
-            ),
+            entry, account, SIA_HUB_ZONE, ENTITY_DESCRIPTION_CONNECTIVITY
         )
-        yield SIABinarySensor(
-            port=entry.data[CONF_PORT],
-            account=account_data[CONF_ACCOUNT],
-            zone=SIA_HUB_ZONE,
-            ping_interval=account_data[CONF_PING_INTERVAL],
-            entity_description=ENTITY_DESCRIPTION_POWER,
-            unique_id_and_name=get_unique_id_and_name(
-                entry.entry_id,
-                entry.data[CONF_PORT],
-                account_data[CONF_ACCOUNT],
-                SIA_HUB_ZONE,
-                ENTITY_DESCRIPTION_POWER.key,
-            ),
-        )
-        zones = entry.options[CONF_ACCOUNTS][account_data[CONF_ACCOUNT]][CONF_ZONES]
+        yield SIABinarySensor(entry, account, SIA_HUB_ZONE, ENTITY_DESCRIPTION_POWER)
         for zone in range(1, zones + 1):
-            yield SIABinarySensor(
-                port=entry.data[CONF_PORT],
-                account=account_data[CONF_ACCOUNT],
-                zone=zone,
-                ping_interval=account_data[CONF_PING_INTERVAL],
-                entity_description=ENTITY_DESCRIPTION_SMOKE,
-                unique_id_and_name=get_unique_id_and_name(
-                    entry.entry_id,
-                    entry.data[CONF_PORT],
-                    account_data[CONF_ACCOUNT],
-                    zone,
-                    ENTITY_DESCRIPTION_SMOKE.key,
-                ),
-            )
-            yield SIABinarySensor(
-                port=entry.data[CONF_PORT],
-                account=account_data[CONF_ACCOUNT],
-                zone=zone,
-                ping_interval=account_data[CONF_PING_INTERVAL],
-                entity_description=ENTITY_DESCRIPTION_MOISTURE,
-                unique_id_and_name=get_unique_id_and_name(
-                    entry.entry_id,
-                    entry.data[CONF_PORT],
-                    account_data[CONF_ACCOUNT],
-                    zone,
-                    ENTITY_DESCRIPTION_MOISTURE.key,
-                ),
-            )
+            yield SIABinarySensor(entry, account, zone, ENTITY_DESCRIPTION_SMOKE)
+            yield SIABinarySensor(entry, account, zone, ENTITY_DESCRIPTION_MOISTURE)
 
 
 async def async_setup_entry(
