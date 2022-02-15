@@ -1,11 +1,11 @@
 """Support to serve the Home Assistant API as WSGI application."""
 from __future__ import annotations
 
-from ipaddress import ip_network
+from ipaddress import IPv4Network, IPv6Network, ip_network
 import logging
 import os
 import ssl
-from typing import Any, Final, Optional, TypedDict, cast
+from typing import Any, Final, Optional, TypedDict, Union, cast
 
 from aiohttp import web
 from aiohttp.typedefs import StrOrURL
@@ -109,7 +109,7 @@ class ConfData(TypedDict, total=False):
     ssl_key: str
     cors_allowed_origins: list[str]
     use_x_forwarded_for: bool
-    trusted_proxies: list[str]
+    trusted_proxies: list[IPv4Network | IPv6Network]
     login_attempts_threshold: int
     ip_ban_enabled: bool
     ssl_profile: str
@@ -216,7 +216,7 @@ class HomeAssistantHTTP:
         ssl_key: str | None,
         server_host: list[str] | None,
         server_port: int,
-        trusted_proxies: list[str],
+        trusted_proxies: list[IPv4Network | IPv6Network],
         ssl_profile: str,
     ) -> None:
         """Initialize the HTTP Home Assistant server."""
@@ -399,7 +399,8 @@ async def start_http_server_and_save_config(
 
     if CONF_TRUSTED_PROXIES in conf:
         conf[CONF_TRUSTED_PROXIES] = [
-            str(ip.network_address) for ip in conf[CONF_TRUSTED_PROXIES]
+            str(cast(Union[IPv4Network, IPv6Network], ip).network_address)
+            for ip in conf[CONF_TRUSTED_PROXIES]
         ]
 
     store.async_delay_save(lambda: conf, SAVE_DELAY)

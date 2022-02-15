@@ -114,7 +114,7 @@ adext==0.4.2
 adguardhome==0.5.1
 
 # homeassistant.components.advantage_air
-advantage_air==0.2.6
+advantage_air==0.3.0
 
 # homeassistant.components.frontier_silicon
 afsapi==0.0.4
@@ -684,7 +684,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.28.22
+flux_led==0.28.26
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -842,7 +842,7 @@ hole==0.7.0
 holidays==0.12
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220203.0
+home-assistant-frontend==20220214.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -2057,7 +2057,7 @@ pywemo==0.7.0
 pywilight==0.0.70
 
 # homeassistant.components.wiz
-pywizlight==0.5.6
+pywizlight==0.5.8
 
 # homeassistant.components.xeoma
 pyxeoma==1.4.1
@@ -2178,7 +2178,7 @@ sense-hat==2.2.0
 sense_energy==0.9.6
 
 # homeassistant.components.sentry
-sentry-sdk==1.5.4
+sentry-sdk==1.5.5
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8

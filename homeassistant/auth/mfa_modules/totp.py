@@ -182,8 +182,8 @@ class TotpSetupFlow(SetupFlow):
         self._auth_module: TotpAuthModule = auth_module
         self._user = user
         self._ota_secret: str = ""
-        self._url = None  # type Optional[str]
-        self._image = None  # type Optional[str]
+        self._url: str | None = None
+        self._image: str | None = None
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -218,7 +218,7 @@ class TotpSetupFlow(SetupFlow):
                 self._url,
                 self._image,
             ) = await hass.async_add_executor_job(
-                _generate_secret_and_qr_code,  # type: ignore
+                _generate_secret_and_qr_code,
                 str(self._user.name),
             )
 
