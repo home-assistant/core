@@ -7,15 +7,20 @@ import pytest
 import homeassistant.util.dt as dt_util
 
 
-@pytest.fixture(name="remote")
-def remote_fixture() -> Mock:
-    """Patch the samsungctl Remote."""
+@pytest.fixture(autouse=True)
+def fake_host_fixture() -> None:
+    """Patch gethostbyname."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote"
-    ) as remote_class, patch(
         "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
         return_value="fake_host",
     ):
+        yield
+
+
+@pytest.fixture(name="remote")
+def remote_fixture() -> Mock:
+    """Patch the samsungctl Remote."""
+    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote_class:
         remote = Mock()
         remote.__enter__ = Mock()
         remote.__exit__ = Mock()
@@ -29,10 +34,7 @@ def remotews_fixture() -> Mock:
     """Patch the samsungtvws SamsungTVWS."""
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS"
-    ) as remotews_class, patch(
-        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
-        return_value="fake_host",
-    ):
+    ) as remotews_class:
         remotews = Mock()
         remotews.__enter__ = Mock()
         remotews.__exit__ = Mock()
@@ -57,10 +59,7 @@ def remotews_no_device_info_fixture() -> Mock:
     """Patch the samsungtvws SamsungTVWS."""
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS"
-    ) as remotews_class, patch(
-        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
-        return_value="fake_host",
-    ):
+    ) as remotews_class:
         remotews = Mock()
         remotews.__enter__ = Mock()
         remotews.__exit__ = Mock()
@@ -75,10 +74,7 @@ def remotews_soundbar_fixture() -> Mock:
     """Patch the samsungtvws SamsungTVWS."""
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS"
-    ) as remotews_class, patch(
-        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
-        return_value="fake_host",
-    ):
+    ) as remotews_class:
         remotews = Mock()
         remotews.__enter__ = Mock()
         remotews.__exit__ = Mock()
