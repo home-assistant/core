@@ -1112,40 +1112,50 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     assert mqtt_client_mock.subscribe.mock_calls == expected
 
 
-async def test_setup_logs_error_if_no_connect_broker(hass, caplog):
+async def test_initial_setup_logs_error(hass, caplog, mqtt_client_mock):
+    """Test for setup failure if initial client connection fails."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+
+    mqtt_client_mock.connect.return_value = 1
+    assert await mqtt.async_setup_entry(hass, entry)
+    await hass.async_block_till_done()
+    assert "Failed to connect to MQTT server:" in caplog.text
+
+
+async def test_logs_error_if_no_connect_broker(hass, caplog, mqtt_mock):
     """Test for setup failure if connection to broker is missing."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
 
-    with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client.on_connect(return_value=0)
-        assert await mqtt.async_setup_entry(hass, entry)
-        await hass.async_block_till_done()
-        assert "Failed to connect to MQTT server:" in caplog.text
-        component = hass.data["mqtt"]
-        component._mqtt_on_connect(mock_client, None, None, 3)
-        await hass.async_block_till_done()
-        assert "Unable to connect to the MQTT broker:" in caplog.text
+    assert await mqtt.async_setup_entry(hass, entry)
+    await hass.async_block_till_done()
+    # test with rc = 3 -> broker unavailable
+    mqtt_mock._mqtt_on_connect(mqtt_mock, None, None, 3)
+    await hass.async_block_till_done()
+    assert (
+        "Unable to connect to the MQTT broker: Connection Refused: broker unavailable."
+        in caplog.text
+    )
 
 
-async def test_handle_mid_event(hass, caplog):
+async def test_handle_mid_event(hass, caplog, mqtt_mock):
     """Test handling of the mid event."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
 
-    with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client.on_connect(return_value=0)
-        assert await mqtt.async_setup_entry(hass, entry)
-        await hass.async_block_till_done()
-        mid = 123
-        component = hass.data["mqtt"]
-        component._mqtt_handle_mid(mid)
-        await hass.async_block_till_done()
-        assert mid in component._pending_operations
-        del component._pending_operations[mid]
+    assert await mqtt.async_setup_entry(hass, entry)
+    await hass.async_block_till_done()
+    mid = 123
+    mqtt_mock()._pending_operations = {}
+    mqtt_mock._mqtt_handle_mid(mid)
+    await hass.async_block_till_done()
+    assert mid in mqtt_mock()._pending_operations
+    del mqtt_mock()._pending_operations[mid]
 
 
 async def test_timeout(hass, mqtt_mock, caplog):
     """Test time out."""
 
+    # We patch asyncio.wait_for to avoid waiting in the tests
+    # patching timeout will not work here
     with patch("asyncio.wait_for", side_effect=asyncio.TimeoutError):
         await mqtt.async_publish(
             hass, "some-topic", b"test-payload", qos=0, retain=False, encoding=None
@@ -1171,17 +1181,12 @@ async def test_publish_error(hass, caplog):
         assert "Failed to connect to MQTT server: Out of memory." in caplog.text
 
 
-async def test_handle_message_callback(hass, caplog):
+async def test_handle_message_callback(hass, caplog, mqtt_mock, mqtt_client_mock):
     """Test for handling an incoming message callback."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
     msg = ReceiveMessage("some-topic", b"test-payload", 0, False)
-    with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client().on_connect(return_value=1)
-        assert await mqtt.async_setup_entry(hass, entry)
-        await hass.async_block_till_done()
-        await mqtt.async_subscribe(hass, "some-topic", lambda *args: 0)
-        component = hass.data["mqtt"]
-        component._mqtt_on_message(mock_client, None, msg)
+    mqtt_mock().connected = True
+    await mqtt.async_subscribe(hass, "some-topic", lambda *args: 0)
+    mqtt_mock._mqtt_on_message(mock_mqtt, None, msg)
 
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -1417,7 +1422,7 @@ async def test_no_birth_message(hass, mqtt_client_mock, mqtt_mock):
         }
     ],
 )
-async def test_delayed_birth_message(hass, mqtt_client_mock, mqtt_config):
+async def test_delayed_birth_message(hass, mqtt_client_mock, mqtt_config, mqtt_mock):
     """Test sending birth message does not happen until Home Assistant starts."""
     hass.state = CoreState.starting
     birth = asyncio.Event()
