@@ -123,13 +123,13 @@ async def test_setup_duplicate_config(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test duplicate setup of platform."""
-    DUPLICATE = {
+    duplicate = {
         SAMSUNGTV_DOMAIN: [
             MOCK_CONFIG[SAMSUNGTV_DOMAIN][0],
             MOCK_CONFIG[SAMSUNGTV_DOMAIN][0],
         ]
     }
-    await async_setup_component(hass, SAMSUNGTV_DOMAIN, DUPLICATE)
+    await async_setup_component(hass, SAMSUNGTV_DOMAIN, duplicate)
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID) is None
     assert len(hass.states.async_all("media_player")) == 0
