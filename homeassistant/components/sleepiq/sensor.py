@@ -5,8 +5,10 @@ from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DATA_SLEEPIQ, SleepIQDataUpdateCoordinator, SleepIQSensor
+from . import DATA_SLEEPIQ
 from .const import BED, SIDES, SLEEP_NUMBER
+from .coordinator import SleepIQDataUpdateCoordinator
+from .entity import SleepIQSensor
 
 
 async def async_setup_entry(
