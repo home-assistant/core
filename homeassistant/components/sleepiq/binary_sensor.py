@@ -5,27 +5,18 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, SLEEPIQ_DATA, SLEEPIQ_STATUS_COORDINATOR
-from .device import SleepNumberCoordinatorEntity
 
 ICON = "mdi:bed"
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the SleepIQ binary sensor."""
-
-    data = hass.data[DOMAIN][config_entry.entry_id][SLEEPIQ_DATA]
-    status_coordinator = hass.data[DOMAIN][config_entry.entry_id][
-        SLEEPIQ_STATUS_COORDINATOR
-    ]
+    entry_id = discovery_info["email"]
+    data = hass.data[DOMAIN][entry_id][SLEEPIQ_DATA]
+    status_coordinator = hass.data[DOMAIN][entry_id][SLEEPIQ_STATUS_COORDINATOR]
 
     entities: list[IsInBedBinarySensor] = []
     for bed in data.beds.values():
@@ -35,12 +26,13 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class IsInBedBinarySensor(SleepNumberCoordinatorEntity, BinarySensorEntity):
+class IsInBedBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Implementation of a SleepIQ presence sensor."""
 
     def __init__(self, sleeper, bed, status_coordinator):
         """Initialize the sensor."""
-        super().__init__(bed, status_coordinator)
+        super().__init__(status_coordinator)
+        self._bed = bed
         self._sleeper = sleeper
         self._attr_name = f"SleepNumber {bed.name} {sleeper.name} Is In Bed"
         self._attr_unique_id = f"{bed.id}-{sleeper.side}-InBed"

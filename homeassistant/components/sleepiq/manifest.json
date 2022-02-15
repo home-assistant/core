@@ -4,7 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/sleepiq",
   "requirements": ["asyncsleepiq==1.0.0"],
   "codeowners": ["@kbickar"],
-  "config_flow": true,
+  "config_flow": false,
   "dhcp": [
     {
       "macaddress": "64DBA0*"
