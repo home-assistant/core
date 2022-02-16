@@ -56,7 +56,8 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.hass.async_add_executor_job(self._client.update)
         except (ValueError, TypeError) as err:
             LOGGER.error("Config_flow: Received error from ZAMG: %s", err)
-            return self.async_abort(reason="unknown")
+            errors["base"] = "unknown"
+            return self.async_abort(reason="unknown", description_placeholders=errors)
 
         # Check if already configured
         await self.async_set_unique_id(station_id)
