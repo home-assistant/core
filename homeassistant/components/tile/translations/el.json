@@ -1,7 +1,16 @@
 {
     "config": {
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u039a\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2 \u03c0\u03c1\u03cc\u03c3\u03b2\u03b1\u03c3\u03b7\u03c2"
+                }
+            },
             "user": {
+                "data": {
+                    "password": "\u039a\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2 \u03c0\u03c1\u03cc\u03c3\u03b2\u03b1\u03c3\u03b7\u03c2",
+                    "username": "Email"
+                },
                 "title": "\u0394\u03b9\u03b1\u03bc\u03cc\u03c1\u03c6\u03c9\u03c3\u03b7 Tile"
             }
         }
