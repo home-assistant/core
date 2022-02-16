@@ -421,7 +421,7 @@ class HomeAssistantHTTP:
 
     async def start(self) -> None:
         """Start the aiohttp server."""
-        context: ssl.SSLContext | None
+        context: ssl.SSLContext | None = None
         if self.ssl_certificate:
             context = await self.hass.async_add_executor_job(self._create_ssl_context)
 
