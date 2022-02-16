@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import time as time_sys
 from typing import Any, cast
 
 import voluptuous as vol
@@ -72,19 +73,14 @@ class EntitySelector(Selector):
         }
     )
 
-    SELECTION_SCHEMA = vol.Schema(
-        {
-            vol.Required("entity_id"): cv.entity_id_or_uuid,
-        }
-    )
-
-    def __call__(self, selection: ConfigType) -> ConfigType:
+    def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        selection = self.SELECTION_SCHEMA(selection)
         entity_registry = er.async_get(self.hass)
-        entity_id = er.async_resolve_entity_id(entity_registry, selection["entity_id"])
+        entity_id = er.async_resolve_entity_id(
+            entity_registry, cv.entity_id_or_uuid(data)
+        )
         if not entity_id:
-            raise vol.Invalid(f"Unknown entity {selection['entity_id']}")
+            raise vol.Invalid(f"Unknown entity {data}")
         entry = entity_registry.async_get(entity_id)
         if not entry:
             raise vol.Invalid(f"Entity {entity_id} not registered")
@@ -111,7 +107,7 @@ class EntitySelector(Selector):
                 f"expected {self.config['integration']}"
             )
 
-        return selection
+        return entity_id
 
 
 @SELECTORS.register("device")
@@ -131,18 +127,11 @@ class DeviceSelector(Selector):
         }
     )
 
-    SELECTION_SCHEMA = vol.Schema(
-        {
-            vol.Required("device_id"): str,
-        }
-    )
-
-    def __call__(self, selection: ConfigType) -> ConfigType:
+    def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        selection = self.SELECTION_SCHEMA(selection)
+        device_id = cv.string(data)
         device_registry = dr.async_get(self.hass)
         entity_registry = er.async_get(self.hass)
-        device_id = selection["device_id"]
         entry = device_registry.async_get(device_id)
         if not entry:
             raise vol.Invalid(f"Device {device_id} not registered")
@@ -190,7 +179,7 @@ class DeviceSelector(Selector):
                 f"expected {self.config['model']}"
             )
 
-        return selection
+        return device_id
 
 
 @SELECTORS.register("area")
@@ -204,19 +193,12 @@ class AreaSelector(Selector):
         }
     )
 
-    SELECTION_SCHEMA = vol.Schema(
-        {
-            vol.Required("area_id"): str,
-        }
-    )
-
-    def __call__(self, selection: ConfigType) -> ConfigType:
+    def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        selection = self.SELECTION_SCHEMA(selection)
+        area_id = cv.string(data)
         area_registry = ar.async_get(self.hass)
         device_registry = dr.async_get(self.hass)
         entity_registry = er.async_get(self.hass)
-        area_id = selection["device_id"]
         entry = area_registry.async_get_area(area_id)
         if not entry:
             raise vol.Invalid(f"Area {area_id} not registered")
@@ -251,7 +233,7 @@ class AreaSelector(Selector):
             if not has_match:
                 raise vol.Invalid(f"Area {area_id} has no matching entity")
 
-        return selection
+        return area_id
 
 
 @SELECTORS.register("number")
@@ -270,20 +252,14 @@ class NumberSelector(Selector):
         }
     )
 
-    SELECTION_SCHEMA = vol.Schema(
-        {
-            vol.Required("value"): vol.Coerce(float),
-        }
-    )
-
-    def __call__(self, selection: ConfigType) -> ConfigType:
+    def __call__(self, data: Any) -> float:
         """Validate the passed selection."""
-        selection = self.SELECTION_SCHEMA(selection)
+        value: float = vol.Coerce(float)(data)
 
-        if not self.config["min"] <= selection["value"] <= self.config["max"]:
-            raise vol.Invalid(f"Value {selection['value']} is too small or too large")
+        if not self.config["min"] <= value <= self.config["max"]:
+            raise vol.Invalid(f"Value {value} is too small or too large")
 
-        return selection
+        return value
 
 
 @SELECTORS.register("addon")
@@ -291,7 +267,11 @@ class AddonSelector(Selector):
     """Selector of a add-on."""
 
     CONFIG_SCHEMA = vol.Schema({})
-    SELECTION_SCHEMA = vol.Schema({})
+
+    def __call__(self, data: Any) -> bool:
+        """Validate the passed selection."""
+        value: bool = vol.Coerce(bool)(data)
+        return value
 
 
 @SELECTORS.register("boolean")
@@ -299,16 +279,10 @@ class BooleanSelector(Selector):
     """Selector of a boolean value."""
 
     CONFIG_SCHEMA = vol.Schema({})
-    SELECTION_SCHEMA = vol.Schema(
-        {
-            vol.Required("value"): vol.Coerce(bool),
-        }
-    )
 
-    def __call__(self, selection: ConfigType) -> ConfigType:
+    def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        selection = self.SELECTION_SCHEMA(selection)
-        return selection
+        return cv.string(data)
 
 
 @SELECTORS.register("time")
@@ -316,6 +290,10 @@ class TimeSelector(Selector):
     """Selector of a time value."""
 
     CONFIG_SCHEMA = vol.Schema({})
+
+    def __call__(self, data: Any) -> time_sys:
+        """Validate the passed selection."""
+        return cv.time(data)
 
 
 @SELECTORS.register("target")
