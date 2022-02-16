@@ -1,4 +1,5 @@
 """Fixtures for Samsung TV."""
+from datetime import datetime
 from unittest.mock import Mock, patch
 
 import pytest
@@ -17,7 +18,7 @@ def fake_host_fixture() -> None:
 
 
 @pytest.fixture(name="remote")
-def remote_fixture():
+def remote_fixture() -> Mock:
     """Patch the samsungctl Remote."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote_class:
         remote = Mock()
@@ -29,7 +30,7 @@ def remote_fixture():
 
 
 @pytest.fixture(name="remotews")
-def remotews_fixture():
+def remotews_fixture() -> Mock:
     """Patch the samsungtvws SamsungTVWS."""
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS"
@@ -54,7 +55,7 @@ def remotews_fixture():
 
 
 @pytest.fixture(name="remotews_no_device_info")
-def remotews_no_device_info_fixture():
+def remotews_no_device_info_fixture() -> Mock:
     """Patch the samsungtvws SamsungTVWS."""
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS"
@@ -69,7 +70,7 @@ def remotews_no_device_info_fixture():
 
 
 @pytest.fixture(name="remotews_soundbar")
-def remotews_soundbar_fixture():
+def remotews_soundbar_fixture() -> Mock:
     """Patch the samsungtvws SamsungTVWS."""
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS"
@@ -93,7 +94,7 @@ def remotews_soundbar_fixture():
 
 
 @pytest.fixture(name="delay")
-def delay_fixture():
+def delay_fixture() -> Mock:
     """Patch the delay script function."""
     with patch(
         "homeassistant.components.samsungtv.media_player.Script.async_run"
@@ -102,13 +103,13 @@ def delay_fixture():
 
 
 @pytest.fixture
-def mock_now():
+def mock_now() -> datetime:
     """Fixture for dtutil.now."""
     return dt_util.utcnow()
 
 
 @pytest.fixture(name="no_mac_address")
-def mac_address_fixture():
+def mac_address_fixture() -> Mock:
     """Patch getmac.get_mac_address."""
     with patch("getmac.get_mac_address", return_value=None) as mac:
         yield mac
