@@ -352,6 +352,9 @@ class HomeAssistantHTTP:
                 self.ssl_certificate,
                 error,
             )
+            _LOGGER.warning(
+                "The server will start up with an emergency self signed ssl certificate"
+            )
             try:
                 return self._create_emergency_ssl_context()
             except OSError as error:
@@ -370,9 +373,6 @@ class HomeAssistantHTTP:
 
     def _create_emergency_ssl_context(self) -> ssl.SSLContext | None:
         """Create an emergency ssl certificate so we can still startup."""
-        _LOGGER.warning(
-            "The server will start up with an emergency self signed ssl certificate"
-        )
         context = ssl_util.server_context_modern()
         host: str
         try:
