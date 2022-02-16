@@ -5,7 +5,7 @@ import logging
 from agent import AgentError
 
 from homeassistant.components.camera import SUPPORT_ON_OFF
-from homeassistant.components.mjpeg.camera import MjpegCamera, filter_urllib3_logging
+from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity import DeviceInfo

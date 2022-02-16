@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable
 from contextlib import closing
-import logging
 
 import aiohttp
 from aiohttp import web
@@ -88,8 +87,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a MJPEG IP Camera based on a config entry."""
-    filter_urllib3_logging()
-
     async_add_entities(
         [
             MjpegCamera(
@@ -108,13 +105,6 @@ async def async_setup_entry(
             )
         ]
     )
-
-
-def filter_urllib3_logging() -> None:
-    """Filter header errors from urllib3 due to a urllib3 bug."""
-    urllib3_logger = logging.getLogger("urllib3.connectionpool")
-    if not any(isinstance(x, NoHeaderErrorFilter) for x in urllib3_logger.filters):
-        urllib3_logger.addFilter(NoHeaderErrorFilter())
 
 
 def extract_image_from_mjpeg(stream: Iterable[bytes]) -> bytes | None:
@@ -242,11 +232,3 @@ class MjpegCamera(Camera):
         stream_coro = websession.get(self._mjpeg_url, auth=self._auth)
 
         return await async_aiohttp_proxy_web(self.hass, request, stream_coro)
-
-
-class NoHeaderErrorFilter(logging.Filter):
-    """Filter out urllib3 Header Parsing Errors due to a urllib3 bug."""
-
-    def filter(self, record: logging.LogRecord) -> bool:
-        """Filter out Header Parsing Errors."""
-        return "Failed to parse headers" not in record.getMessage()

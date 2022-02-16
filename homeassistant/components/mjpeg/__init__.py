@@ -2,8 +2,24 @@
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 
-from .const import PLATFORMS
+from .camera import MjpegCamera
+from .const import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, PLATFORMS
+from .util import filter_urllib3_logging
+
+__all__ = [
+    "CONF_MJPEG_URL",
+    "CONF_STILL_IMAGE_URL",
+    "MjpegCamera",
+    "filter_urllib3_logging",
+]
+
+
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the MJPEG IP Camera integration."""
+    filter_urllib3_logging()
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
