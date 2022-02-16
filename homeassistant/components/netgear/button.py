@@ -16,6 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER
 from .router import NetgearRouter, NetgearRouterEntity
 
+
 @dataclass
 class NetgearButtonEntityDescriptionRequired:
     """Required attributes of NetgearButtonEntityDescription."""
