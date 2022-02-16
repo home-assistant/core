@@ -6,6 +6,7 @@ from unittest.mock import DEFAULT as DEFAULT_MOCK, Mock, call, patch
 
 import pytest
 from samsungctl import exceptions
+from samsungtvws import SamsungTVWS
 from samsungtvws.exceptions import ConnectionFailure
 from websocket import WebSocketException
 
@@ -151,7 +152,7 @@ async def test_setup_without_turnon(hass, remote):
 async def test_setup_websocket(hass, remotews):
     """Test setup of platform."""
     with patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remote_class:
-        remote = Mock()
+        remote = Mock(SamsungTVWS)
         remote.__enter__ = Mock(return_value=remote)
         remote.__exit__ = Mock()
         remote.rest_device_info.return_value = {
@@ -199,7 +200,7 @@ async def test_setup_websocket_2(hass, mock_now):
     assert entry is config_entries[0]
 
     with patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remote_class:
-        remote = Mock()
+        remote = Mock(SamsungTVWS)
         remote.__enter__ = Mock(return_value=remote)
         remote.__exit__ = Mock()
         remote.rest_device_info.return_value = {

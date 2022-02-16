@@ -2,6 +2,7 @@
 from unittest.mock import Mock, patch
 
 import pytest
+from samsungtvws import SamsungTVWS
 
 import homeassistant.util.dt as dt_util
 
@@ -34,10 +35,9 @@ def remotews_fixture():
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS"
     ) as remotews_class:
-        remotews = Mock()
+        remotews = Mock(SamsungTVWS)
         remotews.__enter__ = Mock(return_value=remotews)
         remotews.__exit__ = Mock()
-        remotews.port.return_value = 8002
         remotews.rest_device_info.return_value = {
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
             "device": {
@@ -59,7 +59,7 @@ def remotews_no_device_info_fixture():
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS"
     ) as remotews_class:
-        remotews = Mock()
+        remotews = Mock(SamsungTVWS)
         remotews.__enter__ = Mock(return_value=remotews)
         remotews.__exit__ = Mock()
         remotews.rest_device_info.return_value = None
@@ -74,7 +74,7 @@ def remotews_soundbar_fixture():
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS"
     ) as remotews_class:
-        remotews = Mock()
+        remotews = Mock(SamsungTVWS)
         remotews.__enter__ = Mock(return_value=remotews)
         remotews.__exit__ = Mock()
         remotews.rest_device_info.return_value = {

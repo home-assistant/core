@@ -3,6 +3,7 @@ import socket
 from unittest.mock import Mock, call, patch
 
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
+from samsungtvws import SamsungTVWS
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from websocket import WebSocketException, WebSocketProtocolException
 
@@ -799,7 +800,7 @@ async def test_autodetect_websocket(hass: HomeAssistant):
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=OSError("Boom"),
     ), patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remotews:
-        remote = Mock()
+        remote = Mock(SamsungTVWS)
         remote.__enter__ = Mock(return_value=remote)
         remote.__exit__ = Mock(return_value=False)
         remote.rest_device_info.return_value = {
@@ -845,7 +846,7 @@ async def test_websocket_no_mac(hass: HomeAssistant):
     ) as remotews, patch(
         "getmac.get_mac_address", return_value="gg:hh:ii:ll:mm:nn"
     ):
-        remote = Mock()
+        remote = Mock(SamsungTVWS)
         remote.__enter__ = Mock(return_value=remote)
         remote.__exit__ = Mock(return_value=False)
         remote.rest_device_info.return_value = {
