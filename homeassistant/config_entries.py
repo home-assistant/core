@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections import ChainMap
 from collections.abc import Awaitable, Callable, Iterable, Mapping
 from contextvars import ContextVar
 import dataclasses
@@ -184,7 +185,6 @@ class ConfigEntry:
         "reason",
         "_async_cancel_retry_setup",
         "_on_unload",
-        "device_auto_cleanup",
     )
 
     def __init__(
@@ -270,21 +270,6 @@ class ConfigEntry:
 
         # Hold list for functions to call on unload.
         self._on_unload: list[CALLBACK_TYPE] | None = None
-
-        self.device_auto_cleanup = False
-
-    @callback
-    def async_enable_device_auto_cleanup(self) -> None:
-        """Enable automatic device cleanup.
-
-        Controls how the system considers a device orphaned
-        when considering to cleanup devices.
-
-        Orphaned devices are defined by not have any entities
-        referenced and no config entries with auto cleanup
-        disabled (default).
-        """
-        self.device_auto_cleanup = True
 
     async def async_setup(
         self,
@@ -1228,7 +1213,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             match_dict = {}  # Match any entry
         for entry in self._async_current_entries(include_ignore=False):
             if all(
-                item in {**entry.data, **entry.options}.items()
+                item in ChainMap(entry.options, entry.data).items()  # type: ignore
                 for item in match_dict.items()
             ):
                 raise data_entry_flow.AbortFlow("already_configured")

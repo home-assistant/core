@@ -42,6 +42,20 @@ async def test_browsing(hass):
         hass, item.children[0].media_content_id
     )
     assert item_child is not None
+    assert item_child.media_content_id == item.children[0].media_content_id
+    assert item_child.title == "Demo"
+    assert item_child.children is None
+    assert item_child.can_play is False
+    assert item_child.can_expand is True
+
+    item_child = await media_source.async_browse_media(
+        hass, item.children[0].media_content_id + "?message=bla"
+    )
+    assert item_child is not None
+    assert (
+        item_child.media_content_id
+        == item.children[0].media_content_id + "?message=bla"
+    )
     assert item_child.title == "Demo"
     assert item_child.children is None
     assert item_child.can_play is False
