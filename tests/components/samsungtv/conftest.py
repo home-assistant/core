@@ -2,6 +2,7 @@
 from unittest.mock import Mock, patch
 
 import pytest
+from samsungctl import Remote
 from samsungtvws import SamsungTVWS
 
 import homeassistant.util.dt as dt_util
@@ -21,10 +22,9 @@ def fake_host_fixture() -> None:
 def remote_fixture():
     """Patch the samsungctl Remote."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote_class:
-        remote = Mock()
+        remote = Mock(Remote)
         remote.__enter__ = Mock()
         remote.__exit__ = Mock()
-        remote.port.return_value = 55000
         remote_class.return_value = remote
         yield remote
 
