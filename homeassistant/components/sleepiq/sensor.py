@@ -17,6 +17,8 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN, SLEEPIQ_DATA, SLEEPIQ_STATUS_COORDINATOR, SLEEP_NUMBER
 from .entity import SleepIQSensor
 
+ICON = "mdi:bed"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -39,7 +41,7 @@ async def async_setup_entry(
 class SleepNumberSensorEntity(SleepIQSensor, SensorEntity):
     """Representation of an SleepIQ Entity with CoordinatorEntity."""
 
-    _attr_icon = "mdi:gauge"
+    _attr_icon = ICON
 
     def __init__(
         self,

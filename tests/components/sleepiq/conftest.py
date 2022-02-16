@@ -6,7 +6,7 @@ from aioresponses import aioresponses
 import pytest
 
 from homeassistant.components.sleepiq import DOMAIN
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -32,19 +32,20 @@ def mock_aioresponse():
         yield m
 
 
-async def setup_platform(hass: HomeAssistant, platform: str) -> MockConfigEntry:
+async def setup_platform(hass: HomeAssistant, platform) -> MockConfigEntry:
     """Set up the SleepIQ platform."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_EMAIL: "user@email.com",
+            CONF_USERNAME: "user@email.com",
             CONF_PASSWORD: "password",
         },
     )
     mock_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.sleepiq.PLATFORMS", [platform]):
-        assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    if platform:
+        with patch("homeassistant.components.sleepiq.PLATFORMS", [platform]):
+            assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
 
     return mock_entry

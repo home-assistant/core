@@ -3,6 +3,7 @@ from asyncsleepiq import (
     SleepIQBed,
     SleepIQSleeper,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -29,4 +30,5 @@ class SleepIQSensor(CoordinatorEntity):
         self._attr_name = (
             f"SleepNumber {self.bed.name} {self.sleeper.name} {SENSOR_TYPES[name]}"
         )
-        self._attr_unique_id = f"{self.bed.name}_{self.sleeper.name}_{name}"
+        self._attr_unique_id = f"{self.bed.id}_{self.sleeper.name}_{name}"
+        print(self._attr_unique_id)

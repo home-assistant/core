@@ -1,10 +1,13 @@
 """The tests for SleepIQ sensor platform."""
+from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.helpers import entity_registry as er
+from tests.components.sleepiq.conftest import setup_platform
 
 
-async def test_sensors(hass, setup_entry):
+async def test_sensors(hass, mock_aioresponse):
     """Test the SleepIQ binary sensors for a bed with two sides."""
+    entry = await setup_platform(hass, DOMAIN)
     entity_registry = er.async_get(hass)
 
     state = hass.states.get("sensor.sleepnumber_ile_test1_sleepnumber")
@@ -17,11 +20,6 @@ async def test_sensors(hass, setup_entry):
     entry = entity_registry.async_get("sensor.sleepnumber_ile_test1_sleepnumber")
     assert entry
     assert entry.unique_id == "-31_Test1_sleep_number"
-
-    # If account type is set, only a single bed account was created and there will
-    # not be a second entity
-    if setup_entry["account_type"]:
-        return
 
     state = hass.states.get("sensor.sleepnumber_ile_test2_sleepnumber")
     assert state.state == "80"

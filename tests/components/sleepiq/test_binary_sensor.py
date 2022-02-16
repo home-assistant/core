@@ -1,11 +1,14 @@
 """The tests for SleepIQ binary sensor platform."""
+from homeassistant.components.binary_sensor import DOMAIN
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.helpers import entity_registry as er
+from tests.components.sleepiq.conftest import setup_platform
 
 
-async def test_binary_sensors(hass, setup_entry):
+async def test_binary_sensors(hass, mock_aioresponse):
     """Test the SleepIQ binary sensors."""
+    entry = await setup_platform(hass, DOMAIN)
     entity_registry = er.async_get(hass)
 
     state = hass.states.get("binary_sensor.sleepnumber_ile_test1_is_in_bed")
@@ -17,11 +20,6 @@ async def test_binary_sensors(hass, setup_entry):
     entry = entity_registry.async_get("binary_sensor.sleepnumber_ile_test1_is_in_bed")
     assert entry
     assert entry.unique_id == "-31_Test1_is_in_bed"
-
-    # If account type is set, only a single bed account was created and there will
-    # not be a second entity
-    if setup_entry["account_type"]:
-        return
 
     entry = entity_registry.async_get("binary_sensor.sleepnumber_ile_test2_is_in_bed")
     assert entry
