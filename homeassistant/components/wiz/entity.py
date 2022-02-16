@@ -1,23 +1,24 @@
 """WiZ integration entities."""
 from __future__ import annotations
 
+from abc import abstractmethod
 from typing import Any
 
 from pywizlight.bulblibrary import BulbType
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo, ToggleEntity
+from homeassistant.helpers.entity import DeviceInfo, Entity, ToggleEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .models import WizData
 
 
-class WizToggleEntity(CoordinatorEntity, ToggleEntity):
-    """Representation of WiZ toggle entity."""
+class WizEntity(CoordinatorEntity, Entity):
+    """Representation of WiZ entity."""
 
     def __init__(self, wiz_data: WizData, name: str) -> None:
-        """Initialize an WiZ device."""
+        """Initialize a WiZ entity."""
         super().__init__(wiz_data.coordinator)
         self._device = wiz_data.bulb
         bulb_type: BulbType = self._device.bulbtype
@@ -40,6 +41,15 @@ class WizToggleEntity(CoordinatorEntity, ToggleEntity):
         """Handle updated data from the coordinator."""
         self._async_update_attrs()
         super()._handle_coordinator_update()
+
+    @callback
+    @abstractmethod
+    def _async_update_attrs(self) -> None:
+        """Handle updating _attr values."""
+
+
+class WizToggleEntity(WizEntity, ToggleEntity):
+    """Representation of WiZ toggle entity."""
 
     @callback
     def _async_update_attrs(self) -> None:

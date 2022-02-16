@@ -2,6 +2,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from rokuecp import Device as RokuDevice
 
 from homeassistant.components.binary_sensor import STATE_OFF, STATE_ON
 from homeassistant.components.roku.const import DOMAIN
@@ -82,10 +83,11 @@ async def test_roku_binary_sensors(
     assert device_entry.suggested_area is None
 
 
-@pytest.mark.parametrize("mock_roku", ["roku/rokutv-7820x.json"], indirect=True)
+@pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_rokutv_binary_sensors(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    mock_device: RokuDevice,
     mock_roku: MagicMock,
 ) -> None:
     """Test the Roku binary sensors."""

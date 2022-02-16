@@ -1,4 +1,6 @@
 """The FiveM binary sensor platform."""
+from dataclasses import dataclass
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -12,6 +14,7 @@ from . import FiveMEntity, FiveMEntityDescription
 from .const import DOMAIN, NAME_STATUS
 
 
+@dataclass
 class FiveMBinarySensorEntityDescription(
     BinarySensorEntityDescription, FiveMEntityDescription
 ):

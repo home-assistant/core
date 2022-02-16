@@ -15,6 +15,7 @@ from zwave_js_server.model.notification import (
 )
 from zwave_js_server.model.value import Value, ValueNotification
 
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -93,6 +94,7 @@ from .helpers import (
     get_device_id,
     get_device_id_ext,
     get_unique_id,
+    get_valueless_base_unique_id,
 )
 from .migrate import async_migrate_discovered_value
 from .services import ZWaveServices
@@ -171,10 +173,18 @@ async def async_setup_entry(  # noqa: C901
     entry_hass_data: dict = hass.data[DOMAIN].setdefault(entry.entry_id, {})
 
     entry_hass_data[DATA_CLIENT] = client
-    entry_hass_data[DATA_PLATFORM_SETUP] = {}
+    platform_setup_tasks = entry_hass_data[DATA_PLATFORM_SETUP] = {}
 
     registered_unique_ids: dict[str, dict[str, set[str]]] = defaultdict(dict)
     discovered_value_ids: dict[str, set[str]] = defaultdict(set)
+
+    async def async_setup_platform(platform: str) -> None:
+        """Set up platform if needed."""
+        if platform not in platform_setup_tasks:
+            platform_setup_tasks[platform] = hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(entry, platform)
+            )
+        await platform_setup_tasks[platform]
 
     @callback
     def remove_device(device: device_registry.DeviceEntry) -> None:
@@ -202,13 +212,8 @@ async def async_setup_entry(  # noqa: C901
             disc_info,
         )
 
-        platform_setup_tasks = entry_hass_data[DATA_PLATFORM_SETUP]
         platform = disc_info.platform
-        if platform not in platform_setup_tasks:
-            platform_setup_tasks[platform] = hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-            )
-        await platform_setup_tasks[platform]
+        await async_setup_platform(platform)
 
         LOGGER.debug("Discovered entity: %s", disc_info)
         async_dispatcher_send(
@@ -256,6 +261,12 @@ async def async_setup_entry(  # noqa: C901
             )
         )
 
+        # Create a ping button for each device
+        await async_setup_platform(BUTTON_DOMAIN)
+        async_dispatcher_send(
+            hass, f"{DOMAIN}_{entry.entry_id}_add_ping_button_entity", node
+        )
+
         # add listeners to handle new values that get added later
         for event in ("value added", "value updated", "metadata updated"):
             entry.async_on_unload(
@@ -284,19 +295,7 @@ async def async_setup_entry(  # noqa: C901
 
     async def async_on_node_added(node: ZwaveNode) -> None:
         """Handle node added event."""
-        platform_setup_tasks = entry_hass_data[DATA_PLATFORM_SETUP]
-
-        # We need to set up the sensor platform if it hasn't already been setup in
-        # order to create the node status sensor
-        if SENSOR_DOMAIN not in platform_setup_tasks:
-            platform_setup_tasks[SENSOR_DOMAIN] = hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, SENSOR_DOMAIN)
-            )
-
-        # This guard ensures that concurrent runs of this function all await the
-        # platform setup task
-        if not platform_setup_tasks[SENSOR_DOMAIN].done():
-            await platform_setup_tasks[SENSOR_DOMAIN]
+        await async_setup_platform(SENSOR_DOMAIN)
 
         # Create a node status sensor for each device
         async_dispatcher_send(
@@ -358,7 +357,7 @@ async def async_setup_entry(  # noqa: C901
 
             async_dispatcher_send(
                 hass,
-                f"{DOMAIN}_{client.driver.controller.home_id}.{node.node_id}.node_status_remove_entity",
+                f"{DOMAIN}_{get_valueless_base_unique_id(client, node)}_remove_entity",
             )
         else:
             remove_device(device)
@@ -446,9 +445,7 @@ async def async_setup_entry(  # noqa: C901
         # We assert because we know the device exists
         assert device
 
-        unique_id = get_unique_id(
-            client.driver.controller.home_id, disc_info.primary_value.value_id
-        )
+        unique_id = get_unique_id(client, disc_info.primary_value.value_id)
         entity_id = ent_reg.async_get_entity_id(disc_info.platform, DOMAIN, unique_id)
 
         raw_value = value_ = value.value
