@@ -360,7 +360,7 @@ async def test_with_same_name(hass, mqtt_mock, caplog):
         in caplog.text
     )
     assert (
-        "Notify service 'test_same_name' is not unique, cannot register service(s)"
+        "Notify service 'test_same_name' already exists, cannot register service"
         in caplog.text
     )
 
@@ -501,7 +501,7 @@ async def test_discovery_without_device(hass, mqtt_mock, caplog):
     )
     await hass.async_block_till_done()
     assert (
-        "Notify service 'test_setup1' already exists, cannot register service(s)"
+        "Notify service 'test_setup1' already exists, cannot register service"
         in caplog.text
     )
     await hass.services.async_call(
@@ -535,8 +535,7 @@ async def test_discovery_without_device(hass, mqtt_mock, caplog):
     async_fire_mqtt_message(hass, f"homeassistant/{notify.DOMAIN}/testc/config", data)
     await hass.async_block_till_done()
     assert (
-        "Notify service 'testa' already exists, cannot register service(s)"
-        in caplog.text
+        "Notify service 'testa' already exists, cannot register service" in caplog.text
     )
 
     # Try to update the same discovery to existing service test
@@ -545,8 +544,7 @@ async def test_discovery_without_device(hass, mqtt_mock, caplog):
     async_fire_mqtt_message(hass, f"homeassistant/{notify.DOMAIN}/testb/config", data)
     await hass.async_block_till_done()
     assert (
-        "Notify service 'testa' already exists, cannot update the existing service(s)"
-        in caplog.text
+        "Notify service 'testa' already exists, cannot register service" in caplog.text
     )
 
 

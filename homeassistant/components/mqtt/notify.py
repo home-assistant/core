@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components import notify
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE, CONF_DEVICE_ID, CONF_NAME
+from homeassistant.const import CONF_DEVICE, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
@@ -73,14 +73,33 @@ DISCOVERY_SCHEMA = PLATFORM_SCHEMA.extend(
 _LOGGER = logging.getLogger(__name__)
 
 
+async def async_initialize(hass: HomeAssistant) -> None:
+    """Initialize globals."""
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    hass.data.setdefault(MQTT_NOTIFY_SERVICES_SETUP, {})
+
+
+def _check_notify_service_name(hass: HomeAssistant, config: ConfigType) -> str | None:
+    """Check if the service already exists or else return the service name."""
+    service_name = slugify(config[CONF_NAME])
+    has_services = hass.services.has_service(notify.DOMAIN, service_name)
+    services = hass.data[MQTT_NOTIFY_SERVICES_SETUP]
+    if service_name in services.keys() or has_services:
+        _LOGGER.error(
+            "Notify service '%s' already exists, cannot register service",
+            service_name,
+        )
+        return None
+    return service_name
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT notify service dynamically through MQTT discovery."""
-    hass.data.setdefault(MQTT_NOTIFY_SERVICES_SETUP, {})
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    await async_initialize(hass)
     setup = functools.partial(_async_setup_notify, hass, config_entry=config_entry)
     await async_setup_entry_helper(hass, notify.DOMAIN, setup, DISCOVERY_SCHEMA)
 
@@ -93,40 +112,31 @@ async def _async_setup_notify(
 ):
     """Set up the MQTT notify service with auto discovery."""
     config = DISCOVERY_SCHEMA(discovery_data[ATTR_DISCOVERY_PAYLOAD])
-    service_name = slugify(config[CONF_NAME])
-    services = hass.data[MQTT_NOTIFY_SERVICES_SETUP]
-    has_services = hass.services.has_service(notify.DOMAIN, service_name)
     discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
-    if service_name in services.keys() or has_services:
-        _LOGGER.error(
-            "Notify service '%s' already exists, cannot register service(s)",
-            service_name,
-        )
+
+    if not (service_name := _check_notify_service_name(hass, config)):
         async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
         clear_discovery_hash(hass, discovery_hash)
         return
+
     device_id = None
     if CONF_DEVICE in config:
         await _update_device(hass, config_entry, config)
-
         device_registry = await hass.helpers.device_registry.async_get_registry()
         device = device_registry.async_get_device(
             {(DOMAIN, id_) for id_ in config[CONF_DEVICE][CONF_IDENTIFIERS]},
             {tuple(x) for x in config[CONF_DEVICE][CONF_CONNECTIONS]},
         )
-
         device_id = device.id
-
-    service_config = cast(MqttNotificationConfig, config)
-    service_config[CONF_DISCOVER_HASH] = discovery_hash
-    service_config[CONF_DEVICE_ID] = device_id
-    service_config[CONF_CONFIG_ENTRY] = config_entry
 
     service = MqttNotificationService(
         hass,
-        service_config,
+        cast(MqttNotificationConfig, config),
+        config_entry,
+        device_id,
+        discovery_hash,
     )
-    services[service_name] = service
+    hass.data[MQTT_NOTIFY_SERVICES_SETUP][service_name] = service
 
     await service.async_setup(hass, service_name, service_name)
     await service.async_register_services()
@@ -134,8 +144,9 @@ async def _async_setup_notify(
 
 def has_notify_services(hass: HomeAssistant, device_id: str) -> bool:
     """Check if the device has registered notify services."""
-    services = hass.data[MQTT_NOTIFY_SERVICES_SETUP]
-    for key, service in services.items():  # pylint: disable=unused-variable
+    for key, service in hass.data[  # pylint: disable=unused-variable
+        MQTT_NOTIFY_SERVICES_SETUP
+    ].items():
         if service.device_id == device_id:
             return True
     return False
@@ -147,24 +158,19 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> MqttNotificationService | None:
     """Prepare the MQTT notification service through configuration.yaml."""
-    hass.data.setdefault(MQTT_NOTIFY_SERVICES_SETUP, {})
+    await async_initialize(hass)
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
-    service_name = slugify(config[CONF_NAME])
-    has_services = hass.services.has_service(notify.DOMAIN, service_name)
-    services = hass.data[MQTT_NOTIFY_SERVICES_SETUP]
-    if service_name in services.keys() or has_services:
-        _LOGGER.error(
-            "Notify service '%s' is not unique, cannot register service(s)",
-            service_name,
-        )
+    if not (service_name := _check_notify_service_name(hass, config)):
         return None
 
-    services[service_name] = MqttNotificationService(
+    service = hass.data[MQTT_NOTIFY_SERVICES_SETUP][
+        service_name
+    ] = MqttNotificationService(
         hass,
         cast(MqttNotificationConfig, config),
     )
-    return services[service_name]
+    return service
 
 
 class MqttNotificationConfig(TypedDict, total=False):
@@ -178,9 +184,7 @@ class MqttNotificationConfig(TypedDict, total=False):
     retain: bool
     targets: list
     title: str
-    discovery_hash: tuple | None
-    device_id: str | None
-    config_entry: ConfigEntry | None
+    device: ConfigType
 
 
 class MqttNotificationServiceUpdater:
@@ -193,11 +197,11 @@ class MqttNotificationServiceUpdater:
             discovery_payload: DiscoveryInfoType | None,
         ) -> None:
             """Handle discovery update."""
-            async_dispatcher_send(
-                hass, MQTT_DISCOVERY_DONE.format(service.discovery_hash), None
-            )
             if not discovery_payload:
                 # unregister notify service through auto discovery
+                async_dispatcher_send(
+                    hass, MQTT_DISCOVERY_DONE.format(service.discovery_hash), None
+                )
                 await async_tear_down_service()
                 return
 
@@ -206,6 +210,9 @@ class MqttNotificationServiceUpdater:
             _LOGGER.debug(
                 "Notify service %s updated has been processed",
                 service.discovery_hash,
+            )
+            async_dispatcher_send(
+                hass, MQTT_DISCOVERY_DONE.format(service.discovery_hash), None
             )
 
         async def async_device_removed(event):
@@ -264,6 +271,9 @@ class MqttNotificationService(notify.BaseNotificationService):
         self,
         hass: HomeAssistant,
         service_config: MqttNotificationConfig,
+        config_entry: ConfigEntry | None = None,
+        device_id: str | None = None,
+        discovery_hash: tuple | None = None,
     ) -> None:
         """Initialize the service."""
         self.hass = hass
@@ -271,15 +281,13 @@ class MqttNotificationService(notify.BaseNotificationService):
         self._commmand_template = MqttCommandTemplate(
             service_config.get(CONF_COMMAND_TEMPLATE), hass=hass
         )
-        self._device_id = self._config.get(CONF_DEVICE_ID)
-        self._discovery_hash = self._config.get(CONF_DISCOVER_HASH)
-        self._config_entry = self._config.get(CONF_CONFIG_ENTRY)
+        self._device_id = device_id
+        self._discovery_hash = discovery_hash
+        self._config_entry = config_entry
         self._service_name = slugify(service_config[CONF_NAME])
 
         self._updater = (
-            MqttNotificationServiceUpdater(hass, self)
-            if service_config.get(CONF_DISCOVER_HASH)
-            else None
+            MqttNotificationServiceUpdater(hass, self) if discovery_hash else None
         )
 
     @property
@@ -303,20 +311,19 @@ class MqttNotificationService(notify.BaseNotificationService):
     ) -> None:
         """Update the notify service through auto discovery."""
         config: ConfigType = DISCOVERY_SCHEMA(discovery_payload)
-        new_service_name = slugify(config[CONF_NAME])
-        if new_service_name != self._service_name and self.hass.services.has_service(
-            notify.DOMAIN, new_service_name
-        ):
-            _LOGGER.error(
-                "Notify service '%s' already exists, cannot update the existing service(s)",
-                new_service_name,
-            )
+        # Do not rename a service if that service_name is already in use
+        if (
+            new_service_name := slugify(config[CONF_NAME])
+        ) != self._service_name and _check_notify_service_name(
+            self.hass, config
+        ) is None:
             return
+        # Only refresh services if service name or targets have changes
         if (
             new_service_name != self._service_name
             or config[CONF_TARGETS] != self._config[CONF_TARGETS]
         ):
-            services = self.hass.data.setdefault(MQTT_NOTIFY_SERVICES_SETUP, {})
+            services = self.hass.data[MQTT_NOTIFY_SERVICES_SETUP]
             await self.async_unregister_services()
             if self._service_name in services:
                 del services[self._service_name]
