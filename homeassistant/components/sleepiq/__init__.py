@@ -1,5 +1,6 @@
 """Support for SleepIQ from SleepNumber."""
 import logging
+from datetime import timedelta
 
 from asyncsleepiq import (
     AsyncSleepIQ,
@@ -12,7 +13,6 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -20,15 +20,10 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, SLEEPIQ_DATA, SLEEPIQ_STATUS_COORDINATOR
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
-
-from .const import DOMAIN
-from .coordinator import SleepIQDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+UPDATE_INTERVAL = timedelta(seconds=60)
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 CONFIG_SCHEMA = vol.Schema(
@@ -59,7 +54,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the SleepIQ config entry."""
-    conf = entry.data.get(DOMAIN)
+    conf = entry.data
     email = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
 
@@ -86,23 +81,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SleepIQAPIException as err:
         raise ConfigEntryNotReady(str(err) or "Error reading from SleepIQ API") from err
 
-    coordinator = SleepIQDataUpdateCoordinator(
-        hass,
-        client=client,
-        username=entry.data[CONF_USERNAME],
-    )
-    status_coordinator: DataUpdateCoordinator[None] = DataUpdateCoordinator(
+    coordinator: DataUpdateCoordinator[None] = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"SleepIQ Bed Statuses - {email}",
         update_method=gateway.fetch_bed_statuses,
-        update_interval=MIN_TIME_BETWEEN_UPDATES,
+        update_interval=UPDATE_INTERVAL,
     )
 
     # Call the SleepIQ API to refresh data
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[email] = {
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         SLEEPIQ_DATA: gateway,
         SLEEPIQ_STATUS_COORDINATOR: coordinator,
     }

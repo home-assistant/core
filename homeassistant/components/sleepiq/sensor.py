@@ -1,21 +1,22 @@
 """Support for SleepIQ Sensor."""
 from __future__ import annotations
+from asyncsleepiq import (
+    SleepIQBed,
+    SleepIQSleeper,
+)
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, SLEEPIQ_DATA, SLEEPIQ_STATUS_COORDINATOR
-from .coordinator import SleepIQDataUpdateCoordinator
+from .const import DOMAIN, SLEEPIQ_DATA, SLEEPIQ_STATUS_COORDINATOR, SLEEP_NUMBER
+from .entity import SleepIQSensor
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the sleep numbers."""
-    entry_id = discovery_info["email"]
-    data = hass.data[DOMAIN][entry_id][SLEEPIQ_DATA]
-    status_coordinator = hass.data[DOMAIN][entry_id][SLEEPIQ_STATUS_COORDINATOR]
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -23,29 +24,33 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SleepIQ bed sensors."""
-    coordinator: SleepIQDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][SLEEPIQ_STATUS_COORDINATOR]
+    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        SLEEPIQ_STATUS_COORDINATOR
+    ]
     data = hass.data[DOMAIN][entry.entry_id][SLEEPIQ_DATA]
     entities: list[SleepNumberSensorEntity] = []
     for bed in data.beds.values():
         for sleeper in bed.sleepers:
-            entities.append(SleepNumberSensorEntity(sleeper, bed, coordinator))
+            entities.append(SleepNumberSensorEntity(coordinator, bed, sleeper))
 
     async_add_entities(entities)
 
-class SleepNumberSensorEntity(CoordinatorEntity, SensorEntity):
+
+class SleepNumberSensorEntity(SleepIQSensor, SensorEntity):
     """Representation of an SleepIQ Entity with CoordinatorEntity."""
 
     _attr_icon = "mdi:gauge"
 
-    def __init__(self,
-        coordinator: SleepIQDataUpdateCoordinator, bed, sleeper):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        bed: SleepIQBed,
+        sleeper: SleepIQSleeper,
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, bed, side, SLEEP_NUMBER)
-        self._sleeper = sleeper
-        self._attr_name = f"SleepNumber {bed.name} {sleeper.name} SleepNumber"
-        self._attr_unique_id = f"{bed.id}-{sleeper.side}-SN"
+        super().__init__(coordinator, bed, sleeper, SLEEP_NUMBER)
 
     @property
     def native_value(self) -> int:
         """Return the current sleep number value."""
-        return self._sleeper.sleep_number
+        return self.sleeper.sleep_number
