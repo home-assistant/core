@@ -7,7 +7,13 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    ATTR_AREA_ID,
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    CONF_MODE,
+    CONF_UNIT_OF_MEASUREMENT,
+)
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.util import decorator
 
@@ -322,12 +328,31 @@ class TargetSelector(Selector):
         }
     )
 
+    TARGET_SELECTION_SCHEMA = vol.Schema(
+        {
+            vol.Optional(ATTR_AREA_ID): vol.All(cv.ensure_list, str),
+            vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, str),
+            vol.Optional(ATTR_ENTITY_ID): vol.All(
+                cv.ensure_list, cv.entity_ids_or_uuids
+            ),
+        }
+    )
+
+    def __call__(self, data: Any) -> dict[str, list[str]]:
+        """Validate the passed selection."""
+        target: dict[str, list[str]] = self.TARGET_SELECTION_SCHEMA(data)
+        return target
+
 
 @SELECTORS.register("action")
 class ActionSelector(Selector):
     """Selector of an action sequence (script syntax)."""
 
     CONFIG_SCHEMA = vol.Schema({})
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        return data
 
 
 @SELECTORS.register("object")
@@ -336,12 +361,21 @@ class ObjectSelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema({})
 
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        return data
+
 
 @SELECTORS.register("text")
 class StringSelector(Selector):
     """Selector for a multi-line text string."""
 
     CONFIG_SCHEMA = vol.Schema({vol.Optional("multiline", default=False): bool})
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        text = cv.string(data)
+        return text
 
 
 @SELECTORS.register("select")
@@ -351,3 +385,8 @@ class SelectSelector(Selector):
     CONFIG_SCHEMA = vol.Schema(
         {vol.Required("options"): vol.All([str], vol.Length(min=1))}
     )
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        selected_option = vol.In(self.config["options"])(cv.string(data))
+        return selected_option
