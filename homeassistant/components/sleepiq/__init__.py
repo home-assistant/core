@@ -1,6 +1,6 @@
 """Support for SleepIQ from SleepNumber."""
-import logging
 from datetime import timedelta
+import logging
 
 from asyncsleepiq import (
     AsyncSleepIQ,

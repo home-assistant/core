@@ -1,13 +1,14 @@
 """Tests for the SleepIQ integration."""
 from unittest.mock import patch
+
 from asyncsleepiq import (
     SleepIQAPIException,
     SleepIQLoginException,
     SleepIQTimeoutException,
 )
 
-from homeassistant.components.sleepiq.const import DOMAIN
 from homeassistant.components.sleepiq import UPDATE_INTERVAL
+from homeassistant.components.sleepiq.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow

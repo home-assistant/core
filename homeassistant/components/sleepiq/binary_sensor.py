@@ -1,24 +1,22 @@
 """Support for SleepIQ sensors."""
-from asyncsleepiq import (
-    SleepIQBed,
-    SleepIQSleeper,
-)
+from asyncsleepiq import SleepIQBed, SleepIQSleeper
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     DOMAIN,
-    SLEEPIQ_DATA,
-    SLEEPIQ_STATUS_COORDINATOR,
     ICON_EMPTY,
     ICON_OCCUPIED,
     IS_IN_BED,
+    SLEEPIQ_DATA,
+    SLEEPIQ_STATUS_COORDINATOR,
 )
 from .entity import SleepIQSensor
 
@@ -59,9 +57,9 @@ class IsInBedBinarySensor(SleepIQSensor, BinarySensorEntity):
         self._attr_icon = ICON
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the status of the sensor."""
-        return self.sleeper.in_bed
+        return bool(self.sleeper.in_bed)
 
     @property
     def icon(self) -> str:

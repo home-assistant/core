@@ -1,11 +1,10 @@
 """Entity for the SleepIQ integration."""
-from asyncsleepiq import (
-    SleepIQBed,
-    SleepIQSleeper,
+from asyncsleepiq import SleepIQBed, SleepIQSleeper
+
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import ICON_OCCUPIED, SENSOR_TYPES
 

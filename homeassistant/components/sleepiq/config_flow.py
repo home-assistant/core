@@ -3,11 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from asyncsleepiq import (
-    AsyncSleepIQ,
-    SleepIQLoginException,
-    SleepIQTimeoutException,
-)
+from asyncsleepiq import AsyncSleepIQ, SleepIQLoginException, SleepIQTimeoutException
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -75,7 +71,7 @@ class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-async def try_connection(hass: HomeAssistant, user_input: dict[str, Any]) -> str:
+async def try_connection(hass: HomeAssistant, user_input: dict[str, Any]) -> None:
     """Test if the given credentials can successfully login to SleepIQ."""
 
     client_session = async_get_clientsession(hass)

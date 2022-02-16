@@ -1,20 +1,15 @@
 """Support for SleepIQ Sensor."""
 from __future__ import annotations
-from asyncsleepiq import (
-    SleepIQBed,
-    SleepIQSleeper,
-)
+
+from asyncsleepiq import SleepIQBed, SleepIQSleeper
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, SLEEPIQ_DATA, SLEEPIQ_STATUS_COORDINATOR, SLEEP_NUMBER
+from .const import DOMAIN, SLEEP_NUMBER, SLEEPIQ_DATA, SLEEPIQ_STATUS_COORDINATOR
 from .entity import SleepIQSensor
 
 ICON = "mdi:bed"
@@ -55,4 +50,4 @@ class SleepNumberSensorEntity(SleepIQSensor, SensorEntity):
     @property
     def native_value(self) -> int:
         """Return the current sleep number value."""
-        return self.sleeper.sleep_number
+        return int(self.sleeper.sleep_number)
