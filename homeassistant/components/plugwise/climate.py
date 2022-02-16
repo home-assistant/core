@@ -153,7 +153,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         await self.coordinator.api.set_schedule_state(
             self.device["location"],
             self.device.get("last_used"),
-            "true" if hvac_mode == HVAC_MODE_AUTO else "false",
+            "on" if hvac_mode == HVAC_MODE_AUTO else "off",
         )
 
     @plugwise_command
