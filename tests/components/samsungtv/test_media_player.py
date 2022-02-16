@@ -165,7 +165,7 @@ async def test_setup_websocket(hass, remotews):
                 "networkType": "wireless",
             },
         }
-        remote.token = "987654321"
+        remote.token = "123456789"
         remote_class.return_value = remote
 
         await setup_samsungtv(hass, MOCK_CONFIGWS)
