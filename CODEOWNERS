@@ -850,6 +850,8 @@ homeassistant/components/sisyphus/* @jkeljo
 homeassistant/components/sky_hub/* @rogerselwyn
 homeassistant/components/slack/* @bachya
 tests/components/slack/* @bachya
+homeassistant/components/sleepiq/* @mfugate1
+tests/components/sleepiq/* @mfugate1
 homeassistant/components/slide/* @ualex73
 homeassistant/components/sma/* @kellerza @rklomp
 tests/components/sma/* @kellerza @rklomp
