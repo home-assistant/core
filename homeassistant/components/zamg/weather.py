@@ -155,7 +155,3 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
     def wind_bearing(self):
         """Return the wind bearing."""
         return self.coordinator.data.get(ATTR_WEATHER_WIND_BEARING)
-
-    def update(self) -> None:
-        """Update current conditions."""
-        self.coordinator.data.update()

@@ -328,10 +328,6 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
             ATTR_UPDATED: update_time.isoformat(),
         }
 
-    def update(self) -> None:
-        """Delegate update to probe."""
-        self.coordinator.data.update()
-
 
 @dataclass
 class ZamgData:
