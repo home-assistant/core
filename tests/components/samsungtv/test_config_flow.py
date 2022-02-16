@@ -1,8 +1,9 @@
 """Tests for Samsung TV config flow."""
 import socket
-from unittest.mock import Mock, PropertyMock, call, patch
+from unittest.mock import Mock, call, patch
 
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
+from samsungtvws import SamsungTVWS
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from websocket import WebSocketException, WebSocketProtocolException
 
@@ -798,10 +799,8 @@ async def test_autodetect_websocket(hass: HomeAssistant):
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=OSError("Boom"),
     ), patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remotews:
-        enter = Mock()
-        type(enter).token = PropertyMock(return_value="123456789")
-        remote = Mock()
-        remote.__enter__ = Mock(return_value=enter)
+        remote = Mock(SamsungTVWS)
+        remote.__enter__ = Mock(return_value=remote)
         remote.__exit__ = Mock(return_value=False)
         remote.rest_device_info.return_value = {
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
@@ -815,6 +814,7 @@ async def test_autodetect_websocket(hass: HomeAssistant):
                 "type": "Samsung SmartTV",
             },
         }
+        remote.token = "123456789"
         remotews.return_value = remote
 
         result = await hass.config_entries.flow.async_init(
@@ -845,10 +845,8 @@ async def test_websocket_no_mac(hass: HomeAssistant):
     ) as remotews, patch(
         "getmac.get_mac_address", return_value="gg:hh:ii:ll:mm:nn"
     ):
-        enter = Mock()
-        type(enter).token = PropertyMock(return_value="123456789")
-        remote = Mock()
-        remote.__enter__ = Mock(return_value=enter)
+        remote = Mock(SamsungTVWS)
+        remote.__enter__ = Mock(return_value=remote)
         remote.__exit__ = Mock(return_value=False)
         remote.rest_device_info.return_value = {
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
@@ -860,6 +858,7 @@ async def test_websocket_no_mac(hass: HomeAssistant):
                 "type": "Samsung SmartTV",
             },
         }
+        remote.token = "123456789"
         remotews.return_value = remote
 
         result = await hass.config_entries.flow.async_init(
