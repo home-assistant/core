@@ -1,6 +1,7 @@
 """HTTP views to interact with the device registry."""
 import voluptuous as vol
 
+from homeassistant import loader
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.decorators import require_admin
 from homeassistant.core import HomeAssistant, callback
@@ -76,25 +77,59 @@ def websocket_update_device(hass, connection, msg):
         "config_entry_id": str,
     }
 )
-@callback
-def websocket_remove_config_entry_from_device(
+@websocket_api.async_response
+async def websocket_remove_config_entry_from_device(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Remove config entry from a device."""
     registry = async_get(hass)
+    config_entry_id = msg["config_entry_id"]
+    device_id = msg["device_id"]
 
-    config_entry = hass.config_entries.async_get_entry(msg["config_entry_id"])
-    if config_entry and not config_entry.supports_remove_device:
+    def _send_error(message: str) -> None:
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
-            "Config entry does not support device removal",
+            websocket_api.const.ERR_UNKNOWN_ERROR,
+            message,
         )
+
+    if (config_entry := hass.config_entries.async_get_entry(config_entry_id)) is None:
+        _send_error("Unknown config entry")
+        return
+
+    if not config_entry.supports_remove_device:
+        _send_error("Config entry does not support device removal")
+        return
+
+    if (device_entry := registry.async_get(device_id)) is None:
+        _send_error("Unknown device")
+        return
+
+    if config_entry_id not in device_entry.config_entries:
+        _send_error("Config entry not in device")
+        return
+
+    try:
+        integration = await loader.async_get_integration(hass, config_entry.domain)
+    except loader.IntegrationNotFound:
+        _send_error("Integration not found")
+        return
+
+    try:
+        component = integration.get_component()
+    except ImportError:
+        _send_error("Integration not found")
+        return
+
+    if not await component.async_remove_config_entry_device(
+        hass, config_entry, device_entry
+    ):
+        _send_error("Failed to remove device entry, rejected by integration")
         return
 
     try:
         entry = registry.async_update_device(
-            msg["device_id"], remove_config_entry_id=msg["config_entry_id"]
+            device_id, remove_config_entry_id=config_entry_id
         )
     except HomeAssistantError as exc:
         connection.send_error(

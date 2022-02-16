@@ -140,13 +140,22 @@ async def test_remove_config_entry_from_device(hass, hass_ws_client):
     ws_client = await hass_ws_client(hass)
     device_registry = mock_device_registry(hass)
 
+    can_remove = False
+
+    async def async_remove_config_entry_device(hass, config_entry, device_entry):
+        return can_remove
+
     mock_integration(
         hass,
-        MockModule("comp1", support_remove_from_device=True),
+        MockModule(
+            "comp1", async_remove_config_entry_device=async_remove_config_entry_device
+        ),
     )
     mock_integration(
         hass,
-        MockModule("comp2", support_remove_from_device=True),
+        MockModule(
+            "comp2", async_remove_config_entry_device=async_remove_config_entry_device
+        ),
     )
 
     entry_1 = MockConfigEntry(
@@ -175,10 +184,28 @@ async def test_remove_config_entry_from_device(hass, hass_ws_client):
     )
     assert device_entry.config_entries == {entry_1.entry_id, entry_2.entry_id}
 
-    # Remove the 1st config entry
+    # Try removing a config entry from the device, it should fail because
+    # async_remove_config_entry_device returns False
     await ws_client.send_json(
         {
             "id": 5,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": entry_1.entry_id,
+            "device_id": device_entry.id,
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "unknown_error"
+
+    # Make async_remove_config_entry_device return True
+    can_remove = True
+
+    # Remove the 1st config entry
+    await ws_client.send_json(
+        {
+            "id": 6,
             "type": "config/device_registry/remove_config_entry",
             "config_entry_id": entry_1.entry_id,
             "device_id": device_entry.id,
@@ -197,7 +224,7 @@ async def test_remove_config_entry_from_device(hass, hass_ws_client):
     # Remove the 2nd config entry
     await ws_client.send_json(
         {
-            "id": 6,
+            "id": 7,
             "type": "config/device_registry/remove_config_entry",
             "config_entry_id": entry_2.entry_id,
             "device_id": device_entry.id,
@@ -218,13 +245,18 @@ async def test_remove_config_entry_from_device_fails(hass, hass_ws_client):
     ws_client = await hass_ws_client(hass)
     device_registry = mock_device_registry(hass)
 
+    async def async_remove_config_entry_device(hass, config_entry, device_entry):
+        return True
+
     mock_integration(
         hass,
         MockModule("comp1"),
     )
     mock_integration(
         hass,
-        MockModule("comp2", support_remove_from_device=True),
+        MockModule(
+            "comp2", async_remove_config_entry_device=async_remove_config_entry_device
+        ),
     )
 
     entry_1 = MockConfigEntry(
@@ -273,7 +305,7 @@ async def test_remove_config_entry_from_device_fails(hass, hass_ws_client):
     fake_device_id = "abc123"
     assert device_entry.id != fake_device_id
 
-    # Try removing a non existing config entry from the device - does nothing
+    # Try removing a non existing config entry from the device
     await ws_client.send_json(
         {
             "id": 5,
@@ -283,12 +315,10 @@ async def test_remove_config_entry_from_device_fails(hass, hass_ws_client):
         }
     )
     response = await ws_client.receive_json()
-    assert response["success"]
-    assert set(response["result"]["config_entries"]) == {
-        entry_1.entry_id,
-        entry_2.entry_id,
-        entry_3.entry_id,
-    }
+
+    assert not response["success"]
+    assert response["error"]["code"] == "unknown_error"
+    assert response["error"]["message"] == "Unknown config entry"
 
     # Try removing a config entry which does not support removal from the device
     await ws_client.send_json(
@@ -302,7 +332,7 @@ async def test_remove_config_entry_from_device_fails(hass, hass_ws_client):
     response = await ws_client.receive_json()
 
     assert not response["success"]
-    assert response["error"]["code"] == "home_assistant_error"
+    assert response["error"]["code"] == "unknown_error"
     assert (
         response["error"]["message"] == "Config entry does not support device removal"
     )
@@ -319,10 +349,10 @@ async def test_remove_config_entry_from_device_fails(hass, hass_ws_client):
     response = await ws_client.receive_json()
 
     assert not response["success"]
-    assert response["error"]["code"] == "home_assistant_error"
+    assert response["error"]["code"] == "unknown_error"
     assert response["error"]["message"] == "Unknown device"
 
-    # Try removing a config entry from a device which it's not connected to - does nothing
+    # Try removing a config entry from a device which it's not connected to
     await ws_client.send_json(
         {
             "id": 8,
@@ -349,11 +379,9 @@ async def test_remove_config_entry_from_device_fails(hass, hass_ws_client):
     )
     response = await ws_client.receive_json()
 
-    assert response["success"]
-    assert set(response["result"]["config_entries"]) == {
-        entry_1.entry_id,
-        entry_3.entry_id,
-    }
+    assert not response["success"]
+    assert response["error"]["code"] == "unknown_error"
+    assert response["error"]["message"] == "Config entry not in device"
 
     # Try removing a config entry which can't be loaded from a device - allowed
     await ws_client.send_json(
@@ -366,5 +394,6 @@ async def test_remove_config_entry_from_device_fails(hass, hass_ws_client):
     )
     response = await ws_client.receive_json()
 
-    assert response["success"]
-    assert set(response["result"]["config_entries"]) == {entry_1.entry_id}
+    assert not response["success"]
+    assert response["error"]["code"] == "unknown_error"
+    assert response["error"]["message"] == "Integration not found"

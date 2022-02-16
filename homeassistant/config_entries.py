@@ -1619,4 +1619,4 @@ async def support_remove_from_device(hass: HomeAssistant, domain: str) -> bool:
     """Test if a domain supports being removed from a device."""
     integration = await loader.async_get_integration(hass, domain)
     component = integration.get_component()
-    return hasattr(component, "support_remove_from_device")
+    return hasattr(component, "async_remove_config_entry_device")

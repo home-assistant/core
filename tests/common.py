@@ -583,7 +583,7 @@ class MockModule:
         async_migrate_entry=None,
         async_remove_entry=None,
         partial_manifest=None,
-        support_remove_from_device=None,
+        async_remove_config_entry_device=None,
     ):
         """Initialize the mock module."""
         self.__name__ = f"homeassistant.components.{domain}"
@@ -625,8 +625,8 @@ class MockModule:
         if async_remove_entry is not None:
             self.async_remove_entry = async_remove_entry
 
-        if support_remove_from_device is not None:
-            self.support_remove_from_device = support_remove_from_device
+        if async_remove_config_entry_device is not None:
+            self.async_remove_config_entry_device = async_remove_config_entry_device
 
     def mock_manifest(self):
         """Generate a mock manifest to represent this module."""
