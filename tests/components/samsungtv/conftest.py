@@ -48,8 +48,8 @@ def remotews_fixture():
                 "networkType": "wireless",
             },
         }
+        remotews.token = "FAKE_TOKEN"
         remotews_class.return_value = remotews
-        remotews_class().__enter__().token = "FAKE_TOKEN"
         yield remotews
 
 
@@ -63,8 +63,8 @@ def remotews_no_device_info_fixture():
         remotews.__enter__ = Mock(return_value=remotews)
         remotews.__exit__ = Mock()
         remotews.rest_device_info.return_value = None
+        remotews.token = "FAKE_TOKEN"
         remotews_class.return_value = remotews
-        remotews_class().__enter__().token = "FAKE_TOKEN"
         yield remotews
 
 
@@ -87,8 +87,8 @@ def remotews_soundbar_fixture():
                 "type": "Samsung SoundBar",
             },
         }
+        remotews.token = "FAKE_TOKEN"
         remotews_class.return_value = remotews
-        remotews_class().__enter__().token = "FAKE_TOKEN"
         yield remotews
 
 
