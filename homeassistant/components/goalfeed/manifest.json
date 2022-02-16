@@ -2,7 +2,7 @@
   "domain": "goalfeed",
   "name": "Goalfeed",
   "documentation": "https://www.home-assistant.io/integrations/goalfeed",
-  "requirements": ["pysher==1.0.6", "websocket-client==0.57.0"],
+  "requirements": ["pysher==1.0.7"],
   "codeowners": [],
   "iot_class": "cloud_push"
 }
