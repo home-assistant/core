@@ -441,6 +441,7 @@ async def _account_data(hass: HomeAssistant, cloud: Cloud):
         "email": claims["email"],
         "google_entities": client.google_user_config["filter"].config,
         "google_registered": google_config.has_registered_user_agent,
+        "google_local_connected": google_config.is_local_connected,
         "logged_in": True,
         "prefs": client.prefs.as_dict(),
         "remote_certificate": certificate,
