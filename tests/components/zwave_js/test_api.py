@@ -475,7 +475,15 @@ async def test_add_node(
 
     event = Event(
         type="interview failed",
-        data={"source": "node", "event": "interview failed", "nodeId": 67},
+        data={
+            "source": "node",
+            "event": "interview failed",
+            "nodeId": 67,
+            "args": {
+                "errorMessage": "error",
+                "isFinal": True,
+            },
+        },
     )
     client.driver.receive_event(event)
 
@@ -1607,7 +1615,15 @@ async def test_replace_failed_node(
 
     event = Event(
         type="interview failed",
-        data={"source": "node", "event": "interview failed", "nodeId": 67},
+        data={
+            "source": "node",
+            "event": "interview failed",
+            "nodeId": 67,
+            "args": {
+                "errorMessage": "error",
+                "isFinal": True,
+            },
+        },
     )
     client.driver.receive_event(event)
 
@@ -2190,7 +2206,15 @@ async def test_refresh_node_info(
 
     event = Event(
         type="interview failed",
-        data={"source": "node", "event": "interview failed", "nodeId": 52},
+        data={
+            "source": "node",
+            "event": "interview failed",
+            "nodeId": 52,
+            "args": {
+                "errorMessage": "error",
+                "isFinal": True,
+            },
+        },
     )
     client.driver.receive_event(event)
 
