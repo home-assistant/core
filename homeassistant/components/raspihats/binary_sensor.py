@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -109,20 +108,12 @@ class I2CHatBinarySensor(BinarySensorEntity):
         self._device_class = device_class
         self._state = self.I2C_HATS_MANAGER.read_di(self._address, self._channel)
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        if TYPE_CHECKING:
-            assert self.I2C_HATS_MANAGER
-
         def online_callback():
             """Call fired when board is online."""
             self.schedule_update_ha_state()
 
-        await self.hass.async_add_executor_job(
-            self.I2C_HATS_MANAGER.register_online_callback,
-            self._address,
-            self._channel,
-            online_callback,
+        self.I2C_HATS_MANAGER.register_online_callback(
+            self._address, self._channel, online_callback
         )
 
         def edge_callback(state):
@@ -130,11 +121,8 @@ class I2CHatBinarySensor(BinarySensorEntity):
             self._state = state
             self.schedule_update_ha_state()
 
-        await self.hass.async_add_executor_job(
-            self.I2C_HATS_MANAGER.register_di_callback,
-            self._address,
-            self._channel,
-            edge_callback,
+        self.I2C_HATS_MANAGER.register_di_callback(
+            self._address, self._channel, edge_callback
         )
 
     @property

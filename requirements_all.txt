@@ -114,7 +114,7 @@ adext==0.4.2
 adguardhome==0.5.1
 
 # homeassistant.components.advantage_air
-advantage_air==0.2.5
+advantage_air==0.3.0
 
 # homeassistant.components.frontier_silicon
 afsapi==0.0.4
@@ -191,7 +191,7 @@ aiohomekit==0.6.11
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==4.0.1
+aiohue==4.1.2
 
 # homeassistant.components.homewizard
 aiohwenergy==0.8.0
@@ -681,7 +681,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.28.22
+flux_led==0.28.26
 
 # homeassistant.components.homekit
 fnvhash==0.1.0

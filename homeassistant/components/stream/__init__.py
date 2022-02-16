@@ -342,7 +342,9 @@ class Stream:
             stream_state.discontinuity()
             if not self.keepalive or self._thread_quit.is_set():
                 if self._fast_restart_once:
-                    # The stream source is updated, restart without any delay.
+                    # The stream source is updated, restart without any delay and reset the retry
+                    # backoff for the new url.
+                    wait_timeout = 0
                     self._fast_restart_once = False
                     self._thread_quit.clear()
                     continue

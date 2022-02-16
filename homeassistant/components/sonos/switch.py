@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import datetime
 import logging
+from typing import Any
 
 from soco.exceptions import SoCoException, SoCoSlaveException, SoCoUPnPException
 
@@ -342,20 +343,20 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             ATTR_INCLUDE_LINKED_ZONES: self.alarm.include_linked_zones,
         }
 
-    async def async_turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn alarm switch on."""
-        await self.async_handle_switch_on_off(turn_on=True)
+        self._handle_switch_on_off(turn_on=True)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn alarm switch off."""
-        await self.async_handle_switch_on_off(turn_on=False)
+        self._handle_switch_on_off(turn_on=False)
 
-    async def async_handle_switch_on_off(self, turn_on: bool) -> None:
+    def _handle_switch_on_off(self, turn_on: bool) -> None:
         """Handle turn on/off of alarm switch."""
         try:
             _LOGGER.debug("Toggling the state of %s", self.entity_id)
             self.alarm.enabled = turn_on
-            await self.hass.async_add_executor_job(self.alarm.save)
+            self.alarm.save()
         except (OSError, SoCoException, SoCoUPnPException) as exc:
             _LOGGER.error("Could not update %s: %s", self.entity_id, exc)
 
