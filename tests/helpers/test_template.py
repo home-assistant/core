@@ -1221,6 +1221,38 @@ def test_state_attr(hass):
     )
     assert tpl.async_render() is True
 
+    tpl = template.Template(
+        """
+{{ state_attr("test.noobject", "mode", "off") == "off" }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is True
+
+    tpl = template.Template(
+        """
+{{ state_attr("test.object", "missing_attribute") == None }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is True
+
+    tpl = template.Template(
+        """
+{{ state_attr("test.object", "missing_attribute", default=15) == 15 }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is True
+
+    tpl = template.Template(
+        """
+{{ state_attr("test.object", "missing_attribute", 15) == 15 }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is True
+
 
 def test_states_function(hass):
     """Test using states as a function."""

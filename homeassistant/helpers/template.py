@@ -1257,11 +1257,15 @@ def is_state_attr(hass: HomeAssistant, entity_id: str, name: str, value: Any) ->
     return attr is not None and attr == value
 
 
-def state_attr(hass: HomeAssistant, entity_id: str, name: str) -> Any:
+def state_attr(
+    hass: HomeAssistant, entity_id: str, name: str, default: Any = None
+) -> Any:
     """Get a specific attribute from a state."""
-    if (state_obj := _get_state(hass, entity_id)) is not None:
-        return state_obj.attributes.get(name)
-    return None
+    if (state_obj := _get_state(hass, entity_id)) is not None and (
+        attr_value := state_obj.attributes.get(name)
+    ) is not None:
+        return attr_value
+    return default
 
 
 def now(hass: HomeAssistant) -> datetime:
