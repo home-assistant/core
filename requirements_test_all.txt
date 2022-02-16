@@ -141,7 +141,7 @@ aiohomekit==0.7.14
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==4.1.2
+aiohue==4.2.0
 
 # homeassistant.components.homewizard
 aiohwenergy==0.8.0
@@ -792,7 +792,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.16.4
+plugwise==0.16.5
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -917,7 +917,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.7.0
 
 # homeassistant.components.deconz
-pydeconz==86
+pydeconz==87
 
 # homeassistant.components.dexcom
 pydexcom==0.2.2
@@ -1285,7 +1285,7 @@ pywemo==0.7.0
 pywilight==0.0.70
 
 # homeassistant.components.wiz
-pywizlight==0.5.8
+pywizlight==0.5.9
 
 # homeassistant.components.zerproc
 pyzerproc==0.4.8

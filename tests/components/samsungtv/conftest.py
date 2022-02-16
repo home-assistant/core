@@ -2,6 +2,8 @@
 from unittest.mock import Mock, patch
 
 import pytest
+from samsungctl import Remote
+from samsungtvws import SamsungTVWS
 
 import homeassistant.util.dt as dt_util
 
@@ -20,10 +22,9 @@ def fake_host_fixture() -> None:
 def remote_fixture():
     """Patch the samsungctl Remote."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote_class:
-        remote = Mock()
+        remote = Mock(Remote)
         remote.__enter__ = Mock()
         remote.__exit__ = Mock()
-        remote.port.return_value = 55000
         remote_class.return_value = remote
         yield remote
 
@@ -34,10 +35,9 @@ def remotews_fixture():
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS"
     ) as remotews_class:
-        remotews = Mock()
-        remotews.__enter__ = Mock()
+        remotews = Mock(SamsungTVWS)
+        remotews.__enter__ = Mock(return_value=remotews)
         remotews.__exit__ = Mock()
-        remotews.port.return_value = 8002
         remotews.rest_device_info.return_value = {
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
             "device": {
@@ -48,8 +48,8 @@ def remotews_fixture():
                 "networkType": "wireless",
             },
         }
+        remotews.token = "FAKE_TOKEN"
         remotews_class.return_value = remotews
-        remotews_class().__enter__().token = "FAKE_TOKEN"
         yield remotews
 
 
@@ -59,12 +59,12 @@ def remotews_no_device_info_fixture():
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS"
     ) as remotews_class:
-        remotews = Mock()
-        remotews.__enter__ = Mock()
+        remotews = Mock(SamsungTVWS)
+        remotews.__enter__ = Mock(return_value=remotews)
         remotews.__exit__ = Mock()
         remotews.rest_device_info.return_value = None
+        remotews.token = "FAKE_TOKEN"
         remotews_class.return_value = remotews
-        remotews_class().__enter__().token = "FAKE_TOKEN"
         yield remotews
 
 
@@ -74,8 +74,8 @@ def remotews_soundbar_fixture():
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS"
     ) as remotews_class:
-        remotews = Mock()
-        remotews.__enter__ = Mock()
+        remotews = Mock(SamsungTVWS)
+        remotews.__enter__ = Mock(return_value=remotews)
         remotews.__exit__ = Mock()
         remotews.rest_device_info.return_value = {
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
@@ -87,8 +87,8 @@ def remotews_soundbar_fixture():
                 "type": "Samsung SoundBar",
             },
         }
+        remotews.token = "FAKE_TOKEN"
         remotews_class.return_value = remotews
-        remotews_class().__enter__().token = "FAKE_TOKEN"
         yield remotews
 
 
