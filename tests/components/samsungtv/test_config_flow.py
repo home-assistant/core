@@ -925,12 +925,17 @@ async def test_autodetect_legacy(hass: HomeAssistant, remote: Mock):
 
 async def test_autodetect_none(hass: HomeAssistant):
     """Test for send key with autodetection of protocol."""
+    mock_remotews = Mock()
+    mock_remotews.__enter__ = Mock(return_value=mock_remotews)
+    mock_remotews.__exit__ = Mock()
+    mock_remotews.open = Mock(side_effect=OSError("Boom"))
+
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=OSError("Boom"),
     ) as remote, patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS",
-        side_effect=OSError("Boom"),
+        return_value=mock_remotews,
     ) as remotews:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
