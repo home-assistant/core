@@ -1133,7 +1133,6 @@ async def test_cleanup_device_registry(hass, registry):
     """Test cleanup works."""
     config_entry = MockConfigEntry(domain="hue")
     config_entry.add_to_hass(hass)
-    assert config_entry.device_auto_cleanup is False
 
     d1 = registry.async_get_or_create(
         identifiers={("hue", "d1")}, config_entry_id=config_entry.entry_id
@@ -1161,94 +1160,10 @@ async def test_cleanup_device_registry(hass, registry):
     assert registry.async_get_device({("something", "d4")}) is None
 
 
-async def test_cleanup_device_registry_auto_cleanup(hass, registry):
-    """Test config entries with auto cleanup are not considered for orphaned state."""
-    config_entry = MockConfigEntry(domain="hue")
-    config_entry.add_to_hass(hass)
-    config_entry.async_enable_device_auto_cleanup()
-    assert config_entry.device_auto_cleanup is True
-
-    registry.async_get_or_create(
-        identifiers={("hue", "d1")}, config_entry_id=config_entry.entry_id
-    )
-    registry.async_get_or_create(
-        identifiers={("hue", "d2")}, config_entry_id=config_entry.entry_id
-    )
-    d3 = registry.async_get_or_create(
-        identifiers={("hue", "d3")}, config_entry_id=config_entry.entry_id
-    )
-    registry.async_get_or_create(
-        identifiers={("something", "d4")}, config_entry_id="non_existing"
-    )
-
-    ent_reg = entity_registry.async_get(hass)
-    device_registry.async_cleanup(hass, registry, ent_reg)
-    ent_reg.async_get_or_create("light", "hue", "e3", device_id=d3.id)
-
-    assert registry.async_get_device({("hue", "d1")}) is None
-    assert registry.async_get_device({("hue", "d2")}) is None
-    assert registry.async_get_device({("hue", "d3")}) is not None
-    assert registry.async_get_device({("something", "d4")}) is None
-
-
-async def test_cleanup_device_registry_auto_cleanup_one_with_one_without(
-    hass, registry
-):
-    """Test config entries with auto cleanup are not considered for orphaned state.
-
-    Ensure device that still has config entries only if
-    auto cleanup is enabled on all of the referenced config entries
-    """
-    auto_cleanup_entry = MockConfigEntry(domain="hue")
-    auto_cleanup_entry.add_to_hass(hass)
-    auto_cleanup_entry.async_enable_device_auto_cleanup()
-    assert auto_cleanup_entry.device_auto_cleanup is True
-
-    no_auto_cleanup_entry = MockConfigEntry(domain="hue")
-    no_auto_cleanup_entry.add_to_hass(hass)
-    assert no_auto_cleanup_entry.device_auto_cleanup is False
-
-    d1 = registry.async_get_or_create(
-        identifiers={("hue", "d1")}, config_entry_id=auto_cleanup_entry.entry_id
-    )
-    registry.async_get_or_create(
-        identifiers={("hue", "d1")}, config_entry_id=no_auto_cleanup_entry.entry_id
-    )
-    registry.async_get_or_create(
-        identifiers={("hue", "d2")},
-        config_entry_id=auto_cleanup_entry.entry_id,
-    )
-    d3 = registry.async_get_or_create(
-        identifiers={("hue", "d3")},
-        config_entry_id=auto_cleanup_entry.entry_id,
-    )
-    registry.async_get_or_create(
-        identifiers={("something", "d4")}, config_entry_id="non_existing"
-    )
-
-    ent_reg = entity_registry.async_get(hass)
-    ent_reg.async_get_or_create("light", "hue", "e1", device_id=d1.id)
-    ent_reg.async_get_or_create("light", "hue", "e2", device_id=d1.id)
-    ent_reg.async_get_or_create("light", "hue", "e3", device_id=d3.id)
-
-    device_registry.async_cleanup(hass, registry, ent_reg)
-
-    # d1 is referenced by two config entries
-    # and one of them does not have auto cleanup turned on
-    assert registry.async_get_device({("hue", "d1")}) is not None
-
-    assert registry.async_get_device({("hue", "d2")}) is None
-
-    # d3 still has an entity so it should not get removed
-    assert registry.async_get_device({("hue", "d3")}) is not None
-    assert registry.async_get_device({("something", "d4")}) is None
-
-
 async def test_cleanup_device_registry_removes_expired_orphaned_devices(hass, registry):
     """Test cleanup removes expired orphaned devices."""
     config_entry = MockConfigEntry(domain="hue")
     config_entry.add_to_hass(hass)
-    assert config_entry.device_auto_cleanup is False
 
     registry.async_get_or_create(
         identifiers={("hue", "d1")}, config_entry_id=config_entry.entry_id
