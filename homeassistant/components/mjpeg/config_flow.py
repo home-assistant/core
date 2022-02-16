@@ -157,9 +157,9 @@ class MJPEGFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             errors, authentication = await async_validate_input(self.hass, user_input)
             if not errors:
-                for entry in self._async_current_entries(include_ignore=False):
-                    if entry.options[CONF_MJPEG_URL] == user_input[CONF_MJPEG_URL]:
-                        return self.async_abort(reason="already_configured")
+                self._async_abort_entries_match(
+                    {CONF_MJPEG_URL: user_input[CONF_MJPEG_URL]}
+                )
 
                 # Storing data in option, to allow for changing them later
                 # using an options flow.
@@ -186,10 +186,7 @@ class MJPEGFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Handle a flow initialized by importing a config."""
-        for entry in self._async_current_entries(include_ignore=False):
-            if entry.options[CONF_MJPEG_URL] == config[CONF_MJPEG_URL]:
-                return self.async_abort(reason="already_configured")
-
+        self._async_abort_entries_match({CONF_MJPEG_URL: config[CONF_MJPEG_URL]})
         return self.async_create_entry(
             title=config[CONF_NAME],
             data={},
