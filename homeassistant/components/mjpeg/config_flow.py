@@ -139,7 +139,6 @@ class MJPEGFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for MJPEG IP Camera."""
 
     VERSION = 1
-    show_name: bool = True
 
     @staticmethod
     @callback
@@ -181,7 +180,7 @@ class MJPEGFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=async_get_schema(user_input, show_name=self.show_name),
+            data_schema=async_get_schema(user_input, show_name=True),
             errors=errors,
         )
 
@@ -207,8 +206,6 @@ class MJPEGFlowHandler(ConfigFlow, domain=DOMAIN):
 
 class MJPEGOptionsFlowHandler(OptionsFlow):
     """Handle MJPEG IP Camera options."""
-
-    show_name: bool = False
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize MJPEG IP Camera options flow."""
@@ -247,9 +244,7 @@ class MJPEGOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=async_get_schema(
-                user_input or self.config_entry.options, show_name=self.show_name
-            ),
+            data_schema=async_get_schema(user_input or self.config_entry.options),
             errors=errors,
         )
 
