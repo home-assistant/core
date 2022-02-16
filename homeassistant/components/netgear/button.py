@@ -22,6 +22,7 @@ class NetgearButtonEntityDescriptionRequired:
 
     action: Callable
 
+
 @dataclass
 class NetgearButtonEntityDescription(
     ButtonEntityDescription, NetgearButtonEntityDescriptionRequired
