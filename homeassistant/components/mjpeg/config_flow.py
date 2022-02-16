@@ -197,7 +197,7 @@ class MJPEGFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_AUTHENTICATION: config[CONF_AUTHENTICATION],
                 CONF_MJPEG_URL: config[CONF_MJPEG_URL],
                 CONF_PASSWORD: config[CONF_PASSWORD],
-                CONF_STILL_IMAGE_URL: config[CONF_STILL_IMAGE_URL],
+                CONF_STILL_IMAGE_URL: config.get(CONF_STILL_IMAGE_URL),
                 CONF_USERNAME: config.get(CONF_USERNAME),
                 CONF_VERIFY_SSL: config[CONF_VERIFY_SSL],
             },
