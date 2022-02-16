@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import ValuesView
 from typing import Any
 
-from pydeconz.group import DeconzGroup as Group
+from pydeconz.group import Group
 from pydeconz.light import (
     ALERT_LONG,
     ALERT_SHORT,

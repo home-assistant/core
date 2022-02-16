@@ -102,7 +102,10 @@ async def async_browse_media(
     if DOMAIN not in hass.data:
         raise BrowseError("Media Source not loaded")
 
-    item = await _get_media_item(hass, media_content_id).async_browse()
+    try:
+        item = await _get_media_item(hass, media_content_id).async_browse()
+    except ValueError as err:
+        raise BrowseError("Not a media source item") from err
 
     if content_filter is None or item.children is None:
         return item
@@ -118,7 +121,13 @@ async def async_resolve_media(hass: HomeAssistant, media_content_id: str) -> Pla
     """Get info to play media."""
     if DOMAIN not in hass.data:
         raise Unresolvable("Media Source not loaded")
-    return await _get_media_item(hass, media_content_id).async_resolve()
+
+    try:
+        item = _get_media_item(hass, media_content_id)
+    except ValueError as err:
+        raise Unresolvable("Not a media source item") from err
+
+    return await item.async_resolve()
 
 
 @websocket_api.websocket_command(

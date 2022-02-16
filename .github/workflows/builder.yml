@@ -57,6 +57,7 @@ jobs:
         uses: home-assistant/actions/helpers/codenotary@master
         with:
           source: file://${{ github.workspace }}/OFFICIAL_IMAGE
+          asset: OFFICIAL_IMAGE-${{ steps.version.outputs.version }}
           token: ${{ secrets.CAS_TOKEN }}
 
   build_python:

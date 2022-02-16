@@ -42,10 +42,10 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_device = device
         return await self.async_step_discovery_confirm()
 
-    async def async_step_discovery(
+    async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
-        """Handle discovery."""
+        """Handle integration discovery."""
         uuid = discovery_info[CONF_ID]
         device = async_get_discovered_device(self.hass, discovery_info[CONF_ID])
         host = device.address

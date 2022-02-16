@@ -211,7 +211,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={CONF_ID: MOCK_UUID},
         )
         assert result["type"] == RESULT_TYPE_FORM
@@ -254,7 +254,7 @@ async def test_discovery_existing_device_no_ip_change(hass: HomeAssistant) -> No
     with _patch_discovery():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={CONF_ID: MOCK_UUID},
         )
         assert result["type"] == RESULT_TYPE_ABORT
@@ -281,7 +281,7 @@ async def test_discovery_existing_device_ip_change(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={CONF_ID: MOCK_UUID},
         )
         await hass.async_block_till_done()
