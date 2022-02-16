@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "cannot_connect": "\u00dchendamine nurjus",
             "no_devices_found": "V\u00f5rgust seadmeid ei leitud"
         },
         "error": {
