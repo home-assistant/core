@@ -133,7 +133,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                 _LOGGER.debug("Skip state recovery after reload for %s", self.entity_id)
                 return
             self._expired = False
-            self._state = bool(last_state.state == STATE_ON)
+            self._state = last_state.state == STATE_ON
 
             if self._expiration_trigger:
                 # We might have set up a trigger already after subscribing from
