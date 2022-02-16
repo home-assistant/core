@@ -1,6 +1,6 @@
 """Tests for Samsung TV config flow."""
 import socket
-from unittest.mock import Mock, call, patch
+from unittest.mock import Mock, PropertyMock, call, patch
 
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
@@ -814,7 +814,7 @@ async def test_autodetect_websocket(hass: HomeAssistant):
                 "type": "Samsung SmartTV",
             },
         }
-        remote.token = "123456789"
+        remote.token = PropertyMock(return_value="123456789")
         remotews.return_value = remote
 
         result = await hass.config_entries.flow.async_init(
@@ -858,7 +858,7 @@ async def test_websocket_no_mac(hass: HomeAssistant):
                 "type": "Samsung SmartTV",
             },
         }
-        remote.token = "123456789"
+        remote.token = PropertyMock(return_value="123456789")
         remotews.return_value = remote
 
         result = await hass.config_entries.flow.async_init(
