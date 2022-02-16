@@ -1,48 +1,35 @@
 """The tests for SleepIQ sensor platform."""
-from unittest.mock import MagicMock
-
-import homeassistant.components.sleepiq.sensor as sleepiq
-from homeassistant.setup import async_setup_component
-
-from tests.components.sleepiq.test_init import mock_responses
-
-CONFIG = {"username": "foo", "password": "bar"}
+from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON
+from homeassistant.helpers import entity_registry as er
 
 
-async def test_setup(hass, requests_mock):
-    """Test for successfully setting up the SleepIQ platform."""
-    mock_responses(requests_mock)
+async def test_sensors(hass, setup_entry):
+    """Test the SleepIQ binary sensors for a bed with two sides."""
+    entity_registry = er.async_get(hass)
 
-    assert await async_setup_component(hass, "sleepiq", {"sleepiq": CONFIG})
+    state = hass.states.get("sensor.sleepnumber_ile_test1_sleepnumber")
+    assert state.state == "40"
+    assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME) == "SleepNumber ILE Test1 SleepNumber"
+    )
 
-    device_mock = MagicMock()
-    sleepiq.setup_platform(hass, CONFIG, device_mock, MagicMock())
-    devices = device_mock.call_args[0][0]
-    assert len(devices) == 2
+    entry = entity_registry.async_get("sensor.sleepnumber_ile_test1_sleepnumber")
+    assert entry
+    assert entry.unique_id == "-31_Test1_sleep_number"
 
-    left_side = devices[1]
-    left_side.hass = hass
-    assert left_side.name == "SleepNumber ILE Test1 SleepNumber"
-    assert left_side.state == 40
+    # If account type is set, only a single bed account was created and there will
+    # not be a second entity
+    if setup_entry["account_type"]:
+        return
 
-    right_side = devices[0]
-    right_side.hass = hass
-    assert right_side.name == "SleepNumber ILE Test2 SleepNumber"
-    assert right_side.state == 80
+    state = hass.states.get("sensor.sleepnumber_ile_test2_sleepnumber")
+    assert state.state == "80"
+    assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME) == "SleepNumber ILE Test2 SleepNumber"
+    )
 
-
-async def test_setup_single(hass, requests_mock):
-    """Test for successfully setting up the SleepIQ platform."""
-    mock_responses(requests_mock, single=True)
-
-    assert await async_setup_component(hass, "sleepiq", {"sleepiq": CONFIG})
-
-    device_mock = MagicMock()
-    sleepiq.setup_platform(hass, CONFIG, device_mock, MagicMock())
-    devices = device_mock.call_args[0][0]
-    assert len(devices) == 1
-
-    right_side = devices[0]
-    right_side.hass = hass
-    assert right_side.name == "SleepNumber ILE Test1 SleepNumber"
-    assert right_side.state == 40
+    entry = entity_registry.async_get("sensor.sleepnumber_ile_test2_sleepnumber")
+    assert entry
+    assert entry.unique_id == "-31_Test2_sleep_number"
