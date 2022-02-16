@@ -21,7 +21,7 @@ from .router import NetgearRouter, NetgearRouterEntity
 class NetgearButtonEntityDescription(ButtonEntityDescription):
     """Class describing Netgear button entities."""
 
-    action: Callable = lambda router: router
+    action: Callable
 
 
 BUTTONS = [
