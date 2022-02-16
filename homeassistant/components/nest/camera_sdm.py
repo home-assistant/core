@@ -220,7 +220,7 @@ class NestCamera(Camera):
         return await self.hass.async_add_executor_job(self.placeholder_image)
 
     @classmethod
-    @functools.lru_cache(maxsize=1)
+    @functools.cache
     def placeholder_image(cls) -> bytes:
         """Return placeholder image to use when no stream is available."""
         return PLACEHOLDER.read_bytes()
