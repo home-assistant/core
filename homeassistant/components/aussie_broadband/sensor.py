@@ -24,7 +24,7 @@ from .const import DOMAIN, SERVICE_ID
 
 @dataclass
 class SensorValueEntityDescription(SensorEntityDescription):
-    """Class describing Airly sensor entities."""
+    """Class describing Aussie Broadband sensor entities."""
 
     value: Callable = lambda x: x
 
@@ -137,12 +137,14 @@ async def async_setup_entry(
 class AussieBroadandSensorEntity(CoordinatorEntity, SensorEntity):
     """Base class for Aussie Broadband metric sensors."""
 
+    entity_description: SensorValueEntityDescription
+
     def __init__(
         self, service: dict[str, Any], description: SensorValueEntityDescription
     ) -> None:
         """Initialize the sensor."""
         super().__init__(service["coordinator"])
-        self.entity_description: SensorValueEntityDescription = description
+        self.entity_description = description
         self._attr_unique_id = f"{service[SERVICE_ID]}:{description.key}"
         self._attr_name = f"{service['name']} {description.name}"
         self._attr_device_info = DeviceInfo(
