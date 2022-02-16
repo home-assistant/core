@@ -43,6 +43,19 @@ async def test_load_unload_config_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+async def test_reload_config_entry(
+    hass: HomeAssistant,
+    mock_reload_entry: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test the MJPEG IP Camera configuration entry is reloaded on change."""
+    assert len(mock_reload_entry.mock_calls) == 0
+    hass.config_entries.async_update_entry(
+        init_integration, options={"something": "else"}
+    )
+    assert len(mock_reload_entry.mock_calls) == 1
+
+
 async def test_import_config(
     hass: HomeAssistant,
     mock_mjpeg_requests: MagicMock,

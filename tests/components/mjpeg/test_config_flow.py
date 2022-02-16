@@ -319,13 +319,10 @@ async def test_import_flow_already_configured(
 async def test_options_flow(
     hass: HomeAssistant,
     mock_mjpeg_requests: Mocker,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test options config flow."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(init_integration.entry_id)
 
     assert result.get("type") == RESULT_TYPE_FORM
     assert result.get("step_id") == "init"
@@ -361,7 +358,6 @@ async def test_options_flow(
     assert result2.get("errors") == {"mjpeg_url": "already_configured"}
     assert "flow_id" in result2
 
-    assert len(mock_setup_entry.mock_calls) == 0
     assert mock_mjpeg_requests.call_count == 1
 
     # Test connectione error on MJPEG url
@@ -381,7 +377,6 @@ async def test_options_flow(
     assert result3.get("errors") == {"mjpeg_url": "cannot_connect"}
     assert "flow_id" in result3
 
-    assert len(mock_setup_entry.mock_calls) == 0
     assert mock_mjpeg_requests.call_count == 2
 
     # Test connectione error on still url
@@ -401,7 +396,6 @@ async def test_options_flow(
     assert result4.get("errors") == {"still_image_url": "cannot_connect"}
     assert "flow_id" in result4
 
-    assert len(mock_setup_entry.mock_calls) == 0
     assert mock_mjpeg_requests.call_count == 4
 
     # Invalid credentials
@@ -422,7 +416,6 @@ async def test_options_flow(
     assert result5.get("errors") == {"username": "invalid_auth"}
     assert "flow_id" in result5
 
-    assert len(mock_setup_entry.mock_calls) == 0
     assert mock_mjpeg_requests.call_count == 6
 
     # Finish
@@ -445,5 +438,4 @@ async def test_options_flow(
         CONF_VERIFY_SSL: True,
     }
 
-    assert len(mock_setup_entry.mock_calls) == 0
     assert mock_mjpeg_requests.call_count == 7

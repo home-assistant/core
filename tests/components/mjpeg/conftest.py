@@ -52,6 +52,13 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
+def mock_reload_entry() -> Generator[AsyncMock, None, None]:
+    """Mock setting up a config entry."""
+    with patch("homeassistant.components.mjpeg.async_reload_entry") as mock_reload:
+        yield mock_reload
+
+
+@pytest.fixture
 def mock_mjpeg_requests(requests_mock: Mocker) -> Generator[Mocker, None, None]:
     """Fixture to provide a requests mocker."""
     requests_mock.get("https://example.com/mjpeg", text="resp")
