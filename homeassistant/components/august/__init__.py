@@ -36,8 +36,6 @@ API_CACHED_ATTRS = (
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up August from a config entry."""
 
-    entry.async_enable_device_auto_cleanup()
-
     august_gateway = AugustGateway(hass)
 
     try:
