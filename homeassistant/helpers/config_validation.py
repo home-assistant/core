@@ -1058,6 +1058,8 @@ SERVICE_SCHEMA = vol.All(
             ),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
             vol.Optional(CONF_TARGET): vol.Any(TARGET_SERVICE_FIELDS, dynamic_template),
+            # The frontend stores data here. Don't use in core.
+            vol.Remove("metadata"): dict,
         }
     ),
     has_at_least_one_key(CONF_SERVICE, CONF_SERVICE_TEMPLATE),
