@@ -345,6 +345,11 @@ class DPCode(StrEnum):
     TOTAL_CLEAN_COUNT = "total_clean_count"
     TOTAL_CLEAN_TIME = "total_clean_time"
     TOTAL_FORWARD_ENERGY = "total_forward_energy"
+    TOTAL_TIME = "total_time"
+    TOTAL_PM = "total_pm"
+    TVOC = "tvoc"
+    UPPER_TEMP = "upper_temp"
+    UPPER_TEMP_F = "upper_temp_f"
     UV = "uv"  # UV sterilization
     VA_BATTERY = "va_battery"
     VA_HUMIDITY = "va_humidity"
