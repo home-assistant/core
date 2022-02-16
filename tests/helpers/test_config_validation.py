@@ -415,6 +415,11 @@ def test_service_schema():
     for value in options:
         cv.SERVICE_SCHEMA(value)
 
+    # Check metadata is removed from the validated output
+    assert cv.SERVICE_SCHEMA({"service": "scene.turn_on", "metadata": {}}) == {
+        "service": "scene.turn_on"
+    }
+
 
 def test_entity_service_schema():
     """Test make_entity_service_schema validation."""
