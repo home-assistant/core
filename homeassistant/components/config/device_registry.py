@@ -2,15 +2,10 @@
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api.decorators import (
-    async_response,
-    require_admin,
-)
-from homeassistant.core import callback
-from homeassistant.helpers.device_registry import (
-    DeviceEntryDisabler,
-    async_get_registry,
-)
+from homeassistant.components.websocket_api.decorators import require_admin
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceEntryDisabler, async_get
 
 WS_TYPE_LIST = "config/device_registry/list"
 SCHEMA_WS_LIST = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
@@ -39,13 +34,16 @@ async def async_setup(hass):
     websocket_api.async_register_command(
         hass, WS_TYPE_UPDATE, websocket_update_device, SCHEMA_WS_UPDATE
     )
+    websocket_api.async_register_command(
+        hass, websocket_remove_config_entry_from_device
+    )
     return True
 
 
-@async_response
-async def websocket_list_devices(hass, connection, msg):
+@callback
+def websocket_list_devices(hass, connection, msg):
     """Handle list devices command."""
-    registry = await async_get_registry(hass)
+    registry = async_get(hass)
     connection.send_message(
         websocket_api.result_message(
             msg["id"], [_entry_dict(entry) for entry in registry.devices.values()]
@@ -54,10 +52,10 @@ async def websocket_list_devices(hass, connection, msg):
 
 
 @require_admin
-@async_response
-async def websocket_update_device(hass, connection, msg):
+@callback
+def websocket_update_device(hass, connection, msg):
     """Handle update area websocket command."""
-    registry = await async_get_registry(hass)
+    registry = async_get(hass)
 
     msg.pop("type")
     msg_id = msg.pop("id")
@@ -68,6 +66,52 @@ async def websocket_update_device(hass, connection, msg):
     entry = registry.async_update_device(**msg)
 
     connection.send_message(websocket_api.result_message(msg_id, _entry_dict(entry)))
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        "type": "config/device_registry/remove_config_entry",
+        "device_id": str,
+        "config_entry_id": str,
+    }
+)
+@callback
+def websocket_remove_config_entry_from_device(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Remove config entry from a device."""
+    registry = async_get(hass)
+
+    config_entry = hass.config_entries.async_get_entry(msg["config_entry_id"])
+    if config_entry and not config_entry.supports_remove_device:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
+            "Config entry does not support device removal",
+        )
+        return
+
+    try:
+        entry = registry.async_update_device(
+            msg["device_id"], remove_config_entry_id=msg["config_entry_id"]
+        )
+    except HomeAssistantError as exc:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
+            str(exc),
+        )
+        return
+    except KeyError:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, "Unknown device"
+        )
+        return
+
+    entry_as_dict = _entry_dict(entry) if entry else None
+
+    connection.send_message(websocket_api.result_message(msg["id"], entry_as_dict))
 
 
 @callback

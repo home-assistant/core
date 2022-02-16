@@ -12,7 +12,7 @@ from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import DependencyError, HomeAssistantError, Unauthorized
+from homeassistant.exceptions import DependencyError, Unauthorized
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
     FlowManagerResourceView,
@@ -33,7 +33,6 @@ async def async_setup(hass):
     hass.http.register_view(OptionManagerFlowResourceView(hass.config_entries.options))
 
     websocket_api.async_register_command(hass, config_entry_disable)
-    websocket_api.async_register_command(hass, config_entry_remove_device)
     websocket_api.async_register_command(hass, config_entry_update)
     websocket_api.async_register_command(hass, config_entries_progress)
     websocket_api.async_register_command(hass, ignore_config_flow)
@@ -371,45 +370,6 @@ async def ignore_config_flow(hass, connection, msg):
         data={"unique_id": flow["context"]["unique_id"], "title": msg["title"]},
     )
     connection.send_result(msg["id"])
-
-
-@websocket_api.require_admin
-@websocket_api.websocket_command(
-    {
-        "type": "config_entries/remove_device",
-        "entry_id": str,
-        "device_id": str,
-    }
-)
-@websocket_api.async_response
-async def config_entry_remove_device(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
-) -> None:
-    """Remove config entry from a device."""
-    try:
-        result = await hass.config_entries.async_remove_device(
-            msg["entry_id"], msg["device_id"]
-        )
-    except config_entries.UnknownEntry:
-        send_entry_not_found(connection, msg["id"])
-        return
-    except HomeAssistantError as exc:
-        connection.send_error(
-            msg["id"],
-            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
-            str(exc),
-        )
-        return
-
-    if not result:
-        connection.send_error(
-            msg["id"],
-            websocket_api.const.ERR_UNKNOWN_ERROR,
-            "Failed to remove device entry, rejected by integration",
-        )
-        return
-
-    connection.send_result(msg["id"], result)
 
 
 @callback
