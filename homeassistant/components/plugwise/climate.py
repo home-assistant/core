@@ -79,7 +79,9 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
 
         self._attr_min_temp = self.device.get("lower_bound", DEFAULT_MIN_TEMP)
         self._attr_max_temp = self.device.get("upper_bound", DEFAULT_MAX_TEMP)
-        self._attr_target_temperature_step = self.device.get("resolution")
+        if resolution := self.device.get("resolution"):
+            # Ensure we don't drop blow 0.1
+            self._attr_target_temperature_step = max(resolution, 0.1)
 
     @property
     def current_temperature(self) -> float | None:
