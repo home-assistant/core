@@ -48,6 +48,7 @@ from .errors import ShouldUpdateConfigEntry
 from .media_browser import browse_media
 from .server import PlexServer
 from .services import async_setup_services
+from .view import PlexImageView
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -162,6 +163,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     server_id = plex_server.machine_identifier
     hass.data[PLEX_DOMAIN][SERVERS][server_id] = plex_server
     hass.data[PLEX_DOMAIN][PLATFORMS_COMPLETED][server_id] = set()
+
+    hass.http.register_view(PlexImageView(hass, server_id))
 
     entry.add_update_listener(async_options_updated)
 
