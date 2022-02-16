@@ -73,6 +73,7 @@ DHCP: list[dict[str, str | bool]] = [
     {'domain': 'roomba', 'hostname': 'irobot-*', 'macaddress': '501479*'},
     {'domain': 'roomba', 'hostname': 'roomba-*', 'macaddress': '80A589*'},
     {'domain': 'roomba', 'hostname': 'roomba-*', 'macaddress': 'DCF505*'},
+    {'domain': 'samsungtv', 'registered_devices': True},
     {'domain': 'samsungtv', 'hostname': 'tizen*'},
     {'domain': 'samsungtv', 'macaddress': '8CC8CD*'},
     {'domain': 'samsungtv', 'macaddress': '606BBD*'},
