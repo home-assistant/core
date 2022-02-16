@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import contextlib
 from datetime import time as time_sys
 from typing import Any, cast
 
@@ -14,17 +15,10 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_UNIT_OF_MEASUREMENT,
 )
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import split_entity_id
 from homeassistant.util import decorator
 
-from . import (
-    area_registry as ar,
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
-from .entity import get_device_class
-from .typing import ConfigType
+from . import config_validation as cv
 
 SELECTORS = decorator.Registry()
 
@@ -55,14 +49,12 @@ class Selector:
     """Base class for selectors."""
 
     CONFIG_SCHEMA: Callable
-    config: ConfigType
-    hass: HomeAssistant
+    config: Any
     name: str
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+    def __init__(self, config: Any) -> None:
         """Instantiate a selector."""
         self.config = self.CONFIG_SCHEMA(config)
-        self.hass = hass
 
     def serialize(self) -> Any:
         """Serialize Selector for voluptuous_serialize."""
@@ -91,39 +83,18 @@ class EntitySelector(Selector):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        entity_registry = er.async_get(self.hass)
-        entity_id = er.async_resolve_entity_id(
-            entity_registry, cv.entity_id_or_uuid(data)
-        )
-        if not entity_id:
-            raise vol.Invalid(f"Unknown entity {data}")
-        entry = entity_registry.async_get(entity_id)
-        if not entry:
-            raise vol.Invalid(f"Entity {entity_id} not registered")
-        domain = split_entity_id(entity_id)[0]
+        with contextlib.suppress(vol.Invalid):
+            entity_id = cv.entity_id(data)
+            domain = split_entity_id(entity_id)[0]
 
-        if "device_class" in self.config:
-            device_class = get_device_class(self.hass, entity_id)
-            expected_device_class = self.config["device_class"]
-            if device_class != expected_device_class:
+            if "domain" in self.config and domain != self.config["domain"]:
                 raise vol.Invalid(
-                    f"Entity {entity_id} has device class {device_class}, "
-                    f"expected {expected_device_class}"
+                    f"Entity {entity_id} belongs to domain {domain}, "
+                    f"expected {self.config['domain']}"
                 )
 
-        if "domain" in self.config and domain != self.config["domain"]:
-            raise vol.Invalid(
-                f"Entity {entity_id} belongs to domain {domain}, "
-                f"expected {self.config['domain']}"
-            )
-
-        if "integration" in self.config and entry.domain != self.config["integration"]:
-            raise vol.Invalid(
-                f"Entity {entity_id} belongs to integration {entry.domain}, "
-                f"expected {self.config['integration']}"
-            )
-
-        return entity_id
+            return entity_id
+        return cv.entity_id_or_uuid(data)
 
 
 @SELECTORS.register("device")
@@ -147,57 +118,7 @@ class DeviceSelector(Selector):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        device_id = cv.string(data)
-        device_registry = dr.async_get(self.hass)
-        entity_registry = er.async_get(self.hass)
-        entry = device_registry.async_get(device_id)
-        if not entry:
-            raise vol.Invalid(f"Device {device_id} not registered")
-
-        if "entity" in self.config:
-            entity_validator = EntitySelector(self.hass, self.config["entity"])
-            device_entities = er.async_entries_for_device(
-                entity_registry, device_id, include_disabled_entities=True
-            )
-            has_match = False
-            for entity_entry in device_entities:
-                try:
-                    entity_validator({"entity_id": entity_entry.entity_id})
-                except vol.Error:
-                    pass
-                else:
-                    has_match = True
-                    break
-            if not has_match:
-                raise vol.Invalid(f"Device {device_id} has no matching entity")
-
-        if "integration" in self.config:
-            has_match = False
-            for config_entry_id in entry.config_entries:
-                config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
-                assert config_entry
-                if config_entry.domain == self.config["integration"]:
-                    has_match = True
-                break
-            if not has_match:
-                raise vol.Invalid(f"Device {device_id} has no matching config entry")
-
-        if (
-            "manufacturer" in self.config
-            and entry.manufacturer != self.config["manufacturer"]
-        ):
-            raise vol.Invalid(
-                f"Device {device_id} has manufacturer {entry.manufacturer}, "
-                f"expected {self.config['manufacturer']}"
-            )
-
-        if "model" in self.config and entry.manufacturer != self.config["model"]:
-            raise vol.Invalid(
-                f"Device {device_id} has model {entry.model}, "
-                f"expected {self.config['model']}"
-            )
-
-        return device_id
+        return cv.string(data)
 
 
 @SELECTORS.register("area")
@@ -215,45 +136,7 @@ class AreaSelector(Selector):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        area_id = cv.string(data)
-        area_registry = ar.async_get(self.hass)
-        device_registry = dr.async_get(self.hass)
-        entity_registry = er.async_get(self.hass)
-        entry = area_registry.async_get_area(area_id)
-        if not entry:
-            raise vol.Invalid(f"Area {area_id} not registered")
-
-        if "device" in self.config:
-            device_validator = DeviceSelector(self.hass, self.config["device"])
-            area_devices = dr.async_entries_for_area(device_registry, area_id)
-            has_match = False
-            for device_entry in area_devices:
-                try:
-                    device_validator({"device_id": device_entry.id})
-                except vol.Error:
-                    pass
-                else:
-                    has_match = True
-                    break
-            if not has_match:
-                raise vol.Invalid(f"Area {area_id} has no matching device")
-
-        if "entity" in self.config:
-            entity_validator = EntitySelector(self.hass, self.config["entity"])
-            area_entities = er.async_entries_for_area(entity_registry, area_id)
-            has_match = False
-            for entity_entry in area_entities:
-                try:
-                    entity_validator({"entity_id": entity_entry.entity_id})
-                except vol.Error:
-                    pass
-                else:
-                    has_match = True
-                    break
-            if not has_match:
-                raise vol.Invalid(f"Area {area_id} has no matching entity")
-
-        return area_id
+        return cv.string(data)
 
 
 @SELECTORS.register("number")

@@ -939,8 +939,18 @@ def async_resolve_entity_ids(
     registry: EntityRegistry, entity_ids_or_uuids: list[str]
 ) -> list[str]:
     """Resolve a list of entity ids or UUIDs to a list of entity ids."""
-    return [
+
+    def resolve_entity(entity_id_or_uuid: str) -> str | None:
+        """Resolve an entity id or UUID to an entity id or None."""
+        if valid_entity_id(entity_id_or_uuid):
+            return entity_id_or_uuid
+        if (entry := registry.entities.get_entry(entity_id_or_uuid)) is None:
+            raise vol.Invalid(f"Unknown entity registry entry {entity_id_or_uuid}")
+        return entry.entity_id
+
+    tmp = [
         resolved_item
         for item in entity_ids_or_uuids
-        if (resolved_item := async_resolve_entity_id(registry, item)) is not None
+        if (resolved_item := resolve_entity(item)) is not None
     ]
+    return tmp
