@@ -2,7 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from unittest.mock import DEFAULT as DEFAULT_MOCK, Mock, PropertyMock, call, patch
+from unittest.mock import DEFAULT as DEFAULT_MOCK, Mock, call, patch
 
 import pytest
 from samsungctl import exceptions
@@ -151,10 +151,8 @@ async def test_setup_without_turnon(hass, remote):
 async def test_setup_websocket(hass, remotews):
     """Test setup of platform."""
     with patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remote_class:
-        enter = Mock()
-        type(enter).token = PropertyMock(return_value="987654321")
         remote = Mock()
-        remote.__enter__ = Mock(return_value=enter)
+        remote.__enter__ = Mock(return_value=remote)
         remote.__exit__ = Mock()
         remote.rest_device_info.return_value = {
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
@@ -166,6 +164,7 @@ async def test_setup_websocket(hass, remotews):
                 "networkType": "wireless",
             },
         }
+        remote.token = "987654321"
         remote_class.return_value = remote
 
         await setup_samsungtv(hass, MOCK_CONFIGWS)
@@ -200,10 +199,8 @@ async def test_setup_websocket_2(hass, mock_now):
     assert entry is config_entries[0]
 
     with patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remote_class:
-        enter = Mock()
-        type(enter).token = PropertyMock(return_value="987654321")
         remote = Mock()
-        remote.__enter__ = Mock(return_value=enter)
+        remote.__enter__ = Mock(return_value=remote)
         remote.__exit__ = Mock()
         remote.rest_device_info.return_value = {
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
@@ -215,6 +212,7 @@ async def test_setup_websocket_2(hass, mock_now):
                 "networkType": "wireless",
             },
         }
+        remote.token = "987654321"
         remote_class.return_value = remote
         assert await async_setup_component(hass, SAMSUNGTV_DOMAIN, {})
         await hass.async_block_till_done()
