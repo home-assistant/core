@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "sources": "Avotu saraksts"
+                }
+            }
+        }
+    }
+}

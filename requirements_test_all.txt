@@ -141,7 +141,7 @@ aiohomekit==0.7.14
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==4.0.1
+aiohue==4.1.2
 
 # homeassistant.components.homewizard
 aiohwenergy==0.8.0
@@ -531,7 +531,7 @@ habitipy==0.2.0
 hangups==0.4.17
 
 # homeassistant.components.cloud
-hass-nabucasa==0.52.0
+hass-nabucasa==0.52.1
 
 # homeassistant.components.tasmota
 hatasmota==0.3.1
@@ -595,7 +595,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.intellifire
-intellifire4py==0.6
+intellifire4py==0.9.8
 
 # homeassistant.components.iotawatt
 iotawattpy==0.1.0
@@ -795,7 +795,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.16.2
+plugwise==0.16.4
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -890,7 +890,7 @@ pyatmo==6.2.4
 pyatv==0.10.0
 
 # homeassistant.components.aussie_broadband
-pyaussiebb==0.0.9
+pyaussiebb==0.0.11
 
 # homeassistant.components.balboa
 pybalboa==0.13
@@ -1121,7 +1121,7 @@ pyotgw==1.1b1
 pyotp==2.6.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.3.4
+pyoverkiz==1.3.5
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0

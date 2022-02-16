@@ -117,7 +117,7 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
 ) -> None:
     """Test that the unique id is added if its missing via directed (not broadcast) discovery."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=None
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=None, title=IP_ADDRESS
     )
     config_entry.add_to_hass(hass)
     last_address = None
@@ -144,7 +144,6 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
         assert config_entry.state == ConfigEntryState.LOADED
 
     assert config_entry.unique_id == MAC_ADDRESS
-    assert config_entry.data[CONF_NAME] == title
     assert config_entry.title == title
 
 

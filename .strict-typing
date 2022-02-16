@@ -119,6 +119,7 @@ homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
 homeassistant.components.mailbox.*
 homeassistant.components.media_player.*
+homeassistant.components.mjpeg.*
 homeassistant.components.modbus.*
 homeassistant.components.modem_callerid.*
 homeassistant.components.media_source.*
@@ -165,6 +166,7 @@ homeassistant.components.senseme.*
 homeassistant.components.shelly.*
 homeassistant.components.simplisafe.*
 homeassistant.components.slack.*
+homeassistant.components.sleepiq.*
 homeassistant.components.smhi.*
 homeassistant.components.ssdp.*
 homeassistant.components.stookalert.*
