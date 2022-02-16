@@ -107,8 +107,8 @@ async def test_webhook_post(
     assert len(events) == 1
 
 
-async def test_webhook_allow_methods_internet(hass, hass_client_no_auth):
-    """Test the webhook obeys allow_methods and allow_internet options."""
+async def test_webhook_allowed_methods_internet(hass, hass_client_no_auth):
+    """Test the webhook obeys allowed_methods and local_only options."""
     events = []
 
     @callback
@@ -126,8 +126,8 @@ async def test_webhook_allow_methods_internet(hass, hass_client_no_auth):
                 "trigger": {
                     "platform": "webhook",
                     "webhook_id": "post_webhook",
-                    "allow_methods": "PUT",
-                    "allow_internet": True,
+                    "allowed_methods": "PUT",
+                    "local_only": False,
                 },
                 "action": {
                     "event": "test_success",

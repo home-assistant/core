@@ -26,8 +26,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "webhook"
 
-ALLOWED_METHODS = (METH_GET, METH_HEAD, METH_POST, METH_PUT)
 DEFAULT_METHODS = (METH_POST, METH_PUT)
+SUPPORTED_METHODS = (METH_GET, METH_HEAD, METH_POST, METH_PUT)
 URL_WEBHOOK_PATH = "/api/webhook/{webhook_id}"
 
 
@@ -53,9 +53,9 @@ def async_register(
         allowed_methods = DEFAULT_METHODS
     allowed_methods = frozenset(method.upper() for method in allowed_methods)
 
-    if not allowed_methods.issubset(ALLOWED_METHODS):
+    if not allowed_methods.issubset(SUPPORTED_METHODS):
         raise ValueError(
-            f"Unexpected method: {allowed_methods.difference(ALLOWED_METHODS)}"
+            f"Unexpected method: {allowed_methods.difference(SUPPORTED_METHODS)}"
         )
 
     handlers[webhook_id] = {
@@ -184,7 +184,7 @@ class WebhookView(HomeAssistantView):
         return await async_handle_webhook(hass, webhook_id, request)
 
 
-for method in ALLOWED_METHODS:
+for method in SUPPORTED_METHODS:
     # pylint: disable=protected-access
     setattr(WebhookView, method.lower(), WebhookView._handle)
 

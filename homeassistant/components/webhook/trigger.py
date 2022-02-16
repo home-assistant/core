@@ -12,21 +12,27 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import ALLOWED_METHODS, DEFAULT_METHODS, DOMAIN, async_register, async_unregister
+from . import (
+    DEFAULT_METHODS,
+    DOMAIN,
+    SUPPORTED_METHODS,
+    async_register,
+    async_unregister,
+)
 
 DEPENDENCIES = ("webhook",)
 
-CONF_ALLOW_INTERNET = "allow_internet"
-CONF_ALLOW_METHODS = "allow_methods"
+CONF_ALLOWED_METHODS = "allowed_methods"
+CONF_LOCAL_ONLY = "local_only"
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "webhook",
         vol.Required(CONF_WEBHOOK_ID): cv.string,
-        vol.Optional(CONF_ALLOW_INTERNET): bool,
-        vol.Optional(CONF_ALLOW_METHODS): vol.All(
-            cv.ensure_list, [vol.In(ALLOWED_METHODS)], vol.Unique()
+        vol.Optional(CONF_ALLOWED_METHODS): vol.All(
+            cv.ensure_list, [vol.In(SUPPORTED_METHODS)], vol.Unique()
         ),
+        vol.Optional(CONF_LOCAL_ONLY): bool,
     }
 )
 
@@ -69,8 +75,8 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Trigger based on incoming webhooks."""
     webhook_id: str = config[CONF_WEBHOOK_ID]
-    local_only = not config.get(CONF_ALLOW_INTERNET, False)
-    allowed_methods = config.get(CONF_ALLOW_METHODS, DEFAULT_METHODS)
+    local_only = config.get(CONF_LOCAL_ONLY, True)
+    allowed_methods = config.get(CONF_ALLOWED_METHODS, DEFAULT_METHODS)
     job = HassJob(action)
 
     triggers: dict[str, list[TriggerInstance]] = hass.data.setdefault(
