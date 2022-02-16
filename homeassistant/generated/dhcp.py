@@ -87,6 +87,7 @@ DHCP: list[dict[str, str | bool]] = [
     {'domain': 'solaredge', 'hostname': 'target', 'macaddress': '002702*'},
     {'domain': 'somfy_mylink', 'hostname': 'somfy_*', 'macaddress': 'B8B7F1*'},
     {'domain': 'squeezebox', 'hostname': 'squeezebox*', 'macaddress': '000420*'},
+    {'domain': 'steamist', 'registered_devices': True},
     {'domain': 'steamist', 'hostname': 'my[45]50*', 'macaddress': '001E0C*'},
     {'domain': 'tado', 'hostname': 'tado*'},
     {'domain': 'tesla_wall_connector',
