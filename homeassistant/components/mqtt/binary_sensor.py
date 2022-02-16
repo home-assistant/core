@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
     CONF_VALUE_TEMPLATE,
+    STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -106,7 +107,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT binary sensor."""
-        self._state = None
+        self._state: bool | None = None
         self._expiration_trigger = None
         self._delay_listener = None
         expire_after = config.get(CONF_EXPIRE_AFTER)
@@ -132,7 +133,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                 _LOGGER.debug("Skip state recovery after reload for %s", self.entity_id)
                 return
             self._expired = False
-            self._state = last_state.state
+            self._state = bool(last_state.state == STATE_ON)
 
             if self._expiration_trigger:
                 # We might have set up a trigger already after subscribing from
