@@ -297,10 +297,7 @@ async def test_update_connection_failure(hass, remotews, mock_now):
     ):
         await setup_samsungtv(hass, MOCK_CONFIGWS)
 
-        with patch(
-            "homeassistant.components.samsungtv.bridge.SamsungTVWS",
-            side_effect=ConnectionFailure("Boom"),
-        ):
+        with patch.object(remotews, "open", side_effect=ConnectionFailure("Boom")):
             next_update = mock_now + timedelta(minutes=5)
             with patch("homeassistant.util.dt.utcnow", return_value=next_update):
                 async_fire_time_changed(hass, next_update)
