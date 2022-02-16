@@ -7,7 +7,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -21,37 +20,8 @@ SCAN_INTERVAL = timedelta(seconds=15)
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key="Heating_Current_Temperature",
-        icon="mdi:thermometer",
-        device_class="temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
-        key="Heating_Target_Temperature",
-        icon="mdi:thermometer",
-        device_class="temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
-        key="Heating_State",
-        icon="mdi:radiator",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
         key="Heating_Mode",
         icon="mdi:radiator",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
-        key="Heating_Boost",
-        icon="mdi:radiator",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
-        key="Hotwater_State",
-        icon="mdi:water-pump",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
