@@ -99,7 +99,7 @@ class TTSMediaSource(MediaSource):
         if provider is None:
             raise BrowseError("Unknown provider")
 
-        if params is not None:
+        if params:
             params = f"?{params}"
         else:
             params = ""
