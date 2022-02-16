@@ -2,7 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from unittest.mock import DEFAULT as DEFAULT_MOCK, Mock, PropertyMock, call, patch
+from unittest.mock import DEFAULT as DEFAULT_MOCK, Mock, call, patch
 
 import pytest
 from samsungctl import exceptions
@@ -164,7 +164,7 @@ async def test_setup_websocket(hass, remotews):
                 "networkType": "wireless",
             },
         }
-        remote.token = PropertyMock(return_value="987654321")
+        remote.token = "987654321"
         remote_class.return_value = remote
 
         await setup_samsungtv(hass, MOCK_CONFIGWS)
@@ -212,7 +212,7 @@ async def test_setup_websocket_2(hass, mock_now):
                 "networkType": "wireless",
             },
         }
-        remote.token = PropertyMock(return_value="987654321")
+        remote.token = "987654321"
         remote_class.return_value = remote
         assert await async_setup_component(hass, SAMSUNGTV_DOMAIN, {})
         await hass.async_block_till_done()
