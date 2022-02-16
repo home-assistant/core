@@ -73,6 +73,20 @@ DISCOVERY_SCHEMA = PLATFORM_SCHEMA.extend(
 _LOGGER = logging.getLogger(__name__)
 
 
+class MqttNotificationConfig(TypedDict, total=False):
+    """Supply service parameters for MqttNotificationService."""
+
+    command_topic: str
+    command_template: Template
+    encoding: str
+    name: str | None
+    qos: int
+    retain: bool
+    targets: list
+    title: str
+    device: ConfigType
+
+
 async def async_initialize(hass: HomeAssistant) -> None:
     """Initialize globals."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
@@ -171,20 +185,6 @@ async def async_get_service(
         cast(MqttNotificationConfig, config),
     )
     return service
-
-
-class MqttNotificationConfig(TypedDict, total=False):
-    """Supply service parameters for MqttNotificationService."""
-
-    command_topic: str
-    command_template: Template
-    encoding: str
-    name: str | None
-    qos: int
-    retain: bool
-    targets: list
-    title: str
-    device: ConfigType
 
 
 class MqttNotificationServiceUpdater:
