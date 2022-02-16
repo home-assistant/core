@@ -2905,6 +2905,11 @@ async def test_setup_retrying_during_shutdown(hass):
         ({"vendor": "zoo"}, "already_configured"),
         ({"ip": "9.9.9.9"}, "already_configured"),
         ({"ip": "7.7.7.7"}, "no_match"),  # ignored
+        ({"vendor": "data"}, "no_match"),
+        (
+            {"vendor": "options"},
+            "already_configured",
+        ),  # ensure options takes precedence over data
     ],
 )
 async def test__async_abort_entries_match(hass, manager, matchers, reason):
@@ -2927,6 +2932,11 @@ async def test__async_abort_entries_match(hass, manager, matchers, reason):
         domain="comp",
         data={"ip": "6.6.6.6", "host": "9.9.9.9", "port": 12},
         options={"vendor": "zoo"},
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp",
+        data={"vendor": "data"},
+        options={"vendor": "options"},
     ).add_to_hass(hass)
 
     mock_setup_entry = AsyncMock(return_value=True)
