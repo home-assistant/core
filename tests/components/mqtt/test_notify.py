@@ -22,16 +22,16 @@ COMMAND_TEMPLATE_TEST_PARAMS = (
     "name,service,parameters,expected_result",
     [
         (
-            None,
-            "mqtt",
+            "My service",
+            "my_service",
             {
                 notify.ATTR_TITLE: "Title",
                 notify.ATTR_MESSAGE: "Message",
                 notify.ATTR_DATA: {"par1": "val1"},
             },
             '{"message":"Message",'
-            '"name":"None",'
-            '"service":"mqtt",'
+            '"name":"My service",'
+            '"service":"my_service",'
             '"par1":"val1",'
             '"target":['
             "'t1', 't2'"
@@ -39,8 +39,8 @@ COMMAND_TEMPLATE_TEST_PARAMS = (
             '"title":"Title"}',
         ),
         (
-            None,
-            "mqtt",
+            "My service",
+            "my_service",
             {
                 notify.ATTR_TITLE: "Title",
                 notify.ATTR_MESSAGE: "Message",
@@ -48,8 +48,8 @@ COMMAND_TEMPLATE_TEST_PARAMS = (
                 notify.ATTR_TARGET: ["t2"],
             },
             '{"message":"Message",'
-            '"name":"None",'
-            '"service":"mqtt",'
+            '"name":"My service",'
+            '"service":"my_service",'
             '"par1":"val1",'
             '"target":['
             "'t2'"
@@ -57,27 +57,10 @@ COMMAND_TEMPLATE_TEST_PARAMS = (
             '"title":"Title"}',
         ),
         (
-            None,
-            "mqtt_t1",
-            {
-                notify.ATTR_TITLE: "Title",
-                notify.ATTR_MESSAGE: "Message",
-                notify.ATTR_DATA: {"par1": "val2"},
-            },
-            '{"message":"Message",'
-            '"name":"None",'
-            '"service":"mqtt",'
-            '"par1":"val2",'
-            '"target":['
-            "'t1'"
-            "],"
-            '"title":"Title"}',
-        ),
-        (
             "My service",
             "my_service_t1",
             {
-                notify.ATTR_TITLE: "Title",
+                notify.ATTR_TITLE: "Title2",
                 notify.ATTR_MESSAGE: "Message",
                 notify.ATTR_DATA: {"par1": "val2"},
             },
@@ -88,7 +71,7 @@ COMMAND_TEMPLATE_TEST_PARAMS = (
             '"target":['
             "'t1'"
             "],"
-            '"title":"Title"}',
+            '"title":"Title2"}',
         ),
     ],
 )
@@ -131,6 +114,7 @@ async def test_sending_with_command_templates_with_config_setup(
 ):
     """Test the sending MQTT commands using a template using config setup."""
     config = {
+        "name": name,
         "command_topic": "lcd/set",
         "command_template": "{"
         '"message":"{{message}}",'
@@ -144,11 +128,7 @@ async def test_sending_with_command_templates_with_config_setup(
         "platform": "mqtt",
         "qos": "1",
     }
-    if name:
-        config[CONF_NAME] = name
-        service_base_name = slugify(name)
-    else:
-        service_base_name = DOMAIN
+    service_base_name = slugify(name)
     assert await async_setup_component(
         hass,
         notify.DOMAIN,
@@ -185,6 +165,7 @@ async def test_sending_with_command_templates_auto_discovery(
 ):
     """Test the sending MQTT commands using a template and auto discovery."""
     config = {
+        "name": name,
         "command_topic": "lcd/set",
         "command_template": "{"
         '"message":"{{message}}",'
