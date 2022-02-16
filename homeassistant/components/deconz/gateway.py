@@ -9,7 +9,7 @@ from typing import Any, cast
 import async_timeout
 from pydeconz import DeconzSession, errors, group, light, sensor
 from pydeconz.alarm_system import AlarmSystem as DeconzAlarmSystem
-from pydeconz.group import DeconzGroup
+from pydeconz.group import Group as DeconzGroup
 from pydeconz.light import DeconzLight
 from pydeconz.sensor import DeconzSensor
 
