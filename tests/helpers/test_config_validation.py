@@ -410,6 +410,7 @@ def test_service_schema():
             "entity_id": "all",
             "alias": "turn on kitchen lights",
         },
+        {"service": "scene.turn_on", "metadata": {}},
     )
     for value in options:
         cv.SERVICE_SCHEMA(value)
