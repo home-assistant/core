@@ -5,7 +5,7 @@ from aiohttp import ClientConnectionError
 from aussiebb.asyncio import AuthenticationException
 
 from homeassistant import config_entries
-from homeassistant.components.aussie_broadband.const import CONF_SERVICES, DOMAIN
+from homeassistant.components.aussie_broadband.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
@@ -14,7 +14,7 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from .common import FAKE_DATA, FAKE_SERVICES, setup_platform
+from .common import FAKE_DATA, FAKE_SERVICES
 
 TEST_USERNAME = FAKE_DATA[CONF_USERNAME]
 TEST_PASSWORD = FAKE_DATA[CONF_PASSWORD]
@@ -217,63 +217,3 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
         assert result7["type"] == "abort"
         assert result7["reason"] == "reauth_successful"
-
-
-async def test_options_flow(hass):
-    """Test options flow."""
-    entry = await setup_platform(hass)
-
-    with patch("aussiebb.asyncio.AussieBB.get_services", return_value=FAKE_SERVICES):
-
-        result1 = await hass.config_entries.options.async_init(entry.entry_id)
-        assert result1["type"] == RESULT_TYPE_FORM
-        assert result1["step_id"] == "init"
-
-        result2 = await hass.config_entries.options.async_configure(
-            result1["flow_id"],
-            user_input={CONF_SERVICES: []},
-        )
-        assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert entry.options == {CONF_SERVICES: []}
-
-
-async def test_options_flow_auth_failure(hass):
-    """Test options flow with auth failure."""
-
-    entry = await setup_platform(hass)
-
-    with patch(
-        "aussiebb.asyncio.AussieBB.get_services", side_effect=AuthenticationException()
-    ):
-
-        result1 = await hass.config_entries.options.async_init(entry.entry_id)
-        assert result1["type"] == RESULT_TYPE_ABORT
-        assert result1["reason"] == "invalid_auth"
-
-
-async def test_options_flow_network_failure(hass):
-    """Test options flow with connectivity failure."""
-
-    entry = await setup_platform(hass)
-
-    with patch(
-        "aussiebb.asyncio.AussieBB.get_services", side_effect=ClientConnectionError()
-    ):
-
-        result1 = await hass.config_entries.options.async_init(entry.entry_id)
-        assert result1["type"] == RESULT_TYPE_ABORT
-        assert result1["reason"] == "cannot_connect"
-
-
-async def test_options_flow_not_loaded(hass):
-    """Test the options flow aborts when the entry has unloaded due to a reauth."""
-
-    entry = await setup_platform(hass)
-
-    with patch(
-        "aussiebb.asyncio.AussieBB.get_services", side_effect=AuthenticationException()
-    ):
-        entry.state = config_entries.ConfigEntryState.NOT_LOADED
-        result1 = await hass.config_entries.options.async_init(entry.entry_id)
-        assert result1["type"] == RESULT_TYPE_ABORT
-        assert result1["reason"] == "unknown"
