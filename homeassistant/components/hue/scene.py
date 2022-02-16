@@ -72,7 +72,7 @@ async def async_setup_entry(
                 vol.Coerce(int), vol.Range(min=0, max=255)
             ),
         },
-        "async_activate",
+        "_async_activate",
     )
 
 
