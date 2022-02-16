@@ -17,15 +17,16 @@ from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER
 from .router import NetgearRouter, NetgearRouterEntity
 
 @dataclass
-class NetgearButtonEntityDescriptionRequired():
-    """required properties of NetgearButtonEntityDescription."""
+class NetgearButtonEntityDescriptionRequired:
+    """Required attributes of NetgearButtonEntityDescription."""
 
     action: Callable
 
 @dataclass
-class NetgearButtonEntityDescription(NetgearButtonEntityDescriptionRequired, ButtonEntityDescription):
+class NetgearButtonEntityDescription(
+    ButtonEntityDescription, NetgearButtonEntityDescriptionRequired
+):
     """Class describing Netgear button entities."""
-    pass
 
 
 BUTTONS = [
