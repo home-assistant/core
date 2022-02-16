@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
             "no_devices_found": "No s'han trobat dispositius a la xarxa"
         },
         "error": {

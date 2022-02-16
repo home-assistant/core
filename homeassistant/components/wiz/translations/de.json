@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden"
         },
         "error": {
