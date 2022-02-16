@@ -7,9 +7,10 @@ from homeassistant.components.samsungtv import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
+from .test_media_player import MOCK_ENTRY_WS_WITH_MAC
+
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.components.samsungtv.test_media_player import MOCK_ENTRY_WS_WITH_MAC
 
 
 @pytest.fixture(name="config_entry")
