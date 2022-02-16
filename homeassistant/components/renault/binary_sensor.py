@@ -104,4 +104,12 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = (
         on_key="hvacStatus",
         on_value="on",
     ),
+    RenaultBinarySensorEntityDescription(
+        key="lock_status",
+        coordinator="lock_status",
+        device_class=BinarySensorDeviceClass.LOCK,
+        name="Lock",
+        on_key="lockStatus",
+        on_value="locked",
+    ),
 )
