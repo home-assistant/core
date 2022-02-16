@@ -77,7 +77,7 @@ CONF_ACTION_TOPIC = "action_topic"
 CONF_AUX_COMMAND_TOPIC = "aux_command_topic"
 CONF_AUX_STATE_TEMPLATE = "aux_state_template"
 CONF_AUX_STATE_TOPIC = "aux_state_topic"
-# AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.7
+# AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
 CONF_AWAY_MODE_COMMAND_TOPIC = "away_mode_command_topic"
 CONF_AWAY_MODE_STATE_TEMPLATE = "away_mode_state_template"
 CONF_AWAY_MODE_STATE_TOPIC = "away_mode_state_topic"
@@ -88,7 +88,7 @@ CONF_FAN_MODE_COMMAND_TOPIC = "fan_mode_command_topic"
 CONF_FAN_MODE_LIST = "fan_modes"
 CONF_FAN_MODE_STATE_TEMPLATE = "fan_mode_state_template"
 CONF_FAN_MODE_STATE_TOPIC = "fan_mode_state_topic"
-# AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.7
+# AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
 CONF_HOLD_COMMAND_TEMPLATE = "hold_command_template"
 CONF_HOLD_COMMAND_TOPIC = "hold_command_topic"
 CONF_HOLD_STATE_TEMPLATE = "hold_state_template"
@@ -159,11 +159,11 @@ MQTT_CLIMATE_ATTRIBUTES_BLOCKED = frozenset(
 
 VALUE_TEMPLATE_KEYS = (
     CONF_AUX_STATE_TEMPLATE,
-    # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.7
+    # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
     CONF_AWAY_MODE_STATE_TEMPLATE,
     CONF_CURRENT_TEMP_TEMPLATE,
     CONF_FAN_MODE_STATE_TEMPLATE,
-    # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.7
+    # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
     CONF_HOLD_STATE_TEMPLATE,
     CONF_MODE_STATE_TEMPLATE,
     CONF_POWER_STATE_TEMPLATE,
@@ -177,7 +177,7 @@ VALUE_TEMPLATE_KEYS = (
 
 COMMAND_TEMPLATE_KEYS = {
     CONF_FAN_MODE_COMMAND_TEMPLATE,
-    # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.7
+    # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
     CONF_HOLD_COMMAND_TEMPLATE,
     CONF_MODE_COMMAND_TEMPLATE,
     CONF_PRESET_MODE_COMMAND_TEMPLATE,
@@ -187,7 +187,7 @@ COMMAND_TEMPLATE_KEYS = {
     CONF_TEMP_LOW_COMMAND_TEMPLATE,
 }
 
-# AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.7
+# AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
 DEPRECATED_INVALID = [
     CONF_AWAY_MODE_COMMAND_TOPIC,
     CONF_AWAY_MODE_STATE_TEMPLATE,
@@ -204,13 +204,13 @@ TOPIC_KEYS = (
     CONF_ACTION_TOPIC,
     CONF_AUX_COMMAND_TOPIC,
     CONF_AUX_STATE_TOPIC,
-    # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.7
+    # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
     CONF_AWAY_MODE_COMMAND_TOPIC,
     CONF_AWAY_MODE_STATE_TOPIC,
     CONF_CURRENT_TEMP_TOPIC,
     CONF_FAN_MODE_COMMAND_TOPIC,
     CONF_FAN_MODE_STATE_TOPIC,
-    # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.7
+    # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
     CONF_HOLD_COMMAND_TOPIC,
     CONF_HOLD_STATE_TOPIC,
     CONF_MODE_COMMAND_TOPIC,
@@ -249,7 +249,7 @@ _PLATFORM_SCHEMA_BASE = SCHEMA_BASE.extend(
         vol.Optional(CONF_AUX_COMMAND_TOPIC): mqtt.valid_publish_topic,
         vol.Optional(CONF_AUX_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_AUX_STATE_TOPIC): mqtt.valid_subscribe_topic,
-        # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.7
+        # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
         vol.Optional(CONF_AWAY_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
         vol.Optional(CONF_AWAY_MODE_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_AWAY_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
@@ -263,7 +263,7 @@ _PLATFORM_SCHEMA_BASE = SCHEMA_BASE.extend(
         ): cv.ensure_list,
         vol.Optional(CONF_FAN_MODE_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_FAN_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
-        # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.7
+        # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
         vol.Optional(CONF_HOLD_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_HOLD_COMMAND_TOPIC): mqtt.valid_publish_topic,
         vol.Optional(CONF_HOLD_STATE_TEMPLATE): cv.template,
@@ -340,7 +340,7 @@ PLATFORM_SCHEMA = vol.All(
     _PLATFORM_SCHEMA_BASE,
     # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.9
     cv.deprecated(CONF_SEND_IF_OFF),
-    # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.7
+    # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
     cv.deprecated(CONF_AWAY_MODE_COMMAND_TOPIC),
     cv.deprecated(CONF_AWAY_MODE_STATE_TEMPLATE),
     cv.deprecated(CONF_AWAY_MODE_STATE_TOPIC),
@@ -358,7 +358,7 @@ DISCOVERY_SCHEMA = vol.All(
     _DISCOVERY_SCHEMA_BASE,
     # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.9
     cv.deprecated(CONF_SEND_IF_OFF),
-    # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.7
+    # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
     cv.deprecated(CONF_AWAY_MODE_COMMAND_TOPIC),
     cv.deprecated(CONF_AWAY_MODE_STATE_TEMPLATE),
     cv.deprecated(CONF_AWAY_MODE_STATE_TOPIC),
@@ -465,7 +465,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
             self._preset_modes = []
         self._optimistic_preset_mode = CONF_PRESET_MODE_STATE_TOPIC not in config
         self._action = None
-        # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.7
+        # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
         self._away = False
         self._hold = None
         self._aux = False
@@ -663,7 +663,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
             self.async_write_ha_state()
 
-        # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.7
+        # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
         @callback
         @log_messages(self.hass, self.entity_id)
         def handle_away_mode_received(msg):
@@ -680,7 +680,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
         add_subscription(topics, CONF_AUX_STATE_TOPIC, handle_aux_mode_received)
 
-        # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.7
+        # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
         @callback
         @log_messages(self.hass, self.entity_id)
         def handle_hold_mode_received(msg):
@@ -783,7 +783,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         """Return preset mode."""
         if self._feature_preset_mode and self._preset_mode is not None:
             return self._preset_mode
-        # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.7
+        # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
         if self._hold:
             return self._hold
         if self._away:
@@ -796,7 +796,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         presets = []
         presets.extend(self._preset_modes)
 
-        # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.7
+        # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
         if (self._topic[CONF_AWAY_MODE_STATE_TOPIC] is not None) or (
             self._topic[CONF_AWAY_MODE_COMMAND_TOPIC] is not None
         ):
@@ -963,7 +963,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         if optimistic_update:
             self.async_write_ha_state()
 
-    # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.7
+    # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
     async def _set_away_mode(self, state):
         """Set away mode.
 
@@ -1044,7 +1044,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         ):
             support |= SUPPORT_SWING_MODE
 
-        # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.7
+        # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
         if (
             self._feature_preset_mode
             or (self._topic[CONF_AWAY_MODE_STATE_TOPIC] is not None)
