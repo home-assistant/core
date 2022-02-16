@@ -94,8 +94,8 @@ async def test_prevent_flooding(caplog):
     assert len(frame._REPORTED_INTEGRATIONS) == 1
 
 
-async def test_prevent_flooding_missing_integration_frame(caplog):
-    """Test to ensure only one log when no integration is detected."""
+async def test_report_missing_integration_frame(caplog):
+    """Test reporting when no integration is detected."""
 
     what = "teststring"
     with patch(
