@@ -26,8 +26,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import HWEnergyDeviceUpdateCoordinator
 from .const import DOMAIN, MANUFACTURER, SERVICE_DATA, SERVICE_DEVICE
-from .coordinator import HWEnergyDeviceUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

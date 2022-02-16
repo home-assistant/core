@@ -1,13 +1,23 @@
 """The Homewizard integration."""
+from __future__ import annotations
+
+from datetime import timedelta
 import logging
+from typing import TypedDict
+
+from homewizard_energy.errors import DisabledError
+from homewizard_energy.homewizard_energy import HomeWizardEnergy
+from homewizard_energy.models import Data, Device, State
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, PLATFORMS
-from .coordinator import HWEnergyDeviceUpdateCoordinator as Coordinator
+from .const import DOMAIN, PLATFORMS, SERVICE_DATA, SERVICE_DEVICE, SERVICE_STATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,10 +73,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.async_create_task(hass.config_entries.async_remove(old_config_entry_id))
 
     # Create coordinator
-    coordinator = Coordinator(hass, entry.data[CONF_IP_ADDRESS])
-    await coordinator.async_config_entry_first_refresh()
+    coordinator = HWEnergyDeviceUpdateCoordinator(hass, entry.data[CONF_IP_ADDRESS])
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        await coordinator.api.close()
+        raise
 
-    # Finalize
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
@@ -86,3 +99,43 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await config_data.api.close()
 
     return unload_ok
+
+
+class HomeWizardEnergyData(TypedDict):
+    """Class for defining data in dict."""
+
+    device: Device
+    data: Data
+    state: State | None
+
+
+class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[HomeWizardEnergyData]):
+    """Gather data for the energy device."""
+
+    api: HomeWizardEnergy
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        host: str,
+    ) -> None:
+        """Initialize Update Coordinator."""
+
+        super().__init__(
+            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(seconds=5)
+        )
+        self.api = HomeWizardEnergy(host, clientsession=async_get_clientsession(hass))
+
+    async def _async_update_data(self) -> HomeWizardEnergyData:
+        """Fetch all device and sensor data from api."""
+
+        try:
+            data: HomeWizardEnergyData = {
+                SERVICE_DEVICE: await self.api.device(),
+                SERVICE_DATA: await self.api.data(),
+                SERVICE_STATE: await self.api.state(),
+            }
+        except DisabledError as error:
+            raise UpdateFailed(error) from error
+
+        return data

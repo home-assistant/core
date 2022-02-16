@@ -10,8 +10,8 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import HWEnergyDeviceUpdateCoordinator
 from .const import DOMAIN, MANUFACTURER, SERVICE_DEVICE, SERVICE_STATE
-from .coordinator import HWEnergyDeviceUpdateCoordinator
 
 
 async def async_setup_entry(

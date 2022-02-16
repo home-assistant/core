@@ -9,8 +9,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 
+from . import HWEnergyDeviceUpdateCoordinator
 from .const import DOMAIN, SERVICE_DATA, SERVICE_DEVICE, SERVICE_STATE
-from .coordinator import HWEnergyDeviceUpdateCoordinator
 
 TO_REDACT = {CONF_IP_ADDRESS, "serial", "wifi_ssid"}
 
