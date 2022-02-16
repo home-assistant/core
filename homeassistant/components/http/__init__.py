@@ -1,22 +1,30 @@
 """Support to serve the Home Assistant API as WSGI application."""
 from __future__ import annotations
 
+import datetime
 from ipaddress import IPv4Network, IPv6Network, ip_network
 import logging
 import os
 import ssl
+from tempfile import NamedTemporaryFile
 from typing import Any, Final, Optional, TypedDict, Union, cast
 
 from aiohttp import web
 from aiohttp.typedefs import StrOrURL
 from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.x509.oid import NameOID
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, SERVER_PORT
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import storage
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_start_setup, async_when_setup_or_start
@@ -329,34 +337,93 @@ class HomeAssistantHTTP:
             self.app.router.add_route("GET", url_path, serve_file)
         )
 
+    def _create_ssl_context(self) -> ssl.SSLContext | None:
+        context: ssl.SSLContext | None = None
+        assert self.ssl_certificate is not None
+        try:
+            if self.ssl_profile == SSL_INTERMEDIATE:
+                context = ssl_util.server_context_intermediate()
+            else:
+                context = ssl_util.server_context_modern()
+            context.load_cert_chain(self.ssl_certificate, self.ssl_key)
+        except OSError as error:
+            _LOGGER.error(
+                "Could not read SSL certificate from %s: %s",
+                self.ssl_certificate,
+                error,
+            )
+            try:
+                return self._create_emergency_ssl_context()
+            except OSError as error:
+                _LOGGER.error(
+                    "Could not create an emergency self signed ssl certificate: %s",
+                    error,
+                )
+                return None
+
+        assert context is not None
+        if self.ssl_peer_certificate:
+            context.verify_mode = ssl.CERT_REQUIRED
+            context.load_verify_locations(self.ssl_peer_certificate)
+
+        return context
+
+    def _create_emergency_ssl_context(self) -> ssl.SSLContext | None:
+        """Create an emergency ssl certificate so we can still startup."""
+        _LOGGER.warning(
+            "The server will start up with an emergency self signed ssl certificate"
+        )
+        context = ssl_util.server_context_modern()
+        host: str
+        try:
+            host = cast(str, URL(get_url(self.hass, prefer_external=True)).host)
+        except NoURLAvailableError:
+            host = "homeassistant.local"
+        key = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=2048,
+        )
+        subject = issuer = x509.Name(
+            [
+                x509.NameAttribute(
+                    NameOID.ORGANIZATION_NAME, "Home Assistant Emergency Certificate"
+                ),
+                x509.NameAttribute(NameOID.COMMON_NAME, host),
+            ]
+        )
+        cert = (
+            x509.CertificateBuilder()
+            .subject_name(subject)
+            .issuer_name(issuer)
+            .public_key(key.public_key())
+            .serial_number(x509.random_serial_number())
+            .not_valid_before(datetime.datetime.utcnow())
+            .not_valid_after(datetime.datetime.utcnow() + datetime.timedelta(days=30))
+            .add_extension(
+                x509.SubjectAlternativeName([x509.DNSName(host)]),
+                critical=False,
+            )
+            .sign(key, hashes.SHA256())
+        )
+        with NamedTemporaryFile() as cert_pem, NamedTemporaryFile() as key_pem:
+            cert_pem.write(cert.public_bytes(serialization.Encoding.PEM))
+            key_pem.write(
+                key.private_bytes(
+                    serialization.Encoding.PEM,
+                    format=serialization.PrivateFormat.TraditionalOpenSSL,
+                    encryption_algorithm=serialization.NoEncryption(),
+                )
+            )
+            cert_pem.flush()
+            key_pem.flush()
+            context.load_cert_chain(cert_pem.name, key_pem.name)
+        return context
+
     async def start(self) -> None:
         """Start the aiohttp server."""
         context: ssl.SSLContext | None
         if self.ssl_certificate:
-            try:
-                if self.ssl_profile == SSL_INTERMEDIATE:
-                    context = ssl_util.server_context_intermediate()
-                else:
-                    context = ssl_util.server_context_modern()
-                await self.hass.async_add_executor_job(
-                    context.load_cert_chain, self.ssl_certificate, self.ssl_key
-                )
-            except OSError as error:
-                _LOGGER.error(
-                    "Could not read SSL certificate from %s: %s",
-                    self.ssl_certificate,
-                    error,
-                )
-                return
-
-            if self.ssl_peer_certificate:
-                context.verify_mode = ssl.CERT_REQUIRED
-                await self.hass.async_add_executor_job(
-                    context.load_verify_locations, self.ssl_peer_certificate
-                )
-
-        else:
-            context = None
+            context = await self.hass.async_add_executor_job(self._create_ssl_context)
 
         # Aiohttp freezes apps after start so that no changes can be made.
         # However in Home Assistant components can be discovered after boot.
