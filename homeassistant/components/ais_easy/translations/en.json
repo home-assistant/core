@@ -12,6 +12,9 @@
                     "host": "Host", "user": "Login", "pass": "Password"
                 }
             }
+        },
+      "error": {
+            "connection_error": "Connection to PLC error"
         }
     }
 }
