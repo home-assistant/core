@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections import ChainMap
 from collections.abc import Awaitable, Callable, Iterable, Mapping
 from contextvars import ContextVar
 import dataclasses
@@ -1212,7 +1213,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             match_dict = {}  # Match any entry
         for entry in self._async_current_entries(include_ignore=False):
             if all(
-                item in {**entry.data, **entry.options}.items()
+                item in ChainMap(entry.data, entry.options).items()  # type: ignore
                 for item in match_dict.items()
             ):
                 raise data_entry_flow.AbortFlow("already_configured")
