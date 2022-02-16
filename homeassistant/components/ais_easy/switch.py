@@ -22,7 +22,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Konfiguracja za pomcą przepływu konfiguracji."""
     # PLC EASY
-    for x in range(4):
+    for x in range(config_entry.data["inputs"]):
         async_add_entities(
             [
                 AisEasySwitch(
@@ -63,7 +63,9 @@ class AisEasySwitch(Entity):
     @property
     def entity_id(self):
         """Funkcja zwracająca identyfikator sensora."""
-        return "switch.ais_easy_switch_" + str(self._number)
+        return (
+            "switch.ais_easy_" + self._host.replace(".", "") + "_" + str(self._number)
+        )
 
     @property
     def name(self):

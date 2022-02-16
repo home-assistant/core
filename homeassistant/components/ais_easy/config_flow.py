@@ -14,6 +14,11 @@ _LOGGER = logging.getLogger(__name__)
 class AisNbpConfigFlow(config_entries.ConfigFlow, domain="ais_easy"):
     """przepływu konfiguracji w integracji."""
 
+    def __init__(self):
+        self._host = None
+        self._user = None
+        self._pass = None
+
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
@@ -56,8 +61,16 @@ class AisNbpConfigFlow(config_entries.ConfigFlow, domain="ais_easy"):
                     ws_resp = await web_session.get(url, headers=header)
                     info = await ws_resp.text()
                     info_json = json.loads(info)
-                    # Zakończenie i zapis konfiguracji
-                    return self.async_create_entry(title="Easy PLC", data=user_input)
+
+                    self._host = user_input["host"]
+                    self._user = user_input["user"]
+                    self._pass = user_input["pass"]
+
+                    # Info o ilości io
+                    return self.async_show_form(
+                        step_id="inputs",
+                        data_schema=vol.Schema({"inputs": int}),
+                    )
 
             except Exception as e:
                 _LOGGER.error("Ask Easy error: " + str(e))
@@ -70,3 +83,14 @@ class AisNbpConfigFlow(config_entries.ConfigFlow, domain="ais_easy"):
                 )
 
         return self.async_show_form(step_id="confirm")
+
+    async def async_step_inputs(self, user_input=None):
+        """Obsługa kroku potwierdzenia przez użytkownika."""
+        if user_input is not None:
+            # Zakończenie i zapis konfiguracji
+            user_input["host"] = self._host
+            user_input["user"] = self._user
+            user_input["pass"] = self._pass
+            return self.async_create_entry(title="Easy PLC", data=user_input)
+
+        return self.async_show_form(step_id="inputs")
