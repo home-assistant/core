@@ -35,7 +35,7 @@ def remotews_fixture():
         "homeassistant.components.samsungtv.bridge.SamsungTVWS"
     ) as remotews_class:
         remotews = Mock()
-        remotews.__enter__ = Mock()
+        remotews.__enter__ = Mock(return_value=remotews)
         remotews.__exit__ = Mock()
         remotews.port.return_value = 8002
         remotews.rest_device_info.return_value = {
@@ -60,7 +60,7 @@ def remotews_no_device_info_fixture():
         "homeassistant.components.samsungtv.bridge.SamsungTVWS"
     ) as remotews_class:
         remotews = Mock()
-        remotews.__enter__ = Mock()
+        remotews.__enter__ = Mock(return_value=remotews)
         remotews.__exit__ = Mock()
         remotews.rest_device_info.return_value = None
         remotews_class.return_value = remotews
@@ -75,7 +75,7 @@ def remotews_soundbar_fixture():
         "homeassistant.components.samsungtv.bridge.SamsungTVWS"
     ) as remotews_class:
         remotews = Mock()
-        remotews.__enter__ = Mock()
+        remotews.__enter__ = Mock(return_value=remotews)
         remotews.__exit__ = Mock()
         remotews.rest_device_info.return_value = {
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
