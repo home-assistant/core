@@ -23,7 +23,7 @@ UID_POSTFIX = "01400"
 
 _LOGGER = logging.getLogger(__name__)
 
-_T = TypeVar("_T", "SonosSpeaker", "SonosEntity")
+_T = TypeVar("_T", bound="SonosSpeaker | SonosEntity")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
 
