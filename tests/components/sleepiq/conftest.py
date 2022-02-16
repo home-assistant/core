@@ -6,7 +6,7 @@ from aioresponses import aioresponses
 import pytest
 
 from homeassistant.components.sleepiq import DOMAIN
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 

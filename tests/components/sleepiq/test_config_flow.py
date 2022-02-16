@@ -1,15 +1,10 @@
 """Tests for the SleepIQ config flow."""
 from unittest.mock import patch
-from asyncsleepiq import (
-    AsyncSleepIQ,
-    SleepIQAPIException,
-    SleepIQLoginException,
-    SleepIQTimeoutException,
-)
+
+from asyncsleepiq import SleepIQLoginException, SleepIQTimeoutException
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.sleepiq.const import DOMAIN
-
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
