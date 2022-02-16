@@ -27,7 +27,8 @@
   ],
   "codeowners": [
     "@escoand",
-    "@chemelli74"
+    "@chemelli74",
+    "@epenet"
   ],
   "config_flow": true,
   "iot_class": "local_polling",
