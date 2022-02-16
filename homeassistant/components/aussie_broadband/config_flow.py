@@ -77,12 +77,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(
-        self, user_input: dict[str, str]
-    ) -> FlowResult:
+    async def async_step_reauth(self, user_input: dict[str, str]) -> FlowResult:
         """Handle reauth on credential failure."""
-        if user_input:
-            self._reauth_username = user_input[CONF_USERNAME]
+        self._reauth_username = user_input[CONF_USERNAME]
 
         return await self.async_step_reauth_confirm()
 
