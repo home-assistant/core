@@ -57,16 +57,26 @@ class Selector:
     CONFIG_SCHEMA: Callable
     config: ConfigType
     hass: HomeAssistant
+    name: str
 
     def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
         """Instantiate a selector."""
         self.config = self.CONFIG_SCHEMA(config)
         self.hass = hass
 
+    def serialize(self) -> Any:
+        """Serialize Selector for voluptuous_serialize."""
+        result: dict[str, Any] = {"selector": self.name}
+        if self.config:
+            result["config"] = self.config
+        return result
+
 
 @SELECTORS.register("entity")
 class EntitySelector(Selector):
     """Selector of a single entity."""
+
+    name = "entity"
 
     CONFIG_SCHEMA = vol.Schema(
         {
@@ -119,6 +129,8 @@ class EntitySelector(Selector):
 @SELECTORS.register("device")
 class DeviceSelector(Selector):
     """Selector of a single device."""
+
+    name = "device"
 
     CONFIG_SCHEMA = vol.Schema(
         {
@@ -192,6 +204,8 @@ class DeviceSelector(Selector):
 class AreaSelector(Selector):
     """Selector of a single area."""
 
+    name = "area"
+
     CONFIG_SCHEMA = vol.Schema(
         {
             vol.Optional("entity"): EntitySelector.CONFIG_SCHEMA,
@@ -246,6 +260,8 @@ class AreaSelector(Selector):
 class NumberSelector(Selector):
     """Selector of a numeric value."""
 
+    name = "number"
+
     CONFIG_SCHEMA = vol.Schema(
         {
             vol.Required("min"): vol.Coerce(float),
@@ -272,6 +288,8 @@ class NumberSelector(Selector):
 class AddonSelector(Selector):
     """Selector of a add-on."""
 
+    name = "addon"
+
     CONFIG_SCHEMA = vol.Schema({})
 
     def __call__(self, data: Any) -> bool:
@@ -284,6 +302,8 @@ class AddonSelector(Selector):
 class BooleanSelector(Selector):
     """Selector of a boolean value."""
 
+    name = "boolean"
+
     CONFIG_SCHEMA = vol.Schema({})
 
     def __call__(self, data: Any) -> str:
@@ -294,6 +314,8 @@ class BooleanSelector(Selector):
 @SELECTORS.register("time")
 class TimeSelector(Selector):
     """Selector of a time value."""
+
+    name = "time"
 
     CONFIG_SCHEMA = vol.Schema({})
 
@@ -308,6 +330,8 @@ class TargetSelector(Selector):
 
     Value should follow cv.ENTITY_SERVICE_FIELDS format.
     """
+
+    name = "target"
 
     CONFIG_SCHEMA = vol.Schema(
         {
@@ -348,6 +372,8 @@ class TargetSelector(Selector):
 class ActionSelector(Selector):
     """Selector of an action sequence (script syntax)."""
 
+    name = "action"
+
     CONFIG_SCHEMA = vol.Schema({})
 
     def __call__(self, data: Any) -> Any:
@@ -358,6 +384,8 @@ class ActionSelector(Selector):
 @SELECTORS.register("object")
 class ObjectSelector(Selector):
     """Selector for an arbitrary object."""
+
+    name = "object"
 
     CONFIG_SCHEMA = vol.Schema({})
 
@@ -370,6 +398,8 @@ class ObjectSelector(Selector):
 class StringSelector(Selector):
     """Selector for a multi-line text string."""
 
+    name = "text"
+
     CONFIG_SCHEMA = vol.Schema({vol.Optional("multiline", default=False): bool})
 
     def __call__(self, data: Any) -> str:
@@ -381,6 +411,8 @@ class StringSelector(Selector):
 @SELECTORS.register("select")
 class SelectSelector(Selector):
     """Selector for an single-choice input select."""
+
+    name = "select"
 
     CONFIG_SCHEMA = vol.Schema(
         {vol.Required("options"): vol.All([str], vol.Length(min=1))}
