@@ -19,24 +19,10 @@ SCAN_INTERVAL = timedelta(seconds=15)
 
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key="Heating_Mode",
-        icon="mdi:radiator",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
-        key="Hotwater_Mode",
-        icon="mdi:water-pump",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
-        key="Hotwater_Boost",
-        icon="mdi:water-pump",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
-        key="Mode", icon="mdi:eye", entity_category=EntityCategory.DIAGNOSTIC
-    ),
+    SensorEntityDescription(key="Heating_Mode", icon="mdi:radiator"),
+    SensorEntityDescription(key="Hotwater_Mode", icon="mdi:water-pump"),
+    SensorEntityDescription(key="Hotwater_Boost", icon="mdi:water-pump"),
+    SensorEntityDescription(key="Mode", icon="mdi:eye"),
     SensorEntityDescription(
         key="Battery",
         native_unit_of_measurement="%",
