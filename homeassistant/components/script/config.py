@@ -45,7 +45,7 @@ SCRIPT_ENTITY_SCHEMA = make_script_schema(
         vol.Optional(CONF_ALIAS): cv.string,
         vol.Optional(CONF_TRACE, default={}): TRACE_CONFIG_SCHEMA,
         vol.Optional(CONF_ICON): cv.icon,
-        vol.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA,
+        vol.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA_WITH_DYNAMIC,
         vol.Optional(CONF_DESCRIPTION, default=""): cv.string,
         vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
         vol.Optional(CONF_FIELDS, default={}): {

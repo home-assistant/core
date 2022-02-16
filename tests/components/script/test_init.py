@@ -31,7 +31,7 @@ from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_mock_service, mock_restore_cache
+from tests.common import async_mock_service, mock_platform, mock_restore_cache
 from tests.components.logbook.test_init import MockLazyEventPartialState
 
 ENTITY_ID = "script.test"
@@ -790,3 +790,41 @@ async def test_script_restore_last_triggered(hass: HomeAssistant) -> None:
     state = hass.states.get("script.last_triggered")
     assert state
     assert state.attributes["last_triggered"] == time
+
+
+async def test_dynamic_action(hass):
+    """Test running a dynamic action."""
+    calls = []
+
+    async def async_validate_action_config(hass, config):
+        return config
+
+    async def async_run_action(hass, config, info):
+        calls.append(info)
+
+    mock_platform(
+        hass,
+        "test_int.action",
+        Mock(
+            async_validate_action_config=async_validate_action_config,
+            async_run_action=async_run_action,
+        ),
+    )
+
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "script1": {
+                    "sequence": [{"test_int.something": {}}],
+                },
+            },
+        },
+    )
+
+    context = Context()
+    await hass.services.async_call("script", "script1", context=context, blocking=True)
+
+    assert len(calls) == 1
+    assert calls[0].context is context

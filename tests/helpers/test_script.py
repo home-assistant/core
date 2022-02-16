@@ -8,7 +8,7 @@ import logging
 import operator
 from types import MappingProxyType
 from unittest import mock
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from async_timeout import timeout
 import pytest
@@ -40,6 +40,7 @@ from tests.common import (
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
+    mock_platform,
 )
 
 ENTITY_ID = "script.test"
@@ -3727,3 +3728,69 @@ async def test_platform_async_validate_action_config(hass):
         platform.async_validate_action_config.return_value = config
         await script.async_validate_action_config(hass, config)
         platform.async_validate_action_config.assert_awaited()
+
+
+async def test_validate_dynamic_action_config(hass):
+    """Test we can validate the config of a dynamic action."""
+    calls = []
+
+    async def async_validate_action_config(hass, config):
+        calls.append(config)
+        return config
+
+    mock_platform(
+        hass,
+        "test_int.action",
+        Mock(async_validate_action_config=async_validate_action_config),
+    )
+
+    config = [{"test_int.do_something": {}}]
+    await script.async_validate_actions_config(hass, config)
+    assert len(calls) == 1
+    assert calls[0] is config[0]
+
+
+async def test_run_dynamic_action(hass):
+    """Test running a dynamic action."""
+    script_config = [{"test_int.do_something": {}}]
+    script_context = Context()
+    calls = []
+
+    async def async_validate_action_config(hass, config):
+        return config
+
+    async def async_run_action(hass, config, info):
+        calls.append((config, info))
+
+    mock_platform(
+        hass,
+        "test_int.action",
+        Mock(
+            async_validate_action_config=async_validate_action_config,
+            async_run_action=async_run_action,
+            async_find_referenced_entities=Mock(
+                side_effect=lambda refs, _: refs.add("test-entity")
+            ),
+            async_find_referenced_devices=Mock(
+                side_effect=lambda refs, _: refs.add("test-device")
+            ),
+            async_find_referenced_areas=Mock(
+                side_effect=lambda refs, _: refs.add("test-area")
+            ),
+        ),
+    )
+
+    script_obj = script.Script(
+        hass,
+        await script.async_validate_actions_config(hass, script_config),
+        "Test Script",
+        "test",
+    )
+    await script_obj.async_run(context=script_context)
+    assert len(calls) == 1
+    assert calls[0][0] == script_config[0]
+    assert calls[0][1].context is script_context
+
+    assert script_obj.referenced_areas == {"test-area"}
+    assert script_obj.referenced_entities == {"test-entity"}
+    assert script_obj.referenced_devices == {"test-device"}

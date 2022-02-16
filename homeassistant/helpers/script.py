@@ -4,12 +4,13 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Sequence
 from contextlib import asynccontextmanager, suppress
+import dataclasses
 from datetime import datetime, timedelta
 from functools import partial
 import itertools
 import logging
 from types import MappingProxyType
-from typing import Any, TypedDict, Union, cast
+from typing import Any, Protocol, TypedDict, Union, cast
 
 import async_timeout
 import voluptuous as vol
@@ -56,6 +57,7 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
+from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
@@ -124,6 +126,51 @@ ACTION_TRACE_NODE_MAX_LEN = 20  # Max length of a trace node for repeated action
 SCRIPT_BREAKPOINT_HIT = "script_breakpoint_hit"
 SCRIPT_DEBUG_CONTINUE_STOP = "script_debug_continue_stop_{}_{}"
 SCRIPT_DEBUG_CONTINUE_ALL = "script_debug_continue_all"
+
+
+@dataclasses.dataclass
+class ScriptInfo:
+    """Hold the script info."""
+
+    variables: dict[str, Any]
+    context: Context
+
+
+class ActionPlatform(Protocol):
+    """Type for the action platform."""
+
+    async def async_validate_action_config(
+        self, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        ...
+
+    async def async_run_action(
+        self, hass: HomeAssistant, config: ConfigType, info: ScriptInfo
+    ) -> None:
+        """Run an action."""
+        ...
+
+    @callback
+    def async_find_referenced_entities(
+        self, referenced: set[str], config: ConfigType
+    ) -> None:
+        """Find referenced entities."""
+        ...
+
+    @callback
+    def async_find_referenced_devices(
+        self, referenced: set[str], config: ConfigType
+    ) -> None:
+        """Find referenced devices."""
+        ...
+
+    @callback
+    def async_find_referenced_areas(
+        self, referenced: set[str], config: ConfigType
+    ) -> None:
+        """Find referenced areas."""
+        ...
 
 
 def action_trace_append(variables, path):
@@ -226,19 +273,60 @@ STATIC_VALIDATION_ACTION_TYPES = (
 
 
 async def async_validate_actions_config(
-    hass: HomeAssistant, actions: list[ConfigType]
+    hass: HomeAssistant, actions: Any
 ) -> list[ConfigType]:
     """Validate a list of actions."""
+    if not isinstance(actions, list):
+        raise vol.Invalid("Actions must be a list")
+
     return await asyncio.gather(
         *(async_validate_action_config(hass, action) for action in actions)
     )
 
 
-async def async_validate_action_config(
-    hass: HomeAssistant, config: ConfigType
-) -> ConfigType:
+async def _async_get_action_platform(
+    hass: HomeAssistant, action_type: str
+) -> ActionPlatform:
+    """Return action platform."""
+    domain = action_type.partition(".")[0]
+    try:
+        integration = await async_get_integration(hass, domain)
+    except IntegrationNotFound as err:
+        raise ValueError(f"Invalid action '{action_type}' specified") from err
+    try:
+        return integration.get_platform("action")
+    except ImportError as err:
+        raise ValueError(
+            f"Integration '{domain}' does not provide action support"
+        ) from err
+
+
+class ActionConfigWithPlatform(dict):
+    """Action config with platform."""
+
+    def __init__(self, config: ConfigType, platform: ActionPlatform) -> None:
+        """Initialize action config with platform."""
+        super().__init__(config)
+        self.platform = platform
+
+
+async def async_validate_action_config(hass: HomeAssistant, config: Any) -> ConfigType:
     """Validate config."""
+    if not isinstance(config, dict):
+        raise vol.Invalid("Action config must be a dictionary")
+
     action_type = cv.determine_script_action(config)
+
+    # Test if dynamic action.
+    if "." in action_type:
+        try:
+            platform = await _async_get_action_platform(hass, action_type)
+        except ValueError as err:
+            raise vol.Invalid(str(err)) from err
+
+        return ActionConfigWithPlatform(
+            await platform.async_validate_action_config(hass, config), platform
+        )
 
     if action_type in STATIC_VALIDATION_ACTION_TYPES:
         pass
@@ -293,6 +381,8 @@ async def async_validate_action_config(
     else:
         raise ValueError(f"No validation for {action_type}")
 
+    assert isinstance(config, dict)
+
     return config
 
 
@@ -308,13 +398,12 @@ class _ScriptRun:
         hass: HomeAssistant,
         script: Script,
         variables: dict[str, Any],
-        context: Context | None,
+        context: Context,
         log_exceptions: bool,
     ) -> None:
         self._hass = hass
+        self._info = ScriptInfo(variables=variables, context=context)
         self._script = script
-        self._variables = variables
-        self._context = context
         self._log_exceptions = log_exceptions
         self._step = -1
         self._action: dict[str, Any] | None = None
@@ -364,12 +453,25 @@ class _ScriptRun:
 
     async def _async_step(self, log_exceptions):
         with trace_path(str(self._step)):
-            async with trace_action(self._hass, self, self._stop, self._variables):
+            async with trace_action(self._hass, self, self._stop, self._info.variables):
                 if self._stop.is_set():
                     return
+
+                action_type = cv.determine_script_action(self._action)
+
                 try:
-                    handler = f"_async_{cv.determine_script_action(self._action)}_step"
-                    await getattr(self, handler)()
+                    if "." in action_type:
+                        platform = await _async_get_action_platform(
+                            self._hass, action_type
+                        )
+                        await platform.async_run_action(
+                            self._hass, self._action, self._info
+                        )
+                    else:
+                        handler = (
+                            f"_async_{cv.determine_script_action(self._action)}_step"
+                        )
+                        await getattr(self, handler)()
                 except Exception as ex:
                     if not isinstance(ex, _StopScript) and (
                         self._log_exceptions or log_exceptions
@@ -426,7 +528,7 @@ class _ScriptRun:
     def _get_pos_time_period_template(self, key):
         try:
             return cv.positive_time_period(
-                template.render_complex(self._action[key], self._variables)
+                template.render_complex(self._action[key], self._info.variables)
             )
         except (exceptions.TemplateError, vol.Invalid) as ex:
             self._log(
@@ -462,21 +564,23 @@ class _ScriptRun:
 
         self._step_log("wait template", timeout)
 
-        self._variables["wait"] = {"remaining": timeout, "completed": False}
-        trace_set_result(wait=self._variables["wait"])
+        self._info.variables["wait"] = {"remaining": timeout, "completed": False}
+        trace_set_result(wait=self._info.variables["wait"])
 
         wait_template = self._action[CONF_WAIT_TEMPLATE]
         wait_template.hass = self._hass
 
         # check if condition already okay
-        if condition.async_template(self._hass, wait_template, self._variables, False):
-            self._variables["wait"]["completed"] = True
+        if condition.async_template(
+            self._hass, wait_template, self._info.variables, False
+        ):
+            self._info.variables["wait"]["completed"] = True
             return
 
         @callback
         def async_script_wait(entity_id, from_s, to_s):
             """Handle script after template condition is true."""
-            wait_var = self._variables["wait"]
+            wait_var = self._info.variables["wait"]
             if to_context and to_context.deadline:
                 wait_var["remaining"] = to_context.deadline - self._hass.loop.time()
             else:
@@ -486,7 +590,7 @@ class _ScriptRun:
 
         to_context = None
         unsub = async_track_template(
-            self._hass, wait_template, async_script_wait, self._variables
+            self._hass, wait_template, async_script_wait, self._info.variables
         )
 
         self._changed()
@@ -498,10 +602,10 @@ class _ScriptRun:
             async with async_timeout.timeout(timeout) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         except asyncio.TimeoutError as ex:
-            self._variables["wait"]["remaining"] = 0.0
+            self._info.variables["wait"]["remaining"] = 0.0
             if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
                 self._log(_TIMEOUT_MSG)
-                trace_set_result(wait=self._variables["wait"], timeout=True)
+                trace_set_result(wait=self._info.variables["wait"], timeout=True)
                 raise _StopScript from ex
         finally:
             for task in tasks:
@@ -546,7 +650,7 @@ class _ScriptRun:
         self._step_log("call service")
 
         params = service.async_prepare_call_from_config(
-            self._hass, self._action, self._variables
+            self._hass, self._action, self._info.variables
         )
 
         running_script = (
@@ -566,7 +670,7 @@ class _ScriptRun:
             self._hass.services.async_call(
                 **params,
                 blocking=True,
-                context=self._context,
+                context=self._info.context,
                 limit=limit,
             )
         )
@@ -586,7 +690,7 @@ class _ScriptRun:
             device_automation.DeviceAutomationType.ACTION,
         )
         await platform.async_call_action_from_config(
-            self._hass, self._action, self._variables, self._context
+            self._hass, self._action, self._info.variables, self._info.context
         )
 
     async def _async_scene_step(self):
@@ -598,7 +702,7 @@ class _ScriptRun:
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: self._action[CONF_SCENE]},
             blocking=True,
-            context=self._context,
+            context=self._info.context,
         )
 
     async def _async_event_step(self):
@@ -611,7 +715,7 @@ class _ScriptRun:
 
             try:
                 event_data.update(
-                    template.render_complex(self._action[conf], self._variables)
+                    template.render_complex(self._action[conf], self._info.variables)
                 )
             except exceptions.TemplateError as ex:
                 self._log(
@@ -620,7 +724,7 @@ class _ScriptRun:
 
         trace_set_result(event=self._action[CONF_EVENT], event_data=event_data)
         self._hass.bus.async_fire(
-            self._action[CONF_EVENT], event_data, context=self._context
+            self._action[CONF_EVENT], event_data, context=self._info.context
         )
 
     async def _async_condition_step(self):
@@ -633,7 +737,7 @@ class _ScriptRun:
             trace_element = trace_stack_top(trace_stack_cv)
             if trace_element:
                 trace_element.reuse_by_child = True
-            check = cond(self._hass, self._variables)
+            check = cond(self._hass, self._info.variables)
         except exceptions.ConditionError as ex:
             _LOGGER.warning("Error in 'condition' evaluation:\n%s", ex)
             check = False
@@ -661,7 +765,7 @@ class _ScriptRun:
 
             return True
 
-        result = traced_test_conditions(self._hass, self._variables)
+        result = traced_test_conditions(self._hass, self._info.variables)
         return result
 
     @async_trace_path("repeat")
@@ -670,13 +774,13 @@ class _ScriptRun:
         description = self._action.get(CONF_ALIAS, "sequence")
         repeat = self._action[CONF_REPEAT]
 
-        saved_repeat_vars = self._variables.get("repeat")
+        saved_repeat_vars = self._info.variables.get("repeat")
 
         def set_repeat_var(iteration, count=None):
             repeat_vars = {"first": iteration == 1, "index": iteration}
             if count:
                 repeat_vars["last"] = iteration == count
-            self._variables["repeat"] = repeat_vars
+            self._info.variables["repeat"] = repeat_vars
 
         # pylint: disable=protected-access
         script = self._script._get_repeat_script(self._step)
@@ -690,7 +794,7 @@ class _ScriptRun:
             count = repeat[CONF_COUNT]
             if isinstance(count, template.Template):
                 try:
-                    count = int(count.async_render(self._variables))
+                    count = int(count.async_render(self._info.variables))
                 except (exceptions.TemplateError, ValueError) as ex:
                     self._log(
                         "Error rendering %s repeat count template: %s",
@@ -740,9 +844,9 @@ class _ScriptRun:
                     break
 
         if saved_repeat_vars:
-            self._variables["repeat"] = saved_repeat_vars
+            self._info.variables["repeat"] = saved_repeat_vars
         else:
-            self._variables.pop("repeat", None)  # Not set if count = 0
+            self._info.variables.pop("repeat", None)  # Not set if count = 0
 
     async def _async_choose_step(self) -> None:
         """Choose a sequence."""
@@ -775,14 +879,14 @@ class _ScriptRun:
 
         self._step_log("wait for trigger", timeout)
 
-        variables = {**self._variables}
-        self._variables["wait"] = {"remaining": timeout, "trigger": None}
-        trace_set_result(wait=self._variables["wait"])
+        variables = {**self._info.variables}
+        self._info.variables["wait"] = {"remaining": timeout, "trigger": None}
+        trace_set_result(wait=self._info.variables["wait"])
 
         done = asyncio.Event()
 
         async def async_done(variables, context=None):
-            wait_var = self._variables["wait"]
+            wait_var = self._info.variables["wait"]
             if to_context and to_context.deadline:
                 wait_var["remaining"] = to_context.deadline - self._hass.loop.time()
             else:
@@ -814,10 +918,10 @@ class _ScriptRun:
             async with async_timeout.timeout(timeout) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         except asyncio.TimeoutError as ex:
-            self._variables["wait"]["remaining"] = 0.0
+            self._info.variables["wait"]["remaining"] = 0.0
             if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
                 self._log(_TIMEOUT_MSG)
-                trace_set_result(wait=self._variables["wait"], timeout=True)
+                trace_set_result(wait=self._info.variables["wait"], timeout=True)
                 raise _StopScript from ex
         finally:
             for task in tasks:
@@ -827,15 +931,15 @@ class _ScriptRun:
     async def _async_variables_step(self):
         """Set a variable value."""
         self._step_log("setting variables")
-        self._variables = self._action[CONF_VARIABLES].async_render(
-            self._hass, self._variables, render_as_defaults=False
+        self._info.variables = self._action[CONF_VARIABLES].async_render(
+            self._hass, self._info.variables, render_as_defaults=False
         )
 
     async def _async_run_script(self, script: Script) -> None:
         """Execute a script."""
         await self._async_run_long_action(
             self._hass.async_create_task(
-                script.async_run(self._variables, self._context)
+                script.async_run(self._info.variables, self._info.context)
             )
         )
 
@@ -1005,8 +1109,8 @@ class Script:
         self._referenced_devices: set[str] | None = None
         self._referenced_areas: set[str] | None = None
         self.variables = variables
-        self._variables_dynamic = template.is_complex(variables)
-        if self._variables_dynamic:
+        self.variables_dynamic = template.is_complex(variables)
+        if self.variables_dynamic:
             template.attach(hass, variables)
 
     @property
@@ -1081,6 +1185,12 @@ class Script:
         for step in sequence:
             action = cv.determine_script_action(step)
 
+            if "." in action:
+                cast(
+                    ActionConfigWithPlatform, step
+                ).platform.async_find_referenced_areas(referenced, step)
+                continue
+
             if action == cv.SCRIPT_ACTION_CALL_SERVICE:
                 for data in (
                     step.get(CONF_TARGET),
@@ -1088,8 +1198,9 @@ class Script:
                     step.get(service.CONF_SERVICE_DATA_TEMPLATE),
                 ):
                     _referenced_extract_ids(data, ATTR_AREA_ID, referenced)
+                continue
 
-            elif action == cv.SCRIPT_ACTION_CHOOSE:
+            if action == cv.SCRIPT_ACTION_CHOOSE:
                 for choice in step[CONF_CHOOSE]:
                     Script._find_referenced_areas(referenced, choice[CONF_SEQUENCE])
                 if CONF_DEFAULT in step:
@@ -1109,6 +1220,12 @@ class Script:
     def _find_referenced_devices(referenced, sequence):
         for step in sequence:
             action = cv.determine_script_action(step)
+
+            if "." in action:
+                cast(
+                    ActionConfigWithPlatform, step
+                ).platform.async_find_referenced_devices(referenced, step)
+                continue
 
             if action == cv.SCRIPT_ACTION_CALL_SERVICE:
                 for data in (
@@ -1146,6 +1263,12 @@ class Script:
     def _find_referenced_entities(referenced, sequence):
         for step in sequence:
             action = cv.determine_script_action(step)
+
+            if "." in action:
+                cast(
+                    ActionConfigWithPlatform, step
+                ).platform.async_find_referenced_entities(referenced, step)
+                continue
 
             if action == cv.SCRIPT_ACTION_CALL_SERVICE:
                 for data in (

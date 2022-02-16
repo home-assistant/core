@@ -912,6 +912,32 @@ def key_value_schemas(
     return key_value_validator
 
 
+def single_key_schemas(
+    value_schemas: dict[Hashable, vol.Schema]
+) -> Callable[[Any], dict[Hashable, dict[str, Any]]]:
+    """Create a validator that expects a top-level single config key.
+
+    This gives better error messages than wrapping all schemas in a vol.Any.
+    """
+
+    def single_key_schema_validator(value: Any) -> dict[Hashable, dict[str, Any]]:
+        if not isinstance(value, dict):
+            raise vol.Invalid("Expected a dictionary")
+
+        if not len(value) == 1:
+            raise vol.Invalid(f"Expected only a single key, found {len(value)}")
+
+        key_value = list(value)[0]
+
+        if isinstance(key_value, Hashable) and key_value in value_schemas:
+            return cast(dict[Hashable, dict[str, Any]], value_schemas[key_value](value))
+
+        alternatives = ", ".join(str(key) for key in value_schemas)
+        raise vol.Invalid(f"Unexpected key: '{key_value}'. Expected {alternatives}")
+
+    return single_key_schema_validator
+
+
 # Validator helpers
 
 
@@ -1026,10 +1052,30 @@ def script_action(value: Any) -> dict:
     if not isinstance(value, dict):
         raise vol.Invalid("expected dictionary")
 
-    return ACTION_TYPE_SCHEMAS[determine_script_action(value)](value)
+    action_type = determine_script_action(value)
+
+    if "." in action_type:
+        raise vol.Invalid("Dynamic actions are not supported here")
+
+    return ACTION_TYPE_SCHEMAS[action_type](value)
+
+
+def script_action_with_dynamic(value: Any) -> dict:
+    """Validate a script action and allow dynamic actions."""
+    if not isinstance(value, dict):
+        raise vol.Invalid("expected dictionary")
+
+    action_type = determine_script_action(value)
+
+    if "." in action_type:
+        return value
+
+    return ACTION_TYPE_SCHEMAS[action_type](value)
 
 
 SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])
+
+SCRIPT_SCHEMA_WITH_DYNAMIC = vol.All(ensure_list, [script_action_with_dynamic])
 
 SCRIPT_ACTION_BASE_SCHEMA = {vol.Optional(CONF_ALIAS): string}
 
@@ -1435,7 +1481,13 @@ def determine_script_action(action: dict[str, Any]) -> str:
     if CONF_VARIABLES in action:
         return SCRIPT_ACTION_VARIABLES
 
-    return SCRIPT_ACTION_CALL_SERVICE
+    if CONF_SERVICE in action or CONF_SERVICE_TEMPLATE in action:
+        return SCRIPT_ACTION_CALL_SERVICE
+
+    if len(action) == 1:
+        return list(action.keys())[0]
+
+    raise ValueError("Unable to determine action")
 
 
 ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {

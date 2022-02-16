@@ -34,6 +34,7 @@ from tests.common import (
     assert_setup_component,
     async_capture_events,
     async_mock_service,
+    mock_platform,
     mock_restore_cache,
 )
 from tests.components.logbook.test_init import MockLazyEventPartialState
@@ -1570,3 +1571,42 @@ async def test_trigger_condition_explicit_id(hass, calls):
     await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[-1].data.get("param") == "two"
+
+
+async def test_dynamic_action(hass):
+    """Test running a dynamic action."""
+    calls = []
+
+    async def async_validate_action_config(hass, config):
+        return config
+
+    async def async_run_action(hass, config, info):
+        calls.append(info)
+
+    mock_platform(
+        hass,
+        "test_int.action",
+        Mock(
+            async_validate_action_config=async_validate_action_config,
+            async_run_action=async_run_action,
+        ),
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": [
+                    {"platform": "event", "event_type": "test_event1"},
+                ],
+                "action": {"test_int.something": {}},
+            }
+        },
+    )
+
+    context = Context()
+    hass.bus.async_fire("test_event1", context=context)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].context.parent_id == context.id

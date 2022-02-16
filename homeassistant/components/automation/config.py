@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
             vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
             vol.Optional(CONF_TRIGGER_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
-            vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA_WITH_DYNAMIC,
         },
         script.SCRIPT_MODE_SINGLE,
     ),
