@@ -128,7 +128,7 @@ class LidarrSensor(LidarrEntity, SensorEntity):
 
 def to_attr(albums: list[LidarrCalendar] | list[LidarrAlbum]) -> dict[str, StateType]:
     """Get attributes."""
-    if isinstance(albums[0], LidarrCalendar):
+    if len(albums) > 0 and isinstance(albums[0], LidarrCalendar):
         return {
             f"{album.title} ({album.artist.artistName})": album.releaseDate.isoformat()
             for album in albums
