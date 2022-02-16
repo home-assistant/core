@@ -764,6 +764,5 @@ async def test_vizio_update_with_apps_on_input(
     )
     await _add_config_entry_to_hass(hass, config_entry)
     attr = _get_attr_and_assert_base_attr(hass, DEVICE_CLASS_TV, STATE_ON)
-    # App name and app ID should not be in the attributes
-    assert "app_name" not in attr
+    # app ID should not be in the attributes
     assert "app_id" not in attr

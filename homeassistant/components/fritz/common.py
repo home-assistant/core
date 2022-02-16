@@ -327,11 +327,19 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         _LOGGER.debug("Checking host info for FRITZ!Box device %s", self.host)
         self._update_available, self._latest_firmware = self._update_device_info()
 
-        try:
-            topology = self.fritz_hosts.get_mesh_topology()
-        except FritzActionError:
-            self.mesh_role = MeshRoles.SLAVE
-            return
+        if (
+            "Hosts1" not in self.connection.services
+            or "X_AVM-DE_GetMeshListPath"
+            not in self.connection.services["Hosts1"].actions
+        ):
+            self.mesh_role = MeshRoles.NONE
+        else:
+            try:
+                topology = self.fritz_hosts.get_mesh_topology()
+            except FritzActionError:
+                self.mesh_role = MeshRoles.SLAVE
+                # Avoid duplicating device trackers
+                return
 
         _LOGGER.debug("Checking devices for FRITZ!Box device %s", self.host)
         _default_consider_home = DEFAULT_CONSIDER_HOME.total_seconds()
