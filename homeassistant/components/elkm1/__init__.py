@@ -14,6 +14,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    ATTR_CONNECTIONS,
     CONF_EXCLUDE,
     CONF_HOST,
     CONF_INCLUDE,
@@ -28,6 +29,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -286,6 +288,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = {
         "elk": elk,
         "prefix": conf[CONF_PREFIX],
+        "mac": entry.unique_id,
         "auto_configure": conf[CONF_AUTO_CONFIGURE],
         "config": config,
         "keypads": {},
@@ -420,6 +423,7 @@ class ElkEntity(Entity):
         """Initialize the base of all Elk devices."""
         self._elk = elk
         self._element = element
+        self._mac = elk_data["mac"]
         self._prefix = elk_data["prefix"]
         self._name_prefix = f"{self._prefix} " if self._prefix else ""
         self._temperature_unit = elk_data["config"]["temperature_unit"]
@@ -499,10 +503,13 @@ class ElkAttachedEntity(ElkEntity):
         device_name = "ElkM1"
         if self._prefix:
             device_name += f" {self._prefix}"
-        return DeviceInfo(
+        device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{self._prefix}_system")},
             manufacturer="ELK Products, Inc.",
             model="M1",
             name=device_name,
             sw_version=self._elk.panel.elkm1_version,
         )
+        if self._mac:
+            device_info[ATTR_CONNECTIONS] = {(CONNECTION_NETWORK_MAC, self._mac)}
+        return device_info
