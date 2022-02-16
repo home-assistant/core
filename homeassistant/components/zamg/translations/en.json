@@ -1,20 +1,20 @@
 {
     "config": {
         "abort": {
-            "unknown": "Station id is unknown",
-            "already_configured": "Station is already configured",
+            "already_configured": "Device is already configured",
             "cannot_connect": "Failed to connect"
         },
         "error": {
-            "cannot_connect": "Failed to connect"
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
         },
         "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
-                    "station_id": "Zamg weather station id"
+                    "station_id": "Host"
                 },
-                "description": "Set up zamg to integrate with Home Assistant."
+                "description": "Set up your ZAMG to integrate with Home Assistant."
             }
         }
     }
