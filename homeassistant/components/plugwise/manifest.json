@@ -5,6 +5,7 @@
   "requirements": ["plugwise==0.16.4"],
   "codeowners": ["@CoMPaTech", "@bouwew", "@brefra", "@frenck"],
   "zeroconf": ["_plugwise._tcp.local."],
+  "dhcp": [{ "registered_devices": true }],
   "config_flow": true,
   "iot_class": "local_polling",
   "loggers": ["crcmod", "plugwise"]

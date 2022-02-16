@@ -7,6 +7,7 @@ from plugwise.exceptions import InvalidAuthentication, PlugwiseException
 from plugwise.smile import Smile
 import voluptuous as vol
 
+from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
@@ -20,6 +21,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceRegistry,
+    async_get,
+)
 
 from .const import (
     API,
@@ -79,6 +85,22 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     discovery_info: ZeroconfServiceInfo | None = None
     _username: str = DEFAULT_USERNAME
+
+    async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
+        """Update configuration of a DHCP discovered Plugwise Smile."""
+        dev_reg: DeviceRegistry = async_get(self.hass)
+        if device := dev_reg.async_get_device(
+            identifiers=set(),
+            connections={(CONNECTION_NETWORK_MAC, discovery_info.macaddress)},
+        ):
+            for entry_id in device.config_entries:
+                if (
+                    entry := self.hass.config_entries.async_get_entry(entry_id)
+                ) and entry.domain == DOMAIN:
+                    await self.async_set_unique_id(entry.unique_id)
+                    self._abort_if_unique_id_configured({CONF_HOST: discovery_info.ip})
+
+        return self.async_abort(reason="already_configured")
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo

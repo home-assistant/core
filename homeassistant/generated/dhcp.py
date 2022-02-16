@@ -58,6 +58,7 @@ DHCP: list[dict[str, str | bool]] = [
     {'domain': 'nuki', 'hostname': 'nuki_bridge_*'},
     {'domain': 'oncue', 'hostname': 'kohlergen*', 'macaddress': '00146F*'},
     {'domain': 'overkiz', 'hostname': 'gateway*', 'macaddress': 'F8811A*'},
+    {'domain': 'plugwise', 'registered_devices': True},
     {'domain': 'powerwall', 'hostname': '1118431-*'},
     {'domain': 'rachio', 'hostname': 'rachio-*', 'macaddress': '009D6B*'},
     {'domain': 'rachio', 'hostname': 'rachio-*', 'macaddress': 'F0038C*'},
