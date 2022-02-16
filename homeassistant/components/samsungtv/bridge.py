@@ -303,6 +303,8 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     self.token = remote.token
                     if self.token is None:
                         config[CONF_TOKEN] = "*****"
+                    LOGGER.debug("Working config: %s", config)
+                    return RESULT_SUCCESS
             except WebSocketException as err:
                 LOGGER.debug(
                     "Working but unsupported config: %s, error: %s", config, err
@@ -310,9 +312,6 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 result = RESULT_NOT_SUPPORTED
             except (OSError, ConnectionFailure) as err:
                 LOGGER.debug("Failing config: %s, error: %s", config, err)
-            else:
-                LOGGER.debug("Working config: %s", config)
-                return RESULT_SUCCESS
         # pylint: disable=useless-else-on-loop
         else:
             if result:
