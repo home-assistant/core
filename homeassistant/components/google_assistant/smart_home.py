@@ -281,7 +281,7 @@ async def async_devices_identify(hass, data: RequestData, payload):
 async def async_devices_reachable(hass, data: RequestData, payload):
     """Handle action.devices.REACHABLE_DEVICES request.
 
-    https://developers.google.com/actions/smarthome/create#actiondevicesdisconnect
+    https://developers.google.com/assistant/smarthome/develop/local#implement_the_reachable_devices_handler_hub_integrations_only
     """
     google_ids = {dev["id"] for dev in (data.devices or [])}
 

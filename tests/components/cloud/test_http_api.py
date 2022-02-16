@@ -424,6 +424,7 @@ async def test_websocket_status(
             "exclude_entities": [],
         },
         "google_registered": False,
+        "google_local_connected": False,
         "remote_domain": None,
         "remote_connected": False,
         "remote_certificate": None,
