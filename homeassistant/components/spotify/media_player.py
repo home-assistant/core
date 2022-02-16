@@ -515,9 +515,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             run_coroutine_threadsafe(
                 self._session.async_ensure_token_valid(), self.hass.loop
             ).result()
-            self._spotify_data[DATA_SPOTIFY_CLIENT] = Spotify(
-                auth=self._session.token["access_token"]
-            )
+            self._spotify.set_auth(auth=self._session.token["access_token"])
 
         current = self._spotify.current_playback()
         self._currently_playing = current or {}
@@ -581,7 +579,11 @@ async def async_browse_media_internal(
             partial(library_payload, can_play_artist=can_play_artist)
         )
 
-    await session.async_ensure_token_valid()
+    if not session.valid_token:
+        await session.async_ensure_token_valid()
+        await hass.async_add_executor_job(
+            spotify.set_auth, session.token["access_token"]
+        )
 
     # Strip prefix
     media_content_type = media_content_type[len(MEDIA_PLAYER_PREFIX) :]
