@@ -126,7 +126,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
             and (last_state := await self.async_get_last_state()) is not None
             and last_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
             # We might have set up a trigger already after subscribing from
-            # super().async_added_to_hass()
+            # super().async_added_to_hass(), then we should not restore state
             and not self._expiration_trigger
         ):
             expiration_at = last_state.last_changed + timedelta(seconds=expire_after)
