@@ -1222,10 +1222,7 @@ async def test_form_reauth_websocket_cannot_connect(hass, remotews: Mock):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWS",
-        side_effect=ConnectionFailure,
-    ):
+    with patch.object(remotews, "open", side_effect=ConnectionFailure):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
