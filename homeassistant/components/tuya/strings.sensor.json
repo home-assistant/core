@@ -40,8 +40,8 @@
         "defense":"Defense"
     },
     "tuya__lock_status": {
-        "open":"Unlocked",
-        "closed":"Locked"
+        "open":"[%key:common::state::unlocked%]",
+        "closed":"[%key:common::state::locked%]"
     },
     "tuya__lock_antilock": {
         "unlocked":"Unlocked",
