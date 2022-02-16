@@ -106,22 +106,12 @@ async def async_validate_input(
     field = "base"
     authentication = HTTP_BASIC_AUTHENTICATION
     try:
-        # Validate MJPEG URL
-        field = CONF_MJPEG_URL
-        authentication = await hass.async_add_executor_job(
-            validate_url,
-            user_input[CONF_MJPEG_URL],
-            user_input.get(CONF_USERNAME),
-            user_input[CONF_PASSWORD],
-            user_input[CONF_VERIFY_SSL],
-        )
-
-        # Validate still image URL
-        if still_image_url := user_input.get(CONF_STILL_IMAGE_URL):
-            field = CONF_STILL_IMAGE_URL
-            await hass.async_add_executor_job(
+        for field in (CONF_MJPEG_URL, CONF_STILL_IMAGE_URL):
+            if not (url := user_input.get(field)):
+                continue
+            authentication = await hass.async_add_executor_job(
                 validate_url,
-                still_image_url,
+                url,
                 user_input.get(CONF_USERNAME),
                 user_input[CONF_PASSWORD],
                 user_input[CONF_VERIFY_SSL],
