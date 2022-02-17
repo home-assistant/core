@@ -47,7 +47,7 @@ class LgWebOSNotificationService(BaseNotificationService):
                 await self._client.connect()
 
             data = kwargs.get(ATTR_DATA)
-            icon_path = data.get(CONF_ICON, "") if data else None
+            icon_path = data.get(CONF_ICON, None) if data else None
             await self._client.send_message(message, icon_path=icon_path)
         except WebOsTvPairError:
             _LOGGER.error("Pairing with TV failed")
