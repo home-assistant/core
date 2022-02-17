@@ -55,5 +55,15 @@ async def test_entry_diagnostics(
             "title": "Mock Title",
             "unique_id": "any",
             "version": 2,
-        }
+        },
+        "device_info": {
+            "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
+            "device": {
+                "modelName": "82GXARRS",
+                "name": "[TV] Living Room",
+                "networkType": "wireless",
+                "type": "Samsung SmartTV",
+                "wifiMac": "aa:bb:cc:dd:ee:ff",
+            },
+        },
     }
