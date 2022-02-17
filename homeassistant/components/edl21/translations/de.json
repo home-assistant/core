@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "serial_port": "Serieller Port",
+          "name": "Name"
+        },
+        "title": "EDL21 Einrichten"
+      }
+    }
+  }
+}

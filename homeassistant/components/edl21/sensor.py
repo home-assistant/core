@@ -33,6 +33,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utcnow
+from homeassistant.config_entries import ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -264,6 +265,18 @@ async def async_setup_platform(
     hass.data[DOMAIN] = EDL21(hass, config, async_add_entities)
     await hass.data[DOMAIN].connect()
 
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities,
+):
+    config = hass.data[DOMAIN]
+    if config_entry.options:
+        config.update(config_entry.options)
+
+    hass.data[DOMAIN] = EDL21(hass, config, async_add_entities)
+    await hass.data[DOMAIN].connect()
 
 class EDL21:
     """EDL21 handles telegrams sent by a compatible smart meter."""

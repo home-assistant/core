@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "serial_port": "Serial Port",
+          "name": "Name"
+        },
+        "title": "Set up EDL21"
+      }
+    }
+  }
+}

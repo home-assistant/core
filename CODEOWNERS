@@ -235,6 +235,7 @@ homeassistant/components/econet/* @vangorra @w1ll1am23
 tests/components/econet/* @vangorra @w1ll1am23
 homeassistant/components/ecovacs/* @OverloadUT
 homeassistant/components/edl21/* @mtdcr
+tests/components/edl21/* @dh4rry
 homeassistant/components/efergy/* @tkdrob
 tests/components/efergy/* @tkdrob
 homeassistant/components/egardia/* @jeroenterheerdt
