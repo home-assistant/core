@@ -36,8 +36,8 @@ class PhoneModemButton(ButtonEntity):
     def __init__(self, api: PhoneModem, device: str, server_unique_id: str) -> None:
         """Initialize the button."""
         self.entity_description = ButtonEntityDescription(
-            key="reject",
-            name="Reject",
+            key="phone_modem_reject",
+            name="Phone Modem Reject",
             icon="mdi:phone-hangup",
         )
         self.device = device
