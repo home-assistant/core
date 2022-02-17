@@ -196,6 +196,14 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         mandatory_arg=True,
     ),
+    "network_use_percent": SysMonitorSensorEntityDescription(
+        key="network_use",
+        name="Network use",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:server-network",
+        state_class=SensorStateClass.MEASUREMENT,
+        mandatory_arg=True,
+    ),
     "process": SysMonitorSensorEntityDescription(
         key="process",
         name="Process",
