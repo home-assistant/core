@@ -13,6 +13,7 @@ from homeassistant.components.cover import (
     SUPPORT_STOP,
     CoverDeviceClass,
 )
+from homeassistant.components.overkiz.coordinator import OverkizDataUpdateCoordinator
 
 from .generic_cover import COMMANDS_STOP, OverkizGenericCover
 
@@ -35,6 +36,19 @@ OVERKIZ_DEVICE_TO_DEVICE_CLASS = {
 
 class VerticalCover(OverkizGenericCover):
     """Representation of an Overkiz vertical cover."""
+
+    def __init__(
+        self,
+        device_url: str,
+        coordinator: OverkizDataUpdateCoordinator,
+        low_speed: bool = False,
+    ) -> None:
+        """Initialize the device."""
+        super().__init__(device_url, coordinator)
+        self.low_speed = low_speed
+        if self.low_speed:
+            self._attr_name = f"{self._attr_name} Low Speed"
+            self._attr_unique_id = f"{self._attr_unique_id}_low_speed"
 
     @property
     def supported_features(self) -> int:
@@ -87,15 +101,33 @@ class VerticalCover(OverkizGenericCover):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position = 100 - kwargs[ATTR_POSITION]
-        await self.executor.async_execute_command(OverkizCommand.SET_CLOSURE, position)
+        if self.low_speed:
+            await self.async_set_cover_position_low_speed(**kwargs)
+        else:
+            position = 100 - kwargs[ATTR_POSITION]
+            await self.executor.async_execute_command(
+                OverkizCommand.SET_CLOSURE, position
+            )
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        if command := self.executor.select_command(*COMMANDS_OPEN):
+        if self.low_speed:
+            await self.async_set_cover_position_low_speed(**{ATTR_POSITION: 100})
+
+        elif command := self.executor.select_command(*COMMANDS_OPEN):
             await self.executor.async_execute_command(command)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        if command := self.executor.select_command(*COMMANDS_CLOSE):
+        if self.low_speed:
+            await self.async_set_cover_position_low_speed(**{ATTR_POSITION: 0})
+        elif command := self.executor.select_command(*COMMANDS_CLOSE):
             await self.executor.async_execute_command(command)
+
+    async def async_set_cover_position_low_speed(self, **kwargs: Any) -> None:
+        """Move the cover to a specific position with a low speed."""
+        position = 100 - kwargs.get(ATTR_POSITION, 0)
+
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED, position, "lowspeed"
+        )
