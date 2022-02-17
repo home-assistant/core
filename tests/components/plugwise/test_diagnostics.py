@@ -149,7 +149,7 @@ async def test_diagnostics(
                 "model": "Adam",
                 "name": "Adam",
                 "vendor": "Plugwise B.V.",
-                "zigbee_mac_address": "012345670101",
+                "zigbee_mac_address": "ABCD012345670101",
                 "binary_sensors": {"plugwise_notification": True},
                 "sensors": {"outdoor_temperature": 7.81},
             },
@@ -182,7 +182,7 @@ async def test_diagnostics(
                 "model": "Plug",
                 "name": "Playstation Smart Plug",
                 "vendor": "Plugwise",
-                "zigbee_mac_address": "012345670A12",
+                "zigbee_mac_address": "ABCD012345670A12",
                 "sensors": {
                     "electricity_consumed": 82.6,
                     "electricity_consumed_interval": 8.6,
@@ -200,7 +200,7 @@ async def test_diagnostics(
                 "model": "Plug",
                 "name": "CV Pomp",
                 "vendor": "Plugwise",
-                "zigbee_mac_address": "012345670A05",
+                "zigbee_mac_address": "ABCD012345670A05",
                 "sensors": {
                     "electricity_consumed": 35.6,
                     "electricity_consumed_interval": 7.37,
@@ -238,7 +238,7 @@ async def test_diagnostics(
                 "model": "Plug",
                 "name": "NAS",
                 "vendor": "Plugwise",
-                "zigbee_mac_address": "012345670A14",
+                "zigbee_mac_address": "ABCD012345670A14",
                 "sensors": {
                     "electricity_consumed": 16.5,
                     "electricity_consumed_interval": 0.5,
@@ -256,7 +256,7 @@ async def test_diagnostics(
                 "model": "Plug",
                 "name": "USG Smart Plug",
                 "vendor": "Plugwise",
-                "zigbee_mac_address": "012345670A16",
+                "zigbee_mac_address": "ABCD012345670A16",
                 "sensors": {
                     "electricity_consumed": 8.5,
                     "electricity_consumed_interval": 0.0,
@@ -274,7 +274,7 @@ async def test_diagnostics(
                 "model": "Plug",
                 "name": "NVR",
                 "vendor": "Plugwise",
-                "zigbee_mac_address": "012345670A15",
+                "zigbee_mac_address": "ABCD012345670A15",
                 "sensors": {
                     "electricity_consumed": 34.0,
                     "electricity_consumed_interval": 9.15,
@@ -292,7 +292,7 @@ async def test_diagnostics(
                 "model": "Plug",
                 "name": "Fibaro HC2",
                 "vendor": "Plugwise",
-                "zigbee_mac_address": "012345670A13",
+                "zigbee_mac_address": "ABCD012345670A13",
                 "sensors": {
                     "electricity_consumed": 12.5,
                     "electricity_consumed_interval": 3.8,
@@ -398,7 +398,7 @@ async def test_diagnostics(
                 "model": "Plug",
                 "name": "Ziggo Modem",
                 "vendor": "Plugwise",
-                "zigbee_mac_address": "012345670A01",
+                "zigbee_mac_address": "ABCD012345670A01",
                 "sensors": {
                     "electricity_consumed": 12.2,
                     "electricity_consumed_interval": 2.97,
