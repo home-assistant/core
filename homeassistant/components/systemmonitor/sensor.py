@@ -578,7 +578,6 @@ def _update(  # noqa: C901
             "throughput_network_out",
         )
         if in_troughput is not None and out_troughput is not None:
-            update_time = datetime.now()
             total_troughput = in_troughput + out_troughput
             max_throughput = (
                 psutil.net_if_stats()[data.argument].speed / 8.333
