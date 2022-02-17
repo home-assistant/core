@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "no_services_found": "No se han encontrado servicios para esta cuenta"
+        },
+        "step": {
+            "reauth": {
+                "description": "Actualizar la contrase\u00f1a de {username}"
+            },
+            "service": {
+                "data": {
+                    "services": "Servicios"
+                },
+                "title": "Seleccionar Servicios"
+            }
+        }
+    }
+}
