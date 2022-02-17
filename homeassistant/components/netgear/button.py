@@ -21,7 +21,7 @@ from .router import NetgearRouter, NetgearRouterEntity
 class NetgearButtonEntityDescriptionRequired:
     """Required attributes of NetgearButtonEntityDescription."""
 
-    action: Callable[[NetgearRouter], None]
+    action: Callable[[NetgearRouter], Callable[[], Coroutine[Any, Any, None]]]
 
 
 @dataclass
