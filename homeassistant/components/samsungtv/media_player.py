@@ -89,6 +89,8 @@ async def async_setup_entry(
 class SamsungTVDevice(MediaPlayerEntity):
     """Representation of a Samsung TV."""
 
+    _attr_source_list: list[str]
+
     def __init__(
         self,
         bridge: SamsungTVLegacyBridge | SamsungTVWSBridge,
@@ -109,6 +111,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._attr_is_volume_muted: bool = False
         self._attr_device_class = MediaPlayerDeviceClass.TV
         self._attr_source_list = list(SOURCES)
+        self._app_list: dict[str, str] | None = None
 
         if self._on_script or self._mac:
             self._attr_supported_features = SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON
@@ -157,6 +160,15 @@ class SamsungTVDevice(MediaPlayerEntity):
             self._attr_state = STATE_OFF
         else:
             self._attr_state = STATE_ON if self._bridge.is_on() else STATE_OFF
+
+        if self._attr_state == STATE_ON and self._app_list is None:
+            self._app_list = {}  # Ensure that we don't update it twice in parallel
+            self.hass.async_add_job(self._update_app_list)
+
+    def _update_app_list(self) -> None:
+        self._app_list = self._bridge.get_app_list()
+        if self._app_list is not None:
+            self._attr_source_list.extend(self._app_list)
 
     def send_key(self, key: str) -> None:
         """Send a key to the tv and handles exceptions."""
