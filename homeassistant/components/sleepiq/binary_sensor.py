@@ -6,7 +6,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -44,14 +44,9 @@ class IsInBedBinarySensor(SleepIQSensor, BinarySensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, bed, sleeper, IS_IN_BED)
-        self._attr_icon = ICON
 
-    @property
-    def is_on(self) -> bool:
-        """Return the status of the sensor."""
-        return bool(self.sleeper.in_bed)
-
-    @property
-    def icon(self) -> str:
-        """Return the icon to use in the frontend, if any."""
-        return ICON_OCCUPIED if self.sleeper.in_bed else ICON_EMPTY
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update sensor attributes."""
+        self._attr_is_on = self.sleeper.in_bed
+        self._attr_icon = ICON_OCCUPIED if self.sleeper.in_bed else ICON_EMPTY

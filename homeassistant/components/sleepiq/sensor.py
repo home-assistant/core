@@ -5,7 +5,7 @@ from asyncsleepiq import SleepIQBed, SleepIQSleeper
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -44,7 +44,7 @@ class SleepNumberSensorEntity(SleepIQSensor, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator, bed, sleeper, SLEEP_NUMBER)
 
-    @property
-    def native_value(self) -> int:
-        """Return the current sleep number value."""
-        return int(self.sleeper.sleep_number)
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update sensor attributes."""
+        self._attr_native_value = self.sleeper.sleep_number

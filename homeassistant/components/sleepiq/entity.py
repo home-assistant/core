@@ -1,6 +1,7 @@
 """Entity for the SleepIQ integration."""
 from asyncsleepiq import SleepIQBed, SleepIQSleeper
 
+from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -30,3 +31,11 @@ class SleepIQSensor(CoordinatorEntity):
             f"SleepNumber {self.bed.name} {self.sleeper.name} {SENSOR_TYPES[name]}"
         )
         self._attr_unique_id = f"{self.bed.id}_{self.sleeper.name}_{name}"
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self._async_update_attrs)
+        )
+        self._async_update_attrs()
+
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update sensor attributes."""
