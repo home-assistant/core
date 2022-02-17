@@ -33,12 +33,11 @@ async def async_setup_entry(
         SLEEPIQ_STATUS_COORDINATOR
     ]
     data = hass.data[DOMAIN][entry.entry_id][SLEEPIQ_DATA]
-    entities: list[IsInBedBinarySensor] = []
-    for bed in data.beds.values():
-        for sleeper in bed.sleepers:
-            entities.append(IsInBedBinarySensor(coordinator, bed, sleeper))
-
-    async_add_entities(entities)
+    async_add_entities(
+        IsInBedBinarySensor(coordinator, bed, sleeper)
+        for bed in data.beds.values()
+        for sleeper in bed.sleepers
+    )
 
 
 class IsInBedBinarySensor(SleepIQSensor, BinarySensorEntity):
