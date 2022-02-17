@@ -1,4 +1,4 @@
-"""Updater support for the NEW_NAME integration."""
+"""Update support for the NEW_NAME integration."""
 
 from homeassistant.components.update import UpdateDescription, UpdateRegistration
 from homeassistant.core import HomeAssistant, callback
