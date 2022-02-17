@@ -217,6 +217,7 @@ class UpdateDescription:
     current_version: str
     available_version: str
     update_callback: Callable[[HomeAssistant, UpdateDescription], Awaitable[bool]]
+    changelog_content: str | None = None
     changelog_url: str | None = None
     icon_url: str | None = None
 
