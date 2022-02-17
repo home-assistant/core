@@ -139,13 +139,7 @@ async def _async_setup_notify(
 
     device_id = None
     if CONF_DEVICE in config:
-        await _update_device(hass, config_entry, config)
-        device_registry = await hass.helpers.device_registry.async_get_registry()
-        device = device_registry.async_get_device(
-            {(DOMAIN, id_) for id_ in config[CONF_DEVICE][CONF_IDENTIFIERS]},
-            {tuple(x) for x in config[CONF_DEVICE][CONF_CONNECTIONS]},
-        )
-        device_id = device.id
+        device_id = _update_device(hass, config_entry, config).id
 
     service = MqttNotificationService(
         hass,
