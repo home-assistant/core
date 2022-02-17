@@ -707,16 +707,16 @@ async def test_update_duplicates(hass, hass_ws_client, storage_setup, caplog):
         }
     )
     resp = await client.receive_json()
-    assert resp["success"]
-
-    assert (
-        "Input select 'from storage' with options "
-        "['new option', 'newer option', 'newer option'] "
-        "had duplicated options, the duplicates have been removed"
-    ) in caplog.text
+    assert not resp["success"]
+    assert resp["error"]["code"] == "invalid_format"
+    assert resp["error"]["message"] == (
+        "contains duplicate items: ['newer option'] for "
+        "dictionary value @ data['options']. Got ['new option', "
+        "'newer option', 'newer option']"
+    )
 
     state = hass.states.get(input_entity_id)
-    assert state.attributes[ATTR_OPTIONS] == ["new option", "newer option"]
+    assert state.attributes[ATTR_OPTIONS] == ["yaml update 1", "yaml update 2"]
 
 
 async def test_ws_create(hass, hass_ws_client, storage_setup):
@@ -774,17 +774,13 @@ async def test_ws_create_duplicates(hass, hass_ws_client, storage_setup, caplog)
         }
     )
     resp = await client.receive_json()
-    assert resp["success"]
-
-    assert (
-        "Input select 'New Input' with options "
-        "['new option', 'even newer option', 'even newer option'] "
-        "had duplicated options, the duplicates have been removed"
-    ) in caplog.text
-
-    state = hass.states.get(input_entity_id)
-    assert state.state == "even newer option"
-    assert state.attributes[ATTR_OPTIONS] == ["new option", "even newer option"]
+    assert not resp["success"]
+    assert resp["error"]["code"] == "invalid_format"
+    assert resp["error"]["message"] == (
+        "contains duplicate items: ['even newer option'] for "
+        "dictionary value @ data['options']. Got ['new option', "
+        "'even newer option', 'even newer option']"
+    )
 
 
 async def test_setup_no_config(hass, hass_admin_user):
