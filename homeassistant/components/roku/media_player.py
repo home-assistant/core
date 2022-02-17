@@ -483,7 +483,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
             await self.coordinator.roku.play_on_roku(media_id, params)
         else:
-            _LOGGER.error("Media type %s is not supported", media_type)
+            _LOGGER.error("Media type %s is not supported", original_media_type)
             return
 
         await self.coordinator.async_request_refresh()
