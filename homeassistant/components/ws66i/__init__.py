@@ -19,8 +19,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         options = {CONF_SOURCES: INIT_OPTIONS_DEFAULT}
         hass.config_entries.async_update_entry(entry, options=options)
 
-    entry.async_on_unload(entry.add_update_listener(_update_listener))
-
     ws66i = get_ws66i(entry.data[CONF_IP_ADDRESS])
     try:
         await hass.async_add_executor_job(ws66i.open)
@@ -32,7 +30,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Close the Telnet connection to the amplifier."""
         ws66i.close()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close)
+    entry.async_on_unload(entry.add_update_listener(_update_listener))
+    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close))
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {WS66I_OBJECT: ws66i}
 

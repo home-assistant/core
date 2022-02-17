@@ -59,17 +59,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # Zones 11 - 16 are the master amp
     # Zones 21,31 - 26,36 are the daisy-chained amps
     entities = []
-    for i in range(1, 4):
+    for amp_num in range(1, 4):
 
-        if i > 1:
+        if amp_num > 1:
             # Don't add entities that aren't present
-            status = await hass.async_add_executor_job(ws66i.zone_status, (i * 10 + 1))
+            status = await hass.async_add_executor_job(
+                ws66i.zone_status, (amp_num * 10 + 1)
+            )
             if status is None:
                 break
 
-        _LOGGER.info("Detected amp %d at ip %s", i, ip_addr)
-        for j in range(1, 7):
-            zone_id = (i * 10) + j
+        _LOGGER.info("Detected amp %d at ip %s", amp_num, ip_addr)
+        for zone_num in range(1, 7):
+            zone_id = (amp_num * 10) + zone_num
             entities.append(Ws66iZone(ws66i, sources, config_entry.entry_id, zone_id))
 
     async_add_entities(entities)
@@ -108,6 +110,10 @@ class Ws66iZone(MediaPlayerEntity):
         self._attr_supported_features = SUPPORT_WS66I
         self._attr_available = True
         self._attr_should_poll = True
+        self._attr_is_volume_muted = None
+        self._attr_source = None
+        self._attr_state = None
+        self._attr_media_title = None
         self._attr_device_info = {
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
@@ -116,10 +122,7 @@ class Ws66iZone(MediaPlayerEntity):
         }
 
         self._snapshot = None
-        self._state = None
         self._volume = None
-        self._source = None
-        self._mute = None
 
     def update(self):
         """Retrieve latest state."""
@@ -132,19 +135,16 @@ class Ws66iZone(MediaPlayerEntity):
             return
 
         # successfully retrieved zone state
-        self._state = STATE_ON if new_state.power else STATE_OFF
+        self._attr_state = STATE_ON if new_state.power else STATE_OFF
         self._volume = new_state.volume
-        self._mute = new_state.mute
+        self._attr_is_volume_muted = new_state.mute
         idx = new_state.source
         if idx in self._source_id_name:
-            self._source = self._source_id_name[idx]
+            self._attr_source = self._source_id_name[idx]
+            self._attr_media_title = self._source_id_name[idx]
         else:
-            self._source = None
-
-    @property
-    def state(self):
-        """Return the state of the zone."""
-        return self._state
+            self._attr_source = None
+            self._attr_media_title = None
 
     @property
     def volume_level(self):
@@ -152,21 +152,6 @@ class Ws66iZone(MediaPlayerEntity):
         if self._volume is None:
             return None
         return self._volume / 38.0
-
-    @property
-    def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
-        return self._mute
-
-    @property
-    def media_title(self):
-        """Return the current source as medial title."""
-        return self._source
-
-    @property
-    def source(self):
-        """Return the current input source of the device."""
-        return self._source
 
     def snapshot(self):
         """Save zone's current state."""
