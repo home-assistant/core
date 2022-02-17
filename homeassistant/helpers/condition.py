@@ -875,12 +875,7 @@ async def async_device_from_config(
     platform = await async_get_device_automation_platform(
         hass, config[CONF_DOMAIN], DeviceAutomationType.CONDITION
     )
-    return trace_condition_function(
-        cast(
-            ConditionCheckerType,
-            platform.async_condition_from_config(hass, config),
-        )
-    )
+    return trace_condition_function(platform.async_condition_from_config(hass, config))
 
 
 async def async_trigger_from_config(
@@ -943,14 +938,15 @@ async def async_validate_condition_config(
             hass, config[CONF_DOMAIN], DeviceAutomationType.CONDITION
         )
         if hasattr(platform, "async_validate_condition_config"):
-            return await platform.async_validate_condition_config(hass, config)  # type: ignore
+            return await platform.async_validate_condition_config(hass, config)
         return cast(ConfigType, platform.CONDITION_SCHEMA(config))
 
     if condition in ("numeric_state", "state"):
-        validator = getattr(
-            sys.modules[__name__], VALIDATE_CONFIG_FORMAT.format(condition)
+        validator = cast(
+            Callable[[HomeAssistant, ConfigType], ConfigType],
+            getattr(sys.modules[__name__], VALIDATE_CONFIG_FORMAT.format(condition)),
         )
-        return validator(hass, config)  # type: ignore
+        return validator(hass, config)
 
     return config
 
