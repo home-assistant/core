@@ -27,6 +27,7 @@ COMMENT_REQUIREMENTS = (
     "envirophat",
     "evdev",
     "face_recognition",
+    "homeassistant-pyozw",
     "i2csense",
     "opencv-python-headless",
     "pybluez",

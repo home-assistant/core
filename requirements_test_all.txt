@@ -548,6 +548,9 @@ holidays==0.12
 # homeassistant.components.frontend
 home-assistant-frontend==20220214.0
 
+# homeassistant.components.zwave
+# homeassistant-pyozw==0.1.10
+
 # homeassistant.components.home_connect
 homeconnect==0.6.3
 
@@ -915,6 +918,9 @@ pydeconz==87
 
 # homeassistant.components.dexcom
 pydexcom==0.2.2
+
+# homeassistant.components.zwave
+pydispatcher==2.0.5
 
 # homeassistant.components.econet
 pyeconet==0.1.15

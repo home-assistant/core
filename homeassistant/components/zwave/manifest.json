@@ -1,5 +1,4 @@
 {
-  "disabled": "Not compatible with Python 3.10",
   "domain": "zwave",
   "name": "Z-Wave (deprecated)",
   "config_flow": true,

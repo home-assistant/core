@@ -15,7 +15,8 @@ RUN \
     -r homeassistant/requirements.txt --use-deprecated=legacy-resolver
 COPY requirements_all.txt homeassistant/
 RUN \
-    pip3 install --no-cache-dir --no-index --only-binary=:all: --find-links "${WHEELS_LINKS}" \
+    sed -i "s|# homeassistant-pyozw|homeassistant-pyozw|g" homeassistant/requirements_all.txt \
+    && pip3 install --no-cache-dir --no-index --only-binary=:all: --find-links "${WHEELS_LINKS}" \
     -r homeassistant/requirements_all.txt --use-deprecated=legacy-resolver
 
 ## Setup Home Assistant Core
