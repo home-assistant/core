@@ -45,15 +45,27 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 STORAGE_VERSION_MINOR = 2
 
+
+def _unique(options: Any) -> Any:
+    try:
+        return vol.Unique()(options)
+    except vol.Invalid as exc:
+        raise HomeAssistantError("Duplicate options are not allowed") from exc
+
+
 CREATE_FIELDS = {
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Required(CONF_OPTIONS): vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
+    vol.Required(CONF_OPTIONS): vol.All(
+        cv.ensure_list, vol.Length(min=1), _unique, [cv.string]
+    ),
     vol.Optional(CONF_INITIAL): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
 }
 UPDATE_FIELDS = {
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_OPTIONS): vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
+    vol.Optional(CONF_OPTIONS): vol.All(
+        cv.ensure_list, vol.Length(min=1), _unique, [cv.string]
+    ),
     vol.Optional(CONF_INITIAL): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
 }
