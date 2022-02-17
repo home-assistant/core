@@ -1,4 +1,7 @@
 """Define constants for the Spotify integration."""
+
+import logging
+
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
@@ -9,9 +12,7 @@ from homeassistant.components.media_player.const import (
 
 DOMAIN = "spotify"
 
-DATA_SPOTIFY_CLIENT = "spotify_client"
-DATA_SPOTIFY_ME = "spotify_me"
-DATA_SPOTIFY_SESSION = "spotify_session"
+LOGGER = logging.getLogger(__package__)
 
 SPOTIFY_SCOPES = [
     # Needed to be able to control playback

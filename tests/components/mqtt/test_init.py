@@ -1134,6 +1134,8 @@ async def test_setup_without_tls_config_uses_tlsv1_under_python36(hass):
             mqtt.CONF_BIRTH_MESSAGE: {
                 mqtt.ATTR_TOPIC: "birth",
                 mqtt.ATTR_PAYLOAD: "birth",
+                mqtt.ATTR_QOS: 0,
+                mqtt.ATTR_RETAIN: False,
             },
         }
     ],
@@ -1162,6 +1164,8 @@ async def test_custom_birth_message(hass, mqtt_client_mock, mqtt_mock):
             mqtt.CONF_BIRTH_MESSAGE: {
                 mqtt.ATTR_TOPIC: "homeassistant/status",
                 mqtt.ATTR_PAYLOAD: "online",
+                mqtt.ATTR_QOS: 0,
+                mqtt.ATTR_RETAIN: False,
             },
         }
     ],
@@ -1205,6 +1209,8 @@ async def test_no_birth_message(hass, mqtt_client_mock, mqtt_mock):
             mqtt.CONF_BIRTH_MESSAGE: {
                 mqtt.ATTR_TOPIC: "homeassistant/status",
                 mqtt.ATTR_PAYLOAD: "online",
+                mqtt.ATTR_QOS: 0,
+                mqtt.ATTR_RETAIN: False,
             },
         }
     ],
@@ -1214,17 +1220,16 @@ async def test_delayed_birth_message(hass, mqtt_client_mock, mqtt_config):
     hass.state = CoreState.starting
     birth = asyncio.Event()
 
-    result = await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: mqtt_config})
-    assert result
     await hass.async_block_till_done()
 
-    # Workaround: asynctest==0.13 fails on @functools.lru_cache
-    spec = dir(hass.data["mqtt"])
-    spec.remove("_matching_subscriptions")
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data=mqtt_config)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     mqtt_component_mock = MagicMock(
         return_value=hass.data["mqtt"],
-        spec_set=spec,
+        spec_set=hass.data["mqtt"],
         wraps=hass.data["mqtt"],
     )
     mqtt_component_mock._mqttc = mqtt_client_mock
@@ -1261,6 +1266,8 @@ async def test_delayed_birth_message(hass, mqtt_client_mock, mqtt_config):
             mqtt.CONF_WILL_MESSAGE: {
                 mqtt.ATTR_TOPIC: "death",
                 mqtt.ATTR_PAYLOAD: "death",
+                mqtt.ATTR_QOS: 0,
+                mqtt.ATTR_RETAIN: False,
             },
         }
     ],
@@ -1317,9 +1324,28 @@ async def test_mqtt_subscribes_topics_on_connect(hass, mqtt_client_mock, mqtt_mo
     assert calls == expected
 
 
-async def test_setup_fails_without_config(hass):
-    """Test if the MQTT component fails to load with no config."""
-    assert not await async_setup_component(hass, mqtt.DOMAIN, {})
+async def test_setup_entry_with_config_override(hass, device_reg, mqtt_client_mock):
+    """Test if the MQTT component loads with no config and config entry can be setup."""
+    data = (
+        '{ "device":{"identifiers":["0AFFD2"]},'
+        '  "state_topic": "foobar/sensor",'
+        '  "unique_id": "unique" }'
+    )
+
+    # mqtt present in yaml config
+    assert await async_setup_component(hass, mqtt.DOMAIN, {})
+
+    # User sets up a config entry
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+
+    # Discover a device to verify the entry was setup correctly
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    await hass.async_block_till_done()
+
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
+    assert device_entry is not None
 
 
 @pytest.mark.no_fail_on_log_exception

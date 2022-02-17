@@ -223,7 +223,10 @@ def convert_to_entity_category(
                 "EntityCategory instead" % (type(value).__name__, value),
                 error_if_core=False,
             )
-        return EntityCategory(value)
+        try:
+            return EntityCategory(value)
+        except ValueError:
+            return None
     return value
 
 
@@ -671,7 +674,7 @@ class Entity(ABC):
         If state is changed more than once before the ha state change task has
         been executed, the intermediate state transitions will be missed.
         """
-        self.hass.add_job(self.async_update_ha_state(force_refresh))  # type: ignore
+        self.hass.add_job(self.async_update_ha_state(force_refresh))
 
     @callback
     def async_schedule_update_ha_state(self, force_refresh: bool = False) -> None:

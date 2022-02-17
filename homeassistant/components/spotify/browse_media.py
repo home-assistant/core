@@ -6,11 +6,13 @@ import logging
 from typing import Any
 
 from spotipy import Spotify
+import yarl
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.components.media_player import BrowseError, BrowseMedia
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_ALBUM,
+    MEDIA_CLASS_APP,
     MEDIA_CLASS_ARTIST,
     MEDIA_CLASS_DIRECTORY,
     MEDIA_CLASS_EPISODE,
@@ -27,15 +29,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 
-from .const import (
-    DATA_SPOTIFY_CLIENT,
-    DATA_SPOTIFY_ME,
-    DATA_SPOTIFY_SESSION,
-    DOMAIN,
-    MEDIA_PLAYER_PREFIX,
-    MEDIA_TYPE_SHOW,
-    PLAYABLE_MEDIA_TYPES,
-)
+from .const import DOMAIN, MEDIA_PLAYER_PREFIX, MEDIA_TYPE_SHOW, PLAYABLE_MEDIA_TYPES
 from .util import fetch_image_url
 
 BROWSE_LIMIT = 48
@@ -145,23 +139,68 @@ class UnknownMediaType(BrowseError):
 
 async def async_browse_media(
     hass: HomeAssistant,
-    media_content_type: str,
-    media_content_id: str,
+    media_content_type: str | None,
+    media_content_id: str | None,
     *,
     can_play_artist: bool = True,
 ) -> BrowseMedia:
     """Browse Spotify media."""
-    if not (info := next(iter(hass.data[DOMAIN].values()), None)):
-        raise BrowseError("No Spotify accounts available")
-    return await async_browse_media_internal(
+    parsed_url = None
+    info = None
+
+    # Check if caller is requesting the root nodes
+    if media_content_type is None and media_content_id is None:
+        children = []
+        for config_entry_id, info in hass.data[DOMAIN].items():
+            config_entry = hass.config_entries.async_get_entry(config_entry_id)
+            assert config_entry is not None
+            children.append(
+                BrowseMedia(
+                    title=config_entry.title,
+                    media_class=MEDIA_CLASS_APP,
+                    media_content_id=f"{MEDIA_PLAYER_PREFIX}{config_entry_id}",
+                    media_content_type=f"{MEDIA_PLAYER_PREFIX}library",
+                    thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
+                    can_play=False,
+                    can_expand=True,
+                )
+            )
+        return BrowseMedia(
+            title="Spotify",
+            media_class=MEDIA_CLASS_APP,
+            media_content_id=MEDIA_PLAYER_PREFIX,
+            media_content_type="spotify",
+            thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
+            can_play=False,
+            can_expand=True,
+            children=children,
+        )
+
+    if media_content_id is None or not media_content_id.startswith(MEDIA_PLAYER_PREFIX):
+        raise BrowseError("Invalid Spotify URL specified")
+
+    # Check for config entry specifier, and extract Spotify URI
+    parsed_url = yarl.URL(media_content_id)
+    if (info := hass.data[DOMAIN].get(parsed_url.host)) is None:
+        raise BrowseError("Invalid Spotify account specified")
+    media_content_id = parsed_url.name
+
+    result = await async_browse_media_internal(
         hass,
-        info[DATA_SPOTIFY_CLIENT],
-        info[DATA_SPOTIFY_SESSION],
-        info[DATA_SPOTIFY_ME],
+        info.client,
+        info.session,
+        info.current_user,
         media_content_type,
         media_content_id,
         can_play_artist=can_play_artist,
     )
+
+    # Build new URLs with config entry specifyers
+    result.media_content_id = str(parsed_url.with_name(result.media_content_id))
+    if result.children:
+        for child in result.children:
+            child.media_content_id = str(parsed_url.with_name(child.media_content_id))
+    return result
 
 
 async def async_browse_media_internal(
@@ -180,7 +219,11 @@ async def async_browse_media_internal(
             partial(library_payload, can_play_artist=can_play_artist)
         )
 
-    await session.async_ensure_token_valid()
+    if not session.valid_token:
+        await session.async_ensure_token_valid()
+        await hass.async_add_executor_job(
+            spotify.set_auth, session.token["access_token"]
+        )
 
     # Strip prefix
     if media_content_type:
