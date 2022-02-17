@@ -50,7 +50,7 @@ def _unique(options: Any) -> Any:
     try:
         return vol.Unique()(options)
     except vol.Invalid as exc:
-        raise HomeAssistantError("duplicate options") from exc
+        raise HomeAssistantError("Duplicate options are not allowed") from exc
 
 
 CREATE_FIELDS = {

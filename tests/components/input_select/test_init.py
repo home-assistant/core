@@ -709,7 +709,7 @@ async def test_update_duplicates(hass, hass_ws_client, storage_setup, caplog):
     resp = await client.receive_json()
     assert not resp["success"]
     assert resp["error"]["code"] == "unknown_error"
-    assert resp["error"]["message"] == "duplicate options"
+    assert resp["error"]["message"] == "Duplicate options are not allowed"
 
     state = hass.states.get(input_entity_id)
     assert state.attributes[ATTR_OPTIONS] == ["yaml update 1", "yaml update 2"]
@@ -772,7 +772,7 @@ async def test_ws_create_duplicates(hass, hass_ws_client, storage_setup, caplog)
     resp = await client.receive_json()
     assert not resp["success"]
     assert resp["error"]["code"] == "unknown_error"
-    assert resp["error"]["message"] == "duplicate options"
+    assert resp["error"]["message"] == "Duplicate options are not allowed"
 
     assert not hass.states.get(input_entity_id)
 
