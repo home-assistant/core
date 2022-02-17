@@ -926,7 +926,7 @@ pydexcom==0.2.2
 pydispatcher==2.0.5
 
 # homeassistant.components.econet
-pyeconet==0.1.14
+pyeconet==0.1.15
 
 # homeassistant.components.efergy
 pyefergy==22.1.1
