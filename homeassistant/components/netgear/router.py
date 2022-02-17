@@ -209,6 +209,11 @@ class NetgearRouter:
                 self._api.allow_block_device, mac, allow_block
             )
 
+    async def async_reboot(self) -> None:
+        """Reboot the router."""
+        async with self._api_lock:
+            await self.hass.async_add_executor_job(self._api.reboot)
+
     @property
     def port(self) -> int:
         """Port used by the API."""
