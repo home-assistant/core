@@ -48,14 +48,10 @@ async def async_setup_entry(
     """Set up button for Netgear component."""
     router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]
     coordinator = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR]
-    entities = []
-
-    for entity_description in BUTTONS:
-        entities.append(
-            NetgearRouterButtonEntity(coordinator, router, entity_description)
-        )
-
-    async_add_entities(entities)
+    async_add_entities(
+        NetgearRouterButtonEntity(coordinator, router, entity_description)
+        for entity_description in BUTTONS
+    )
 
 
 class NetgearRouterButtonEntity(NetgearRouterEntity, ButtonEntity):
