@@ -223,7 +223,7 @@ async def test_hassio_confirm(hass, mock_try_connection_success, mock_finish_set
     assert result["step_id"] == "hassio_confirm"
     assert result["description_placeholders"] == {"addon": "Mock Addon"}
 
-    mock_try_connection_success.mock_calls.clear()
+    mock_try_connection_success.reset_mock()
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"discovery": True}
     )
