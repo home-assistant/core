@@ -5,6 +5,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM, CONF_VALUE_TEMPLATE
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.dispatcher import (
@@ -61,9 +62,9 @@ async def async_setup_tag(hass, config, config_entry, discovery_data):
 
     device_id = None
     if CONF_DEVICE in config:
-        await _update_device(hass, config_entry, config)
+        _update_device(hass, config_entry, config)
 
-        device_registry = await hass.helpers.device_registry.async_get_registry()
+        device_registry = dr.async_get(hass)
         device = device_registry.async_get_device(
             {(DOMAIN, id_) for id_ in config[CONF_DEVICE][CONF_IDENTIFIERS]},
             {tuple(x) for x in config[CONF_DEVICE][CONF_CONNECTIONS]},
@@ -134,7 +135,7 @@ class MQTTTagScanner:
             config = PLATFORM_SCHEMA(payload)
             self._config = config
             if self.device_id:
-                await _update_device(self.hass, self._config_entry, config)
+                _update_device(self.hass, self._config_entry, config)
             self._setup_from_config(config)
             await self.subscribe_topics()
 
@@ -215,9 +216,9 @@ class MQTTTagScanner:
             self.hass.data[TAGS][self.device_id].pop(discovery_id)
 
 
-async def _update_device(hass, config_entry, config):
+def _update_device(hass, config_entry, config):
     """Update device registry."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     config_entry_id = config_entry.entry_id
     device_info = device_info_from_config(config[CONF_DEVICE])
 
