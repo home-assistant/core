@@ -290,4 +290,3 @@ class SamsungTVDevice(MediaPlayerEntity):
             return
 
         LOGGER.error("Unsupported source")
-        return
