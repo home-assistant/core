@@ -569,11 +569,6 @@ async def test_discovery_with_device_update(hass, mqtt_mock, caplog, device_reg)
     device_id = device_entry.id
     assert device_id == device_entry.id
     assert device_entry.name == "Name update"
-    assert (
-        f"<Event device_registry_updated[L]: action=update, device_id={device_id}>"
-        in caplog.text
-    )
-    caplog.clear()
 
     # Test removal device from device registry using discovery
     caplog.clear()
