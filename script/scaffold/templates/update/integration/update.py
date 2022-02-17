@@ -1,13 +1,13 @@
 """Updater support for the NEW_NAME integration."""
 
-from homeassistant.components.updater import UpdateDescription, UpdaterRegistration
+from homeassistant.components.update import UpdateDescription, UpdateRegistration
 from homeassistant.core import HomeAssistant, callback
 
 
 @callback
-def async_register_updater(registration: UpdaterRegistration) -> None:
-    """Register the updater."""
-    registration.async_register_updater(get_pending_updates)
+def async_register(registration: UpdateRegistration) -> None:
+    """Register the update handler."""
+    registration.async_register(get_pending_updates)
 
 
 async def get_pending_updates(hass: HomeAssistant) -> list[UpdateDescription]:

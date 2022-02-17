@@ -1,215 +1,130 @@
-"""Tests for the Version integration init."""
-from __future__ import annotations
+"""The tests for the Updater integration."""
+from unittest.mock import patch
 
-import asyncio
-from collections.abc import Awaitable, Callable
-from unittest.mock import AsyncMock, Mock
+import pytest
 
-from homeassistant.components.updater import UpdateDescription, UpdaterRegistration
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.components import updater
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
 
-from tests.common import get_integration_updates, mock_platform
+from tests.common import mock_component
+
+NEW_VERSION = "10000.0"
+MOCK_VERSION = "10.0"
+MOCK_DEV_VERSION = "10.0.dev0"
+MOCK_RESPONSE = {
+    "current_version": "0.15",
+    "release_notes": "https://home-assistant.io",
+}
+MOCK_CONFIG = {updater.DOMAIN: {"reporting": True}}
+RELEASE_NOTES = "test release notes"
 
 
-async def setup_mock_domain(
-    hass: HomeAssistant,
-    get_updates: Callable[[HomeAssistant], Awaitable[list[UpdateDescription]]]
-    | None = None,
-    update_callback: Callable[[HomeAssistant, UpdateDescription], Awaitable[bool]]
-    | None = None,
-) -> None:
-    """Set up a mock domain."""
+@pytest.fixture(autouse=True)
+def mock_version():
+    """Mock current version."""
+    with patch("homeassistant.components.updater.current_version", MOCK_VERSION):
+        yield
 
-    async def mock_get_updates(hass: HomeAssistant) -> list[UpdateDescription]:
-        return [
-            UpdateDescription(
-                identifier="lorem_ipsum",
-                name="Lorem Ipsum",
-                current_version="1.0.0",
-                available_version="1.0.1",
-                update_callback=update_callback or AsyncMock(),
-            )
-        ]
 
-    @callback
-    def _mock_async_register_updater(registration: UpdaterRegistration) -> None:
-        registration.async_register_updater(get_updates or mock_get_updates)
+@pytest.fixture(name="mock_get_newest_version")
+def mock_get_newest_version_fixture():
+    """Fixture to mock get_newest_version."""
+    with patch(
+        "homeassistant.components.updater.get_newest_version",
+        return_value=(NEW_VERSION, RELEASE_NOTES),
+    ) as mock:
+        yield mock
 
-    mock_platform(
-        hass,
-        "some_domain.updater",
-        Mock(
-            async_register_updater=_mock_async_register_updater,
-        ),
+
+async def test_new_version_shows_entity_true(hass, mock_get_newest_version):
+    """Test if sensor is true if new version is available."""
+    assert await async_setup_component(hass, updater.DOMAIN, {updater.DOMAIN: {}})
+
+    await hass.async_block_till_done()
+    assert hass.states.is_state("binary_sensor.updater", "on")
+    assert (
+        hass.states.get("binary_sensor.updater").attributes["newest_version"]
+        == NEW_VERSION
+    )
+    assert (
+        hass.states.get("binary_sensor.updater").attributes["release_notes"]
+        == RELEASE_NOTES
     )
 
-    assert await async_setup_component(hass, "some_domain", {})
 
+async def test_same_version_shows_entity_false(hass, mock_get_newest_version):
+    """Test if sensor is false if no new version is available."""
+    mock_get_newest_version.return_value = (MOCK_VERSION, "")
 
-async def gather_update_info(hass, hass_ws_client) -> list[dict]:
-    """Gather all info."""
-    client = await hass_ws_client(hass)
-    await client.send_json({"id": 1, "type": "updater/info"})
-    resp = await client.receive_json()
-    return resp["result"]
+    assert await async_setup_component(hass, updater.DOMAIN, {updater.DOMAIN: {}})
 
+    await hass.async_block_till_done()
 
-async def test_updater_updates(hass, hass_ws_client):
-    """Test getting updates."""
-    await setup_mock_domain(hass)
-
-    assert await async_setup_component(hass, "updater", {})
-    data = await gather_update_info(hass, hass_ws_client)
-
-    assert len(data) == 1
-    data = data[0] == {
-        "domain": "some_domain",
-        "identifier": "lorem_ipsum",
-        "name": "Lorem Ipsum",
-        "current_version": "1.0.0",
-        "available_version": "1.0.1",
-        "changelog_url": None,
-        "icon_url": None,
-    }
-
-
-async def test_updater_updates_with_timeout_error(hass, hass_ws_client):
-    """Test timeout while getting updates."""
-
-    async def mock_get_updates(hass: HomeAssistant) -> list[UpdateDescription]:
-        raise asyncio.TimeoutError()
-
-    await setup_mock_domain(hass, get_updates=mock_get_updates)
-
-    assert await async_setup_component(hass, "updater", {})
-    data = await gather_update_info(hass, hass_ws_client)
-
-    assert len(data) == 0
-
-
-async def test_updater_updates_with_exception(hass, hass_ws_client):
-    """Test exception while getting updates."""
-
-    async def mock_get_updates(hass: HomeAssistant) -> list[UpdateDescription]:
-        raise Exception()
-
-    await setup_mock_domain(hass, get_updates=mock_get_updates)
-
-    assert await async_setup_component(hass, "updater", {})
-    data = await gather_update_info(hass, hass_ws_client)
-
-    assert len(data) == 0
-
-
-async def test_get_updates_for_domain(hass, hass_ws_client):
-    """Test getting updates for a single domain."""
-    await setup_mock_domain(hass)
-    updates = await get_integration_updates(hass, "some_domain")
-    assert len(updates) == 1
-    assert updates[0].identifier == "lorem_ipsum"
-
-
-async def test_updater_update(hass, hass_ws_client):
-    """Test performing an update."""
-    await setup_mock_domain(hass)
-
-    assert await async_setup_component(hass, "updater", {})
-    data = await gather_update_info(hass, hass_ws_client)
-
-    assert len(data) == 1
-    update = data[0]
-
-    client = await hass_ws_client(hass)
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "updater/update",
-            "domain": update["domain"],
-            "identifier": update["identifier"],
-        }
+    assert hass.states.is_state("binary_sensor.updater", "off")
+    assert (
+        hass.states.get("binary_sensor.updater").attributes["newest_version"]
+        == MOCK_VERSION
     )
-    resp = await client.receive_json()
-    assert resp["success"]
-    assert resp["result"] == []
+    assert "release_notes" not in hass.states.get("binary_sensor.updater").attributes
 
 
-async def test_skip_update(hass, hass_ws_client):
-    """Test skipping updates."""
-    await setup_mock_domain(hass)
+async def test_deprecated_reporting(hass, mock_get_newest_version, caplog):
+    """Test we do not gather analytics when disable reporting is active."""
+    mock_get_newest_version.return_value = (MOCK_VERSION, "")
 
-    assert await async_setup_component(hass, "updater", {})
-    data = await gather_update_info(hass, hass_ws_client)
-
-    assert len(data) == 1
-    update = data[0]
-
-    client = await hass_ws_client(hass)
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "updater/skip",
-            "domain": update["domain"],
-            "identifier": update["identifier"],
-        }
+    assert await async_setup_component(
+        hass, updater.DOMAIN, {updater.DOMAIN: {"reporting": True}}
     )
-    resp = await client.receive_json()
-    assert resp["success"]
-    assert resp["result"] == []
+    await hass.async_block_till_done()
 
-    data = await gather_update_info(hass, hass_ws_client)
-    assert len(data) == 0
+    assert "deprecated" in caplog.text
 
 
-async def test_updater_update_non_existing(hass, hass_ws_client):
-    """Test that we fail when trying to update something that does not exist."""
-    await setup_mock_domain(hass)
+async def test_error_fetching_new_version_bad_json(hass, aioclient_mock):
+    """Test we handle json error while fetching new version."""
+    aioclient_mock.get(updater.UPDATER_URL, text="not json")
 
-    assert await async_setup_component(hass, "updater", {})
-    data = await gather_update_info(hass, hass_ws_client)
+    with patch(
+        "homeassistant.helpers.system_info.async_get_system_info",
+        return_value={"fake": "bla"},
+    ), pytest.raises(UpdateFailed):
+        await updater.get_newest_version(hass)
 
-    assert len(data) == 1
-    update = data[0]
 
-    client = await hass_ws_client(hass)
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "updater/update",
-            "domain": update["domain"],
-            "identifier": "does_not_exist",
-        }
+async def test_error_fetching_new_version_invalid_response(hass, aioclient_mock):
+    """Test we handle response error while fetching new version."""
+    aioclient_mock.get(
+        updater.UPDATER_URL,
+        json={
+            "version": "0.15"
+            # 'release-notes' is missing
+        },
     )
-    resp = await client.receive_json()
-    assert not resp["success"]
-    assert resp["error"]["code"] == "not_found"
+
+    with patch(
+        "homeassistant.helpers.system_info.async_get_system_info",
+        return_value={"fake": "bla"},
+    ), pytest.raises(UpdateFailed):
+        await updater.get_newest_version(hass)
 
 
-async def test_updater_update_failed(hass, hass_ws_client):
-    """Test that we correctly handle failed updates."""
+async def test_new_version_shows_entity_after_hour_hassio(
+    hass, mock_get_newest_version
+):
+    """Test if binary sensor gets updated if new version is available / Hass.io."""
+    mock_component(hass, "hassio")
+    hass.data["hassio_core_info"] = {"version_latest": "999.0"}
 
-    async def mock_update_callback(
-        hass: HomeAssistant, data: UpdateDescription
-    ) -> bool:
-        return False
+    assert await async_setup_component(hass, updater.DOMAIN, {updater.DOMAIN: {}})
 
-    await setup_mock_domain(hass, update_callback=mock_update_callback)
+    await hass.async_block_till_done()
 
-    assert await async_setup_component(hass, "updater", {})
-    data = await gather_update_info(hass, hass_ws_client)
-
-    assert len(data) == 1
-    update = data[0]
-
-    client = await hass_ws_client(hass)
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "updater/update",
-            "domain": update["domain"],
-            "identifier": update["identifier"],
-        }
+    assert hass.states.is_state("binary_sensor.updater", "on")
+    assert (
+        hass.states.get("binary_sensor.updater").attributes["newest_version"] == "999.0"
     )
-    resp = await client.receive_json()
-    assert not resp["success"]
-    assert resp["error"]["code"] == "update_failed"
+    assert (
+        hass.states.get("binary_sensor.updater").attributes["release_notes"]
+        == RELEASE_NOTES
+    )
