@@ -30,9 +30,9 @@ DATA = {
         "title": "Integration",
         "docs": "https://developers.home-assistant.io/docs/en/creating_integration_file_structure.html",
     },
-    "updater": {
-        "title": "Updater",
-        "docs": "https://developers.home-assistant.io/docs/en/updater.html",
+    "update": {
+        "title": "Update",
+        "docs": "https://developers.home-assistant.io/docs/en/update.html",
         "extra": "This will allow you to present updates the user can perform.",
     },
     "reproduce_state": {

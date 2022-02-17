@@ -1,4 +1,4 @@
-"""Test the NEW_NAME updater platform."""
+"""Test the NEW_NAME update platform."""
 from homeassistant.components.NEW_DOMAIN.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
