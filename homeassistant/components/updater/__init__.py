@@ -69,12 +69,11 @@ async def get_integration_info(
 
 
 def _get_update_details(
-    hass: HomeAssistant,
+    updater_data: UpdaterData,
     domain: str,
     identifier: str,
 ) -> UpdateDescription | None:
     """Get an update."""
-    updater_data: UpdaterData = hass.data[DOMAIN]
     return next(
         (
             update
@@ -144,7 +143,7 @@ async def handle_skip(
 ):
     """Skip an update."""
     updater_data: UpdaterData = hass.data[DOMAIN]
-    update_details = _get_update_details(hass, msg["domain"], msg["identifier"])
+    update_details = _get_update_details(updater_data, msg["domain"], msg["identifier"])
     if update_details is not None:
         updater_data.skip.add(
             f"{msg['domain']}_{update_details.identifier}_{update_details.available_version}"
@@ -173,7 +172,7 @@ async def handle_update(
 ):
     """Handle an update."""
     updater_data: UpdaterData = hass.data[DOMAIN]
-    update_details = _get_update_details(hass, msg["domain"], msg["identifier"])
+    update_details = _get_update_details(updater_data, msg["domain"], msg["identifier"])
 
     if update_details is None:
         connection.send_error(
