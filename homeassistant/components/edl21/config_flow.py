@@ -1,4 +1,3 @@
-
 from homeassistant import config_entries, core
 import voluptuous as vol
 from .sensor import DOMAIN, CONF_SERIAL_PORT
@@ -7,11 +6,9 @@ import homeassistant.helpers.config_validation as cv
 
 
 EDL_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_SERIAL_PORT): cv.string,
-        vol.Optional(CONF_NAME): cv.string
-    }
+    {vol.Required(CONF_SERIAL_PORT): cv.string, vol.Optional(CONF_NAME): cv.string}
 )
+
 
 @config_entries.HANDLERS.register(DOMAIN)
 class EDL21ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

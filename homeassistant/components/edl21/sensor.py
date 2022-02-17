@@ -278,6 +278,7 @@ async def async_setup_entry(
     hass.data[DOMAIN] = EDL21(hass, config, async_add_entities)
     await hass.data[DOMAIN].connect()
 
+
 class EDL21:
     """EDL21 handles telegrams sent by a compatible smart meter."""
 

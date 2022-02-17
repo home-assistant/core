@@ -20,8 +20,8 @@ async def test_show_config_form(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-async def test_with_data(
-    hass: HomeAssistant ) -> None:
+
+async def test_with_data(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

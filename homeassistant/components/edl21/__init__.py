@@ -6,6 +6,7 @@ from homeassistant import config_entries, core
 
 from .sensor import DOMAIN
 
+
 async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
