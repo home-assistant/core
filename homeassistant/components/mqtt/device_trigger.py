@@ -222,7 +222,7 @@ async def async_setup_trigger(hass, config, config_entry, discovery_data):
                 device_trigger.detach_trigger()
                 clear_discovery_hash(hass, discovery_hash)
                 remove_signal()
-                await cleanup_device_registry(hass, device.id)
+                await cleanup_device_registry(hass, device.id, config_entry.entry_id)
         else:
             # Non-empty payload: Update trigger
             _LOGGER.info("Updating trigger: %s", discovery_hash)
@@ -275,8 +275,8 @@ async def async_setup_trigger(hass, config, config_entry, discovery_data):
     async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
 
 
-async def async_device_removed(hass: HomeAssistant, device_id: str):
-    """Handle the removal of a device."""
+async def async_removed_from_device(hass: HomeAssistant, device_id: str):
+    """Handle Mqtt removed from a device."""
     triggers = await async_get_triggers(hass, device_id)
     for trig in triggers:
         device_trigger = hass.data[DEVICE_TRIGGERS].pop(trig[CONF_DISCOVERY_ID])
