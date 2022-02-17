@@ -197,8 +197,8 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         mandatory_arg=True,
     ),
     "network_use_percent": SysMonitorSensorEntityDescription(
-        key="network_use",
-        name="Network use",
+        key="network_use_percent",
+        name="Network use (percent)",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:server-network",
         state_class=SensorStateClass.MEASUREMENT,
@@ -326,6 +326,10 @@ class SensorData:
     value: Any | None
     update_time: datetime | None
     last_exception: BaseException | None
+    network_in_value: Any | None
+    network_out_value: Any | None
+    network_in_update_time: datetime | None
+    network_out_update_time: datetime | None
 
 
 async def async_setup_platform(
@@ -359,7 +363,7 @@ async def async_setup_platform(
             continue
 
         sensor_registry[(type_, argument)] = SensorData(
-            argument, None, None, None, None
+            argument, None, None, None, None, None, None, None, None
         )
         entities.append(
             SystemMonitorSensor(sensor_registry, SENSOR_TYPES[type_], argument)
@@ -384,7 +388,15 @@ async def async_setup_sensor_registry_updates(
         """Update sensors and store the result in the registry."""
         for (type_, argument), data in sensor_registry.items():
             try:
-                state, value, update_time = _update(type_, data)
+                (
+                    state,
+                    value,
+                    update_time,
+                    network_in_value,
+                    network_out_value,
+                    network_in_update_time,
+                    network_out_update_time,
+                ) = _update(type_, data)
             except Exception as ex:  # pylint: disable=broad-except
                 _LOGGER.exception("Error updating sensor: %s (%s)", type_, argument)
                 data.last_exception = ex
@@ -392,6 +404,10 @@ async def async_setup_sensor_registry_updates(
                 data.state = state
                 data.value = value
                 data.update_time = update_time
+                data.network_in_value = network_in_value
+                data.network_out_value = network_out_value
+                data.network_in_update_time = network_in_update_time
+                data.network_out_update_time = network_out_update_time
                 data.last_exception = None
 
         # Only fetch these once per iteration as we use the same
@@ -401,6 +417,7 @@ async def async_setup_sensor_registry_updates(
         _virtual_memory.cache_clear()
         _net_io_counters.cache_clear()
         _net_if_addrs.cache_clear()
+        _get_network_troughput.cache_clear()
         _getloadavg.cache_clear()
 
     async def _async_update_data(*_: Any) -> None:
@@ -472,11 +489,23 @@ class SystemMonitorSensor(SensorEntity):
 
 def _update(  # noqa: C901
     type_: str, data: SensorData
-) -> tuple[str | datetime | None, str | None, datetime | None]:
+) -> tuple[
+    str | datetime | None,
+    str | None,
+    datetime | None,
+    str | None,
+    str | None,
+    datetime | None,
+    datetime | None,
+]:
     """Get the latest system information."""
     state = None
     value = None
     update_time = None
+    network_in_value = None
+    network_out_value = None
+    network_in_update_time = None
+    network_out_update_time = None
 
     if type_ == "disk_use_percent":
         state = _disk_usage(data.argument).percent
@@ -528,23 +557,34 @@ def _update(  # noqa: C901
         else:
             state = None
     elif type_ in ("throughput_network_out", "throughput_network_in"):
-        counters = _net_io_counters()
-        if data.argument in counters:
-            counter = counters[data.argument][IO_COUNTER[type_]]
-            now = dt_util.utcnow()
-            if data.value and data.value < counter:
-                state = round(
-                    (counter - data.value)
-                    / 1000**2
-                    / (now - (data.update_time or now)).total_seconds(),
-                    3,
-                )
-            else:
-                state = None
-            update_time = now
-            value = counter
-        else:
-            state = None
+        state, value, update_time = _get_network_troughput(
+            data.argument, data.value, data.update_time, type_
+        )
+    elif type_ == "network_use_percent":
+        in_troughput, network_in_value, network_in_update_time = _get_network_troughput(
+            data.argument,
+            data.network_in_value,
+            data.network_in_update_time,
+            "throughput_network_in",
+        )
+        (
+            out_troughput,
+            network_out_value,
+            network_out_update_time,
+        ) = _get_network_troughput(
+            data.argument,
+            data.network_out_value,
+            data.network_out_update_time,
+            "throughput_network_out",
+        )
+        if in_troughput is not None and out_troughput is not None:
+            total_troughput = in_troughput + out_troughput
+            max_throughput = (
+                psutil.net_if_stats()[data.argument].speed / 8.333
+            )  # Converting Megabits to Megabytes
+            value = total_troughput
+            if max_throughput > 0:
+                state = round(total_troughput / max_throughput * 100, 1)
     elif type_ in ("ipv4_address", "ipv6_address"):
         addresses = _net_if_addrs()
         if data.argument in addresses:
@@ -566,7 +606,15 @@ def _update(  # noqa: C901
     elif type_ == "load_15m":
         state = round(_getloadavg()[2], 2)
 
-    return state, value, update_time
+    return (
+        state,
+        value,
+        update_time,
+        network_in_value,
+        network_out_value,
+        network_in_update_time,
+        network_out_update_time,
+    )
 
 
 @cache
@@ -587,6 +635,31 @@ def _virtual_memory() -> Any:
 @cache
 def _net_io_counters() -> Any:
     return psutil.net_io_counters(pernic=True)
+
+
+@cache
+def _get_network_troughput(
+    interface: str,
+    last_value: str | None,
+    last_update_time: datetime | None,
+    io_counter_key: str,
+) -> tuple[float | None, Any | None, datetime | None]:
+    state = None
+    counter = None
+    now = None
+
+    counters = _net_io_counters()
+    if interface in counters:
+        counter = counters[interface][IO_COUNTER[io_counter_key]]
+        now = dt_util.utcnow()
+        if last_value and last_value < counter:
+            state = round(
+                (counter - last_value)
+                / 1000**2
+                / (now - (last_update_time or now)).total_seconds(),
+                3,
+            )
+    return state, counter, now
 
 
 @cache
