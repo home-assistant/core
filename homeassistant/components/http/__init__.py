@@ -22,6 +22,7 @@ from yarl import URL
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, SERVER_PORT
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import storage
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
@@ -362,10 +363,14 @@ class HomeAssistantHTTP:
                     "Could not create an emergency self signed ssl certificate: %s",
                     error,
                 )
-                return None
+                context = None
 
-        assert context is not None
         if self.ssl_peer_certificate:
+            if context is None:
+                raise HomeAssistantError(
+                    "Failed to create ssl context, no fallback available because a peer certificate is required."
+                )
+
             context.verify_mode = ssl.CERT_REQUIRED
             context.load_verify_locations(self.ssl_peer_certificate)
 

@@ -185,6 +185,29 @@ async def test_ssl_profile_change_modern(hass):
     assert len(mock_context.mock_calls) == 1
 
 
+async def test_peer_cert(hass):
+    """Test required peer cert."""
+    assert (
+        await async_setup_component(hass, "http", {"http": {"ssl_profile": "modern"}})
+        is True
+    )
+
+    hass.http.ssl_certificate = "bla"
+    hass.http.ssl_peer_certificate = "bla"
+
+    with patch("ssl.SSLContext.load_cert_chain"), patch(
+        "ssl.SSLContext.load_verify_locations"
+    ) as mock_load_verify_locations, patch(
+        "homeassistant.util.ssl.server_context_modern",
+        side_effect=server_context_modern,
+    ) as mock_context:
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert len(mock_context.mock_calls) == 1
+    assert len(mock_load_verify_locations.mock_calls) == 1
+
+
 async def test_emergency_ssl_certificate_when_invalid(hass, tmpdir, caplog):
     """Test http can startup with an emergency self signed cert when the current one is broken."""
 
@@ -199,7 +222,6 @@ async def test_emergency_ssl_certificate_when_invalid(hass, tmpdir, caplog):
         is True
     )
 
-    hass.http.ssl_certificate = "bla"
     await hass.async_start()
     await hass.async_block_till_done()
     assert (
@@ -227,8 +249,6 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
         )
         is True
     )
-
-    hass.http.ssl_certificate = "bla"
 
     with patch(
         "homeassistant.components.http.get_url", side_effect=NoURLAvailableError
@@ -259,16 +279,57 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert(hass, tmpdir, caplog
         is True
     )
 
-    hass.http.ssl_certificate = "bla"
-
     with patch(
         "homeassistant.components.http.x509.CertificateBuilder", side_effect=OSError
-    ):
+    ) as mock_builder:
         await hass.async_start()
         await hass.async_block_till_done()
     assert "Could not create an emergency self signed ssl certificate" in caplog.text
+    assert len(mock_builder.mock_calls) == 1
 
     assert hass.http.site is not None
+
+
+async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
+    hass, tmpdir, caplog
+):
+    """Test http falls back to no ssl when an emergency cert cannot be created when the configured one is broken.
+
+    When there is a peer cert verification and we cannot create
+    an emergency cert (probably will never happen since this means
+    the system is very broken), we do not want to startup http
+    as it would allow connections that are not verified by the cert.
+    """
+
+    cert_path, key_path = await hass.async_add_executor_job(
+        _setup_broken_ssl_pem_files, tmpdir
+    )
+
+    assert (
+        await async_setup_component(
+            hass,
+            "http",
+            {
+                "http": {
+                    "ssl_certificate": cert_path,
+                    "ssl_key": key_path,
+                    "ssl_peer_certificate": cert_path,
+                }
+            },
+        )
+        is True
+    )
+
+    with patch(
+        "homeassistant.components.http.x509.CertificateBuilder", side_effect=OSError
+    ) as mock_builder:
+        await hass.async_start()
+        await hass.async_block_till_done()
+    assert "Could not create an emergency self signed ssl certificate" in caplog.text
+    assert len(mock_builder.mock_calls) == 1
+
+    assert hass.http.ssl_peer_certificate is not None
+    assert hass.http.site is None
 
 
 async def test_cors_defaults(hass):
