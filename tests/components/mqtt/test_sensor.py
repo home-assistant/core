@@ -2,7 +2,7 @@
 import copy
 from datetime import datetime, timedelta
 import json
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -1068,10 +1068,16 @@ async def test_skip_restoring_state_with_over_due_expire_trigger(
         {},
         last_changed=datetime.fromisoformat("2022-02-02 12:01:35+01:00"),
     )
+    fake_extra_data = MagicMock()
     with patch(
         "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
         return_value=fake_state,
-    ), assert_setup_component(1, domain):
+    ), patch(
+        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_extra_data",
+        return_value=fake_extra_data,
+    ), assert_setup_component(
+        1, domain
+    ):
         assert await async_setup_component(hass, domain, {domain: config3})
         await hass.async_block_till_done()
     assert "Skip state recovery after reload for sensor.test3" in caplog.text
