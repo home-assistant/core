@@ -287,6 +287,36 @@ MOCK_VEHICLES = {
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_lock_status",
             },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_rear_left_door",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777999_rear_left_door_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_rear_right_door",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777999_rear_right_door_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_driver_door",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777999_driver_door_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_passenger_door",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777999_passenger_door_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_hatch",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777999_hatch_status",
+            },
         ],
         Platform.BUTTON: [
             {
@@ -470,6 +500,36 @@ MOCK_VEHICLES = {
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_lock_status",
             },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_rear_left_door",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_rear_left_door_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_rear_right_door",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_rear_right_door_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_driver_door",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_driver_door_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_passenger_door",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_passenger_door_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_hatch",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_hatch_status",
+            },
         ],
         Platform.BUTTON: [
             {
@@ -633,6 +693,36 @@ MOCK_VEHICLES = {
                 ATTR_ENTITY_ID: "binary_sensor.reg_number_lock",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_lock_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_rear_left_door",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_rear_left_door_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_rear_right_door",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_rear_right_door_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_driver_door",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_driver_door_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_passenger_door",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_passenger_door_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_hatch",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_hatch_status",
             },
         ],
         Platform.BUTTON: [
