@@ -296,9 +296,8 @@ async def test_update_access_denied(hass: HomeAssistant, mock_now: datetime) -> 
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.usefixtures("remotews")
 async def test_update_connection_failure(
-    hass: HomeAssistant, mock_now: datetime
+    hass: HomeAssistant, mock_now: datetime, remotews: Mock
 ) -> None:
     """Testing update tv connection failure exception."""
     with patch(

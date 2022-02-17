@@ -1246,8 +1246,9 @@ async def test_form_reauth_websocket(hass: HomeAssistant) -> None:
     assert entry.state == config_entries.ConfigEntryState.LOADED
 
 
-@pytest.mark.usefixtures("remotews")
-async def test_form_reauth_websocket_cannot_connect(hass: HomeAssistant) -> None:
+async def test_form_reauth_websocket_cannot_connect(
+    hass: HomeAssistant, remotews: Mock
+) -> None:
     """Test reauthenticate websocket when we cannot connect on the first attempt."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_WS_ENTRY)
     entry.add_to_hass(hass)
