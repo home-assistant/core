@@ -529,7 +529,6 @@ async def test_services_play_media(
         (MEDIA_TYPE_URL, "http://localhost/media.m4a", "media.m4a", "m4a"),
         (MEDIA_TYPE_MUSIC, "http://localhost/media.m4a", "media.m4a", "m4a"),
         (MEDIA_TYPE_MUSIC, "http://localhost/media.mka", "media.mka", "mka"),
-        (MEDIA_TYPE_MUSIC, "http://localhost/media.wma", "media.wma", "wma"),
         (
             MEDIA_TYPE_MUSIC,
             "http://localhost/api/tts_proxy/generated.mp3",
