@@ -85,6 +85,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await async_setup_services(hass)
 
+    hass.http.register_view(PlexImageView(hass))
+
     gdm = hass.data[PLEX_DOMAIN][GDM_SCANNER] = GDM()
 
     def gdm_scan():
@@ -163,8 +165,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     server_id = plex_server.machine_identifier
     hass.data[PLEX_DOMAIN][SERVERS][server_id] = plex_server
     hass.data[PLEX_DOMAIN][PLATFORMS_COMPLETED][server_id] = set()
-
-    hass.http.register_view(PlexImageView(hass, server_id))
 
     entry.add_update_listener(async_options_updated)
 

@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import logging
 
-import yarl
-
 from homeassistant.components.media_player import BrowseMedia
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_ALBUM,
@@ -340,5 +338,4 @@ def get_proxy_image_url(
     media_content_id: str,
 ) -> str:
     """Generate an url for a Plex media browser image."""
-    url_path = f"/api/plex_image_proxy/{server_id}/{media_content_id}"
-    return str(yarl.URL(url_path))
+    return f"/api/plex_image_proxy/{server_id}/{media_content_id}"

@@ -22,26 +22,25 @@ class PlexImageView(HomeAssistantView):
 
     requires_auth = False
     name = "api:plex:image"
+    url = "/api/plex_image_proxy/{server_id}/{media_content_id}"
 
-    def __init__(self, hass: HomeAssistant, server_id: str) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a media player view."""
         self.hass = hass
-        self.server_id = server_id
-        self.url = f"/api/plex_image_proxy/{server_id}"
-        self.extra_urls = [
-            self.url + "/{media_content_id}",
-        ]
 
     async def get(
         self,
         request: web.Request,
+        server_id: str | None = None,
         media_content_id: str | None = None,
     ) -> web.Response:
         """Start a get request."""
         if not request[KEY_AUTHENTICATED]:
             return web.Response(status=HTTPStatus.UNAUTHORIZED)
 
-        server = self.hass.data[PLEX_DOMAIN][SERVERS][self.server_id]
+        if (server := self.hass.data[PLEX_DOMAIN][SERVERS].get(server_id)) is None:
+            return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
         if media_content_id:
             image_url = server.thumbnail_cache.get(media_content_id)
             data, content_type = await async_fetch_image(self.hass, image_url)
