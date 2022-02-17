@@ -18,7 +18,7 @@
       "vendor": "Plugwise B.V.",
       "model": "Stretch",
       "name": "Stretch",
-      "zigbee_mac_address": "012345670101"
+      "zigbee_mac_address": "ABCD012345670101"
     },
     "5871317346d045bc9f6b987ef25ee638": {
       "class": "water_heater_vessel",
@@ -29,7 +29,7 @@
       "model": "Circle type F",
       "name": "Boiler (1EB31)",
       "vendor": "Plugwise",
-      "zigbee_mac_address": "012345670A07",
+      "zigbee_mac_address": "ABCD012345670A07",
       "sensors": {
         "electricity_consumed": 1.19,
         "electricity_consumed_interval": 0.0,
@@ -68,7 +68,7 @@
       "model": "Circle type F",
       "name": "Vaatwasser (2a1ab)",
       "vendor": "Plugwise",
-      "zigbee_mac_address": "012345670A02",
+      "zigbee_mac_address": "ABCD012345670A02",
       "sensors": {
         "electricity_consumed": 0.0,
         "electricity_consumed_interval": 0.71,
@@ -88,7 +88,7 @@
       "model": "Circle type F",
       "name": "Droger (52559)",
       "vendor": "Plugwise",
-      "zigbee_mac_address": "012345670A04",
+      "zigbee_mac_address": "ABCD012345670A04",
       "sensors": {
         "electricity_consumed": 0.0,
         "electricity_consumed_interval": 0.0,
@@ -108,7 +108,7 @@
       "model": "Circle type F",
       "name": "Wasmachine (52AC1)",
       "vendor": "Plugwise",
-      "zigbee_mac_address": "012345670A01",
+      "zigbee_mac_address": "ABCD012345670A01",
       "sensors": {
         "electricity_consumed": 0.0,
         "electricity_consumed_interval": 0.0,
