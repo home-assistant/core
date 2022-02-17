@@ -158,6 +158,8 @@ async def _async_setup_notify(
 
 def has_notify_services(hass: HomeAssistant, device_id: str) -> bool:
     """Check if the device has registered notify services."""
+    if MQTT_NOTIFY_SERVICES_SETUP not in hass.data:
+        return False
     for key, service in hass.data[  # pylint: disable=unused-variable
         MQTT_NOTIFY_SERVICES_SETUP
     ].items():
