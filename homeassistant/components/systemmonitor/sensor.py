@@ -197,7 +197,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         mandatory_arg=True,
     ),
     "network_use_percent": SysMonitorSensorEntityDescription(
-        key="network_use",
+        key="network_use_percent",
         name="Network use",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:server-network",
@@ -400,6 +400,7 @@ async def async_setup_sensor_registry_updates(
         _swap_memory.cache_clear()
         _virtual_memory.cache_clear()
         _net_io_counters.cache_clear()
+        _get_network_counter.cache_clear()
         _net_if_addrs.cache_clear()
         _getloadavg.cache_clear()
 
@@ -515,44 +516,58 @@ def _update(  # noqa: C901
                     err.name,
                 )
     elif type_ in ("network_out", "network_in"):
-        counters = _net_io_counters()
-        if data.argument in counters:
-            counter = counters[data.argument][IO_COUNTER[type_]]
-            state = round(counter / 1024**2, 1)
-        else:
-            state = None
+        state = _get_network_counter(data.argument, type_)[0]
+        if state is not None:
+            state = round(state / 1024**2, 1)
     elif type_ in ("packets_out", "packets_in"):
-        counters = _net_io_counters()
-        if data.argument in counters:
-            state = counters[data.argument][IO_COUNTER[type_]]
-        else:
-            state = None
+        state = _get_network_counter(data.argument, type_)[0]
     elif type_ in ("throughput_network_out", "throughput_network_in"):
-        counters = _net_io_counters()
-        if data.argument in counters:
-            counter = counters[data.argument][IO_COUNTER[type_]]
-            now = dt_util.utcnow()
-            if data.value and data.value < counter:
-                state = round(
-                    (counter - data.value)
+        value, update_time = _get_network_counter(data.argument, type_)
+        if (
+            value is not None
+            and update_time is not None
+            and data.value
+            and data.value < value
+        ):
+            state = round(
+                (value - data.value)
+                / 1000**2
+                / (update_time - (data.update_time or update_time)).total_seconds(),
+                3,
+            )
+    elif type_ == "network_use_percent":
+        in_value, in_update_time = _get_network_counter(
+            data.argument, "throughput_network_in"
+        )
+        out_value, out_update_time = _get_network_counter(
+            data.argument, "throughput_network_out"
+        )
+        max_throughput = (
+            psutil.net_if_stats()[data.argument].speed / 8.333
+        )  # Converting Megabits to Megabytes
+        if (
+            in_value is not None
+            and in_update_time is not None
+            and out_value is not None
+            and out_update_time is not None
+            and max_throughput != 0
+        ):
+            value = in_value + out_value
+            update_time = in_update_time + (out_update_time - in_update_time) / 2
+            if data.value and data.value < value:
+                total_throughput = round(
+                    (value - data.value)
                     / 1000**2
-                    / (now - (data.update_time or now)).total_seconds(),
+                    / (update_time - (data.update_time or update_time)).total_seconds(),
                     3,
                 )
-            else:
-                state = None
-            update_time = now
-            value = counter
-        else:
-            state = None
+                state = round(total_throughput / max_throughput * 100, 1)
     elif type_ in ("ipv4_address", "ipv6_address"):
         addresses = _net_if_addrs()
         if data.argument in addresses:
             for addr in addresses[data.argument]:
                 if addr.family == IF_ADDRS_FAMILY[type_]:
                     state = addr.address
-        else:
-            state = None
     elif type_ == "last_boot":
         # Only update on initial setup
         if data.state is None:
@@ -587,6 +602,19 @@ def _virtual_memory() -> Any:
 @cache
 def _net_io_counters() -> Any:
     return psutil.net_io_counters(pernic=True)
+
+
+@cache
+def _get_network_counter(
+    interface: str, io_counter_key: str
+) -> tuple[Any | None, datetime | None]:
+    value = None
+    update_time = None
+    counters = _net_io_counters()
+    if interface in counters:
+        update_time = dt_util.utcnow()
+        value = counters[interface][IO_COUNTER[io_counter_key]]
+    return value, update_time
 
 
 @cache
