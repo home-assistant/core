@@ -167,8 +167,12 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         self._attr_temperature_unit = TEMP_CELSIUS
 
         # Figure out current temperature, use preferred unit or what is available
-        celsius_type = self.find_dpcode(DPCode.TEMP_CURRENT, dptype=DPType.INTEGER)
-        farhenheit_type = self.find_dpcode(DPCode.TEMP_CURRENT_F, dptype=DPType.INTEGER)
+        celsius_type = self.find_dpcode(
+            (DPCode.TEMP_CURRENT, DPCode.UPPER_TEMP), dptype=DPType.INTEGER
+        )
+        farhenheit_type = self.find_dpcode(
+            (DPCode.TEMP_CURRENT_F, DPCode.UPPER_TEMP_F), dptype=DPType.INTEGER
+        )
         if farhenheit_type and (
             prefered_temperature_unit == TEMP_FAHRENHEIT
             or (prefered_temperature_unit == TEMP_CELSIUS and not celsius_type)

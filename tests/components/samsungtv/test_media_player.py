@@ -2,10 +2,11 @@
 import asyncio
 from datetime import timedelta
 import logging
-from unittest.mock import DEFAULT as DEFAULT_MOCK, Mock, PropertyMock, call, patch
+from unittest.mock import DEFAULT as DEFAULT_MOCK, Mock, call, patch
 
 import pytest
 from samsungctl import exceptions
+from samsungtvws import SamsungTVWS
 from samsungtvws.exceptions import ConnectionFailure
 from websocket import WebSocketException
 
@@ -117,6 +118,9 @@ MOCK_CONFIG_NOTURNON = {
     ]
 }
 
+# Fake mac address in all mediaplayer tests.
+pytestmark = pytest.mark.usefixtures("no_mac_address")
+
 
 @pytest.fixture(name="delay")
 def delay_fixture():
@@ -125,11 +129,6 @@ def delay_fixture():
         "homeassistant.components.samsungtv.media_player.Script.async_run"
     ) as delay:
         yield delay
-
-
-@pytest.fixture(autouse=True)
-def mock_no_mac_address(no_mac_address):
-    """Fake mac address in all mediaplayer tests."""
 
 
 async def setup_samsungtv(hass, config):
@@ -150,13 +149,11 @@ async def test_setup_without_turnon(hass, remote):
     assert hass.states.get(ENTITY_ID_NOTURNON)
 
 
-async def test_setup_websocket(hass, remotews, mock_now):
+async def test_setup_websocket(hass, remotews):
     """Test setup of platform."""
     with patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remote_class:
-        enter = Mock()
-        type(enter).token = PropertyMock(return_value="987654321")
-        remote = Mock()
-        remote.__enter__ = Mock(return_value=enter)
+        remote = Mock(SamsungTVWS)
+        remote.__enter__ = Mock(return_value=remote)
         remote.__exit__ = Mock()
         remote.rest_device_info.return_value = {
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
@@ -168,6 +165,7 @@ async def test_setup_websocket(hass, remotews, mock_now):
                 "networkType": "wireless",
             },
         }
+        remote.token = "123456789"
         remote_class.return_value = remote
 
         await setup_samsungtv(hass, MOCK_CONFIGWS)
@@ -202,10 +200,8 @@ async def test_setup_websocket_2(hass, mock_now):
     assert entry is config_entries[0]
 
     with patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remote_class:
-        enter = Mock()
-        type(enter).token = PropertyMock(return_value="987654321")
-        remote = Mock()
-        remote.__enter__ = Mock(return_value=enter)
+        remote = Mock(SamsungTVWS)
+        remote.__enter__ = Mock(return_value=remote)
         remote.__exit__ = Mock()
         remote.rest_device_info.return_value = {
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
@@ -217,6 +213,7 @@ async def test_setup_websocket_2(hass, mock_now):
                 "networkType": "wireless",
             },
         }
+        remote.token = "987654321"
         remote_class.return_value = remote
         assert await async_setup_component(hass, SAMSUNGTV_DOMAIN, {})
         await hass.async_block_till_done()
@@ -299,10 +296,7 @@ async def test_update_connection_failure(hass, remotews, mock_now):
     ):
         await setup_samsungtv(hass, MOCK_CONFIGWS)
 
-        with patch(
-            "homeassistant.components.samsungtv.bridge.SamsungTVWS",
-            side_effect=ConnectionFailure("Boom"),
-        ):
+        with patch.object(remotews, "open", side_effect=ConnectionFailure("Boom")):
             next_update = mock_now + timedelta(minutes=5)
             with patch("homeassistant.util.dt.utcnow", return_value=next_update):
                 async_fire_time_changed(hass, next_update)
@@ -742,7 +736,7 @@ async def test_play_media(hass, remote):
         assert len(sleeps) == 3
 
 
-async def test_play_media_invalid_type(hass, remote):
+async def test_play_media_invalid_type(hass):
     """Test for play_media with invalid media type."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         url = "https://example.com"
@@ -764,7 +758,7 @@ async def test_play_media_invalid_type(hass, remote):
         assert remote.call_count == 1
 
 
-async def test_play_media_channel_as_string(hass, remote):
+async def test_play_media_channel_as_string(hass):
     """Test for play_media with invalid channel as string."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         url = "https://example.com"
@@ -786,7 +780,7 @@ async def test_play_media_channel_as_string(hass, remote):
         assert remote.call_count == 1
 
 
-async def test_play_media_channel_as_non_positive(hass, remote):
+async def test_play_media_channel_as_non_positive(hass):
     """Test for play_media with invalid channel as non positive integer."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         await setup_samsungtv(hass, MOCK_CONFIG)
@@ -823,7 +817,7 @@ async def test_select_source(hass, remote):
     assert remote.close.call_args_list == [call()]
 
 
-async def test_select_source_invalid_source(hass, remote):
+async def test_select_source_invalid_source(hass):
     """Test for select_source with invalid source."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         await setup_samsungtv(hass, MOCK_CONFIG)

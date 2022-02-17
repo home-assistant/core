@@ -2,26 +2,29 @@
 from unittest.mock import Mock, patch
 
 import pytest
+from samsungctl import Remote
+from samsungtvws import SamsungTVWS
 
 import homeassistant.util.dt as dt_util
 
-RESULT_ALREADY_CONFIGURED = "already_configured"
-RESULT_ALREADY_IN_PROGRESS = "already_in_progress"
+
+@pytest.fixture(autouse=True)
+def fake_host_fixture() -> None:
+    """Patch gethostbyname."""
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        return_value="fake_host",
+    ):
+        yield
 
 
 @pytest.fixture(name="remote")
 def remote_fixture():
     """Patch the samsungctl Remote."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote"
-    ) as remote_class, patch(
-        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
-        return_value="fake_host",
-    ):
-        remote = Mock()
+    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote_class:
+        remote = Mock(Remote)
         remote.__enter__ = Mock()
         remote.__exit__ = Mock()
-        remote.port.return_value = 55000
         remote_class.return_value = remote
         yield remote
 
@@ -31,14 +34,10 @@ def remotews_fixture():
     """Patch the samsungtvws SamsungTVWS."""
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS"
-    ) as remotews_class, patch(
-        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
-        return_value="fake_host",
-    ):
-        remotews = Mock()
-        remotews.__enter__ = Mock()
+    ) as remotews_class:
+        remotews = Mock(SamsungTVWS)
+        remotews.__enter__ = Mock(return_value=remotews)
         remotews.__exit__ = Mock()
-        remotews.port.return_value = 8002
         remotews.rest_device_info.return_value = {
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
             "device": {
@@ -49,8 +48,8 @@ def remotews_fixture():
                 "networkType": "wireless",
             },
         }
+        remotews.token = "FAKE_TOKEN"
         remotews_class.return_value = remotews
-        remotews_class().__enter__().token = "FAKE_TOKEN"
         yield remotews
 
 
@@ -59,16 +58,13 @@ def remotews_no_device_info_fixture():
     """Patch the samsungtvws SamsungTVWS."""
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS"
-    ) as remotews_class, patch(
-        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
-        return_value="fake_host",
-    ):
-        remotews = Mock()
-        remotews.__enter__ = Mock()
+    ) as remotews_class:
+        remotews = Mock(SamsungTVWS)
+        remotews.__enter__ = Mock(return_value=remotews)
         remotews.__exit__ = Mock()
         remotews.rest_device_info.return_value = None
+        remotews.token = "FAKE_TOKEN"
         remotews_class.return_value = remotews
-        remotews_class().__enter__().token = "FAKE_TOKEN"
         yield remotews
 
 
@@ -77,12 +73,9 @@ def remotews_soundbar_fixture():
     """Patch the samsungtvws SamsungTVWS."""
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS"
-    ) as remotews_class, patch(
-        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
-        return_value="fake_host",
-    ):
-        remotews = Mock()
-        remotews.__enter__ = Mock()
+    ) as remotews_class:
+        remotews = Mock(SamsungTVWS)
+        remotews.__enter__ = Mock(return_value=remotews)
         remotews.__exit__ = Mock()
         remotews.rest_device_info.return_value = {
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
@@ -94,8 +87,8 @@ def remotews_soundbar_fixture():
                 "type": "Samsung SoundBar",
             },
         }
+        remotews.token = "FAKE_TOKEN"
         remotews_class.return_value = remotews
-        remotews_class().__enter__().token = "FAKE_TOKEN"
         yield remotews
 
 

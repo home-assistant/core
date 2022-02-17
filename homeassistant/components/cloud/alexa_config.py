@@ -187,7 +187,11 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
                 self._alexa_sync_unsub = None
             return
 
-        if ALEXA_DOMAIN not in self.hass.config.components and self.enabled:
+        if (
+            ALEXA_DOMAIN not in self.hass.config.components
+            and self.enabled
+            and self.hass.is_running
+        ):
             await async_setup_component(self.hass, ALEXA_DOMAIN, {})
 
         if self.should_report_state != self.is_reporting_states:

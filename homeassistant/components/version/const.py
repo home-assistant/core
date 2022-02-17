@@ -11,7 +11,7 @@ from homeassistant.const import CONF_NAME, Platform
 
 DOMAIN: Final = "version"
 LOGGER: Final[Logger] = getLogger(__package__)
-PLATFORMS: Final[list[Platform]] = [Platform.SENSOR]
+PLATFORMS: Final[list[Platform]] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 UPDATE_COORDINATOR_UPDATE_INTERVAL: Final[timedelta] = timedelta(minutes=5)
 
 ENTRY_TYPE_SERVICE: Final = "service"

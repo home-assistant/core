@@ -70,7 +70,7 @@ adext==0.4.2
 adguardhome==0.5.1
 
 # homeassistant.components.advantage_air
-advantage_air==0.3.0
+advantage_air==0.3.1
 
 # homeassistant.components.agent_dvr
 agent-py==0.0.23
@@ -141,7 +141,7 @@ aiohomekit==0.7.14
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==4.0.1
+aiohue==4.2.0
 
 # homeassistant.components.homewizard
 aiohwenergy==0.8.0
@@ -239,9 +239,6 @@ ambiclimate==0.2.1
 # homeassistant.components.androidtv
 androidtv[async]==0.0.63
 
-# homeassistant.components.apns
-apns2==0.3.0
-
 # homeassistant.components.apprise
 apprise==0.9.7
 
@@ -306,7 +303,7 @@ broadlink==0.18.0
 brother==1.1.0
 
 # homeassistant.components.brunt
-brunt==1.1.1
+brunt==1.2.0
 
 # homeassistant.components.bsblan
 bsblan==0.5.0
@@ -552,7 +549,7 @@ holidays==0.12
 home-assistant-frontend==20220214.0
 
 # homeassistant.components.zwave
-homeassistant-pyozw==0.1.10
+# homeassistant-pyozw==0.1.10
 
 # homeassistant.components.home_connect
 homeconnect==0.6.3
@@ -792,7 +789,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.16.2
+plugwise==0.16.5
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -917,7 +914,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.7.0
 
 # homeassistant.components.deconz
-pydeconz==86
+pydeconz==87
 
 # homeassistant.components.dexcom
 pydexcom==0.2.2
@@ -926,7 +923,7 @@ pydexcom==0.2.2
 pydispatcher==2.0.5
 
 # homeassistant.components.econet
-pyeconet==0.1.14
+pyeconet==0.1.15
 
 # homeassistant.components.efergy
 pyefergy==22.1.1
@@ -1118,7 +1115,7 @@ pyotgw==1.1b1
 pyotp==2.6.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.3.4
+pyoverkiz==1.3.5
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -1285,7 +1282,7 @@ pywemo==0.7.0
 pywilight==0.0.70
 
 # homeassistant.components.wiz
-pywizlight==0.5.8
+pywizlight==0.5.9
 
 # homeassistant.components.zerproc
 pyzerproc==0.4.8
@@ -1531,7 +1528,7 @@ whois==0.9.13
 wiffi==1.1.0
 
 # homeassistant.components.withings
-withings-api==2.3.2
+withings-api==2.4.0
 
 # homeassistant.components.wled
 wled==0.13.0
