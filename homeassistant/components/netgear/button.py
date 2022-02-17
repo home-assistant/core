@@ -1,7 +1,6 @@
 """Support for Netgear Button."""
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-
 from typing import Any
 
 from homeassistant.components.button import (
