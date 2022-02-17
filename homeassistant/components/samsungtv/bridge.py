@@ -187,7 +187,7 @@ class SamsungTVBridge(ABC):
             self._reauth_callback()
 
     def _notify_new_token_callback(self) -> None:
-        """Notify access denied callback."""
+        """Notify new token callback."""
         if self._new_token_callback is not None:
             self._new_token_callback()
 
