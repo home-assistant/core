@@ -895,7 +895,7 @@ class MQTT:
 
     async def async_connect(self) -> None:
         """Connect to the host. Does not process messages yet."""
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         import paho.mqtt.client as mqtt
 
         result: int | None = None
@@ -1000,7 +1000,7 @@ class MQTT:
         Resubscribe to all topics we were subscribed to and publish birth
         message.
         """
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         import paho.mqtt.client as mqtt
 
         if result_code != mqtt.CONNACK_ACCEPTED:
@@ -1159,7 +1159,7 @@ class MQTT:
 
 def _raise_on_error(result_code: int | None) -> None:
     """Raise error if error result."""
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     import paho.mqtt.client as mqtt
 
     if result_code is not None and result_code != 0:
@@ -1169,7 +1169,7 @@ def _raise_on_error(result_code: int | None) -> None:
 
 
 def _matcher_for_topic(subscription: str) -> Any:
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from paho.mqtt.matcher import MQTTMatcher
 
     matcher = MQTTMatcher()
