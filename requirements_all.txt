@@ -114,7 +114,7 @@ adext==0.4.2
 adguardhome==0.5.1
 
 # homeassistant.components.advantage_air
-advantage_air==0.3.0
+advantage_air==0.3.1
 
 # homeassistant.components.frontier_silicon
 afsapi==0.0.4
@@ -319,12 +319,6 @@ anel_pwrctrl-homeassistant==0.0.1.dev2
 # homeassistant.components.anthemav
 anthemav==1.2.0
 
-# homeassistant.components.apcupsd
-apcaccess==0.0.13
-
-# homeassistant.components.apns
-apns2==0.3.0
-
 # homeassistant.components.apprise
 apprise==0.9.7
 
@@ -457,7 +451,7 @@ brother==1.1.0
 brottsplatskartan==0.0.1
 
 # homeassistant.components.brunt
-brunt==1.1.1
+brunt==1.2.0
 
 # homeassistant.components.bsblan
 bsblan==0.5.0
@@ -842,7 +836,7 @@ holidays==0.12
 home-assistant-frontend==20220214.0
 
 # homeassistant.components.zwave
-homeassistant-pyozw==0.1.10
+# homeassistant-pyozw==0.1.10
 
 # homeassistant.components.home_connect
 homeconnect==0.6.3
@@ -1488,7 +1482,7 @@ pydroid-ipcam==0.8
 pyebox==1.1.4
 
 # homeassistant.components.econet
-pyeconet==0.1.14
+pyeconet==0.1.15
 
 # homeassistant.components.edimax
 pyedimax==0.2.1
@@ -2482,16 +2476,13 @@ wiffi==1.1.0
 wirelesstagpy==0.8.1
 
 # homeassistant.components.withings
-withings-api==2.3.2
+withings-api==2.4.0
 
 # homeassistant.components.wled
 wled==0.13.0
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11
-
-# homeassistant.components.xbee
-xbee-helper==0.0.7
 
 # homeassistant.components.xbox
 xbox-webapi==2.0.11

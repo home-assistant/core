@@ -172,6 +172,9 @@ class MqttSensor(MqttEntity, SensorEntity, RestoreEntity):
             and expire_after > 0
             and (last_state := await self.async_get_last_state()) is not None
             and last_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+            # We might have set up a trigger already after subscribing from
+            # super().async_added_to_hass(), then we should not restore state
+            and not self._expiration_trigger
         ):
             expiration_at = last_state.last_changed + timedelta(seconds=expire_after)
             if expiration_at < (time_now := dt_util.utcnow()):
@@ -181,10 +184,6 @@ class MqttSensor(MqttEntity, SensorEntity, RestoreEntity):
             self._expired = False
             self._state = last_state.state
 
-            if self._expiration_trigger:
-                # We might have set up a trigger already after subscribing from
-                # super().async_added_to_hass()
-                self._expiration_trigger()
             self._expiration_trigger = async_track_point_in_utc_time(
                 self.hass, self._value_is_expired, expiration_at
             )
