@@ -26,15 +26,18 @@ class SleepIQSensor(CoordinatorEntity):
         super().__init__(coordinator)
         self.bed = bed
         self.sleeper = sleeper
+        self._async_update_attrs()
 
         self._attr_name = (
             f"SleepNumber {self.bed.name} {self.sleeper.name} {SENSOR_TYPES[name]}"
         )
         self._attr_unique_id = f"{self.bed.id}_{self.sleeper.name}_{name}"
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._async_update_attrs)
-        )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         self._async_update_attrs()
+        super()._handle_coordinator_update()
 
     @callback
     def _async_update_attrs(self) -> None:
