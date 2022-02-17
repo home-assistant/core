@@ -3,16 +3,27 @@ from datetime import timedelta
 from http import HTTPStatus
 from ipaddress import ip_network
 import logging
+import pathlib
 from unittest.mock import Mock, patch
 
 import pytest
 
 import homeassistant.components.http as http
+from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import server_context_intermediate, server_context_modern
 
 from tests.common import async_fire_time_changed
+
+
+def _setup_broken_ssl_pem_files(tmpdir):
+    test_dir = tmpdir.mkdir("test_broken_ssl")
+    cert_path = pathlib.Path(test_dir) / "cert.pem"
+    cert_path.write_text("garbage")
+    key_path = pathlib.Path(test_dir) / "key.pem"
+    key_path.write_text("garbage")
+    return cert_path, key_path
 
 
 @pytest.fixture
@@ -172,6 +183,92 @@ async def test_ssl_profile_change_modern(hass):
         await hass.async_block_till_done()
 
     assert len(mock_context.mock_calls) == 1
+
+
+async def test_emergency_ssl_certificate_when_invalid(hass, tmpdir, caplog):
+    """Test http can startup with an emergency self signed cert when the current one is broken."""
+
+    cert_path, key_path = await hass.async_add_executor_job(
+        _setup_broken_ssl_pem_files, tmpdir
+    )
+
+    assert (
+        await async_setup_component(
+            hass, "http", {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}}
+        )
+        is True
+    )
+
+    hass.http.ssl_certificate = "bla"
+    await hass.async_start()
+    await hass.async_block_till_done()
+    assert (
+        "The server will start up with an emergency self signed ssl certificate"
+        in caplog.text
+    )
+
+    assert hass.http.site is not None
+
+
+async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
+    hass, tmpdir, caplog
+):
+    """Test http falls back to no ssl when an emergency cert cannot be created when the configured one is broken.
+
+    Ensure we can still start of we cannot determine the external url as well.
+    """
+    cert_path, key_path = await hass.async_add_executor_job(
+        _setup_broken_ssl_pem_files, tmpdir
+    )
+
+    assert (
+        await async_setup_component(
+            hass, "http", {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}}
+        )
+        is True
+    )
+
+    hass.http.ssl_certificate = "bla"
+
+    with patch(
+        "homeassistant.components.http.get_url", side_effect=NoURLAvailableError
+    ) as mock_get_url:
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert len(mock_get_url.mock_calls) == 1
+    assert (
+        "The server will start up with an emergency self signed ssl certificate"
+        in caplog.text
+    )
+
+    assert hass.http.site is not None
+
+
+async def test_invalid_ssl_and_cannot_create_emergency_cert(hass, tmpdir, caplog):
+    """Test http falls back to no ssl when an emergency cert cannot be created when the configured one is broken."""
+
+    cert_path, key_path = await hass.async_add_executor_job(
+        _setup_broken_ssl_pem_files, tmpdir
+    )
+
+    assert (
+        await async_setup_component(
+            hass, "http", {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}}
+        )
+        is True
+    )
+
+    hass.http.ssl_certificate = "bla"
+
+    with patch(
+        "homeassistant.components.http.x509.CertificateBuilder", side_effect=OSError
+    ):
+        await hass.async_start()
+        await hass.async_block_till_done()
+    assert "Could not create an emergency self signed ssl certificate" in caplog.text
+
+    assert hass.http.site is not None
 
 
 async def test_cors_defaults(hass):
