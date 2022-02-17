@@ -17,6 +17,15 @@ from homeassistant.util.ssl import server_context_intermediate, server_context_m
 from tests.common import async_fire_time_changed
 
 
+def _setup_broken_ssl_pem_files(tmpdir):
+    test_dir = tmpdir.mkdir("test_broken_ssl")
+    cert_path = pathlib.Path(test_dir) / "cert.pem"
+    cert_path.write_text("garbage")
+    key_path = pathlib.Path(test_dir) / "key.pem"
+    key_path.write_text("garbage")
+    return cert_path, key_path
+
+
 @pytest.fixture
 def mock_stack():
     """Mock extract stack."""
@@ -179,19 +188,9 @@ async def test_ssl_profile_change_modern(hass):
 async def test_emergency_ssl_certificate_when_invalid(hass, tmpdir, caplog):
     """Test http can startup with an emergency self signed cert when the current one is broken."""
 
-    cert_path = None
-    key_path = None
-
-    def _setup_test_files():
-        nonlocal cert_path
-        nonlocal key_path
-        test_dir = tmpdir.mkdir("test_broken_ssl")
-        cert_path = pathlib.Path(test_dir) / "cert.pem"
-        cert_path.write_text("garbage")
-        key_path = pathlib.Path(test_dir) / "key.pem"
-        key_path.write_text("garbage")
-
-    await hass.async_add_executor_job(_setup_test_files)
+    cert_path, key_path = await hass.async_add_executor_job(
+        _setup_broken_ssl_pem_files, tmpdir
+    )
 
     assert (
         await async_setup_component(
@@ -218,20 +217,9 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
 
     Ensure we can still start of we cannot determine the external url as well.
     """
-
-    cert_path = None
-    key_path = None
-
-    def _setup_test_files():
-        nonlocal cert_path
-        nonlocal key_path
-        test_dir = tmpdir.mkdir("test_broken_ssl")
-        cert_path = pathlib.Path(test_dir) / "cert.pem"
-        cert_path.write_text("garbage")
-        key_path = pathlib.Path(test_dir) / "key.pem"
-        key_path.write_text("garbage")
-
-    await hass.async_add_executor_job(_setup_test_files)
+    cert_path, key_path = await hass.async_add_executor_job(
+        _setup_broken_ssl_pem_files, tmpdir
+    )
 
     assert (
         await async_setup_component(
@@ -260,19 +248,9 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
 async def test_invalid_ssl_and_cannot_create_emergency_cert(hass, tmpdir, caplog):
     """Test http falls back to no ssl when an emergency cert cannot be created when the configured one is broken."""
 
-    cert_path = None
-    key_path = None
-
-    def _setup_test_files():
-        nonlocal cert_path
-        nonlocal key_path
-        test_dir = tmpdir.mkdir("test_broken_ssl")
-        cert_path = pathlib.Path(test_dir) / "cert.pem"
-        cert_path.write_text("garbage")
-        key_path = pathlib.Path(test_dir) / "key.pem"
-        key_path.write_text("garbage")
-
-    await hass.async_add_executor_job(_setup_test_files)
+    cert_path, key_path = await hass.async_add_executor_job(
+        _setup_broken_ssl_pem_files, tmpdir
+    )
 
     assert (
         await async_setup_component(
