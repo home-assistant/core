@@ -30,4 +30,3 @@ class SleepIQSensor(CoordinatorEntity):
             f"SleepNumber {self.bed.name} {self.sleeper.name} {SENSOR_TYPES[name]}"
         )
         self._attr_unique_id = f"{self.bed.id}_{self.sleeper.name}_{name}"
-        print(self._attr_unique_id)
