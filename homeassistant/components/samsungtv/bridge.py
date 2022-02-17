@@ -358,6 +358,13 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 self._notify_callback()
             except (WebSocketException, OSError):
                 self._remote = None
+            else:
+                if self.token != self._remote.token:
+                    LOGGER.debug(
+                        "SamsungTVWSBridge has provided a new token %s",
+                        self._remote.token,
+                    )
+                    self.token = self._remote.token
         return self._remote
 
     def stop(self) -> None:
