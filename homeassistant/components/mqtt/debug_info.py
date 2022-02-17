@@ -162,7 +162,7 @@ def info_for_device(hass, device_id):
     mqtt_info = {"entities": [], "triggers": []}
     entity_registry = er.async_get(hass)
 
-    entries = hass.helpers.entity_registry.async_entries_for_device(
+    entries = er.async_entries_for_device(
         entity_registry, device_id, include_disabled_entities=True
     )
     mqtt_debug_info = hass.data[DATA_MQTT_DEBUG_INFO]
