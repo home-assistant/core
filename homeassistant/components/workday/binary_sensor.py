@@ -96,16 +96,13 @@ def setup_platform(
     obj_holidays = getattr(holidays, country)(years=year)
 
     if province:
-        # 'state' and 'prov' are not interchangeable, so need to make
-        # sure we use the right one
-        if hasattr(obj_holidays, "PROVINCES") and province in obj_holidays.PROVINCES:
-            obj_holidays = getattr(holidays, country)(prov=province, years=year)
-        elif hasattr(obj_holidays, "STATES") and province in obj_holidays.STATES:
-            obj_holidays = getattr(holidays, country)(state=province, years=year)
+        if (
+            hasattr(obj_holidays, "subdivisions")
+            and province in obj_holidays.subdivisions
+        ):
+            obj_holidays = getattr(holidays, country)(subdiv=province, years=year)
         else:
-            _LOGGER.error(
-                "There is no province/state %s in country %s", province, country
-            )
+            _LOGGER.error("There is no subdivision %s in country %s", province, country)
             return
 
     # Add custom holidays
