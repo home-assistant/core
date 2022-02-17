@@ -64,7 +64,7 @@ async def async_setup_tag(hass, config, config_entry, discovery_data):
     if CONF_DEVICE in config:
         _update_device(hass, config_entry, config)
 
-        device_registry = await dr.async_get(hass)
+        device_registry = dr.async_get(hass)
         device = device_registry.async_get_device(
             {(DOMAIN, id_) for id_ in config[CONF_DEVICE][CONF_IDENTIFIERS]},
             {tuple(x) for x in config[CONF_DEVICE][CONF_CONNECTIONS]},
