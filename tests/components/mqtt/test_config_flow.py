@@ -554,7 +554,7 @@ async def test_options_user_connection_fails(hass, mock_try_connection_time_out)
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == "form"
 
-    mock_try_connection_time_out.mock_calls.clear()
+    mock_try_connection_time_out.reset_mock()
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={mqtt.CONF_BROKER: "bad-broker", mqtt.CONF_PORT: 2345},
