@@ -96,7 +96,6 @@ def setup_platform(
     obj_holidays = getattr(holidays, country)(years=year)
 
     if province:
-        # 'state' and 'prov' were replaced by `subdiv`, we use province for both - great!
         if (
             hasattr(obj_holidays, "subdivisions")
             and province in obj_holidays.subdivisions
