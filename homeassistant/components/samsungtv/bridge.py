@@ -143,14 +143,14 @@ class SamsungTVBridge(ABC):
             # Different reasons, e.g. hostname not resolveable
             return False
 
-    def send_key(self, key: str) -> None:
+    def send_key(self, key: str, key_type: str | None = None) -> None:
         """Send a key to the tv and handles exceptions."""
         try:
             # recreate connection if connection was dead
             retry_count = 1
             for _ in range(retry_count + 1):
                 try:
-                    self._send_key(key)
+                    self._send_key(key, key_type)
                     break
                 except (
                     ConnectionClosed,
@@ -168,7 +168,7 @@ class SamsungTVBridge(ABC):
             pass
 
     @abstractmethod
-    def _send_key(self, key: str) -> None:
+    def _send_key(self, key: str, key_type: str | None = None) -> None:
         """Send the key."""
 
     @abstractmethod
@@ -269,7 +269,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
                 pass
         return self._remote
 
-    def _send_key(self, key: str) -> None:
+    def _send_key(self, key: str, key_type: str | None = None) -> None:
         """Send the key using legacy protocol."""
         if remote := self._get_remote():
             remote.control(key)
@@ -356,12 +356,15 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
         return None
 
-    def _send_key(self, key: str) -> None:
+    def _send_key(self, key: str, key_type: str | None = None) -> None:
         """Send the key using websocket protocol."""
         if key == "KEY_POWEROFF":
             key = "KEY_POWER"
         if remote := self._get_remote():
-            remote.send_key(key)
+            if key_type == "run_app":
+                remote.run_app(key)
+            else:
+                remote.send_key(key)
 
     def _get_remote(self, avoid_open: bool = False) -> Remote:
         """Create or return a remote control instance."""
