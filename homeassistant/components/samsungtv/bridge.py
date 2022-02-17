@@ -301,7 +301,10 @@ class SamsungTVWSBridge(SamsungTVBridge):
         if self._app_list is None:
             if remote := self._get_remote():
                 raw_app_list: list[dict[str, str]] = remote.app_list()
-                self._app_list = {app["name"]: app["appId"] for app in raw_app_list}
+                self._app_list = {
+                    app["name"]: app["appId"]
+                    for app in sorted(raw_app_list, key=lambda app: app["name"])
+                }
 
         return self._app_list
 
