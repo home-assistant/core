@@ -5,7 +5,6 @@ from homeassistant import loader
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.decorators import require_admin
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryDisabler, async_get
 
 WS_TYPE_LIST = "config/device_registry/list"
@@ -111,13 +110,8 @@ async def websocket_remove_config_entry_from_device(
 
     try:
         integration = await loader.async_get_integration(hass, config_entry.domain)
-    except loader.IntegrationNotFound:
-        _send_error("Integration not found")
-        return
-
-    try:
         component = integration.get_component()
-    except ImportError:
+    except (ImportError, loader.IntegrationNotFound):
         _send_error("Integration not found")
         return
 
@@ -127,22 +121,9 @@ async def websocket_remove_config_entry_from_device(
         _send_error("Failed to remove device entry, rejected by integration")
         return
 
-    try:
-        entry = registry.async_update_device(
-            device_id, remove_config_entry_id=config_entry_id
-        )
-    except HomeAssistantError as exc:
-        connection.send_error(
-            msg["id"],
-            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
-            str(exc),
-        )
-        return
-    except KeyError:
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, "Unknown device"
-        )
-        return
+    entry = registry.async_update_device(
+        device_id, remove_config_entry_id=config_entry_id
+    )
 
     entry_as_dict = _entry_dict(entry) if entry else None
 
