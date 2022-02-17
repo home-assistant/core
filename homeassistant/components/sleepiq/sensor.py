@@ -9,7 +9,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, SLEEP_NUMBER, SLEEPIQ_DATA, SLEEPIQ_STATUS_COORDINATOR
+from .const import DOMAIN, SLEEP_NUMBER
+from .coordinator import SleepIQDataUpdateCoordinator
 from .entity import SleepIQSensor
 
 ICON = "mdi:bed"
@@ -21,13 +22,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SleepIQ bed sensors."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        SLEEPIQ_STATUS_COORDINATOR
-    ]
-    data = hass.data[DOMAIN][entry.entry_id][SLEEPIQ_DATA]
+    coordinator: SleepIQDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         SleepNumberSensorEntity(coordinator, bed, sleeper)
-        for bed in data.beds.values()
+        for bed in coordinator.client.beds.values()
         for sleeper in bed.sleepers
     )
 

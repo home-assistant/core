@@ -1,5 +1,4 @@
 """Support for SleepIQ from SleepNumber."""
-from datetime import timedelta
 import logging
 
 from asyncsleepiq import (
@@ -17,13 +16,12 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, SLEEPIQ_DATA, SLEEPIQ_STATUS_COORDINATOR
+from .const import DOMAIN
+from .coordinator import SleepIQDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-UPDATE_INTERVAL = timedelta(seconds=60)
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 CONFIG_SCHEMA = vol.Schema(
@@ -81,21 +79,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SleepIQAPIException as err:
         raise ConfigEntryNotReady(str(err) or "Error reading from SleepIQ API") from err
 
-    coordinator: DataUpdateCoordinator[None] = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=f"SleepIQ Bed Statuses - {email}",
-        update_method=gateway.fetch_bed_statuses,
-        update_interval=UPDATE_INTERVAL,
-    )
+    coordinator = SleepIQDataUpdateCoordinator(hass, gateway, email)
 
     # Call the SleepIQ API to refresh data
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        SLEEPIQ_DATA: gateway,
-        SLEEPIQ_STATUS_COORDINATOR: coordinator,
-    }
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
