@@ -1,4 +1,6 @@
 """Entity for the SleepIQ integration."""
+from abc import abstractmethod
+
 from asyncsleepiq import SleepIQBed, SleepIQSleeper
 
 from homeassistant.core import callback
@@ -28,10 +30,8 @@ class SleepIQSensor(CoordinatorEntity):
         self.sleeper = sleeper
         self._async_update_attrs()
 
-        self._attr_name = (
-            f"SleepNumber {self.bed.name} {self.sleeper.name} {SENSOR_TYPES[name]}"
-        )
-        self._attr_unique_id = f"{self.bed.id}_{self.sleeper.name}_{name}"
+        self._attr_name = f"SleepNumber {bed.name} {sleeper.name} {SENSOR_TYPES[name]}"
+        self._attr_unique_id = f"{bed.id}_{sleeper.name}_{name}"
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -40,5 +40,6 @@ class SleepIQSensor(CoordinatorEntity):
         super()._handle_coordinator_update()
 
     @callback
+    @abstractmethod
     def _async_update_attrs(self) -> None:
         """Update sensor attributes."""
