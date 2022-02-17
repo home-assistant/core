@@ -121,6 +121,10 @@ class SamsungTVBridge(ABC):
     def mac_from_device(self) -> str | None:
         """Try to fetch the mac address of the TV."""
 
+    @abstractmethod
+    def get_app_list(self) -> dict[str, str] | None:
+        """Get installed app list."""
+
     def is_on(self) -> bool:
         """Tells if the TV is on."""
         if self._remote is not None:
@@ -212,6 +216,10 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         """Try to fetch the mac address of the TV."""
         return None
 
+    def get_app_list(self) -> dict[str, str]:
+        """Get installed app list."""
+        return {}
+
     def try_connect(self) -> str:
         """Try to connect to the Legacy TV."""
         config = {
@@ -281,11 +289,21 @@ class SamsungTVWSBridge(SamsungTVBridge):
         """Initialize Bridge."""
         super().__init__(method, host, port)
         self.token = token
+        self._app_list: dict[str, str] | None = None
 
     def mac_from_device(self) -> str | None:
         """Try to fetch the mac address of the TV."""
         info = self.device_info()
         return mac_from_device_info(info) if info else None
+
+    def get_app_list(self) -> dict[str, str] | None:
+        """Get installed app list."""
+        if self._app_list is None:
+            if remote := self._get_remote():
+                raw_app_list: list[dict[str, str]] = remote.app_list()
+                self._app_list = {app["name"]: app["appId"] for app in raw_app_list}
+
+        return self._app_list
 
     def try_connect(self) -> str:
         """Try to connect to the Websocket TV."""
