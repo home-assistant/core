@@ -364,6 +364,11 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         temperature = self.device.status.get(self._current_temperature.dpcode)
         if temperature is None:
             return None
+        elif self._current_temperature.scale == 0:
+            # Current Temperature can have scale 0 or 1 and is used for rounding mode in app
+            # HA doesn't need to round but we will always need to divide the value by 10^1 in
+            # case of 0 as scale, #66693
+            return self._current_temperature.scale_value(temperature) / 10
 
         return self._current_temperature.scale_value(temperature)
 
