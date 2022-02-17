@@ -206,7 +206,7 @@ class MqttNotificationServiceUpdater:
                 return
 
             # update notify service through auto discovery
-            await service.async_update_service(discovery_payload)
+            service.async_update_service(discovery_payload)
             _LOGGER.debug(
                 "Notify service %s updated has been processed",
                 service.discovery_hash,
