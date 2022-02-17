@@ -124,7 +124,7 @@ other: &other
   - .github/workflows/*
   - homeassistant/scripts/**
 
-requirements:
+requirements: &requirements
   - .github/workflows/*
   - homeassistant/package_constraints.txt
   - requirements*.txt
@@ -135,4 +135,5 @@ any:
   - *components
   - *core
   - *other
+  - *requirements
   - *tests
