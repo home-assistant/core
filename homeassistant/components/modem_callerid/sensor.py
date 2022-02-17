@@ -9,7 +9,7 @@ from homeassistant.const import CONF_DEVICE, EVENT_HOMEASSISTANT_STOP, STATE_IDL
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 
-from .const import CID, DATA_KEY_API, DOMAIN, ICON, SERVICE_REJECT_CALL
+from .const import CID, DATA_KEY_API, DOMAIN, ICON
 
 
 async def async_setup_entry(
@@ -38,10 +38,6 @@ async def async_setup_entry(
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_hass_stop)
     )
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(SERVICE_REJECT_CALL, {}, "async_reject_call")
 
 
 class ModemCalleridSensor(SensorEntity):
@@ -82,7 +78,3 @@ class ModemCalleridSensor(SensorEntity):
             self._attr_extra_state_attributes[CID.CID_TIME] = self.api.cid_time
         self._attr_native_value = self.api.state
         self.async_write_ha_state()
-
-    async def async_reject_call(self) -> None:
-        """Reject Incoming Call."""
-        await self.api.reject_call(self.device)
