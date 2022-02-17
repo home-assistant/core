@@ -225,10 +225,7 @@ def info_for_config_entry(hass):
     for entity_id in mqtt_debug_info["entities"]:
         mqtt_info["entities"].append(_info_for_entity(hass, entity_id))
 
-    for trigger_key, trigger in mqtt_debug_info["triggers"].items():
-        if trigger["discovery_data"] is None:
-            continue
-
+    for trigger_key in mqtt_debug_info["triggers"]:
         mqtt_info["triggers"].append(_info_for_trigger(hass, trigger_key))
 
     return mqtt_info
@@ -250,7 +247,7 @@ def info_for_device(hass, device_id):
         mqtt_info["entities"].append(_info_for_entity(hass, entry.entity_id))
 
     for trigger_key, trigger in mqtt_debug_info["triggers"].items():
-        if trigger["device_id"] != device_id or trigger["discovery_data"] is None:
+        if trigger["device_id"] != device_id:
             continue
 
         mqtt_info["triggers"].append(_info_for_trigger(hass, trigger_key))
