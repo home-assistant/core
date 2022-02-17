@@ -284,7 +284,7 @@ MOCK_VEHICLES = {
             {
                 ATTR_DEVICE_CLASS: BinarySensorDeviceClass.LOCK,
                 ATTR_ENTITY_ID: "binary_sensor.reg_number_lock",
-                ATTR_STATE: STATE_ON,
+                ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_lock_status",
             },
         ],
@@ -467,7 +467,7 @@ MOCK_VEHICLES = {
             {
                 ATTR_DEVICE_CLASS: BinarySensorDeviceClass.LOCK,
                 ATTR_ENTITY_ID: "binary_sensor.reg_number_lock",
-                ATTR_STATE: STATE_ON,
+                ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_lock_status",
             },
         ],
@@ -631,7 +631,7 @@ MOCK_VEHICLES = {
             {
                 ATTR_DEVICE_CLASS: BinarySensorDeviceClass.LOCK,
                 ATTR_ENTITY_ID: "binary_sensor.reg_number_lock",
-                ATTR_STATE: STATE_ON,
+                ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_lock_status",
             },
         ],
