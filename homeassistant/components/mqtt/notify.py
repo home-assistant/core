@@ -11,6 +11,7 @@ from homeassistant.components import notify
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.dispatcher import (
@@ -37,8 +38,6 @@ from .const import (
 )
 from .discovery import MQTT_DISCOVERY_DONE, MQTT_DISCOVERY_UPDATED, clear_discovery_hash
 from .mixins import (
-    CONF_CONNECTIONS,
-    CONF_IDENTIFIERS,
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     async_setup_entry_helper,
     cleanup_device_registry,
@@ -93,6 +92,18 @@ async def async_initialize(hass: HomeAssistant) -> None:
     hass.data.setdefault(MQTT_NOTIFY_SERVICES_SETUP, {})
 
 
+def device_has_notify_services(hass: HomeAssistant, device_id: str) -> bool:
+    """Check if the device has registered notify services."""
+    if MQTT_NOTIFY_SERVICES_SETUP not in hass.data:
+        return False
+    for key, service in hass.data[  # pylint: disable=unused-variable
+        MQTT_NOTIFY_SERVICES_SETUP
+    ].items():
+        if service.device_id == device_id:
+            return True
+    return False
+
+
 def _check_notify_service_name(
     hass: HomeAssistant, config: MqttNotificationConfig
 ) -> str | None:
@@ -137,9 +148,7 @@ async def _async_setup_notify(
         clear_discovery_hash(hass, discovery_hash)
         return
 
-    device_id = None
-    if CONF_DEVICE in config:
-        device_id = _update_device(hass, config_entry, config).id
+    device_id = _update_device(hass, config_entry, config)
 
     service = MqttNotificationService(
         hass,
@@ -152,18 +161,6 @@ async def _async_setup_notify(
 
     await service.async_setup(hass, service_name, service_name)
     await service.async_register_services()
-
-
-def has_notify_services(hass: HomeAssistant, device_id: str) -> bool:
-    """Check if the device has registered notify services."""
-    if MQTT_NOTIFY_SERVICES_SETUP not in hass.data:
-        return False
-    for key, service in hass.data[  # pylint: disable=unused-variable
-        MQTT_NOTIFY_SERVICES_SETUP
-    ].items():
-        if service.device_id == device_id:
-            return True
-    return False
 
 
 async def async_get_service(
@@ -206,7 +203,7 @@ class MqttNotificationServiceUpdater:
                 return
 
             # update notify service through auto discovery
-            service.async_update_service(discovery_payload)
+            await service.async_update_service(discovery_payload)
             _LOGGER.debug(
                 "Notify service %s updated has been processed",
                 service.discovery_hash,
@@ -336,8 +333,7 @@ class MqttNotificationService(notify.BaseNotificationService):
         self._commmand_template = MqttCommandTemplate(
             config.get(CONF_COMMAND_TEMPLATE), hass=self.hass
         )
-        if CONF_DEVICE in config and self._config_entry:
-            await _update_device(self.hass, self._config_entry, config)
+        _update_device(self.hass, self._config_entry, config)
 
     @property
     def targets(self) -> dict[str, str]:
@@ -381,15 +377,23 @@ class MqttNotificationService(notify.BaseNotificationService):
         )
 
 
-async def _update_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, config: MqttNotificationConfig
-) -> None:
+def _update_device(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry | None,
+    config: MqttNotificationConfig,
+) -> str | None:
     """Update device registry."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    if config_entry is None or CONF_DEVICE not in config:
+        return None
+
+    device = None
+    device_registry = dr.async_get(hass)
     config_entry_id = config_entry.entry_id
     device_info = device_info_from_config(config[CONF_DEVICE])
 
     if config_entry_id is not None and device_info is not None:
-        update_device_info = dict(device_info)
+        update_device_info = cast(dict, device_info)
         update_device_info["config_entry_id"] = config_entry_id
-        device_registry.async_get_or_create(**update_device_info)
+        device = device_registry.async_get_or_create(**update_device_info)
+
+    return device.id if device else None

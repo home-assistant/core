@@ -468,7 +468,7 @@ async def cleanup_device_registry(hass: HomeAssistant, device_id: str | None) ->
         )
         and not await device_trigger.async_get_triggers(hass, device_id)
         and not tag.async_has_tags(hass, device_id)
-        and not notify.has_notify_services(hass, device_id)
+        and not notify.device_has_notify_services(hass, device_id)
     ):
         device_registry.async_remove_device(device_id)
 
