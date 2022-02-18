@@ -1246,6 +1246,7 @@ omit =
     homeassistant/components/tolo/climate.py
     homeassistant/components/tolo/fan.py
     homeassistant/components/tolo/light.py
+    homeassistant/components/tolo/number.py
     homeassistant/components/tolo/select.py
     homeassistant/components/tolo/sensor.py
     homeassistant/components/tomato/device_tracker.py
