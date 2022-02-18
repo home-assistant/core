@@ -141,9 +141,12 @@ TIMEOUT_EVENT_START = 15
 _LOGGER = logging.getLogger(__name__)
 
 
-def split_entity_id(entity_id: str) -> list[str]:
+def split_entity_id(entity_id: str) -> tuple[str, str]:
     """Split a state entity ID into domain and object ID."""
-    return entity_id.split(".", 1)
+    domain, _, object_id = entity_id.partition(".")
+    if not domain or not object_id:
+        raise ValueError("Invalid entity ID")
+    return domain, object_id
 
 
 VALID_ENTITY_ID = re.compile(r"^(?!.+__)(?!_)[\da-z_]+(?<!_)\.(?!_)[\da-z_]+(?<!_)$")
