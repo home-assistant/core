@@ -19,7 +19,6 @@ from cryptography.x509.oid import NameOID
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.components import hassio
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, SERVER_PORT
 from homeassistant.core import Event, HomeAssistant
@@ -168,7 +167,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
     ssl_profile = conf[CONF_SSL_PROFILE]
 
-    if ssl_peer_certificate is not None and hassio.is_hassio(hass):
+    if ssl_peer_certificate is not None and "hassio" in hass.config.components:
         _LOGGER.warning(
             "Peer certificates are not supported when running the supervisor"
         )
