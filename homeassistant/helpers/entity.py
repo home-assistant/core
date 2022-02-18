@@ -707,10 +707,11 @@ class Entity(ABC):
             await self.parallel_updates.acquire()
 
         try:
+            task: asyncio.Future[None]
             if hasattr(self, "async_update"):
-                task = self.hass.async_create_task(self.async_update())  # type: ignore
+                task = self.hass.async_create_task(self.async_update())  # type: ignore[attr-defined]
             elif hasattr(self, "update"):
-                task = self.hass.async_add_executor_job(self.update)  # type: ignore
+                task = self.hass.async_add_executor_job(self.update)  # type: ignore[attr-defined]
             else:
                 return
 
