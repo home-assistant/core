@@ -77,6 +77,7 @@ def _mocked_dimmer() -> SmartDimmer:
     dimmer.set_brightness = AsyncMock()
     dimmer.set_hsv = AsyncMock()
     dimmer.set_color_temp = AsyncMock()
+    dimmer.set_led = AsyncMock()
     dimmer.protocol = _mock_protocol()
     return dimmer
 
