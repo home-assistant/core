@@ -154,7 +154,7 @@ def update_trigger_discovery_data(hass, discovery_hash, discovery_payload):
 
 def remove_trigger_discovery_data(hass, discovery_hash):
     """Remove discovery data."""
-    hass.data[DATA_MQTT_DEBUG_INFO]["triggers"][discovery_hash]["discovery_data"] = None
+    hass.data[DATA_MQTT_DEBUG_INFO]["triggers"].pop(discovery_hash)
 
 
 def _info_for_entity(hass: HomeAssistant, entity_id: str) -> dict[str, Any]:
