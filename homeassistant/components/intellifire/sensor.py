@@ -47,6 +47,13 @@ def _time_remaining_to_timestamp(data: IntellifirePollData) -> datetime | None:
     return utcnow() + timedelta(seconds=seconds_offset)
 
 
+def _downtime_to_timestamp(data: IntellifirePollData) -> datetime | None:
+    """Define a sensor that takes into account a timezone."""
+    if not (seconds_offset := data.downtime):
+        return None
+    return utcnow() - timedelta(seconds=seconds_offset)
+
+
 INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
     IntellifireSensorEntityDescription(
         key="flame_height",
@@ -91,9 +98,7 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         name="Downtime",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: utcnow() - timedelta(seconds=data.downtime)
-        if data.downtime > 0
-        else None,
+        value_fn=_downtime_to_timestamp,
     ),
     IntellifireSensorEntityDescription(
         key="uptime",
