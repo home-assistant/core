@@ -10,7 +10,7 @@
       "generic": {"key": 16, "label":"Binary Switch"},
       "specific": {"key": 1, "label":"Binary Power Switch"},
       "mandatorySupportedCCs": [],
-      "mandatoryControlCCs": []
+      "mandatoryControlledCCs": []
     },
     "isListening": true,
     "isFrequentListening": false,
@@ -50,10 +50,10 @@
         "nodeId": 102,
         "index": 0,
         "installerIcon": 1792,
-        "userIcon": 1792
+        "userIcon": 1792,
+        "commandClasses": []
       }
     ],
-    "commandClasses": [],
     "values": [
       {
         "endpoint": 0,
