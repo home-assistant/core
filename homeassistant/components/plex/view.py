@@ -25,8 +25,8 @@ class PlexImageView(HomeAssistantView):
     async def get(  # pylint: disable=no-self-use
         self,
         request: web.Request,
+        server_id: str,
         media_content_id: str,
-        server_id: str | None = None,
     ) -> web.Response:
         """Start a get request."""
         if not request[KEY_AUTHENTICATED]:
