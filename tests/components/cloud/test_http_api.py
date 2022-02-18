@@ -392,6 +392,7 @@ async def test_websocket_status(
         "logged_in": True,
         "email": "hello@home-assistant.io",
         "cloud": "connected",
+        "cloud_last_disconnect_reason": None,
         "prefs": {
             "alexa_enabled": True,
             "cloudhooks": {},
