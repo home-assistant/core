@@ -1,6 +1,7 @@
 """The dhcp integration."""
 from __future__ import annotations
 
+from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
 import fnmatch
@@ -111,21 +112,23 @@ class DhcpServiceInfo(BaseServiceInfo):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the dhcp component."""
+    watchers: list[WatcherBase] = []
+    address_data: dict[str, dict[str, str]] = {}
+    integration_matchers = await async_get_dhcp(hass)
+
+    # For the passive classes we need to start listening
+    # for state changes and connect the dispatchers before
+    # everything else starts up or we will miss events
+    for passive_cls in (DeviceTrackerRegisteredWatcher, DeviceTrackerWatcher):
+        passive_watcher = passive_cls(hass, address_data, integration_matchers)
+        await passive_watcher.async_start()
+        watchers.append(passive_watcher)
 
     async def _initialize(_):
-        address_data = {}
-        integration_matchers = await async_get_dhcp(hass)
-        watchers = []
-
-        for cls in (
-            DHCPWatcher,
-            DeviceTrackerRegisteredWatcher,
-            DeviceTrackerWatcher,
-            NetworkWatcher,
-        ):
-            watcher = cls(hass, address_data, integration_matchers)
-            await watcher.async_start()
-            watchers.append(watcher)
+        for active_cls in (DHCPWatcher, NetworkWatcher):
+            active_watcher = active_cls(hass, address_data, integration_matchers)
+            await active_watcher.async_start()
+            watchers.append(active_watcher)
 
         async def _async_stop(*_):
             for watcher in watchers:
@@ -147,6 +150,14 @@ class WatcherBase:
         self.hass = hass
         self._integration_matchers = integration_matchers
         self._address_data = address_data
+
+    @abstractmethod
+    async def async_stop(self):
+        """Stop the watcher."""
+
+    @abstractmethod
+    async def async_start(self):
+        """Start the watcher."""
 
     def process_client(self, ip_address, hostname, mac_address):
         """Process a client."""
