@@ -266,7 +266,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     ),
     # Smart Lock
     # https://developer.tuya.com/en/docs/iot/f?id=Kb0o2vbzuzl81
-    "jtmspro": (
+    "ms": (
         NumberEntityDescription(
             key=DPCode.AUTO_LOCK_TIME,
             name="Latency of Automatic Latch",
@@ -290,10 +290,16 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     ),
 }
 
-
-# Lock (duplicate of 'jtmspro')
+# Lock (duplicate of 'ms')
 # https://developer.tuya.com/en/docs/iot/f?id=Kb0o2vbzuzl81
-NUMBERS["hotelms"] = NUMBERS["jtmspro"]
+NUMBERS["gyms"] = NUMBERS["ms"]
+NUMBERS["jtmspro"] = NUMBERS["ms"]
+NUMBERS["hotelms"] = NUMBERS["ms"]
+NUMBERS["ms_category"] = NUMBERS["ms"]
+NUMBERS["jtmsbh"] = NUMBERS["ms"]
+NUMBERS["mk"] = NUMBERS["ms"]
+NUMBERS["videolock"] = NUMBERS["ms"]
+NUMBERS["photolock"] = NUMBERS["ms"]
 
 
 async def async_setup_entry(

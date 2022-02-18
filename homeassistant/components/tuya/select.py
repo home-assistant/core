@@ -346,7 +346,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     ),
     # Smart Lock
     # https://developer.tuya.com/en/docs/iot/f?id=Kb0o2vbzuzl81
-    "jtmspro": (
+    "ms": (
         SelectEntityDescription(
             key=DPCode.ALARM_VOLUME,
             name="Alert Volume",
@@ -485,9 +485,16 @@ SELECTS["cz"] = SELECTS["kg"]
 # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
 SELECTS["pc"] = SELECTS["kg"]
 
-# Lock (duplicate of 'jtmspro')
+# Lock (duplicate of 'ms')
 # https://developer.tuya.com/en/docs/iot/f?id=Kb0o2vbzuzl81
-SELECTS["hotelms"] = SELECTS["jtmspro"]
+SELECTS["gyms"] = SELECTS["ms"]
+SELECTS["jtmspro"] = SELECTS["ms"]
+SELECTS["hotelms"] = SELECTS["ms"]
+SELECTS["ms_category"] = SELECTS["ms"]
+SELECTS["jtmsbh"] = SELECTS["ms"]
+SELECTS["mk"] = SELECTS["ms"]
+SELECTS["videolock"] = SELECTS["ms"]
+SELECTS["photolock"] = SELECTS["ms"]
 
 
 async def async_setup_entry(

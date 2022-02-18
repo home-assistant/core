@@ -854,7 +854,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     ),
     # Smart Lock
     # https://developer.tuya.com/en/docs/iot/f?id=Kb0o2vbzuzl81
-    "jtmspro": (
+    "ms": (
         TuyaSensorEntityDescription(
             key=DPCode.ALARM_LOCK,
             name="Alert",
@@ -1031,9 +1031,16 @@ SENSORS["cz"] = SENSORS["kg"]
 # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
 SENSORS["pc"] = SENSORS["kg"]
 
-# Lock (duplicate of 'jtmspro')
+# Lock (duplicate of 'ms')
 # https://developer.tuya.com/en/docs/iot/f?id=Kb0o2vbzuzl81
-SENSORS["hotelms"] = SENSORS["jtmspro"]
+SENSORS["gyms"] = SENSORS["ms"]
+SENSORS["jtmspro"] = SENSORS["ms"]
+SENSORS["hotelms"] = SENSORS["ms"]
+SENSORS["ms_category"] = SENSORS["ms"]
+SENSORS["jtmsbh"] = SENSORS["ms"]
+SENSORS["mk"] = SENSORS["ms"]
+SENSORS["videolock"] = SENSORS["ms"]
+SENSORS["photolock"] = SENSORS["ms"]
 
 
 async def async_setup_entry(

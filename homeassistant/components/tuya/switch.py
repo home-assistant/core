@@ -591,7 +591,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     ),
     # Smart Lock
     # https://developer.tuya.com/en/docs/iot/f?id=Kb0o2vbzuzl81
-    "jtmspro": (
+    "ms": (
         SwitchEntityDescription(
             key=DPCode.AUTOMATIC_LOCK,
             name="Automatic Latch",
@@ -696,9 +696,16 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
 # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
 SWITCHES["cz"] = SWITCHES["pc"]
 
-# Lock (duplicate of 'jtmspro')
+# Lock (duplicate of 'ms')
 # https://developer.tuya.com/en/docs/iot/f?id=Kb0o2vbzuzl81
-SWITCHES["hotelms"] = SWITCHES["jtmspro"]
+SWITCHES["gyms"] = SWITCHES["ms"]
+SWITCHES["jtmspro"] = SWITCHES["ms"]
+SWITCHES["hotelms"] = SWITCHES["ms"]
+SWITCHES["ms_category"] = SWITCHES["ms"]
+SWITCHES["jtmsbh"] = SWITCHES["ms"]
+SWITCHES["mk"] = SWITCHES["ms"]
+SWITCHES["videolock"] = SWITCHES["ms"]
+SWITCHES["photolock"] = SWITCHES["ms"]
 
 
 async def async_setup_entry(
