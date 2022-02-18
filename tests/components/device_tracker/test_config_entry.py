@@ -145,7 +145,7 @@ async def test_connected_device_registered(hass):
 
     @callback
     def _save_dispatch(msg):
-        dispatchs.append(msg)
+        dispatches.append(msg)
 
     unsub = async_dispatcher_connect(
         hass, ce.CONNECTED_DEVICE_REGISTERED, _save_dispatch
