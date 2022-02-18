@@ -829,10 +829,10 @@ def async_removed_from_device(
 ) -> bool:
     """Check if the passed event indicates MQTT was removed from a device."""
     device_id = event.data["device_id"]
-    if device_id != mqtt_device_id:
+    if event.data["action"] not in ("remove", "update"):
         return False
 
-    if event.data["action"] not in ("remove", "update"):
+    if device_id != mqtt_device_id:
         return False
 
     if event.data["action"] == "update":
