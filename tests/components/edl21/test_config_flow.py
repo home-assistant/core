@@ -20,7 +20,7 @@ async def test_show_config_form(hass: HomeAssistant) -> None:
 
 
 async def test_with_data(hass: HomeAssistant) -> None:
-
+    """Test that entry creation."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
