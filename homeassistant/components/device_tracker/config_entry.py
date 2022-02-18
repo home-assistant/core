@@ -75,9 +75,26 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 @callback
 def _async_register_mac(
-    hass: HomeAssistant, domain: str, mac: str, unique_id: str
+    hass: HomeAssistant,
+    domain: str,
+    mac: str,
+    unique_id: str,
+    ip_address: str | None,
+    hostname: str | None,
+    state: str,
 ) -> None:
     """Register a mac address with a unique ID."""
+    if state == STATE_HOME:
+        async_dispatcher_send(
+            hass,
+            DEVICE_REGISTRED,
+            {
+                ATTR_IP: ip_address,
+                ATTR_MAC: mac,
+                ATTR_HOST_NAME: hostname,
+            },
+        )
+
     data_key = "device_tracker_mac"
     mac = dr.format_mac(mac)
     if data_key in hass.data:
@@ -314,18 +331,14 @@ class ScannerEntity(BaseTrackerEntity):
             self.unique_id,
         )
         if self.mac_address and self.unique_id:
-            if self.state == STATE_HOME:
-                async_dispatcher_send(
-                    hass,
-                    DEVICE_REGISTRED,
-                    {
-                        ATTR_IP: self.ip_address,
-                        ATTR_MAC: self.mac_address,
-                        ATTR_HOST_NAME: self.hostname,
-                    },
-                )
             _async_register_mac(
-                hass, platform.platform_name, self.mac_address, self.unique_id
+                hass,
+                platform.platform_name,
+                self.mac_address,
+                self.unique_id,
+                self.ip_address,
+                self.hostname,
+                self.state,
             )
 
     @callback
