@@ -171,7 +171,7 @@ def _info_for_entity(hass: HomeAssistant, entity_id: str) -> dict[str, Any]:
                     "time": msg.timestamp,
                     "topic": msg.topic,
                 }
-                for msg in list(subscription["messages"])
+                for msg in subscription["messages"]
             ],
         }
         for topic, subscription in entity_info["subscriptions"].items()
@@ -187,7 +187,7 @@ def _info_for_entity(hass: HomeAssistant, entity_id: str) -> dict[str, Any]:
                     "time": msg.timestamp,
                     "topic": msg.topic,
                 }
-                for msg in list(subscription["messages"])
+                for msg in subscription["messages"]
             ],
         }
         for topic, subscription in entity_info["transmitted"].items()

@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components import device_tracker
-from homeassistant.components.diagnostics import REDACTED, async_redact_data
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
@@ -46,8 +46,6 @@ def _async_get_diagnostics(
     mqtt_instance: MQTT = hass.data[DATA_MQTT]
 
     redacted_config = async_redact_data(mqtt_instance.conf, REDACT_CONFIG)
-    if CONF_PASSWORD in redacted_config:
-        redacted_config[CONF_PASSWORD] = REDACTED
 
     data = {
         "connected": is_connected(hass),
