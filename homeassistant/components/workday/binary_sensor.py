@@ -150,7 +150,7 @@ def setup_platform(
     )
 
 
-def day_to_string(day: int) -> str:
+def day_to_string(day: int) -> str | None:
     """Convert day index 0 - 7 to string."""
     try:
         return ALLOWED_DAYS[day]
