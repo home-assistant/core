@@ -45,13 +45,14 @@ class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await try_connection(self.hass, user_input)
-                return self.async_create_entry(
-                    title=user_input[CONF_USERNAME], data=user_input
-                )
             except SleepIQLoginException:
                 errors["base"] = "invalid_auth"
             except SleepIQTimeoutException:
                 errors["base"] = "cannot_connect"
+            else:
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user",
