@@ -68,8 +68,6 @@ ATTR_CURRENT = "current"
 ATTR_POWER = "power"
 ATTR_DAYLIGHT = "daylight"
 ATTR_EVENT_ID = "event_id"
-ATTR_AIR_QUALITY_PPB = "air_quality_ppb"
-
 
 @dataclass
 class DeconzSensorDescriptionMixin:
