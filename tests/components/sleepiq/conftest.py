@@ -1,8 +1,6 @@
 """Common methods for SleepIQ."""
-import re
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
-from aioresponses import aioresponses
 import pytest
 
 from homeassistant.components.sleepiq import DOMAIN
@@ -10,26 +8,44 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry
+
+BED_ID = "123456"
+BED_NAME = "Test Bed"
+BED_NAME_LOWER = BED_NAME.lower().replace(" ", "_")
+SLEEPER_L_NAME = "SleeperL"
+SLEEPER_R_NAME = "Sleeper R"
+SLEEPER_L_NAME_LOWER = SLEEPER_L_NAME.lower().replace(" ", "_")
+SLEEPER_R_NAME_LOWER = SLEEPER_R_NAME.lower().replace(" ", "_")
 
 
 @pytest.fixture
-def mock_aioresponse():
-    """Mock responses for SleepIQ."""
-    BASE_URL = "https://prod-api.sleepiq.sleepnumber.com/rest/"
-    with aioresponses() as m:
-        m.put(BASE_URL + "login", body=load_fixture("sleepiq/login.json"))
-        m.get(BASE_URL + "bed?_k=0987", body=load_fixture("sleepiq/bed.json"))
-        m.get(BASE_URL + "sleeper?_k=0987", body=load_fixture("sleepiq/sleeper.json"))
-        m.get(
-            BASE_URL + "bed/familyStatus?_k=0987",
-            body=load_fixture("sleepiq/familystatus.json"),
-        )
-        m.get(re.compile(BASE_URL + ".*/foundation/.*"), status=404, repeat=True)
-        m.get(re.compile(BASE_URL + ".*/pauseMode"), payload={"pauseMode": "off"})
-        m.put(re.compile(BASE_URL + ".*/pauseMode"), repeat=True)
+def mock_asyncsleepiq():
+    """Mock an AsyncSleepIQ object."""
+    with patch("homeassistant.components.sleepiq.AsyncSleepIQ", autospec=True) as mock:
+        client = mock.return_value
+        bed = MagicMock()
+        client.beds = {BED_ID: bed}
+        bed.name = BED_NAME
+        bed.id = BED_ID
+        bed.mac_addr = "12:34:56:78:AB:CD"
+        bed.model = "C10"
+        bed.paused = False
+        sleeper_l = MagicMock()
+        sleeper_r = MagicMock()
+        bed.sleepers = [sleeper_l, sleeper_r]
 
-        yield m
+        sleeper_l.side = "L"
+        sleeper_l.name = SLEEPER_L_NAME
+        sleeper_l.in_bed = True
+        sleeper_l.sleep_number = 40
+
+        sleeper_r.side = "R"
+        sleeper_r.name = SLEEPER_R_NAME
+        sleeper_r.in_bed = False
+        sleeper_r.sleep_number = 80
+
+        yield client
 
 
 async def setup_platform(hass: HomeAssistant, platform) -> MockConfigEntry:
