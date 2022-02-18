@@ -305,12 +305,13 @@ class ScannerEntity(BaseTrackerEntity):
         """Start adding an entity to a platform."""
         super().add_to_platform_start(hass, platform, parallel_updates)
         LOGGER.warning(
-            "Add_to_platform_start: name=%s, state=%s ip=%s, mac_address=%s, hostname=%s",
+            "Add_to_platform_start: name=%s, state=%s ip=%s, mac_address=%s, hostname=%s unique_id=%s",
             self.name,
             self.state,
             self.ip_address,
             self.mac_address,
             self.hostname,
+            self.unique_id,
         )
         if self.mac_address and self.unique_id:
             if self.state == STATE_HOME:
