@@ -35,11 +35,6 @@ from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
 from homeassistant.components.mqtt.models import ReceiveMessage
-from homeassistant.components.update import (
-    DOMAIN as UPDATE_DOMAIN,
-    UpdateData,
-    UpdateDescription,
-)
 from homeassistant.config import async_process_component_config
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
@@ -1132,16 +1127,6 @@ async def flush_store(store):
 async def get_system_health_info(hass, domain):
     """Get system health info."""
     return await hass.data["system_health"][domain].info_callback(hass)
-
-
-async def get_integration_updates(
-    hass: HomeAssistant,
-    domain: str,
-) -> list[UpdateDescription]:
-    """Get updates for an integration."""
-    await async_setup_component(hass, UPDATE_DOMAIN, {})
-    update_data: UpdateData = hass.data[UPDATE_DOMAIN]
-    return await update_data.registrations[domain].updates_callback(hass)
 
 
 def mock_integration(hass, module, built_in=True):

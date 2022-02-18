@@ -13,7 +13,7 @@ from homeassistant.components.update import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
-from tests.common import get_integration_updates, mock_platform
+from tests.common import mock_platform
 
 
 async def setup_mock_domain(
@@ -104,14 +104,6 @@ async def test_update_updates_with_exception(hass, hass_ws_client):
     data = await gather_update_info(hass, hass_ws_client)
 
     assert len(data) == 0
-
-
-async def test_get_updates_for_domain(hass, hass_ws_client):
-    """Test getting updates for a single domain."""
-    await setup_mock_domain(hass)
-    updates = await get_integration_updates(hass, "some_domain")
-    assert len(updates) == 1
-    assert updates[0].identifier == "lorem_ipsum"
 
 
 async def test_update_update(hass, hass_ws_client):
