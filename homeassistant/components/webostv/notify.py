@@ -7,7 +7,7 @@ from typing import Any
 from aiowebostv import WebOsClient, WebOsTvPairError
 
 from homeassistant.components.notify import ATTR_DATA, BaseNotificationService
-from homeassistant.const import CONF_ICON
+from homeassistant.const import ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -47,7 +47,7 @@ class LgWebOSNotificationService(BaseNotificationService):
                 await self._client.connect()
 
             data = kwargs[ATTR_DATA]
-            icon_path = data.get(CONF_ICON) if data else None
+            icon_path = data.get(ATTR_ICON) if data else None
             await self._client.send_message(message, icon_path=icon_path)
         except WebOsTvPairError:
             _LOGGER.error("Pairing with TV failed")

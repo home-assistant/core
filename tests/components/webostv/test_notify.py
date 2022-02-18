@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.notify import ATTR_MESSAGE, DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.webostv import DOMAIN
-from homeassistant.const import CONF_ICON
+from homeassistant.const import ATTR_ICON
 from homeassistant.setup import async_setup_component
 
 from . import setup_webostv
@@ -28,7 +28,7 @@ async def test_notify(hass, client):
         {
             ATTR_MESSAGE: MESSAGE,
             ATTR_SERVICE_DATA: {
-                CONF_ICON: ICON_PATH,
+                ATTR_ICON: ICON_PATH,
             },
         },
         blocking=True,
@@ -79,7 +79,7 @@ async def test_notify_not_connected(hass, client, monkeypatch):
         {
             ATTR_MESSAGE: MESSAGE,
             ATTR_SERVICE_DATA: {
-                CONF_ICON: ICON_PATH,
+                ATTR_ICON: ICON_PATH,
             },
         },
         blocking=True,
@@ -101,7 +101,7 @@ async def test_icon_not_found(hass, caplog, client, monkeypatch):
         {
             ATTR_MESSAGE: MESSAGE,
             ATTR_SERVICE_DATA: {
-                CONF_ICON: ICON_PATH,
+                ATTR_ICON: ICON_PATH,
             },
         },
         blocking=True,
@@ -132,7 +132,7 @@ async def test_connection_errors(hass, caplog, client, monkeypatch, side_effect,
         {
             ATTR_MESSAGE: MESSAGE,
             ATTR_SERVICE_DATA: {
-                CONF_ICON: ICON_PATH,
+                ATTR_ICON: ICON_PATH,
             },
         },
         blocking=True,
