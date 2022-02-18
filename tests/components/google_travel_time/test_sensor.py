@@ -16,6 +16,21 @@ from .const import MOCK_CONFIG
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(name="mock_config")
+async def mock_config_fixture(hass, data, options):
+    """Mock a Google Travel Time config entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=data,
+        options=options,
+        entry_id="test",
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    yield
+
+
 @pytest.fixture(name="mock_update")
 def mock_update_fixture():
     """Mock an update to the sensor."""
