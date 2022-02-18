@@ -338,7 +338,7 @@ class HomeAssistantHTTP:
             self.app.router.add_route("GET", url_path, serve_file)
         )
 
-    def _create_ssl_context(self) -> ssl.SSLContext | None:
+    def _create_ssl_context(self) -> tuple[ssl.SSLContext | None, bool]:
         context: ssl.SSLContext | None = None
         assert self.ssl_certificate is not None
         try:
@@ -353,17 +353,16 @@ class HomeAssistantHTTP:
                 self.ssl_certificate,
                 error,
             )
-            _LOGGER.warning(
-                "The server will start up with an emergency self signed ssl certificate"
-            )
             try:
-                return self._create_emergency_ssl_context()
+                context = self._create_emergency_ssl_context()
             except OSError as error:
                 _LOGGER.error(
                     "Could not create an emergency self signed ssl certificate: %s",
                     error,
                 )
                 context = None
+            else:
+                return context, True
 
         if self.ssl_peer_certificate:
             if context is None:
@@ -374,7 +373,7 @@ class HomeAssistantHTTP:
             context.verify_mode = ssl.CERT_REQUIRED
             context.load_verify_locations(self.ssl_peer_certificate)
 
-        return context
+        return context, False
 
     def _create_emergency_ssl_context(self) -> ssl.SSLContext | None:
         """Create an emergency ssl certificate so we can still startup."""
@@ -428,7 +427,14 @@ class HomeAssistantHTTP:
         """Start the aiohttp server."""
         context: ssl.SSLContext | None = None
         if self.ssl_certificate:
-            context = await self.hass.async_add_executor_job(self._create_ssl_context)
+            context, is_emergency_cert = await self.hass.async_add_executor_job(
+                self._create_ssl_context
+            )
+            if is_emergency_cert:
+                _LOGGER.critical(
+                    "Home Assistant is running in safe mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
+                )
+                self.hass.config.safe_mode = True
 
         # Aiohttp freezes apps after start so that no changes can be made.
         # However in Home Assistant components can be discovered after boot.
