@@ -150,12 +150,9 @@ def setup_platform(
     )
 
 
-def day_to_string(day: int) -> str | None:
+def day_to_string(day: int) -> str:
     """Convert day index 0 - 7 to string."""
-    try:
-        return ALLOWED_DAYS[day]
-    except IndexError:
-        return None
+    return ALLOWED_DAYS[day]
 
 
 def get_date(input_date: date) -> date:
@@ -180,6 +177,11 @@ class IsWorkdaySensor(BinarySensorEntity):
         self._workdays = workdays
         self._excludes = excludes
         self._days_offset = days_offset
+        self._attr_extra_state_attributes = {
+            CONF_WORKDAYS: workdays,
+            CONF_EXCLUDES: excludes,
+            CONF_OFFSET: days_offset,
+        }
 
     def is_include(self, day: str, now: date) -> bool:
         """Check if given day is in the includes list."""
@@ -207,13 +209,10 @@ class IsWorkdaySensor(BinarySensorEntity):
         # Get ISO day of the week (1 = Monday, 7 = Sunday)
         adjusted_date = get_date(dt.now()) + timedelta(days=self._days_offset)
         day = adjusted_date.isoweekday() - 1
-        day_of_week = day_to_string(day)
-
-        self._attr_extra_state_attributes = {
-            CONF_WORKDAYS: self._workdays,
-            CONF_EXCLUDES: self._excludes,
-            CONF_OFFSET: self._days_offset,
-        }
+        try:
+            day_of_week = day_to_string(day)
+        except IndexError:
+            return
 
         if not day_of_week:
             return
