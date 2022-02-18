@@ -56,7 +56,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -292,11 +292,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         self._cast_view_remove_handler = None
         self._attr_unique_id = str(cast_info.uuid)
         self._attr_name = cast_info.friendly_name
-        entry_type = None
-        if cast_info.cast_info.cast_type == pychromecast.const.CAST_TYPE_GROUP:
-            entry_type = dr.DeviceEntryType.SERVICE
         self._attr_device_info = DeviceInfo(
-            entry_type=entry_type,
             identifiers={(CAST_DOMAIN, str(cast_info.uuid).replace("-", ""))},
             manufacturer=str(cast_info.cast_info.manufacturer),
             model=cast_info.cast_info.model_name,
