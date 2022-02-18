@@ -167,8 +167,6 @@ class EQ3BTSmartThermostat(ClimateEntity):
 
     def set_hvac_mode(self, hvac_mode):
         """Set operation mode."""
-        if self.preset_mode:
-            return
         self._thermostat.mode = HA_TO_EQ_HVAC[hvac_mode]
 
     @property
