@@ -69,6 +69,7 @@ ATTR_POWER = "power"
 ATTR_DAYLIGHT = "daylight"
 ATTR_EVENT_ID = "event_id"
 
+
 @dataclass
 class DeconzSensorDescriptionMixin:
     """Required values when describing secondary sensor attributes."""
@@ -351,11 +352,7 @@ class DeconzSensor(DeconzDevice, SensorEntity):
         if self._device.secondary_temperature is not None:
             attr[ATTR_TEMPERATURE] = self._device.secondary_temperature
 
-        if isinstance(self._device, AirQuality):
-            if self._device.air_quality_ppb is not None:
-              attr[ATTR_AIR_QUALITY_PPB] = self._device.air_quality_ppb
-        
-        elif isinstance(self._device, Consumption):
+        if isinstance(self._device, Consumption):
             attr[ATTR_POWER] = self._device.power
 
         elif isinstance(self._device, Daylight):
