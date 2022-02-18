@@ -3,14 +3,16 @@ from __future__ import annotations
 
 from typing import Any
 
-from sleepyq import Sleepyq
+from asyncsleepiq import AsyncSleepIQ, SleepIQLoginException, SleepIQTimeoutException
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, SLEEPYQ_INVALID_CREDENTIALS_MESSAGE
+from .const import DOMAIN
 
 
 class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -41,18 +43,16 @@ class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
             self._abort_if_unique_id_configured()
 
-            login_error = await self.hass.async_add_executor_job(
-                try_connection, user_input
-            )
-            if not login_error:
+            try:
+                await try_connection(self.hass, user_input)
+            except SleepIQLoginException:
+                errors["base"] = "invalid_auth"
+            except SleepIQTimeoutException:
+                errors["base"] = "cannot_connect"
+            else:
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )
-
-            if SLEEPYQ_INVALID_CREDENTIALS_MESSAGE in login_error:
-                errors["base"] = "invalid_auth"
-            else:
-                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",
@@ -72,14 +72,10 @@ class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-def try_connection(user_input: dict[str, Any]) -> str:
+async def try_connection(hass: HomeAssistant, user_input: dict[str, Any]) -> None:
     """Test if the given credentials can successfully login to SleepIQ."""
 
-    client = Sleepyq(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+    client_session = async_get_clientsession(hass)
 
-    try:
-        client.login()
-    except ValueError as error:
-        return str(error)
-
-    return ""
+    gateway = AsyncSleepIQ(client_session=client_session)
+    await gateway.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])

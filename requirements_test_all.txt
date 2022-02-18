@@ -141,7 +141,7 @@ aiohomekit==0.7.14
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==4.2.0
+aiohue==4.2.1
 
 # homeassistant.components.homewizard
 aiohwenergy==0.8.0
@@ -253,6 +253,9 @@ arcam-fmj==0.12.0
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
 async-upnp-client==0.23.5
+
+# homeassistant.components.sleepiq
+asyncsleepiq==1.0.0
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
@@ -525,7 +528,7 @@ habitipy==0.2.0
 hangups==0.4.17
 
 # homeassistant.components.cloud
-hass-nabucasa==0.52.1
+hass-nabucasa==0.53.0
 
 # homeassistant.components.tasmota
 hatasmota==0.3.1
@@ -589,7 +592,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.intellifire
-intellifire4py==0.9.8
+intellifire4py==0.9.9
 
 # homeassistant.components.iotawatt
 iotawattpy==0.1.0
@@ -1353,9 +1356,6 @@ simplisafe-python==2022.02.1
 
 # homeassistant.components.slack
 slackclient==2.5.0
-
-# homeassistant.components.sleepiq
-sleepyq==0.8.1
 
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.4.7
