@@ -292,10 +292,11 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         self._cast_view_remove_handler = None
         self._attr_unique_id = str(cast_info.uuid)
         self._attr_name = cast_info.friendly_name
+        entry_type = None
+        if cast_info.cast_info.cast_type == pychromecast.const.CAST_TYPE_GROUP:
+            entry_type = dr.DeviceEntryType.SERVICE
         self._attr_device_info = DeviceInfo(
-            entry_type=dr.DeviceEntryType.SERVICE
-            if cast_info.cast_info.cast_type == pychromecast.const.CAST_TYPE_GROUP
-            else None,
+            entry_type=entry_type,
             identifiers={(CAST_DOMAIN, str(cast_info.uuid).replace("-", ""))},
             manufacturer=str(cast_info.cast_info.manufacturer),
             model=cast_info.cast_info.model_name,
