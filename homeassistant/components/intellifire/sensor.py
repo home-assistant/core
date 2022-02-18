@@ -116,12 +116,6 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.ipv4_address,
     ),
-    IntellifireSensorEntityDescription(
-        key="serial",
-        name="Serial",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.serial,
-    ),
 )
 
 
