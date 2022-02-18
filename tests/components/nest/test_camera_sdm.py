@@ -23,7 +23,6 @@ from homeassistant.components.camera import (
 from homeassistant.components.nest.const import DOMAIN
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -176,21 +175,6 @@ async def async_get_image(hass, width=None, height=None):
     return image.content
 
 
-async def async_setup_camera(hass, traits={}, auth=None):
-    """Set up the platform and prerequisites."""
-    devices = {}
-    if traits:
-        devices[DEVICE_ID] = Device.MakeDevice(
-            {
-                "name": DEVICE_ID,
-                "type": CAMERA_DEVICE_TYPE,
-                "traits": traits,
-            },
-            auth=auth,
-        )
-    return await async_setup_sdm_platform(hass, PLATFORM, devices)
-
-
 async def fire_alarm(hass, point_in_time):
     """Fire an alarm and wait for callbacks to run."""
     with patch("homeassistant.util.dt.utcnow", return_value=point_in_time):
@@ -268,7 +252,12 @@ async def test_camera_stream(
 
 
 async def test_camera_ws_stream(
-    hass, setup_platform, camera_device, hass_ws_client, auth, mock_create_stream,
+    hass,
+    setup_platform,
+    camera_device,
+    hass_ws_client,
+    auth,
+    mock_create_stream,
 ):
     """Test a basic camera that supports web rtc."""
     auth.responses = [make_stream_url_response()]
