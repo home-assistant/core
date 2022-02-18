@@ -145,7 +145,7 @@ def split_entity_id(entity_id: str) -> tuple[str, str]:
     """Split a state entity ID into domain and object ID."""
     domain, _, object_id = entity_id.partition(".")
     if not domain or not object_id:
-        raise ValueError("Invalid entity ID")
+        raise ValueError(f"Invalid entity ID {entity_id}")
     return domain, object_id
 
 
