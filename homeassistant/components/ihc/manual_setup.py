@@ -133,11 +133,11 @@ def manual_setup(hass: HomeAssistant, controller_id: str) -> None:
     if controller_conf is None:
         return
     # Get manual configuration for IHC devices
-    for component in IHC_PLATFORMS:
+    for platform in IHC_PLATFORMS:
         discovery_info = {}
-        if component in controller_conf:
-            component_setup = controller_conf.get(component)
-            for sensor_cfg in component_setup:
+        if platform in controller_conf:
+            platform_setup = controller_conf.get(platform, {})
+            for sensor_cfg in platform_setup:
                 name = sensor_cfg[CONF_NAME]
                 device = {
                     "ihc_id": sensor_cfg[CONF_ID],
@@ -158,7 +158,7 @@ def manual_setup(hass: HomeAssistant, controller_id: str) -> None:
                 }
                 discovery_info[name] = device
         if discovery_info:
-            if component in hass.data[DOMAIN][controller_id]:
-                hass.data[DOMAIN][controller_id][component].update(discovery_info)
+            if platform in hass.data[DOMAIN][controller_id]:
+                hass.data[DOMAIN][controller_id][platform].update(discovery_info)
             else:
-                hass.data[DOMAIN][controller_id][component] = discovery_info
+                hass.data[DOMAIN][controller_id][platform] = discovery_info
