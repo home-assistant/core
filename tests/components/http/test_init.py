@@ -230,6 +230,7 @@ async def test_emergency_ssl_certificate_when_invalid(hass, tmpdir, caplog):
     )
 
     assert hass.http.site is not None
+    assert hass.config.safe_mode is True
 
 
 async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
@@ -263,6 +264,7 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
     )
 
     assert hass.http.site is not None
+    assert hass.config.safe_mode is True
 
 
 async def test_invalid_ssl_and_cannot_create_emergency_cert(hass, tmpdir, caplog):
