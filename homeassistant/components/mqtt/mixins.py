@@ -827,7 +827,7 @@ class MqttEntity(
 def async_removed_from_device(
     hass: HomeAssistant, event: Event, mqtt_device_id: str, config_entry_id: str
 ) -> bool:
-    """Check if the passed event indiecates MQTT was removed from a device."""
+    """Check if the passed event indicates MQTT was removed from a device."""
     device_id = event.data["device_id"]
     if device_id != mqtt_device_id:
         return False
