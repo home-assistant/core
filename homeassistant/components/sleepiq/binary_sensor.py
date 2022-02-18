@@ -14,8 +14,6 @@ from .const import DOMAIN, ICON_EMPTY, ICON_OCCUPIED, IS_IN_BED
 from .coordinator import SleepIQDataUpdateCoordinator
 from .entity import SleepIQSensor
 
-ICON = "mdi:bed"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
