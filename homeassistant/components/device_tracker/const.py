@@ -38,4 +38,4 @@ ATTR_SOURCE_TYPE: Final = "source_type"
 ATTR_CONSIDER_HOME: Final = "consider_home"
 ATTR_IP: Final = "ip"
 
-CONNECTED_DEVICE_REGISTRED: Final = "device_tracker_connected_device_registered"
+CONNECTED_DEVICE_REGISTERED: Final = "device_tracker_connected_device_registered"

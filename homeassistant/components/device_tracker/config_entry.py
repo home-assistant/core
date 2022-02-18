@@ -27,7 +27,7 @@ from .const import (
     ATTR_IP,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
-    CONNECTED_DEVICE_REGISTRED,
+    CONNECTED_DEVICE_REGISTERED,
     DOMAIN,
     LOGGER,
 )
@@ -74,27 +74,34 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 @callback
+def _async_connected_device_registered(
+    hass: HomeAssistant, mac: str, ip_address: str | None, hostname: str | None
+) -> None:
+    """Register a newly seen connected device.
+
+    This is currently used by the dhcp integration
+    to listen for newly registered connected devices
+    for discovery.
+    """
+    async_dispatcher_send(
+        hass,
+        CONNECTED_DEVICE_REGISTERED,
+        {
+            ATTR_IP: ip_address,
+            ATTR_MAC: mac,
+            ATTR_HOST_NAME: hostname,
+        },
+    )
+
+
+@callback
 def _async_register_mac(
     hass: HomeAssistant,
     domain: str,
     mac: str,
     unique_id: str,
-    ip_address: str | None,
-    hostname: str | None,
-    connected: bool,
 ) -> None:
     """Register a mac address with a unique ID."""
-    if connected:
-        async_dispatcher_send(
-            hass,
-            CONNECTED_DEVICE_REGISTRED,
-            {
-                ATTR_IP: ip_address,
-                ATTR_MAC: mac,
-                ATTR_HOST_NAME: hostname,
-            },
-        )
-
     data_key = "device_tracker_mac"
     mac = dr.format_mac(mac)
     if data_key in hass.data:
@@ -336,10 +343,14 @@ class ScannerEntity(BaseTrackerEntity):
                 platform.platform_name,
                 self.mac_address,
                 self.unique_id,
-                self.ip_address,
-                self.hostname,
-                self.is_connected,
             )
+            if self.is_connected:
+                _async_connected_device_registered(
+                    hass,
+                    self.mac_address,
+                    self.ip_address,
+                    self.hostname,
+                )
 
     @callback
     def find_device_entry(self) -> dr.DeviceEntry | None:
