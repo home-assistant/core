@@ -56,7 +56,7 @@ class TTSMediaSource(MediaSource):
         manager: SpeechManager = self.hass.data[DOMAIN]
 
         try:
-            url = await manager.async_get_url_path(**kwargs)  # type: ignore
+            url = await manager.async_get_url_path(**kwargs)  # type: ignore[arg-type]
         except HomeAssistantError as err:
             raise Unresolvable(str(err)) from err
 

@@ -7,14 +7,14 @@ from enum import Enum
 from functools import wraps
 import logging
 from types import ModuleType
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, Protocol, Union, overload
 
 import voluptuous as vol
 import voluptuous_serialize
 
 from homeassistant.components import websocket_api
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -26,6 +26,13 @@ from homeassistant.loader import IntegrationNotFound, bind_hass
 from homeassistant.requirements import async_get_integration_with_requirements
 
 from .exceptions import DeviceNotFound, InvalidDeviceAutomationConfig
+
+if TYPE_CHECKING:
+    from homeassistant.components.automation import (
+        AutomationActionType,
+        AutomationTriggerInfo,
+    )
+    from homeassistant.helpers import condition
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -76,6 +83,77 @@ TYPES = {
 }
 
 
+class DeviceAutomationTriggerProtocol(Protocol):
+    """Define the format of device_trigger modules.
+
+    Each module must define either TRIGGER_SCHEMA or async_validate_trigger_config.
+    """
+
+    TRIGGER_SCHEMA: vol.Schema
+
+    async def async_validate_trigger_config(
+        self, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        raise NotImplementedError
+
+    async def async_attach_trigger(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        action: AutomationActionType,
+        automation_info: AutomationTriggerInfo,
+    ) -> CALLBACK_TYPE:
+        """Attach a trigger."""
+        raise NotImplementedError
+
+
+class DeviceAutomationConditionProtocol(Protocol):
+    """Define the format of device_condition modules.
+
+    Each module must define either CONDITION_SCHEMA or async_validate_condition_config.
+    """
+
+    CONDITION_SCHEMA: vol.Schema
+
+    async def async_validate_condition_config(
+        self, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        raise NotImplementedError
+
+    def async_condition_from_config(
+        self, hass: HomeAssistant, config: ConfigType
+    ) -> condition.ConditionCheckerType:
+        """Evaluate state based on configuration."""
+        raise NotImplementedError
+
+
+class DeviceAutomationActionProtocol(Protocol):
+    """Define the format of device_action modules.
+
+    Each module must define either ACTION_SCHEMA or async_validate_action_config.
+    """
+
+    ACTION_SCHEMA: vol.Schema
+
+    async def async_validate_action_config(
+        self, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        raise NotImplementedError
+
+    async def async_call_action_from_config(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        variables: dict[str, Any],
+        context: Context | None,
+    ) -> None:
+        """Execute a device action."""
+        raise NotImplementedError
+
+
 @bind_hass
 async def async_get_device_automations(
     hass: HomeAssistant,
@@ -115,9 +193,51 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+DeviceAutomationPlatformType = Union[
+    ModuleType,
+    DeviceAutomationTriggerProtocol,
+    DeviceAutomationConditionProtocol,
+    DeviceAutomationActionProtocol,
+]
+
+
+@overload
+async def async_get_device_automation_platform(  # noqa: D103
+    hass: HomeAssistant,
+    domain: str,
+    automation_type: Literal[DeviceAutomationType.TRIGGER],
+) -> DeviceAutomationTriggerProtocol:
+    ...
+
+
+@overload
+async def async_get_device_automation_platform(  # noqa: D103
+    hass: HomeAssistant,
+    domain: str,
+    automation_type: Literal[DeviceAutomationType.CONDITION],
+) -> DeviceAutomationConditionProtocol:
+    ...
+
+
+@overload
+async def async_get_device_automation_platform(  # noqa: D103
+    hass: HomeAssistant,
+    domain: str,
+    automation_type: Literal[DeviceAutomationType.ACTION],
+) -> DeviceAutomationActionProtocol:
+    ...
+
+
+@overload
+async def async_get_device_automation_platform(  # noqa: D103
+    hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType | str
+) -> DeviceAutomationPlatformType:
+    ...
+
+
 async def async_get_device_automation_platform(
     hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType | str
-) -> ModuleType:
+) -> DeviceAutomationPlatformType:
     """Load device automation platform for integration.
 
     Throws InvalidDeviceAutomationConfig if the integration is not found or does not support device automation.

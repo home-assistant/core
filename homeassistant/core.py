@@ -238,8 +238,8 @@ class HomeAssistant:
     """Root object of the Home Assistant home automation."""
 
     auth: AuthManager
-    http: HomeAssistantHTTP = None  # type: ignore
-    config_entries: ConfigEntries = None  # type: ignore
+    http: HomeAssistantHTTP = None  # type: ignore[assignment]
+    config_entries: ConfigEntries = None  # type: ignore[assignment]
 
     def __init__(self) -> None:
         """Initialize new Home Assistant object."""
@@ -765,7 +765,7 @@ class Event:
 
     def __eq__(self, other: Any) -> bool:
         """Return the comparison."""
-        return (  # type: ignore
+        return (  # type: ignore[no-any-return]
             self.__class__ == other.__class__
             and self.event_type == other.event_type
             and self.data == other.data
@@ -1125,7 +1125,7 @@ class State:
 
     def __eq__(self, other: Any) -> bool:
         """Return the comparison of the state."""
-        return (  # type: ignore
+        return (  # type: ignore[no-any-return]
             self.__class__ == other.__class__
             and self.entity_id == other.entity_id
             and self.state == other.state

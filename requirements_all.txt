@@ -830,7 +830,7 @@ hlk-sw16==0.0.9
 hole==0.7.0
 
 # homeassistant.components.workday
-holidays==0.12
+holidays==0.13
 
 # homeassistant.components.frontend
 home-assistant-frontend==20220214.0
@@ -1579,7 +1579,7 @@ pyialarm==1.9.0
 pyicloud==0.10.2
 
 # homeassistant.components.insteon
-pyinsteon==1.0.14
+pyinsteon==1.0.16
 
 # homeassistant.components.intesishome
 pyintesishome==1.7.6
@@ -1755,7 +1755,7 @@ pyownet==0.10.0.post1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.7.13
+pypck==0.7.14
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
@@ -1942,7 +1942,7 @@ python-kasa==0.4.1
 # python-lirc==1.2.3
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.9.2
+python-miio==0.5.10
 
 # homeassistant.components.mpd
 python-mpd2==3.0.4
@@ -1972,7 +1972,7 @@ python-smarttub==0.0.29
 python-sochain-api==0.0.2
 
 # homeassistant.components.songpal
-python-songpal==0.12
+python-songpal==0.14
 
 # homeassistant.components.tado
 python-tado==0.12.0
@@ -2111,7 +2111,7 @@ rjpl==0.3.6
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-rokuecp==0.13.2
+rokuecp==0.14.0
 
 # homeassistant.components.roomba
 roombapy==1.6.5
@@ -2559,7 +2559,7 @@ zigpy==0.43.0
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.34.0
+zwave-js-server-python==0.35.0
 
 # homeassistant.components.zwave_me
 zwave_me_ws==0.1.23
