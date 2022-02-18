@@ -1033,6 +1033,7 @@ SENSORS["pc"] = SENSORS["kg"]
 
 # Lock (duplicate of 'ms')
 # https://developer.tuya.com/en/docs/iot/f?id=Kb0o2vbzuzl81
+SENSORS["bxx"] = SENSORS["ms"]
 SENSORS["gyms"] = SENSORS["ms"]
 SENSORS["jtmspro"] = SENSORS["ms"]
 SENSORS["hotelms"] = SENSORS["ms"]

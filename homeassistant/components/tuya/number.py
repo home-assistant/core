@@ -292,6 +292,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
 
 # Lock (duplicate of 'ms')
 # https://developer.tuya.com/en/docs/iot/f?id=Kb0o2vbzuzl81
+NUMBERS["bxx"] = NUMBERS["ms"]
 NUMBERS["gyms"] = NUMBERS["ms"]
 NUMBERS["jtmspro"] = NUMBERS["ms"]
 NUMBERS["hotelms"] = NUMBERS["ms"]

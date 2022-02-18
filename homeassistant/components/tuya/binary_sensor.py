@@ -315,6 +315,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
 
 # Lock (duplicate of 'ms')
 # https://developer.tuya.com/en/docs/iot/f?id=Kb0o2vbzuzl81
+BINARY_SENSORS["bxx"] = BINARY_SENSORS["ms"]
 BINARY_SENSORS["gyms"] = BINARY_SENSORS["ms"]
 BINARY_SENSORS["jtmspro"] = BINARY_SENSORS["ms"]
 BINARY_SENSORS["hotelms"] = BINARY_SENSORS["ms"]

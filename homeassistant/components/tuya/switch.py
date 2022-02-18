@@ -698,6 +698,7 @@ SWITCHES["cz"] = SWITCHES["pc"]
 
 # Lock (duplicate of 'ms')
 # https://developer.tuya.com/en/docs/iot/f?id=Kb0o2vbzuzl81
+SWITCHES["bxx"] = SWITCHES["ms"]
 SWITCHES["gyms"] = SWITCHES["ms"]
 SWITCHES["jtmspro"] = SWITCHES["ms"]
 SWITCHES["hotelms"] = SWITCHES["ms"]

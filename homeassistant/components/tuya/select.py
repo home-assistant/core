@@ -487,6 +487,7 @@ SELECTS["pc"] = SELECTS["kg"]
 
 # Lock (duplicate of 'ms')
 # https://developer.tuya.com/en/docs/iot/f?id=Kb0o2vbzuzl81
+SELECTS["bxx"] = SELECTS["ms"]
 SELECTS["gyms"] = SELECTS["ms"]
 SELECTS["jtmspro"] = SELECTS["ms"]
 SELECTS["hotelms"] = SELECTS["ms"]
