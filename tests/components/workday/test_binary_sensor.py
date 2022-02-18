@@ -317,6 +317,7 @@ class TestWorkdaySetup:
         assert binary_sensor.day_to_string(0) == "mon"
         assert binary_sensor.day_to_string(1) == "tue"
         assert binary_sensor.day_to_string(7) == "holiday"
+        assert binary_sensor.day_to_string(8) is None
 
     # Freeze time to test Fri, but remove holiday - December 25, 2020
     @patch(FUNCTION_PATH, return_value=date(2020, 12, 25))

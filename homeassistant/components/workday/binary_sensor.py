@@ -152,7 +152,10 @@ def setup_platform(
 
 def day_to_string(day: int) -> str:
     """Convert day index 0 - 7 to string."""
-    return ALLOWED_DAYS[day]
+    try:
+        return ALLOWED_DAYS[day]
+    except IndexError:
+        return None
 
 
 def get_date(input_date: date) -> date:
@@ -209,12 +212,9 @@ class IsWorkdaySensor(BinarySensorEntity):
         # Get ISO day of the week (1 = Monday, 7 = Sunday)
         adjusted_date = get_date(dt.now()) + timedelta(days=self._days_offset)
         day = adjusted_date.isoweekday() - 1
-        try:
-            day_of_week = day_to_string(day)
-        except IndexError:
-            return
+        day_of_week = day_to_string(day)
 
-        if not day_of_week:
+        if day_of_week is None:
             return
 
         if self.is_include(day_of_week, adjusted_date):
