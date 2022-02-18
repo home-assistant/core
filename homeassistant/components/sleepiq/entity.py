@@ -4,12 +4,14 @@ from abc import abstractmethod
 from asyncsleepiq import SleepIQBed, SleepIQSleeper
 
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import ICON_OCCUPIED, SENSOR_TYPES
+from .const import DOMAIN, ICON_OCCUPIED, SENSOR_TYPES
 
 
 class SleepIQSensor(CoordinatorEntity):
@@ -32,6 +34,18 @@ class SleepIQSensor(CoordinatorEntity):
 
         self._attr_name = f"SleepNumber {bed.name} {sleeper.name} {SENSOR_TYPES[name]}"
         self._attr_unique_id = f"{bed.id}_{sleeper.name}_{name}"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return information about the device."""
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.bed.id)},
+            connections={(device_registry.CONNECTION_NETWORK_MAC, self.bed.mac_addr)},
+            manufacturer="SleepNumber",
+            name=self.bed.name,
+            model=self.bed.model,
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
