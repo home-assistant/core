@@ -23,7 +23,7 @@ from .const import (
     SIGNAL_BOOTSTRAP_INTEGRATONS,
 )
 from .exceptions import HomeAssistantError
-from .helpers import area_registry, device_registry, entity_registry
+from .helpers import area_registry, device_registry, entity_registry, hassio
 from .helpers.dispatcher import async_dispatcher_send
 from .helpers.typing import ConfigType
 from .setup import (
@@ -398,7 +398,7 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
         domains.update(hass.config_entries.async_domains())
 
     # Make sure the Hass.io component is loaded
-    if "HASSIO" in os.environ:
+    if hassio.is_hassio():
         domains.add("hassio")
 
     return domains
