@@ -216,6 +216,6 @@ async def test_connected_device_registered(hass):
         == "super-mock-id"
     )
     unsub()
-    assert dispatchs == [
+    assert dispatches == [
         {"ip": "5.4.3.2", "mac": "aa:bb:cc:dd:ee:ff", "host_name": "connected"}
     ]
