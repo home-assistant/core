@@ -6,12 +6,13 @@ import pytest
 
 from homeassistant.components.notify import ATTR_MESSAGE, DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.webostv import DOMAIN
-from homeassistant.const import CONF_ICON, CONF_SERVICE_DATA
+from homeassistant.const import CONF_ICON
 from homeassistant.setup import async_setup_component
 
 from . import setup_webostv
 from .const import TV_NAME
 
+ATTR_SERVICE_DATA = "data"
 ICON_PATH = "/some/path"
 MESSAGE = "one, two, testing, testing"
 
@@ -26,7 +27,7 @@ async def test_notify(hass, client):
         TV_NAME,
         {
             ATTR_MESSAGE: MESSAGE,
-            CONF_SERVICE_DATA: {
+            ATTR_SERVICE_DATA: {
                 CONF_ICON: ICON_PATH,
             },
         },
@@ -41,7 +42,7 @@ async def test_notify(hass, client):
         TV_NAME,
         {
             ATTR_MESSAGE: MESSAGE,
-            CONF_SERVICE_DATA: {
+            ATTR_SERVICE_DATA: {
                 "OTHER_DATA": "not_used",
             },
         },
@@ -63,7 +64,7 @@ async def test_notify_not_connected(hass, client, monkeypatch):
         TV_NAME,
         {
             ATTR_MESSAGE: MESSAGE,
-            CONF_SERVICE_DATA: {
+            ATTR_SERVICE_DATA: {
                 CONF_ICON: ICON_PATH,
             },
         },
@@ -85,7 +86,7 @@ async def test_icon_not_found(hass, caplog, client, monkeypatch):
         TV_NAME,
         {
             ATTR_MESSAGE: MESSAGE,
-            CONF_SERVICE_DATA: {
+            ATTR_SERVICE_DATA: {
                 CONF_ICON: ICON_PATH,
             },
         },
@@ -116,7 +117,7 @@ async def test_connection_errors(hass, caplog, client, monkeypatch, side_effect,
         TV_NAME,
         {
             ATTR_MESSAGE: MESSAGE,
-            CONF_SERVICE_DATA: {
+            ATTR_SERVICE_DATA: {
                 CONF_ICON: ICON_PATH,
             },
         },
