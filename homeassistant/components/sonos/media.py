@@ -14,6 +14,7 @@ from soco.core import (
     SoCo,
 )
 from soco.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
+from soco.music_library import MusicLibrary
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -98,6 +99,11 @@ class SonosMedia:
         self.position = None
         self.position_updated_at = None
 
+    @property
+    def library(self) -> MusicLibrary:
+        """Return the soco MusicLibrary instance."""
+        return self.soco.music_library
+
     @soco_error()
     def poll_track_info(self) -> dict[str, Any]:
         """Poll the speaker for current track info, add converted position values, and return."""
@@ -152,7 +158,7 @@ class SonosMedia:
         if ct_md := evars["current_track_meta_data"]:
             if not self.image_url:
                 if album_art_uri := getattr(ct_md, "album_art_uri", None):
-                    self.image_url = self.soco.music_library.build_album_art_full_uri(
+                    self.image_url = self.library.build_album_art_full_uri(
                         album_art_uri
                     )
 
