@@ -10,7 +10,6 @@ from aiohttp.typedefs import LooseHeaders
 
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.media_player import async_fetch_image
-from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN as PLEX_DOMAIN, SERVERS
 
@@ -23,11 +22,7 @@ class PlexImageView(HomeAssistantView):
     name = "api:plex:image"
     url = "/api/plex_image_proxy/{server_id}/{media_content_id}"
 
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize a media player view."""
-        self.hass = hass
-
-    async def get(
+    async def get(  # pylint: disable=no-self-use
         self,
         request: web.Request,
         server_id: str | None = None,
@@ -37,12 +32,18 @@ class PlexImageView(HomeAssistantView):
         if not request[KEY_AUTHENTICATED]:
             return web.Response(status=HTTPStatus.UNAUTHORIZED)
 
-        if (server := self.hass.data[PLEX_DOMAIN][SERVERS].get(server_id)) is None:
+        hass = request.app["hass"]
+        if (server := hass.data[PLEX_DOMAIN][SERVERS].get(server_id)) is None:
+            _LOGGER.error("Plex server_id %s not known", server_id)
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         if media_content_id:
-            image_url = server.thumbnail_cache.get(media_content_id)
-            data, content_type = await async_fetch_image(self.hass, image_url)
+            if (image_url := server.thumbnail_cache.get(media_content_id)) is None:
+                _LOGGER.debug(
+                    "Thumbnail URL for %s not found in cache", media_content_id
+                )
+                return web.Response(status=HTTPStatus.NOT_FOUND)
+            data, content_type = await async_fetch_image(_LOGGER, hass, image_url)
 
         if data is None:
             return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)

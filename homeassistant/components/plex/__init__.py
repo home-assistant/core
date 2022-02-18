@@ -85,7 +85,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await async_setup_services(hass)
 
-    hass.http.register_view(PlexImageView(hass))
+    hass.http.register_view(PlexImageView())
 
     gdm = hass.data[PLEX_DOMAIN][GDM_SCANNER] = GDM()
 

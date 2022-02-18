@@ -999,7 +999,7 @@ class MediaPlayerEntity(Entity):
 
     async def _async_fetch_image(self, url: str) -> tuple[bytes | None, str | None]:
         """Retrieve an image."""
-        return await async_fetch_image(self.hass, url)
+        return await async_fetch_image(_LOGGER, self.hass, url)
 
     def get_browse_image_url(
         self,
@@ -1190,7 +1190,7 @@ async def websocket_browse_media(hass, connection, msg):
 
 
 async def async_fetch_image(
-    hass: HomeAssistant, url: str
+    logger: logging.Logger, hass: HomeAssistant, url: str
 ) -> tuple[bytes | None, str | None]:
     """Retrieve an image."""
     content, content_type = (None, None)
@@ -1209,6 +1209,6 @@ async def async_fetch_image(
         if url_parts.password is not None:
             url_parts = url_parts.with_password("xxxxxxxx")
         url = str(url_parts)
-        _LOGGER.warning("Error retrieving proxied image from %s", url)
+        logger.warning("Error retrieving proxied image from %s", url)
 
     return content, content_type
