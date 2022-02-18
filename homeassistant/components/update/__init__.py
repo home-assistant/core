@@ -2,17 +2,17 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Coroutine
 import dataclasses
 import logging
 from types import ModuleType
-from typing import Any
+from typing import Any, Protocol
 
 import async_timeout
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.core import HomeAssistant, T, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import integration_platform, storage
 from homeassistant.helpers.typing import ConfigType
 
@@ -133,6 +133,18 @@ async def perform_update(
     connection.send_result(msg["id"], manager.filtered_updates)
 
 
+class UpdateDescriptionUpdateCallback(Protocol):
+    """Protocol type for UpdateDescription.update_callback."""
+
+    def __call__(
+        self,
+        hass: HomeAssistant,
+        description: UpdateDescription,
+        **kwargs: Any,
+    ) -> Coroutine[None, None, bool]:
+        """Perform an update."""
+
+
 @dataclasses.dataclass()
 class UpdateDescription:
     """Describe an update update."""
@@ -141,7 +153,7 @@ class UpdateDescription:
     name: str
     current_version: str
     available_version: str
-    update_callback: Callable[..., Awaitable[T]]
+    update_callback: UpdateDescriptionUpdateCallback
     changelog_content: str | None = None
     changelog_url: str | None = None
     icon_url: str | None = None
