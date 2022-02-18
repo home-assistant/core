@@ -91,7 +91,7 @@ async def test_remaining_time_for_filter_nothing_returned_from_vallox(
 
     # Assert
     sensor = hass.states.get("sensor.vallox_remaining_time_for_filter")
-    assert sensor is None
+    assert sensor.state == "unknown"
 
 
 @pytest.mark.parametrize(
