@@ -140,7 +140,9 @@ class ValloxState:
         """Return the next filter change date."""
         next_filter_change_date = calculate_next_filter_change_date(self.metric_cache)
         if not isinstance(next_filter_change_date, date):
-            raise ValueError
+            raise ValueError(
+                f"Unexpected next filter change date type: {type(next_filter_change_date)}"
+            )
         return next_filter_change_date
 
 
