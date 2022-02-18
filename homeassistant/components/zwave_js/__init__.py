@@ -12,7 +12,6 @@ from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.notification import (
     EntryControlNotification,
     NotificationNotification,
-    PowerLevelNotification,
 )
 from zwave_js_server.model.value import Value, ValueNotification
 
@@ -42,7 +41,6 @@ from homeassistant.helpers.typing import ConfigType
 from .addon import AddonError, AddonManager, AddonState, get_addon_manager
 from .api import async_register_api
 from .const import (
-    ATTR_ACKNOWLEDGED_FRAMES,
     ATTR_COMMAND_CLASS,
     ATTR_COMMAND_CLASS_NAME,
     ATTR_DATA_TYPE,
@@ -59,8 +57,6 @@ from .const import (
     ATTR_PROPERTY_KEY,
     ATTR_PROPERTY_KEY_NAME,
     ATTR_PROPERTY_NAME,
-    ATTR_STATUS,
-    ATTR_TEST_NODE_ID,
     ATTR_TYPE,
     ATTR_VALUE,
     ATTR_VALUE_RAW,
@@ -420,7 +416,7 @@ async def async_setup_entry(  # noqa: C901
                     ATTR_EVENT_DATA: notification.event_data,
                 }
             )
-        elif isinstance(notification, NotificationNotification):
+        else:
             event_data.update(
                 {
                     ATTR_COMMAND_CLASS_NAME: "Notification",
@@ -431,17 +427,6 @@ async def async_setup_entry(  # noqa: C901
                     ATTR_PARAMETERS: notification.parameters,
                 }
             )
-        elif isinstance(notification, PowerLevelNotification):
-            event_data.update(
-                {
-                    ATTR_COMMAND_CLASS_NAME: "Power Level",
-                    ATTR_TEST_NODE_ID: notification.test_node_id,
-                    ATTR_STATUS: notification.status,
-                    ATTR_ACKNOWLEDGED_FRAMES: notification.acknowledged_frames,
-                }
-            )
-        else:
-            raise ValueError(f"Unknown notification type: {notification}")
 
         hass.bus.async_fire(ZWAVE_JS_NOTIFICATION_EVENT, event_data)
 
