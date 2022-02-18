@@ -151,6 +151,7 @@ class ApiConfig:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HTTP API and debug interface."""
     conf: ConfData | None = config.get(DOMAIN)
+    safe_mode = "safe_mode" in config
 
     if conf is None:
         conf = cast(ConfData, HTTP_SCHEMA({}))
@@ -176,6 +177,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ssl_key=ssl_key,
         trusted_proxies=trusted_proxies,
         ssl_profile=ssl_profile,
+        safe_mode=safe_mode,
     )
     await server.async_initialize(
         cors_origins=cors_origins,
@@ -227,6 +229,7 @@ class HomeAssistantHTTP:
         server_port: int,
         trusted_proxies: list[IPv4Network | IPv6Network],
         ssl_profile: str,
+        safe_mode: bool,
     ) -> None:
         """Initialize the HTTP Home Assistant server."""
         self.app = web.Application(middlewares=[], client_max_size=MAX_CLIENT_SIZE)
@@ -240,6 +243,8 @@ class HomeAssistantHTTP:
         self.ssl_profile = ssl_profile
         self.runner: web.AppRunner | None = None
         self.site: HomeAssistantTCPSite | None = None
+        self.safe_mode = safe_mode
+        self.context: ssl.SSLContext | None = None
 
     async def async_initialize(
         self,
@@ -266,6 +271,11 @@ class HomeAssistantHTTP:
         await async_setup_auth(self.hass, self.app)
 
         setup_cors(self.app, cors_origins)
+
+        if self.ssl_certificate:
+            self.context = await self.hass.async_add_executor_job(
+                self._create_ssl_context
+            )
 
     def register_view(self, view: HomeAssistantView | type[HomeAssistantView]) -> None:
         """Register a view with the WSGI server.
@@ -338,7 +348,7 @@ class HomeAssistantHTTP:
             self.app.router.add_route("GET", url_path, serve_file)
         )
 
-    def _create_ssl_context(self) -> tuple[ssl.SSLContext | None, bool]:
+    def _create_ssl_context(self) -> ssl.SSLContext | None:
         context: ssl.SSLContext | None = None
         assert self.ssl_certificate is not None
         try:
@@ -348,6 +358,10 @@ class HomeAssistantHTTP:
                 context = ssl_util.server_context_modern()
             context.load_cert_chain(self.ssl_certificate, self.ssl_key)
         except OSError as error:
+            if not self.safe_mode:
+                raise HomeAssistantError(
+                    f"Could not use SSL certificate from {self.ssl_certificate}: {error}"
+                ) from error
             _LOGGER.error(
                 "Could not read SSL certificate from %s: %s",
                 self.ssl_certificate,
@@ -362,7 +376,10 @@ class HomeAssistantHTTP:
                 )
                 context = None
             else:
-                return context, True
+                _LOGGER.critical(
+                    "Home Assistant is running in safe mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
+                )
+                return context
 
         if self.ssl_peer_certificate:
             if context is None:
@@ -373,9 +390,9 @@ class HomeAssistantHTTP:
             context.verify_mode = ssl.CERT_REQUIRED
             context.load_verify_locations(self.ssl_peer_certificate)
 
-        return context, False
+        return context
 
-    def _create_emergency_ssl_context(self) -> ssl.SSLContext | None:
+    def _create_emergency_ssl_context(self) -> ssl.SSLContext:
         """Create an emergency ssl certificate so we can still startup."""
         context = ssl_util.server_context_modern()
         host: str
@@ -425,17 +442,6 @@ class HomeAssistantHTTP:
 
     async def start(self) -> None:
         """Start the aiohttp server."""
-        context: ssl.SSLContext | None = None
-        if self.ssl_certificate:
-            context, is_emergency_cert = await self.hass.async_add_executor_job(
-                self._create_ssl_context
-            )
-            if is_emergency_cert:
-                _LOGGER.critical(
-                    "Home Assistant is running in safe mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
-                )
-                self.hass.config.safe_mode = True
-
         # Aiohttp freezes apps after start so that no changes can be made.
         # However in Home Assistant components can be discovered after boot.
         # This will now raise a RunTimeError.
@@ -447,7 +453,7 @@ class HomeAssistantHTTP:
         await self.runner.setup()
 
         self.site = HomeAssistantTCPSite(
-            self.runner, self.server_host, self.server_port, ssl_context=context
+            self.runner, self.server_host, self.server_port, ssl_context=self.context
         )
         try:
             await self.site.start()
