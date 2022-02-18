@@ -98,11 +98,16 @@ class SamsungTVBridge(ABC):
         self.host = host
         self.token: str | None = None
         self._remote: Remote | None = None
-        self._callback: CALLBACK_TYPE | None = None
+        self._reauth_callback: CALLBACK_TYPE | None = None
+        self._new_token_callback: CALLBACK_TYPE | None = None
 
     def register_reauth_callback(self, func: CALLBACK_TYPE) -> None:
         """Register a callback function."""
-        self._callback = func
+        self._reauth_callback = func
+
+    def register_new_token_callback(self, func: CALLBACK_TYPE) -> None:
+        """Register a callback function."""
+        self._new_token_callback = func
 
     @abstractmethod
     def try_connect(self) -> str | None:
@@ -176,10 +181,15 @@ class SamsungTVBridge(ABC):
         except OSError:
             LOGGER.debug("Could not establish connection")
 
-    def _notify_callback(self) -> None:
+    def _notify_reauth_callback(self) -> None:
         """Notify access denied callback."""
-        if self._callback is not None:
-            self._callback()
+        if self._reauth_callback is not None:
+            self._reauth_callback()
+
+    def _notify_new_token_callback(self) -> None:
+        """Notify new token callback."""
+        if self._new_token_callback is not None:
+            self._new_token_callback()
 
 
 class SamsungTVLegacyBridge(SamsungTVBridge):
@@ -245,7 +255,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             # This is only happening when the auth was switched to DENY
             # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
             except AccessDenied:
-                self._notify_callback()
+                self._notify_reauth_callback()
                 raise
             except (ConnectionClosed, OSError):
                 pass
@@ -303,8 +313,8 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     self.token = remote.token
                     if self.token is None:
                         config[CONF_TOKEN] = "*****"
-                LOGGER.debug("Working config: %s", config)
-                return RESULT_SUCCESS
+                    LOGGER.debug("Working config: %s", config)
+                    return RESULT_SUCCESS
             except WebSocketException as err:
                 LOGGER.debug(
                     "Working but unsupported config: %s, error: %s", config, err
@@ -355,9 +365,17 @@ class SamsungTVWSBridge(SamsungTVBridge):
             # This is only happening when the auth was switched to DENY
             # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
             except ConnectionFailure:
-                self._notify_callback()
+                self._notify_reauth_callback()
             except (WebSocketException, OSError):
                 self._remote = None
+            else:
+                if self.token != self._remote.token:
+                    LOGGER.debug(
+                        "SamsungTVWSBridge has provided a new token %s",
+                        self._remote.token,
+                    )
+                    self.token = self._remote.token
+                    self._notify_new_token_callback()
         return self._remote
 
     def stop(self) -> None:

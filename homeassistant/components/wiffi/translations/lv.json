@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Servera ports jau ir konfigur\u0113ts."
+        }
+    }
+}

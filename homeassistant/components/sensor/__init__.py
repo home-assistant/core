@@ -355,7 +355,7 @@ class SensorEntity(Entity):
             hasattr(self, "_attr_unit_of_measurement")
             and self._attr_unit_of_measurement is not None
         ):
-            return self._attr_unit_of_measurement  # type: ignore
+            return self._attr_unit_of_measurement  # type: ignore[unreachable]
 
         native_unit_of_measurement = self.native_unit_of_measurement
 

@@ -1,0 +1,27 @@
+{
+    "state": {
+        "climacell__health_concern": {
+            "good": "Labs",
+            "hazardous": "B\u012bstams",
+            "moderate": "M\u0113rens",
+            "unhealthy": "Nevesel\u012bgs",
+            "unhealthy_for_sensitive_groups": "Nevesel\u012bgs jut\u012bg\u0101m grup\u0101m",
+            "very_unhealthy": "\u013boti nevesel\u012bgs"
+        },
+        "climacell__pollen_index": {
+            "high": "Augsts",
+            "low": "Zems",
+            "medium": "Vid\u0113js",
+            "none": "Nav",
+            "very_high": "\u013boti augsts",
+            "very_low": "\u013boti zems"
+        },
+        "climacell__precipitation_type": {
+            "freezing_rain": "Sasalsto\u0161s lietus",
+            "ice_pellets": "Krusa",
+            "none": "Nav",
+            "rain": "Lietus",
+            "snow": "Sniegs"
+        }
+    }
+}
