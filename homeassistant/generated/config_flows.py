@@ -256,6 +256,7 @@ FLOWS = [
     "progettihwsw",
     "prosegur",
     "ps4",
+    "pure_energie",
     "pvoutput",
     "pvpc_hourly_pricing",
     "rachio",
