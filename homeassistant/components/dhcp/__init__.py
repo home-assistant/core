@@ -25,6 +25,7 @@ from homeassistant.components.device_tracker.const import (
     ATTR_IP,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
+    DEVICE_REGISTRED,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     SOURCE_TYPE_ROUTER,
 )
@@ -42,6 +43,7 @@ from homeassistant.helpers.device_registry import (
     async_get,
     format_mac,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
     async_track_state_added_domain,
     async_track_time_interval,
@@ -115,7 +117,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         integration_matchers = await async_get_dhcp(hass)
         watchers = []
 
-        for cls in (DHCPWatcher, DeviceTrackerWatcher, NetworkWatcher):
+        for cls in (
+            DHCPWatcher,
+            DeviceTrackerRegisteredWatcher,
+            DeviceTrackerWatcher,
+            NetworkWatcher,
+        ):
             watcher = cls(hass, address_data, integration_matchers)
             await watcher.async_start()
             watchers.append(watcher)
@@ -313,6 +320,39 @@ class DeviceTrackerWatcher(WatcherBase):
         ip_address = attributes.get(ATTR_IP)
         hostname = attributes.get(ATTR_HOST_NAME, "")
         mac_address = attributes.get(ATTR_MAC)
+
+        if ip_address is None or mac_address is None:
+            return
+
+        self.async_process_client(ip_address, hostname, _format_mac(mac_address))
+
+
+class DeviceTrackerRegisteredWatcher(WatcherBase):
+    """Class to watch data from device tracker registrations."""
+
+    def __init__(self, hass, address_data, integration_matchers):
+        """Initialize class."""
+        super().__init__(hass, address_data, integration_matchers)
+        self._unsub = None
+
+    async def async_stop(self):
+        """Stop watching for device tracker registrations."""
+        if self._unsub:
+            self._unsub()
+            self._unsub = None
+
+    async def async_start(self):
+        """Stop watching for device tracker registrations."""
+        self._unsub = async_dispatcher_connect(
+            self.hass, DEVICE_REGISTRED, self._async_process_device_state
+        )
+
+    @callback
+    def _async_process_device_state(self, data: dict[str, Any]) -> None:
+        """Process a device tracker state."""
+        ip_address = data.get(ATTR_IP)
+        hostname = data.get(ATTR_HOST_NAME, "")
+        mac_address = data.get(ATTR_MAC)
 
         if ip_address is None or mac_address is None:
             return

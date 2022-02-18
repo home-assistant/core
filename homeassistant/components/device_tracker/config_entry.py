@@ -16,12 +16,21 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.typing import StateType
 
-from .const import ATTR_HOST_NAME, ATTR_IP, ATTR_MAC, ATTR_SOURCE_TYPE, DOMAIN, LOGGER
+from .const import (
+    ATTR_HOST_NAME,
+    ATTR_IP,
+    ATTR_MAC,
+    ATTR_SOURCE_TYPE,
+    DEVICE_REGISTRED,
+    DOMAIN,
+    LOGGER,
+)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -296,6 +305,16 @@ class ScannerEntity(BaseTrackerEntity):
         """Start adding an entity to a platform."""
         super().add_to_platform_start(hass, platform, parallel_updates)
         if self.mac_address and self.unique_id:
+            if self.state == STATE_HOME:
+                async_dispatcher_send(
+                    hass,
+                    DEVICE_REGISTRED,
+                    {
+                        ATTR_IP: self.ip_address,
+                        ATTR_MAC: self.mac_address,
+                        ATTR_HOST_NAME: self.hostname,
+                    },
+                )
             _async_register_mac(
                 hass, platform.platform_name, self.mac_address, self.unique_id
             )

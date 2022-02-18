@@ -37,3 +37,5 @@ ATTR_MAC: Final = "mac"
 ATTR_SOURCE_TYPE: Final = "source_type"
 ATTR_CONSIDER_HOME: Final = "consider_home"
 ATTR_IP: Final = "ip"
+
+DEVICE_REGISTRED: Final = "device_tracker_registered"
