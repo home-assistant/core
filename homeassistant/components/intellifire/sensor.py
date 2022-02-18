@@ -20,8 +20,8 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from . import IntellifireDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import IntellifireDataUpdateCoordinator
 from .entity import IntellifireEntity
 
 
@@ -90,25 +90,31 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         key="downtime",
         name="Downtime",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.downtime,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda data: utcnow() - timedelta(seconds=data.downtime)
+        if data.downtime > 0
+        else None,
     ),
     IntellifireSensorEntityDescription(
         key="uptime",
         name="Uptime",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.uptime,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda data: utcnow() - timedelta(seconds=data.uptime),
     ),
     IntellifireSensorEntityDescription(
         key="connection_quality",
         name="Connection Quality",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.connection_quality,
+        entity_registry_enabled_default=False,
     ),
     IntellifireSensorEntityDescription(
         key="ecm_latency",
         name="ECM Latency",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.ecm_latency,
+        entity_registry_enabled_default=False,
     ),
     IntellifireSensorEntityDescription(
         key="ipv4_address",
