@@ -56,7 +56,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -292,13 +292,15 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         self._cast_view_remove_handler = None
         self._attr_unique_id = str(cast_info.uuid)
         self._attr_name = cast_info.friendly_name
-        if cast_info.cast_info.model_name != "Google Cast Group":
-            self._attr_device_info = DeviceInfo(
-                identifiers={(CAST_DOMAIN, str(cast_info.uuid).replace("-", ""))},
-                manufacturer=str(cast_info.cast_info.manufacturer),
-                model=cast_info.cast_info.model_name,
-                name=str(cast_info.friendly_name),
-            )
+        self._attr_device_info = DeviceInfo(
+            entry_type=dr.DeviceEntryType.SERVICE
+            if cast_info.cast_info.cast_type == pychromecast.const.CAST_TYPE_GROUP
+            else None,
+            identifiers={(CAST_DOMAIN, str(cast_info.uuid).replace("-", ""))},
+            manufacturer=str(cast_info.cast_info.manufacturer),
+            model=cast_info.cast_info.model_name,
+            name=str(cast_info.friendly_name),
+        )
 
     async def async_added_to_hass(self):
         """Create chromecast object when added to hass."""
