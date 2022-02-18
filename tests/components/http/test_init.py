@@ -225,7 +225,7 @@ async def test_emergency_ssl_certificate_when_invalid(hass, tmpdir, caplog):
     await hass.async_start()
     await hass.async_block_till_done()
     assert (
-        "The server will start up with an emergency self signed ssl certificate"
+        "Home Assistant is running in safe mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
         in caplog.text
     )
 
@@ -258,7 +258,7 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
 
     assert len(mock_get_url.mock_calls) == 1
     assert (
-        "The server will start up with an emergency self signed ssl certificate"
+        "Home Assistant is running in safe mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
         in caplog.text
     )
 
