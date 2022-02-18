@@ -1,6 +1,4 @@
 """Tests for the EDL21 config flow."""
-import aiohttp
-
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.edl21.sensor import DOMAIN, CONF_SERIAL_PORT
 from homeassistant.components.hassio import HassioServiceInfo
@@ -30,3 +28,5 @@ async def test_with_data(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"][CONF_NAME] == "TEST"
+    assert result["data"][CONF_SERIAL_PORT] == "/dev/ttyTEST"
