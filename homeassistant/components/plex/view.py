@@ -34,16 +34,15 @@ class PlexImageView(HomeAssistantView):
 
         hass = request.app["hass"]
         if (server := hass.data[PLEX_DOMAIN][SERVERS].get(server_id)) is None:
-            _LOGGER.error("Plex server_id %s not known", server_id)
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         if (image_url := server.thumbnail_cache.get(media_content_id)) is None:
-            _LOGGER.debug("Thumbnail URL for %s not found in cache", media_content_id)
             return web.Response(status=HTTPStatus.NOT_FOUND)
+
         data, content_type = await async_fetch_image(_LOGGER, hass, image_url)
 
         if data is None:
-            return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            return web.Response(status=HTTPStatus.SERVICE_UNAVAILABLE)
 
         headers: LooseHeaders = {CACHE_CONTROL: "max-age=3600"}
         return web.Response(body=data, content_type=content_type, headers=headers)
