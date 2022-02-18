@@ -141,7 +141,7 @@ async def test_connected_device_registered(hass):
     """Test dispatch on connected device being registered."""
 
     registry = mock_registry(hass)
-    dispatchs = []
+    dispatches = []
 
     @callback
     def _save_dispatch(msg):
