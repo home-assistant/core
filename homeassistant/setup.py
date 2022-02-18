@@ -66,10 +66,10 @@ async def async_setup_component(
     if domain in hass.config.components:
         return True
 
-    setup_tasks = hass.data.setdefault(DATA_SETUP, {})
+    setup_tasks: dict[str, asyncio.Task[bool]] = hass.data.setdefault(DATA_SETUP, {})
 
     if domain in setup_tasks:
-        return await setup_tasks[domain]  # type: ignore
+        return await setup_tasks[domain]
 
     task = setup_tasks[domain] = hass.async_create_task(
         _async_setup_component(hass, domain, config)
