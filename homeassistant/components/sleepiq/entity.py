@@ -11,7 +11,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, ICON_OCCUPIED, SENSOR_TYPES
+from .const import ICON_OCCUPIED, SENSOR_TYPES
 
 
 class SleepIQSensor(CoordinatorEntity):
