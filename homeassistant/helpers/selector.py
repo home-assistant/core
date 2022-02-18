@@ -58,10 +58,7 @@ class Selector:
 
     def serialize(self) -> Any:
         """Serialize Selector for voluptuous_serialize."""
-        result: dict[str, Any] = {"selector": self.name}
-        if self.config:
-            result["config"] = self.config
-        return result
+        return {"selector": {self.name: self.config}}
 
 
 @SELECTORS.register("entity")
