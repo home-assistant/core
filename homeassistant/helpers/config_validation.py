@@ -939,6 +939,8 @@ def key_dependency(
 
 def custom_serializer(schema: Any) -> Any:
     """Serialize additional types for voluptuous_serialize."""
+    from . import selector  # pylint: disable=import-outside-toplevel
+
     if schema is positive_time_period_dict:
         return {"type": "positive_time_period_dict"}
 
@@ -950,6 +952,9 @@ def custom_serializer(schema: Any) -> Any:
 
     if isinstance(schema, multi_select):
         return {"type": "multi_select", "options": schema.options}
+
+    if isinstance(schema, selector.Selector):
+        return schema.serialize()
 
     return voluptuous_serialize.UNSUPPORTED
 
