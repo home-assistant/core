@@ -923,17 +923,6 @@ async def async_migrate_entries(
             ent_reg.async_update_entity(entry.entity_id, **updates)
 
 
-def async_resolve_entity_id(
-    registry: EntityRegistry, entity_id_or_uuid: str
-) -> str | None:
-    """Resolve an entity id or UUID to an entity id or None."""
-    if valid_entity_id(entity_id_or_uuid):
-        return entity_id_or_uuid
-    if (entry := registry.entities.get_entry(entity_id_or_uuid)) is None:
-        raise vol.Invalid(f"Unknown entity registry entry {entity_id_or_uuid}")
-    return entry.entity_id
-
-
 @callback
 def async_resolve_entity_ids(
     registry: EntityRegistry, entity_ids_or_uuids: list[str]
