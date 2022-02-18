@@ -255,27 +255,13 @@ SENSOR_UNIT_MAPPING = {
 }
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the EDL21 sensor."""
-    hass.data[DOMAIN] = EDL21(hass, config, async_add_entities)
-    await hass.data[DOMAIN].connect()
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities,
 ):
-    config = hass.data[DOMAIN]
-    if config_entry.options:
-        config.update(config_entry.options)
-
-    hass.data[DOMAIN] = EDL21(hass, config, async_add_entities)
+    """Setup EDL21 Entry"""
+    hass.data[DOMAIN] = EDL21(hass, config_entry.data, async_add_entities)
     await hass.data[DOMAIN].connect()
 
 
@@ -304,6 +290,10 @@ class EDL21:
     async def connect(self):
         """Connect to an EDL21 reader."""
         await self._proto.connect(self._hass.loop)
+
+    async def disconnect(self):
+        """Connect to an EDL21 reader."""
+        await self._proto._disconnect()
 
     def event(self, message_body) -> None:
         """Handle events from pysml."""
