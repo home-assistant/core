@@ -50,7 +50,12 @@ from homeassistant.core import (
 )
 from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.exceptions import HomeAssistantError, TemplateError, Unauthorized
-from homeassistant.helpers import config_validation as cv, event, template
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    event,
+    template,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.frame import report
@@ -895,7 +900,7 @@ class MQTT:
 
     async def async_connect(self) -> None:
         """Connect to the host. Does not process messages yet."""
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         import paho.mqtt.client as mqtt
 
         result: int | None = None
@@ -1000,7 +1005,7 @@ class MQTT:
         Resubscribe to all topics we were subscribed to and publish birth
         message.
         """
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         import paho.mqtt.client as mqtt
 
         if result_code != mqtt.CONNACK_ACCEPTED:
@@ -1159,7 +1164,7 @@ class MQTT:
 
 def _raise_on_error(result_code: int | None) -> None:
     """Raise error if error result."""
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     import paho.mqtt.client as mqtt
 
     if result_code is not None and result_code != 0:
@@ -1169,7 +1174,7 @@ def _raise_on_error(result_code: int | None) -> None:
 
 
 def _matcher_for_topic(subscription: str) -> Any:
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from paho.mqtt.matcher import MQTTMatcher
 
     matcher = MQTTMatcher()
@@ -1181,8 +1186,8 @@ def _matcher_for_topic(subscription: str) -> Any:
 @websocket_api.websocket_command(
     {vol.Required("type"): "mqtt/device/debug_info", vol.Required("device_id"): str}
 )
-@websocket_api.async_response
-async def websocket_mqtt_info(hass, connection, msg):
+@callback
+def websocket_mqtt_info(hass, connection, msg):
     """Get MQTT debug info for device."""
     device_id = msg["device_id"]
     mqtt_info = debug_info.info_for_device(hass, device_id)
@@ -1193,13 +1198,13 @@ async def websocket_mqtt_info(hass, connection, msg):
 @websocket_api.websocket_command(
     {vol.Required("type"): "mqtt/device/remove", vol.Required("device_id"): str}
 )
-@websocket_api.async_response
-async def websocket_remove_device(hass, connection, msg):
+@callback
+def websocket_remove_device(hass, connection, msg):
     """Delete device."""
     device_id = msg["device_id"]
-    dev_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
 
-    if not (device := dev_registry.async_get(device_id)):
+    if not (device := device_registry.async_get(device_id)):
         connection.send_error(
             msg["id"], websocket_api.const.ERR_NOT_FOUND, "Device not found"
         )
@@ -1209,7 +1214,7 @@ async def websocket_remove_device(hass, connection, msg):
         config_entry = hass.config_entries.async_get_entry(config_entry)
         # Only delete the device if it belongs to an MQTT device entry
         if config_entry.domain == DOMAIN:
-            dev_registry.async_remove_device(device_id)
+            device_registry.async_remove_device(device_id)
             connection.send_message(websocket_api.result_message(msg["id"]))
             return
 

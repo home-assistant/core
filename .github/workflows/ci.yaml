@@ -10,8 +10,8 @@ on:
   pull_request: ~
 
 env:
-  CACHE_VERSION: 7
-  PIP_CACHE_VERSION: 1
+  CACHE_VERSION: 9
+  PIP_CACHE_VERSION: 3
   HA_SHORT_VERSION: 2022.3
   DEFAULT_PYTHON: 3.9
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
@@ -524,10 +524,10 @@ jobs:
   prepare-tests:
     name: Prepare tests for Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       matrix:
-        python-version: [3.9]
+        python-version: ["3.9", "3.10"]
     outputs:
       python-key: ${{ steps.generate-python-key.outputs.key }}
     container: homeassistant/ci-azure:${{ matrix.python-version }}
@@ -721,7 +721,7 @@ jobs:
       fail-fast: false
       matrix:
         group: ${{ fromJson(needs.changes.outputs.test_groups) }}
-        python-version: [3.9]
+        python-version: ["3.9", "3.10"]
     name: >-
       Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
     container: homeassistant/ci-azure:${{ matrix.python-version }}

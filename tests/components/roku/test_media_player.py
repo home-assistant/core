@@ -27,7 +27,9 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_APPS,
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_CHANNELS,
+    MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_URL,
+    MEDIA_TYPE_VIDEO,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     SUPPORT_BROWSE_MEDIA,
@@ -459,50 +461,7 @@ async def test_services(
         "291097",
         {
             "contentID": "8e06a8b7-d667-4e31-939d-f40a6dd78a88",
-            "MediaType": "movie",
-        },
-    )
-
-    await hass.services.async_call(
-        MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
-        {
-            ATTR_ENTITY_ID: MAIN_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_URL,
-            ATTR_MEDIA_CONTENT_ID: "https://awesome.tld/media.mp4",
-            ATTR_MEDIA_EXTRA: {
-                ATTR_NAME: "Sent from HA",
-                ATTR_FORMAT: "mp4",
-            },
-        },
-        blocking=True,
-    )
-
-    assert mock_roku.play_on_roku.call_count == 1
-    mock_roku.play_on_roku.assert_called_with(
-        "https://awesome.tld/media.mp4",
-        {
-            "videoName": "Sent from HA",
-            "videoFormat": "mp4",
-        },
-    )
-
-    await hass.services.async_call(
-        MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
-        {
-            ATTR_ENTITY_ID: MAIN_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[HLS_PROVIDER],
-            ATTR_MEDIA_CONTENT_ID: "https://awesome.tld/api/hls/api_token/master_playlist.m3u8",
-        },
-        blocking=True,
-    )
-
-    assert mock_roku.play_on_roku.call_count == 2
-    mock_roku.play_on_roku.assert_called_with(
-        "https://awesome.tld/api/hls/api_token/master_playlist.m3u8",
-        {
-            "MediaType": "hls",
+            "mediaType": "movie",
         },
     )
 
@@ -525,6 +484,158 @@ async def test_services(
 
     assert mock_roku.launch.call_count == 4
     mock_roku.launch.assert_called_with("12")
+
+
+async def test_services_play_media(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_roku: MagicMock,
+) -> None:
+    """Test the media player services related to playing media."""
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: MAIN_ENTITY_ID,
+            ATTR_MEDIA_CONTENT_TYPE: "blah",
+            ATTR_MEDIA_CONTENT_ID: "https://localhost/media.m4a",
+            ATTR_MEDIA_EXTRA: {
+                ATTR_NAME: "Test",
+            },
+        },
+        blocking=True,
+    )
+
+    assert mock_roku.play_on_roku.call_count == 0
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: MAIN_ENTITY_ID,
+            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+            ATTR_MEDIA_CONTENT_ID: "https://localhost/media.m4a",
+            ATTR_MEDIA_EXTRA: {ATTR_FORMAT: "blah"},
+        },
+        blocking=True,
+    )
+
+    assert mock_roku.play_on_roku.call_count == 0
+
+
+@pytest.mark.parametrize(
+    "content_type, content_id, resolved_name, resolved_format",
+    [
+        (MEDIA_TYPE_URL, "http://localhost/media.m4a", "media.m4a", "m4a"),
+        (MEDIA_TYPE_MUSIC, "http://localhost/media.m4a", "media.m4a", "m4a"),
+        (MEDIA_TYPE_MUSIC, "http://localhost/media.mka", "media.mka", "mka"),
+        (
+            MEDIA_TYPE_MUSIC,
+            "http://localhost/api/tts_proxy/generated.mp3",
+            "Text to Speech",
+            "mp3",
+        ),
+    ],
+)
+async def test_services_play_media_audio(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_roku: MagicMock,
+    content_type: str,
+    content_id: str,
+    resolved_name: str,
+    resolved_format: str,
+) -> None:
+    """Test the media player services related to playing media."""
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: MAIN_ENTITY_ID,
+            ATTR_MEDIA_CONTENT_TYPE: content_type,
+            ATTR_MEDIA_CONTENT_ID: content_id,
+        },
+        blocking=True,
+    )
+    mock_roku.play_on_roku.assert_called_once_with(
+        content_id,
+        {
+            "t": "a",
+            "songName": resolved_name,
+            "songFormat": resolved_format,
+            "artistName": "Home Assistant",
+        },
+    )
+
+
+@pytest.mark.parametrize(
+    "content_type, content_id, resolved_name, resolved_format",
+    [
+        (MEDIA_TYPE_URL, "http://localhost/media.mp4", "media.mp4", "mp4"),
+        (MEDIA_TYPE_VIDEO, "http://localhost/media.m4v", "media.m4v", "mp4"),
+        (MEDIA_TYPE_VIDEO, "http://localhost/media.mov", "media.mov", "mp4"),
+        (MEDIA_TYPE_VIDEO, "http://localhost/media.mkv", "media.mkv", "mkv"),
+        (MEDIA_TYPE_VIDEO, "http://localhost/media.mks", "media.mks", "mks"),
+        (MEDIA_TYPE_VIDEO, "http://localhost/media.m3u8", "media.m3u8", "hls"),
+        (MEDIA_TYPE_VIDEO, "http://localhost/media.dash", "media.dash", "dash"),
+        (MEDIA_TYPE_VIDEO, "http://localhost/media.mpd", "media.mpd", "dash"),
+        (MEDIA_TYPE_VIDEO, "http://localhost/media.ism/manifest", "media.ism", "ism"),
+    ],
+)
+async def test_services_play_media_video(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_roku: MagicMock,
+    content_type: str,
+    content_id: str,
+    resolved_name: str,
+    resolved_format: str,
+) -> None:
+    """Test the media player services related to playing media."""
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: MAIN_ENTITY_ID,
+            ATTR_MEDIA_CONTENT_TYPE: content_type,
+            ATTR_MEDIA_CONTENT_ID: content_id,
+        },
+        blocking=True,
+    )
+    mock_roku.play_on_roku.assert_called_once_with(
+        content_id,
+        {
+            "videoName": resolved_name,
+            "videoFormat": resolved_format,
+        },
+    )
+
+
+async def test_services_camera_play_stream(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_roku: MagicMock,
+) -> None:
+    """Test the media player services related to playing camera stream."""
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: MAIN_ENTITY_ID,
+            ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[HLS_PROVIDER],
+            ATTR_MEDIA_CONTENT_ID: "https://awesome.tld/api/hls/api_token/master_playlist.m3u8",
+        },
+        blocking=True,
+    )
+
+    assert mock_roku.play_on_roku.call_count == 1
+    mock_roku.play_on_roku.assert_called_with(
+        "https://awesome.tld/api/hls/api_token/master_playlist.m3u8",
+        {
+            "videoName": "Camera Stream",
+            "videoFormat": "hls",
+        },
+    )
 
 
 async def test_services_play_media_local_source(
@@ -556,7 +667,11 @@ async def test_services_play_media_local_source(
     assert mock_roku.play_on_roku.call_count == 1
     assert mock_roku.play_on_roku.call_args
     call_args = mock_roku.play_on_roku.call_args.args
-    assert "/media/local/Epic%20Sax%20Guy%2010%20Hours.mp4?authSig=" in call_args[0]
+    assert "/local/Epic%20Sax%20Guy%2010%20Hours.mp4?authSig=" in call_args[0]
+    assert call_args[1] == {
+        "videoFormat": "mp4",
+        "videoName": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+    }
 
 
 @pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)

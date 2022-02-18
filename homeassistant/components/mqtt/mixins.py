@@ -420,10 +420,7 @@ class MqttAvailability(Entity):
                     CONF_AVAILABILITY_TEMPLATE: avail.get(CONF_VALUE_TEMPLATE),
                 }
 
-        for (
-            topic,  # pylint: disable=unused-variable
-            avail_topic_conf,
-        ) in self._avail_topics.items():
+        for avail_topic_conf in self._avail_topics.values():
             avail_topic_conf[CONF_AVAILABILITY_TEMPLATE] = MqttValueTemplate(
                 avail_topic_conf[CONF_AVAILABILITY_TEMPLATE],
                 entity=self,
@@ -502,7 +499,7 @@ class MqttAvailability(Entity):
 async def cleanup_device_registry(hass, device_id):
     """Remove device registry entry if there are no remaining entities or triggers."""
     # Local import to avoid circular dependencies
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from . import device_trigger, tag
 
     device_registry = dr.async_get(hass)
