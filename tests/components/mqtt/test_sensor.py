@@ -1104,4 +1104,5 @@ async def test_encoding_subscribable_topics(
         value,
         attribute,
         attribute_value,
+        skip_raw_test=True,
     )
