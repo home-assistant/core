@@ -81,10 +81,10 @@ def _async_register_mac(
     unique_id: str,
     ip_address: str | None,
     hostname: str | None,
-    state: str,
+    connected: bool,
 ) -> None:
     """Register a mac address with a unique ID."""
-    if state == STATE_HOME:
+    if connected:
         async_dispatcher_send(
             hass,
             DEVICE_REGISTRED,
@@ -338,7 +338,7 @@ class ScannerEntity(BaseTrackerEntity):
                 self.unique_id,
                 self.ip_address,
                 self.hostname,
-                self.state,
+                self.is_connected,
             )
 
     @callback
