@@ -281,7 +281,7 @@ class UpdateManager:
             f"{domain}_{update_description.identifier}_{update_description.available_version}"
         )
         self._updates[domain].remove(update_description)
-        self._store.async_delay_save(self._data_to_save)
+        self._store.async_delay_save(self._data_to_save, 60)
 
     async def _get_integration_info(
         self,
