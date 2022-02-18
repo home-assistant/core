@@ -1213,7 +1213,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             match_dict = {}  # Match any entry
         for entry in self._async_current_entries(include_ignore=False):
             if all(
-                item in ChainMap(entry.options, entry.data).items()  # type: ignore
+                item in ChainMap(entry.options, entry.data).items()  # type: ignore[arg-type]
                 for item in match_dict.items()
             ):
                 raise data_entry_flow.AbortFlow("already_configured")
