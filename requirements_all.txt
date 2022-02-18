@@ -191,7 +191,7 @@ aiohomekit==0.6.11
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==4.2.0
+aiohue==4.2.1
 
 # homeassistant.components.homewizard
 aiohwenergy==0.8.0
@@ -842,7 +842,7 @@ hole==0.7.0
 holidays==0.12
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220203.0
+home-assistant-frontend==20220203.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1582,7 +1582,7 @@ pyialarm==1.9.0
 pyicloud==0.10.2
 
 # homeassistant.components.insteon
-pyinsteon==1.0.14
+pyinsteon==1.0.16
 
 # homeassistant.components.intesishome
 pyintesishome==1.7.6

@@ -24,6 +24,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.async_ import run_callback_threadsafe
 
 from .bridge import (
     SamsungTVBridge,
@@ -116,6 +117,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Initialize bridge
     bridge = await _async_create_bridge_with_updated_data(hass, entry)
+
+    # Ensure new token gets saved against the config_entry
+    def _update_token() -> None:
+        """Update config entry with the new token."""
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_TOKEN: bridge.token}
+        )
+
+    def new_token_callback() -> None:
+        """Update config entry with the new token."""
+        run_callback_threadsafe(hass.loop, _update_token)
+
+    bridge.register_new_token_callback(new_token_callback)
 
     def stop_bridge(event: Event) -> None:
         """Stop SamsungTV bridge connection."""
