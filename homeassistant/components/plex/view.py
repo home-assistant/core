@@ -20,7 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 class PlexImageView(HomeAssistantView):
     """Media player view to serve a Plex image."""
 
-    requires_auth = False
     name = "api:plex:image"
     url = "/api/plex_image_proxy/{server_id}/{media_content_id}"
 
@@ -39,7 +38,7 @@ class PlexImageView(HomeAssistantView):
             return web.Response(status=HTTPStatus.UNAUTHORIZED)
 
         if (server := self.hass.data[PLEX_DOMAIN][SERVERS].get(server_id)) is None:
-            return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            return web.Response(status=HTTPStatus.NOT_FOUND)
 
         if media_content_id:
             image_url = server.thumbnail_cache.get(media_content_id)
