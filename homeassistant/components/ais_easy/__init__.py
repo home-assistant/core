@@ -17,7 +17,7 @@ async def async_setup_entry(hass, config_entry):
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
     )
-    # switch
+    # switches
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(config_entry, "switch")
     )
@@ -29,5 +29,8 @@ async def async_unload_entry(hass, config_entry):
     _LOGGER.info("async_unload_entry remove entities")
     hass.async_create_task(
         hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
+    )
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_unload(config_entry, "switch")
     )
     return True
