@@ -568,8 +568,11 @@ async def test_duplicate_removal(hass, mqtt_mock, caplog):
     assert "Component has already been discovered: binary_sensor bla" not in caplog.text
 
 
-async def test_cleanup_device(hass, device_reg, entity_reg, mqtt_mock):
+async def test_cleanup_device(hass, hass_ws_client, device_reg, entity_reg, mqtt_mock):
     """Test discvered device is cleaned up when entry removed from device."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
     data = (
         '{ "device":{"identifiers":["0AFFD2"]},'
         '  "state_topic": "foobar/sensor",'
@@ -588,7 +591,16 @@ async def test_cleanup_device(hass, device_reg, entity_reg, mqtt_mock):
     state = hass.states.get("sensor.mqtt_sensor")
     assert state is not None
 
-    device_reg.async_remove_device(device_entry.id)
+    # Remove MQTT from the device
+    await ws_client.send_json(
+        {
+            "id": 6,
+            "type": "mqtt/device/remove",
+            "device_id": device_entry.id,
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
@@ -644,10 +656,8 @@ async def test_cleanup_device_mqtt(hass, device_reg, entity_reg, mqtt_mock):
     assert state is None
     await hass.async_block_till_done()
 
-    # Verify retained discovery topic has been cleared
-    mqtt_mock.async_publish.assert_called_once_with(
-        "homeassistant/sensor/bla/config", "", 0, True
-    )
+    # Verify retained discovery topics have not been cleared again
+    mqtt_mock.async_publish.assert_not_called()
 
 
 async def test_cleanup_device_multiple_config_entries(
@@ -816,7 +826,7 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
     assert state is None
     await hass.async_block_till_done()
 
-    # Verify retained discovery topics have been cleared again
+    # Verify retained discovery topics have not been cleared again
     mqtt_mock.async_publish.assert_not_called()
 
 

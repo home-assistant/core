@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     async_fire_mqtt_message,
@@ -355,11 +356,15 @@ async def test_not_fires_on_mqtt_message_after_remove_by_mqtt_without_device(
 
 async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     hass,
+    hass_ws_client,
     device_reg,
     mqtt_mock,
     tag_mock,
 ):
     """Test tag scanning after removal."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
     config = copy.deepcopy(DEFAULT_CONFIG_DEVICE)
 
     async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config))
@@ -371,9 +376,16 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     await hass.async_block_till_done()
     tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, device_entry.id)
 
-    # Remove the device
-    device_reg.async_remove_device(device_entry.id)
-    await hass.async_block_till_done()
+    # Remove MQTT from the device
+    await ws_client.send_json(
+        {
+            "id": 6,
+            "type": "mqtt/device/remove",
+            "device_id": device_entry.id,
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
     tag_mock.reset_mock()
 
     async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
@@ -473,8 +485,11 @@ async def test_entity_device_info_update(hass, mqtt_mock):
     assert device.name == "Milk"
 
 
-async def test_cleanup_tag(hass, device_reg, entity_reg, mqtt_mock):
+async def test_cleanup_tag(hass, hass_ws_client, device_reg, entity_reg, mqtt_mock):
     """Test tag discovery topic is cleaned when device is removed from registry."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
     config = {
         "topic": "test-topic",
         "device": {"identifiers": ["helloworld"]},
@@ -488,7 +503,16 @@ async def test_cleanup_tag(hass, device_reg, entity_reg, mqtt_mock):
     device_entry = device_reg.async_get_device({("mqtt", "helloworld")})
     assert device_entry is not None
 
-    device_reg.async_remove_device(device_entry.id)
+    # Remove MQTT from the device
+    await ws_client.send_json(
+        {
+            "id": 6,
+            "type": "mqtt/device/remove",
+            "device_id": device_entry.id,
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
