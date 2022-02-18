@@ -3,67 +3,28 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
+
+from tololib import ToloClient
+from tololib.message_info import SettingsInfo
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import TIME_MINUTES
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ToloSaunaCoordinatorEntity, ToloSaunaUpdateCoordinator
-from ...const import TIME_MINUTES
-from ...helpers.entity import EntityCategory
 from .const import DOMAIN, FAN_TIMER_MAX, POWER_TIMER_MAX, SALT_BATH_TIMER_MAX
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up number controls for TOLO Sauna."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        [
-            ToloNumberEntity(coordinator, entry, description)
-            for description in (
-                ToloNumberEntityDescription(
-                    key="power_timer",
-                    icon="mdi:power-settings",
-                    name="Power Timer",
-                    unit_of_measurement=TIME_MINUTES,
-                    max_value=POWER_TIMER_MAX,
-                    getter=coordinator.data.settings.power_timer,
-                    setter=coordinator.client.set_power_timer,
-                ),
-                ToloNumberEntityDescription(
-                    key="salt_bath_timer",
-                    icon="mdi:shaker-outline",
-                    name="Salt Bath Timer",
-                    unit_of_measurement=TIME_MINUTES,
-                    max_value=SALT_BATH_TIMER_MAX,
-                    getter=coordinator.data.settings.salt_bath_timer,
-                    setter=coordinator.client.set_salt_bath_timer,
-                ),
-                ToloNumberEntityDescription(
-                    key="fan_timer",
-                    icon="mdi:fan-auto",
-                    name="Fan Timer",
-                    unit_of_measurement=TIME_MINUTES,
-                    max_value=FAN_TIMER_MAX,
-                    getter=coordinator.data.settings.fan_timer,
-                    setter=coordinator.client.set_fan_timer,
-                ),
-            )
-        ]
-    )
 
 
 @dataclass
 class ToloNumberEntityDescriptionBase:
     """Required values when describing TOLO Number entities."""
 
-    getter: Callable[[], int | None]
-    setter: Callable[[int | None], None]
+    getter: Callable[[SettingsInfo], int | None]
+    setter: Callable[[ToloClient, int | None], Any]
 
 
 @dataclass
@@ -75,6 +36,49 @@ class ToloNumberEntityDescription(
     entity_category = EntityCategory.CONFIG
     min_value = 0
     step = 1
+
+
+NUMBERS = (
+    ToloNumberEntityDescription(
+        key="power_timer",
+        icon="mdi:power-settings",
+        name="Power Timer",
+        unit_of_measurement=TIME_MINUTES,
+        max_value=POWER_TIMER_MAX,
+        getter=lambda settings: settings.power_timer,
+        setter=lambda client, value: client.set_power_timer(value),
+    ),
+    ToloNumberEntityDescription(
+        key="salt_bath_timer",
+        icon="mdi:shaker-outline",
+        name="Salt Bath Timer",
+        unit_of_measurement=TIME_MINUTES,
+        max_value=SALT_BATH_TIMER_MAX,
+        getter=lambda settings: settings.salt_bath_timer,
+        setter=lambda client, value: client.set_salt_bath_timer(value),
+    ),
+    ToloNumberEntityDescription(
+        key="fan_timer",
+        icon="mdi:fan-auto",
+        name="Fan Timer",
+        unit_of_measurement=TIME_MINUTES,
+        max_value=FAN_TIMER_MAX,
+        getter=lambda settings: settings.fan_timer,
+        setter=lambda client, value: client.set_fan_timer(value),
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up number controls for TOLO Sauna."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
+        [ToloNumberEntity(coordinator, entry, description) for description in NUMBERS]
+    )
 
 
 class ToloNumberEntity(ToloSaunaCoordinatorEntity, NumberEntity):
@@ -96,12 +100,12 @@ class ToloNumberEntity(ToloSaunaCoordinatorEntity, NumberEntity):
     @property
     def value(self) -> float:
         """Return the value of this TOLO Number entity."""
-        return self.entity_description.getter() or 0
+        return self.entity_description.getter(self.coordinator.data.settings) or 0
 
     def set_value(self, value: float) -> None:
         """Set the value of this TOLO Number entity."""
         int_value = int(value)
         if int_value == 0:
-            self.entity_description.setter(None)
+            self.entity_description.setter(self.coordinator.client, None)
             return
-        self.entity_description.setter(int_value)
+        self.entity_description.setter(self.coordinator.client, int_value)
