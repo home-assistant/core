@@ -77,10 +77,10 @@ async def test_remaining_filter_returns_timestamp(
     assert sensor.attributes["device_class"] == "timestamp"
 
 
-async def test_remaining_time_for_filter_nothing_returned_from_vallox(
+async def test_remaining_time_for_filter_none_returned_from_vallox(
     mock_entry: MockConfigEntry, hass: HomeAssistant
 ):
-    """Test that the remaining time for filter sensor returns 'unknown' when Vallox doesn't return anything."""
+    """Test that the remaining time for filter sensor returns 'unknown' when Vallox returns None."""
     # Act
     with patch(
         "homeassistant.components.vallox.calculate_next_filter_change_date",
