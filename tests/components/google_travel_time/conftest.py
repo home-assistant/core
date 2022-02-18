@@ -4,6 +4,25 @@ from unittest.mock import Mock, patch
 from googlemaps.exceptions import ApiError
 import pytest
 
+from homeassistant.components.google_travel_time.const import DOMAIN
+
+from tests.common import MockConfigEntry
+
+
+@pytest.fixture(name="mock_config")
+async def mock_config_fixture(hass, data, options):
+    """Mock a Google Travel Time config entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=data,
+        options=options,
+        entry_id="test",
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    yield
+
 
 @pytest.fixture(name="validate_config_entry")
 def validate_config_entry_fixture():

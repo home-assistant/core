@@ -72,18 +72,13 @@ def mock_update_empty_fixture(mock_update):
     yield mock_update
 
 
-@pytest.mark.usefixtures("mock_update")
+@pytest.mark.parametrize(
+    "data,options",
+    [(MOCK_CONFIG, {})],
+)
+@pytest.mark.usefixtures("mock_update", "mock_config")
 async def test_sensor(hass):
     """Test that sensor works."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=MOCK_CONFIG,
-        entry_id="test",
-    )
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
     assert hass.states.get("sensor.google_travel_time").state == "27"
     assert (
         hass.states.get("sensor.google_travel_time").attributes["attribution"]
@@ -112,111 +107,100 @@ async def test_sensor(hass):
     )
 
 
-@pytest.mark.usefixtures("mock_update_duration")
+@pytest.mark.parametrize(
+    "data,options",
+    [(MOCK_CONFIG, {})],
+)
+@pytest.mark.usefixtures("mock_update_duration", "mock_config")
 async def test_sensor_duration(hass):
     """Test that sensor works with no duration_in_traffic in response."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=MOCK_CONFIG,
-        entry_id="test",
-    )
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
     assert hass.states.get("sensor.google_travel_time").state == "26"
 
 
-@pytest.mark.usefixtures("mock_update_empty")
+@pytest.mark.parametrize(
+    "data,options",
+    [(MOCK_CONFIG, {})],
+)
+@pytest.mark.usefixtures("mock_update_empty", "mock_config")
 async def test_sensor_empty_response(hass):
     """Test that sensor works for an empty response."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=MOCK_CONFIG,
-        entry_id="test",
-    )
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
     assert hass.states.get("sensor.google_travel_time").state == "unknown"
 
 
-@pytest.mark.usefixtures("mock_update")
+@pytest.mark.parametrize(
+    "data,options",
+    [
+        (
+            MOCK_CONFIG,
+            {
+                CONF_DEPARTURE_TIME: "10:00",
+            },
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_update", "mock_config")
 async def test_sensor_departure_time(hass):
     """Test that sensor works for departure time."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=MOCK_CONFIG,
-        options={
-            CONF_DEPARTURE_TIME: "10:00",
-        },
-        entry_id="test",
-    )
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
     assert hass.states.get("sensor.google_travel_time").state == "27"
 
 
-@pytest.mark.usefixtures("mock_update")
+@pytest.mark.parametrize(
+    "data,options",
+    [
+        (
+            MOCK_CONFIG,
+            {
+                CONF_DEPARTURE_TIME: "custom_timestamp",
+            },
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_update", "mock_config")
 async def test_sensor_departure_time_custom_timestamp(hass):
     """Test that sensor works for departure time with a custom timestamp."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=MOCK_CONFIG,
-        options={
-            CONF_DEPARTURE_TIME: "test",
-        },
-        entry_id="test",
-    )
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
     assert hass.states.get("sensor.google_travel_time").state == "27"
 
 
-@pytest.mark.usefixtures("mock_update")
+@pytest.mark.parametrize(
+    "data,options",
+    [
+        (
+            MOCK_CONFIG,
+            {
+                CONF_ARRIVAL_TIME: "10:00",
+            },
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_update", "mock_config")
 async def test_sensor_arrival_time(hass):
     """Test that sensor works for arrival time."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=MOCK_CONFIG,
-        options={
-            CONF_ARRIVAL_TIME: "10:00",
-        },
-        entry_id="test",
-    )
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
     assert hass.states.get("sensor.google_travel_time").state == "27"
 
 
-@pytest.mark.usefixtures("mock_update")
+@pytest.mark.parametrize(
+    "data,options",
+    [
+        (
+            MOCK_CONFIG,
+            {
+                CONF_ARRIVAL_TIME: "custom_timestamp",
+            },
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_update", "mock_config")
 async def test_sensor_arrival_time_custom_timestamp(hass):
     """Test that sensor works for arrival time with a custom timestamp."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=MOCK_CONFIG,
-        options={
-            CONF_ARRIVAL_TIME: "custom_timestamp",
-        },
-        entry_id="test",
-    )
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
     assert hass.states.get("sensor.google_travel_time").state == "27"
 
 
 @pytest.mark.usefixtures("mock_update")
 async def test_sensor_deprecation_warning(hass, caplog):
-    """Test that sensor setup prints a deprecating warning for old configs."""
+    """Test that sensor setup prints a deprecating warning for old configs.
+
+    The mock_config fixture does not work with caplog.
+    """
     data = MOCK_CONFIG.copy()
     data[CONF_TRAVEL_MODE] = "driving"
     config_entry = MockConfigEntry(
