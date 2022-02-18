@@ -20,7 +20,7 @@ async def setup_mock_domain(
     hass: HomeAssistant,
     get_updates: Callable[[HomeAssistant], Awaitable[list[UpdateDescription]]]
     | None = None,
-    update_callback: Callable[[HomeAssistant, UpdateDescription], Awaitable[bool]]
+    update_callback: Callable[[HomeAssistant, UpdateDescription, dict], Awaitable[bool]]
     | None = None,
 ) -> None:
     """Set up a mock domain."""
@@ -185,7 +185,7 @@ async def test_update_update_failed(hass, hass_ws_client):
     """Test that we correctly handle failed updates."""
 
     async def mock_update_callback(
-        hass: HomeAssistant, data: UpdateDescription
+        hass: HomeAssistant, data: UpdateDescription, **kwargs
     ) -> bool:
         return False
 
