@@ -35,11 +35,10 @@ class SleepIQSensor(CoordinatorEntity):
         self._attr_name = f"SleepNumber {bed.name} {sleeper.name} {SENSOR_TYPES[name]}"
         self._attr_unique_id = f"{bed.id}_{sleeper.name}_{name}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.bed.id)},
-            connections={(device_registry.CONNECTION_NETWORK_MAC, self.bed.mac_addr)},
+            connections={(device_registry.CONNECTION_NETWORK_MAC, bed.mac_addr)},
             manufacturer="SleepNumber",
-            name=self.bed.name,
-            model=self.bed.model,
+            name=bed.name,
+            model=bed.model,
         )
 
     @callback
