@@ -5,7 +5,6 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_call_later
 
 from .const import (
     CONF_RELAY_ADDR,
@@ -33,8 +32,6 @@ ATTR_RF_LOOP3 = "rf_loop3"
 ATTR_RF_LOOP2 = "rf_loop2"
 ATTR_RF_LOOP4 = "rf_loop4"
 ATTR_RF_LOOP1 = "rf_loop1"
-
-DEFAULT_STATE_TIMEOUT = 30
 
 
 async def async_setup_entry(
@@ -80,7 +77,7 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
         self._zone_number = int(zone_number)
         self._zone_type = zone_type
         self._attr_name = zone_name
-        self._attr_is_on = None
+        self._attr_is_on = False
         self._rfid = zone_rfid
         self._loop = zone_loop
         self._relay_addr = relay_addr
@@ -115,13 +112,6 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
                 SIGNAL_REL_MESSAGE, self._rel_message_callback
             )
         )
-
-        def set_default_state(_):
-            if self._attr_is_on is None:
-                self._attr_is_on = False
-                self.schedule_update_ha_state()
-
-        async_call_later(self.hass, DEFAULT_STATE_TIMEOUT, set_default_state)
 
     def _fault_callback(self, zone):
         """Update the zone's state, if needed."""
