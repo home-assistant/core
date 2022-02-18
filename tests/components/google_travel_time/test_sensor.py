@@ -20,8 +20,9 @@ from tests.common import MockConfigEntry
 def mock_update_fixture():
     """Mock an update to the sensor."""
     with patch("homeassistant.components.google_travel_time.sensor.Client"), patch(
-        "homeassistant.components.google_travel_time.sensor.distance_matrix",
-        return_value={
+        "homeassistant.components.google_travel_time.sensor.distance_matrix"
+    ) as distance_matrix_mock:
+        distance_matrix_mock.return_value = {
             "rows": [
                 {
                     "elements": [
@@ -39,43 +40,36 @@ def mock_update_fixture():
                     ]
                 }
             ]
-        },
-    ):
-        yield
+        }
+        yield distance_matrix_mock
 
 
 @pytest.fixture(name="mock_update_duration")
-def mock_update_duration_fixture():
+def mock_update_duration_fixture(mock_update):
     """Mock an update to the sensor returning no duration_in_traffic."""
-    with patch("homeassistant.components.google_travel_time.sensor.Client"), patch(
-        "homeassistant.components.google_travel_time.sensor.distance_matrix",
-        return_value={
-            "rows": [
-                {
-                    "elements": [
-                        {
-                            "duration": {
-                                "value": 1560,
-                                "text": "26 mins",
-                            },
-                            "distance": {"text": "21.3 km"},
-                        }
-                    ]
-                }
-            ]
-        },
-    ):
-        yield
+    mock_update.return_value = {
+        "rows": [
+            {
+                "elements": [
+                    {
+                        "duration": {
+                            "value": 1560,
+                            "text": "26 mins",
+                        },
+                        "distance": {"text": "21.3 km"},
+                    }
+                ]
+            }
+        ]
+    }
+    yield mock_update
 
 
 @pytest.fixture(name="mock_update_empty")
-def mock_update_empty_fixture():
+def mock_update_empty_fixture(mock_update):
     """Mock an update to the sensor with an empty response."""
-    with patch("homeassistant.components.google_travel_time.sensor.Client"), patch(
-        "homeassistant.components.google_travel_time.sensor.distance_matrix",
-        return_value=None,
-    ):
-        yield
+    mock_update.return_value = None
+    yield mock_update
 
 
 @pytest.mark.usefixtures("mock_update")
