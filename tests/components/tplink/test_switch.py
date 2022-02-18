@@ -13,7 +13,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 
 from . import (
     MAC_ADDRESS,
@@ -55,8 +55,15 @@ async def test_plug(hass: HomeAssistant) -> None:
     plug.turn_on.reset_mock()
 
 
-@pytest.mark.parametrize("dev", [_mocked_plug(), _mocked_strip(), _mocked_dimmer()])
-async def test_led_switch(hass: HomeAssistant, dev) -> None:
+@pytest.mark.parametrize(
+    "dev, domain",
+    [
+        (_mocked_plug(), "switch"),
+        (_mocked_strip(), "switch"),
+        (_mocked_dimmer(), "light"),
+    ],
+)
+async def test_led_switch(hass: HomeAssistant, dev, domain: str) -> None:
     """Test LED setting for plugs, strips and dimmers."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
@@ -66,13 +73,12 @@ async def test_led_switch(hass: HomeAssistant, dev) -> None:
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "switch.my_plug"
-    state = hass.states.get(entity_id)
+    entity_name = slugify(dev.alias)
 
-    led_entity_id = f"{entity_id}_led"
+    led_entity_id = f"switch.{entity_name}_led"
     led_state = hass.states.get(led_entity_id)
     assert led_state.state == STATE_ON
-    assert led_state.name == f"{state.name} LED"
+    assert led_state.name == f"{dev.alias} LED"
 
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_off", {ATTR_ENTITY_ID: led_entity_id}, blocking=True
