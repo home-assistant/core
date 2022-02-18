@@ -77,7 +77,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def _async_connected_device_registered(
     hass: HomeAssistant, mac: str, ip_address: str | None, hostname: str | None
 ) -> None:
-    """Register a newly seen connected device."""
+    """Register a newly seen connected device.
+
+    This is currently used by the dhcp integration
+    to listen for newly registered connected devices
+    for discovery.
+    """
     async_dispatcher_send(
         hass,
         CONNECTED_DEVICE_REGISTRED,
