@@ -80,7 +80,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.debug("Fetched version %s: %s", newest, release_notes)
 
         # Load data from Supervisor
-        if hassio.is_hassio(hass):
+        if hassio.is_hassio():
             core_info = hassio.get_core_info(hass)
             newest = core_info["version_latest"]
 
