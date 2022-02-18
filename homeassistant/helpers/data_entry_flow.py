@@ -70,7 +70,7 @@ class FlowManagerIndexView(_BaseFlowManagerView):
 
         try:
             result = await self._flow_mgr.async_init(
-                handler,  # type: ignore
+                handler,  # type: ignore[arg-type]
                 context={
                     "source": config_entries.SOURCE_USER,
                     "show_advanced_options": data["show_advanced_options"],
