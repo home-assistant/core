@@ -50,23 +50,6 @@ async def _register_update_platform(
         platform.async_register(UpdateRegistration(hass, integration_domain))
 
 
-async def get_integration_info(
-    hass: HomeAssistant,
-    registration: UpdateRegistration,
-) -> list[UpdateDescription] | None:
-    """Get integration update details."""
-    assert registration.updates_callback
-
-    try:
-        async with async_timeout.timeout(INFO_CALLBACK_TIMEOUT):
-            return await registration.updates_callback(hass)
-    except asyncio.TimeoutError:
-        _LOGGER.warning("Timeout while getting updates from %s", registration.domain)
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception("Error fetching info")
-    return None
-
-
 @websocket_api.websocket_command({vol.Required("type"): "update/info"})
 @websocket_api.async_response
 async def handle_info(

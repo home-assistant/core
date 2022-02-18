@@ -157,6 +157,31 @@ async def test_skip_update(hass, hass_ws_client):
     assert len(data) == 0
 
 
+async def test_skip_non_existing_update(hass, hass_ws_client):
+    """Test skipping non-existing updates."""
+    await setup_mock_domain(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    data = await gather_update_info(hass, hass_ws_client)
+
+    assert len(data) == 1
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "update/skip",
+            "domain": "non_existing",
+            "identifier": "non_existing",
+        }
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    data = await gather_update_info(hass, hass_ws_client)
+    assert len(data) == 1
+
+
 async def test_update_update_non_existing(hass, hass_ws_client):
     """Test that we fail when trying to update something that does not exist."""
     await setup_mock_domain(hass)
