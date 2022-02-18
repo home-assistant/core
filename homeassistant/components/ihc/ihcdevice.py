@@ -43,8 +43,7 @@ class IHCDevice(Entity):
             if "id" in product:
                 product_id = product["id"]
                 self.device_id = f"{controller_id}_{product_id }"
-                """this will name the device the same way as the IHC visual
-                 application: Product name + position"""
+                # this will name the device the same way as the IHC visual application: Product name + position
                 self.device_name = product["name"]
                 if self.ihc_position:
                     self.device_name += f" ({self.ihc_position})"
