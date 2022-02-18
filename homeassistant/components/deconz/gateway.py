@@ -131,6 +131,7 @@ class DeconzGateway:
         | DeconzGroup
         | DeconzLight
         | DeconzSensor
+        | list[DeconzAlarmSystem | DeconzGroup | DeconzLight | DeconzSensor]
         | None = None,
         force: bool = False,
     ) -> None:
