@@ -8,6 +8,8 @@ from samsungtvws import SamsungTVWS
 
 import homeassistant.util.dt as dt_util
 
+from .const import SAMPLE_APP_LIST
+
 
 @pytest.fixture(autouse=True)
 def fake_host_fixture() -> None:
@@ -49,6 +51,7 @@ def remotews_fixture() -> Mock:
                 "networkType": "wireless",
             },
         }
+        remotews.app_list.return_value = SAMPLE_APP_LIST
         remotews.token = "FAKE_TOKEN"
         remotews_class.return_value = remotews
         yield remotews
