@@ -268,12 +268,12 @@ async def test_emergency_ssl_certificate_when_invalid(hass, tmpdir, caplog):
         _setup_broken_ssl_pem_files, tmpdir
     )
 
+    hass.config.safe_mode = True
     assert (
         await async_setup_component(
             hass,
             "http",
             {
-                "safe_mode": {},
                 "http": {"ssl_certificate": cert_path, "ssl_key": key_path},
             },
         )
@@ -317,6 +317,7 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
     cert_path, key_path = await hass.async_add_executor_job(
         _setup_broken_ssl_pem_files, tmpdir
     )
+    hass.config.safe_mode = True
 
     with patch(
         "homeassistant.components.http.get_url", side_effect=NoURLAvailableError
@@ -326,7 +327,6 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
                 hass,
                 "http",
                 {
-                    "safe_mode": {},
                     "http": {"ssl_certificate": cert_path, "ssl_key": key_path},
                 },
             )
@@ -350,6 +350,7 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert(hass, tmpdir, caplog
     cert_path, key_path = await hass.async_add_executor_job(
         _setup_broken_ssl_pem_files, tmpdir
     )
+    hass.config.safe_mode = True
 
     with patch(
         "homeassistant.components.http.x509.CertificateBuilder", side_effect=OSError
@@ -359,7 +360,6 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert(hass, tmpdir, caplog
                 hass,
                 "http",
                 {
-                    "safe_mode": {},
                     "http": {"ssl_certificate": cert_path, "ssl_key": key_path},
                 },
             )
@@ -387,6 +387,7 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
     cert_path, key_path = await hass.async_add_executor_job(
         _setup_broken_ssl_pem_files, tmpdir
     )
+    hass.config.safe_mode = True
 
     with patch(
         "homeassistant.components.http.x509.CertificateBuilder", side_effect=OSError
@@ -396,7 +397,6 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
                 hass,
                 "http",
                 {
-                    "safe_mode": {},
                     "http": {
                         "ssl_certificate": cert_path,
                         "ssl_key": key_path,

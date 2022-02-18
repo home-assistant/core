@@ -151,7 +151,6 @@ class ApiConfig:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HTTP API and debug interface."""
     conf: ConfData | None = config.get(DOMAIN)
-    safe_mode = "safe_mode" in config
 
     if conf is None:
         conf = cast(ConfData, HTTP_SCHEMA({}))
@@ -177,7 +176,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ssl_key=ssl_key,
         trusted_proxies=trusted_proxies,
         ssl_profile=ssl_profile,
-        safe_mode=safe_mode,
     )
     await server.async_initialize(
         cors_origins=cors_origins,
@@ -229,7 +227,6 @@ class HomeAssistantHTTP:
         server_port: int,
         trusted_proxies: list[IPv4Network | IPv6Network],
         ssl_profile: str,
-        safe_mode: bool,
     ) -> None:
         """Initialize the HTTP Home Assistant server."""
         self.app = web.Application(middlewares=[], client_max_size=MAX_CLIENT_SIZE)
@@ -243,7 +240,6 @@ class HomeAssistantHTTP:
         self.ssl_profile = ssl_profile
         self.runner: web.AppRunner | None = None
         self.site: HomeAssistantTCPSite | None = None
-        self.safe_mode = safe_mode
         self.context: ssl.SSLContext | None = None
 
     async def async_initialize(
@@ -358,7 +354,7 @@ class HomeAssistantHTTP:
                 context = ssl_util.server_context_modern()
             context.load_cert_chain(self.ssl_certificate, self.ssl_key)
         except OSError as error:
-            if not self.safe_mode:
+            if not self.hass.config.safe_mode:
                 raise HomeAssistantError(
                     f"Could not use SSL certificate from {self.ssl_certificate}: {error}"
                 ) from error
