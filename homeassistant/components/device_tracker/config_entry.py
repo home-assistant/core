@@ -27,7 +27,7 @@ from .const import (
     ATTR_IP,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
-    DEVICE_REGISTRED,
+    CONNECTED_DEVICE_REGISTRED,
     DOMAIN,
     LOGGER,
 )
@@ -87,7 +87,7 @@ def _async_register_mac(
     if connected:
         async_dispatcher_send(
             hass,
-            DEVICE_REGISTRED,
+            CONNECTED_DEVICE_REGISTRED,
             {
                 ATTR_IP: ip_address,
                 ATTR_MAC: mac,

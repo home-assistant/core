@@ -26,7 +26,7 @@ from homeassistant.components.device_tracker.const import (
     ATTR_IP,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
-    DEVICE_REGISTRED,
+    CONNECTED_DEVICE_REGISTRED,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     SOURCE_TYPE_ROUTER,
 )
@@ -355,7 +355,7 @@ class DeviceTrackerRegisteredWatcher(WatcherBase):
     async def async_start(self):
         """Stop watching for device tracker registrations."""
         self._unsub = async_dispatcher_connect(
-            self.hass, DEVICE_REGISTRED, self._async_process_device_state
+            self.hass, CONNECTED_DEVICE_REGISTRED, self._async_process_device_state
         )
 
     @callback
