@@ -19,7 +19,6 @@ import homeassistant.helpers.config_validation as cv
 from .const import (
     CONF_BINARY_SENSOR,
     CONF_DIMMABLE,
-    CONF_INFO,
     CONF_INVERTING,
     CONF_LIGHT,
     CONF_NOTE,
@@ -95,7 +94,6 @@ MANUAL_SETUP_SCHEMA = vol.Schema(
                                 cv.ensure_list,
                                 [vol.All(BINARY_SENSOR_SCHEMA, validate_name)],
                             ),
-                            vol.Optional(CONF_INFO, default=True): cv.boolean,
                             vol.Optional(CONF_LIGHT, default=[]): vol.All(
                                 cv.ensure_list, [vol.All(LIGHT_SCHEMA, validate_name)]
                             ),

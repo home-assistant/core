@@ -5,7 +5,7 @@ from ihcsdk.ihccontroller import IHCController
 
 from homeassistant.helpers.entity import Entity
 
-from .const import CONF_INFO, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,8 +72,6 @@ class IHCDevice(Entity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        if not self.hass.data[DOMAIN][self.controller_id][CONF_INFO]:
-            return {}
         attributes = {
             "ihc_id": self.ihc_id,
             "ihc_name": self.ihc_name,

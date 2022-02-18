@@ -10,7 +10,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .auto_setup import autosetup_ihc_products
-from .const import CONF_AUTOSETUP, CONF_INFO, DOMAIN, IHC_CONTROLLER, IHC_PLATFORMS
+from .const import CONF_AUTOSETUP, DOMAIN, IHC_CONTROLLER, IHC_PLATFORMS
 from .manual_setup import manual_setup
 from .migrate import migrate_configuration
 from .service_functions import setup_service_functions
@@ -39,7 +39,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     username: str = entry.data[CONF_USERNAME]
     password: str = entry.data[CONF_PASSWORD]
     autosetup: bool = entry.data[CONF_AUTOSETUP]
-    info: bool = get_options_value(entry, CONF_INFO, True)
     ihc_controller: IHCController = IHCController(url, username, password)
     if not await hass.async_add_executor_job(ihc_controller.authenticate):
         _LOGGER.error("Unable to authenticate on IHC controller")
@@ -47,7 +46,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][controller_id] = {
         IHC_CONTROLLER: ihc_controller,
-        CONF_INFO: info,
     }
     if not await setup_controller_device(hass, ihc_controller, entry):
         return False
@@ -86,13 +84,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Update options."""
     await hass.config_entries.async_reload(config_entry.entry_id)
-
-
-def get_options_value(config_entry, key, default):
-    """Get an options value or fall back to a default."""
-    if config_entry.options:
-        return config_entry.options.get(key, default)
-    return default
 
 
 async def setup_controller_device(

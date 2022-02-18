@@ -6,11 +6,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
 
-from . import get_options_value
-from .const import CONF_AUTOSETUP, CONF_INFO, DOMAIN
+from .const import CONF_AUTOSETUP, DOMAIN
 from .util import get_controller_serial
 
 CONFIG_FLOW_VERSION = 1
@@ -78,12 +77,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry):
-        """IHC options flow handler."""
-        return OptionsFlowHandler(config_entry)
-
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
@@ -91,31 +84,3 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate we cannot authenticate."""
-
-
-class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Flow handle for IHC controller options."""
-
-    def __init__(self, config_entry):
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None):
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=self._get_options_schema(),
-        )
-
-    def _get_options_schema(self):
-        return vol.Schema(
-            {
-                vol.Optional(
-                    CONF_INFO,
-                    default=get_options_value(self.config_entry, CONF_INFO, True),
-                ): bool,
-            }
-        )

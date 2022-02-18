@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries
-from homeassistant.components.ihc.const import CONF_INFO, DOMAIN
+from homeassistant.components.ihc.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -180,34 +180,6 @@ async def test_unknown_error(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["errors"] == {"base": "unknown"}
-
-
-async def test_options_flow(hass):
-    """Test options config flow."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="aabbccddeeff",
-        data={},
-    )
-    entry.add_to_hass(hass)
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "init"
-    schema = result["data_schema"].schema
-    assert _get_schema_default(schema, CONF_INFO) is True
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_INFO: True,
-        },
-    )
-
-    assert result["type"] == "create_entry"
-    assert result["data"] == {
-        CONF_INFO: True,
-    }
 
 
 def _get_schema_default(schema, key_name):
