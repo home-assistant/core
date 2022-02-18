@@ -52,6 +52,20 @@ async def test_notify(hass, client):
     assert client.connect.call_count == 1
     client.send_message.assert_called_with(MESSAGE, icon_path=None)
 
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        TV_NAME,
+        {
+            ATTR_MESSAGE: "only message, no data",
+        },
+        blocking=True,
+    )
+
+    assert client.connect.call_count == 1
+    assert client.send_message.call_args == call(
+        "only message, no data", icon_path=None
+    )
+
 
 async def test_notify_not_connected(hass, client, monkeypatch):
     """Test sending a message when client is not connected."""
