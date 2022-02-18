@@ -26,6 +26,17 @@ def _setup_broken_ssl_pem_files(tmpdir):
     return cert_path, key_path
 
 
+def _setup_empty_ssl_pem_files(tmpdir):
+    test_dir = tmpdir.mkdir("test_empty_ssl")
+    cert_path = pathlib.Path(test_dir) / "cert.pem"
+    cert_path.write_text("-")
+    peer_cert_path = pathlib.Path(test_dir) / "peer_cert.pem"
+    peer_cert_path.write_text("-")
+    key_path = pathlib.Path(test_dir) / "key.pem"
+    key_path.write_text("-")
+    return cert_path, key_path, peer_cert_path
+
+
 @pytest.fixture
 def mock_stack():
     """Mock extract stack."""
@@ -129,71 +140,98 @@ async def test_proxy_config_only_trust_proxies(hass):
     )
 
 
-async def test_ssl_profile_defaults_modern(hass):
+async def test_ssl_profile_defaults_modern(hass, tmpdir):
     """Test default ssl profile."""
-    assert await async_setup_component(hass, "http", {}) is True
 
-    hass.http.ssl_certificate = "bla"
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmpdir
+    )
 
     with patch("ssl.SSLContext.load_cert_chain"), patch(
         "homeassistant.util.ssl.server_context_modern",
         side_effect=server_context_modern,
     ) as mock_context:
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
+            )
+            is True
+        )
         await hass.async_start()
         await hass.async_block_till_done()
 
     assert len(mock_context.mock_calls) == 1
 
 
-async def test_ssl_profile_change_intermediate(hass):
+async def test_ssl_profile_change_intermediate(hass, tmpdir):
     """Test setting ssl profile to intermediate."""
-    assert (
-        await async_setup_component(
-            hass, "http", {"http": {"ssl_profile": "intermediate"}}
-        )
-        is True
-    )
 
-    hass.http.ssl_certificate = "bla"
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmpdir
+    )
 
     with patch("ssl.SSLContext.load_cert_chain"), patch(
         "homeassistant.util.ssl.server_context_intermediate",
         side_effect=server_context_intermediate,
     ) as mock_context:
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {
+                    "http": {
+                        "ssl_profile": "intermediate",
+                        "ssl_certificate": cert_path,
+                        "ssl_key": key_path,
+                    }
+                },
+            )
+            is True
+        )
         await hass.async_start()
         await hass.async_block_till_done()
 
     assert len(mock_context.mock_calls) == 1
 
 
-async def test_ssl_profile_change_modern(hass):
+async def test_ssl_profile_change_modern(hass, tmpdir):
     """Test setting ssl profile to modern."""
-    assert (
-        await async_setup_component(hass, "http", {"http": {"ssl_profile": "modern"}})
-        is True
-    )
 
-    hass.http.ssl_certificate = "bla"
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmpdir
+    )
 
     with patch("ssl.SSLContext.load_cert_chain"), patch(
         "homeassistant.util.ssl.server_context_modern",
         side_effect=server_context_modern,
     ) as mock_context:
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {
+                    "http": {
+                        "ssl_profile": "modern",
+                        "ssl_certificate": cert_path,
+                        "ssl_key": key_path,
+                    }
+                },
+            )
+            is True
+        )
         await hass.async_start()
         await hass.async_block_till_done()
 
     assert len(mock_context.mock_calls) == 1
 
 
-async def test_peer_cert(hass):
+async def test_peer_cert(hass, tmpdir):
     """Test required peer cert."""
-    assert (
-        await async_setup_component(hass, "http", {"http": {"ssl_profile": "modern"}})
-        is True
+    cert_path, key_path, peer_cert_path = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmpdir
     )
-
-    hass.http.ssl_certificate = "bla"
-    hass.http.ssl_peer_certificate = "bla"
 
     with patch("ssl.SSLContext.load_cert_chain"), patch(
         "ssl.SSLContext.load_verify_locations"
@@ -201,6 +239,21 @@ async def test_peer_cert(hass):
         "homeassistant.util.ssl.server_context_modern",
         side_effect=server_context_modern,
     ) as mock_context:
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {
+                    "http": {
+                        "ssl_peer_certificate": peer_cert_path,
+                        "ssl_profile": "modern",
+                        "ssl_certificate": cert_path,
+                        "ssl_key": key_path,
+                    }
+                },
+            )
+            is True
+        )
         await hass.async_start()
         await hass.async_block_till_done()
 
@@ -217,7 +270,12 @@ async def test_emergency_ssl_certificate_when_invalid(hass, tmpdir, caplog):
 
     assert (
         await async_setup_component(
-            hass, "http", {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}}
+            hass,
+            "http",
+            {
+                "safe_mode": {},
+                "http": {"ssl_certificate": cert_path, "ssl_key": key_path},
+            },
         )
         is True
     )
@@ -230,7 +288,23 @@ async def test_emergency_ssl_certificate_when_invalid(hass, tmpdir, caplog):
     )
 
     assert hass.http.site is not None
-    assert hass.config.safe_mode is True
+
+
+async def test_emergency_ssl_certificate_not_used_when_not_safe_mode(
+    hass, tmpdir, caplog
+):
+    """Test an emergency cert is only used in safe mode."""
+
+    cert_path, key_path = await hass.async_add_executor_job(
+        _setup_broken_ssl_pem_files, tmpdir
+    )
+
+    assert (
+        await async_setup_component(
+            hass, "http", {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}}
+        )
+        is False
+    )
 
 
 async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
@@ -244,16 +318,20 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
         _setup_broken_ssl_pem_files, tmpdir
     )
 
-    assert (
-        await async_setup_component(
-            hass, "http", {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}}
-        )
-        is True
-    )
-
     with patch(
         "homeassistant.components.http.get_url", side_effect=NoURLAvailableError
     ) as mock_get_url:
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {
+                    "safe_mode": {},
+                    "http": {"ssl_certificate": cert_path, "ssl_key": key_path},
+                },
+            )
+            is True
+        )
         await hass.async_start()
         await hass.async_block_till_done()
 
@@ -264,7 +342,6 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
     )
 
     assert hass.http.site is not None
-    assert hass.config.safe_mode is True
 
 
 async def test_invalid_ssl_and_cannot_create_emergency_cert(hass, tmpdir, caplog):
@@ -274,16 +351,20 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert(hass, tmpdir, caplog
         _setup_broken_ssl_pem_files, tmpdir
     )
 
-    assert (
-        await async_setup_component(
-            hass, "http", {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}}
-        )
-        is True
-    )
-
     with patch(
         "homeassistant.components.http.x509.CertificateBuilder", side_effect=OSError
     ) as mock_builder:
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {
+                    "safe_mode": {},
+                    "http": {"ssl_certificate": cert_path, "ssl_key": key_path},
+                },
+            )
+            is True
+        )
         await hass.async_start()
         await hass.async_block_till_done()
     assert "Could not create an emergency self signed ssl certificate" in caplog.text
@@ -307,31 +388,28 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
         _setup_broken_ssl_pem_files, tmpdir
     )
 
-    assert (
-        await async_setup_component(
-            hass,
-            "http",
-            {
-                "http": {
-                    "ssl_certificate": cert_path,
-                    "ssl_key": key_path,
-                    "ssl_peer_certificate": cert_path,
-                }
-            },
-        )
-        is True
-    )
-
     with patch(
         "homeassistant.components.http.x509.CertificateBuilder", side_effect=OSError
     ) as mock_builder:
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {
+                    "safe_mode": {},
+                    "http": {
+                        "ssl_certificate": cert_path,
+                        "ssl_key": key_path,
+                        "ssl_peer_certificate": cert_path,
+                    },
+                },
+            )
+            is False
+        )
         await hass.async_start()
         await hass.async_block_till_done()
     assert "Could not create an emergency self signed ssl certificate" in caplog.text
     assert len(mock_builder.mock_calls) == 1
-
-    assert hass.http.ssl_peer_certificate is not None
-    assert hass.http.site is None
 
 
 async def test_cors_defaults(hass):
