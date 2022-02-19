@@ -20,8 +20,8 @@ set_sound_setting:
       example: "on"
       selector:
         text:
-  create_group:
-description: Create a new group.
+create_group:
+  description: Create a new group.
   fields:
     entity_id:
       description: Target device.
