@@ -12,7 +12,7 @@ from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_ENDPOINT, DOMAIN
+from .const import CONF_ENDPOINT, CONF_URL, CONF_UUID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +25,8 @@ class SongpalConfig:
         self.name = name
         self.host = host
         self.endpoint = endpoint
-
+        self.url = url
+        self.uuid = uuid
 
 class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Songpal configuration flow."""
@@ -41,7 +42,7 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema({vol.Required(CONF_ENDPOINT): str}),
+                data_schema=vol.Schema({vol.Required(CONF_ENDPOINT): str,vol.Optional(CONF_URL): str,vol.Optional(CONF_UUID): str}),
             )
 
         # Validate input
@@ -63,12 +64,18 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         vol.Required(
                             CONF_ENDPOINT, default=user_input.get(CONF_ENDPOINT, "")
                         ): str,
+                        vol.Optional(
+                            CONF_URL, default=user_input.get(CONF_URL, "")
+                        ): str,
+                        vol.Optional(
+                            CONF_UUID, default=user_input.get(CONF_UUID, "")
+                        ): str,
                     }
                 ),
                 errors={"base": "cannot_connect"},
             )
 
-        self.conf = SongpalConfig(name, parsed_url.hostname, endpoint)
+        self.conf = SongpalConfig(name, parsed_url.hostname, endpoint, url, uuid)
 
         return await self.async_step_init(user_input)
 
@@ -82,6 +89,8 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders={
                     CONF_NAME: self.conf.name,
                     CONF_HOST: self.conf.host,
+                    CONF_URL: self.conf.url,
+                    CONF_UUID: self.conf.uuid
                 },
             )
 
@@ -90,7 +99,7 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=self.conf.name,
-            data={CONF_NAME: self.conf.name, CONF_ENDPOINT: self.conf.endpoint},
+            data={CONF_NAME: self.conf.name, CONF_ENDPOINT: self.conf.endpoint, CONF_URL: self.conf.url, CONF_UUID: self.conf.uuid},
         )
 
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
@@ -101,6 +110,8 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Discovered: %s", discovery_info)
 
         friendly_name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        uuid = discovery_info[ssdp.ATTR_UPNP_UDN]
+        url = discovery_info[ssdp.ATTR_SSDP_LOCATION]
         parsed_url = urlparse(discovery_info.ssdp_location)
         scalarweb_info = discovery_info.upnp["X_ScalarWebAPI_DeviceInfo"]
         endpoint = scalarweb_info["X_ScalarWebAPI_BaseURL"]
@@ -117,7 +128,7 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_HOST: parsed_url.hostname,
         }
 
-        self.conf = SongpalConfig(friendly_name, parsed_url.hostname, endpoint)
+        self.conf = SongpalConfig(friendly_name, parsed_url.hostname, endpoint, url, uuid)
 
         return await self.async_step_init()
 
@@ -126,6 +137,8 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         name = user_input.get(CONF_NAME)
         endpoint = user_input.get(CONF_ENDPOINT)
         parsed_url = urlparse(endpoint)
+        url= ""
+        uuid= ""
 
         # Try to connect to test the endpoint
         try:
@@ -139,6 +152,6 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Import from yaml configuration failed: %s", ex)
             return self.async_abort(reason="cannot_connect")
 
-        self.conf = SongpalConfig(name, parsed_url.hostname, endpoint)
+        self.conf = SongpalConfig(name, parsed_url.hostname, endpoint, url, uuid)
 
         return await self.async_step_init(user_input)
