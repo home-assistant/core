@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import time
 from typing import TypedDict
 
 from homeassistant.const import (
@@ -37,8 +37,8 @@ class HERETravelTimeConfig:
     travel_mode: str
     route_mode: str
     units: str
-    arrival: datetime
-    departure: datetime
+    arrival: time
+    departure: time
 
 
 DOMAIN = "here_travel_time"

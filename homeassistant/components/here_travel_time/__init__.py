@@ -77,12 +77,12 @@ class HereTravelTimeDataUpdateCoordinator(DataUpdateCoordinator):
         if destination is not None and origin is not None:
             here_formatted_destination = destination.split(",")
             here_formatted_origin = origin.split(",")
-            arrival: str | None = None
-            departure: str | None = "now"
+            arrival: str | time | None = None
+            departure: str | time | None = "now"
             if (arrival := self.config.arrival) is not None:
-                arrival = convert_time_to_isodate(arrival)
+                arrival = convert_time_to_isodate(str(arrival))
             if (departure := self.config.departure) is not None:
-                departure = convert_time_to_isodate(departure)
+                departure = convert_time_to_isodate(str(departure))
 
             if departure is None and arrival is None:
                 departure = "now"
@@ -134,17 +134,19 @@ class HereTravelTimeDataUpdateCoordinator(DataUpdateCoordinator):
             else:
                 # Convert to kilometers
                 distance = distance / 1000
-            return {
-                ATTR_ATTRIBUTION: attribution,
-                ATTR_DURATION: summary["baseTime"] / 60,
-                ATTR_DURATION_IN_TRAFFIC: traffic_time / 60,
-                ATTR_DISTANCE: distance,
-                ATTR_ROUTE: response.route_short,
-                ATTR_ORIGIN: ",".join(here_formatted_origin),
-                ATTR_DESTINATION: ",".join(here_formatted_destination),
-                ATTR_ORIGIN_NAME: waypoint[0]["mappedRoadName"],
-                ATTR_DESTINATION_NAME: waypoint[1]["mappedRoadName"],
-            }
+            return HERERoutingData(
+                {
+                    ATTR_ATTRIBUTION: attribution,
+                    ATTR_DURATION: summary["baseTime"] / 60,  # type: ignore
+                    ATTR_DURATION_IN_TRAFFIC: traffic_time / 60,
+                    ATTR_DISTANCE: distance,
+                    ATTR_ROUTE: response.route_short,
+                    ATTR_ORIGIN: ",".join(here_formatted_origin),
+                    ATTR_DESTINATION: ",".join(here_formatted_destination),
+                    ATTR_ORIGIN_NAME: waypoint[0]["mappedRoadName"],
+                    ATTR_DESTINATION_NAME: waypoint[1]["mappedRoadName"],
+                }
+            )
         return None
 
 
