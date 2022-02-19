@@ -84,9 +84,9 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        name_prefix =  "SMA"
+        name_prefix = "SMA"
         if self._attr_device_info is not None:
-            name_prefix = self._attr_device_info.get("name", "SMA")
+            name_prefix = str(self._attr_device_info.get("name", "SMA"))
 
         return f"{name_prefix} {self._sensor.name}"
 
