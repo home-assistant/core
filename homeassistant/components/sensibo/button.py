@@ -12,10 +12,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, TIMEOUT, LOGGER
+from .const import DOMAIN, LOGGER, TIMEOUT
 from .coordinator import SensiboDataUpdateCoordinator
 
 
@@ -60,7 +60,7 @@ class SensiboButton(CoordinatorEntity, ButtonEntity):
         )
 
     async def async_press(self) -> None:
-        """Press the button."""
+        """Press the On/Off button."""
         if self.coordinator.data[self.unique_id]["on"]:
             await self._async_set_ac_state_property("on", False)
         else:
