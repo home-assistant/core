@@ -405,6 +405,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     """Set up the Hass.io component."""
     if not is_hassio():
         _LOGGER.error("Supervisor not available")
+        if config_entries := hass.config_entries.async_entries(DOMAIN):
+            hass.async_create_task(
+                hass.config_entries.async_remove(config_entries[0].entry_id)
+            )
         return False
 
     async_load_websocket_api(hass)
