@@ -71,9 +71,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     coordinator: DataUpdateCoordinator[IssData] = hass.data[DOMAIN]
-
-    name = entry.data.get(CONF_NAME, DEFAULT_NAME)
-    show_on_map = entry.data.get(CONF_SHOW_ON_MAP, False)
+    
+    name = entry.title
+    show_on_map = entry.options.get(CONF_SHOW_ON_MAP, False)
 
     async_add_entities([IssBinarySensor(coordinator, name, show_on_map)], True)
 

@@ -205,6 +205,7 @@ def add_outlet_entities(controller, async_add_entities, devices):
             or not (device := controller.api.devices[mac]).outlet_table
         ):
             continue
+
         for outlet in device.outlets.values():
             if outlet.has_relay:
                 switches.append(UniFiOutletSwitch(device, controller, outlet.index))

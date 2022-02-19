@@ -330,7 +330,7 @@ class TransmissionClient:
         )
 
     @staticmethod
-    async def async_options_updated(hass, entry):
+    async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Triggered by config entry options updates."""
         tm_client = hass.data[DOMAIN][entry.entry_id]
         tm_client.set_scan_interval(entry.options[CONF_SCAN_INTERVAL])

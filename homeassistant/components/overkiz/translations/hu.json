@@ -12,6 +12,7 @@
             "too_many_requests": "T\u00fal sok a k\u00e9r\u00e9s, pr\u00f3b\u00e1lja meg k\u00e9s\u0151bb \u00fajra.",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
+        "flow_title": "\u00c1tj\u00e1r\u00f3: {gateway_id}",
         "step": {
             "user": {
                 "data": {

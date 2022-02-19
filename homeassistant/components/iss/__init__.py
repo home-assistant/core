@@ -32,7 +32,6 @@ class IssData(TypedDict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
-
     hass.data.setdefault(DOMAIN, {})
     latitude = hass.config.latitude
     longitude = hass.config.longitude
@@ -66,6 +65,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN] = coordinator
 
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -76,3 +77,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         del hass.data[DOMAIN]
     return unload_ok
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)

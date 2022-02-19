@@ -13,7 +13,7 @@ from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.address import GroupAddress, IndividualAddress
 from xknx.telegram.apci import APCI, GroupValueRead, GroupValueResponse, GroupValueWrite
 
-from homeassistant.components.knx import ConnectionSchema, KNXModule
+from homeassistant.components.knx import ConnectionSchema
 from homeassistant.components.knx.const import (
     CONF_KNX_AUTOMATIC,
     CONF_KNX_CONNECTION_TYPE,
@@ -39,11 +39,6 @@ class KNXTestKit:
         # outgoing telegrams will be put in the Queue instead of sent to the interface
         # telegrams to an InternalGroupAddress won't be queued here
         self._outgoing_telegrams: asyncio.Queue = asyncio.Queue()
-
-    @property
-    def knx_module(self) -> KNXModule:
-        """Get the KNX module."""
-        return self.hass.data[KNX_DOMAIN]
 
     def assert_state(self, entity_id: str, state: str, **attributes) -> None:
         """Assert the state of an entity."""

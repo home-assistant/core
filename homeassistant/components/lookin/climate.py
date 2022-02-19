@@ -100,7 +100,7 @@ async def async_setup_entry(
 class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
     """An aircon or heat pump."""
 
-    _attr_current_humidity: float | None = None  # type: ignore
+    _attr_current_humidity: float | None = None  # type: ignore[assignment]
     _attr_temperature_unit = TEMP_CELSIUS
     _attr_supported_features: int = SUPPORT_FLAGS
     _attr_fan_modes: list[str] = LOOKIN_FAN_MODE_IDX_TO_HASS

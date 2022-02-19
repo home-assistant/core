@@ -143,6 +143,32 @@ async def test_whois_sensors(
     assert device_entry.sw_version is None
 
 
+@pytest.mark.freeze_time("2022-01-01 12:00:00", tz_offset=0)
+async def test_whois_sensors_missing_some_attrs(
+    hass: HomeAssistant,
+    enable_all_entities: AsyncMock,
+    init_integration_missing_some_attrs: MockConfigEntry,
+) -> None:
+    """Test the Whois sensors with owner and reseller missing."""
+    entity_registry = er.async_get(hass)
+
+    state = hass.states.get("sensor.home_assistant_io_last_updated")
+    entry = entity_registry.async_get("sensor.home_assistant_io_last_updated")
+    assert entry
+    assert state
+    assert entry.unique_id == "home-assistant.io_last_updated"
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert state.state == "2021-12-31T23:00:00+00:00"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "home-assistant.io Last Updated"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
+    assert ATTR_ICON not in state.attributes
+
+    assert hass.states.get("sensor.home_assistant_io_owner").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.home_assistant_io_reseller").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.home_assistant_io_registrant").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.home_assistant_io_admin").state == STATE_UNKNOWN
+
+
 @pytest.mark.parametrize(
     "entity_id",
     (

@@ -8,7 +8,7 @@
       "generic": {"key": 32, "label":"Binary Sensor"},
       "specific": {"key": 1, "label":"Routing Binary Sensor"},
       "mandatorySupportedCCs": [],
-      "mandatoryControlCCs": []
+      "mandatoryControlledCCs": []
     },
     "isListening": false,
     "isFrequentListening": false,

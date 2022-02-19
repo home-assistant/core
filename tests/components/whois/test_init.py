@@ -30,7 +30,7 @@ async def test_load_unload_config_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert len(mock_whois.mock_calls) == 2
+    assert len(mock_whois.mock_calls) == 1
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -76,5 +76,5 @@ async def test_import_config(
     await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_whois.mock_calls) == 2
+    assert len(mock_whois.mock_calls) == 1
     assert "the Whois platform in YAML is deprecated" in caplog.text

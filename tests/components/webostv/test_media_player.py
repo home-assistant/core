@@ -59,14 +59,16 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
-from . import CHANNEL_2, ENTITY_ID, TV_NAME, setup_webostv
+from . import setup_webostv
+from .const import CHANNEL_2, ENTITY_ID, TV_NAME
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, mock_restore_cache
 
 
 @pytest.mark.parametrize(
@@ -552,6 +554,135 @@ async def test_supported_features(hass, client, monkeypatch):
     )
     supported |= SUPPORT_TURN_ON
     await client.mock_state_update()
+    attrs = hass.states.get(ENTITY_ID).attributes
+
+    assert attrs[ATTR_SUPPORTED_FEATURES] == supported
+
+
+async def test_cached_supported_features(hass, client, monkeypatch):
+    """Test test supported features."""
+    monkeypatch.setattr(client, "is_on", False)
+    monkeypatch.setattr(client, "sound_output", None)
+    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | SUPPORT_TURN_ON
+    mock_restore_cache(
+        hass,
+        [
+            State(
+                ENTITY_ID,
+                STATE_OFF,
+                attributes={
+                    ATTR_SUPPORTED_FEATURES: supported,
+                },
+            )
+        ],
+    )
+    await setup_webostv(hass)
+    await client.mock_state_update()
+
+    # TV off, restored state supports mute, step
+    # validate SUPPORT_TURN_ON is not cached
+    attrs = hass.states.get(ENTITY_ID).attributes
+
+    assert attrs[ATTR_SUPPORTED_FEATURES] == supported & ~SUPPORT_TURN_ON
+
+    # TV on, support volume mute, step
+    monkeypatch.setattr(client, "is_on", True)
+    monkeypatch.setattr(client, "sound_output", "external_speaker")
+    await client.mock_state_update()
+
+    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME
+    attrs = hass.states.get(ENTITY_ID).attributes
+
+    assert attrs[ATTR_SUPPORTED_FEATURES] == supported
+
+    # TV off, support volume mute, step
+    monkeypatch.setattr(client, "is_on", False)
+    monkeypatch.setattr(client, "sound_output", None)
+    await client.mock_state_update()
+
+    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME
+    attrs = hass.states.get(ENTITY_ID).attributes
+
+    assert attrs[ATTR_SUPPORTED_FEATURES] == supported
+
+    # TV on, support volume mute, step, set
+    monkeypatch.setattr(client, "is_on", True)
+    monkeypatch.setattr(client, "sound_output", "speaker")
+    await client.mock_state_update()
+
+    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
+    attrs = hass.states.get(ENTITY_ID).attributes
+
+    assert attrs[ATTR_SUPPORTED_FEATURES] == supported
+
+    # TV off, support volume mute, step, set
+    monkeypatch.setattr(client, "is_on", False)
+    monkeypatch.setattr(client, "sound_output", None)
+    await client.mock_state_update()
+
+    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
+    attrs = hass.states.get(ENTITY_ID).attributes
+
+    assert attrs[ATTR_SUPPORTED_FEATURES] == supported
+
+    # Test support turn on is updated on cached state
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "webostv.turn_on",
+                        "entity_id": ENTITY_ID,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": ENTITY_ID,
+                            "id": "{{ trigger.id }}",
+                        },
+                    },
+                },
+            ],
+        },
+    )
+    await client.mock_state_update()
+
+    attrs = hass.states.get(ENTITY_ID).attributes
+
+    assert attrs[ATTR_SUPPORTED_FEATURES] == supported | SUPPORT_TURN_ON
+
+
+async def test_supported_features_no_cache(hass, client, monkeypatch):
+    """Test supported features if device is off and no cache."""
+    monkeypatch.setattr(client, "is_on", False)
+    monkeypatch.setattr(client, "sound_output", None)
+    await setup_webostv(hass)
+
+    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
+    attrs = hass.states.get(ENTITY_ID).attributes
+
+    assert attrs[ATTR_SUPPORTED_FEATURES] == supported
+
+
+async def test_supported_features_ignore_cache(hass, client):
+    """Test ignore cached supported features if device is on at startup."""
+    mock_restore_cache(
+        hass,
+        [
+            State(
+                ENTITY_ID,
+                STATE_OFF,
+                attributes={
+                    ATTR_SUPPORTED_FEATURES: SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME,
+                },
+            )
+        ],
+    )
+    await setup_webostv(hass)
+
+    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
     attrs = hass.states.get(ENTITY_ID).attributes
 
     assert attrs[ATTR_SUPPORTED_FEATURES] == supported
