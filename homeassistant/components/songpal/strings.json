@@ -4,7 +4,9 @@
     "step": {
       "user": {
         "data": {
-          "endpoint": "Endpoint"
+          "endpoint": "Endpoint",
+          "url": "URL",
+          "uuid": "UUID"
         }
       },
       "init": {
