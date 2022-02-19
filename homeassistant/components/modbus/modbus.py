@@ -39,6 +39,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     ATTR_ADDRESS,
     ATTR_HUB,
+    ATTR_SLAVE,
     ATTR_STATE,
     ATTR_UNIT,
     ATTR_VALUE,
@@ -156,7 +157,11 @@ async def async_modbus_setup(
 
     async def async_write_register(service: ServiceCall) -> None:
         """Write Modbus registers."""
-        unit = int(float(service.data[ATTR_UNIT]))
+        unit = 0
+        if ATTR_UNIT in service.data:
+            unit = int(float(service.data[ATTR_UNIT]))
+        if ATTR_SLAVE in service.data:
+            unit = int(float(service.data[ATTR_SLAVE]))
         address = int(float(service.data[ATTR_ADDRESS]))
         value = service.data[ATTR_VALUE]
         hub = hub_collect[
