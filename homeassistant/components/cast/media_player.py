@@ -3,10 +3,9 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import suppress
-from datetime import datetime, timedelta
+from datetime import datetime
 import json
 import logging
-from urllib.parse import quote
 
 import pychromecast
 from pychromecast.controllers.homeassistant import HomeAssistantController
@@ -18,13 +17,14 @@ from pychromecast.socket_client import (
     CONNECTION_STATUS_DISCONNECTED,
 )
 import voluptuous as vol
+import yarl
 
 from homeassistant.components import media_source, zeroconf
-from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player import (
     BrowseError,
     BrowseMedia,
     MediaPlayerEntity,
+    async_process_play_media_url,
 )
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_EXTRA,
@@ -59,7 +59,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.network import NoURLAvailableError, get_url, is_hass_url
 import homeassistant.util.dt as dt_util
 from homeassistant.util.logging import async_create_catching_coro
 
@@ -212,6 +212,10 @@ class CastDevice(MediaPlayerEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect Chromecast object when removed."""
         await self._async_disconnect()
+        if self._cast_info.uuid is not None:
+            # Remove the entity from the added casts so that it can dynamically
+            # be re-added again.
+            self.hass.data[ADDED_CAST_DEVICES_KEY].remove(self._cast_info.uuid)
         if self._add_remove_handler:
             self._add_remove_handler()
             self._add_remove_handler = None
@@ -253,21 +257,16 @@ class CastDevice(MediaPlayerEntity):
 
     async def _async_disconnect(self):
         """Disconnect Chromecast object if it is set."""
-        if self._chromecast is None:
-            # Can't disconnect if not connected.
-            return
-        _LOGGER.debug(
-            "[%s %s] Disconnecting from chromecast socket",
-            self.entity_id,
-            self._cast_info.friendly_name,
-        )
+        if self._chromecast is not None:
+            _LOGGER.debug(
+                "[%s %s] Disconnecting from chromecast socket",
+                self.entity_id,
+                self._cast_info.friendly_name,
+            )
+            await self.hass.async_add_executor_job(self._chromecast.disconnect)
+
         self._attr_available = False
-        self.async_write_ha_state()
-
-        await self.hass.async_add_executor_job(self._chromecast.disconnect)
-
         self._invalidate()
-
         self.async_write_ha_state()
 
     def _invalidate(self):
@@ -411,7 +410,7 @@ class CastDevice(MediaPlayerEntity):
 
         # The only way we can turn the Chromecast is on is by launching an app
         if self._chromecast.cast_type == pychromecast.const.CAST_TYPE_CHROMECAST:
-            self._chromecast.play_media(CAST_SPLASH, pychromecast.STREAM_TYPE_BUFFERED)
+            self._chromecast.play_media(CAST_SPLASH, "image/png")
         else:
             self._chromecast.start_app(pychromecast.config.APP_MEDIA_RECEIVER)
 
@@ -473,13 +472,13 @@ class CastDevice(MediaPlayerEntity):
             result = await media_source.async_browse_media(
                 self.hass, None, content_filter=content_filter
             )
-            children.append(result)
+            children.extend(result.children)
         except BrowseError:
             if not children:
                 raise
 
         # If there's only one media source, resolve it
-        if len(children) == 1:
+        if len(children) == 1 and children[0].can_expand:
             return await self.async_browse_media(
                 children[0].media_content_type,
                 children[0].media_content_id,
@@ -492,7 +491,7 @@ class CastDevice(MediaPlayerEntity):
             media_content_type="",
             can_play=False,
             can_expand=True,
-            children=children,
+            children=sorted(children, key=lambda c: c.title),
         )
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
@@ -534,19 +533,6 @@ class CastDevice(MediaPlayerEntity):
             sourced_media = await media_source.async_resolve_media(self.hass, media_id)
             media_type = sourced_media.mime_type
             media_id = sourced_media.url
-
-        # If media ID is a relative URL, we serve it from HA.
-        # Create a signed path.
-        if media_id[0] == "/":
-            media_id = async_sign_path(
-                self.hass,
-                quote(media_id),
-                timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
-            )
-
-            # prepend external URL
-            hass_url = get_url(self.hass, prefer_external=True)
-            media_id = f"{hass_url}{media_id}"
 
         extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
         metadata = extra.get("metadata")
@@ -592,6 +578,21 @@ class CastDevice(MediaPlayerEntity):
             )
             if result:
                 return
+
+        # If media ID is a relative URL, we serve it from HA.
+        media_id = async_process_play_media_url(self.hass, media_id)
+
+        # Configure play command for when playing a HLS stream
+        if is_hass_url(self.hass, media_id):
+            parsed = yarl.URL(media_id)
+            if parsed.path.startswith("/api/hls/"):
+                extra = {
+                    **extra,
+                    "stream_type": "LIVE",
+                    "media_info": {
+                        "hlsVideoSegmentFormat": "fmp4",
+                    },
+                }
 
         # Default to play with the default media receiver
         app_data = {"media_id": media_id, "media_type": media_type, **extra}
@@ -902,16 +903,13 @@ class DynamicCastGroup:
 
     async def _async_disconnect(self):
         """Disconnect Chromecast object if it is set."""
-        if self._chromecast is None:
-            # Can't disconnect if not connected.
-            return
-        _LOGGER.debug(
-            "[%s %s] Disconnecting from chromecast socket",
-            "Dynamic group",
-            self._cast_info.friendly_name,
-        )
-
-        await self.hass.async_add_executor_job(self._chromecast.disconnect)
+        if self._chromecast is not None:
+            _LOGGER.debug(
+                "[%s %s] Disconnecting from chromecast socket",
+                "Dynamic group",
+                self._cast_info.friendly_name,
+            )
+            await self.hass.async_add_executor_job(self._chromecast.disconnect)
 
         self._invalidate()
 

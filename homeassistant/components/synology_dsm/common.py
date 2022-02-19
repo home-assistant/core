@@ -33,7 +33,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 
-from .const import CONF_DEVICE_TOKEN
+from .const import CONF_DEVICE_TOKEN, DOMAIN, SYSTEM_LOADED
 
 LOGGER = logging.getLogger(__name__)
 
@@ -218,6 +218,11 @@ class SynoApi:
             )
             self.surveillance_station = self.dsm.surveillance_station
 
+    def _set_system_loaded(self, state: bool = False) -> None:
+        """Set system loaded flag."""
+        dsm_device = self._hass.data[DOMAIN].get(self.information.serial)
+        dsm_device[SYSTEM_LOADED] = state
+
     async def _syno_api_executer(self, api_call: Callable) -> None:
         """Synology api call wrapper."""
         try:
@@ -231,10 +236,12 @@ class SynoApi:
     async def async_reboot(self) -> None:
         """Reboot NAS."""
         await self._syno_api_executer(self.system.reboot)
+        self._set_system_loaded()
 
     async def async_shutdown(self) -> None:
         """Shutdown NAS."""
         await self._syno_api_executer(self.system.shutdown)
+        self._set_system_loaded()
 
     async def async_unload(self) -> None:
         """Stop interacting with the NAS and prepare for removal from hass."""

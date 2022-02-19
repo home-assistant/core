@@ -1,4 +1,6 @@
 """Test Z-Wave fans."""
+import pytest
+
 from homeassistant.components.fan import (
     SPEED_HIGH,
     SPEED_LOW,
@@ -9,6 +11,9 @@ from homeassistant.components.fan import (
 from homeassistant.components.zwave import fan
 
 from tests.mock.zwave import MockEntityValues, MockNode, MockValue, value_changed
+
+# Integration is disabled
+pytest.skip("Integration has been disabled in the manifest", allow_module_level=True)
 
 
 def test_get_device_detects_fan(mock_openzwave):

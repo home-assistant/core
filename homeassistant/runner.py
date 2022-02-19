@@ -59,7 +59,7 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[valid
     @property
     def loop_name(self) -> str:
         """Return name of the loop."""
-        return self._loop_factory.__name__  # type: ignore
+        return self._loop_factory.__name__  # type: ignore[no-any-return]
 
     def new_event_loop(self) -> asyncio.AbstractEventLoop:
         """Get the event loop."""
@@ -72,7 +72,7 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[valid
             thread_name_prefix="SyncWorker", max_workers=MAX_EXECUTOR_WORKERS
         )
         loop.set_default_executor(executor)
-        loop.set_default_executor = warn_use(  # type: ignore
+        loop.set_default_executor = warn_use(  # type: ignore[assignment]
             loop.set_default_executor, "sets default executor on the event loop"
         )
         return loop
@@ -89,11 +89,11 @@ def _async_loop_exception_handler(_: Any, context: dict[str, Any]) -> None:
     if source_traceback := context.get("source_traceback"):
         stack_summary = "".join(traceback.format_list(source_traceback))
         logger.error(
-            "Error doing job: %s: %s", context["message"], stack_summary, **kwargs  # type: ignore
+            "Error doing job: %s: %s", context["message"], stack_summary, **kwargs  # type: ignore[arg-type]
         )
         return
 
-    logger.error("Error doing job: %s", context["message"], **kwargs)  # type: ignore
+    logger.error("Error doing job: %s", context["message"], **kwargs)  # type: ignore[arg-type]
 
 
 async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:

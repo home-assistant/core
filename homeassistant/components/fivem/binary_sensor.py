@@ -1,4 +1,6 @@
 """The FiveM binary sensor platform."""
+from dataclasses import dataclass
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -9,9 +11,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FiveMEntity, FiveMEntityDescription
-from .const import DOMAIN, ICON_STATUS, NAME_STATUS
+from .const import DOMAIN, NAME_STATUS
 
 
+@dataclass
 class FiveMBinarySensorEntityDescription(
     BinarySensorEntityDescription, FiveMEntityDescription
 ):
@@ -22,7 +25,6 @@ BINARY_SENSORS: tuple[FiveMBinarySensorEntityDescription, ...] = (
     FiveMBinarySensorEntityDescription(
         key=NAME_STATUS,
         name=NAME_STATUS,
-        icon=ICON_STATUS,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
     ),
 )

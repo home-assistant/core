@@ -330,7 +330,7 @@ def sync_entity_lifecycle(
     create_entity: Callable[[dict], Entity],
 ) -> None:
     """Map a collection to an entity component."""
-    entities = {}
+    entities: dict[str, Entity] = {}
     ent_reg = entity_registry.async_get(hass)
 
     async def _add_entity(change_set: CollectionChangeSet) -> Entity:
@@ -348,7 +348,7 @@ def sync_entity_lifecycle(
         entities.pop(change_set.item_id)
 
     async def _update_entity(change_set: CollectionChangeSet) -> None:
-        await entities[change_set.item_id].async_update_config(change_set.item)  # type: ignore
+        await entities[change_set.item_id].async_update_config(change_set.item)  # type: ignore[attr-defined]
 
     _func_map: dict[
         str, Callable[[CollectionChangeSet], Coroutine[Any, Any, Entity | None]]

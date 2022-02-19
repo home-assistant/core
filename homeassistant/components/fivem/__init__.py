@@ -10,7 +10,7 @@ from typing import Any
 from fivem import FiveM, FiveMServerOfflineError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
@@ -45,14 +45,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_PORT],
     )
 
+    coordinator = FiveMDataUpdateCoordinator(hass, entry.data, entry.entry_id)
+
     try:
-        coordinator = FiveMDataUpdateCoordinator(hass, entry.data, entry.entry_id)
         await coordinator.initialize()
     except FiveMServerOfflineError as err:
         raise ConfigEntryNotReady from err
 
     await coordinator.async_config_entry_first_refresh()
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
@@ -69,32 +69,23 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update listener."""
-    await hass.config_entries.async_reload(entry.entry_id)
-
-
 class FiveMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching FiveM data."""
 
-    def __init__(self, hass: HomeAssistant, config_data, unique_id: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_data: Mapping[str, Any], unique_id: str
+    ) -> None:
         """Initialize server instance."""
-        self._hass = hass
-
         self.unique_id = unique_id
         self.server = None
         self.version = None
-        self.gamename: str | None = None
+        self.game_name: str | None = None
 
-        self.server_name = config_data[CONF_NAME]
         self.host = config_data[CONF_HOST]
-        self.port = config_data[CONF_PORT]
-        self.online = False
 
-        self._fivem = FiveM(self.host, self.port)
+        self._fivem = FiveM(self.host, config_data[CONF_PORT])
 
         update_interval = timedelta(seconds=SCAN_INTERVAL)
-        _LOGGER.debug("Data will be updated every %s", update_interval)
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
 
@@ -103,42 +94,31 @@ class FiveMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         info = await self._fivem.get_info_raw()
         self.server = info["server"]
         self.version = info["version"]
-        self.gamename = info["vars"]["gamename"]
+        self.game_name = info["vars"]["gamename"]
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Get server data from 3rd party library and update properties."""
-        was_online = self.online
-
         try:
             server = await self._fivem.get_server()
-            self.online = True
-        except FiveMServerOfflineError:
-            self.online = False
+        except FiveMServerOfflineError as err:
+            raise UpdateFailed from err
 
-        if was_online and not self.online:
-            _LOGGER.warning("Connection to '%s:%s' lost", self.host, self.port)
-        elif not was_online and self.online:
-            _LOGGER.info("Connection to '%s:%s' (re-)established", self.host, self.port)
+        players_list: list[str] = []
+        for player in server.players:
+            players_list.append(player.name)
+        players_list.sort()
 
-        if self.online:
-            players_list: list[str] = []
-            for player in server.players:
-                players_list.append(player.name)
-            players_list.sort()
+        resources_list = server.resources
+        resources_list.sort()
 
-            resources_list = server.resources
-            resources_list.sort()
-
-            return {
-                NAME_PLAYERS_ONLINE: len(players_list),
-                NAME_PLAYERS_MAX: server.max_players,
-                NAME_RESOURCES: len(resources_list),
-                NAME_STATUS: self.online,
-                ATTR_PLAYERS_LIST: players_list,
-                ATTR_RESOURCES_LIST: resources_list,
-            }
-
-        raise UpdateFailed
+        return {
+            NAME_PLAYERS_ONLINE: len(players_list),
+            NAME_PLAYERS_MAX: server.max_players,
+            NAME_RESOURCES: len(resources_list),
+            NAME_STATUS: self.last_update_success,
+            ATTR_PLAYERS_LIST: players_list,
+            ATTR_RESOURCES_LIST: resources_list,
+        }
 
 
 @dataclass
@@ -163,13 +143,13 @@ class FiveMEntity(CoordinatorEntity):
         super().__init__(coordinator)
         self.entity_description = description
 
-        self._attr_name = f"{self.coordinator.server_name} {description.name}"
+        self._attr_name = f"{self.coordinator.host} {description.name}"
         self._attr_unique_id = f"{self.coordinator.unique_id}-{description.key}".lower()
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.unique_id)},
             manufacturer=MANUFACTURER,
             model=self.coordinator.server,
-            name=self.coordinator.server_name,
+            name=self.coordinator.host,
             sw_version=self.coordinator.version,
         )
 

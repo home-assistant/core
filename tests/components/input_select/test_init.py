@@ -15,6 +15,8 @@ from homeassistant.components.input_select import (
     SERVICE_SELECT_OPTION,
     SERVICE_SELECT_PREVIOUS,
     SERVICE_SET_OPTIONS,
+    STORAGE_VERSION,
+    STORAGE_VERSION_MINOR,
 )
 from homeassistant.const import (
     ATTR_EDITABLE,
@@ -25,7 +27,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import Context, State
-from homeassistant.exceptions import Unauthorized
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -36,11 +38,12 @@ from tests.common import mock_restore_cache
 def storage_setup(hass, hass_storage):
     """Storage setup."""
 
-    async def _storage(items=None, config=None):
+    async def _storage(items=None, config=None, minor_version=STORAGE_VERSION_MINOR):
         if items is None:
             hass_storage[DOMAIN] = {
                 "key": DOMAIN,
-                "version": 1,
+                "version": STORAGE_VERSION,
+                "minor_version": minor_version,
                 "data": {
                     "items": [
                         {
@@ -55,6 +58,7 @@ def storage_setup(hass, hass_storage):
             hass_storage[DOMAIN] = {
                 "key": DOMAIN,
                 "version": 1,
+                "minor_version": minor_version,
                 "data": {"items": items},
             }
         if config is None:
@@ -320,6 +324,46 @@ async def test_set_options_service(hass):
     assert state.state == "test2"
 
 
+async def test_set_options_service_duplicate(hass):
+    """Test set_options service with duplicates."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "test_1": {
+                    "options": ["first option", "middle option", "last option"],
+                    "initial": "middle option",
+                }
+            }
+        },
+    )
+    entity_id = "input_select.test_1"
+
+    state = hass.states.get(entity_id)
+    assert state.state == "middle option"
+    assert state.attributes[ATTR_OPTIONS] == [
+        "first option",
+        "middle option",
+        "last option",
+    ]
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_OPTIONS,
+            {ATTR_OPTIONS: ["option1", "option1"], ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    state = hass.states.get(entity_id)
+    assert state.state == "middle option"
+    assert state.attributes[ATTR_OPTIONS] == [
+        "first option",
+        "middle option",
+        "last option",
+    ]
+
+
 async def test_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(
@@ -488,6 +532,34 @@ async def test_load_from_storage(hass, storage_setup):
     assert state.state == "storage option 1"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
     assert state.attributes.get(ATTR_EDITABLE)
+    assert state.attributes.get(ATTR_OPTIONS) == [
+        "storage option 1",
+        "storage option 2",
+    ]
+
+
+async def test_load_from_storage_duplicate(hass, storage_setup, caplog):
+    """Test set up from old storage with duplicates."""
+    items = [
+        {
+            "id": "from_storage",
+            "name": "from storage",
+            "options": ["yaml update 1", "yaml update 2", "yaml update 2"],
+        }
+    ]
+    assert await storage_setup(items, minor_version=1)
+
+    assert (
+        "Input select 'from storage' with options "
+        "['yaml update 1', 'yaml update 2', 'yaml update 2'] "
+        "had duplicated options, the duplicates have been removed"
+    ) in caplog.text
+
+    state = hass.states.get(f"{DOMAIN}.from_storage")
+    assert state.state == "yaml update 1"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
+    assert state.attributes.get(ATTR_EDITABLE)
+    assert state.attributes.get(ATTR_OPTIONS) == ["yaml update 1", "yaml update 2"]
 
 
 async def test_editable_state_attribute(hass, storage_setup):
@@ -554,7 +626,7 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
 
 
 async def test_update(hass, hass_ws_client, storage_setup):
-    """Test updating min/max updates the state."""
+    """Test updating options updates the state."""
 
     items = [
         {
@@ -590,6 +662,7 @@ async def test_update(hass, hass_ws_client, storage_setup):
     state = hass.states.get(input_entity_id)
     assert state.attributes[ATTR_OPTIONS] == ["new option", "newer option"]
 
+    # Should fail because the initial state is now invalid
     await client.send_json(
         {
             "id": 7,
@@ -600,6 +673,46 @@ async def test_update(hass, hass_ws_client, storage_setup):
     )
     resp = await client.receive_json()
     assert not resp["success"]
+
+
+async def test_update_duplicates(hass, hass_ws_client, storage_setup, caplog):
+    """Test updating options updates the state."""
+
+    items = [
+        {
+            "id": "from_storage",
+            "name": "from storage",
+            "options": ["yaml update 1", "yaml update 2"],
+        }
+    ]
+    assert await storage_setup(items)
+
+    input_id = "from_storage"
+    input_entity_id = f"{DOMAIN}.{input_id}"
+    ent_reg = er.async_get(hass)
+
+    state = hass.states.get(input_entity_id)
+    assert state.attributes[ATTR_OPTIONS] == ["yaml update 1", "yaml update 2"]
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": f"{DOMAIN}/update",
+            f"{DOMAIN}_id": f"{input_id}",
+            "options": ["new option", "newer option", "newer option"],
+            CONF_INITIAL: "newer option",
+        }
+    )
+    resp = await client.receive_json()
+    assert not resp["success"]
+    assert resp["error"]["code"] == "unknown_error"
+    assert resp["error"]["message"] == "Duplicate options are not allowed"
+
+    state = hass.states.get(input_entity_id)
+    assert state.attributes[ATTR_OPTIONS] == ["yaml update 1", "yaml update 2"]
 
 
 async def test_ws_create(hass, hass_ws_client, storage_setup):
@@ -630,6 +743,38 @@ async def test_ws_create(hass, hass_ws_client, storage_setup):
 
     state = hass.states.get(input_entity_id)
     assert state.state == "even newer option"
+    assert state.attributes[ATTR_OPTIONS] == ["new option", "even newer option"]
+
+
+async def test_ws_create_duplicates(hass, hass_ws_client, storage_setup, caplog):
+    """Test create WS with duplicates."""
+    assert await storage_setup(items=[])
+
+    input_id = "new_input"
+    input_entity_id = f"{DOMAIN}.{input_id}"
+    ent_reg = er.async_get(hass)
+
+    state = hass.states.get(input_entity_id)
+    assert state is None
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": f"{DOMAIN}/create",
+            "name": "New Input",
+            "options": ["new option", "even newer option", "even newer option"],
+            "initial": "even newer option",
+        }
+    )
+    resp = await client.receive_json()
+    assert not resp["success"]
+    assert resp["error"]["code"] == "unknown_error"
+    assert resp["error"]["message"] == "Duplicate options are not allowed"
+
+    assert not hass.states.get(input_entity_id)
 
 
 async def test_setup_no_config(hass, hass_admin_user):
