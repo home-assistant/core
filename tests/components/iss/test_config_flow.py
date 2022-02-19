@@ -103,3 +103,4 @@ async def test_options(hass: HomeAssistant):
         )
 
         assert configured.get("type") == "create_entry"
+        assert config_entry.options == {CONF_SHOW_ON_MAP: True}
