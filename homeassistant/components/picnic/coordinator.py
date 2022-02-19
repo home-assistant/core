@@ -59,9 +59,7 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
     def fetch_data(self):
         """Fetch the data from the Picnic API and return a flat dict with only needed sensor data."""
         # Fetch from the API and pre-process the data
-        cart = self.picnic_api_client.get_cart()
-
-        if not cart:
+        if not (cart := self.picnic_api_client.get_cart()):
             raise UpdateFailed("API response doesn't contain expected data.")
 
         last_order = self._get_last_order()

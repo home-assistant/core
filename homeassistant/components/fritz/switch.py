@@ -31,6 +31,7 @@ from .const import (
     SWITCH_TYPE_DEFLECTION,
     SWITCH_TYPE_PORTFORWARD,
     SWITCH_TYPE_WIFINETWORK,
+    WIFI_STANDARD,
     MeshRoles,
 )
 
@@ -59,9 +60,7 @@ def deflection_entities_list(
         _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
         return []
 
-    deflection_list = avm_wrapper.get_ontel_deflections()
-
-    if not deflection_list:
+    if not (deflection_list := avm_wrapper.get_ontel_deflections()):
         return []
 
     items = xmltodict.parse(deflection_list["NewDeflectionList"])["List"]["Item"]
@@ -141,31 +140,43 @@ def wifi_entities_list(
 ) -> list[FritzBoxWifiSwitch]:
     """Get list of wifi entities."""
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_WIFINETWORK)
-    std_table = {"ax": "Wifi6", "ac": "5Ghz", "n": "2.4Ghz"}
-    if avm_wrapper.model == "FRITZ!Box 7390":
-        std_table = {"n": "5Ghz"}
 
+    #
+    # https://avm.de/fileadmin/user_upload/Global/Service/Schnittstellen/wlanconfigSCPD.pdf
+    #
+    wifi_count = len(
+        [
+            s
+            for s in avm_wrapper.connection.services
+            if s.startswith("WLANConfiguration")
+        ]
+    )
+    _LOGGER.debug("WiFi networks count: %s", wifi_count)
     networks: dict = {}
-    for i in range(4):
-        if not ("WLANConfiguration" + str(i)) in avm_wrapper.connection.services:
-            continue
+    for i in range(1, wifi_count + 1):
+        network_info = avm_wrapper.connection.call_action(
+            f"WLANConfiguration{i}", "GetInfo"
+        )
+        # Devices with 4 WLAN services, use the 2nd for internal communications
+        if not (wifi_count == 4 and i == 2):
+            networks[i] = {
+                "ssid": network_info["NewSSID"],
+                "bssid": network_info["NewBSSID"],
+                "standard": network_info["NewStandard"],
+                "enabled": network_info["NewEnable"],
+                "status": network_info["NewStatus"],
+            }
+    for i, network in networks.copy().items():
+        networks[i]["switch_name"] = network["ssid"]
+        if len([j for j, n in networks.items() if n["ssid"] == network["ssid"]]) > 1:
+            networks[i]["switch_name"] += f" ({WIFI_STANDARD[i]})"
 
-        network_info = avm_wrapper.get_wlan_configuration(i)
-        if network_info:
-            ssid = network_info["NewSSID"]
-            _LOGGER.debug("SSID from device: <%s>", ssid)
-            if slugify(
-                ssid,
-            ) in [slugify(v) for v in networks.values()]:
-                _LOGGER.debug("SSID duplicated, adding suffix")
-                networks[i] = f'{ssid} {std_table[network_info["NewStandard"]]}'
-            else:
-                networks[i] = ssid
-            _LOGGER.debug("SSID normalized: <%s>", networks[i])
-
+    _LOGGER.debug("WiFi networks list: %s", networks)
     return [
-        FritzBoxWifiSwitch(avm_wrapper, device_friendly_name, net, network_name)
-        for net, network_name in networks.items()
+        FritzBoxWifiSwitch(
+            avm_wrapper, device_friendly_name, index, data["switch_name"]
+        )
+        for index, data in networks.items()
     ]
 
 

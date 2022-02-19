@@ -47,14 +47,12 @@ class CameraMediaSource(MediaSource):
         if not camera:
             raise Unresolvable(f"Could not resolve media item: {item.identifier}")
 
-        stream_type = camera.frontend_stream_type
-
-        if stream_type is None:
+        if (stream_type := camera.frontend_stream_type) is None:
             return PlayMedia(
                 f"/api/camera_proxy_stream/{camera.entity_id}", camera.content_type
             )
 
-        if camera.frontend_stream_type != STREAM_TYPE_HLS:
+        if stream_type != STREAM_TYPE_HLS:
             raise Unresolvable("Camera does not support MJPEG or HLS streaming.")
 
         if "stream" not in self.hass.config.components:

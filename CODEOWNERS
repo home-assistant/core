@@ -738,6 +738,8 @@ tests/components/prosegur/* @dgomes
 homeassistant/components/proxmoxve/* @jhollowe @Corbeno
 homeassistant/components/ps4/* @ktnrg45
 tests/components/ps4/* @ktnrg45
+homeassistant/components/pure_energie/* @klaasnicolaas
+tests/components/pure_energie/* @klaasnicolaas
 homeassistant/components/push/* @dgomes
 tests/components/push/* @dgomes
 homeassistant/components/pvoutput/* @fabaff @frenck
@@ -850,8 +852,8 @@ homeassistant/components/sisyphus/* @jkeljo
 homeassistant/components/sky_hub/* @rogerselwyn
 homeassistant/components/slack/* @bachya
 tests/components/slack/* @bachya
-homeassistant/components/sleepiq/* @mfugate1
-tests/components/sleepiq/* @mfugate1
+homeassistant/components/sleepiq/* @mfugate1 @kbickar
+tests/components/sleepiq/* @mfugate1 @kbickar
 homeassistant/components/slide/* @ualex73
 homeassistant/components/sma/* @kellerza @rklomp
 tests/components/sma/* @kellerza @rklomp

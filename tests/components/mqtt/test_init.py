@@ -1529,15 +1529,27 @@ async def test_mqtt_ws_get_device_debug_info(
     hass, device_reg, hass_ws_client, mqtt_mock
 ):
     """Test MQTT websocket device debug info."""
-    config = {
+    config_sensor = {
         "device": {"identifiers": ["0AFFD2"]},
         "platform": "mqtt",
         "state_topic": "foobar/sensor",
         "unique_id": "unique",
     }
-    data = json.dumps(config)
+    config_trigger = {
+        "automation_type": "trigger",
+        "device": {"identifiers": ["0AFFD2"]},
+        "platform": "mqtt",
+        "topic": "test-topic1",
+        "type": "foo",
+        "subtype": "bar",
+    }
+    data_sensor = json.dumps(config_sensor)
+    data_trigger = json.dumps(config_trigger)
 
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data_sensor)
+    async_fire_mqtt_message(
+        hass, "homeassistant/device_automation/bla/config", data_trigger
+    )
     await hass.async_block_till_done()
 
     # Verify device entry is created
@@ -1556,13 +1568,21 @@ async def test_mqtt_ws_get_device_debug_info(
                 "entity_id": "sensor.mqtt_sensor",
                 "subscriptions": [{"topic": "foobar/sensor", "messages": []}],
                 "discovery_data": {
-                    "payload": config,
+                    "payload": config_sensor,
                     "topic": "homeassistant/sensor/bla/config",
                 },
                 "transmitted": [],
             }
         ],
-        "triggers": [],
+        "triggers": [
+            {
+                "discovery_data": {
+                    "payload": config_trigger,
+                    "topic": "homeassistant/device_automation/bla/config",
+                },
+                "trigger_key": ["device_automation", "bla"],
+            }
+        ],
     }
     assert response["result"] == expected_result
 

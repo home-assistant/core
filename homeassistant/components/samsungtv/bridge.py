@@ -121,6 +121,10 @@ class SamsungTVBridge(ABC):
     def mac_from_device(self) -> str | None:
         """Try to fetch the mac address of the TV."""
 
+    @abstractmethod
+    def get_app_list(self) -> dict[str, str] | None:
+        """Get installed app list."""
+
     def is_on(self) -> bool:
         """Tells if the TV is on."""
         if self._remote is not None:
@@ -139,14 +143,14 @@ class SamsungTVBridge(ABC):
             # Different reasons, e.g. hostname not resolveable
             return False
 
-    def send_key(self, key: str) -> None:
+    def send_key(self, key: str, key_type: str | None = None) -> None:
         """Send a key to the tv and handles exceptions."""
         try:
             # recreate connection if connection was dead
             retry_count = 1
             for _ in range(retry_count + 1):
                 try:
-                    self._send_key(key)
+                    self._send_key(key, key_type)
                     break
                 except (
                     ConnectionClosed,
@@ -164,7 +168,7 @@ class SamsungTVBridge(ABC):
             pass
 
     @abstractmethod
-    def _send_key(self, key: str) -> None:
+    def _send_key(self, key: str, key_type: str | None = None) -> None:
         """Send the key."""
 
     @abstractmethod
@@ -211,6 +215,10 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
     def mac_from_device(self) -> None:
         """Try to fetch the mac address of the TV."""
         return None
+
+    def get_app_list(self) -> dict[str, str]:
+        """Get installed app list."""
+        return {}
 
     def try_connect(self) -> str:
         """Try to connect to the Legacy TV."""
@@ -261,7 +269,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
                 pass
         return self._remote
 
-    def _send_key(self, key: str) -> None:
+    def _send_key(self, key: str, key_type: str | None = None) -> None:
         """Send the key using legacy protocol."""
         if remote := self._get_remote():
             remote.control(key)
@@ -281,11 +289,24 @@ class SamsungTVWSBridge(SamsungTVBridge):
         """Initialize Bridge."""
         super().__init__(method, host, port)
         self.token = token
+        self._app_list: dict[str, str] | None = None
 
     def mac_from_device(self) -> str | None:
         """Try to fetch the mac address of the TV."""
         info = self.device_info()
         return mac_from_device_info(info) if info else None
+
+    def get_app_list(self) -> dict[str, str] | None:
+        """Get installed app list."""
+        if self._app_list is None:
+            if remote := self._get_remote():
+                raw_app_list: list[dict[str, str]] = remote.app_list()
+                self._app_list = {
+                    app["name"]: app["appId"]
+                    for app in sorted(raw_app_list, key=lambda app: app["name"])
+                }
+
+        return self._app_list
 
     def try_connect(self) -> str:
         """Try to connect to the Websocket TV."""
@@ -338,12 +359,15 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
         return None
 
-    def _send_key(self, key: str) -> None:
+    def _send_key(self, key: str, key_type: str | None = None) -> None:
         """Send the key using websocket protocol."""
         if key == "KEY_POWEROFF":
             key = "KEY_POWER"
         if remote := self._get_remote():
-            remote.send_key(key)
+            if key_type == "run_app":
+                remote.run_app(key)
+            else:
+                remote.send_key(key)
 
     def _get_remote(self, avoid_open: bool = False) -> Remote:
         """Create or return a remote control instance."""

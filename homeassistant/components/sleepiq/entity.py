@@ -1,9 +1,17 @@
 """Entity for the SleepIQ integration."""
-from homeassistant.core import callback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from abc import abstractmethod
 
-from .const import BED, ICON_OCCUPIED, SENSOR_TYPES
-from .coordinator import SleepIQDataUpdateCoordinator
+from asyncsleepiq import SleepIQBed, SleepIQSleeper
+
+from homeassistant.core import callback
+from homeassistant.helpers import device_registry
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
+
+from .const import ICON_OCCUPIED, SENSOR_TYPES
 
 
 class SleepIQSensor(CoordinatorEntity):
@@ -13,21 +21,24 @@ class SleepIQSensor(CoordinatorEntity):
 
     def __init__(
         self,
-        coordinator: SleepIQDataUpdateCoordinator,
-        bed_id: str,
-        side: str,
+        coordinator: DataUpdateCoordinator,
+        bed: SleepIQBed,
+        sleeper: SleepIQSleeper,
         name: str,
     ) -> None:
         """Initialize the SleepIQ side entity."""
         super().__init__(coordinator)
-        self.bed_id = bed_id
-        self.side = side
-
+        self.bed = bed
+        self.sleeper = sleeper
         self._async_update_attrs()
 
-        self._attr_name = f"SleepNumber {self.bed_data.name} {self.side_data.sleeper.first_name} {SENSOR_TYPES[name]}"
-        self._attr_unique_id = (
-            f"{self.bed_id}_{self.side_data.sleeper.first_name}_{name}"
+        self._attr_name = f"SleepNumber {bed.name} {sleeper.name} {SENSOR_TYPES[name]}"
+        self._attr_unique_id = f"{bed.id}_{sleeper.name}_{name}"
+        self._attr_device_info = DeviceInfo(
+            connections={(device_registry.CONNECTION_NETWORK_MAC, bed.mac_addr)},
+            manufacturer="SleepNumber",
+            name=bed.name,
+            model=bed.model,
         )
 
     @callback
@@ -37,7 +48,6 @@ class SleepIQSensor(CoordinatorEntity):
         super()._handle_coordinator_update()
 
     @callback
+    @abstractmethod
     def _async_update_attrs(self) -> None:
         """Update sensor attributes."""
-        self.bed_data = self.coordinator.data[self.bed_id][BED]
-        self.side_data = getattr(self.bed_data, self.side)

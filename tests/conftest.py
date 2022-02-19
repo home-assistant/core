@@ -609,6 +609,7 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
         spec_set=hass.data["mqtt"],
         wraps=hass.data["mqtt"],
     )
+    mqtt_component_mock.conf = hass.data["mqtt"].conf  # For diagnostics
     mqtt_component_mock._mqttc = mqtt_client_mock
 
     hass.data["mqtt"] = mqtt_component_mock
