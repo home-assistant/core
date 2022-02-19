@@ -1135,46 +1135,71 @@ async def test_logs_error_if_no_connect_broker(
     )
 
 
+@patch("homeassistant.components.mqtt.TIMEOUT_ACK", 0.3)
+async def test_publish_mid(hass, mqtt_client_mock):
+    """Test if subscribe, publish, and unsubscribe waits until the callback release."""
+    unsub_1 = None
+    unsub_2 = None
+    calls_1 = MagicMock()
+    calls_2 = MagicMock()
+
+    # on_publish: no callback yet
+    async def publish_twice():
+        """Publish two calls without a simulated callback."""
+        await mqtt.async_publish(hass, "test-topic1", "payload1")
+        await mqtt.async_publish(hass, "no_callback/test-topic2", "payload2")
+
+    # on_subscribe: no callback yet
+    async def subscribe_twice():
+        """Publish two calls without a simulated callback."""
+        nonlocal unsub_1, unsub_2, calls_1, calls_2
+        unsub_1 = await mqtt.async_subscribe(hass, "test-topic1", calls_1)
+        unsub_2 = await mqtt.async_subscribe(hass, "no_callback/test-topic2", calls_2)
+
+    # on_unsubscribe: no callback yet
+    async def unsubscribe_twice():
+        """Publish two calls without a simulated callback."""
+        nonlocal unsub_1, unsub_2
+        unsub_1()
+        unsub_2()
+
+    # Setup
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+    assert await mqtt.async_setup_entry(hass, entry)
+    await hass.async_block_till_done()
+    # We are connected
+    mqtt_client_mock.on_connect(mqtt_client_mock, None, None, 0)
+
+    # Subscribe on two topics the first with ACK
+    hass.async_create_task(subscribe_twice())
+    await hass.async_block_till_done()
+    # Publish on two topics the first with ACK
+    hass.async_create_task(publish_twice())
+    # Subscribe on two topics the first with ACK
+    hass.async_create_task(unsubscribe_twice())
+    await hass.async_block_till_done()
+    # Only the first published call was acknowlegded
+    assert calls_1.call_count == 1
+    assert calls_2.call_count == 0
+
+
+@patch("homeassistant.components.mqtt.TIMEOUT_ACK", 0.3)
 async def test_handle_mqtt_on_callback(hass, caplog, mqtt_mock, mqtt_client_mock):
-    """Test handling of an ACK callback."""
-    mqtt_mock()._pending_operations = {}
-
-    mid = 1
-    mqtt_client_mock.on_publish(mqtt_client_mock, None, mid)
-    # mqtt_mock._mqtt_handle_mid(mid)
+    """Test receiving an ACK callback before waiting for it."""
+    # Simulate an ACK for mid == 1, this will call mqtt_mock._mqtt_handle_mid(mid)
+    mqtt_client_mock.on_publish(mqtt_client_mock, None, 1)
     await hass.async_block_till_done()
-    await asyncio.sleep(0.2)
-    assert mid in mqtt_mock()._pending_operations
-    del mqtt_mock()._pending_operations[mid]
-
-    mid = 2
-    mqtt_client_mock.on_subscribe(mqtt_client_mock, None, mid)
-    # mqtt_mock._mqtt_handle_mid(mid)
+    # Make sure the ACK has been received
     await hass.async_block_till_done()
-    await asyncio.sleep(0.2)
-    assert mid in mqtt_mock()._pending_operations
-    del mqtt_mock()._pending_operations[mid]
-
-    mid = 3
-    mqtt_client_mock.on_unsubscribe(mqtt_client_mock, None, mid)
-    # mqtt_mock._mqtt_handle_mid(mid)
+    # Now call publish without call back, this will call _wait_for_mid(msg_info.mid)
+    await mqtt.async_publish(hass, "no_callback/test-topic", "test-payload")
+    # Since the mid event wals already set, we should not see any timeout
     await hass.async_block_till_done()
-    await asyncio.sleep(0.2)
-    assert mid in mqtt_mock()._pending_operations
-    del mqtt_mock()._pending_operations[mid]
-
-
-async def test_timeout(hass, mqtt_mock, caplog):
-    """Test time out."""
-
-    # We patch asyncio.wait_for to avoid waiting in the tests
-    # patching timeout will not work here
-    with patch("asyncio.wait_for", side_effect=asyncio.TimeoutError):
-        await mqtt.async_publish(
-            hass, "some-topic", b"test-payload", qos=0, retain=False, encoding=None
-        )
-    await hass.async_block_till_done()
-    assert "No ACK from MQTT server in 10 seconds" in caplog.text
+    assert (
+        "Transmitting message on no_callback/test-topic: 'test-payload', mid: 1"
+        in caplog.text
+    )
+    assert "No ACK from MQTT server" not in caplog.text
 
 
 async def test_publish_error(hass, caplog):
