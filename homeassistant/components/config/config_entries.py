@@ -317,8 +317,7 @@ async def config_entry_update(hass, connection, msg):
 @websocket_api.async_response
 async def config_entry_disable(hass, connection, msg):
     """Disable config entry."""
-    disabled_by = msg["disabled_by"]
-    if disabled_by is not None:
+    if (disabled_by := msg["disabled_by"]) is not None:
         disabled_by = config_entries.ConfigEntryDisabler(disabled_by)
 
     result = False
