@@ -41,7 +41,7 @@ from homeassistant.core import CoreState, State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed, mock_restore_cache
+from tests.common import MockConfigEntry, async_fire_time_changed, mock_restore_cache_with_extra_data
 
 
 @contextmanager
@@ -443,29 +443,49 @@ async def test_restore_state(hass, yaml_config, config_entry_config):
     hass.state = CoreState.not_running
 
     last_reset = "2020-12-21T00:00:00.013073+00:00"
-    mock_restore_cache(
+
+    mock_restore_cache_with_extra_data(
         hass,
         [
-            State(
-                "sensor.energy_bill_onpeak",
-                "3",
-                attributes={
-                    ATTR_STATUS: PAUSED,
-                    ATTR_LAST_RESET: last_reset,
-                    ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            (
+                State(
+                    "sensor.energy_bill_onpeak",
+                    "3",
+                    attributes={
+                        ATTR_STATUS: PAUSED,
+                        ATTR_LAST_RESET: last_reset,
+                        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+                    },
+                ),
+                {
+                    "native_value": "3",
+                    "native_unit_of_measurement": "kWh",
+                    "last_reset": last_reset,
+                    "last_period": "7",
                 },
             ),
-            State(
-                "sensor.energy_bill_midpeak",
-                "error",
+            (
+                State(
+                    "sensor.energy_bill_midpeak",
+                    "error",
+                ),
+                {},
             ),
-            State(
-                "sensor.energy_bill_offpeak",
-                "6",
-                attributes={
-                    ATTR_STATUS: COLLECTING,
-                    ATTR_LAST_RESET: last_reset,
-                    ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            (
+                State(
+                    "sensor.energy_bill_offpeak",
+                    "6",
+                    attributes={
+                        ATTR_STATUS: COLLECTING,
+                        ATTR_LAST_RESET: last_reset,
+                        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+                    },
+                ),
+                {
+                    "native_value": "6",
+                    "native_unit_of_measurement": "kWh",
+                    "last_reset": last_reset,
+                    "last_period": "7",
                 },
             ),
         ],

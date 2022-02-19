@@ -2,16 +2,19 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from dataclasses import dataclass
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
+from typing import Any
 
 from croniter import croniter
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
+    RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
+    SensorExtraStoredData,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -223,7 +226,41 @@ async def async_setup_platform(
     )
 
 
-class UtilityMeterSensor(RestoreEntity, SensorEntity):
+@dataclass
+class UtilitySensorExtraStoredData(SensorExtraStoredData):
+    """Object to hold extra stored data."""
+
+    native_value: Decimal  # type: ignore[assignment]
+    last_period: Decimal
+    last_reset: datetime
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the utility sensor data."""
+        data = super().as_dict()
+        data["native_value"] = str(self.native_value)
+        data["last_period"] = str(self.last_period)
+        data["last_reset"] = self.last_reset.isoformat()
+
+        return data
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> UtilitySensorExtraStoredData | None:
+        """Initialize a stored sensor state from a dict."""
+        try:
+            native_value = Decimal(restored["native_value"])
+        except InvalidOperation:
+            native_value = restored["native_value"]
+        native_unit_of_measurement = restored["native_unit_of_measurement"]
+        try:
+            last_period = Decimal(restored["last_period"])
+        except InvalidOperation:
+            last_period = Decimal(0)
+        last_reset = dt_util.parse_datetime(restored["last_reset"])
+
+        return cls(native_value, native_unit_of_measurement, last_period, last_reset)  # type: ignore[arg-type]
+
+
+class UtilityMeterSensor(RestoreSensor):
     """Representation of an utility meter sensor."""
 
     def __init__(
@@ -396,9 +433,11 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
             )
         )
 
-        if state := await self.async_get_last_state():
+        if (state := await self.async_get_last_state()) is not None and (
+            last_sensor_data := await self.async_get_last_sensor_data()
+        ) is not None:
             try:
-                self._state = Decimal(state.state)
+                self._state = last_sensor_data.native_value
             except InvalidOperation:
                 _LOGGER.error(
                     "Could not restore state <%s>. Resetting utility_meter.%s",
@@ -406,18 +445,9 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                     self.name,
                 )
             else:
-                self._unit_of_measurement = state.attributes.get(
-                    ATTR_UNIT_OF_MEASUREMENT
-                )
-                self._last_period = (
-                    Decimal(state.attributes[ATTR_LAST_PERIOD])
-                    if state.attributes.get(ATTR_LAST_PERIOD)
-                    and is_number(state.attributes[ATTR_LAST_PERIOD])
-                    else Decimal(0)
-                )
-                self._last_reset = dt_util.as_utc(
-                    dt_util.parse_datetime(state.attributes.get(ATTR_LAST_RESET))
-                )
+                self._unit_of_measurement = last_sensor_data.native_unit_of_measurement
+                self._last_period = last_sensor_data.last_period
+                self._last_reset = last_sensor_data.last_reset
                 if state.attributes.get(ATTR_STATUS) == COLLECTING:
                     # Fake cancellation function to init the meter in similar state
                     self._collecting = lambda: None
@@ -523,3 +553,27 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return ICON
+
+    @property
+    def last_reset(self):
+        """Return the last time the sensor was reset."""
+        return self._last_reset
+
+    @property
+    def extra_restore_state_data(self) -> UtilitySensorExtraStoredData:
+        """Return sensor specific state data to be restored."""
+        return UtilitySensorExtraStoredData(
+            self.native_value,
+            self.native_unit_of_measurement,
+            self._last_period,
+            self._last_reset,
+        )
+
+    async def async_get_last_sensor_data(self) -> UtilitySensorExtraStoredData | None:
+        """Restore native_value and native_unit_of_measurement."""
+        if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
+            return None
+
+        return UtilitySensorExtraStoredData.from_dict(
+            restored_last_extra_data.as_dict()
+        )
