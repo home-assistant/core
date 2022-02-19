@@ -286,7 +286,7 @@ async def async_start(  # noqa: C901
             # Note: The lock is not intended to prevent a race, only for performance
             async with hass.data[DATA_CONFIG_FLOW_LOCK]:
                 # Already unsubscribed
-                if key not in hass.data[INTEGRATION_UNSUBSCRIBE]:
+                if key in hass.data[INTEGRATION_UNSUBSCRIBE]:
                     return
 
                 data = mqtt.MqttServiceInfo(
