@@ -22,7 +22,7 @@ from .coordinator import SleepIQDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.BUTTON]
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -33,9 +33,6 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
