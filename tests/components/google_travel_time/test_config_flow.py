@@ -68,7 +68,7 @@ async def test_invalid_config_entry(hass, invalidate_config_entry):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_options_flow(hass, validate_config_entry, bypass_update):
+async def test_options_flow(hass, validate_config_entry):
     """Test options flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -127,7 +127,7 @@ async def test_options_flow(hass, validate_config_entry, bypass_update):
     }
 
 
-async def test_options_flow_departure_time(hass, validate_config_entry, bypass_update):
+async def test_options_flow_departure_time(hass, validate_config_entry):
     """Test options flow wiith departure time."""
     entry = MockConfigEntry(
         domain=DOMAIN,

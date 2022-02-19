@@ -38,13 +38,6 @@ def bypass_platform_setup_fixture():
         yield
 
 
-@pytest.fixture(name="bypass_update")
-def bypass_update_fixture():
-    """Bypass sensor update."""
-    with patch("homeassistant.components.google_travel_time.sensor.distance_matrix"):
-        yield
-
-
 @pytest.fixture(name="invalidate_config_entry")
 def invalidate_config_entry_fixture():
     """Return invalid config entry."""
