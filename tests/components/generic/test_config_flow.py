@@ -36,7 +36,6 @@ TESTDATA = {
     CONF_USERNAME: "fred_flintstone",
     CONF_PASSWORD: "bambam",
     CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
-    CONF_CONTENT_TYPE: "image/jpeg",
     CONF_FRAMERATE: 5,
     CONF_VERIFY_SSL: False,
 }
@@ -69,7 +68,7 @@ async def test_form(hass, fakeimgbytes_png, fakevidcontainer):
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
         CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
-        CONF_CONTENT_TYPE: "image/jpeg",
+        CONF_CONTENT_TYPE: "image/png",
         CONF_FRAMERATE: 5,
         CONF_VERIFY_SSL: False,
     }
@@ -98,7 +97,6 @@ async def test_form_only_stillimage(hass, fakeimgbytes_png, fakevidcontainer):
             CONF_USERNAME: "fred_flintstone",
             CONF_PASSWORD: "bambam",
             CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
-            CONF_CONTENT_TYPE: "image/jpeg",
             CONF_FRAMERATE: 5,
             CONF_VERIFY_SSL: False,
         },
@@ -113,7 +111,7 @@ async def test_form_only_stillimage(hass, fakeimgbytes_png, fakevidcontainer):
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
         CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
-        CONF_CONTENT_TYPE: "image/jpeg",
+        CONF_CONTENT_TYPE: "image/png",
         CONF_FRAMERATE: 5,
         CONF_VERIFY_SSL: False,
     }
@@ -152,7 +150,7 @@ async def test_form_rtsp_mode(hass, fakeimgbytes_png, fakevidcontainer):
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
         CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
-        CONF_CONTENT_TYPE: "image/jpeg",
+        CONF_CONTENT_TYPE: "image/png",
         CONF_FRAMERATE: 5,
         CONF_VERIFY_SSL: False,
     }
@@ -178,7 +176,6 @@ async def test_form_only_stream(hass, fakevidcontainer):
                 CONF_USERNAME: "fred_flintstone",
                 CONF_PASSWORD: "bambam",
                 CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
-                CONF_CONTENT_TYPE: "image/jpeg",
                 CONF_FRAMERATE: 5,
                 CONF_VERIFY_SSL: False,
             },
@@ -193,7 +190,7 @@ async def test_form_only_stream(hass, fakevidcontainer):
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
         CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
-        CONF_CONTENT_TYPE: "image/jpeg",
+        CONF_CONTENT_TYPE: None,
         CONF_FRAMERATE: 5,
         CONF_VERIFY_SSL: False,
     }
@@ -214,33 +211,12 @@ async def test_form_still_and_stream_not_provided(hass):
             CONF_NAME: "cam1",
             CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
             CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
-            CONF_CONTENT_TYPE: "image/jpeg",
             CONF_FRAMERATE: 5,
             CONF_VERIFY_SSL: False,
         },
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "no_still_image_or_stream_url"}
-
-
-async def test_form_stream_noimage(hass, fakevidcontainer):
-    """Test we handle image returning None when a stream is specified."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    with patch(
-        "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
-        return_value=None,
-    ), patch("av.open", return_value=fakevidcontainer):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            TESTDATA,
-        )
-
-    await hass.async_block_till_done()
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "unable_still_load"}
 
 
 @respx.mock
@@ -251,7 +227,6 @@ async def test_form_stream_invalidimage(hass, fakevidcontainer):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     test_data_new = TESTDATA.copy()
-    test_data_new.pop(CONF_CONTENT_TYPE)  # don't specify format
 
     with patch("av.open", return_value=fakevidcontainer):
         result2 = await hass.config_entries.flow.async_configure(
@@ -365,15 +340,16 @@ async def test_form_stream_io_error(hass, fakeimgbytes_png):
     assert result2["errors"] == {"base": "stream_io_error"}
 
 
+@respx.mock
 async def test_form_oserror(hass, fakeimgbytes_png):
     """Test we handle OS error when setting up stream."""
+    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    with pytest.raises(OSError), patch(
-        "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
-        return_value=fakeimgbytes_png,
-    ), patch("av.open", side_effect=OSError("Some other OSError")):
+    with patch("av.open", side_effect=OSError("Some other OSError")), pytest.raises(
+        OSError
+    ):
         await hass.config_entries.flow.async_configure(
             result["flow_id"],
             TESTDATA,
@@ -445,20 +421,18 @@ async def test_import_invalid_still_image(hass, fakeimgbytes_png, fakevidcontain
     assert result["title"] == "cam1"
 
 
-async def test_import_other_error(hass, fakevidcontainer):
-    """Test that none-specific import errors are caught and logged."""
+@respx.mock
+async def test_import_other_error(hass, fakeimgbytes_png, fakevidcontainer):
+    """Test that non-specific import errors are raised."""
+    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
     with patch(
-        "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
-        return_value=None,
-    ), patch(
         "av.open",
         return_value=fakevidcontainer,
         side_effect=OSError("other error"),
-    ):
-        result = await hass.config_entries.flow.async_init(
+    ), pytest.raises(OSError):
+        await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TESTDATA
         )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
 # These above can be deleted after deprecation period is finished.
