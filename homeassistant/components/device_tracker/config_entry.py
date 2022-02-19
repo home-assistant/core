@@ -141,14 +141,11 @@ def _async_register_mac(
             return
 
         ent_reg = er.async_get(hass)
-        entity_id = ent_reg.async_get_entity_id(DOMAIN, *unique_id)
 
-        if entity_id is None:
+        if (entity_id := ent_reg.async_get_entity_id(DOMAIN, *unique_id)) is None:
             return
 
-        entity_entry = ent_reg.async_get(entity_id)
-
-        if entity_entry is None:
+        if (entity_entry := ent_reg.async_get(entity_id)) is None:
             return
 
         # Make sure entity has a config entry and was disabled by the
