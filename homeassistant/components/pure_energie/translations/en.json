@@ -12,8 +12,7 @@
             "user": {
                 "data": {
                     "host": "Host"
-                },
-                "description": "Set up Pure Energie Meter to integrate with Home Assistant."
+                }
             },
             "zeroconf_confirm": {
                 "description": "Do you want to add Pure Energie Meter (`{model}`) to Home Assistant?",

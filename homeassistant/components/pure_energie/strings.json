@@ -3,7 +3,6 @@
     "flow_title": "{model} ({host})",
     "step": {
       "user": {
-        "description": "Set up Pure Energie Meter to integrate with Home Assistant.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         }

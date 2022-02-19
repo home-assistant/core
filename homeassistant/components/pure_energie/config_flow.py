@@ -45,8 +45,6 @@ class PureEnergieFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_HOST: user_input[CONF_HOST],
                     },
                 )
-        else:
-            user_input = {}
 
         return self.async_show_form(
             step_id="user",

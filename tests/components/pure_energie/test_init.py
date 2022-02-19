@@ -25,6 +25,7 @@ async def test_load_unload_config_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.unique_id == "unique_thingy"
     assert len(mock_pure_energie.mock_calls) == 3
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
@@ -49,11 +50,3 @@ async def test_config_entry_not_ready(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setting_unique_id(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> None:
-    """Test we set unique ID if not set yet."""
-    assert hass.data[DOMAIN]
-    assert init_integration.unique_id == "unique_thingy"
