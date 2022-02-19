@@ -82,8 +82,7 @@ def async_build_cached_discovery(entry: ConfigEntry) -> FluxLEDDiscovery:
 @callback
 def async_name_from_discovery(device: FluxLEDDiscovery) -> str:
     """Convert a flux_led discovery to a human readable name."""
-    mac_address = device[ATTR_ID]
-    if mac_address is None:
+    if (mac_address := device[ATTR_ID]) is None:
         return device[ATTR_IPADDR]
     short_mac = mac_address[-6:]
     if device[ATTR_MODEL_DESCRIPTION]:
