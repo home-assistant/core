@@ -142,14 +142,14 @@ class AfterShipSensor(SensorEntity):
     async def async_update(self, **kwargs: Any) -> None:
         """Get the latest data from the AfterShip API."""
         try:
-            trackings = await self.aftership.trackings.list()
+            trackings = await self.aftership.trackings.list()["trackings"]
         except AfterShipException as err:
             _LOGGER.error("Errors when querying AfterShip - %s", err)
             return
 
         status_to_ignore = {"delivered"}
         status_counts: dict[str, int] = {}
-        trackings = []
+        parsed_trackings = []
         not_delivered_count = 0
 
         for track in trackings:
@@ -163,7 +163,7 @@ class AfterShipSensor(SensorEntity):
                 else track["checkpoints"][-1]
             )
             status_counts[status] = status_counts.get(status, 0) + 1
-            trackings.append(
+            parsed_trackings.append(
                 {
                     "name": name,
                     "tracking_number": track["tracking_number"],
@@ -183,7 +183,7 @@ class AfterShipSensor(SensorEntity):
 
         self._attributes = {
             **status_counts,
-            ATTR_TRACKINGS: trackings,
+            ATTR_TRACKINGS: parsed_trackings,
         }
 
         self._state = not_delivered_count
