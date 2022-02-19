@@ -79,6 +79,7 @@ SUBSCRIPTION_SERVICES = [
     "renderingControl",
     "zoneGroupTopology",
 ]
+SUPPORTED_VANISH_REASONS = ("sleeping", "upgrade")
 UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
 UNUSED_DEVICE_KEYS = ["SPID", "TargetRoomName"]
 
@@ -175,7 +176,7 @@ class SonosSpeaker:
         # Subscriptions and events
         self.subscriptions_failed: bool = False
         self._subscriptions: list[SubscriptionBase] = []
-        self._resubscription_lock: asyncio.Lock | None = None
+        self._subscription_lock: asyncio.Lock | None = None
         self._event_dispatchers: dict[str, Callable] = {}
         self._last_activity: float = NEVER_TIME
         self._last_event_cache: dict[str, Any] = {}
@@ -343,8 +344,41 @@ class SonosSpeaker:
     #
     # Subscription handling and event dispatchers
     #
-    async def async_subscribe(self) -> bool:
-        """Initiate event subscriptions."""
+    def log_subscription_result(
+        self, result: Any, event: str, level: str = logging.DEBUG
+    ) -> None:
+        """Log a message if a subscription action (create/renew/stop) results in an exception."""
+        if not isinstance(result, Exception):
+            return
+
+        if isinstance(result, asyncio.exceptions.TimeoutError):
+            message = "Request timed out"
+            exc_info = None
+        else:
+            message = result
+            exc_info = result if not str(result) else None
+
+        _LOGGER.log(
+            level,
+            "%s failed for %s: %s",
+            event,
+            self.zone_name,
+            message,
+            exc_info=exc_info,
+        )
+
+    async def async_subscribe(self) -> None:
+        """Initiate event subscriptions under an async lock."""
+        if not self._subscription_lock:
+            self._subscription_lock = asyncio.Lock()
+
+        async with self._subscription_lock:
+            if self._subscriptions:
+                return
+            await self._async_subscribe()
+
+    async def _async_subscribe(self) -> None:
+        """Create event subscriptions."""
         _LOGGER.debug("Creating subscriptions for %s", self.zone_name)
 
         # Create a polling task in case subscriptions fail or callback events do not arrive
@@ -359,24 +393,15 @@ class SonosSpeaker:
                 SCAN_INTERVAL,
             )
 
-        try:
-            await self.hass.async_add_executor_job(self.set_basic_info)
-
-            if self._subscriptions:
-                raise RuntimeError(
-                    f"Attempted to attach subscriptions to player: {self.soco} "
-                    f"when existing subscriptions exist: {self._subscriptions}"
-                )
-
-            subscriptions = [
-                self._subscribe(getattr(self.soco, service), self.async_dispatch_event)
-                for service in SUBSCRIPTION_SERVICES
-            ]
-            await asyncio.gather(*subscriptions)
-        except SoCoException as ex:
-            _LOGGER.warning("Could not connect %s: %s", self.zone_name, ex)
-            return False
-        return True
+        subscriptions = [
+            self._subscribe(getattr(self.soco, service), self.async_dispatch_event)
+            for service in SUBSCRIPTION_SERVICES
+        ]
+        results = await asyncio.gather(*subscriptions, return_exceptions=True)
+        for result in results:
+            self.log_subscription_result(
+                result, "Creating subscription", logging.WARNING
+            )
 
     async def _subscribe(
         self, target: SubscriptionBase, sub_callback: Callable
@@ -399,49 +424,24 @@ class SonosSpeaker:
             return_exceptions=True,
         )
         for result in results:
-            if isinstance(result, asyncio.exceptions.TimeoutError):
-                message = "Request timed out"
-                exc_info = None
-            elif isinstance(result, Exception):
-                message = result
-                exc_info = result if not str(result) else None
-            else:
-                continue
-            _LOGGER.debug(
-                "Unsubscribe failed for %s: %s",
-                self.zone_name,
-                message,
-                exc_info=exc_info,
-            )
+            self.log_subscription_result(result, "Unsubscribe")
         self._subscriptions = []
 
     @callback
     def async_renew_failed(self, exception: Exception) -> None:
         """Handle a failed subscription renewal."""
-        self.hass.async_create_task(self.async_resubscribe(exception))
+        self.hass.async_create_task(self._async_renew_failed(exception))
 
-    async def async_resubscribe(self, exception: Exception) -> None:
-        """Attempt to resubscribe when a renewal failure is detected."""
-        if not self._resubscription_lock:
-            self._resubscription_lock = asyncio.Lock()
+    async def _async_renew_failed(self, exception: Exception) -> None:
+        """Mark the speaker as offline after a subscription renewal failure.
 
-        async with self._resubscription_lock:
-            if not self.available:
-                return
+        This is to reset the state to allow a future clean subscription attempt.
+        """
+        if not self.available:
+            return
 
-            if isinstance(exception, asyncio.exceptions.TimeoutError):
-                message = "Request timed out"
-                exc_info = None
-            else:
-                message = exception
-                exc_info = exception if not str(exception) else None
-            _LOGGER.warning(
-                "Subscription renewals for %s failed, marking unavailable: %s",
-                self.zone_name,
-                message,
-                exc_info=exc_info,
-            )
-            await self.async_offline()
+        self.log_subscription_result(exception, "Subscription renewal", logging.WARNING)
+        await self.async_offline()
 
     @callback
     def async_dispatch_event(self, event: SonosEvent) -> None:
@@ -554,39 +554,48 @@ class SonosSpeaker:
 
     async def async_check_activity(self, now: datetime.datetime) -> None:
         """Validate availability of the speaker based on recent activity."""
+        if not self.available:
+            return
         if time.monotonic() - self._last_activity < AVAILABILITY_TIMEOUT:
             return
 
         try:
-            _ = await self.hass.async_add_executor_job(getattr, self.soco, "volume")
-        except (OSError, SoCoException):
-            pass
+            # Make a short-timeout call as a final check
+            # before marking this speaker as unavailable
+            await self.hass.async_add_executor_job(
+                partial(
+                    self.soco.renderingControl.GetVolume,
+                    [("InstanceID", 0), ("Channel", "Master")],
+                    timeout=1,
+                )
+            )
+        except OSError:
+            _LOGGER.warning(
+                "No recent activity and cannot reach %s, marking unavailable",
+                self.zone_name,
+            )
+            await self.async_offline()
         else:
             self.speaker_activity("timeout poll")
-            return
-
-        if not self.available:
-            return
-
-        _LOGGER.warning(
-            "No recent activity and cannot reach %s, marking unavailable",
-            self.zone_name,
-        )
-        await self.async_offline()
 
     async def async_offline(self) -> None:
         """Handle removal of speaker when unavailable."""
+        if not self.available:
+            return
+
         self.available = False
+        self.async_write_entity_states()
+
         self._share_link_plugin = None
 
         if self._poll_timer:
             self._poll_timer()
             self._poll_timer = None
 
-        await self.async_unsubscribe()
+        async with self._subscription_lock:
+            await self.async_unsubscribe()
 
         self.hass.data[DATA_SONOS].discovery_known.discard(self.soco.uid)
-        self.async_write_entity_states()
 
     async def async_vanished(self, reason: str) -> None:
         """Handle removal of speaker when marked as vanished."""
@@ -599,8 +608,8 @@ class SonosSpeaker:
 
     async def async_rebooted(self, soco: SoCo) -> None:
         """Handle a detected speaker reboot."""
-        _LOGGER.warning(
-            "%s rebooted or lost network connectivity, reconnecting with %s",
+        _LOGGER.debug(
+            "%s rebooted, reconnecting with %s",
             self.zone_name,
             soco,
         )
@@ -713,7 +722,9 @@ class SonosSpeaker:
         if xml := event.variables.get("zone_group_state"):
             zgs = ET.fromstring(xml)
             for vanished_device in zgs.find("VanishedDevices") or []:
-                if (reason := vanished_device.get("Reason")) != "sleeping":
+                if (
+                    reason := vanished_device.get("Reason")
+                ) not in SUPPORTED_VANISH_REASONS:
                     _LOGGER.debug(
                         "Ignoring %s marked %s as vanished with reason: %s",
                         self.zone_name,

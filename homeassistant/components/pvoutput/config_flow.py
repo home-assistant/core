@@ -23,7 +23,7 @@ async def validate_input(hass: HomeAssistant, *, api_key: str, system_id: int) -
         api_key=api_key,
         system_id=system_id,
     )
-    await pvoutput.status()
+    await pvoutput.system()
 
 
 class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):

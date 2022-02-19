@@ -418,7 +418,7 @@ def _compile_statistics(  # noqa: C901
     ]
     history_list = {}
     if entities_full_history:
-        history_list = history.get_significant_states_with_session(  # type: ignore
+        history_list = history.get_significant_states_with_session(  # type: ignore[no-untyped-call]
             hass,
             session,
             start - datetime.timedelta.resolution,
@@ -432,7 +432,7 @@ def _compile_statistics(  # noqa: C901
         if "sum" not in wanted_statistics[i.entity_id]
     ]
     if entities_significant_history:
-        _history_list = history.get_significant_states_with_session(  # type: ignore
+        _history_list = history.get_significant_states_with_session(  # type: ignore[no-untyped-call]
             hass,
             session,
             start - datetime.timedelta.resolution,

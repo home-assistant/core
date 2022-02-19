@@ -46,6 +46,7 @@ ACTIVITY_UPDATE_INTERVAL = timedelta(seconds=10)
 LOGIN_METHODS = ["phone", "email"]
 
 PLATFORMS = [
+    Platform.BUTTON,
     Platform.CAMERA,
     Platform.BINARY_SENSOR,
     Platform.LOCK,

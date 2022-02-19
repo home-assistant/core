@@ -49,6 +49,7 @@ async def test_entry_diagnostics(
         "entities": {
             str(Platform.ALARM_CONTROL_PANEL): [],
             str(Platform.BINARY_SENSOR): [],
+            str(Platform.BUTTON): [],
             str(Platform.CLIMATE): [],
             str(Platform.COVER): [],
             str(Platform.FAN): [],

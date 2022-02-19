@@ -656,7 +656,7 @@ async def test_form_import_device_discovered(hass):
     "source, data",
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
-        (config_entries.SOURCE_DISCOVERY, ELK_DISCOVERY_INFO),
+        (config_entries.SOURCE_INTEGRATION_DISCOVERY, ELK_DISCOVERY_INFO),
     ],
 )
 async def test_discovered_by_dhcp_or_discovery_mac_address_mismatch_host_already_configured(
@@ -686,7 +686,7 @@ async def test_discovered_by_dhcp_or_discovery_mac_address_mismatch_host_already
     "source, data",
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
-        (config_entries.SOURCE_DISCOVERY, ELK_DISCOVERY_INFO),
+        (config_entries.SOURCE_INTEGRATION_DISCOVERY, ELK_DISCOVERY_INFO),
     ],
 )
 async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
@@ -717,7 +717,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
     with _patch_discovery(), _patch_elk():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data=ELK_DISCOVERY_INFO,
         )
         await hass.async_block_till_done()
@@ -755,7 +755,7 @@ async def test_discovered_by_discovery(hass):
     with _patch_discovery(), _patch_elk():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data=ELK_DISCOVERY_INFO,
         )
         await hass.async_block_till_done()
@@ -806,7 +806,7 @@ async def test_discovered_by_discovery_url_already_configured(hass):
     with _patch_discovery(), _patch_elk():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data=ELK_DISCOVERY_INFO,
         )
         await hass.async_block_till_done()
