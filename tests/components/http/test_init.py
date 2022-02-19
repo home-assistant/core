@@ -261,6 +261,42 @@ async def test_peer_cert(hass, tmpdir):
     assert len(mock_load_verify_locations.mock_calls) == 1
 
 
+async def test_peer_cert_ignored_with_supervisor(hass, tmpdir):
+    """Test peer certiicate requirement ignored in supervised deployments."""
+    cert_path, key_path, peer_cert_path = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmpdir
+    )
+
+    with patch("ssl.SSLContext.load_cert_chain"), patch(
+        "homeassistant.components.http.hassio.is_hassio", return_value=True
+    ), patch(
+        "ssl.SSLContext.load_verify_locations"
+    ) as mock_load_verify_locations, patch(
+        "homeassistant.util.ssl.server_context_modern",
+        side_effect=server_context_modern,
+    ) as mock_context:
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {
+                    "http": {
+                        "ssl_peer_certificate": peer_cert_path,
+                        "ssl_profile": "modern",
+                        "ssl_certificate": cert_path,
+                        "ssl_key": key_path,
+                    }
+                },
+            )
+            is True
+        )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert len(mock_context.mock_calls) == 1
+    mock_load_verify_locations.assert_not_called()
+
+
 async def test_emergency_ssl_certificate_when_invalid(hass, tmpdir, caplog):
     """Test http can startup with an emergency self signed cert when the current one is broken."""
 
