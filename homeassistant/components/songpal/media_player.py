@@ -14,6 +14,7 @@ from songpal import (
     SongpalException,
     VolumeChange,
 )
+from songpal.group import GroupControl
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerEntity
@@ -26,7 +27,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import (
@@ -36,14 +37,18 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, HomeAssistantType
 
-from .const import CONF_ENDPOINT, DOMAIN, SET_SOUND_SETTING
+from .const import CONF_ENDPOINT, CONF_URL, CONF_UUID, DOMAIN, SET_SOUND_SETTING, CREATE_GROUP, ABORT_GROUP
 
 _LOGGER = logging.getLogger(__name__)
 
 PARAM_NAME = "name"
 PARAM_VALUE = "value"
+PARAM_SLAVES = "slaves"
+PARAM_GROUP_NAME = "group_name"
+
+SONGPALDATA = "songpal"
 
 SUPPORT_SONGPAL = (
     SUPPORT_VOLUME_SET
@@ -75,9 +80,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up songpal media player."""
+    if SONGPALDATA not in hass.data:
+        hass.data[SONGPALDATA] = []
     name = config_entry.data[CONF_NAME]
+    entity_id = "media_player."+name.lower().replace(" ","_")  # What is the proper way to get the entity id?
     endpoint = config_entry.data[CONF_ENDPOINT]
-
+    url = config_entry.data[CONF_URL]
+    uuid = config_entry.data[CONF_UUID]
+    group = GroupControl(url)
     device = Device(endpoint)
     try:
         async with async_timeout.timeout(
@@ -89,7 +99,7 @@ async def async_setup_entry(
         _LOGGER.debug("Unable to get methods from songpal: %s", ex)
         raise PlatformNotReady from ex
 
-    songpal_entity = SongpalEntity(name, device)
+    songpal_entity = SongpalEntity(hass, name, device, group, entity_id, uuid)
     async_add_entities([songpal_entity], True)
 
     platform = entity_platform.async_get_current_platform()
@@ -98,17 +108,31 @@ async def async_setup_entry(
         {vol.Required(PARAM_NAME): cv.string, vol.Required(PARAM_VALUE): cv.string},
         "async_set_sound_setting",
     )
+    platform.async_register_entity_service(
+        CREATE_GROUP,
+        {vol.Required(PARAM_GROUP_NAME): cv.string, vol.Required(PARAM_SLAVES): cv.string},
+        "async_create_group",
+    )
+    platform.async_register_entity_service(
+        ABORT_GROUP,
+        {},
+        "async_abort_group",
+    )
 
 
 class SongpalEntity(MediaPlayerEntity):
     """Class representing a Songpal device."""
 
-    def __init__(self, name, device):
+    def __init__(self, hass, name, device, group, entity_id, uuid):
         """Init."""
         self._name = name
+        self._hass = hass
         self._dev = device
         self._sysinfo = None
         self._model = None
+        self._group = group
+        self._entity_id = entity_id
+        self._uuid = uuid
 
         self._state = False
         self._available = False
@@ -122,6 +146,12 @@ class SongpalEntity(MediaPlayerEntity):
 
         self._active_source = None
         self._sources = {}
+        
+        self._is_master = False
+        self._is_grouped = False
+        self._group_name = None
+        self._master = None
+        self._group_list = []
 
     @property
     def should_poll(self):
@@ -240,6 +270,46 @@ class SongpalEntity(MediaPlayerEntity):
         """Change a setting on the device."""
         _LOGGER.debug("Calling set_sound_setting with %s: %s", name, value)
         await self._dev.set_sound_settings(name, value)
+    
+    
+    async def async_create_group(self, group_name, slaves):
+        """Create a new group."""
+        
+        uuids = [
+            device._uuid
+            for device in self._hass.data[SONGPALDATA]
+            if device._entity_id in slaves
+        ]
+        _LOGGER.info("Calling create_group to create %s on %s with %s", group_name, self._name, slaves)
+        await self._group.connect()
+        await self._group.create(group_name, uuids)
+        self._is_coordinator = True
+        self._is_grouped = True ##TODO: set slaves grouped
+        self._group_list = slaves
+        for device in self._hass.data[SONGPALDATA]:
+            if device._entity_id in slaves:
+                device._is_grouped = True
+                device._master = self._entity_id
+        _LOGGER.debug("Creating group succeeded")
+
+    async def async_abort_group(self):
+        """Abort the current group."""
+        _LOGGER.debug("Calling abort_group to abort group")
+        await self._group.connect()
+        await self._group.abort()
+        self._is_grouped = False   ##TODO: set slaves ungrouped
+        self._is_coordinator = False
+        slaves = [
+            device._entity_id
+            for device in self._hass.data[SONGPALDATA]
+            if device._master == self._entity_id
+        ]
+        for device in self._hass.data[SONGPALDATA]:
+            if device._entity_id in slaves:
+                device._is_grouped = False
+                device._master = None
+        self._group_list = []
+        _LOGGER.debug("Aborting group succeeded")
 
     async def async_update(self):
         """Fetch updates from the device."""
@@ -354,6 +424,16 @@ class SongpalEntity(MediaPlayerEntity):
     def is_volume_muted(self):
         """Return whether the device is muted."""
         return self._is_muted
+    
+    @property
+    def is_coordinator(self):
+        """Return whether the device is group coordinator, state GROUP, MasterSessionID 0"""
+        return self._is_coordinator
+    
+    @property
+    def is_grouped(self):
+        """Return whether the device is grouped"""
+        return self._is_grouped
 
     @property
     def supported_features(self):
