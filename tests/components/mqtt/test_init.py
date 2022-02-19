@@ -1135,6 +1135,92 @@ async def test_logs_error_if_no_connect_broker(
     )
 
 
+@pytest.mark.parametrize("enable_callback", [False, True])
+@patch("homeassistant.components.mqtt.TIMEOUT_ACK", 0.3)
+async def test_wait_for_ack(hass, caplog, calls, record_calls, enable_callback):
+    """Test if publish waits for a callback or is released."""
+
+    mid = 0
+
+    def get_mid():
+        nonlocal mid
+        mid += 1
+        return mid
+
+    class FakeInfo:
+        def __init__(self, mid):
+            self.mid = mid
+            self.rc = 0
+
+    @ha.callback
+    def _async_fire_mqtt_message(topic, payload, qos, retain):
+        async_fire_mqtt_message(hass, topic, payload, qos, retain)
+        mid = get_mid()
+        record_calls(mid, "publish", topic, payload, qos, retain)
+        if enable_callback:
+            mock_client.on_publish(0, 0, mid)
+        return FakeInfo(mid)
+
+    def _subscribe(topic, qos=0):
+        mid = get_mid()
+        record_calls(mid, "subscribe", topic, None, qos, None)
+        mock_client.on_subscribe(0, 0, mid)
+        return (0, mid)
+
+    def _unsubscribe(topic):
+        mid = get_mid()
+        record_calls(mid, "unsubscribe", topic, None, None, None)
+        mock_client.on_unsubscribe(0, 0, mid)
+        return (0, mid)
+
+    def get_first_mid_for_call(call_type=None, topic=None):
+        nonlocal calls
+        mid = None
+        for my_call in calls:
+            if call_type and my_call[1] != call_type:
+                continue
+            if topic and my_call[2] == topic:
+                mid = my_call[0]
+                break
+            if call_type and not topic and my_call[1] == call_type:
+                mid = my_call[0]
+                break
+        return mid
+
+    # Patch the publish side effect to a void a callback
+    with patch("paho.mqtt.client.Client") as mock_client:
+        mock_client = mock_client.return_value
+        mock_client.connect.return_value = 0
+        mock_client.subscribe.side_effect = _subscribe
+        mock_client.unsubscribe.side_effect = _unsubscribe
+        mock_client.publish.side_effect = _async_fire_mqtt_message
+        # Setup
+        entry = MockConfigEntry(
+            domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"}
+        )
+        assert await mqtt.async_setup_entry(hass, entry)
+        await hass.async_block_till_done()
+        # We are connected
+        mock_client.on_connect(mock_client, None, None, 0)
+        # Publish with or without callback
+        await mqtt.async_publish(hass, "test-topic1", "payload1")
+        # assert len(calls) == 4
+        publish_mid = get_first_mid_for_call("publish", "test-topic1")
+        # Send ACK for publish call
+        # [({mid}, 'publish', 'test-topic1', 'payload1', 0, False)]
+        await hass.async_block_till_done()
+        if enable_callback:
+            assert (
+                f"No ACK from MQTT server in 0.3 seconds (mid: {publish_mid})"
+                not in caplog.text
+            )
+        else:
+            assert (
+                f"No ACK from MQTT server in 0.3 seconds (mid: {publish_mid})"
+                in caplog.text
+            )
+
+
 @patch("homeassistant.components.mqtt.TIMEOUT_ACK", 0.3)
 async def test_publish_mid(hass, mqtt_client_mock):
     """Test if subscribe, publish, and unsubscribe waits until the callback release."""
@@ -1178,7 +1264,7 @@ async def test_publish_mid(hass, mqtt_client_mock):
     # Subscribe on two topics the first with ACK
     hass.async_create_task(unsubscribe_twice())
     await hass.async_block_till_done()
-    # Only the first published call was acknowlegded
+    # Only the first published call was acknowlegded, and the data was received back
     assert calls_1.call_count == 1
     assert calls_2.call_count == 0
 
@@ -1193,7 +1279,7 @@ async def test_handle_mqtt_on_callback(hass, caplog, mqtt_mock, mqtt_client_mock
     await hass.async_block_till_done()
     # Now call publish without call back, this will call _wait_for_mid(msg_info.mid)
     await mqtt.async_publish(hass, "no_callback/test-topic", "test-payload")
-    # Since the mid event wals already set, we should not see any timeout
+    # Since the mid event was already set, we should not see any timeout
     await hass.async_block_till_done()
     assert (
         "Transmitting message on no_callback/test-topic: 'test-payload', mid: 1"
