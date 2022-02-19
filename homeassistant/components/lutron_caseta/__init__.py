@@ -221,9 +221,7 @@ def _async_subscribe_pico_remote_events(
 
     @callback
     def _async_button_event(button_id, event_type):
-        device = button_devices_by_id.get(button_id)
-
-        if not device:
+        if not (device := button_devices_by_id.get(button_id)):
             return
 
         if event_type == BUTTON_STATUS_PRESSED:

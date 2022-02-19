@@ -319,8 +319,7 @@ class NestFlowHandler(
         if user_input is not None and not errors:
             # Create the subscriber id and/or verify it already exists. Note that
             # the existing id is used, and create call below is idempotent
-            subscriber_id = data.get(CONF_SUBSCRIBER_ID, "")
-            if not subscriber_id:
+            if not (subscriber_id := data.get(CONF_SUBSCRIBER_ID, "")):
                 subscriber_id = _generate_subscription_id(cloud_project_id)
             _LOGGER.debug("Creating subscriber id '%s'", subscriber_id)
             # Create a placeholder ConfigEntry to use since with the auth we've already created.
