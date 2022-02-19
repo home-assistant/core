@@ -58,12 +58,17 @@ def validate_event_name(obj: dict) -> dict:
     """Validate that a trigger has a valid event name."""
     event_source = obj[ATTR_EVENT_SOURCE]
     event_name = obj[ATTR_EVENT]
+    # the keys to the event source's model map are the event names
     vol.In(EVENT_MODEL_MAP[event_source])(event_name)
     return obj
 
 
 def validate_event_data(obj: dict) -> dict:
     """Validate that a trigger has a valid event data."""
+    # Return if there's no event data to validate
+    if ATTR_EVENT_DATA not in obj:
+        return obj
+
     event_source = obj[ATTR_EVENT_SOURCE]
     event_name = obj[ATTR_EVENT]
     event_data = obj[ATTR_EVENT_DATA]
@@ -96,10 +101,10 @@ TRIGGER_SCHEMA = vol.All(
             vol.Optional(ATTR_PARTIAL_DICT_MATCH, default=False): bool,
         },
     ),
+    validate_event_name,
+    validate_event_data,
     vol.Any(
         validate_non_node_event_source,
-        validate_event_name,
-        validate_event_data,
         cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
     ),
 )

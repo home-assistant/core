@@ -283,12 +283,6 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
         hass, "driver_no_event_data_filter"
     )
     driver_event_data_filter = async_capture_events(hass, "driver_event_data_filter")
-    node_event_data_no_partial_dict_match_wrong_type_filter = async_capture_events(
-        hass, "node_event_data_no_partial_dict_match_wrong_type_filter"
-    )
-    node_event_data_partial_dict_match_wrong_type_filter = async_capture_events(
-        hass, "node_event_data_partial_dict_match_wrong_type_filter"
-    )
     node_event_data_no_partial_dict_match_filter = async_capture_events(
         hass, "node_event_data_no_partial_dict_match_filter"
     )
@@ -304,8 +298,6 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
         controller_event_data_filter.clear()
         driver_no_event_data_filter.clear()
         driver_event_data_filter.clear()
-        node_event_data_no_partial_dict_match_wrong_type_filter.clear()
-        node_event_data_partial_dict_match_wrong_type_filter.clear()
         node_event_data_no_partial_dict_match_filter.clear()
         node_event_data_partial_dict_match_filter.clear()
 
@@ -389,33 +381,6 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
                         "event": "driver_event_data_filter",
                     },
                 },
-                # node filter: event data, no partial dict match, wrong type
-                {
-                    "trigger": {
-                        "platform": trigger_type,
-                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-                        "event_source": "node",
-                        "event": "value updated",
-                        "event_data": {"args": "wrong type"},
-                    },
-                    "action": {
-                        "event": "node_event_data_no_partial_dict_match_wrong_type_filter",
-                    },
-                },
-                # node filter: event data, partial dict match, wrong type
-                {
-                    "trigger": {
-                        "platform": trigger_type,
-                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-                        "event_source": "node",
-                        "event": "value updated",
-                        "event_data": {"args": "wrong type"},
-                        "partial_dict_match": True,
-                    },
-                    "action": {
-                        "event": "node_event_data_partial_dict_match_wrong_type_filter",
-                    },
-                },
                 # node filter: event data, no partial dict match
                 {
                     "trigger": {
@@ -437,20 +402,6 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
                         "event_source": "node",
                         "event": "value updated",
                         "event_data": {"args": {"commandClassName": "Door Lock"}},
-                        "partial_dict_match": True,
-                    },
-                    "action": {
-                        "event": "node_event_data_partial_dict_match_filter",
-                    },
-                },
-                # node filter: event data, partial dict with a nonexistent key
-                {
-                    "trigger": {
-                        "platform": trigger_type,
-                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-                        "event_source": "node",
-                        "event": "value updated",
-                        "event_data": {"non-existent key": True},
                         "partial_dict_match": True,
                     },
                     "action": {
@@ -480,8 +431,6 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
     assert len(controller_event_data_filter) == 0
     assert len(driver_no_event_data_filter) == 0
     assert len(driver_event_data_filter) == 0
-    assert len(node_event_data_no_partial_dict_match_wrong_type_filter) == 0
-    assert len(node_event_data_partial_dict_match_wrong_type_filter) == 0
     assert len(node_event_data_no_partial_dict_match_filter) == 0
     assert len(node_event_data_partial_dict_match_filter) == 0
 
@@ -506,8 +455,6 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
     assert len(controller_event_data_filter) == 0
     assert len(driver_no_event_data_filter) == 0
     assert len(driver_event_data_filter) == 0
-    assert len(node_event_data_no_partial_dict_match_wrong_type_filter) == 0
-    assert len(node_event_data_partial_dict_match_wrong_type_filter) == 0
     assert len(node_event_data_no_partial_dict_match_filter) == 0
     assert len(node_event_data_partial_dict_match_filter) == 0
 
@@ -531,8 +478,6 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
     assert len(controller_event_data_filter) == 0
     assert len(driver_no_event_data_filter) == 0
     assert len(driver_event_data_filter) == 0
-    assert len(node_event_data_no_partial_dict_match_wrong_type_filter) == 0
-    assert len(node_event_data_partial_dict_match_wrong_type_filter) == 0
     assert len(node_event_data_no_partial_dict_match_filter) == 0
     assert len(node_event_data_partial_dict_match_filter) == 0
 
@@ -556,8 +501,6 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
     assert len(controller_event_data_filter) == 1
     assert len(driver_no_event_data_filter) == 0
     assert len(driver_event_data_filter) == 0
-    assert len(node_event_data_no_partial_dict_match_wrong_type_filter) == 0
-    assert len(node_event_data_partial_dict_match_wrong_type_filter) == 0
     assert len(node_event_data_no_partial_dict_match_filter) == 0
     assert len(node_event_data_partial_dict_match_filter) == 0
 
@@ -590,8 +533,6 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
     assert len(controller_event_data_filter) == 0
     assert len(driver_no_event_data_filter) == 1
     assert len(driver_event_data_filter) == 0
-    assert len(node_event_data_no_partial_dict_match_wrong_type_filter) == 0
-    assert len(node_event_data_partial_dict_match_wrong_type_filter) == 0
     assert len(node_event_data_no_partial_dict_match_filter) == 0
     assert len(node_event_data_partial_dict_match_filter) == 0
 
@@ -624,8 +565,6 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
     assert len(controller_event_data_filter) == 0
     assert len(driver_no_event_data_filter) == 1
     assert len(driver_event_data_filter) == 1
-    assert len(node_event_data_no_partial_dict_match_wrong_type_filter) == 0
-    assert len(node_event_data_partial_dict_match_wrong_type_filter) == 0
     assert len(node_event_data_no_partial_dict_match_filter) == 0
     assert len(node_event_data_partial_dict_match_filter) == 0
 
@@ -658,8 +597,6 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
     assert len(controller_event_data_filter) == 0
     assert len(driver_no_event_data_filter) == 0
     assert len(driver_event_data_filter) == 0
-    assert len(node_event_data_no_partial_dict_match_wrong_type_filter) == 0
-    assert len(node_event_data_partial_dict_match_wrong_type_filter) == 0
     assert len(node_event_data_no_partial_dict_match_filter) == 0
     assert len(node_event_data_partial_dict_match_filter) == 1
 
@@ -693,8 +630,6 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
     assert len(controller_event_data_filter) == 0
     assert len(driver_no_event_data_filter) == 0
     assert len(driver_event_data_filter) == 0
-    assert len(node_event_data_no_partial_dict_match_wrong_type_filter) == 0
-    assert len(node_event_data_partial_dict_match_wrong_type_filter) == 0
     assert len(node_event_data_no_partial_dict_match_filter) == 0
     assert len(node_event_data_partial_dict_match_filter) == 0
 
