@@ -158,8 +158,11 @@ async def async_setup_hass(
 
         safe_mode = True
         old_config = hass.config
+        old_logging = hass.data.get(DATA_LOGGING)
 
         hass = core.HomeAssistant()
+        if old_logging:
+            hass.data[DATA_LOGGING] = old_logging
         hass.config.skip_pip = old_config.skip_pip
         hass.config.internal_url = old_config.internal_url
         hass.config.external_url = old_config.external_url
