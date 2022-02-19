@@ -10,8 +10,9 @@ import av
 from httpx import HTTPStatusError, RequestError, TimeoutException
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.stream.const import SOURCE_TIMEOUT
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,
@@ -21,6 +22,7 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template as template_helper
 from homeassistant.helpers.httpx_client import get_async_client
@@ -54,102 +56,98 @@ DEFAULT_DATA = {
 SUPPORTED_IMAGE_TYPES = ["png", "jpeg", "svg+xml"]
 
 
-class GenericIPCamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+async def async_test_connection(hass, info) -> tuple[bool, str | None, str]:
+    """Verify that the camera data is valid before we add it."""
+
+    fmt = None
+    if url := info.get(CONF_STILL_IMAGE_URL):
+        # First try getting a still image
+        if not isinstance(url, template_helper.Template) and url:
+            url = cv.template(url)
+            url.hass = hass
+        try:
+            url = url.async_render(parse_result=False)
+        except TemplateError as err:
+            _LOGGER.error("Error parsing template %s: %s", url, err)
+            return False, None, "template_error"
+        verify_ssl = info.get(CONF_VERIFY_SSL)
+        auth = generate_auth(info)
+        try:
+            async_client = get_async_client(hass, verify_ssl=verify_ssl)
+            response = await async_client.get(url, auth=auth, timeout=GET_IMAGE_TIMEOUT)
+            response.raise_for_status()
+            image = response.content
+        except (
+            RequestError,
+            HTTPStatusError,
+            TimeoutException,
+        ) as err:
+            _LOGGER.error("Error getting camera image from %s: %s", url, err)
+            return False, None, "unable_still_load"
+
+        if image is None:
+            return False, None, "unable_still_load"
+        fmt = imghdr.what(None, h=image)
+        if fmt is None:
+            # if imghdr can't figure it out, could be svg.
+            if image.decode("utf-8").startswith("<svg"):
+                fmt = "svg+xml"
+        _LOGGER.debug(
+            "Still image at '%s' detected format: %s",
+            info[CONF_STILL_IMAGE_URL],
+            fmt,
+        )
+        if fmt not in SUPPORTED_IMAGE_TYPES:
+            return False, None, "invalid_still_image"
+        fmt = "image/" + fmt
+
+    # Second level functionality is to get a stream.
+    if stream_source := info.get(CONF_STREAM_SOURCE):
+        try:
+            # For RTSP streams, prefer TCP. This code is duplicated from
+            # homeassistant.components.stream.__init__.py:create_stream()
+            # It may be possible & better to call create_stream() directly.
+            stream_options: dict[str, str] = {}
+            if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
+                stream_options = {
+                    "rtsp_flags": "prefer_tcp",
+                    "stimeout": "5000000",
+                }
+            if rtsp_transport := info.get(CONF_RTSP_TRANSPORT):
+                stream_options[FFMPEG_OPTION_MAP[CONF_RTSP_TRANSPORT]] = rtsp_transport
+            _LOGGER.debug("Attempting to open stream %s", stream_source)
+            container = await hass.async_add_executor_job(
+                partial(
+                    av.open,
+                    stream_source,
+                    options=stream_options,
+                    timeout=SOURCE_TIMEOUT,
+                )
+            )
+            _ = container.streams.video[0]
+        # pylint: disable=c-extension-no-member
+        except av.error.FileNotFoundError:
+            return False, None, "stream_no_route_to_host"
+        except av.error.HTTPUnauthorizedError:  # pylint: disable=c-extension-no-member
+            return False, None, "stream_unauthorised"
+        except (KeyError, IndexError):
+            return False, None, "stream_novideo"
+        except PermissionError:
+            return False, None, "stream_not_permitted"
+        except OSError as err:
+            if "No route to host" in str(err):
+                return False, None, "stream_no_route_to_host"
+            if "Input/output error" in str(err):
+                return False, None, "stream_io_error"
+            raise err
+    return True, fmt, ""
+
+
+class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for generic IP camera."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-
-    async def _test_connection(self, info) -> tuple[bool, str | None, str]:
-        """Verify that the camera data is valid before we add it."""
-        unique_id = self.flow_id
-        await self.async_set_unique_id(unique_id)
-        fmt = None
-        if url := info.get(CONF_STILL_IMAGE_URL):
-            # First try getting a still image
-            if not isinstance(url, template_helper.Template) and url:
-                url = cv.template(url)
-                url.hass = self.hass
-            try:
-                url = url.async_render(parse_result=False)
-            except TemplateError as err:
-                _LOGGER.error("Error parsing template %s: %s", url, err)
-                return False, None, "template_error"
-            verify_ssl = info.get(CONF_VERIFY_SSL)
-            auth = generate_auth(info)
-            try:
-                async_client = get_async_client(self.hass, verify_ssl=verify_ssl)
-                response = await async_client.get(
-                    url, auth=auth, timeout=GET_IMAGE_TIMEOUT
-                )
-                response.raise_for_status()
-                image = response.content
-            except (
-                RequestError,
-                HTTPStatusError,
-                TimeoutException,
-            ) as err:
-                _LOGGER.error("Error getting camera image from %s: %s", url, err)
-                return False, None, "unable_still_load"
-
-            if image is None:
-                return False, None, "unable_still_load"
-            fmt = imghdr.what(None, h=image)
-            if fmt is None:
-                # if imghdr can't figure it out, could be svg.
-                if image.decode("utf-8").startswith("<svg"):
-                    fmt = "svg+xml"
-            _LOGGER.debug(
-                "Still image at '%s' detected format: %s",
-                info[CONF_STILL_IMAGE_URL],
-                fmt,
-            )
-            if fmt not in SUPPORTED_IMAGE_TYPES:
-                return False, None, "invalid_still_image"
-            fmt = "image/" + fmt
-
-        # Second level functionality is to get a stream.
-        if stream_source := info.get(CONF_STREAM_SOURCE):
-            try:
-                # For RTSP streams, prefer TCP. This code is duplicated from
-                # homeassistant.components.stream.__init__.py:create_stream()
-                # It may be possible & better to call create_stream() directly.
-                stream_options: dict[str, str] = {}
-                if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
-                    stream_options = {
-                        "rtsp_flags": "prefer_tcp",
-                        "stimeout": "5000000",
-                    }
-                if rtsp_transport := info.get(CONF_RTSP_TRANSPORT):
-                    stream_options[
-                        FFMPEG_OPTION_MAP[CONF_RTSP_TRANSPORT]
-                    ] = rtsp_transport
-                _LOGGER.debug("Attempting to open stream %s", stream_source)
-                container = await self.hass.async_add_executor_job(
-                    partial(
-                        av.open,
-                        stream_source,
-                        options=stream_options,
-                        timeout=SOURCE_TIMEOUT,
-                    )
-                )
-                _ = container.streams.video[0]
-            # pylint: disable=c-extension-no-member
-            except av.error.FileNotFoundError:
-                return False, None, "stream_no_route_to_host"
-            except av.error.HTTPUnauthorizedError:  # pylint: disable=c-extension-no-member
-                return False, None, "stream_unauthorised"
-            except (KeyError, IndexError):
-                return False, None, "stream_novideo"
-            except PermissionError:
-                return False, None, "stream_not_permitted"
-            except OSError as err:
-                if "No route to host" in str(err):
-                    return False, None, "stream_no_route_to_host"
-                if "Input/output error" in str(err):
-                    return False, None, "stream_io_error"
-                raise err
-        return True, fmt, ""
 
     @staticmethod
     def build_schema(user_input):
@@ -196,7 +194,7 @@ class GenericIPCamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> FlowResult:
         """Handle the start of the config flow."""
         errors = {}
         if user_input:
@@ -206,11 +204,12 @@ class GenericIPCamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 errors["base"] = "no_still_image_or_stream_url"
             else:
-                (res, still_format, errors["base"]) = await self._test_connection(
-                    user_input
+                (res, still_format, errors["base"]) = await async_test_connection(
+                    self.hass, user_input
                 )
                 if res:
                     user_input[CONF_CONTENT_TYPE] = still_format
+                    await self.async_set_unique_id(self.flow_id)
                     return self.async_create_entry(
                         title=user_input[CONF_NAME], data=user_input
                     )
@@ -223,7 +222,7 @@ class GenericIPCamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_config):
+    async def async_step_import(self, import_config) -> FlowResult:
         """Handle config import from yaml."""
         # abort if we've already got this one.
         self._async_abort_entries_match(
@@ -232,9 +231,10 @@ class GenericIPCamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_STREAM_SOURCE: import_config.get(CONF_STREAM_SOURCE),
             }
         )
-        res, still_format, err = await self._test_connection(import_config)
-        import_config[CONF_CONTENT_TYPE] = still_format
+        res, still_format, err = await async_test_connection(self.hass, import_config)
         if res:
+            import_config[CONF_CONTENT_TYPE] = still_format
+            await self.async_set_unique_id(self.flow_id)
             return self.async_create_entry(
                 title=import_config[CONF_NAME], data=import_config
             )
