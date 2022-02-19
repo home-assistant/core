@@ -202,9 +202,9 @@ class GenericIPCamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input:
             # Secondary validation because serialised vol can't seem to handle this complexity:
-            if user_input.get(CONF_STILL_IMAGE_URL) in [None, ""] and user_input.get(
+            if not user_input.get(CONF_STILL_IMAGE_URL) and not user_input.get(
                 CONF_STREAM_SOURCE
-            ) in [None, ""]:
+            ):
                 errors["base"] = "no_still_image_or_stream_url"
             else:
                 (res, still_format, errors["base"]) = await self._test_connection(
