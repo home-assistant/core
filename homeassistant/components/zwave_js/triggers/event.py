@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import functools
-from typing import Any
 
 from pydantic import ValidationError
 import voluptuous as vol
@@ -75,15 +74,11 @@ def validate_event_data(obj: dict) -> dict:
     try:
         EVENT_MODEL_MAP[event_source][event_name](**event_data)
     except ValidationError as exc:
-        errors: list[dict[str, Any]] = []
-        for error in exc.errors():
-            # Filter out required field errors if keys can be missing
-            if error["type"] == "value_error.missing":
-                continue
-            errors.append(error)  # type: ignore[arg-type]
-
-        # If there are still errors after filtering, raise an exception
-        if errors:
+        # Filter out required field errors if keys can be missing, and if there are
+        # still errors, raise an exception
+        if errors := [
+            error for error in exc.errors() if error["type"] == "value_error.missing"
+        ]:
             raise vol.MultipleInvalid(errors) from exc
     return obj
 
