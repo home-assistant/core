@@ -2,6 +2,7 @@
 from enum import Enum
 
 from homeassistant.const import (
+    CONF_ADDRESS,
     CONF_BINARY_SENSORS,
     CONF_COVERS,
     CONF_LIGHTS,
@@ -66,13 +67,11 @@ UDP = "udp"
 
 
 # service call attributes
-ATTR_ADDRESS = "address"
-ATTR_HUB = "hub"
+ATTR_ADDRESS = CONF_ADDRESS
+ATTR_HUB = CONF_HUB
 ATTR_UNIT = "unit"
 ATTR_SLAVE = "slave"
 ATTR_VALUE = "value"
-ATTR_STATE = "state"
-ATTR_TEMPERATURE = "temperature"
 
 
 class DataType(str, Enum):
