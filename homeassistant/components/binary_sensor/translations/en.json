@@ -59,8 +59,6 @@
             "connected": "{entity_name} connected",
             "gas": "{entity_name} started detecting gas",
             "hot": "{entity_name} became hot",
-            "is_not_tampered": "{entity_name} stopped detecting tampering",
-            "is_tampered": "{entity_name} started detecting tampering",
             "light": "{entity_name} started detecting light",
             "locked": "{entity_name} locked",
             "moist": "{entity_name} became moist",
@@ -134,9 +132,9 @@
             "off": "Not charging",
             "on": "Charging"
         },
-        "co": {
-            "off": "Clear",
-            "on": "Detected"
+        "carbon_monoxide": {
+            "off": "[%key:component::binary_sensor::state::gas::off%]",
+            "on": "[%key:component::binary_sensor::state::gas::on%]"
         },
         "cold": {
             "off": "Normal",
@@ -155,8 +153,8 @@
             "on": "Open"
         },
         "gas": {
-            "off": "Clear",
-            "on": "Detected"
+            "off": "[%key:component::binary_sensor::state::gas::off%]",
+            "on": "[%key:component::binary_sensor::state::gas::on%]"
         },
         "heat": {
             "off": "Normal",
@@ -175,16 +173,16 @@
             "on": "Wet"
         },
         "motion": {
-            "off": "Clear",
-            "on": "Detected"
+            "off": "[%key:component::binary_sensor::state::gas::off%]",
+            "on": "[%key:component::binary_sensor::state::gas::on%]"
         },
         "moving": {
             "off": "Not moving",
             "on": "Moving"
         },
         "occupancy": {
-            "off": "Clear",
-            "on": "Detected"
+            "off": "[%key:component::binary_sensor::state::gas::off%]",
+            "on": "[%key:component::binary_sensor::state::gas::on%]"
         },
         "opening": {
             "off": "Closed",
@@ -195,8 +193,8 @@
             "on": "Plugged in"
         },
         "presence": {
-            "off": "Away",
-            "on": "Home"
+            "off": "[%key:common::state::not_home%]",
+            "on": "[%key:common::state::home%]"
         },
         "problem": {
             "off": "OK",
@@ -211,20 +209,20 @@
             "on": "Unsafe"
         },
         "smoke": {
-            "off": "Clear",
-            "on": "Detected"
+            "off": "[%key:component::binary_sensor::state::gas::off%]",
+            "on": "[%key:component::binary_sensor::state::gas::on%]"
         },
         "sound": {
-            "off": "Clear",
-            "on": "Detected"
+            "off": "[%key:component::binary_sensor::state::gas::off%]",
+            "on": "[%key:component::binary_sensor::state::gas::on%]"
         },
         "update": {
             "off": "Up-to-date",
             "on": "Update available"
         },
         "vibration": {
-            "off": "Clear",
-            "on": "Detected"
+            "off": "[%key:component::binary_sensor::state::gas::off%]",
+            "on": "[%key:component::binary_sensor::state::gas::on%]"
         },
         "window": {
             "off": "Closed",
