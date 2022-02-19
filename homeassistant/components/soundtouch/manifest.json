@@ -6,6 +6,5 @@
   "after_dependencies": ["zeroconf"],
   "codeowners": [],
   "iot_class": "local_polling",
-  "loggers": ["libsoundtouch"],
-  "version": "1.0.0"
+  "loggers": ["libsoundtouch"]
 }
