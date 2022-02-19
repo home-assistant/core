@@ -141,11 +141,11 @@ async def test_connected_device_registered(hass):
     """Test dispatch on connected device being registered."""
 
     registry = mock_registry(hass)
-    dispatchs = []
+    dispatches = []
 
     @callback
     def _save_dispatch(msg):
-        dispatchs.append(msg)
+        dispatches.append(msg)
 
     unsub = async_dispatcher_connect(
         hass, ce.CONNECTED_DEVICE_REGISTERED, _save_dispatch
@@ -216,6 +216,6 @@ async def test_connected_device_registered(hass):
         == "super-mock-id"
     )
     unsub()
-    assert dispatchs == [
+    assert dispatches == [
         {"ip": "5.4.3.2", "mac": "aa:bb:cc:dd:ee:ff", "host_name": "connected"}
     ]
