@@ -121,6 +121,18 @@ def generate_auth(device_info) -> httpx.Auth | None:
     return None
 
 
+def generate_auth(device_info) -> httpx.Auth | None:
+    """Generate httpx.Auth object from credentials."""
+    username = device_info.get(CONF_USERNAME)
+    password = device_info.get(CONF_PASSWORD)
+    authentication = device_info.get(CONF_AUTHENTICATION)
+    if username and password:
+        if authentication == HTTP_DIGEST_AUTHENTICATION:
+            return httpx.DigestAuth(username=username, password=password)
+        return httpx.BasicAuth(username=username, password=password)
+    return None
+
+
 class GenericCamera(Camera):
     """A generic implementation of an IP camera."""
 
