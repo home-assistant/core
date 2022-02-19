@@ -333,8 +333,7 @@ class XiaomiDoorSensor(XiaomiBinarySensor, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if state is None:
+        if (state := await self.async_get_last_state()) is None:
             return
 
         self._state = state.state == "on"
