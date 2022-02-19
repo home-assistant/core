@@ -48,7 +48,7 @@ async def test_button_stop_pump(hass, mock_asyncsleepiq):
 
     entity = entity_registry.async_get(f"button.sleepnumber_{BED_NAME_LOWER}_stop_pump")
     assert entity
-    assert entity.unique_id == f"{BED_ID}-stop_pump"
+    assert entity.unique_id == f"{BED_ID}-stop-pump"
 
     await hass.services.async_call(
         DOMAIN,
