@@ -1,8 +1,10 @@
 {
+  "disabled": "Integration library not compatible with Python 3.10",
   "domain": "apcupsd",
   "name": "apcupsd",
   "documentation": "https://www.home-assistant.io/integrations/apcupsd",
   "requirements": ["apcaccess==0.0.13"],
   "codeowners": [],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["apcaccess"]
 }

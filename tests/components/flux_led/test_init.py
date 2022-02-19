@@ -7,10 +7,16 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import flux_led
-from homeassistant.components.flux_led.const import DOMAIN
+from homeassistant.components.flux_led.const import (
+    CONF_REMOTE_ACCESS_ENABLED,
+    CONF_REMOTE_ACCESS_HOST,
+    CONF_REMOTE_ACCESS_PORT,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -111,7 +117,7 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
 ) -> None:
     """Test that the unique id is added if its missing via directed (not broadcast) discovery."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=None
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=None, title=IP_ADDRESS
     )
     config_entry.add_to_hass(hass)
     last_address = None
@@ -138,7 +144,6 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
         assert config_entry.state == ConfigEntryState.LOADED
 
     assert config_entry.unique_id == MAC_ADDRESS
-    assert config_entry.data[CONF_NAME] == title
     assert config_entry.title == title
 
 
@@ -156,3 +161,46 @@ async def test_time_sync_startup_and_next_day(hass: HomeAssistant) -> None:
     async_fire_time_changed(hass, utcnow() + timedelta(hours=24))
     await hass.async_block_till_done()
     assert len(bulb.async_set_time.mock_calls) == 2
+
+
+async def test_unique_id_migrate_when_mac_discovered(hass: HomeAssistant) -> None:
+    """Test unique id migrated when mac discovered."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_REMOTE_ACCESS_HOST: "any",
+            CONF_REMOTE_ACCESS_ENABLED: True,
+            CONF_REMOTE_ACCESS_PORT: 1234,
+            CONF_HOST: IP_ADDRESS,
+            CONF_NAME: DEFAULT_ENTRY_TITLE,
+        },
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    with _patch_discovery(no_device=True), _patch_wifibulb(device=bulb):
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    assert not config_entry.unique_id
+    entity_registry = er.async_get(hass)
+    assert (
+        entity_registry.async_get("light.bulb_rgbcw_ddeeff").unique_id
+        == config_entry.entry_id
+    )
+    assert (
+        entity_registry.async_get("switch.bulb_rgbcw_ddeeff_remote_access").unique_id
+        == f"{config_entry.entry_id}_remote_access"
+    )
+
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
+        await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get("light.bulb_rgbcw_ddeeff").unique_id
+        == config_entry.unique_id
+    )
+    assert (
+        entity_registry.async_get("switch.bulb_rgbcw_ddeeff_remote_access").unique_id
+        == f"{config_entry.unique_id}_remote_access"
+    )

@@ -40,6 +40,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entityfilter, state as state_helper
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.temperature import fahrenheit_to_celsius
@@ -112,7 +113,10 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         default_metric,
     )
 
-    hass.bus.listen(EVENT_STATE_CHANGED, metrics.handle_event)
+    hass.bus.listen(EVENT_STATE_CHANGED, metrics.handle_state_changed)
+    hass.bus.listen(
+        EVENT_ENTITY_REGISTRY_UPDATED, metrics.handle_entity_registry_updated
+    )
     return True
 
 
@@ -150,7 +154,7 @@ class PrometheusMetrics:
         self._metrics = {}
         self._climate_units = climate_units
 
-    def handle_event(self, event):
+    def handle_state_changed(self, event):
         """Listen for new messages on the bus, and add them to Prometheus."""
         if (state := event.data.get("new_state")) is None:
             return
@@ -161,6 +165,11 @@ class PrometheusMetrics:
 
         if not self._filter(state.entity_id):
             return
+
+        if (old_state := event.data.get("old_state")) is not None and (
+            old_friendly_name := old_state.attributes.get(ATTR_FRIENDLY_NAME)
+        ) != state.attributes.get(ATTR_FRIENDLY_NAME):
+            self._remove_labelsets(old_state.entity_id, old_friendly_name)
 
         ignored_states = (STATE_UNAVAILABLE, STATE_UNKNOWN)
 
@@ -188,6 +197,46 @@ class PrometheusMetrics:
             "The last_updated timestamp",
         )
         last_updated_time_seconds.labels(**labels).set(state.last_updated.timestamp())
+
+    def handle_entity_registry_updated(self, event):
+        """Listen for deleted, disabled or renamed entities and remove them from the Prometheus Registry."""
+        if (action := event.data.get("action")) in (None, "create"):
+            return
+
+        entity_id = event.data.get("entity_id")
+        _LOGGER.debug("Handling entity update for %s", entity_id)
+
+        metrics_entity_id = None
+
+        if action == "remove":
+            metrics_entity_id = entity_id
+        elif action == "update":
+            changes = event.data.get("changes")
+
+            if "entity_id" in changes:
+                metrics_entity_id = changes["entity_id"]
+            elif "disabled_by" in changes:
+                metrics_entity_id = entity_id
+
+        if metrics_entity_id:
+            self._remove_labelsets(metrics_entity_id)
+
+    def _remove_labelsets(self, entity_id, friendly_name=None):
+        """Remove labelsets matching the given entity id from all metrics."""
+        for _, metric in self._metrics.items():
+            for sample in metric.collect()[0].samples:
+                if sample.labels["entity"] == entity_id and (
+                    not friendly_name or sample.labels["friendly_name"] == friendly_name
+                ):
+                    _LOGGER.debug(
+                        "Removing labelset from %s for entity_id: %s",
+                        sample.name,
+                        entity_id,
+                    )
+                    try:
+                        metric.remove(*sample.labels.values())
+                    except KeyError:
+                        pass
 
     def _handle_attributes(self, state):
         for key, value in state.attributes.items():

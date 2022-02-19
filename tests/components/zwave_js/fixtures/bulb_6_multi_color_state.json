@@ -10,7 +10,7 @@
         "generic": {"key": 17, "label":"Multilevel Switch"},
         "specific": {"key": 1, "label":"Multilevel Power Switch"},
         "mandatorySupportedCCs": [],
-        "mandatoryControlCCs": []
+        "mandatoryControlledCCs": []
     },
     "isListening": true,
     "isFrequentListening": false,

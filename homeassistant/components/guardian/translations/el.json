@@ -6,6 +6,12 @@
         "step": {
             "discovery_confirm": {
                 "description": "\u0398\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03c1\u03c5\u03b8\u03bc\u03af\u03c3\u03b5\u03c4\u03b5 \u03b1\u03c5\u03c4\u03ae \u03c4\u03b7 \u03c3\u03c5\u03c3\u03ba\u03b5\u03c5\u03ae Guardian;"
+            },
+            "user": {
+                "description": "\u0394\u03b9\u03b1\u03bc\u03bf\u03c1\u03c6\u03ce\u03c3\u03c4\u03b5 \u03bc\u03b9\u03b1 \u03c4\u03bf\u03c0\u03b9\u03ba\u03ae \u03c3\u03c5\u03c3\u03ba\u03b5\u03c5\u03ae Elexa Guardian."
+            },
+            "zeroconf_confirm": {
+                "description": "\u0398\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03c1\u03c5\u03b8\u03bc\u03af\u03c3\u03b5\u03c4\u03b5 \u03b1\u03c5\u03c4\u03ae \u03c4\u03b7 \u03c3\u03c5\u03c3\u03ba\u03b5\u03c5\u03ae Guardian;"
             }
         }
     }

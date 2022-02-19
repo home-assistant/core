@@ -148,7 +148,9 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         unique_id,
     ):
         """Initialize the Template cover."""
-        super().__init__(hass, config=config, fallback_name=object_id)
+        super().__init__(
+            hass, config=config, fallback_name=object_id, unique_id=unique_id
+        )
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id, hass=hass
         )
@@ -182,7 +184,6 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         self._is_opening = False
         self._is_closing = False
         self._tilt_value = None
-        self._unique_id = unique_id
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -270,11 +271,6 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             )
         else:
             self._tilt_value = state
-
-    @property
-    def unique_id(self):
-        """Return the unique id of this cover."""
-        return self._unique_id
 
     @property
     def is_closed(self):

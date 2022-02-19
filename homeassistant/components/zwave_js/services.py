@@ -457,7 +457,7 @@ class ZWaveServices:
         options = service.data.get(const.ATTR_OPTIONS)
 
         if not broadcast and len(nodes) == 1:
-            const.LOGGER.warning(
+            const.LOGGER.info(
                 "Passing the zwave_js.multicast_set_value service call to the "
                 "zwave_js.set_value service since only one node was targeted"
             )
@@ -520,5 +520,10 @@ class ZWaveServices:
     async def async_ping(self, service: ServiceCall) -> None:
         """Ping node(s)."""
         # pylint: disable=no-self-use
+        const.LOGGER.warning(
+            "This service is deprecated in favor of the ping button entity. Service "
+            "calls will still work for now but the service will be removed in a "
+            "future release"
+        )
         nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
         await asyncio.gather(*(node.async_ping() for node in nodes))

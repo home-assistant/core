@@ -4,6 +4,8 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import patch
 
+from pytest import LogCaptureFixture
+
 from homeassistant import setup
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -98,7 +100,9 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
         )
 
 
-async def test_bad_template_render(caplog: Any, hass: HomeAssistant) -> None:
+async def test_bad_template_render(
+    caplog: LogCaptureFixture, hass: HomeAssistant
+) -> None:
     """Test rendering a broken template."""
 
     await setup_test_entities(
@@ -141,7 +145,9 @@ async def test_update_with_json_attrs(hass: HomeAssistant) -> None:
     assert entity_state.attributes["key_three"] == "value_three"
 
 
-async def test_update_with_json_attrs_no_data(caplog, hass: HomeAssistant) -> None:  # type: ignore[no-untyped-def]
+async def test_update_with_json_attrs_no_data(
+    caplog: LogCaptureFixture, hass: HomeAssistant
+) -> None:
     """Test attributes when no JSON result fetched."""
 
     await setup_test_entities(
@@ -157,7 +163,9 @@ async def test_update_with_json_attrs_no_data(caplog, hass: HomeAssistant) -> No
     assert "Empty reply found when expecting JSON data" in caplog.text
 
 
-async def test_update_with_json_attrs_not_dict(caplog, hass: HomeAssistant) -> None:  # type: ignore[no-untyped-def]
+async def test_update_with_json_attrs_not_dict(
+    caplog: LogCaptureFixture, hass: HomeAssistant
+) -> None:
     """Test attributes when the return value not a dict."""
 
     await setup_test_entities(
@@ -173,7 +181,9 @@ async def test_update_with_json_attrs_not_dict(caplog, hass: HomeAssistant) -> N
     assert "JSON result was not a dictionary" in caplog.text
 
 
-async def test_update_with_json_attrs_bad_json(caplog, hass: HomeAssistant) -> None:  # type: ignore[no-untyped-def]
+async def test_update_with_json_attrs_bad_json(
+    caplog: LogCaptureFixture, hass: HomeAssistant
+) -> None:
     """Test attributes when the return value is invalid JSON."""
 
     await setup_test_entities(
@@ -189,7 +199,9 @@ async def test_update_with_json_attrs_bad_json(caplog, hass: HomeAssistant) -> N
     assert "Unable to parse output as JSON" in caplog.text
 
 
-async def test_update_with_missing_json_attrs(caplog, hass: HomeAssistant) -> None:  # type: ignore[no-untyped-def]
+async def test_update_with_missing_json_attrs(
+    caplog: LogCaptureFixture, hass: HomeAssistant
+) -> None:
     """Test attributes when an expected key is missing."""
 
     await setup_test_entities(
@@ -208,7 +220,9 @@ async def test_update_with_missing_json_attrs(caplog, hass: HomeAssistant) -> No
     assert "missing_key" not in entity_state.attributes
 
 
-async def test_update_with_unnecessary_json_attrs(caplog, hass: HomeAssistant) -> None:  # type: ignore[no-untyped-def]
+async def test_update_with_unnecessary_json_attrs(
+    caplog: LogCaptureFixture, hass: HomeAssistant
+) -> None:
     """Test attributes when an expected key is missing."""
 
     await setup_test_entities(
@@ -226,7 +240,7 @@ async def test_update_with_unnecessary_json_attrs(caplog, hass: HomeAssistant) -
     assert "key_three" not in entity_state.attributes
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass: HomeAssistant) -> None:
     """Test unique_id option and if it only creates one sensor per id."""
     assert await setup.async_setup_component(
         hass,

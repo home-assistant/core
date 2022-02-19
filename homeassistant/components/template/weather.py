@@ -112,7 +112,7 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         unique_id,
     ):
         """Initialize the Template weather."""
-        super().__init__(hass, config=config)
+        super().__init__(hass, config=config, unique_id=unique_id)
 
         name = self._attr_name
         self._condition_template = config[CONF_CONDITION_TEMPLATE]
@@ -125,7 +125,6 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         self._ozone_template = config.get(CONF_OZONE_TEMPLATE)
         self._visibility_template = config.get(CONF_VISIBILITY_TEMPLATE)
         self._forecast_template = config.get(CONF_FORECAST_TEMPLATE)
-        self._unique_id = unique_id
 
         self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, name, hass=hass)
 
@@ -196,11 +195,6 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         if self._attribution is None:
             return "Powered by Home Assistant"
         return self._attribution
-
-    @property
-    def unique_id(self):
-        """Return the unique id of this weather instance."""
-        return self._unique_id
 
     async def async_added_to_hass(self):
         """Register callbacks."""

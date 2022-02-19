@@ -42,6 +42,7 @@ ID_DECIMAL = f"{int(ID, 16):08d}"
 
 ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
     host=IP_ADDRESS,
+    addresses=[IP_ADDRESS],
     port=54321,
     hostname=f"yeelink-light-strip1_miio{ID_DECIMAL}.local.",
     type="_miio._udp.local.",
@@ -153,7 +154,7 @@ def _mocked_bulb(cannot_connect=False):
     bulb.async_set_power_mode = AsyncMock()
     bulb.async_set_scene = AsyncMock()
     bulb.async_set_default = AsyncMock()
-    bulb.start_music = MagicMock()
+    bulb.async_start_music = AsyncMock()
     return bulb
 
 

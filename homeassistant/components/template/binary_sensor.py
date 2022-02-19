@@ -31,7 +31,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
@@ -196,7 +196,7 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the Template binary sensor."""
-        super().__init__(hass, config=config)
+        super().__init__(hass, config=config, unique_id=unique_id)
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, object_id, hass=hass
@@ -210,7 +210,6 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
         self._delay_on_raw = config.get(CONF_DELAY_ON)
         self._delay_off = None
         self._delay_off_raw = config.get(CONF_DELAY_OFF)
-        self._unique_id = unique_id
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -271,11 +270,6 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
         self._delay_cancel = async_call_later(self.hass, delay, _set_state)
 
     @property
-    def unique_id(self):
-        """Return the unique id of this binary sensor."""
-        return self._unique_id
-
-    @property
     def is_on(self):
         """Return true if sensor is on."""
         return self._state
@@ -306,12 +300,12 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity):
                 self._to_render_simple.append(key)
                 self._parse_result.add(key)
 
-        self._delay_cancel = None
+        self._delay_cancel: CALLBACK_TYPE | None = None
         self._auto_off_cancel = None
-        self._state = None
+        self._state: bool | None = None
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return state of the sensor."""
         return self._state
 

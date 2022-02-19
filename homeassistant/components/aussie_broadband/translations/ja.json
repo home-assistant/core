@@ -18,6 +18,13 @@
                 "description": "{username} \u306e\u30d1\u30b9\u30ef\u30fc\u30c9\u3092\u66f4\u65b0\u3057\u307e\u3059",
                 "title": "\u30a4\u30f3\u30c6\u30b0\u30ec\u30fc\u30b7\u30e7\u30f3\u306e\u518d\u8a8d\u8a3c"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                },
+                "description": "{username} \u306e\u30d1\u30b9\u30ef\u30fc\u30c9\u3092\u66f4\u65b0\u3057\u307e\u3059",
+                "title": "\u30a4\u30f3\u30c6\u30b0\u30ec\u30fc\u30b7\u30e7\u30f3\u306e\u518d\u8a8d\u8a3c"
+            },
             "service": {
                 "data": {
                     "services": "\u30b5\u30fc\u30d3\u30b9"

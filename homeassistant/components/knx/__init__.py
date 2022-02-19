@@ -45,6 +45,7 @@ from .const import (
     CONF_KNX_INDIVIDUAL_ADDRESS,
     CONF_KNX_ROUTING,
     CONF_KNX_TUNNELING,
+    CONF_KNX_TUNNELING_TCP,
     DATA_HASS_CONFIG,
     DATA_KNX_CONFIG,
     DOMAIN,
@@ -224,9 +225,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
-    conf = hass.data.get(DATA_KNX_CONFIG)
     # `conf` is None when reloading the integration or no `knx` key in configuration.yaml
-    if conf is None:
+    if (conf := hass.data.get(DATA_KNX_CONFIG)) is None:
         _conf = await async_integration_yaml_config(hass, DOMAIN)
         if not _conf or DOMAIN not in _conf:
             _LOGGER.warning(
@@ -404,6 +404,13 @@ class KNXModule:
                 route_back=self.config.get(ConnectionSchema.CONF_KNX_ROUTE_BACK, False),
                 auto_reconnect=True,
             )
+        if _conn_type == CONF_KNX_TUNNELING_TCP:
+            return ConnectionConfig(
+                connection_type=ConnectionType.TUNNELING_TCP,
+                gateway_ip=self.config[CONF_HOST],
+                gateway_port=self.config[CONF_PORT],
+                auto_reconnect=True,
+            )
         return ConnectionConfig(auto_reconnect=True)
 
     async def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
@@ -538,7 +545,7 @@ class KNXModule:
                 replaced_exposure.device.name,
             )
             replaced_exposure.shutdown()
-        exposure = create_knx_exposure(self.hass, self.xknx, call.data)  # type: ignore[arg-type]
+        exposure = create_knx_exposure(self.hass, self.xknx, call.data)
         self.service_exposures[group_address] = exposure
         _LOGGER.debug(
             "Service exposure_register registered exposure for '%s' - %s",

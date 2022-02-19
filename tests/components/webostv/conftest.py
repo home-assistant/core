@@ -6,7 +6,7 @@ import pytest
 from homeassistant.components.webostv.const import LIVE_TV_APP_ID
 from homeassistant.helpers import entity_registry
 
-from . import CHANNEL_1, CHANNEL_2, CLIENT_KEY, FAKE_UUID
+from .const import CHANNEL_1, CHANNEL_2, CLIENT_KEY, FAKE_UUID, MOCK_APPS, MOCK_INPUTS
 
 from tests.common import async_mock_service
 
@@ -28,18 +28,8 @@ def client_fixture():
         client.software_info = {"major_ver": "major", "minor_ver": "minor"}
         client.system_info = {"modelName": "TVFAKE"}
         client.client_key = CLIENT_KEY
-        client.apps = {
-            LIVE_TV_APP_ID: {
-                "title": "Live TV",
-                "id": LIVE_TV_APP_ID,
-                "largeIcon": "large-icon",
-                "icon": "icon",
-            },
-        }
-        client.inputs = {
-            "in1": {"label": "Input01", "id": "in1", "appId": "app0"},
-            "in2": {"label": "Input02", "id": "in2", "appId": "app1"},
-        }
+        client.apps = MOCK_APPS
+        client.inputs = MOCK_INPUTS
         client.current_app_id = LIVE_TV_APP_ID
 
         client.channels = [CHANNEL_1, CHANNEL_2]

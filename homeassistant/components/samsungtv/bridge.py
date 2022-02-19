@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 import contextlib
 from typing import Any
 
+from requests.exceptions import Timeout as RequestsTimeout
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
 from samsungtvws import SamsungTVWS
@@ -97,11 +98,16 @@ class SamsungTVBridge(ABC):
         self.host = host
         self.token: str | None = None
         self._remote: Remote | None = None
-        self._callback: CALLBACK_TYPE | None = None
+        self._reauth_callback: CALLBACK_TYPE | None = None
+        self._new_token_callback: CALLBACK_TYPE | None = None
 
     def register_reauth_callback(self, func: CALLBACK_TYPE) -> None:
         """Register a callback function."""
-        self._callback = func
+        self._reauth_callback = func
+
+    def register_new_token_callback(self, func: CALLBACK_TYPE) -> None:
+        """Register a callback function."""
+        self._new_token_callback = func
 
     @abstractmethod
     def try_connect(self) -> str | None:
@@ -114,6 +120,10 @@ class SamsungTVBridge(ABC):
     @abstractmethod
     def mac_from_device(self) -> str | None:
         """Try to fetch the mac address of the TV."""
+
+    @abstractmethod
+    def get_app_list(self) -> dict[str, str] | None:
+        """Get installed app list."""
 
     def is_on(self) -> bool:
         """Tells if the TV is on."""
@@ -133,14 +143,14 @@ class SamsungTVBridge(ABC):
             # Different reasons, e.g. hostname not resolveable
             return False
 
-    def send_key(self, key: str) -> None:
+    def send_key(self, key: str, key_type: str | None = None) -> None:
         """Send a key to the tv and handles exceptions."""
         try:
             # recreate connection if connection was dead
             retry_count = 1
             for _ in range(retry_count + 1):
                 try:
-                    self._send_key(key)
+                    self._send_key(key, key_type)
                     break
                 except (
                     ConnectionClosed,
@@ -158,7 +168,7 @@ class SamsungTVBridge(ABC):
             pass
 
     @abstractmethod
-    def _send_key(self, key: str) -> None:
+    def _send_key(self, key: str, key_type: str | None = None) -> None:
         """Send the key."""
 
     @abstractmethod
@@ -175,10 +185,15 @@ class SamsungTVBridge(ABC):
         except OSError:
             LOGGER.debug("Could not establish connection")
 
-    def _notify_callback(self) -> None:
+    def _notify_reauth_callback(self) -> None:
         """Notify access denied callback."""
-        if self._callback is not None:
-            self._callback()
+        if self._reauth_callback is not None:
+            self._reauth_callback()
+
+    def _notify_new_token_callback(self) -> None:
+        """Notify new token callback."""
+        if self._new_token_callback is not None:
+            self._new_token_callback()
 
 
 class SamsungTVLegacyBridge(SamsungTVBridge):
@@ -200,6 +215,10 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
     def mac_from_device(self) -> None:
         """Try to fetch the mac address of the TV."""
         return None
+
+    def get_app_list(self) -> dict[str, str]:
+        """Get installed app list."""
+        return {}
 
     def try_connect(self) -> str:
         """Try to connect to the Legacy TV."""
@@ -244,13 +263,13 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             # This is only happening when the auth was switched to DENY
             # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
             except AccessDenied:
-                self._notify_callback()
+                self._notify_reauth_callback()
                 raise
             except (ConnectionClosed, OSError):
                 pass
         return self._remote
 
-    def _send_key(self, key: str) -> None:
+    def _send_key(self, key: str, key_type: str | None = None) -> None:
         """Send the key using legacy protocol."""
         if remote := self._get_remote():
             remote.control(key)
@@ -270,11 +289,24 @@ class SamsungTVWSBridge(SamsungTVBridge):
         """Initialize Bridge."""
         super().__init__(method, host, port)
         self.token = token
+        self._app_list: dict[str, str] | None = None
 
     def mac_from_device(self) -> str | None:
         """Try to fetch the mac address of the TV."""
         info = self.device_info()
         return mac_from_device_info(info) if info else None
+
+    def get_app_list(self) -> dict[str, str] | None:
+        """Get installed app list."""
+        if self._app_list is None:
+            if remote := self._get_remote():
+                raw_app_list: list[dict[str, str]] = remote.app_list()
+                self._app_list = {
+                    app["name"]: app["appId"]
+                    for app in sorted(raw_app_list, key=lambda app: app["name"])
+                }
+
+        return self._app_list
 
     def try_connect(self) -> str:
         """Try to connect to the Websocket TV."""
@@ -302,8 +334,8 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     self.token = remote.token
                     if self.token is None:
                         config[CONF_TOKEN] = "*****"
-                LOGGER.debug("Working config: %s", config)
-                return RESULT_SUCCESS
+                    LOGGER.debug("Working config: %s", config)
+                    return RESULT_SUCCESS
             except WebSocketException as err:
                 LOGGER.debug(
                     "Working but unsupported config: %s, error: %s", config, err
@@ -321,18 +353,21 @@ class SamsungTVWSBridge(SamsungTVBridge):
     def device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""
         if remote := self._get_remote(avoid_open=True):
-            with contextlib.suppress(HttpApiError):
+            with contextlib.suppress(HttpApiError, RequestsTimeout):
                 device_info: dict[str, Any] = remote.rest_device_info()
                 return device_info
 
         return None
 
-    def _send_key(self, key: str) -> None:
+    def _send_key(self, key: str, key_type: str | None = None) -> None:
         """Send the key using websocket protocol."""
         if key == "KEY_POWEROFF":
             key = "KEY_POWER"
         if remote := self._get_remote():
-            remote.send_key(key)
+            if key_type == "run_app":
+                remote.run_app(key)
+            else:
+                remote.send_key(key)
 
     def _get_remote(self, avoid_open: bool = False) -> Remote:
         """Create or return a remote control instance."""
@@ -354,9 +389,17 @@ class SamsungTVWSBridge(SamsungTVBridge):
             # This is only happening when the auth was switched to DENY
             # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
             except ConnectionFailure:
-                self._notify_callback()
+                self._notify_reauth_callback()
             except (WebSocketException, OSError):
                 self._remote = None
+            else:
+                if self.token != self._remote.token:
+                    LOGGER.debug(
+                        "SamsungTVWSBridge has provided a new token %s",
+                        self._remote.token,
+                    )
+                    self.token = self._remote.token
+                    self._notify_new_token_callback()
         return self._remote
 
     def stop(self) -> None:

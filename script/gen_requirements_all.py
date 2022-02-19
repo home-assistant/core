@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate an updated requirements_all.txt."""
+import configparser
 import difflib
 import importlib
 import os
@@ -26,6 +27,7 @@ COMMENT_REQUIREMENTS = (
     "envirophat",
     "evdev",
     "face_recognition",
+    "homeassistant-pyozw",
     "i2csense",
     "opencv-python-headless",
     "pybluez",
@@ -75,7 +77,7 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.43.0
+grpcio==1.44.0
 
 # libcst >=0.4.0 requires a newer Rust than we currently have available,
 # thus our wheels builds fail. This pins it to the last working version,
@@ -93,10 +95,6 @@ enum34==1000000000.0.0
 typing==1000000000.0.0
 uuid==1000000000.0.0
 
-# Temporary constraint on pandas, to unblock 2021.7 releases
-# until we have fixed the wheels builds for newer versions.
-pandas==1.3.0
-
 # regex causes segfault with version 2021.8.27
 # https://bitbucket.org/mrabarnett/mrab-regex/issues/421/2021827-results-in-fatal-python-error
 # This is fixed in 2021.8.28
@@ -109,6 +107,10 @@ regex==2021.8.28
 anyio==3.5.0
 h11==0.12.0
 httpcore==0.14.5
+
+# Ensure we have a hyperframe version that works in Python 3.10
+# 5.2.0 fixed a collections abc deprecation
+hyperframe>=5.2.0
 
 # pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
 pytest_asyncio==1000000000.0.0
@@ -167,10 +169,9 @@ def explore_module(package, explore_children):
 
 def core_requirements():
     """Gather core requirements out of setup.py."""
-    reqs_raw = re.search(
-        r"REQUIRES = \[(.*?)\]", Path("setup.py").read_text(), re.S
-    ).group(1)
-    return [x[1] for x in re.findall(r"(['\"])(.*?)\1", reqs_raw)]
+    parser = configparser.ConfigParser()
+    parser.read("setup.cfg")
+    return parser["options"]["install_requires"].strip().split("\n")
 
 
 def gather_recursive_requirements(domain, seen=None):

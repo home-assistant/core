@@ -9,13 +9,16 @@ from pyoverkiz.client import OverkizClient
 from pyoverkiz.enums import EventName, ExecutionState
 from pyoverkiz.exceptions import (
     BadCredentialsException,
+    InvalidEventListenerIdException,
     MaintenanceException,
     NotAuthenticatedException,
+    TooManyConcurrentRequestsException,
     TooManyRequestsException,
 )
 from pyoverkiz.models import Device, Event, Place
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.decorator import Registry
@@ -65,11 +68,15 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         try:
             events = await self.client.fetch_events()
         except BadCredentialsException as exception:
-            raise UpdateFailed("Invalid authentication.") from exception
+            raise ConfigEntryAuthFailed("Invalid authentication.") from exception
+        except TooManyConcurrentRequestsException as exception:
+            raise UpdateFailed("Too many concurrent requests.") from exception
         except TooManyRequestsException as exception:
             raise UpdateFailed("Too many requests, try again later.") from exception
         except MaintenanceException as exception:
             raise UpdateFailed("Server is down for maintenance.") from exception
+        except InvalidEventListenerIdException as exception:
+            raise UpdateFailed(exception) from exception
         except TimeoutError as exception:
             raise UpdateFailed("Failed to connect.") from exception
         except (ServerDisconnectedError, NotAuthenticatedException):
@@ -80,7 +87,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 await self.client.login()
                 self.devices = await self._get_devices()
             except BadCredentialsException as exception:
-                raise UpdateFailed("Invalid authentication.") from exception
+                raise ConfigEntryAuthFailed("Invalid authentication.") from exception
             except TooManyRequestsException as exception:
                 raise UpdateFailed("Too many requests, try again later.") from exception
 
