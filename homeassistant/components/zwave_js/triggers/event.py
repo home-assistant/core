@@ -77,7 +77,7 @@ def validate_event_data(obj: dict) -> dict:
         # Filter out required field errors if keys can be missing, and if there are
         # still errors, raise an exception
         if errors := [
-            error for error in exc.errors() if error["type"] == "value_error.missing"
+            error for error in exc.errors() if error["type"] != "value_error.missing"
         ]:
             raise vol.MultipleInvalid(errors) from exc
     return obj
