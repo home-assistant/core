@@ -80,7 +80,7 @@ def validate_event_data(obj: dict) -> dict:
             # Filter out required field errors since keys can be missing
             if error["msg"] == "field required":
                 continue
-            errors.append(error)  # type: ignore
+            errors.append(error)  # type: ignore[arg-type]
 
         # If there are still errors after filtering, raise an exception
         if errors:
