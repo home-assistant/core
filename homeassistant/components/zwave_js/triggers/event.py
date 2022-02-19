@@ -2,10 +2,14 @@
 from __future__ import annotations
 
 import functools
+from typing import Any
 
+from pydantic import ValidationError
 import voluptuous as vol
 from zwave_js_server.client import Client
-from zwave_js_server.model.node import Node
+from zwave_js_server.model.controller import CONTROLLER_EVENT_MODEL_MAP
+from zwave_js_server.model.driver import DRIVER_EVENT_MODEL_MAP
+from zwave_js_server.model.node import NODE_EVENT_MODEL_MAP, Node
 
 from homeassistant.components.automation import (
     AutomationActionType,
@@ -36,12 +40,47 @@ from homeassistant.helpers.typing import ConfigType
 # Platform type should be <DOMAIN>.<SUBMODULE_NAME>
 PLATFORM_TYPE = f"{DOMAIN}.{__name__.rsplit('.', maxsplit=1)[-1]}"
 
+EVENT_MODEL_MAP = {
+    "controller": CONTROLLER_EVENT_MODEL_MAP,
+    "driver": DRIVER_EVENT_MODEL_MAP,
+    "node": NODE_EVENT_MODEL_MAP,
+}
+
 
 def validate_non_node_event_source(obj: dict) -> dict:
     """Validate that a trigger for a non node event source has a config entry."""
     if obj[ATTR_EVENT_SOURCE] != "node" and ATTR_CONFIG_ENTRY_ID in obj:
         return obj
     raise vol.Invalid(f"Non node event triggers must contain {ATTR_CONFIG_ENTRY_ID}.")
+
+
+def validate_event_name(obj: dict) -> dict:
+    """Validate that a trigger has a valid event name."""
+    event_source = obj[ATTR_EVENT_SOURCE]
+    event_name = obj[ATTR_EVENT]
+    vol.In(EVENT_MODEL_MAP[event_source])(event_name)
+    return obj
+
+
+def validate_event_data(obj: dict) -> dict:
+    """Validate that a trigger has a valid event data."""
+    event_source = obj[ATTR_EVENT_SOURCE]
+    event_name = obj[ATTR_EVENT]
+    event_data = obj[ATTR_EVENT_DATA]
+    try:
+        EVENT_MODEL_MAP[event_source][event_name](**event_data)
+    except ValidationError as exc:
+        errors: list[dict[str, Any]] = []
+        for error in exc.errors():
+            # Filter out required field errors if keys can be missing
+            if error["msg"] == "field required":
+                continue
+            errors.append(error)  # type: ignore
+
+        # If there are still errors after filtering, raise an exception
+        if errors:
+            raise vol.MultipleInvalid(errors) from exc
+    return obj
 
 
 TRIGGER_SCHEMA = vol.All(
@@ -51,7 +90,7 @@ TRIGGER_SCHEMA = vol.All(
             vol.Optional(ATTR_CONFIG_ENTRY_ID): str,
             vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-            vol.Required(ATTR_EVENT_SOURCE): vol.In(["node", "controller", "driver"]),
+            vol.Required(ATTR_EVENT_SOURCE): vol.In(EVENT_MODEL_MAP),
             vol.Required(ATTR_EVENT): cv.string,
             vol.Optional(ATTR_EVENT_DATA): dict,
             vol.Optional(ATTR_PARTIAL_DICT_MATCH, default=False): bool,
@@ -59,6 +98,8 @@ TRIGGER_SCHEMA = vol.All(
     ),
     vol.Any(
         validate_non_node_event_source,
+        validate_event_name,
+        validate_event_data,
         cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
     ),
 )
