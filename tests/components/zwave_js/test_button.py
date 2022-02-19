@@ -8,6 +8,7 @@ async def test_ping_entity(
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     integration,
+    caplog,
 ):
     """Test ping entity."""
     client.async_send_command.return_value = {"responded": True}

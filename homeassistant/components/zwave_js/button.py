@@ -58,8 +58,21 @@ class ZWaveNodePingButton(ButtonEntity):
             identifiers={get_device_id(client, node)},
         )
 
+    async def async_poll_value(self, _: bool) -> None:
+        """Poll a value."""
+        # pylint: disable=no-self-use
+        raise ValueError("There is no value to poll for this entity")
+
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self.unique_id}_poll_value",
+                self.async_poll_value,
+            )
+        )
+
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
