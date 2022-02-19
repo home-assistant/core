@@ -228,7 +228,10 @@ class GenericIPCamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle config import from yaml."""
         # abort if we've already got this one.
         self._async_abort_entries_match(
-            {CONF_STILL_IMAGE_URL: import_config[CONF_STILL_IMAGE_URL]}
+            {
+                CONF_STILL_IMAGE_URL: import_config.get(CONF_STILL_IMAGE_URL),
+                CONF_STREAM_SOURCE: import_config.get(CONF_STREAM_SOURCE),
+            }
         )
         res, still_format, err = await self._test_connection(import_config)
         import_config[CONF_CONTENT_TYPE] = still_format
