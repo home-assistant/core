@@ -1,12 +1,19 @@
 {
   "config": {
     "step": {
-      "user": {
+      "pick_manual": {
         "data": {
           "serial_port": "Serial Port",
           "name": "Name"
         },
-        "title": "Set up EDL21"
+        "title": "Enter device or ser2net socket" 
+      },
+      "user": {
+        "data": {
+          "serial_port": "Serial Port",
+          "name": "Name"
+        },        
+        "title": "Select serial Port"
       }
     }
   }
