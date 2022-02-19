@@ -109,6 +109,18 @@ async def async_setup_entry(hass, config, async_add_entities):
     async_add_entities([GenericCamera(hass, config.data, config.unique_id)])
 
 
+def generate_auth(device_info) -> httpx.Auth | None:
+    """Generate httpx.Auth object from credentials."""
+    username = device_info.get(CONF_USERNAME)
+    password = device_info.get(CONF_PASSWORD)
+    authentication = device_info.get(CONF_AUTHENTICATION)
+    if username and password:
+        if authentication == HTTP_DIGEST_AUTHENTICATION:
+            return httpx.DigestAuth(username=username, password=password)
+        return httpx.BasicAuth(username=username, password=password)
+    return None
+
+
 class GenericCamera(Camera):
     """A generic implementation of an IP camera."""
 
@@ -141,17 +153,7 @@ class GenericCamera(Camera):
             self.stream_options[FFMPEG_OPTION_MAP[CONF_RTSP_TRANSPORT]] = device_info[
                 CONF_RTSP_TRANSPORT
             ]
-
-        username = device_info.get(CONF_USERNAME)
-        password = device_info.get(CONF_PASSWORD)
-
-        if username and password:
-            if self._authentication == HTTP_DIGEST_AUTHENTICATION:
-                self._auth = httpx.DigestAuth(username=username, password=password)
-            else:
-                self._auth = httpx.BasicAuth(username=username, password=password)
-        else:
-            self._auth = None
+        self._auth = generate_auth(device_info)
 
         self._last_url = None
         self._last_image = None
