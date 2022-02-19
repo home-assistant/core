@@ -4,7 +4,7 @@
   "config_flow": true,
   "dependencies": ["ffmpeg", "http", "media_source"],
   "documentation": "https://www.home-assistant.io/integrations/nest",
-  "requirements": ["python-nest==4.1.0", "google-nest-sdm==1.6.0"],
+  "requirements": ["python-nest==4.2.0", "google-nest-sdm==1.7.1"],
   "codeowners": ["@allenporter"],
   "quality_scale": "platinum",
   "dhcp": [

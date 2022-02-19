@@ -17,7 +17,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
@@ -81,10 +81,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return await self._async_handle_discovery()
 
-    async def async_step_discovery(
+    async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
-        """Handle discovery."""
+        """Handle integration discovery."""
         self._discovered_device = cast(FluxLEDDiscovery, discovery_info)
         return await self._async_handle_discovery()
 
@@ -145,10 +145,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Create a config entry from a device."""
         self._async_abort_entries_match({CONF_HOST: device[ATTR_IPADDR]})
         name = async_name_from_discovery(device)
-        data: dict[str, Any] = {
-            CONF_HOST: device[ATTR_IPADDR],
-            CONF_NAME: name,
-        }
+        data: dict[str, Any] = {CONF_HOST: device[ATTR_IPADDR]}
         async_populate_data_from_discovery(data, data, device)
         return self.async_create_entry(
             title=name,
@@ -168,8 +165,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except FLUX_LED_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             else:
-                mac_address = device[ATTR_ID]
-                if mac_address is not None:
+                if (mac_address := device[ATTR_ID]) is not None:
                     await self.async_set_unique_id(
                         dr.format_mac(mac_address), raise_on_progress=False
                     )

@@ -94,7 +94,9 @@ async def test_config_local_sdk(hass, hass_client):
 
     client = await hass_client()
 
+    assert config.is_local_connected is False
     config.async_enable_local_sdk()
+    assert config.is_local_connected is False
 
     resp = await client.post(
         "/api/webhook/mock-webhook-id",
@@ -122,6 +124,14 @@ async def test_config_local_sdk(hass, hass_client):
             "requestId": "mock-req-id",
         },
     )
+
+    assert config.is_local_connected is True
+    with patch(
+        "homeassistant.components.google_assistant.helpers.utcnow",
+        return_value=dt.utcnow() + timedelta(seconds=90),
+    ):
+        assert config.is_local_connected is False
+
     assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result["requestId"] == "mock-req-id"

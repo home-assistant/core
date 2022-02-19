@@ -71,9 +71,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-
-    name = entry.data.get(CONF_NAME, DEFAULT_NAME)
-    show_on_map = entry.data.get(CONF_SHOW_ON_MAP, False)
+    name = entry.title
+    show_on_map = entry.options.get(CONF_SHOW_ON_MAP, False)
 
     try:
         iss_data = IssData(hass.config.latitude, hass.config.longitude)

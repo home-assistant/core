@@ -1,6 +1,4 @@
 """Support for IHC devices."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
@@ -12,15 +10,13 @@ from .const import (
     ATTR_VALUE,
     DOMAIN,
     IHC_CONTROLLER,
+    IHC_CONTROLLER_INDEX,
     SERVICE_PULSE,
     SERVICE_SET_RUNTIME_VALUE_BOOL,
     SERVICE_SET_RUNTIME_VALUE_FLOAT,
     SERVICE_SET_RUNTIME_VALUE_INT,
 )
 from .util import async_pulse, async_set_bool, async_set_float, async_set_int
-
-_LOGGER = logging.getLogger(__name__)
-
 
 SET_RUNTIME_VALUE_BOOL_SCHEMA = vol.Schema(
     {
@@ -54,13 +50,17 @@ PULSE_SCHEMA = vol.Schema(
 )
 
 
-def setup_service_functions(hass: HomeAssistant):
+def setup_service_functions(hass: HomeAssistant) -> None:
     """Set up the IHC service functions."""
 
     def _get_controller(call):
-        controller_id = call.data[ATTR_CONTROLLER_ID]
-        ihc_key = f"ihc{controller_id}"
-        return hass.data[ihc_key][IHC_CONTROLLER]
+        controller_index = call.data[ATTR_CONTROLLER_ID]
+        for controller_id in hass.data[DOMAIN]:
+            controller_conf = hass.data[DOMAIN][controller_id]
+            if controller_conf[IHC_CONTROLLER_INDEX] == controller_index:
+                return controller_conf[IHC_CONTROLLER]
+        # if not found the controller_index is ouf of range
+        raise ValueError("The controller index is out of range")
 
     async def async_set_runtime_value_bool(call):
         """Set a IHC runtime bool value service function."""

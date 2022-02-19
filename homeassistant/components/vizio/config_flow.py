@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.components.media_player import DEVICE_CLASS_SPEAKER, DEVICE_CLASS_TV
+from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
     SOURCE_IMPORT,
@@ -68,7 +68,11 @@ def _get_config_schema(input_dict: dict[str, Any] = None) -> vol.Schema:
             vol.Required(
                 CONF_DEVICE_CLASS,
                 default=input_dict.get(CONF_DEVICE_CLASS, DEFAULT_DEVICE_CLASS),
-            ): vol.All(str, vol.Lower, vol.In([DEVICE_CLASS_TV, DEVICE_CLASS_SPEAKER])),
+            ): vol.All(
+                str,
+                vol.Lower,
+                vol.In([MediaPlayerDeviceClass.TV, MediaPlayerDeviceClass.SPEAKER]),
+            ),
             vol.Optional(
                 CONF_ACCESS_TOKEN, default=input_dict.get(CONF_ACCESS_TOKEN, "")
             ): str,
@@ -134,7 +138,7 @@ class VizioOptionsConfigFlow(config_entries.OptionsFlow):
             }
         )
 
-        if self.config_entry.data[CONF_DEVICE_CLASS] == DEVICE_CLASS_TV:
+        if self.config_entry.data[CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.TV:
             default_include_or_exclude = (
                 CONF_EXCLUDE
                 if self.config_entry.options
@@ -233,7 +237,9 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self._must_show_form = False
                 elif user_input[
                     CONF_DEVICE_CLASS
-                ] == DEVICE_CLASS_SPEAKER or user_input.get(CONF_ACCESS_TOKEN):
+                ] == MediaPlayerDeviceClass.SPEAKER or user_input.get(
+                    CONF_ACCESS_TOKEN
+                ):
                     # Ensure config is valid for a device
                     if not await VizioAsync.validate_ha_config(
                         user_input[CONF_HOST],
