@@ -84,10 +84,13 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        if self._attr_device_info is not None:
-            return f"{self._attr_device_info.get('name')} {self._sensor.name}"
+        name_prefix = (
+            self._attr_device_info.get("name", "SMA")
+            if self._attr_device_info is not None
+            else "SMA"
+        )
 
-        return self._sensor.name
+        return f"{name_prefix} {self._sensor.name}"
 
     @property
     def native_value(self) -> StateType:
