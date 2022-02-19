@@ -234,6 +234,7 @@ FLOWS = [
     "onvif",
     "open_meteo",
     "opengarage",
+    "openhome",
     "opentherm_gw",
     "openuv",
     "openweathermap",

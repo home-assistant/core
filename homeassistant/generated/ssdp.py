@@ -191,6 +191,17 @@ SSDP = {
             "manufacturer": "The OctoPrint Project"
         }
     ],
+    "openhome": [
+        {
+            "deviceType": "urn:av-openhome-org:service:Product:1"
+        },
+        {
+            "deviceType": "urn:av-openhome-org:service:Product:2"
+        },
+        {
+            "deviceType": "urn:av-openhome-org:service:Product:3"
+        }
+    ],
     "roku": [
         {
             "deviceType": "urn:roku-com:device:player:1-0",

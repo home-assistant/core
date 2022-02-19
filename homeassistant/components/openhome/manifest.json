@@ -1,8 +1,20 @@
 {
   "domain": "openhome",
   "name": "Linn / OpenHome",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/openhome",
   "requirements": ["openhomedevice==2.0.1"],
+  "ssdp": [
+    {
+      "deviceType": "urn:av-openhome-org:service:Product:1"
+    },
+    {
+      "deviceType": "urn:av-openhome-org:service:Product:2"
+    },
+    {
+      "deviceType": "urn:av-openhome-org:service:Product:3"
+    }
+  ],
   "codeowners": ["@bazwilliams"],
   "iot_class": "local_polling",
   "loggers": ["async_upnp_client", "openhomedevice"]

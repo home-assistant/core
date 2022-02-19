@@ -26,17 +26,58 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_HOST,
+    STATE_IDLE,
+    STATE_OFF,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import ATTR_PIN_INDEX, DATA_OPENHOME, SERVICE_INVOKE_PIN
+from .const import ATTR_PIN_INDEX, DATA_OPENHOME, DOMAIN, SERVICE_INVOKE_PIN
 
 SUPPORT_OPENHOME = SUPPORT_SELECT_SOURCE | SUPPORT_TURN_OFF | SUPPORT_TURN_ON
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the configuration config entry."""
+
+    _LOGGER.debug("Setting up config entry: %s", config_entry.unique_id)
+
+    device = await hass.async_add_executor_job(Device, config_entry.data[CONF_HOST])
+
+    try:
+        await device.init()
+    except (asyncio.TimeoutError, aiohttp.ClientError, UpnpError):
+        return None
+
+    _LOGGER.debug("Initialised device: %s", device.uuid())
+
+    entity = OpenhomeDevice(hass, device)
+
+    _LOGGER.debug("Adding entity")
+
+    async_add_entities([entity])
+
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_INVOKE_PIN,
+        {vol.Required(ATTR_PIN_INDEX): cv.positive_int},
+        "async_invoke_pin",
+    )
 
 
 async def async_setup_platform(
@@ -115,6 +156,18 @@ class OpenhomeDevice(MediaPlayerEntity):
         self._name = None
         self._state = STATE_PLAYING
         self._available = True
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        return DeviceInfo(
+            identifiers={
+                (DOMAIN, self._device.uuid()),
+            },
+            manufacturer=self._device.device.manufacturer,
+            model=self._device.device.model_name,
+            name=self._device.device.friendly_name,
+        )
 
     @property
     def available(self):
