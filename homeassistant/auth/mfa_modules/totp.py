@@ -107,7 +107,7 @@ class TotpAuthModule(MultiFactorAuthModule):
 
         ota_secret: str = secret or pyotp.random_base32()
 
-        self._users[user_id] = ota_secret  # type: ignore
+        self._users[user_id] = ota_secret  # type: ignore[index]
         return ota_secret
 
     async def async_setup_flow(self, user_id: str) -> SetupFlow:
@@ -136,7 +136,7 @@ class TotpAuthModule(MultiFactorAuthModule):
         if self._users is None:
             await self._async_load()
 
-        if self._users.pop(user_id, None):  # type: ignore
+        if self._users.pop(user_id, None):  # type: ignore[union-attr]
             await self._async_save()
 
     async def async_is_user_setup(self, user_id: str) -> bool:
@@ -144,7 +144,7 @@ class TotpAuthModule(MultiFactorAuthModule):
         if self._users is None:
             await self._async_load()
 
-        return user_id in self._users  # type: ignore
+        return user_id in self._users  # type: ignore[operator]
 
     async def async_validate(self, user_id: str, user_input: dict[str, Any]) -> bool:
         """Return True if validation passed."""
@@ -161,7 +161,7 @@ class TotpAuthModule(MultiFactorAuthModule):
         """Validate two factor authentication code."""
         import pyotp  # pylint: disable=import-outside-toplevel
 
-        if (ota_secret := self._users.get(user_id)) is None:  # type: ignore
+        if (ota_secret := self._users.get(user_id)) is None:  # type: ignore[union-attr]
             # even we cannot find user, we still do verify
             # to make timing the same as if user was found.
             pyotp.TOTP(DUMMY_SECRET).verify(code, valid_window=1)
