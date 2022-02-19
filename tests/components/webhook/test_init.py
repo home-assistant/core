@@ -187,7 +187,7 @@ async def test_webhook_get(hass, mock_client):
         hass, "test", "Test hook", webhook_id, handle, allowed_methods=["PUT"]
     )
     resp = await mock_client.get(f"/api/webhook/{webhook_id}")
-    assert resp.status == HTTPStatus.OK
+    assert resp.status == HTTPStatus.METHOD_NOT_ALLOWED
     assert len(hooks) == 1  # Should not have been called
 
 
