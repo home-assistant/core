@@ -1,6 +1,5 @@
 """Common utilities for Vallox tests."""
 
-from datetime import datetime
 import random
 import string
 from typing import Any
@@ -30,14 +29,6 @@ def mock_entry(hass: HomeAssistant) -> MockConfigEntry:
     vallox_mock_entry.add_to_hass(hass)
 
     return vallox_mock_entry
-
-
-def patch_ha_now(mocked_datetime: datetime):
-    """Patch the current time."""
-    return patch(
-        "homeassistant.components.vallox.sensor.dt.now",
-        return_value=mocked_datetime,
-    )
 
 
 def patch_metrics(metrics: dict[str, Any]):
