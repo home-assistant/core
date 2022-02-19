@@ -12,10 +12,10 @@ from homewizard_energy.models import Data, Device, State
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, PLATFORMS, SERVICE_DATA, SERVICE_DEVICE, SERVICE_STATE
 
@@ -136,6 +136,6 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[HomeWizardEnergyData
                 SERVICE_STATE: await self.api.state(),
             }
         except DisabledError as error:
-            raise UpdateFailed(error) from error
+            raise ConfigEntryAuthFailed(error) from error
 
         return data

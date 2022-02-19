@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homewizard_energy.errors import DisabledError
+from homewizard_energy.errors import DisabledError, UnsupportedError
 from homewizard_energy.homewizard_energy import HomeWizardEnergy
 from voluptuous import Required, Schema
 
@@ -160,6 +160,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
+    async def async_step_reauth(self, data: dict[str, str]) -> FlowResult:
+        """Trigger a reauthentication flow."""
+        return self.async_abort(reason="api_not_enabled")
+
     @staticmethod
     async def _async_try_connect_and_fetch(ip_address: str) -> dict[str, Any]:
         """Try to connect."""
@@ -177,6 +181,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error("API disabled, API must be enabled in the app")
             raise AbortFlow("api_not_enabled") from ex
 
+        except UnsupportedError as ex:
+            _LOGGER.error("API version unsuppored")
+            raise AbortFlow("unsupported_api_version") from ex
+
         except Exception as ex:
             _LOGGER.exception(
                 "Error connecting with Energy Device at %s",
@@ -186,14 +194,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         finally:
             await energy_api.close()
-
-        if device is None:
-            _LOGGER.error("Initialization failed")
-            raise AbortFlow("unknown_error")
-
-        # Validate metadata
-        if device.api_version != "v1":
-            raise AbortFlow("unsupported_api_version")
 
         return {
             CONF_PRODUCT_NAME: device.product_name,

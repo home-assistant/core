@@ -18,7 +18,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         title="Product Name (aabbccddeeff)",
         domain=DOMAIN,
-        data={CONF_IP_ADDRESS: "example.com"},
+        data={CONF_IP_ADDRESS: "1.2.3.4"},
         unique_id="aabbccddeeff",
     )
 
@@ -26,24 +26,19 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_homewizard_energy():
     """Return a mocked P1 Monitor client."""
-    with patch("homeassistant.components.homewizard.HomeWizardEnergy") as mock:
-        api = mock.return_value
-        api.device = AsyncMock(
-            return_value=Device.from_dict(
-                json.loads(load_fixture("homewizard/device.json"))
-            )
+    api = AsyncMock()
+    api.device = AsyncMock(
+        return_value=Device.from_dict(
+            json.loads(load_fixture("homewizard/device.json"))
         )
-        api.data = AsyncMock(
-            return_value=Data.from_dict(
-                json.loads(load_fixture("homewizard/data.json"))
-            )
-        )
-        api.state = AsyncMock(
-            return_value=State.from_dict(
-                json.loads(load_fixture("homewizard/state.json"))
-            )
-        )
-        yield mock
+    )
+    api.data = AsyncMock(
+        return_value=Data.from_dict(json.loads(load_fixture("homewizard/data.json")))
+    )
+    api.state = AsyncMock(
+        return_value=State.from_dict(json.loads(load_fixture("homewizard/state.json")))
+    )
+    return api
 
 
 @pytest.fixture
@@ -53,9 +48,14 @@ async def init_integration(
     mock_homewizard_energy: MagicMock,
 ) -> MockConfigEntry:
     """Set up the HomeWizard integration for testing."""
-    mock_config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.homewizard.HomeWizardEnergy",
+        return_value=mock_homewizard_energy,
+    ):
+        mock_config_entry.add_to_hass(hass)
 
-    return mock_config_entry
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        return mock_config_entry
