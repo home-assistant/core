@@ -358,7 +358,7 @@ class ModbusHub:
             return True
 
     def _pymodbus_call(
-        self, unit: int, address: int, value: int | list[int], use_call: str
+        self, unit: int | None, address: int, value: int | list[int], use_call: str
     ) -> ModbusResponse:
         """Call sync. pymodbus."""
         kwargs = {"unit": unit} if unit else {}

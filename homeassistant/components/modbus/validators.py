@@ -58,9 +58,11 @@ OLD_DATA_TYPES = {
 }
 ENTRY = namedtuple("ENTRY", ["struct_id", "register_count"])
 DEFAULT_STRUCT_FORMAT = {
+    DataType.INT8: ENTRY("b", 1),
     DataType.INT16: ENTRY("h", 1),
     DataType.INT32: ENTRY("i", 2),
     DataType.INT64: ENTRY("q", 4),
+    DataType.UINT8: ENTRY("c", 1),
     DataType.UINT16: ENTRY("H", 1),
     DataType.UINT32: ENTRY("I", 2),
     DataType.UINT64: ENTRY("Q", 4),

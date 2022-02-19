@@ -1,10 +1,15 @@
 """Test Z-Wave node entity."""
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from homeassistant.components.zwave import const, node_entity
 from homeassistant.const import ATTR_ENTITY_ID
 
 import tests.mock.zwave as mock_zwave
+
+# Integration is disabled
+pytest.skip("Integration has been disabled in the manifest", allow_module_level=True)
 
 
 async def test_maybe_schedule_update(hass, mock_openzwave):

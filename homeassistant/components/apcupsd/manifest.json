@@ -1,4 +1,5 @@
 {
+  "disabled": "Integration library not compatible with Python 3.10",
   "domain": "apcupsd",
   "name": "apcupsd",
   "documentation": "https://www.home-assistant.io/integrations/apcupsd",

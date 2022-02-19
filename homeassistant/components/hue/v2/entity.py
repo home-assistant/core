@@ -1,11 +1,12 @@
 """Generic Hue Entity Model."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Union
+
 from aiohue.v2.controllers.base import BaseResourcesController
 from aiohue.v2.controllers.events import EventType
-from aiohue.v2.models.clip import CLIPResource
-from aiohue.v2.models.connectivity import ConnectivityServiceStatus
 from aiohue.v2.models.resource import ResourceTypes
+from aiohue.v2.models.zigbee_connectivity import ConnectivityServiceStatus
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -13,6 +14,16 @@ from homeassistant.helpers.entity_registry import async_get as async_get_entity_
 
 from ..bridge import HueBridge
 from ..const import CONF_IGNORE_AVAILABILITY, DOMAIN
+
+if TYPE_CHECKING:
+    from aiohue.v2.models.device_power import DevicePower
+    from aiohue.v2.models.grouped_light import GroupedLight
+    from aiohue.v2.models.light import Light
+    from aiohue.v2.models.light_level import LightLevel
+    from aiohue.v2.models.motion import Motion
+
+    HueResource = Union[Light, DevicePower, GroupedLight, LightLevel, Motion]
+
 
 RESOURCE_TYPE_NAMES = {
     # a simple mapping of hue resource type to Hass name
@@ -30,7 +41,7 @@ class HueBaseEntity(Entity):
         self,
         bridge: HueBridge,
         controller: BaseResourcesController,
-        resource: CLIPResource,
+        resource: HueResource,
     ) -> None:
         """Initialize a generic Hue resource entity."""
         self.bridge = bridge
@@ -122,7 +133,7 @@ class HueBaseEntity(Entity):
         # used in subclasses
 
     @callback
-    def _handle_event(self, event_type: EventType, resource: CLIPResource) -> None:
+    def _handle_event(self, event_type: EventType, resource: HueResource) -> None:
         """Handle status event for this resource (or it's parent)."""
         if event_type == EventType.RESOURCE_DELETED and resource.id == self.resource.id:
             self.logger.debug("Received delete for %s", self.entity_id)

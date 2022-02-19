@@ -23,6 +23,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
@@ -59,14 +60,14 @@ def setup_platform(
 
     setup_reload_service(hass, DOMAIN, PLATFORMS)
 
-    name = config.get(CONF_NAME)
-    command = config.get(CONF_COMMAND)
-    payload_off = config.get(CONF_PAYLOAD_OFF)
-    payload_on = config.get(CONF_PAYLOAD_ON)
-    device_class = config.get(CONF_DEVICE_CLASS)
-    value_template = config.get(CONF_VALUE_TEMPLATE)
-    command_timeout = config.get(CONF_COMMAND_TIMEOUT)
-    unique_id = config.get(CONF_UNIQUE_ID)
+    name: str = config[CONF_NAME]
+    command: str = config[CONF_COMMAND]
+    payload_off: str = config[CONF_PAYLOAD_OFF]
+    payload_on: str = config[CONF_PAYLOAD_ON]
+    device_class: str | None = config.get(CONF_DEVICE_CLASS)
+    value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
+    command_timeout: int = config[CONF_COMMAND_TIMEOUT]
+    unique_id: str | None = config.get(CONF_UNIQUE_ID)
     if value_template is not None:
         value_template.hass = hass
     data = CommandSensorData(hass, command, command_timeout)
@@ -74,7 +75,6 @@ def setup_platform(
     add_entities(
         [
             CommandBinarySensor(
-                hass,
                 data,
                 name,
                 device_class,
@@ -93,42 +93,25 @@ class CommandBinarySensor(BinarySensorEntity):
 
     def __init__(
         self,
-        hass,
-        data,
-        name,
-        device_class,
-        payload_on,
-        payload_off,
-        value_template,
-        unique_id,
-    ):
+        data: CommandSensorData,
+        name: str,
+        device_class: str | None,
+        payload_on: str,
+        payload_off: str,
+        value_template: Template | None,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the Command line binary sensor."""
-        self._hass = hass
         self.data = data
-        self._name = name
-        self._device_class = device_class
-        self._state = False
+        self._attr_name = name
+        self._attr_device_class = device_class
+        self._attr_is_on = None
         self._payload_on = payload_on
         self._payload_off = payload_off
         self._value_template = value_template
         self._attr_unique_id = unique_id
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
-        return self._state
-
-    @property
-    def device_class(self):
-        """Return the class of the binary sensor."""
-        return self._device_class
-
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the state."""
         self.data.update()
         value = self.data.value
@@ -136,6 +119,6 @@ class CommandBinarySensor(BinarySensorEntity):
         if self._value_template is not None:
             value = self._value_template.render_with_possible_json_value(value, False)
         if value == self._payload_on:
-            self._state = True
+            self._attr_is_on = True
         elif value == self._payload_off:
-            self._state = False
+            self._attr_is_on = False

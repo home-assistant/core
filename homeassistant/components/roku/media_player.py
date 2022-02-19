@@ -3,23 +3,27 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+import mimetypes
 from typing import Any
-from urllib.parse import quote
 
+from rokuecp.helpers import guess_stream_format
 import voluptuous as vol
+import yarl
 
 from homeassistant.components import media_source
-from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player import (
     BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
+    async_process_play_media_url,
 )
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_EXTRA,
     MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
+    MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_URL,
+    MEDIA_TYPE_VIDEO,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -46,20 +50,22 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.network import get_url
 
 from . import roku_exception_handler
 from .browse_media import async_browse_media
 from .const import (
+    ATTR_ARTIST_NAME,
     ATTR_CONTENT_ID,
     ATTR_FORMAT,
     ATTR_KEYWORD,
     ATTR_MEDIA_TYPE,
+    ATTR_THUMBNAIL,
     DOMAIN,
     SERVICE_SEARCH,
 )
 from .coordinator import RokuDataUpdateCoordinator
 from .entity import RokuEntity
+from .helpers import format_channel_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,21 +83,36 @@ SUPPORT_ROKU = (
     | SUPPORT_BROWSE_MEDIA
 )
 
-ATTRS_TO_LAUNCH_PARAMS = {
-    ATTR_CONTENT_ID: "contentID",
-    ATTR_MEDIA_TYPE: "MediaType",
+
+STREAM_FORMAT_TO_MEDIA_TYPE = {
+    "dash": MEDIA_TYPE_VIDEO,
+    "hls": MEDIA_TYPE_VIDEO,
+    "ism": MEDIA_TYPE_VIDEO,
+    "m4a": MEDIA_TYPE_MUSIC,
+    "m4v": MEDIA_TYPE_VIDEO,
+    "mka": MEDIA_TYPE_MUSIC,
+    "mkv": MEDIA_TYPE_VIDEO,
+    "mks": MEDIA_TYPE_VIDEO,
+    "mp3": MEDIA_TYPE_MUSIC,
+    "mp4": MEDIA_TYPE_VIDEO,
 }
 
-PLAY_MEDIA_SUPPORTED_TYPES = (
-    MEDIA_TYPE_APP,
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_URL,
-    FORMAT_CONTENT_TYPE[HLS_PROVIDER],
-)
+ATTRS_TO_LAUNCH_PARAMS = {
+    ATTR_CONTENT_ID: "contentID",
+    ATTR_MEDIA_TYPE: "mediaType",
+}
 
-ATTRS_TO_PLAY_VIDEO_PARAMS = {
+ATTRS_TO_PLAY_ON_ROKU_PARAMS = {
     ATTR_NAME: "videoName",
     ATTR_FORMAT: "videoFormat",
+    ATTR_THUMBNAIL: "k",
+}
+
+ATTRS_TO_PLAY_ON_ROKU_AUDIO_PARAMS = {
+    ATTR_NAME: "songName",
+    ATTR_FORMAT: "songFormat",
+    ATTR_ARTIST_NAME: "artistName",
+    ATTR_THUMBNAIL: "albumArtUrl",
 }
 
 SEARCH_SCHEMA = {vol.Required(ATTR_KEYWORD): str}
@@ -214,10 +235,9 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         if self.app_id != "tvinput.dtv" or self.coordinator.data.channel is None:
             return None
 
-        if self.coordinator.data.channel.name is not None:
-            return f"{self.coordinator.data.channel.name} ({self.coordinator.data.channel.number})"
+        channel = self.coordinator.data.channel
 
-        return self.coordinator.data.channel.number
+        return format_channel_name(channel.number, channel.name)
 
     @property
     def media_title(self) -> str | None:
@@ -368,34 +388,67 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     ) -> None:
         """Play media from a URL or file, launch an application, or tune to a channel."""
         extra: dict[str, Any] = kwargs.get(ATTR_MEDIA_EXTRA) or {}
+        original_media_type: str = media_type
+        original_media_id: str = media_id
+        mime_type: str | None = None
+        stream_name: str | None = None
+        stream_format: str | None = extra.get(ATTR_FORMAT)
 
         # Handle media_source
         if media_source.is_media_source_id(media_id):
             sourced_media = await media_source.async_resolve_media(self.hass, media_id)
             media_type = MEDIA_TYPE_URL
             media_id = sourced_media.url
+            mime_type = sourced_media.mime_type
+            stream_name = original_media_id
+            stream_format = guess_stream_format(media_id, mime_type)
 
-        # Sign and prefix with URL if playing a relative URL
-        if media_id[0] == "/":
-            media_id = async_sign_path(
-                self.hass,
-                quote(media_id),
-                dt.timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
-            )
+        # If media ID is a relative URL, we serve it from HA.
+        media_id = async_process_play_media_url(self.hass, media_id)
 
-            # prepend external URL
-            hass_url = get_url(self.hass)
-            media_id = f"{hass_url}{media_id}"
+        if media_type == FORMAT_CONTENT_TYPE[HLS_PROVIDER]:
+            media_type = MEDIA_TYPE_VIDEO
+            mime_type = FORMAT_CONTENT_TYPE[HLS_PROVIDER]
+            stream_name = "Camera Stream"
+            stream_format = "hls"
 
-        if media_type not in PLAY_MEDIA_SUPPORTED_TYPES:
-            _LOGGER.error(
-                "Invalid media type %s. Only %s, %s, %s, and camera HLS streams are supported",
-                media_type,
-                MEDIA_TYPE_APP,
-                MEDIA_TYPE_CHANNEL,
-                MEDIA_TYPE_URL,
-            )
-            return
+        if media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_URL, MEDIA_TYPE_VIDEO):
+            parsed = yarl.URL(media_id)
+
+            if mime_type is None:
+                mime_type, _ = mimetypes.guess_type(parsed.path)
+
+            if stream_format is None:
+                stream_format = guess_stream_format(media_id, mime_type)
+
+            if extra.get(ATTR_FORMAT) is None:
+                extra[ATTR_FORMAT] = stream_format
+
+            if extra[ATTR_FORMAT] not in STREAM_FORMAT_TO_MEDIA_TYPE:
+                _LOGGER.error(
+                    "Media type %s is not supported with format %s (mime: %s)",
+                    original_media_type,
+                    extra[ATTR_FORMAT],
+                    mime_type,
+                )
+                return
+
+            if (
+                media_type == MEDIA_TYPE_URL
+                and STREAM_FORMAT_TO_MEDIA_TYPE[extra[ATTR_FORMAT]] == MEDIA_TYPE_MUSIC
+            ):
+                media_type = MEDIA_TYPE_MUSIC
+
+            if media_type == MEDIA_TYPE_MUSIC and "tts_proxy" in media_id:
+                stream_name = "Text to Speech"
+            elif stream_name is None:
+                if stream_format == "ism":
+                    stream_name = parsed.parts[-2]
+                else:
+                    stream_name = parsed.name
+
+            if extra.get(ATTR_NAME) is None:
+                extra[ATTR_NAME] = stream_name
 
         if media_type == MEDIA_TYPE_APP:
             params = {
@@ -407,20 +460,30 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             await self.coordinator.roku.launch(media_id, params)
         elif media_type == MEDIA_TYPE_CHANNEL:
             await self.coordinator.roku.tune(media_id)
-        elif media_type == MEDIA_TYPE_URL:
+        elif media_type == MEDIA_TYPE_MUSIC:
+            if extra.get(ATTR_ARTIST_NAME) is None:
+                extra[ATTR_ARTIST_NAME] = "Home Assistant"
+
             params = {
                 param: extra[attr]
-                for (attr, param) in ATTRS_TO_PLAY_VIDEO_PARAMS.items()
+                for (attr, param) in ATTRS_TO_PLAY_ON_ROKU_AUDIO_PARAMS.items()
+                if attr in extra
+            }
+
+            params = {"t": "a", **params}
+
+            await self.coordinator.roku.play_on_roku(media_id, params)
+        elif media_type in (MEDIA_TYPE_URL, MEDIA_TYPE_VIDEO):
+            params = {
+                param: extra[attr]
+                for (attr, param) in ATTRS_TO_PLAY_ON_ROKU_PARAMS.items()
                 if attr in extra
             }
 
             await self.coordinator.roku.play_on_roku(media_id, params)
-        elif media_type == FORMAT_CONTENT_TYPE[HLS_PROVIDER]:
-            params = {
-                "MediaType": "hls",
-            }
-
-            await self.coordinator.roku.play_on_roku(media_id, params)
+        else:
+            _LOGGER.error("Media type %s is not supported", original_media_type)
+            return
 
         await self.coordinator.async_request_refresh()
 

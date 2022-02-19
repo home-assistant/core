@@ -24,6 +24,7 @@ HOMEKIT_HOST = "192.168.1.161"
 
 MOCK_HOMEKIT_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     host=HOMEKIT_HOST,
+    addresses=[HOMEKIT_HOST],
     hostname="mock_hostname",
     name="onn._hap._tcp.local.",
     port=None,

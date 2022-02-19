@@ -38,38 +38,44 @@ def mock_setup_entry() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def mock_roku_config_flow(
+async def mock_device(
     request: pytest.FixtureRequest,
-) -> Generator[None, MagicMock, None]:
-    """Return a mocked Roku client."""
+) -> RokuDevice:
+    """Return the mocked roku device."""
     fixture: str = "roku/roku3.json"
     if hasattr(request, "param") and request.param:
         fixture = request.param
 
-    device = RokuDevice(json.loads(load_fixture(fixture)))
+    return RokuDevice(json.loads(load_fixture(fixture)))
+
+
+@pytest.fixture
+def mock_roku_config_flow(
+    mock_device: RokuDevice,
+) -> Generator[None, MagicMock, None]:
+    """Return a mocked Roku client."""
+
     with patch(
         "homeassistant.components.roku.config_flow.Roku", autospec=True
     ) as roku_mock:
         client = roku_mock.return_value
         client.app_icon_url.side_effect = app_icon_url
-        client.update.return_value = device
+        client.update.return_value = mock_device
         yield client
 
 
 @pytest.fixture
-def mock_roku(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None]:
+def mock_roku(
+    request: pytest.FixtureRequest, mock_device: RokuDevice
+) -> Generator[None, MagicMock, None]:
     """Return a mocked Roku client."""
-    fixture: str = "roku/roku3.json"
-    if hasattr(request, "param") and request.param:
-        fixture = request.param
 
-    device = RokuDevice(json.loads(load_fixture(fixture)))
     with patch(
         "homeassistant.components.roku.coordinator.Roku", autospec=True
     ) as roku_mock:
         client = roku_mock.return_value
         client.app_icon_url.side_effect = app_icon_url
-        client.update.return_value = device
+        client.update.return_value = mock_device
         yield client
 
 

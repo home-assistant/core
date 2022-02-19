@@ -83,7 +83,7 @@ async def async_initialize_triggers(
         triggers.append(platform.async_attach_trigger(hass, conf, action, info))
 
     attach_results = await asyncio.gather(*triggers, return_exceptions=True)
-    removes = []
+    removes: list[Callable[[], None]] = []
 
     for result in attach_results:
         if isinstance(result, HomeAssistantError):
@@ -103,7 +103,7 @@ async def async_initialize_triggers(
     log_cb(logging.INFO, "Initialized trigger")
 
     @callback
-    def remove_triggers():  # type: ignore
+    def remove_triggers() -> None:
         """Remove triggers."""
         for remove in removes:
             remove()

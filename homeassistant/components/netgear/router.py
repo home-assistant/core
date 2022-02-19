@@ -123,8 +123,9 @@ class NetgearRouter:
 
     async def async_setup(self) -> bool:
         """Set up a Netgear router."""
-        if not await self.hass.async_add_executor_job(self._setup):
-            return False
+        async with self._api_lock:
+            if not await self.hass.async_add_executor_job(self._setup):
+                return False
 
         # set already known devices to away instead of unavailable
         device_registry = dr.async_get(self.hass)
@@ -147,6 +148,7 @@ class NetgearRouter:
                 "ip": None,
                 "ssid": None,
                 "conn_ap_mac": None,
+                "allow_or_block": None,
             }
 
         return True
@@ -199,6 +201,18 @@ class NetgearRouter:
         """Get the traffic meter data of the router."""
         async with self._api_lock:
             return await self.hass.async_add_executor_job(self._api.get_traffic_meter)
+
+    async def async_allow_block_device(self, mac: str, allow_block: str) -> None:
+        """Allow or block a device connected to the router."""
+        async with self._api_lock:
+            await self.hass.async_add_executor_job(
+                self._api.allow_block_device, mac, allow_block
+            )
+
+    async def async_reboot(self) -> None:
+        """Reboot the router."""
+        async with self._api_lock:
+            await self.hass.async_add_executor_job(self._api.reboot)
 
     @property
     def port(self) -> int:

@@ -60,7 +60,7 @@ async def test_async_browse_media(hass):
     media.children[0].title = "Epic Sax Guy 10 Hours"
 
     # Test invalid media content
-    with pytest.raises(ValueError):
+    with pytest.raises(BrowseError):
         await media_source.async_browse_media(hass, "invalid")
 
     # Test base URI returns all domains
@@ -80,6 +80,8 @@ async def test_async_resolve_media(hass):
         media_source.generate_media_source_id(media_source.DOMAIN, "local/test.mp3"),
     )
     assert isinstance(media, media_source.models.PlayMedia)
+    assert media.url == "/media/local/test.mp3"
+    assert media.mime_type == "audio/mpeg"
 
 
 async def test_async_unresolve_media(hass):
@@ -90,6 +92,10 @@ async def test_async_unresolve_media(hass):
     # Test no media content
     with pytest.raises(media_source.Unresolvable):
         await media_source.async_resolve_media(hass, "")
+
+    # Test invalid media content
+    with pytest.raises(media_source.Unresolvable):
+        await media_source.async_resolve_media(hass, "invalid")
 
 
 async def test_websocket_browse_media(hass, hass_ws_client):

@@ -10,9 +10,9 @@ from homeassistant.components import ffmpeg
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.config_entries import (
-    SOURCE_DISCOVERY,
     SOURCE_IGNORE,
     SOURCE_IMPORT,
+    SOURCE_INTEGRATION_DISCOVERY,
     ConfigEntry,
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
@@ -151,7 +151,7 @@ async def async_setup_entry(
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
-                    context={"source": SOURCE_DISCOVERY},
+                    context={"source": SOURCE_INTEGRATION_DISCOVERY},
                     data={
                         ATTR_SERIAL: camera,
                         CONF_IP_ADDRESS: value["local_ip"],
