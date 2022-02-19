@@ -40,7 +40,7 @@ class PureEnergieFlowHandler(ConfigFlow, domain=DOMAIN):
                     updates={CONF_HOST: user_input[CONF_HOST]}
                 )
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME],
+                    title="Pure Energie Meter",
                     data={
                         CONF_HOST: user_input[CONF_HOST],
                     },
@@ -52,9 +52,6 @@ class PureEnergieFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(
-                        CONF_NAME, default=self.hass.config.location_name
-                    ): str,
                     vol.Required(CONF_HOST): str,
                 }
             ),
@@ -91,7 +88,7 @@ class PureEnergieFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by zeroconf."""
         if user_input is not None:
             return self.async_create_entry(
-                title=user_input[CONF_NAME],
+                title="Pure Energie Meter",
                 data={
                     CONF_HOST: self.discovered_host,
                 },
@@ -99,13 +96,6 @@ class PureEnergieFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="zeroconf_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_NAME, default=self.hass.config.location_name
-                    ): str,
-                }
-            ),
             description_placeholders={
                 CONF_NAME: "Pure Energie Meter",
                 "model": self.discovered_device.model,

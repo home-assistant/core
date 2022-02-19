@@ -1,7 +1,8 @@
 """Support for Pure Energie sensors."""
 from __future__ import annotations
 
-from typing import Literal
+from collections.abc import Callable
+from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -16,37 +17,52 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import PureEnergieDataUpdateCoordinator
-from .const import DOMAIN, SERVICE_SMARTBRIDGE, SERVICES
+from . import PureEnergieData, PureEnergieDataUpdateCoordinator
+from .const import DOMAIN
 
-SENSORS: dict[Literal["smartbridge"], tuple[SensorEntityDescription, ...]] = {
-    SERVICE_SMARTBRIDGE: (
-        SensorEntityDescription(
-            key="power_flow",
-            name="Power Flow",
-            native_unit_of_measurement=POWER_WATT,
-            device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        SensorEntityDescription(
-            key="energy_consumption_total",
-            name="Energy Consumption",
-            native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-            device_class=SensorDeviceClass.ENERGY,
-            state_class=SensorStateClass.TOTAL_INCREASING,
-        ),
-        SensorEntityDescription(
-            key="energy_production_total",
-            name="Energy Production",
-            native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-            device_class=SensorDeviceClass.ENERGY,
-            state_class=SensorStateClass.TOTAL_INCREASING,
-        ),
+
+@dataclass
+class PureEnergieSensorEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[PureEnergieData], int | float]
+
+
+@dataclass
+class PureEnergieSensorEntityDescription(
+    SensorEntityDescription, PureEnergieSensorEntityDescriptionMixin
+):
+    """Describes a Pure Energie sensor entity."""
+
+
+SENSORS: tuple[PureEnergieSensorEntityDescription, ...] = (
+    PureEnergieSensorEntityDescription(
+        key="power_flow",
+        name="Power Flow",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.smartbridge.power_flow,
     ),
-}
+    PureEnergieSensorEntityDescription(
+        key="energy_consumption_total",
+        name="Energy Consumption",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: data.smartbridge.energy_consumption_total,
+    ),
+    PureEnergieSensorEntityDescription(
+        key="energy_production_total",
+        name="Energy Production",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: data.smartbridge.energy_production_total,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -57,53 +73,41 @@ async def async_setup_entry(
         PureEnergieSensorEntity(
             coordinator=hass.data[DOMAIN][entry.entry_id],
             description=description,
-            service_key=service_key,
-            service=SERVICES[service_key],
+            entry=entry,
         )
-        for service_key, service_sensors in SENSORS.items()
-        for description in service_sensors
+        for description in SENSORS
     )
 
 
-class PureEnergieSensorEntity(CoordinatorEntity, SensorEntity):
+class PureEnergieSensorEntity(CoordinatorEntity[PureEnergieData], SensorEntity):
     """Defines an Pure Energie sensor."""
 
     coordinator: PureEnergieDataUpdateCoordinator
+    entity_description: PureEnergieSensorEntityDescription
 
     def __init__(
         self,
         *,
         coordinator: PureEnergieDataUpdateCoordinator,
-        description: SensorEntityDescription,
-        service_key: Literal["smartbridge"],
-        service: str,
+        description: PureEnergieSensorEntityDescription,
+        entry: ConfigEntry,
     ) -> None:
         """Initialize Pure Energie sensor."""
         super().__init__(coordinator=coordinator)
-        self._service_key = service_key
-
         self.entity_id = f"{SENSOR_DOMAIN}.pem_{description.key}"
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.entry_id}_{service_key}_{description.key}"
-        )
-
+        self._attr_unique_id = f"{coordinator.data.device.n2g_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={
-                (DOMAIN, f"{coordinator.config_entry.entry_id}_{service_key}")
-            },
+            identifiers={(DOMAIN, coordinator.data.device.n2g_id)},
             configuration_url=f"http://{coordinator.config_entry.data[CONF_HOST]}",
-            sw_version=coordinator.data["device"].firmware,
-            manufacturer=coordinator.data["device"].manufacturer,
-            model=coordinator.data["device"].model,
-            name=service,
+            sw_version=coordinator.data.device.firmware,
+            manufacturer=coordinator.data.device.manufacturer,
+            model=coordinator.data.device.model,
+            name=entry.title,
         )
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> int | float:
         """Return the state of the sensor."""
-        value = getattr(
-            self.coordinator.data[self._service_key], self.entity_description.key
-        )
-        return value
+        return self.entity_description.value_fn(self.coordinator.data)

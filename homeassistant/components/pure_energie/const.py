@@ -8,10 +8,3 @@ from typing import Final
 DOMAIN: Final = "pure_energie"
 LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(seconds=30)
-
-SERVICE_DEVICE: Final = "device"
-SERVICE_SMARTBRIDGE: Final = "smartbridge"
-
-SERVICES: dict[str, str] = {
-    SERVICE_SMARTBRIDGE: "SmartBridge",
-}
