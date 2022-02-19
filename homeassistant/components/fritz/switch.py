@@ -60,9 +60,7 @@ def deflection_entities_list(
         _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
         return []
 
-    deflection_list = avm_wrapper.get_ontel_deflections()
-
-    if not deflection_list:
+    if not (deflection_list := avm_wrapper.get_ontel_deflections()):
         return []
 
     items = xmltodict.parse(deflection_list["NewDeflectionList"])["List"]["Item"]
