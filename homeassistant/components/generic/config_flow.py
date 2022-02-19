@@ -200,7 +200,7 @@ class GenericIPCamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> data_entry_flow.FlowResult:
         """Handle the start of the config flow."""
         errors = {}
-        if user_input is not None:
+        if user_input:
             # Secondary validation because serialised vol can't seem to handle this complexity:
             if user_input.get(CONF_STILL_IMAGE_URL) in [None, ""] and user_input.get(
                 CONF_STREAM_SOURCE
