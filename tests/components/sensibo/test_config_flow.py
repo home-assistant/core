@@ -5,7 +5,7 @@ import asyncio
 from unittest.mock import patch
 
 import aiohttp
-from pysensibo import SensiboError
+from pysensibo import AuthenticationError, SensiboError
 import pytest
 
 from homeassistant import config_entries
@@ -123,6 +123,7 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
     [
         (aiohttp.ClientConnectionError),
         (asyncio.TimeoutError),
+        (AuthenticationError),
         (SensiboError),
     ],
 )

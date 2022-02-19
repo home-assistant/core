@@ -5,7 +5,7 @@ import asyncio
 
 from aiohttp.client_exceptions import ClientConnectionError
 import async_timeout
-from pysensibo import SensiboError
+from pysensibo.exceptions import AuthenticationError, SensiboError
 import voluptuous as vol
 
 from homeassistant.components.climate import (
@@ -318,6 +318,7 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
         except (
             ClientConnectionError,
             asyncio.TimeoutError,
+            AuthenticationError,
             SensiboError,
         ) as err:
             raise HomeAssistantError(
