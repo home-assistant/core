@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from asyncsleepiq import SleepIQBed
 
@@ -20,7 +21,7 @@ from .entity import SleepIQEntity
 class SleepIQButtonEntityDescriptionMixin:
     """Describes a SleepIQ Button entity."""
 
-    press_action: Callable
+    press_action: Callable[[SleepIQBed], Any]
 
 
 @dataclass
@@ -38,7 +39,7 @@ ENTITY_DESCRIPTIONS = [
         icon="mdi:target",
     ),
     SleepIQButtonEntityDescription(
-        key="stoppump",
+        key="stop-pump",
         name="Stop Pump",
         press_action=lambda client: client.stop_pump(),
         icon="mdi:stop",
@@ -72,9 +73,7 @@ class SleepNumberButton(SleepIQEntity, ButtonEntity):
         """Initialize the Button."""
         super().__init__(bed)
         self._attr_name = f"SleepNumber {bed.name} {entity_description.name}"
-        if entity_description.name:
-            unique_name = entity_description.name.lower().replace(" ", "-")
-            self._attr_unique_id = f"{bed.id}-{unique_name}"
+        self._attr_unique_id = f"{bed.id}-{entity_description.key}"
         self.entity_description = entity_description
 
     async def async_press(self) -> None:
