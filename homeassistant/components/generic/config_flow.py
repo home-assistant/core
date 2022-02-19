@@ -51,6 +51,8 @@ DEFAULT_DATA = {
     CONF_VERIFY_SSL: True,
 }
 
+SUPPORTED_IMAGE_TYPES = ["png", "jpeg", "svg+xml"]
+
 
 class GenericIPCamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for generic IP camera."""
@@ -103,7 +105,7 @@ class GenericIPCamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info[CONF_STILL_IMAGE_URL],
                 fmt,
             )
-            if fmt not in ["png", "jpeg", "svg+xml"]:
+            if fmt not in SUPPORTED_IMAGE_TYPES:
                 return False, None, "invalid_still_image"
             fmt = "image/" + fmt
 
