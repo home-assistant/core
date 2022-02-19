@@ -5,13 +5,27 @@ from asyncsleepiq import SleepIQBed, SleepIQSleeper
 
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
 from .const import ICON_OCCUPIED, SENSOR_TYPES
+
+
+class SleepIQEntity(Entity):
+    """Implementation of a SleepIQ entity."""
+
+    def __init__(self, bed: SleepIQBed) -> None:
+        """Initialize the SleepIQ entity."""
+        self.bed = bed
+        self._attr_device_info = DeviceInfo(
+            connections={(device_registry.CONNECTION_NETWORK_MAC, bed.mac_addr)},
+            manufacturer="SleepNumber",
+            name=bed.name,
+            model=bed.model,
+        )
 
 
 class SleepIQSensor(CoordinatorEntity):
@@ -26,20 +40,20 @@ class SleepIQSensor(CoordinatorEntity):
         sleeper: SleepIQSleeper,
         name: str,
     ) -> None:
-        """Initialize the SleepIQ side entity."""
+        """Initialize the SleepIQ sensor entity."""
         super().__init__(coordinator)
-        self.bed = bed
         self.sleeper = sleeper
-        self._async_update_attrs()
-
-        self._attr_name = f"SleepNumber {bed.name} {sleeper.name} {SENSOR_TYPES[name]}"
-        self._attr_unique_id = f"{bed.id}_{sleeper.name}_{name}"
+        self.bed = bed
         self._attr_device_info = DeviceInfo(
             connections={(device_registry.CONNECTION_NETWORK_MAC, bed.mac_addr)},
             manufacturer="SleepNumber",
             name=bed.name,
             model=bed.model,
         )
+
+        self._attr_name = f"SleepNumber {bed.name} {sleeper.name} {SENSOR_TYPES[name]}"
+        self._attr_unique_id = f"{bed.id}_{sleeper.name}_{name}"
+        self._async_update_attrs()
 
     @callback
     def _handle_coordinator_update(self) -> None:

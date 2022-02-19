@@ -1,6 +1,7 @@
 """Common methods for SleepIQ."""
-from unittest.mock import MagicMock, patch
+from unittest.mock import create_autospec, patch
 
+from asyncsleepiq import SleepIQBed, SleepIQSleeper
 import pytest
 
 from homeassistant.components.sleepiq import DOMAIN
@@ -24,15 +25,15 @@ def mock_asyncsleepiq():
     """Mock an AsyncSleepIQ object."""
     with patch("homeassistant.components.sleepiq.AsyncSleepIQ", autospec=True) as mock:
         client = mock.return_value
-        bed = MagicMock()
+        bed = create_autospec(SleepIQBed)
         client.beds = {BED_ID: bed}
         bed.name = BED_NAME
         bed.id = BED_ID
         bed.mac_addr = "12:34:56:78:AB:CD"
         bed.model = "C10"
         bed.paused = False
-        sleeper_l = MagicMock()
-        sleeper_r = MagicMock()
+        sleeper_l = create_autospec(SleepIQSleeper)
+        sleeper_r = create_autospec(SleepIQSleeper)
         bed.sleepers = [sleeper_l, sleeper_r]
 
         sleeper_l.side = "L"
