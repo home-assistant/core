@@ -610,10 +610,8 @@ def _merge_config(entry, conf):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
-    conf = hass.data.get(DATA_MQTT_CONFIG)
-
     # If user didn't have configuration.yaml config, generate defaults
-    if conf is None:
+    if (conf := hass.data.get(DATA_MQTT_CONFIG)) is None:
         conf = CONFIG_SCHEMA({DOMAIN: dict(entry.data)})[DOMAIN]
     elif any(key in conf for key in entry.data):
         shared_keys = conf.keys() & entry.data.keys()
