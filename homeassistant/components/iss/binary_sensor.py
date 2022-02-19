@@ -71,7 +71,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     coordinator: DataUpdateCoordinator[IssData] = hass.data[DOMAIN]
-    
+
     name = entry.title
     show_on_map = entry.options.get(CONF_SHOW_ON_MAP, False)
 
