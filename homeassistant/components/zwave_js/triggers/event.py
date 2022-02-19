@@ -77,7 +77,7 @@ def validate_event_data(obj: dict) -> dict:
     except ValidationError as exc:
         errors: list[dict[str, Any]] = []
         for error in exc.errors():
-            # Filter out required field errors if keys can be missing
+            # Filter out required field errors since keys can be missing
             if error["msg"] == "field required":
                 continue
             errors.append(error)  # type: ignore
