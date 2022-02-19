@@ -69,11 +69,11 @@ def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
     This allows us to avoid blocking I/O and formatting messages
     in the event loop as log messages are written in another thread.
     """
-    simple_queue = queue.SimpleQueue()  # type: ignore
+    simple_queue: queue.SimpleQueue[logging.Handler] = queue.SimpleQueue()
     queue_handler = HomeAssistantQueueHandler(simple_queue)
     logging.root.addHandler(queue_handler)
 
-    migrated_handlers = []
+    migrated_handlers: list[logging.Handler] = []
     for handler in logging.root.handlers[:]:
         if handler is queue_handler:
             continue

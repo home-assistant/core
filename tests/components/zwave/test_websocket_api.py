@@ -1,6 +1,8 @@
 """Test Z-Wave Websocket API."""
 from unittest.mock import call, patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.zwave.const import (
@@ -12,6 +14,10 @@ from homeassistant.components.zwave.const import (
 from homeassistant.components.zwave.websocket_api import ID, TYPE
 
 NETWORK_KEY = "0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST"
+
+
+# Integration is disabled
+pytest.skip("Integration has been disabled in the manifest", allow_module_level=True)
 
 
 async def test_zwave_ws_api(hass, mock_openzwave, hass_ws_client):

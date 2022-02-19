@@ -10,9 +10,22 @@
             "unknown": "Error inesperado"
         },
         "step": {
+            "discovered_connection": {
+                "description": "Con\u00e9ctese al sistema detectado: {mac_address} ({host})"
+            },
+            "manual_connection": {
+                "data": {
+                    "address": "La direcci\u00f3n IP o el dominio o el puerto serie si se conecta a trav\u00e9s de serie.",
+                    "prefix": "Un prefijo \u00fanico (dejar en blanco si solo tiene un ElkM1).",
+                    "protocol": "Protocolo",
+                    "temperature_unit": "La unidad de temperatura que utiliza ElkM1."
+                },
+                "description": "Conecte un M\u00f3dulo de Interfaz Universal Powerline Bus Powerline (UPB PIM). La cadena de direcci\u00f3n debe tener el formato 'direcci\u00f3n [: puerto]' para 'tcp'. El puerto es opcional y el valor predeterminado es 2101. Ejemplo: '192.168.1.42'. Para el protocolo serie, la direcci\u00f3n debe estar en la forma 'tty [: baudios]'. El baud es opcional y el valor predeterminado es 4800. Ejemplo: '/ dev / ttyS1'."
+            },
             "user": {
                 "data": {
                     "address": "La direcci\u00f3n IP o dominio o puerto serie si se conecta a trav\u00e9s de serie.",
+                    "device": "Dispositivo",
                     "password": "Contrase\u00f1a",
                     "prefix": "Un prefijo \u00fanico (d\u00e9jalo en blanco si s\u00f3lo tienes un Elk-M1).",
                     "protocol": "Protocolo",

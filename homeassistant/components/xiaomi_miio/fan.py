@@ -8,12 +8,11 @@ from miio.airfresh import OperationMode as AirfreshOperationMode
 from miio.airfresh_t2017 import OperationMode as AirfreshOperationModeT2017
 from miio.airpurifier import OperationMode as AirpurifierOperationMode
 from miio.airpurifier_miot import OperationMode as AirpurifierMiotOperationMode
-from miio.fan import (
+from miio.fan_common import (
     MoveDirection as FanMoveDirection,
     OperationMode as FanOperationMode,
 )
-from miio.fan_miot import (
-    OperationMode as FanMiotOperationMode,
+from miio.integrations.fan.zhimi.zhimi_miot import (
     OperationModeFanZA5 as FanZA5OperationMode,
 )
 import voluptuous as vol
@@ -1035,7 +1034,7 @@ class XiaomiFanMiot(XiaomiGenericFan):
     @property
     def operation_mode_class(self):
         """Hold operation mode class."""
-        return FanMiotOperationMode
+        return FanOperationMode
 
     @property
     def preset_mode(self):

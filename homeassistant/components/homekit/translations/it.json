@@ -31,7 +31,7 @@
                     "devices": "Dispositivi (Attivatori)"
                 },
                 "description": "Gli interruttori programmabili vengono creati per ogni dispositivo selezionato. Quando si attiva un trigger del dispositivo, HomeKit pu\u00f2 essere configurato per eseguire un'automazione o una scena.",
-                "title": "Configurazione Avanzata"
+                "title": "Configurazione avanzata"
             },
             "cameras": {
                 "data": {

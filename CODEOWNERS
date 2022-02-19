@@ -802,8 +802,8 @@ tests/components/ruckus_unleashed/* @gabe565
 homeassistant/components/safe_mode/* @home-assistant/core
 tests/components/safe_mode/* @home-assistant/core
 homeassistant/components/saj/* @fredericvl
-homeassistant/components/samsungtv/* @escoand @chemelli74
-tests/components/samsungtv/* @escoand @chemelli74
+homeassistant/components/samsungtv/* @escoand @chemelli74 @epenet
+tests/components/samsungtv/* @escoand @chemelli74 @epenet
 homeassistant/components/scene/* @home-assistant/core
 tests/components/scene/* @home-assistant/core
 homeassistant/components/schluter/* @prairieapps
@@ -850,6 +850,8 @@ homeassistant/components/sisyphus/* @jkeljo
 homeassistant/components/sky_hub/* @rogerselwyn
 homeassistant/components/slack/* @bachya
 tests/components/slack/* @bachya
+homeassistant/components/sleepiq/* @mfugate1 @kbickar
+tests/components/sleepiq/* @mfugate1 @kbickar
 homeassistant/components/slide/* @ualex73
 homeassistant/components/sma/* @kellerza @rklomp
 tests/components/sma/* @kellerza @rklomp

@@ -7,9 +7,10 @@ from homeassistant.components.samsungtv import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
+from .test_media_player import MOCK_ENTRY_WS_WITH_MAC
+
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.components.samsungtv.test_media_player import MOCK_ENTRY_WS_WITH_MAC
 
 
 @pytest.fixture(name="config_entry")
@@ -54,5 +55,15 @@ async def test_entry_diagnostics(
             "title": "Mock Title",
             "unique_id": "any",
             "version": 2,
-        }
+        },
+        "device_info": {
+            "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
+            "device": {
+                "modelName": "82GXARRS",
+                "name": "[TV] Living Room",
+                "networkType": "wireless",
+                "type": "Samsung SmartTV",
+                "wifiMac": "aa:bb:cc:dd:ee:ff",
+            },
+        },
     }
