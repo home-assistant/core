@@ -1,4 +1,11 @@
 """Number platform for Sensibo integration."""
+from __future__ import annotations
+
+import asyncio
+
+from aiohttp.client_exceptions import ClientConnectionError
+import async_timeout
+from pysensibo.exceptions import AuthenticationError, SensiboError
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -8,7 +15,7 @@ from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER, TIMEOUT
 from .coordinator import SensiboDataUpdateCoordinator
 
 NUMBER_TYPES: tuple[NumberEntityDescription, ...] = (
@@ -42,11 +49,14 @@ async def async_setup_entry(
 
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
-    for description in NUMBER_TYPES:
-        for device_id, device_data in coordinator.data.items():
-            if device_data["hvac_modes"] and device_data["temp"]:
-                entities.append(SensiboNumber(coordinator, device_id, description))
+    entities = [
+        [
+            SensiboNumber(coordinator, device_id, description)
+            for device_id, device_data in coordinator.data.items()
+            if device_data["hvac_modes"] and device_data["temp"]
+        ]
+        for description in NUMBER_TYPES
+    ]
     async_add_entities(entities)
 
 
@@ -66,6 +76,7 @@ class SensiboNumber(CoordinatorEntity, NumberEntity):
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._device_id = device_id
+        self._client = coordinator.client
         self._attr_unique_id = f"{device_id} {entity_description.key}"
         self._attr_name = (
             f"{coordinator.data[device_id]['name']} {entity_description.name}"
@@ -86,6 +97,28 @@ class SensiboNumber(CoordinatorEntity, NumberEntity):
         """Return the value from coordinator data."""
         return self.coordinator.data[self._device_id][self.entity_description.key]
 
-    def set_value(self, value: float) -> None:
+    async def async_set_value(self, value: float) -> None:
         """Set value not implemented."""
-        raise HomeAssistantError("Sensibo does not support setting value")
+        try:
+            async with async_timeout.timeout(TIMEOUT):
+                result = await self._client.async_set_calibration(
+                    self.unique_id,
+                    value,
+                )
+        except (
+            ClientConnectionError,
+            asyncio.TimeoutError,
+            AuthenticationError,
+            SensiboError,
+        ) as err:
+            raise HomeAssistantError(
+                f"Failed to set calibration for device {self.name} to Sensibo servers: {err}"
+            ) from err
+        LOGGER.debug("Result: %s", result)
+        if result["status"] == "Success":
+            return
+
+        failure = result["failureReason"]
+        raise HomeAssistantError(
+            f"Could not set calibration for device {self.name} due to reason {failure}"
+        )
