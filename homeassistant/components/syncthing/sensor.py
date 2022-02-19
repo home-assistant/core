@@ -12,6 +12,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
+    DEVICE_CONNECTED,
+    DEVICE_DISCONNECTED,
+    DEVICE_PAUSED,
+    DEVICE_RESUMED,
+    DEVICE_SENSOR_ALERT_ICON,
+    DEVICE_SENSOR_DEFAULT_ICON,
+    DEVICE_SENSOR_ICONS,
     DOMAIN,
     FOLDER_PAUSED_RECEIVED,
     FOLDER_SENSOR_ALERT_ICON,
@@ -50,7 +57,18 @@ async def async_setup_entry(
         )
         for folder in config["folders"]
     ]
-
+    devices = [
+        DeviceSensor(
+            syncthing,
+            server_id,
+            device["deviceID"],
+            device["name"],
+            version["version"],
+        )
+        for device in config["devices"]
+        if device["deviceID"] != server_id
+    ]
+    async_add_entities(devices)
     async_add_entities(entities)
 
 
@@ -269,3 +287,211 @@ class FolderSensor(SensorEntity):
         state["label"] = self._folder_label
 
         return state
+
+
+class DeviceSensor(SensorEntity):
+    """A Syncthing device sensor."""
+
+    STATE_ATTRIBUTES = {
+        "inBytesTotal": "in_bytes",
+        "outBytesTotal": "out_files",
+        "paused": "paused",
+        "state": "state",
+    }
+
+    def __init__(self, syncthing, server_id, device_id, device_label, version):
+        """Initialize the sensor."""
+        self._syncthing = syncthing
+        self._server_id = server_id
+        self._device_id = device_id
+        self._device_label = device_label
+        self._state = None
+        self._unsub_timer = None
+        self._version = version
+        self._short_device_id = device_id.split("-")[0]
+        self._short_server_id = server_id.split("-")[0]
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"{self._short_server_id} {self._short_device_id} {self._device_label}"
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the entity."""
+        return f"{self._short_server_id} {self._short_device_id} {self._device_id}"
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        return self._state["state"]
+
+    @property
+    def available(self):
+        """Could the device be accessed during the last update call."""
+        return self._state is not None
+
+    @property
+    def icon(self):
+        """Return the icon for this sensor."""
+        if self._state is None:
+            return DEVICE_SENSOR_DEFAULT_ICON
+        if self.state in DEVICE_SENSOR_ICONS:
+            return DEVICE_SENSOR_ICONS[self.state]
+        return DEVICE_SENSOR_ALERT_ICON
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return self._state
+
+    @property
+    def should_poll(self):
+        """Return the polling requirement for this sensor."""
+        return False
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information."""
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, self._server_id)},
+            manufacturer="Syncthing Team",
+            name=f"Syncthing ({self._syncthing.url})",
+            sw_version=self._version,
+        )
+
+    async def async_update_status(self):
+        """Request folder status and update state."""
+        try:
+            connections = await self._syncthing.system.connections()
+            state = connections["connections"][self._device_id]
+        except aiosyncthing.exceptions.SyncthingError:
+            self._state = None
+        else:
+            self._state = self._filter_state(state)
+        self.async_write_ha_state()
+
+    def subscribe(self):
+        """Start polling syncthing folder status."""
+        if self._unsub_timer is None:
+
+            async def refresh(event_time):
+                """Get the latest data from Syncthing."""
+                await self.async_update_status()
+
+            self._unsub_timer = async_track_time_interval(
+                self.hass, refresh, SCAN_INTERVAL
+            )
+
+    @callback
+    def unsubscribe(self):
+        """Stop polling syncthing folder status."""
+        if self._unsub_timer is not None:
+            self._unsub_timer()
+            self._unsub_timer = None
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+
+        @callback
+        def handle_device_connected(event):
+            if self._state is not None:
+                self._state["state"] = "connected"
+                self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DEVICE_CONNECTED}-{self._server_id}-{self._device_id}",
+                handle_device_connected,
+            )
+        )
+
+        @callback
+        def handle_device_disconnected(event):
+            if self._state is not None:
+                self._state["state"] = "disconnected"
+                self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DEVICE_DISCONNECTED}-{self._server_id}-{self._device_id}",
+                handle_device_disconnected,
+            )
+        )
+
+        @callback
+        def handle_device_paused(event):
+            if self._state is not None:
+                self._state["paused"] = True
+                self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DEVICE_PAUSED}-{self._server_id}-{self._device_id}",
+                handle_device_paused,
+            )
+        )
+
+        @callback
+        def handle_device_resumed(event):
+            if self._state is not None:
+                self._state["paused"] = False
+                self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DEVICE_RESUMED}-{self._server_id}-{self._device_id}",
+                handle_device_resumed,
+            )
+        )
+
+        @callback
+        def handle_server_unavailable():
+            self._state = None
+            self.unsubscribe()
+            self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SERVER_UNAVAILABLE}-{self._server_id}",
+                handle_server_unavailable,
+            )
+        )
+
+        async def handle_server_available():
+            self.subscribe()
+            await self.async_update_status()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SERVER_AVAILABLE}-{self._server_id}",
+                handle_server_available,
+            )
+        )
+
+        self.subscribe()
+        self.async_on_remove(self.unsubscribe)
+
+        await self.async_update_status()
+
+    def _filter_state(self, state):
+        # Select only needed state attributes and map their names
+        new_state = {
+            self.STATE_ATTRIBUTES[key]: value
+            for key, value in state.items()
+            if key in self.STATE_ATTRIBUTES
+        }
+
+        # Add some useful attributes
+        new_state["id"] = self._device_id
+        new_state["label"] = self._device_label
+        new_state["state"] = "connected" if state["connected"] else "disconnected"
+
+        return new_state

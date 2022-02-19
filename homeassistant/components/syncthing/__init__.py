@@ -17,8 +17,9 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
+    DEVICE_EVENTS,
     DOMAIN,
-    EVENTS,
+    FOLDER_EVENTS,
     RECONNECT_INTERVAL,
     SERVER_AVAILABLE,
     SERVER_UNAVAILABLE,
@@ -137,18 +138,25 @@ class SyncthingClient:
                 async for event in events.listen():
                     if events.last_seen_id == 0:
                         continue  # skipping historical events from the first batch
-                    if event["type"] not in EVENTS:
+                    entity_id = None
+                    signal_name = None
+                    if event["type"] in FOLDER_EVENTS:
+                        signal_name = FOLDER_EVENTS[event["type"]]
+                        if "folder" in event["data"]:
+                            entity_id = event["data"]["folder"]
+                        else:  # A workaround, some events store folder id under `id` key
+                            entity_id = event["data"]["id"]
+                    elif event["type"] in DEVICE_EVENTS:
+                        signal_name = DEVICE_EVENTS[event["type"]]
+                        if "device" in event["data"]:
+                            entity_id = event["data"]["device"]
+                        else:  # A workaround, some events store device id under `id` key
+                            entity_id = event["data"]["id"]
+                    else:
                         continue
-
-                    signal_name = EVENTS[event["type"]]
-                    folder = None
-                    if "folder" in event["data"]:
-                        folder = event["data"]["folder"]
-                    else:  # A workaround, some events store folder id under `id` key
-                        folder = event["data"]["id"]
                     async_dispatcher_send(
                         self._hass,
-                        f"{signal_name}-{self._server_id}-{folder}",
+                        f"{signal_name}-{self._server_id}-{entity_id}",
                         event,
                     )
             except aiosyncthing.exceptions.SyncthingError:

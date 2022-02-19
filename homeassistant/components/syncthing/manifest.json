@@ -3,7 +3,7 @@
   "name": "Syncthing",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/syncthing",
-  "requirements": ["aiosyncthing==0.5.1"],
+  "requirements": ["aiosyncthing==0.6.3"],
   "codeowners": [
     "@zhulik"
   ],
