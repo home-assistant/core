@@ -7,7 +7,7 @@ import logging
 from typing import Any
 
 import av
-import httpx
+from httpx import HTTPStatusError, RequestError, TimeoutException
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
@@ -84,10 +84,11 @@ class GenericIPCamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 response.raise_for_status()
                 image = response.content
-            except httpx.TimeoutException:
-                _LOGGER.error("Timeout getting camera image from %s", url)
-                return False, None, "unable_still_load"
-            except (httpx.RequestError, httpx.HTTPStatusError) as err:
+            except (
+                RequestError,
+                HTTPStatusError,
+                TimeoutException,
+            ) as err:
                 _LOGGER.error("Error getting camera image from %s: %s", url, err)
                 return False, None, "unable_still_load"
 
