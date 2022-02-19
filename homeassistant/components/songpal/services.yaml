@@ -20,3 +20,23 @@ set_sound_setting:
       example: "on"
       selector:
         text:
+  create_group:
+description: Create a new group.
+  fields:
+    entity_id:
+      description: Target device.
+      example: "media_player.my_soundbar"
+    group_name:
+      description: Name of the group.
+      example: "Linked"
+    slaves:
+      description: entity_ids of devices to add as slaves (comma-separated).
+      example: media_player.my_soundbar,media_player.portable
+#      example: "uuid:00000000-0000-1010-8000-ac9b0a2163d9,uuid:00000000-0000-1010-8000-ac9b0a300c02"
+abort_group:
+  description: Abort current group.
+  fields:
+    entity_id:
+      description: Target device.
+      example: "media_player.my_soundbar"
+
