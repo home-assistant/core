@@ -135,14 +135,40 @@ class RepositoryTagDataUpdateCoordinator(
     @staticmethod
     def _parse_response(
         response: GitHubResponseModel[GitHubTagModel | None],
-    ) -> GitHubTagModel | None:
+    ) -> str | None:
         """Parse the response from GitHub API."""
-        return response.data[0] if response.data else None
+        return next(
+            (
+                tag["name"]
+                for tag in response.data["data"]["repository"]["refs"]["nodes"]
+            ),
+            None,
+        )
 
     async def fetch_data(self) -> GitHubReleaseModel | None:
         """Get the latest data from GitHub."""
-        return await self._client.repos.list_tags(
-            self.repository, **{"params": {"per_page": 1}, "etag": self._etag}
+        return await self._client.graphql(
+            query="""
+                query ($owner: String!, $repository: String!) {
+                    repository(owner: $owner, name: $repository) {
+                        refs(
+                            refPrefix: "refs/tags/"
+                            first: 1
+                            orderBy: {field: TAG_COMMIT_DATE, direction: DESC}
+                        ) {
+                            nodes {
+                                name
+                            }
+                        }
+                    }
+                }
+                """,
+            variables={
+                "owner": self.repository.split("/")[0],
+                "repository": self.repository.split("/")[1],
+            },
+            method="POST",
+            etag=self._etag,
         )
 
 
