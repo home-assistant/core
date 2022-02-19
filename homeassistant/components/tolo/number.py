@@ -77,7 +77,7 @@ async def async_setup_entry(
     """Set up number controls for TOLO Sauna."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [ToloNumberEntity(coordinator, entry, description) for description in NUMBERS]
+        ToloNumberEntity(coordinator, entry, description) for description in NUMBERS
     )
 
 
