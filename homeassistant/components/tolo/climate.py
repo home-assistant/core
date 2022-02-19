@@ -144,8 +144,7 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set desired target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
         self.coordinator.client.set_target_temperature(round(temperature))

@@ -134,8 +134,7 @@ class NestEventMediaStore(EventMediaStore):
         """Load data."""
         if self._data is None:
             self._devices = await self._get_devices()
-            data = await self._store.async_load()
-            if data is None:
+            if (data := await self._store.async_load()) is None:
                 _LOGGER.debug("Loaded empty event store")
                 self._data = {}
             elif isinstance(data, dict):
