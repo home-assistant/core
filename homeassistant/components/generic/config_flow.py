@@ -63,8 +63,6 @@ class GenericIPCamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _test_connection(self, info) -> tuple[bool, str | None, str]:
         """Verify that the camera data is valid before we add it."""
         unique_id = self.flow_id
-        if unique_id in self._async_current_ids():
-            return False, None, "unique_id_already_in_use"
         await self.async_set_unique_id(unique_id)
         fmt = None
         if url := info.get(CONF_STILL_IMAGE_URL):
