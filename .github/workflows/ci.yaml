@@ -718,8 +718,10 @@ jobs:
 
   pytest:
     runs-on: ubuntu-latest
-    if: github.event.inputs.lint-only != 'true' && (
-      needs.changes.outputs.test_full_suite == 'true' || needs.changes.outputs.tests_glob)
+    if: |
+      (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
+      && github.event.inputs.lint-only != 'true'
+      && (needs.changes.outputs.test_full_suite == 'true' || needs.changes.outputs.tests_glob)
     needs:
       - changes
       - gen-requirements-all
