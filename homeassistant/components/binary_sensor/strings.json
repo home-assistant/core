@@ -136,8 +136,8 @@
       "on": "[%key:common::state::open%]"
     },
     "gas": {
-      "off": "[%key:component::binary_sensor::state::gas::off%]",
-      "on": "[%key:component::binary_sensor::state::gas::on%]"
+      "off": "Clear",
+      "on": "Detected"
     },
     "heat": {
       "off": "[%key:component::binary_sensor::state::battery::off%]",

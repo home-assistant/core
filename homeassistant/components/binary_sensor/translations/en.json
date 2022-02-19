@@ -133,8 +133,8 @@
             "on": "Charging"
         },
         "carbon_monoxide": {
-            "off": "[%key:component::binary_sensor::state::gas::off%]",
-            "on": "[%key:component::binary_sensor::state::gas::on%]"
+            "off": "Clear",
+            "on": "Detected"
         },
         "cold": {
             "off": "Normal",
@@ -153,8 +153,8 @@
             "on": "Open"
         },
         "gas": {
-            "off": "[%key:component::binary_sensor::state::gas::off%]",
-            "on": "[%key:component::binary_sensor::state::gas::on%]"
+            "off": "Clear",
+            "on": "Detected"
         },
         "heat": {
             "off": "Normal",
@@ -173,16 +173,16 @@
             "on": "Wet"
         },
         "motion": {
-            "off": "[%key:component::binary_sensor::state::gas::off%]",
-            "on": "[%key:component::binary_sensor::state::gas::on%]"
+            "off": "Clear",
+            "on": "Detected"
         },
         "moving": {
             "off": "Not moving",
             "on": "Moving"
         },
         "occupancy": {
-            "off": "[%key:component::binary_sensor::state::gas::off%]",
-            "on": "[%key:component::binary_sensor::state::gas::on%]"
+            "off": "Clear",
+            "on": "Detected"
         },
         "opening": {
             "off": "Closed",
@@ -209,20 +209,20 @@
             "on": "Unsafe"
         },
         "smoke": {
-            "off": "[%key:component::binary_sensor::state::gas::off%]",
-            "on": "[%key:component::binary_sensor::state::gas::on%]"
+            "off": "Clear",
+            "on": "Detected"
         },
         "sound": {
-            "off": "[%key:component::binary_sensor::state::gas::off%]",
-            "on": "[%key:component::binary_sensor::state::gas::on%]"
+            "off": "Clear",
+            "on": "Detected"
         },
         "update": {
             "off": "Up-to-date",
             "on": "Update available"
         },
         "vibration": {
-            "off": "[%key:component::binary_sensor::state::gas::off%]",
-            "on": "[%key:component::binary_sensor::state::gas::on%]"
+            "off": "Clear",
+            "on": "Detected"
         },
         "window": {
             "off": "Closed",
