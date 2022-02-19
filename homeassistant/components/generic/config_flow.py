@@ -56,6 +56,45 @@ DEFAULT_DATA = {
 SUPPORTED_IMAGE_TYPES = ["png", "jpeg", "svg+xml"]
 
 
+def build_schema(user_input):
+    """Create schema for camera config setup."""
+    spec = {
+        vol.Optional(CONF_NAME, default=user_input[CONF_NAME]): str,
+        vol.Optional(
+            CONF_STILL_IMAGE_URL,
+            description={"suggested_value": user_input.get(CONF_STILL_IMAGE_URL, "")},
+        ): str,
+        vol.Optional(
+            CONF_STREAM_SOURCE,
+            description={"suggested_value": user_input.get(CONF_STREAM_SOURCE, "")},
+        ): str,
+        vol.Optional(
+            CONF_RTSP_TRANSPORT, default=user_input.get(CONF_RTSP_TRANSPORT)
+        ): vol.In([None, "tcp", "udp", "udp_multicast", "http"]),
+        vol.Optional(
+            CONF_AUTHENTICATION, default=user_input.get(CONF_AUTHENTICATION)
+        ): vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
+        vol.Optional(
+            CONF_USERNAME,
+            description={"suggested_value": user_input.get(CONF_USERNAME, "")},
+        ): str,
+        vol.Optional(
+            CONF_PASSWORD,
+            description={"suggested_value": user_input.get(CONF_PASSWORD, "")},
+        ): str,
+        vol.Optional(
+            CONF_LIMIT_REFETCH_TO_URL_CHANGE,
+            default=user_input.get(CONF_LIMIT_REFETCH_TO_URL_CHANGE),
+        ): bool,
+        vol.Optional(
+            CONF_FRAMERATE,
+            description={"suggested_value": user_input.get(CONF_FRAMERATE, "")},
+        ): int,
+        vol.Optional(CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL)): bool,
+    }
+    return vol.Schema(spec)
+
+
 async def async_test_connection(hass, info) -> tuple[bool, str | None, str]:
     """Verify that the camera data is valid before we add it."""
 
@@ -149,49 +188,6 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    @staticmethod
-    def build_schema(user_input):
-        """Create schema for camera config setup."""
-        spec = {
-            vol.Optional(CONF_NAME, default=user_input[CONF_NAME]): str,
-            vol.Optional(
-                CONF_STILL_IMAGE_URL,
-                description={
-                    "suggested_value": user_input.get(CONF_STILL_IMAGE_URL, "")
-                },
-            ): str,
-            vol.Optional(
-                CONF_STREAM_SOURCE,
-                description={"suggested_value": user_input.get(CONF_STREAM_SOURCE, "")},
-            ): str,
-            vol.Optional(
-                CONF_RTSP_TRANSPORT, default=user_input.get(CONF_RTSP_TRANSPORT)
-            ): vol.In([None, "tcp", "udp", "udp_multicast", "http"]),
-            vol.Optional(
-                CONF_AUTHENTICATION, default=user_input.get(CONF_AUTHENTICATION)
-            ): vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
-            vol.Optional(
-                CONF_USERNAME,
-                description={"suggested_value": user_input.get(CONF_USERNAME, "")},
-            ): str,
-            vol.Optional(
-                CONF_PASSWORD,
-                description={"suggested_value": user_input.get(CONF_PASSWORD, "")},
-            ): str,
-            vol.Optional(
-                CONF_LIMIT_REFETCH_TO_URL_CHANGE,
-                default=user_input.get(CONF_LIMIT_REFETCH_TO_URL_CHANGE),
-            ): bool,
-            vol.Optional(
-                CONF_FRAMERATE,
-                description={"suggested_value": user_input.get(CONF_FRAMERATE, "")},
-            ): int,
-            vol.Optional(
-                CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL)
-            ): bool,
-        }
-        return vol.Schema(spec)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -218,7 +214,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=self.build_schema(user_input),
+            data_schema=build_schema(user_input),
             errors=errors,
         )
 
