@@ -1145,20 +1145,20 @@ async def test_publish_mid(hass, mqtt_client_mock):
 
     # on_publish: no callback yet
     async def publish_twice():
-        """Publish two calls without a simulated callback."""
+        """Publish two calls, the second without a mocked callback."""
         await mqtt.async_publish(hass, "test-topic1", "payload1")
         await mqtt.async_publish(hass, "no_callback/test-topic2", "payload2")
 
     # on_subscribe: no callback yet
     async def subscribe_twice():
-        """Publish two calls without a simulated callback."""
+        """Subscribe two topics, the second without a mocked callback."""
         nonlocal unsub_1, unsub_2, calls_1, calls_2
         unsub_1 = await mqtt.async_subscribe(hass, "test-topic1", calls_1)
         unsub_2 = await mqtt.async_subscribe(hass, "no_callback/test-topic2", calls_2)
 
     # on_unsubscribe: no callback yet
     async def unsubscribe_twice():
-        """Publish two calls without a simulated callback."""
+        """Unsubscribe two topics, the second without a mocked callback."""
         nonlocal unsub_1, unsub_2
         unsub_1()
         unsub_2()
