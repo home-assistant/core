@@ -564,20 +564,17 @@ def mqtt_client_mock(hass):
         def _async_fire_mqtt_message(topic, payload, qos, retain):
             async_fire_mqtt_message(hass, topic, payload, qos, retain)
             mid = get_mid()
-            if not topic.startswith("no_callback/"):
-                mock_client.on_publish(0, 0, mid)
+            mock_client.on_publish(0, 0, mid)
             return FakeInfo(mid)
 
         def _subscribe(topic, qos=0):
             mid = get_mid()
-            if not topic.startswith("no_callback/"):
-                mock_client.on_subscribe(0, 0, mid)
+            mock_client.on_subscribe(0, 0, mid)
             return (0, mid)
 
         def _unsubscribe(topic):
             mid = get_mid()
-            if not topic.startswith("no_callback/"):
-                mock_client.on_unsubscribe(0, 0, mid)
+            mock_client.on_unsubscribe(0, 0, mid)
             return (0, mid)
 
         mock_client = mock_client.return_value
