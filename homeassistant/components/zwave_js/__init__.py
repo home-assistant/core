@@ -261,12 +261,6 @@ async def async_setup_entry(  # noqa: C901
             )
         )
 
-        # Create a ping button for each device
-        await async_setup_platform(BUTTON_DOMAIN)
-        async_dispatcher_send(
-            hass, f"{DOMAIN}_{entry.entry_id}_add_ping_button_entity", node
-        )
-
         # add listeners to handle new values that get added later
         for event in ("value added", "value updated", "metadata updated"):
             entry.async_on_unload(
@@ -295,11 +289,16 @@ async def async_setup_entry(  # noqa: C901
 
     async def async_on_node_added(node: ZwaveNode) -> None:
         """Handle node added event."""
-        await async_setup_platform(SENSOR_DOMAIN)
-
         # Create a node status sensor for each device
+        await async_setup_platform(SENSOR_DOMAIN)
         async_dispatcher_send(
             hass, f"{DOMAIN}_{entry.entry_id}_add_node_status_sensor", node
+        )
+
+        # Create a ping button for each device
+        await async_setup_platform(BUTTON_DOMAIN)
+        async_dispatcher_send(
+            hass, f"{DOMAIN}_{entry.entry_id}_add_ping_button_entity", node
         )
 
         # we only want to run discovery when the node has reached ready state,
