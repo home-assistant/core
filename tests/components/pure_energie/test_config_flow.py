@@ -34,7 +34,7 @@ async def test_full_user_flow_implementation(
         result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}
     )
 
-    assert result.get("title") == "test home"
+    assert result.get("title") == "Pure Energie Meter"
     assert result.get("type") == RESULT_TYPE_CREATE_ENTRY
     assert "data" in result
     assert result["data"][CONF_HOST] == "192.168.1.123"
@@ -74,7 +74,7 @@ async def test_full_zeroconf_flow_implementationn(
         result["flow_id"], user_input={}
     )
 
-    assert result2.get("title") == "test home"
+    assert result2.get("title") == "Pure Energie Meter"
     assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
 
     assert "data" in result2

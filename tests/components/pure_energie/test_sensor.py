@@ -25,7 +25,6 @@ async def test_sensors(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the Pure Energie - SmartBridge sensors."""
-    entry_id = init_integration.entry_id
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
@@ -33,7 +32,7 @@ async def test_sensors(
     entry = entity_registry.async_get("sensor.pem_energy_consumption_total")
     assert entry
     assert state
-    assert entry.unique_id == f"{entry_id}_smartbridge_energy_consumption_total"
+    assert entry.unique_id == "aabbccddeeff_energy_consumption_total"
     assert state.state == "17762.1"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Consumption"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
@@ -45,7 +44,7 @@ async def test_sensors(
     entry = entity_registry.async_get("sensor.pem_energy_production_total")
     assert entry
     assert state
-    assert entry.unique_id == f"{entry_id}_smartbridge_energy_production_total"
+    assert entry.unique_id == "aabbccddeeff_energy_production_total"
     assert state.state == "21214.6"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Production"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
@@ -57,7 +56,7 @@ async def test_sensors(
     entry = entity_registry.async_get("sensor.pem_power_flow")
     assert entry
     assert state
-    assert entry.unique_id == f"{entry_id}_smartbridge_power_flow"
+    assert entry.unique_id == "aabbccddeeff_power_flow"
     assert state.state == "338"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Power Flow"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
@@ -68,8 +67,8 @@ async def test_sensors(
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.identifiers == {(DOMAIN, f"{entry_id}_smartbridge")}
-    assert device_entry.name == "SmartBridge"
+    assert device_entry.identifiers == {(DOMAIN, "aabbccddeeff")}
+    assert device_entry.name == "home"
     assert device_entry.manufacturer == "NET2GRID"
     assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
     assert device_entry.model == "SBWF3102"
