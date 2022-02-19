@@ -74,7 +74,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Validate the input and create the entry from the data."""
         try:
             await self.validate_input(user_input)
-            return await self.create_entry_from_data()
         except SenseMFARequiredException:
             return await self.async_step_validation()
         except SENSE_TIMEOUT_EXCEPTIONS:
@@ -84,6 +83,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
+        else:
+            return await self.create_entry_from_data()
         return None
 
     async def async_step_validation(self, user_input=None):
@@ -92,7 +93,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             try:
                 await self._gateway.validate_mfa(user_input[CONF_CODE])
-                return await self.create_entry_from_data()
             except SENSE_TIMEOUT_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             except SenseAuthenticationException:
@@ -100,6 +100,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                return await self.create_entry_from_data()
 
         return self.async_show_form(
             step_id="validation",
@@ -111,8 +113,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            result = await self.validate_input_and_create_entry(user_input, errors)
-            if result:
+            if result := await self.validate_input_and_create_entry(user_input, errors):
                 return result
 
         return self.async_show_form(
@@ -128,8 +129,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle reauth and validation."""
         errors = {}
         if user_input is not None:
-            result = await self.validate_input_and_create_entry(user_input, errors)
-            if result:
+            if result := await self.validate_input_and_create_entry(user_input, errors):
                 return result
 
         return self.async_show_form(
