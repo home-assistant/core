@@ -17,7 +17,7 @@
         "step": {
             "init": {
                 "data": {
-                    "show_on_map": "Mostrar no mapa"
+                    "show_on_map": "Mostrar no mapa?"
                 }
             }
         }
