@@ -74,10 +74,6 @@ class BMWConnectedDriveConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Handle import."""
-        return await self.async_step_user(user_input)
-
     @staticmethod
     @callback
     def async_get_options_flow(

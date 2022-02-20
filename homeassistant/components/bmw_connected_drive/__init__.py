@@ -11,7 +11,7 @@ from bimmer_connected.vehicle import ConnectedDriveVehicle
 import voluptuous as vol
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_NAME,
@@ -26,7 +26,6 @@ from homeassistant.helpers import device_registry, discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import track_utc_time_change
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
@@ -36,7 +35,6 @@ from .const import (
     CONF_ALLOWED_REGIONS,
     CONF_READ_ONLY,
     DATA_ENTRIES,
-    DATA_HASS_CONFIG,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,22 +85,6 @@ _SERVICE_MAP = {
 }
 
 UNDO_UPDATE_LISTENER = "undo_update_listener"
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the BMW Connected Drive component from configuration.yaml."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][DATA_HASS_CONFIG] = config
-
-    if DOMAIN in config:
-        for entry_config in config[DOMAIN].values():
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_config
-                )
-            )
-
-    return True
 
 
 @callback
@@ -167,7 +149,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             Platform.NOTIFY,
             DOMAIN,
             {CONF_NAME: DOMAIN},
-            hass.data[DOMAIN][DATA_HASS_CONFIG],
+            dict(entry.data),
         )
     )
 
