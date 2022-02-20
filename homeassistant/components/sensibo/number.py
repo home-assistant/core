@@ -124,5 +124,7 @@ class SensiboNumber(CoordinatorEntity, NumberEntity):
             ) from err
         LOGGER.debug("Result: %s", result)
         if result["status"] == "success":
+            self.coordinator.data[self._device_id][self.entity_description.key] = value
+            self.async_write_ha_state()
             return
         raise HomeAssistantError(f"Could not set calibration for device {self.name}")
