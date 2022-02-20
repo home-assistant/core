@@ -38,7 +38,8 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
 
         devices = []
         try:
-            for dev in await self.client.async_get_devices():
+            data = await self.client.async_get_devices()
+            for dev in data["result"]:
                 devices.append(dev)
         except (AuthenticationError, SensiboError) as error:
             raise UpdateFailed from error
