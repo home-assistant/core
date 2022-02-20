@@ -76,6 +76,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
+    CONF_SLAVE,
     CONF_STRUCTURE,
     CONF_TIMEOUT,
     CONF_TYPE,
@@ -272,10 +273,12 @@ async def test_duplicate_modbus_validator(do_config):
                     {
                         CONF_NAME: TEST_ENTITY_NAME,
                         CONF_ADDRESS: 117,
+                        CONF_SLAVE: 0,
                     },
                     {
                         CONF_NAME: TEST_ENTITY_NAME,
                         CONF_ADDRESS: 119,
+                        CONF_SLAVE: 0,
                     },
                 ],
             }
@@ -290,10 +293,12 @@ async def test_duplicate_modbus_validator(do_config):
                     {
                         CONF_NAME: TEST_ENTITY_NAME,
                         CONF_ADDRESS: 117,
+                        CONF_SLAVE: 0,
                     },
                     {
                         CONF_NAME: TEST_ENTITY_NAME + "2",
                         CONF_ADDRESS: 117,
+                        CONF_SLAVE: 0,
                     },
                 ],
             }
@@ -409,6 +414,7 @@ async def test_duplicate_entity_validator(do_config):
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 117,
+                    CONF_SLAVE: 0,
                     CONF_SCAN_INTERVAL: 0,
                 }
             ],
@@ -544,6 +550,7 @@ async def mock_modbus_read_pymodbus_fixture(
                         CONF_INPUT_TYPE: do_type,
                         CONF_NAME: TEST_ENTITY_NAME,
                         CONF_ADDRESS: 51,
+                        CONF_SLAVE: 0,
                         CONF_SCAN_INTERVAL: do_scan_interval,
                     }
                 ],
@@ -688,6 +695,7 @@ async def test_delay(hass, mock_pymodbus):
                         CONF_INPUT_TYPE: CALL_TYPE_COIL,
                         CONF_NAME: TEST_ENTITY_NAME,
                         CONF_ADDRESS: 52,
+                        CONF_SLAVE: 0,
                         CONF_SCAN_INTERVAL: set_scan_interval,
                     },
                 ],
@@ -736,6 +744,7 @@ async def test_delay(hass, mock_pymodbus):
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 117,
+                    CONF_SLAVE: 0,
                     CONF_SCAN_INTERVAL: 0,
                 }
             ],
@@ -759,6 +768,7 @@ async def test_shutdown(hass, caplog, mock_pymodbus, mock_modbus_with_pymodbus):
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
+                    CONF_SLAVE: 0,
                 }
             ]
         },
