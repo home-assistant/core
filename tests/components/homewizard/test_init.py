@@ -1,6 +1,6 @@
 """Tests for the homewizard component."""
 from asyncio import TimeoutError
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from homewizard_energy.errors import DisabledError
 
@@ -159,3 +159,31 @@ async def test_init_accepts_and_migrates_old_entry(
     assert new_entity_disabled_sensor.original_name == "Switch Disabled"
     assert new_entity_disabled_sensor.unique_id == "socket_disabled_unique_id"
     assert new_entity_disabled_sensor.disabled_by == er.DISABLED_USER
+
+
+async def test_load_handles_generic_exception(
+    aioclient_mock, hass, mock_homewizard_energy
+):
+    """Test setup catches generic exception."""
+
+    def MockInitialize():
+        raise DisabledError()
+
+    mock_homewizard_energy.device = AsyncMock(side_effect=MockInitialize)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: "1.1.1.1"},
+        unique_id=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homewizard.HomeWizardEnergy",
+        return_value=mock_homewizard_energy,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
