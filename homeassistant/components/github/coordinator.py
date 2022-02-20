@@ -96,14 +96,12 @@ class GitHubDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
     async def _async_update_data(self) -> GitHubResponseModel[dict[str, Any]]:
+        """Update data."""
+        owner, repository = self.repository.split("/")
         try:
             response = await self._client.graphql(
                 query=GRAPHQL_REPOSITORY_QUERY,
-                variables={
-                    "owner": self.repository.split("/")[0],
-                    "repository": self.repository.split("/")[1],
-                },
-                method="POST",
+                variables={"owner": owner, "repository": repository},
             )
         except (GitHubConnectionException, GitHubRatelimitException) as exception:
             # These are expected and we dont log anything extra
@@ -114,4 +112,4 @@ class GitHubDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(exception) from exception
         else:
             self._last_response = response
-            return response.data.get("data", {}).get("repository", {})
+            return response.data["data"]["repository"]
