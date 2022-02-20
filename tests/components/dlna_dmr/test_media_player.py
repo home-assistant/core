@@ -823,10 +823,11 @@ async def test_play_media_didl_metadata(
 
     await async_setup_component(hass, MS_DOMAIN, {MS_DOMAIN: {}})
     await hass.async_block_till_done()
-    local_source = hass.data[MS_DOMAIN][MS_DOMAIN]
 
-    with patch.object(local_source, "async_resolve_media", return_value=play_media):
-
+    with patch(
+        "homeassistant.components.media_source.async_resolve_media",
+        return_value=play_media,
+    ):
         await hass.services.async_call(
             MP_DOMAIN,
             mp_const.SERVICE_PLAY_MEDIA,
