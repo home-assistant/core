@@ -8,10 +8,6 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         }
-      },
-      "zeroconf_confirm": {
-        "description": "Do you want to add the Cybro PLC named `{name}` to Home Assistant?",
-        "title": "Discovered Cybro PLC"
       }
     },
     "error": {

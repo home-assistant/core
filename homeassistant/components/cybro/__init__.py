@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import CybroDataUpdateCoordinator
 
-PLATFORMS = (Platform.BINARY_SENSOR,)
+PLATFORMS = Platform.BINARY_SENSOR
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

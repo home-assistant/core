@@ -17,10 +17,6 @@
                     "port": "Port"
                 },
                 "description": "Set up your Cybro PLC to integrate with Home Assistant."
-            },
-            "zeroconf_confirm": {
-                "description": "Do you want to add the Cybro PLC named `{name}` to Home Assistant?",
-                "title": "Discovered Cybro PLC"
             }
         }
     }
