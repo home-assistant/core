@@ -1,12 +1,9 @@
 """Number platform for Sensibo integration."""
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 
-from aiohttp.client_exceptions import ClientConnectionError
 import async_timeout
-from pysensibo.exceptions import AuthenticationError, SensiboError
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -16,7 +13,7 @@ from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LOGGER, TIMEOUT
+from .const import DOMAIN, LOGGER, SENSIBOERRORS, TIMEOUT
 from .coordinator import SensiboDataUpdateCoordinator
 
 
@@ -113,7 +110,7 @@ class SensiboNumber(CoordinatorEntity, NumberEntity):
         return self.coordinator.data[self._device_id][self.entity_description.key]
 
     async def async_set_value(self, value: float) -> None:
-        """Set value not implemented."""
+        """Set value for calibration."""
         data = {self.entity_description.remote_key: value}
         try:
             async with async_timeout.timeout(TIMEOUT):
@@ -121,12 +118,7 @@ class SensiboNumber(CoordinatorEntity, NumberEntity):
                     self._device_id,
                     data,
                 )
-        except (
-            ClientConnectionError,
-            asyncio.TimeoutError,
-            AuthenticationError,
-            SensiboError,
-        ) as err:
+        except SENSIBOERRORS as err:
             raise HomeAssistantError(
                 f"Failed to set calibration for device {self.name} to Sensibo servers: {err}"
             ) from err

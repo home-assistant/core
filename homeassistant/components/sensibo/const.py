@@ -1,6 +1,10 @@
 """Constants for Sensibo."""
 
+import asyncio
 import logging
+
+from aiohttp.client_exceptions import ClientConnectionError
+from pysensibo.exceptions import AuthenticationError, SensiboError
 
 from homeassistant.const import Platform
 
@@ -12,3 +16,10 @@ PLATFORMS = [Platform.CLIMATE, Platform.NUMBER]
 ALL = ["all"]
 DEFAULT_NAME = "Sensibo"
 TIMEOUT = 8
+
+SENSIBOERRORS = (
+    ClientConnectionError,
+    asyncio.TimeoutError,
+    AuthenticationError,
+    SensiboError,
+)
