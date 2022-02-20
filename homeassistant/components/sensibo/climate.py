@@ -325,12 +325,12 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
                 f"Failed to set AC state for device {self.name} to Sensibo servers: {err}"
             ) from err
         LOGGER.debug("Result: %s", result)
-        if result["status"] == "Success":
+        if result["result"]["status"] == "Success":
             self.coordinator.data[self.unique_id][AC_STATE_TO_DATA[name]] = value
             self.async_write_ha_state()
             return
 
-        failure = result["failureReason"]
+        failure = result["result"]["failureReason"]
         raise HomeAssistantError(
             f"Could not set state for device {self.name} due to reason {failure}"
         )
