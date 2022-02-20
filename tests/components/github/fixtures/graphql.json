@@ -19,6 +19,16 @@
             "watchers": {
                 "total": 9
             },
+            "discussion": {
+                "total": 1,
+                "discussions": [
+                    {
+                        "title": "First discussion",
+                        "url": "https://github.com/octocat/Hello-World/discussions/1347",
+                        "number": 1347
+                    }
+                ]
+            },
             "issue": {
                 "total": 1,
                 "issues": [
