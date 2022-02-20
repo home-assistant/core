@@ -362,7 +362,7 @@ class DeviceSensor(SensorEntity):
         )
 
     async def async_update_status(self):
-        """Request folder status and update state."""
+        """Request device status and update state."""
         try:
             connections = await self._syncthing.system.connections()
             state = connections["connections"][self._device_id]
@@ -373,7 +373,7 @@ class DeviceSensor(SensorEntity):
         self.async_write_ha_state()
 
     def subscribe(self):
-        """Start polling syncthing folder status."""
+        """Start polling syncthing device status."""
         if self._unsub_timer is None:
 
             async def refresh(event_time):
@@ -386,7 +386,7 @@ class DeviceSensor(SensorEntity):
 
     @callback
     def unsubscribe(self):
-        """Stop polling syncthing folder status."""
+        """Stop polling syncthing device status."""
         if self._unsub_timer is not None:
             self._unsub_timer()
             self._unsub_timer = None
