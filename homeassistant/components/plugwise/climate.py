@@ -107,7 +107,8 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         if "control_state" in self.device:
             if self.device.get("control_state") == "cooling":
                 return CURRENT_HVAC_COOL
-            if self.device.get("control_state") == "heating":
+            # Support preheating state as heating, until preheating is added as a separate state
+            if self.device.get("control_state") in ["heating", "preheating"]:
                 return CURRENT_HVAC_HEAT
         else:
             heater_central_data = self.coordinator.data.devices[
