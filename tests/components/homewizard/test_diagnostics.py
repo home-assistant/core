@@ -38,7 +38,7 @@ async def test_diagnostics(
                 "active_power_w": -123,
                 "active_power_l1_w": -123,
                 "active_power_l2_w": 456,
-                "active_power_l3_w": 0,
+                "active_power_l3_w": 123.456,
                 "total_gas_m3": 1122.333,
                 "gas_timestamp": "2021-03-14T11:22:33",
             },

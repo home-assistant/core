@@ -180,12 +180,9 @@ class HWEnergySensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return state of meter."""
-        try:
-            return cast(
-                StateType, getattr(self.coordinator.data[SERVICE_DATA], self.data_type)
-            )
-        except TypeError:
-            return None
+        return cast(
+            StateType, getattr(self.coordinator.data[SERVICE_DATA], self.data_type)
+        )
 
     @property
     def available(self) -> bool:

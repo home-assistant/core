@@ -42,6 +42,24 @@ def mock_homewizard_energy():
 
 
 @pytest.fixture
+def mock_homewizard_energy_minimal():
+    """Return a mocked P1 Monitor client."""
+    api = AsyncMock()
+    api.device = AsyncMock(
+        return_value=Device.from_dict(
+            json.loads(load_fixture("homewizard/device.json"))
+        )
+    )
+    api.data = AsyncMock(
+        return_value=Data.from_dict(
+            json.loads(load_fixture("homewizard/data_minimal.json"))
+        )
+    )
+    api.state = AsyncMock(return_value=None)
+    return api
+
+
+@pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

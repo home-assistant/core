@@ -207,10 +207,7 @@ async def test_discovery_invalid_api(hass, aioclient_mock):
 async def test_check_disabled_api(hass, aioclient_mock, mock_homewizard_energy):
     """Test check detecting disabled api."""
 
-    def mock_device():
-        raise DisabledError
-
-    mock_homewizard_energy.device.side_effect = mock_device
+    mock_homewizard_energy.device.side_effect = DisabledError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -234,10 +231,7 @@ async def test_check_disabled_api(hass, aioclient_mock, mock_homewizard_energy):
 async def test_check_error_handling_api(hass, aioclient_mock, mock_homewizard_energy):
     """Test check detecting error with api."""
 
-    def mock_device():
-        raise Exception()
-
-    mock_homewizard_energy.device.side_effect = mock_device
+    mock_homewizard_energy.device.side_effect = Exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -287,10 +281,7 @@ async def test_check_detects_unexpected_api_response(
 async def test_check_detects_invalid_api(hass, aioclient_mock, mock_homewizard_energy):
     """Test check detecting device endpoint failed fetching data."""
 
-    def mock_device():
-        raise UnsupportedError()
-
-    mock_homewizard_energy.device.side_effect = mock_device
+    mock_homewizard_energy.device.side_effect = UnsupportedError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
