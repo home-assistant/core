@@ -104,7 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         _LOGGER,
         name=f"Sense Trends {email}",
-        update_method=update_trend,
+        update_method=_async_update_trend,
         update_interval=timedelta(seconds=300),
     )
     # Start out as unavailable so we do not report 0 data
