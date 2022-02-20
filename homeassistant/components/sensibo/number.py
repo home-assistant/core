@@ -89,7 +89,7 @@ class SensiboNumber(CoordinatorEntity, NumberEntity):
         self.entity_description = entity_description
         self._device_id = device_id
         self._client = coordinator.client
-        self._attr_unique_id = f"{device_id} {entity_description.key}"
+        self._attr_unique_id = f"{device_id}-{entity_description.key}"
         self._attr_name = (
             f"{coordinator.data[device_id]['name']} {entity_description.name}"
         )
