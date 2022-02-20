@@ -4,14 +4,18 @@ from unittest.mock import patch
 import aiohttp
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.ovo_energy.const import DOMAIN
+from homeassistant.components.ovo_energy.const import CONF_ACCOUNT, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 FIXTURE_REAUTH_INPUT = {CONF_PASSWORD: "something1"}
-FIXTURE_USER_INPUT = {CONF_USERNAME: "example@example.com", CONF_PASSWORD: "something"}
+FIXTURE_USER_INPUT = {
+    CONF_USERNAME: "example@example.com",
+    CONF_PASSWORD: "something",
+    CONF_ACCOUNT: "",
+}
 
 UNIQUE_ID = "example@example.com"
 
@@ -96,6 +100,7 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
     assert result2["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
+    assert result2["data"][CONF_ACCOUNT] == FIXTURE_USER_INPUT[CONF_ACCOUNT]
 
 
 async def test_reauth_authorization_error(hass: HomeAssistant) -> None:

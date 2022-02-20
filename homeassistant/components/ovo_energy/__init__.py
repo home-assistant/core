@@ -28,11 +28,24 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up OVO Energy from a config entry."""
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    config_entries = hass.config_entries
+    version = entry.version
+
+    _LOGGER.debug("Migrating from version %s", version)
 
     if CONF_ACCOUNT not in entry.data:
-        entry.data[CONF_ACCOUNT] = ""
+        version = entry.version = entry.version + 1
+        config_entries.async_update_entry(entry, data={**entry.data, CONF_ACCOUNT: ""})
+
+    _LOGGER.info("Migration to version %s successful", version)
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up OVO Energy from a config entry."""
 
     client = OVOEnergy()
 
