@@ -114,7 +114,7 @@ async def async_setup_entry(
             AzureDevOpsWorkItemSensor(
                 coordinator,
                 AzureDevOpsWorkItemSensorEntityDescription(
-                    key=f"{project.id}_work_items_count",
+                    key=f"{project.id}_work_items",
                     name=f"{project.name} Work Items",
                     icon="mdi:file-tree",
                     item_key="",
@@ -129,7 +129,7 @@ async def async_setup_entry(
                 AzureDevOpsWorkItemSensor(
                     coordinator,
                     AzureDevOpsWorkItemSensorEntityDescription(
-                        key=f"{project.id}_{work_item_type}_work_items_count",
+                        key=f"{project.id}_type_{work_item_type}_work_items",
                         name=f"{project.name} {work_item_type} Items",
                         icon="mdi:file-tree",
                         item_key=work_item_type,
