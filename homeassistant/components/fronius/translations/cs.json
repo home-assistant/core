@@ -3,6 +3,9 @@
         "abort": {
             "invalid_host": "Neplatn\u00fd hostitel nebo IP adresa"
         },
+        "error": {
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
         "flow_title": "{device}"
     }
 }
