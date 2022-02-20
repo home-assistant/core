@@ -494,6 +494,7 @@ class SonosSpeaker:
             sonos_variable: str  # name in notification
             variable_type: type
             local_variable: str | None = None  # our local variable name
+            true_value: str | None = None  # for true value (surround_mode is reversed)
 
         variable_list = [
             # Switch variables
@@ -505,6 +506,7 @@ class SonosSpeaker:
                 sonos_variable="surround_mode",
                 local_variable="surround_ambient_enabled",
                 variable_type=bool,
+                true_value="0",
             ),
             # Number entity variables
             Variable(
@@ -536,7 +538,8 @@ class SonosSpeaker:
             variable_type = info.variable_type
 
             if variable_type == bool:
-                setattr(self, target, variables[info.sonos_variable] == "1")
+                true_value = info.true_value or "1"
+                setattr(self, target, variables[info.sonos_variable] == true_value)
             elif variable_type == int:
                 setattr(self, target, variables[info.sonos_variable])
             else:
