@@ -394,7 +394,6 @@ omit =
     homeassistant/components/freebox/router.py
     homeassistant/components/freebox/sensor.py
     homeassistant/components/freebox/switch.py
-    homeassistant/components/fritz/__init__.py
     homeassistant/components/fritz/binary_sensor.py
     homeassistant/components/fritz/button.py
     homeassistant/components/fritz/common.py
