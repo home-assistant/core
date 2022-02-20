@@ -143,9 +143,6 @@ aiohttp_cors==0.7.0
 # homeassistant.components.hue
 aiohue==4.2.1
 
-# homeassistant.components.homewizard
-aiohwenergy==0.8.0
-
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
 
@@ -565,6 +562,9 @@ homematicip==1.0.2
 
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5
+
+# homeassistant.components.homewizard
+homewizard_energy==0.2.0
 
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk
