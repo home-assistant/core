@@ -66,24 +66,24 @@ async def async_setup_platform(
     for entity in entities:
         command: str = entity[CONF_COMMAND]
         command_timeout: int = entity[CONF_COMMAND_TIMEOUT]
-        value_template: Template = entity[CONF_VALUE_TEMPLATE]
+        value_template: Template | None = entity.get(CONF_VALUE_TEMPLATE)
         if value_template is not None:
             value_template.hass = hass
 
-    add_entities(
-        [
-            CommandBinarySensor(
-                CommandSensorData(hass, command, command_timeout),
-                entity[CONF_NAME],
-                entity.get(CONF_DEVICE_CLASS),
-                entity[CONF_PAYLOAD_ON],
-                entity[CONF_PAYLOAD_OFF],
-                value_template,
-                entity[CONF_UNIQUE_ID],
-            )
-        ],
-        True,
-    )
+        add_entities(
+            [
+                CommandBinarySensor(
+                    CommandSensorData(hass, command, command_timeout),
+                    entity[CONF_NAME],
+                    entity.get(CONF_DEVICE_CLASS),
+                    entity[CONF_PAYLOAD_ON],
+                    entity[CONF_PAYLOAD_OFF],
+                    value_template,
+                    entity.get(CONF_UNIQUE_ID),
+                )
+            ],
+            True,
+        )
 
 
 class CommandBinarySensor(BinarySensorEntity):
