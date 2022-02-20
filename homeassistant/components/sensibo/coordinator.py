@@ -98,6 +98,33 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
             calibration_temp = dev["sensorsCalibration"].get("temperature", 0.0)
             calibration_hum = dev["sensorsCalibration"].get("humidity", 0.0)
 
+            # Sky plus supports functionality to use motion sensor as sensor for temp and humidity
+            if dev["mainMeasurementsSensor"]:
+                temperature = dev["mainMeasurementsSensor"]["measurements"].get(
+                    "temperature", 0.0
+                )
+                humidity = dev["mainMeasurementsSensor"]["measurements"].get(
+                    "humidity", 0
+                )
+
+            motionsensors = []
+            if dev["motionSensors"]:
+                for motionsensor in dev["motionSensors"]:
+                    sensor = {
+                        "alive": motionsensor["connectionStatus"].get("isAlive"),
+                        "fw_ver": motionsensor.get("firmwareVersion"),
+                        "fw_type": motionsensor.get("firmwareType"),
+                        "id": motionsensor["id"],
+                        "ismainsensor": motionsensor.get("isMainSensor"),
+                        "batteryvoltage": motionsensor["measurements"].get(
+                            "batteryVoltage"
+                        ),
+                        "humidity": motionsensor["measurements"].get("humidity"),
+                        "temperature": motionsensor["measurements"].get("temperature"),
+                        "model": motionsensor.get("productModel"),
+                    }
+                    motionsensors.append(sensor)
+
             device_data[unique_id] = {
                 "id": unique_id,
                 "mac": mac,
@@ -126,5 +153,6 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 "calibration_temp": calibration_temp,
                 "calibration_hum": calibration_hum,
                 "full_capabilities": capabilities,
+                "motionsensors": motionsensors,
             }
         return device_data
