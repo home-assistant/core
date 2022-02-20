@@ -92,11 +92,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SENSE_EXCEPTIONS as err:
         raise ConfigEntryNotReady(str(err) or "Error during realtime update") from err
 
+    async def update_trend():
+        """Update the trend data."""
+        try:
+            await gateway.update_trend_data()
+        except (SenseAuthenticationException, SenseMFARequiredException) as err:
+            _LOGGER.warning("Sense authentication expired")
+            raise ConfigEntryAuthFailed(err) from err
+
     trends_coordinator: DataUpdateCoordinator[None] = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"Sense Trends {email}",
-        update_method=gateway.update_trend_data,
+        update_method=update_trend,
         update_interval=timedelta(seconds=300),
     )
     # Start out as unavailable so we do not report 0 data
