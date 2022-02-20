@@ -229,9 +229,11 @@ class MqttNotificationServiceUpdater:
             services = hass.data[MQTT_NOTIFY_SERVICES_SETUP]
             if self._service.service_name in services.keys():
                 del services[self._service.service_name]
-            if not self._device_removed and service.device_id:
+            if not self._device_removed and service.config_entry:
                 self._device_removed = True
-                await cleanup_device_registry(hass, service.device_id)
+                await cleanup_device_registry(
+                    hass, service.device_id, service.config_entry.entry_id
+                )
             clear_discovery_hash(hass, service.discovery_hash)
             self._remove_discovery()
             await service.async_unregister_services()
@@ -291,6 +293,11 @@ class MqttNotificationService(notify.BaseNotificationService):
     def device_id(self) -> str | None:
         """Return the device ID."""
         return self._device_id
+
+    @property
+    def config_entry(self) -> ConfigEntry | None:
+        """Return the config_entry."""
+        return self._config_entry
 
     @property
     def discovery_hash(self) -> tuple | None:

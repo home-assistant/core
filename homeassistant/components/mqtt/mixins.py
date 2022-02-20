@@ -496,7 +496,9 @@ class MqttAvailability(Entity):
         return self._available_latest
 
 
-async def cleanup_device_registry(hass: HomeAssistant, device_id: str | None, config_entry_id: str | None) -> None:
+async def cleanup_device_registry(
+    hass: HomeAssistant, device_id: str | None, config_entry_id: str | None
+) -> None:
     """Remove device registry entry if there are no remaining entities, triggers or notify services."""
     # Local import to avoid circular dependencies
     # pylint: disable=import-outside-toplevel
@@ -506,6 +508,7 @@ async def cleanup_device_registry(hass: HomeAssistant, device_id: str | None, co
     entity_registry = er.async_get(hass)
     if (
         device_id
+        and config_entry_id
         and not er.async_entries_for_device(
             entity_registry, device_id, include_disabled_entities=False
         )
