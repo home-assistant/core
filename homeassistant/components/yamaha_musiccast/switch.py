@@ -4,14 +4,11 @@ from typing import Any
 from aiomusiccast.capabilities import BinarySetter
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.components.yamaha_musiccast import (
-    DOMAIN,
-    MusicCastCapabilityEntity,
-    MusicCastDataUpdateCoordinator,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from . import DOMAIN, MusicCastCapabilityEntity, MusicCastDataUpdateCoordinator
 
 
 async def async_setup_entry(
