@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import SensiboDataUpdateCoordinator
@@ -12,6 +13,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Sensibo from a config entry."""
 
     coordinator = SensiboDataUpdateCoordinator(hass, entry)
+
+    if not await coordinator.client.async_get_devices():
+        raise ConfigEntryAuthFailed
+
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
