@@ -29,6 +29,9 @@ query ($owner: String!, $repository: String!) {
           message: messageHeadline
           url
           sha: oid
+          status: status {
+            state
+          }
         }
       }
     }
