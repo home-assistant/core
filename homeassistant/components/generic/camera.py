@@ -106,7 +106,7 @@ async def async_setup_platform(
 async def async_setup_entry(hass, config, async_add_entities):
     """Set up a generic IP Camera."""
 
-    async_add_entities([GenericCamera(hass, config.data, config.unique_id)])
+    async_add_entities([GenericCamera(hass, config.options, config.unique_id)])
 
 
 def generate_auth(device_info) -> httpx.Auth | None:

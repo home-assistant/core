@@ -2,7 +2,7 @@
   "config": {
     "error": {
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "unique_id_already_in_use": "Already configured: A camera with this unique ID has already been configured.",
+      "already_exists": "A camera with these URL settings already exists.",
       "unable_still_load": "Unable to load valid image from still image URL (e.g. invalid host, URL or authentication failure).  Review log for more info.",
       "no_still_image_or_stream_url": "You must specify at least a still image or stream URL",
       "invalid_still_image": "URL did not return a valid still image",
@@ -20,6 +20,27 @@
       "user": {
         "description": "Enter the settings to connect to the camera.",
         "data": {
+          "still_image_url": "Still Image URL (e.g. http://...)",
+          "stream_source": "Stream Source URL (e.g. rtsp://...)",
+          "rtsp_transport": "RTSP transport protocol",
+          "authentication": "Authentication",
+          "limit_refetch_to_url_change": "Limit refetch to url change",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "content_type": "Content Type",
+          "framerate": "Frame Rate (Hz)",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        }
+      },
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
           "name": "Device Name",
           "still_image_url": "Still Image URL (e.g. http://...)",
           "stream_source": "Stream Source URL (e.g. rtsp://...)",
@@ -31,11 +52,7 @@
           "content_type": "Content Type",
           "framerate": "Frame Rate (Hz)",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
-        },
-        "title": "Set up Generic IP Camera"
-      },
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
+        }
       }
     }
   }
