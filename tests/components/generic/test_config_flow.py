@@ -29,7 +29,6 @@ from homeassistant.const import (
 from tests.common import MockConfigEntry
 
 TESTDATA = {
-    CONF_NAME: "cam1",
     CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
     CONF_STREAM_SOURCE: "http://127.0.0.2/testurl/2",
     CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
@@ -38,6 +37,11 @@ TESTDATA = {
     CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
     CONF_FRAMERATE: 5,
     CONF_VERIFY_SSL: False,
+}
+
+TESTDATA_YAML = {
+    CONF_NAME: "Yaml Defined Name",
+    **TESTDATA,
 }
 
 
@@ -58,9 +62,8 @@ async def test_form(hass, fakeimgbytes_png, fakevidcontainer):
             TESTDATA,
         )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "cam1"
-    assert result2["data"] == {
-        CONF_NAME: "cam1",
+    assert result2["title"] == "http://127.0.0.1/testurl/1"
+    assert result2["options"] == {
         CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
         CONF_STREAM_SOURCE: "http://127.0.0.2/testurl/2",
         CONF_RTSP_TRANSPORT: None,
@@ -91,7 +94,6 @@ async def test_form_only_stillimage(hass, fakeimgbytes_png, fakevidcontainer):
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "cam1",
             CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
             CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
             CONF_USERNAME: "fred_flintstone",
@@ -102,9 +104,8 @@ async def test_form_only_stillimage(hass, fakeimgbytes_png, fakevidcontainer):
         },
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "cam1"
-    assert result2["data"] == {
-        CONF_NAME: "cam1",
+    assert result2["title"] == "http://127.0.0.1/testurl/1"
+    assert result2["options"] == {
         CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
         CONF_RTSP_TRANSPORT: None,
@@ -140,9 +141,8 @@ async def test_form_rtsp_mode(hass, fakeimgbytes_png, fakevidcontainer):
     print(f"result2={result2}")
     assert "errors" not in result2, f"errors={result2['errors']}"
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "cam1"
-    assert result2["data"] == {
-        CONF_NAME: "cam1",
+    assert result2["title"] == "http://127.0.0.1/testurl/1"
+    assert result2["options"] == {
         CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
         CONF_STREAM_SOURCE: "http://127.0.0.2/testurl/2",
@@ -169,9 +169,8 @@ async def test_form_only_stream(hass, fakevidcontainer):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_NAME: "cam1",
                 CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
-                CONF_STREAM_SOURCE: "http://127.0.0.2/testurl/2",
+                CONF_STREAM_SOURCE: "http://127.0.0.1/testurl/2",
                 CONF_RTSP_TRANSPORT: "tcp",
                 CONF_USERNAME: "fred_flintstone",
                 CONF_PASSWORD: "bambam",
@@ -181,11 +180,10 @@ async def test_form_only_stream(hass, fakevidcontainer):
             },
         )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "cam1"
-    assert result2["data"] == {
-        CONF_NAME: "cam1",
+    assert result2["title"] == "http://127.0.0.1/testurl/2"
+    assert result2["options"] == {
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
-        CONF_STREAM_SOURCE: "http://127.0.0.2/testurl/2",
+        CONF_STREAM_SOURCE: "http://127.0.0.1/testurl/2",
         CONF_RTSP_TRANSPORT: "tcp",
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
@@ -208,7 +206,6 @@ async def test_form_still_and_stream_not_provided(hass):
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "cam1",
             CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
             CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
             CONF_FRAMERATE: 5,
@@ -226,12 +223,10 @@ async def test_form_stream_invalidimage(hass, fakevidcontainer):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    test_data_new = TESTDATA.copy()
-
     with patch("av.open", return_value=fakevidcontainer):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            test_data_new,
+            TESTDATA,
         )
 
     await hass.async_block_till_done()
@@ -253,7 +248,7 @@ async def test_form_stream_file_not_found(hass, fakeimgbytes_png):
             TESTDATA,
         )
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "stream_no_route_to_host"}
+    assert result2["errors"] == {"stream_source": "stream_no_route_to_host"}
 
 
 @respx.mock
@@ -263,14 +258,13 @@ async def test_form_stream_unauthorised(hass, fakeimgbytes_png):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
     with patch("av.open", side_effect=av.error.HTTPUnauthorizedError(0, 0)):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             TESTDATA,
         )
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "stream_unauthorised"}
+    assert result2["errors"] == {"stream_source": "stream_unauthorised"}
 
 
 @respx.mock
@@ -280,14 +274,13 @@ async def test_form_stream_novideo(hass, fakeimgbytes_png):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
     with patch("av.open", side_effect=KeyError()):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             TESTDATA,
         )
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "stream_novideo"}
+    assert result2["errors"] == {"stream_source": "stream_novideo"}
 
 
 @respx.mock
@@ -303,7 +296,7 @@ async def test_form_stream_permission_error(hass, fakeimgbytes_png):
             TESTDATA,
         )
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "stream_not_permitted"}
+    assert result2["errors"] == {"stream_source": "stream_not_permitted"}
 
 
 @respx.mock
@@ -320,7 +313,7 @@ async def test_form_no_route_to_host(hass, fakeimgbytes_png):
             TESTDATA,
         )
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "stream_no_route_to_host"}
+    assert result2["errors"] == {"stream_source": "stream_no_route_to_host"}
 
 
 @respx.mock
@@ -337,7 +330,7 @@ async def test_form_stream_io_error(hass, fakeimgbytes_png):
             TESTDATA,
         )
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "stream_io_error"}
+    assert result2["errors"] == {"stream_source": "stream_io_error"}
 
 
 @respx.mock
@@ -356,41 +349,6 @@ async def test_form_oserror(hass, fakeimgbytes_png):
         )
 
 
-@respx.mock
-async def test_form_unique_id_already_in_use(hass, fakeimgbytes_png, fakevidcontainer):
-    """Test we handle duplicate unique id."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    flow1 = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert flow1["type"] == "form"
-    assert flow1["errors"] == {}
-
-    uniqueid = flow1["flow_id"]
-    with patch("av.open", return_value=fakevidcontainer):
-        result1 = await hass.config_entries.flow.async_configure(
-            flow1["flow_id"],
-            TESTDATA,
-        )
-    assert result1["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-
-    with patch("homeassistant.util.uuid.random_uuid_hex", return_value=uniqueid):
-        flow2 = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-    assert flow2["type"] == "form"
-    assert flow2["errors"] == {}
-    # second time round using same flow id (which is used as the unique id)
-    # should result in an error
-    with patch("av.open", return_value=fakevidcontainer):
-        result2 = await hass.config_entries.flow.async_configure(
-            flow2["flow_id"],
-            TESTDATA,
-        )
-    assert result2["errors"] == {"base": "unique_id_already_in_use"}
-
-
 # These below can be deleted after deprecation period is finished.
 @respx.mock
 async def test_import(hass, fakeimgbytes_png, fakevidcontainer):
@@ -398,14 +356,14 @@ async def test_import(hass, fakeimgbytes_png, fakevidcontainer):
     respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
     with patch("av.open", return_value=fakevidcontainer):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TESTDATA
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TESTDATA_YAML
         )
         # duplicate import should be aborted
         result2 = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TESTDATA
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TESTDATA_YAML
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "cam1"
+    assert result["title"] == "Yaml Defined Name"
     assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
@@ -415,10 +373,10 @@ async def test_import_invalid_still_image(hass, fakeimgbytes_png, fakevidcontain
     respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
     with patch("av.open", return_value=fakevidcontainer):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TESTDATA
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TESTDATA_YAML
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "cam1"
+    assert result["title"] == "Yaml Defined Name"
 
 
 @respx.mock
@@ -431,7 +389,7 @@ async def test_import_other_error(hass, fakeimgbytes_png, fakevidcontainer):
         side_effect=OSError("other error"),
     ), pytest.raises(OSError):
         await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TESTDATA
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TESTDATA_YAML
         )
 
 
