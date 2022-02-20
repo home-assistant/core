@@ -41,10 +41,10 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             for dev in await self.client.async_get_devices():
                 devices.append(dev)
-        except SensiboError as error:
-            raise UpdateFailed from error
         except AuthenticationError as error:
             raise ConfigEntryAuthFailed from error
+        except SensiboError as error:
+            raise UpdateFailed from error
 
         device_data: dict[str, dict[str, Any]] = {}
         for dev in devices:
