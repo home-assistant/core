@@ -28,8 +28,6 @@ async def async_setup_entry(
     """Set up the UPnP/IGD sensors."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    LOGGER.debug("Adding binary sensor")
-
     entities = [
         UpnpStatusBinarySensor(
             coordinator=coordinator,
@@ -38,7 +36,7 @@ async def async_setup_entry(
         for entity_description in BINARYSENSOR_ENTITY_DESCRIPTIONS
         if coordinator.data.get(entity_description.key) is not None
     ]
-    LOGGER.debug("Adding entities: %s", entities)
+    LOGGER.debug("Adding binary_sensor entities: %s", entities)
     async_add_entities(entities)
 
 

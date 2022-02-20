@@ -80,6 +80,10 @@ class Device:
         if service_info.ssdp_location is None:
             return
 
+        if change == SsdpChange.ALIVE:
+            # We care only about updates.
+            return
+
         device = self._igd_device.device
         if service_info.ssdp_location == device.device_url:
             return

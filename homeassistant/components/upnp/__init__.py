@@ -177,8 +177,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    # Create sensors.
-    LOGGER.debug("Enabling sensors")
+    # Setup platforms, creating sensors/binary_sensors.
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -188,7 +187,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     """Unload a UPnP/IGD device from a config entry."""
     LOGGER.debug("Unloading config entry: %s", config_entry.unique_id)
 
-    LOGGER.debug("Deleting sensors")
+    # Unload platforms.
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 

@@ -19,7 +19,7 @@ from async_upnp_client.const import (
 )
 from async_upnp_client.description_cache import DescriptionCache
 from async_upnp_client.ssdp import SSDP_PORT, determine_source_target
-from async_upnp_client.ssdp_listener import SsdpDevice, SsdpListener
+from async_upnp_client.ssdp_listener import SsdpDevice, SsdpDeviceTracker, SsdpListener
 from async_upnp_client.utils import CaseInsensitiveDict
 
 from homeassistant import config_entries
@@ -420,6 +420,8 @@ class Scanner:
 
     async def _async_start_ssdp_listeners(self) -> None:
         """Start the SSDP Listeners."""
+        # Devices are shared between all sources.
+        device_tracker = SsdpDeviceTracker()
         for source_ip in await self._async_build_source_set():
             source_ip_str = str(source_ip)
             if source_ip.version == 6:
@@ -437,6 +439,7 @@ class Scanner:
                     async_callback=self._ssdp_listener_callback,
                     source=source,
                     target=target,
+                    device_tracker=device_tracker,
                 )
             )
         results = await asyncio.gather(

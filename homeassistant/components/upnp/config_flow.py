@@ -222,7 +222,9 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         unique_id = discovery_info.ssdp_usn
         await self.async_set_unique_id(unique_id)
         hostname = discovery_info.ssdp_headers["_host"]
-        self._abort_if_unique_id_configured(updates={CONFIG_ENTRY_HOSTNAME: hostname})
+        self._abort_if_unique_id_configured(
+            updates={CONFIG_ENTRY_HOSTNAME: hostname}, reload_on_update=False
+        )
 
         # Handle devices changing their UDN, only allow a single host.
         existing_entries = self._async_current_entries()
