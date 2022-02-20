@@ -6,7 +6,7 @@ from didl_lite import didl_lite
 import pytest
 
 from homeassistant.components.dlna_dms.const import DOMAIN
-from homeassistant.components.dlna_dms.dms import DlnaDmsData, DmsEntity
+from homeassistant.components.dlna_dms.dms import DlnaDmsData, DmsDeviceSource
 from homeassistant.components.dlna_dms.media_source import (
     DmsMediaSource,
     async_get_media_source,
@@ -17,7 +17,7 @@ from homeassistant.components.media_source.models import (
     BrowseMediaSource,
     MediaSourceItem,
 )
-from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITY_ID, CONF_URL
+from homeassistant.const import CONF_DEVICE_ID, CONF_URL
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
@@ -37,15 +37,15 @@ async def entity(
     config_entry_mock: MockConfigEntry,
     dms_device_mock: Mock,
     domain_data_mock: DlnaDmsData,
-) -> DmsEntity:
-    """Fixture to set up a DmsEntity in a connected state and cleanup at completion."""
+) -> DmsDeviceSource:
+    """Fixture to set up a DmsDeviceSource in a connected state and cleanup at completion."""
     await hass.config_entries.async_add(config_entry_mock)
     await hass.async_block_till_done()
-    return domain_data_mock.entities[MOCK_DEVICE_USN]
+    return domain_data_mock.devices[MOCK_DEVICE_USN]
 
 
 @pytest.fixture
-async def dms_source(hass: HomeAssistant, entity: DmsEntity) -> DmsMediaSource:
+async def dms_source(hass: HomeAssistant, entity: DmsDeviceSource) -> DmsMediaSource:
     """Fixture providing a pre-constructed DmsMediaSource with a single device."""
     return DmsMediaSource(hass)
 
@@ -61,7 +61,7 @@ async def test_resolve_media_unconfigured(hass: HomeAssistant) -> None:
     """Test resolve_media without any devices being configured."""
     source = DmsMediaSource(hass)
     item = MediaSourceItem(hass, DOMAIN, "source_id/media_id")
-    with pytest.raises(Unresolvable, match="dlna_dms has not been configured"):
+    with pytest.raises(Unresolvable, match="No sources have been configured"):
         await source.async_resolve_media(item)
 
 
@@ -98,7 +98,7 @@ async def test_resolve_media_bad_identifier(
 async def test_resolve_media_success(
     hass: HomeAssistant, dms_source: DmsMediaSource, dms_device_mock: Mock
 ) -> None:
-    """Test resolving an item via a DmsEntity."""
+    """Test resolving an item via a DmsDeviceSource."""
     object_id = "123"
     item = MediaSourceItem(hass, DOMAIN, f"{MOCK_SOURCE_ID}/:{object_id}")
 
@@ -122,7 +122,11 @@ async def test_browse_media_unconfigured(hass: HomeAssistant) -> None:
     """Test browse_media without any devices being configured."""
     source = DmsMediaSource(hass)
     item = MediaSourceItem(hass, DOMAIN, "source_id/media_id")
-    with pytest.raises(BrowseError, match="dlna_dms has not been configured"):
+    with pytest.raises(BrowseError, match="No sources have been configured"):
+        await source.async_browse_media(item)
+
+    item = MediaSourceItem(hass, DOMAIN, "")
+    with pytest.raises(BrowseError, match="No sources have been configured"):
         await source.async_browse_media(item)
 
 
@@ -167,7 +171,7 @@ async def test_browse_media_multiple_sources(
 ) -> None:
     """Test browse_media without a source_id, with multiple devices registered."""
     # Set up a second source
-    other_source_id = "other_source_id"
+    other_source_id = "second_source"
     other_source_title = "Second source"
     other_config_entry = MockConfigEntry(
         unique_id=f"different-udn::{MOCK_DEVICE_TYPE}",
@@ -177,7 +181,6 @@ async def test_browse_media_multiple_sources(
             CONF_DEVICE_ID: f"different-udn::{MOCK_DEVICE_TYPE}",
         },
         title=other_source_title,
-        options={CONF_ENTITY_ID: other_source_id},
     )
     await hass.config_entries.async_add(other_config_entry)
     await hass.async_block_till_done()
@@ -222,7 +225,6 @@ async def test_browse_media_source_id(
     """Test browse_media with an explicit source_id."""
     # Set up a second device first, then the primary mock device.
     # This allows testing that the right source is chosen by source_id
-    other_source_id = "other_source_id"
     other_source_title = "Second source"
     other_config_entry = MockConfigEntry(
         unique_id=f"different-udn::{MOCK_DEVICE_TYPE}",
@@ -232,7 +234,6 @@ async def test_browse_media_source_id(
             CONF_DEVICE_ID: f"different-udn::{MOCK_DEVICE_TYPE}",
         },
         title=other_source_title,
-        options={CONF_ENTITY_ID: other_source_id},
     )
     await hass.config_entries.async_add(other_config_entry)
     await hass.async_block_till_done()

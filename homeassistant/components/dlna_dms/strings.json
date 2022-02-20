@@ -19,16 +19,5 @@
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "not_dms": "Device is not a supported Media Server"
     }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "DLNA Media Server configuration",
-        "data": {
-          "entity_id": "Source ID"
-        }
-      }
-    }
   }
-  
 }

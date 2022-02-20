@@ -10,7 +10,7 @@ import pytest
 
 from homeassistant.components.dlna_dms.const import DOMAIN
 from homeassistant.components.dlna_dms.dms import DlnaDmsData, get_domain_data
-from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITY_ID, CONF_URL
+from homeassistant.const import CONF_DEVICE_ID, CONF_URL
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -95,7 +95,6 @@ def config_entry_mock() -> MockConfigEntry:
             CONF_DEVICE_ID: MOCK_DEVICE_USN,
         },
         title=MOCK_DEVICE_NAME,
-        options={CONF_ENTITY_ID: MOCK_SOURCE_ID},
     )
     return mock_entry
 

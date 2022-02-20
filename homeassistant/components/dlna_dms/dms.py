@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-import enum
 import functools
 from typing import Any, TypeVar, cast
 
@@ -15,15 +14,17 @@ from async_upnp_client.exceptions import UpnpActionError, UpnpConnectionError, U
 from async_upnp_client.profiles.dlna import ContentDirectoryErrorCode, DmsDevice
 from didl_lite import didl_lite
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.components import ssdp
 from homeassistant.components.media_player.const import MEDIA_CLASS_DIRECTORY
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import BrowseMediaSource, PlayMedia
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITY_ID, CONF_URL
+from homeassistant.const import CONF_DEVICE_ID, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
+from homeassistant.util import slugify
 
 from .const import (
     DLNA_BROWSE_FILTER,
@@ -41,7 +42,7 @@ from .const import (
     STREAMABLE_PROTOCOLS,
 )
 
-_DmsEntityMethod = TypeVar("_DmsEntityMethod", bound="DmsEntity")
+_DlnaDmsDeviceMethod = TypeVar("_DlnaDmsDeviceMethod", bound="DmsDeviceSource")
 _RetType = TypeVar("_RetType")
 
 
@@ -53,8 +54,8 @@ class DlnaDmsData:
     requester: UpnpRequester
     upnp_factory: UpnpFactory
     event_handler: UpnpEventHandler
-    entities: dict[str, DmsEntity]  # Indexed by unique_id
-    sources: dict[str, DmsEntity]  # Indexed by source_id
+    devices: dict[str, DmsDeviceSource]  # Indexed by config_entry.unique_id
+    sources: dict[str, DmsDeviceSource]  # Indexed by source_id
 
     def __init__(
         self,
@@ -69,29 +70,61 @@ class DlnaDmsData:
         # NOTE: event_handler is not actually used, and is only created to
         # satisfy the DmsDevice.__init__ signature
         self.event_handler = UpnpEventHandler("", self.requester)
-        self.entities = {}
+        self.devices = {}
         self.sources = {}
 
     async def async_setup_entry(self, config_entry: ConfigEntry) -> bool:
         """Create a DMS device connection from a config entry."""
-        entity = DmsEntity(self.hass, config_entry)
+        assert config_entry.unique_id
         async with self.lock:
-            if entity.source_id in self.sources:
-                LOGGER.error("The source_id %s is already in use", entity.source_id)
-                return False
-            self.entities[entity.unique_id] = entity
-            self.sources[entity.source_id] = entity
-        await entity.async_added_to_hass()
+            source_id = self._generate_source_id(config_entry.title)
+            device = DmsDeviceSource(self.hass, config_entry, source_id)
+            self.devices[config_entry.unique_id] = device
+            self.sources[device.source_id] = device
+
+        # Update the device when the associated config entry is modified
+        config_entry.async_on_unload(
+            config_entry.add_update_listener(self.async_update_entry)
+        )
+
+        await device.async_added_to_hass()
         return True
 
     async def async_unload_entry(self, config_entry: ConfigEntry) -> bool:
         """Unload a config entry and disconnect the corresponding DMS device."""
-        unique_id = config_entry.data[CONF_DEVICE_ID]
+        assert config_entry.unique_id
         async with self.lock:
-            entity = self.entities.pop(unique_id)
-            del self.sources[entity.source_id]
-        await entity.async_will_remove_from_hass()
+            device = self.devices.pop(config_entry.unique_id)
+            del self.sources[device.source_id]
+        await device.async_will_remove_from_hass()
         return True
+
+    async def async_update_entry(
+        self, hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> None:
+        """Update a DMS device when the config entry changes."""
+        assert config_entry.unique_id
+        async with self.lock:
+            device = self.devices[config_entry.unique_id]
+            # Update the source_id to match the new name
+            del self.sources[device.source_id]
+            device.source_id = self._generate_source_id(config_entry.title)
+            self.sources[device.source_id] = device
+
+    def _generate_source_id(self, name: str) -> str:
+        """Generate a unique source ID.
+
+        Caller should hold self.lock when calling this method.
+        """
+        source_id_base = slugify(name)
+        if source_id_base not in self.sources:
+            return source_id_base
+
+        tries = 1
+        while (suggested_source_id := f"{source_id_base}_{tries}") in self.sources:
+            tries += 1
+
+        return suggested_source_id
 
 
 @callback
@@ -112,30 +145,30 @@ class DidlPlayMedia(PlayMedia):
     didl_metadata: didl_lite.DidlObject
 
 
-class DmsEntityError(BrowseError, Unresolvable):
-    """Base for errors raised by DmsEntity.
+class DlnaDmsDeviceError(BrowseError, Unresolvable):
+    """Base for errors raised by DmsDeviceSource.
 
     Caught by both media_player (BrowseError) and media_source (Unresolvable),
-    to for DmsEntity methods to be used for both browse and resolve
+    so DmsDeviceSource methods can be used for both browse and resolve
     functionality.
     """
 
 
-class DeviceConnectionError(DmsEntityError):
+class DeviceConnectionError(DlnaDmsDeviceError):
     """Error occurred with the connection to the server."""
 
 
-class ActionError(DmsEntityError):
+class ActionError(DlnaDmsDeviceError):
     """Error when calling a UPnP Action on the device."""
 
 
 def catch_request_errors(
-    func: Callable[[_DmsEntityMethod, str], Coroutine[Any, Any, _RetType]]
-) -> Callable[[_DmsEntityMethod, str], Coroutine[Any, Any, _RetType]]:
+    func: Callable[[_DlnaDmsDeviceMethod, str], Coroutine[Any, Any, _RetType]]
+) -> Callable[[_DlnaDmsDeviceMethod, str], Coroutine[Any, Any, _RetType]]:
     """Catch UpnpError errors."""
 
     @functools.wraps(func)
-    async def wrapper(self: _DmsEntityMethod, req_param: str) -> _RetType:
+    async def wrapper(self: _DlnaDmsDeviceMethod, req_param: str) -> _RetType:
         """Catch UpnpError errors and check availability before and after request."""
         if not self.available:
             LOGGER.warning("Device disappeared when trying to call %s", func.__name__)
@@ -165,16 +198,18 @@ def catch_request_errors(
     return wrapper
 
 
-class DmsEntity:
-    """DMS Device providing media files."""
+class DmsDeviceSource:
+    """DMS Device wrapper, providing media files as a media_source."""
 
-    usn: str
+    hass: HomeAssistant
+    config_entry: ConfigEntry
 
-    # Unique slug used for media-source URIs, akin to an entity_id
+    # Unique slug used for media-source URIs
     source_id: str
 
-    # Last known URL for the device, used when adding this entity to hass to try
-    # to connect before SSDP has rediscovered it, or when SSDP discovery fails.
+    # Last known URL for the device, used when adding this wrapper to hass to
+    # try to connect before SSDP has rediscovered it, or when SSDP discovery
+    # fails.
     location: str | None
 
     _device_lock: asyncio.Lock  # Held when connecting or disconnecting the device
@@ -187,26 +222,19 @@ class DmsEntity:
     _bootid: int | None = None
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        self, hass: HomeAssistant, config_entry: ConfigEntry, source_id: str
     ) -> None:
         """Initialize a DMS Source."""
         self.hass = hass
         self.config_entry = config_entry
-        self.usn = self.config_entry.data[CONF_DEVICE_ID]
-        self.source_id = self.config_entry.options[CONF_ENTITY_ID]
+        self.source_id = source_id
         self.location = self.config_entry.data[CONF_URL]
         self._device_lock = asyncio.Lock()
 
-    # Entity callbacks and events
+    # Callbacks and events
 
     async def async_added_to_hass(self) -> None:
         """Handle addition of this source."""
-        # Update this entity when the associated config entry is modified
-        self.config_entry.async_on_unload(
-            self.config_entry.add_update_listener(self.async_config_update_listener)
-        )
 
         # Try to connect to the last known location, but don't worry if not available
         if not self._device and self.location:
@@ -302,22 +330,6 @@ class DmsEntity:
                     err,
                 )
 
-    async def async_config_update_listener(
-        self, hass: HomeAssistant, entry: ConfigEntry
-    ) -> None:
-        """Handle changes to the config entry associated with this entity."""
-        # Update DLNA source list when the source_id changes
-        new_source_id = entry.options[CONF_ENTITY_ID]
-        if new_source_id != self.source_id:
-            domain_data = get_domain_data(hass)
-            async with domain_data.lock:
-                if new_source_id in domain_data.sources:
-                    LOGGER.error("New source_id (%s) is already in use", new_source_id)
-                    return
-                del domain_data.sources[self.source_id]
-                self.source_id = new_source_id
-                domain_data.sources[self.source_id] = self
-
     # Device connection/disconnection
 
     async def device_connect(self) -> None:
@@ -350,7 +362,7 @@ class DmsEntity:
     async def device_disconnect(self) -> None:
         """Destroy connections to the device now that it's not available.
 
-        Also call when removing this entity from hass to clean up connections.
+        Also call when removing this device wrapper from hass to clean up connections.
         """
         async with self._device_lock:
             if not self._device:
@@ -361,7 +373,7 @@ class DmsEntity:
 
             self._device = None
 
-    # Entity properties
+    # Device properties
 
     @property
     def available(self) -> bool:
@@ -369,9 +381,9 @@ class DmsEntity:
         return self._device is not None and self._device.profile_device.available
 
     @property
-    def unique_id(self) -> str:
-        """Get the unique ID for this entity, which is the USN."""
-        return self.usn
+    def usn(self) -> str:
+        """Get the USN (Unique Service Name) for the wrapped UPnP device end-point."""
+        return self.config_entry.data[CONF_DEVICE_ID]
 
     @property
     def udn(self) -> str:
@@ -663,7 +675,7 @@ class DmsEntity:
         return f"{self.source_id}/{action}{object_id}"
 
 
-class Action(str, enum.Enum):
+class Action(StrEnum):
     """Actions that can be specified in a DMS media-source identifier."""
 
     OBJECT = PATH_OBJECT_ID_FLAG

@@ -19,15 +19,5 @@
                 "title": "Discovered DLNA DMA devices"
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "entity_id": "Source ID"
-                },
-                "title": "DLNA Media Server configuration"
-            }
-        }
     }
 }

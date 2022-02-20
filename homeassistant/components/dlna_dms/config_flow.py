@@ -11,11 +11,9 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITY_ID, CONF_HOST, CONF_URL
-from homeassistant.core import callback
+from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_URL
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import IntegrationError
-from homeassistant.util import slugify
 
 from .const import DEFAULT_NAME, DOMAIN
 
@@ -43,14 +41,6 @@ class DlnaDmsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._usn: str | None = None
         self._name: str | None = None
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
-        """Define the config flow to handle options."""
-        return DlnaDmsOptionsFlowHandler(config_entry)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -58,7 +48,7 @@ class DlnaDmsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         LOGGER.debug("async_step_user: user_input: %s", user_input)
 
         if user_input is not None and (host := user_input.get(CONF_HOST)):
-            # User has chosen a device, ask for confirmation
+            # User has chosen a device
             discovery = self._discoveries[host]
             await self._async_set_info_from_discovery(discovery)
             return self._create_entry()
@@ -126,11 +116,8 @@ class DlnaDmsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._location
         assert self._usn
 
-        source_id = self._generate_source_id()
-
         data = {CONF_URL: self._location, CONF_DEVICE_ID: self._usn}
-        options = {CONF_ENTITY_ID: source_id}
-        return self.async_create_entry(title=self._name, data=data, options=options)
+        return self.async_create_entry(title=self._name, data=data)
 
     async def _async_set_info_from_discovery(
         self, discovery_info: ssdp.SsdpServiceInfo
@@ -182,51 +169,3 @@ class DlnaDmsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ]
 
         return discoveries
-
-    def _generate_source_id(self) -> str:
-        """Generate a unique source ID."""
-        assert self._name
-        # Get list of other source_ids
-        source_ids = {
-            entry.options.get(CONF_ENTITY_ID)
-            for entry in self._async_current_entries(include_ignore=True)
-        }
-        source_id_base = slugify(self._name)
-        if source_id_base not in source_ids:
-            return source_id_base
-
-        tries = 1
-        while (suggested_source_id := f"{source_id_base}_{tries}") in source_ids:
-            tries += 1
-
-        return suggested_source_id
-
-
-class DlnaDmsOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a DLNA DMS options flow."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Manage the options."""
-        # Don't modify existing (read-only) options -- copy and update instead
-        options = dict(self.config_entry.options)
-
-        if user_input is not None:
-            LOGGER.debug("user_input: %s", user_input)
-            source_id = user_input[CONF_ENTITY_ID]
-            # NOTE: source_id is not checked for uniqueness because we don't
-            # have access from here to the other config entries to check (no
-            # hass object reference).
-            options[CONF_ENTITY_ID] = source_id
-
-            # Save updated options
-            return self.async_create_entry(title="", data=options)
-
-        fields = {vol.Required(CONF_ENTITY_ID, default=options[CONF_ENTITY_ID]): str}
-
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(fields))

@@ -10,7 +10,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.components.dlna_dms.const import DOMAIN
-from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITY_ID, CONF_HOST, CONF_URL
+from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_URL
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
@@ -19,7 +19,6 @@ from .conftest import (
     MOCK_DEVICE_TYPE,
     MOCK_DEVICE_UDN,
     MOCK_DEVICE_USN,
-    MOCK_SOURCE_ID,
     NEW_DEVICE_LOCATION,
 )
 
@@ -93,7 +92,7 @@ async def test_user_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None:
         CONF_URL: MOCK_DEVICE_LOCATION,
         CONF_DEVICE_ID: MOCK_DEVICE_USN,
     }
-    assert result["options"] == {CONF_ENTITY_ID: MOCK_SOURCE_ID}
+    assert result["options"] == {}
 
     await hass.async_block_till_done()
 
@@ -137,7 +136,7 @@ async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
         CONF_URL: MOCK_DEVICE_LOCATION,
         CONF_DEVICE_ID: MOCK_DEVICE_USN,
     }
-    assert result["options"] == {CONF_ENTITY_ID: MOCK_SOURCE_ID}
+    assert result["options"] == {}
 
 
 async def test_ssdp_flow_unavailable(
@@ -169,7 +168,7 @@ async def test_ssdp_flow_unavailable(
         CONF_URL: MOCK_DEVICE_LOCATION,
         CONF_DEVICE_ID: MOCK_DEVICE_USN,
     }
-    assert result["options"] == {CONF_ENTITY_ID: MOCK_SOURCE_ID}
+    assert result["options"] == {}
 
 
 async def test_ssdp_flow_existing(
@@ -215,7 +214,7 @@ async def test_ssdp_flow_duplicate_location(
 async def test_duplicate_name(
     hass: HomeAssistant, config_entry_mock: MockConfigEntry
 ) -> None:
-    """Test device with name same as another results in unique source_id."""
+    """Test device with name same as another results in no error."""
     config_entry_mock.add_to_hass(hass)
 
     mock_entry_1 = MockConfigEntry(
@@ -226,7 +225,6 @@ async def test_duplicate_name(
             CONF_DEVICE_ID: "not-important",
         },
         title=MOCK_DEVICE_NAME,
-        options={CONF_ENTITY_ID: MOCK_SOURCE_ID + "_1"},
     )
     mock_entry_1.add_to_hass(hass)
 
@@ -256,16 +254,13 @@ async def test_duplicate_name(
     )
     await hass.async_block_till_done()
 
-    # New source ID will be different to the existing one
-    new_source_id = MOCK_SOURCE_ID + "_2"
-
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
         CONF_URL: new_device_location,
         CONF_DEVICE_ID: new_device_usn,
     }
-    assert result["options"] == {CONF_ENTITY_ID: new_source_id}
+    assert result["options"] == {}
 
 
 async def test_ssdp_flow_upnp_udn(
@@ -322,24 +317,3 @@ async def test_ssdp_missing_services(hass: HomeAssistant) -> None:
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "not_dms"
-
-
-async def test_options_flow(
-    hass: HomeAssistant, config_entry_mock: MockConfigEntry
-) -> None:
-    """Test config flow options."""
-    config_entry_mock.add_to_hass(hass)
-    result = await hass.config_entries.options.async_init(config_entry_mock.entry_id)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-    assert not result["errors"]
-
-    # Good data for all fields
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_ENTITY_ID: "new non-slug name"},
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] == {CONF_ENTITY_ID: "new non-slug name"}

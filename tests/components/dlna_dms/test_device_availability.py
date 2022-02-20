@@ -1,4 +1,4 @@
-"""Test how the DmsEntity handles available and unavailable devices."""
+"""Test how the DmsDeviceSource handles available and unavailable devices."""
 from __future__ import annotations
 
 import asyncio
@@ -12,7 +12,7 @@ import pytest
 
 from homeassistant.components import ssdp
 from homeassistant.components.dlna_dms.const import DOMAIN
-from homeassistant.components.dlna_dms.dms import DmsEntity, get_domain_data
+from homeassistant.components.dlna_dms.dms import DmsDeviceSource, get_domain_data
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.core import HomeAssistant
@@ -37,24 +37,24 @@ pytestmark = [
 
 async def setup_mock_component(
     hass: HomeAssistant, mock_entry: MockConfigEntry
-) -> DmsEntity:
+) -> DmsDeviceSource:
     """Set up a mock DlnaDmrEntity with the given configuration."""
     mock_entry.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {}) is True
     await hass.async_block_till_done()
 
     domain_data = get_domain_data(hass)
-    return next(iter(domain_data.entities.values()))
+    return next(iter(domain_data.devices.values()))
 
 
 @pytest.fixture
-async def mock_entity(
+async def connected_source_mock(
     hass: HomeAssistant,
     config_entry_mock: MockConfigEntry,
     ssdp_scanner_mock: Mock,
     dms_device_mock: Mock,
-) -> AsyncIterable[DmsEntity]:
-    """Fixture to set up a mock DmsEntity in a connected state.
+) -> AsyncIterable[DmsDeviceSource]:
+    """Fixture to set up a mock DmsDeviceSource in a connected state.
 
     Yields the entity. Cleans up the entity after the test is complete.
     """
@@ -82,14 +82,14 @@ async def mock_entity(
 
 
 @pytest.fixture
-async def mock_disconnected_entity(
+async def disconnected_source_mock(
     hass: HomeAssistant,
     upnp_factory_mock: Mock,
     config_entry_mock: MockConfigEntry,
     ssdp_scanner_mock: Mock,
     dms_device_mock: Mock,
-) -> AsyncIterable[DmsEntity]:
-    """Fixture to set up a mock DmsEntity in a disconnected state.
+) -> AsyncIterable[DmsDeviceSource]:
+    """Fixture to set up a mock DmsDeviceSource in a disconnected state.
 
     Yields the entity. Cleans up the entity after the test is complete.
     """
@@ -132,7 +132,7 @@ async def test_unavailable_device(
     with patch(
         "homeassistant.components.dlna_dms.dms.DmsDevice", autospec=True
     ) as dms_device_constructor_mock:
-        mock_entity = await setup_mock_component(hass, config_entry_mock)
+        connected_source_mock = await setup_mock_component(hass, config_entry_mock)
 
         # Check device is not created
         dms_device_constructor_mock.assert_not_called()
@@ -147,23 +147,23 @@ async def test_unavailable_device(
         ANY, {"_udn": MOCK_DEVICE_UDN, "NTS": "ssdp:byebye"}
     )
     # Quick check of the state to verify the entity has no connected DmsDevice
-    assert not mock_entity.available
+    assert not connected_source_mock.available
     # Check the name matches that supplied
-    assert mock_entity.name == MOCK_DEVICE_NAME
+    assert connected_source_mock.name == MOCK_DEVICE_NAME
 
     # Check attempts to browse and resolve media give errors
     with pytest.raises(BrowseError):
-        await mock_entity.async_browse_media("/browse_path")
+        await connected_source_mock.async_browse_media("/browse_path")
     with pytest.raises(BrowseError):
-        await mock_entity.async_browse_media(":browse_object")
+        await connected_source_mock.async_browse_media(":browse_object")
     with pytest.raises(BrowseError):
-        await mock_entity.async_browse_media("?browse_search")
+        await connected_source_mock.async_browse_media("?browse_search")
     with pytest.raises(Unresolvable):
-        await mock_entity.async_resolve_media("/resolve_path")
+        await connected_source_mock.async_resolve_media("/resolve_path")
     with pytest.raises(Unresolvable):
-        await mock_entity.async_resolve_media(":resolve_object")
+        await connected_source_mock.async_resolve_media(":resolve_object")
     with pytest.raises(Unresolvable):
-        await mock_entity.async_resolve_media("?resolve_search")
+        await connected_source_mock.async_resolve_media("?resolve_search")
 
     # Unload config entry to clean up
     assert await hass.config_entries.async_remove(config_entry_mock.entry_id) == {
@@ -184,8 +184,8 @@ async def test_become_available(
     """Test a device becoming available after the entity is constructed."""
     # Cause connection attempts to fail before adding the entity
     upnp_factory_mock.async_create_device.side_effect = UpnpConnectionError
-    mock_entity = await setup_mock_component(hass, config_entry_mock)
-    assert not mock_entity.available
+    connected_source_mock = await setup_mock_component(hass, config_entry_mock)
+    assert not connected_source_mock.available
 
     # Mock device is now available.
     upnp_factory_mock.async_create_device.side_effect = None
@@ -207,7 +207,7 @@ async def test_become_available(
     # Check device was created from the supplied URL
     upnp_factory_mock.async_create_device.assert_awaited_once_with(NEW_DEVICE_LOCATION)
     # Quick check of the state to verify the entity has a connected DmsDevice
-    assert mock_entity.available
+    assert connected_source_mock.available
 
     # Unload config entry to clean up
     assert await hass.config_entries.async_remove(config_entry_mock.entry_id) == {
@@ -222,7 +222,7 @@ async def test_alive_but_gone(
     hass: HomeAssistant,
     upnp_factory_mock: Mock,
     ssdp_scanner_mock: Mock,
-    mock_disconnected_entity: DmsEntity,
+    disconnected_source_mock: DmsDeviceSource,
 ) -> None:
     """Test a device sending an SSDP alive announcement, but not being connectable."""
     upnp_factory_mock.async_create_device.side_effect = UpnpError
@@ -245,7 +245,7 @@ async def test_alive_but_gone(
     upnp_factory_mock.async_create_device.assert_awaited()
 
     # Device should still be unavailable
-    assert not mock_disconnected_entity.available
+    assert not disconnected_source_mock.available
 
     # Send the same SSDP notification, expecting no extra connection attempts
     upnp_factory_mock.async_create_device.reset_mock()
@@ -262,7 +262,7 @@ async def test_alive_but_gone(
     await hass.async_block_till_done()
     upnp_factory_mock.async_create_device.assert_not_called()
     upnp_factory_mock.async_create_device.assert_not_awaited()
-    assert not mock_disconnected_entity.available
+    assert not disconnected_source_mock.available
 
     # Send an SSDP notification with a new BOOTID, indicating the device has rebooted
     upnp_factory_mock.async_create_device.reset_mock()
@@ -280,7 +280,7 @@ async def test_alive_but_gone(
 
     # Rebooted device (seen via BOOTID) should mean a new connection attempt
     upnp_factory_mock.async_create_device.assert_awaited()
-    assert not mock_disconnected_entity.available
+    assert not disconnected_source_mock.available
 
     # Send byebye message to indicate device is going away. Next alive message
     # should result in a reconnect attempt even with same BOOTID.
@@ -307,14 +307,14 @@ async def test_alive_but_gone(
 
     # Rebooted device (seen via byebye/alive) should mean a new connection attempt
     upnp_factory_mock.async_create_device.assert_awaited()
-    assert not mock_disconnected_entity.available
+    assert not disconnected_source_mock.available
 
 
 async def test_multiple_ssdp_alive(
     hass: HomeAssistant,
     upnp_factory_mock: Mock,
     ssdp_scanner_mock: Mock,
-    mock_disconnected_entity: DmsEntity,
+    disconnected_source_mock: DmsDeviceSource,
 ) -> None:
     """Test multiple SSDP alive notifications is ok, only connects to device once."""
     upnp_factory_mock.async_create_device.reset_mock()
@@ -356,13 +356,13 @@ async def test_multiple_ssdp_alive(
     upnp_factory_mock.async_create_device.assert_awaited_once_with(NEW_DEVICE_LOCATION)
 
     # Device should be available
-    assert mock_disconnected_entity.available
+    assert disconnected_source_mock.available
 
 
 async def test_ssdp_byebye(
     hass: HomeAssistant,
     ssdp_scanner_mock: Mock,
-    mock_entity: DmsEntity,
+    connected_source_mock: DmsDeviceSource,
 ) -> None:
     """Test device is disconnected when byebye is received."""
     # First byebye will cause a disconnect
@@ -379,7 +379,7 @@ async def test_ssdp_byebye(
     )
 
     # Device should be gone
-    assert not mock_entity.available
+    assert not connected_source_mock.available
 
     # Second byebye will do nothing
     await ssdp_callback(
@@ -398,11 +398,11 @@ async def test_ssdp_update_seen_bootid(
     hass: HomeAssistant,
     ssdp_scanner_mock: Mock,
     upnp_factory_mock: Mock,
-    mock_disconnected_entity: DmsEntity,
+    disconnected_source_mock: DmsDeviceSource,
 ) -> None:
     """Test device does not reconnect when it gets ssdp:update with next bootid."""
     # Start with a disconnected device
-    entity = mock_disconnected_entity
+    entity = disconnected_source_mock
     assert not entity.available
 
     # "Reconnect" the device
@@ -511,11 +511,11 @@ async def test_ssdp_update_missed_bootid(
     hass: HomeAssistant,
     ssdp_scanner_mock: Mock,
     upnp_factory_mock: Mock,
-    mock_disconnected_entity: DmsEntity,
+    disconnected_source_mock: DmsDeviceSource,
 ) -> None:
     """Test device disconnects when it gets ssdp:update bootid it wasn't expecting."""
     # Start with a disconnected device
-    entity = mock_disconnected_entity
+    entity = disconnected_source_mock
     assert not entity.available
 
     # "Reconnect" the device
@@ -582,11 +582,11 @@ async def test_ssdp_bootid(
     hass: HomeAssistant,
     upnp_factory_mock: Mock,
     ssdp_scanner_mock: Mock,
-    mock_disconnected_entity: DmsEntity,
+    disconnected_source_mock: DmsDeviceSource,
 ) -> None:
     """Test an alive with a new BOOTID.UPNP.ORG header causes a reconnect."""
     # Start with a disconnected device
-    entity = mock_disconnected_entity
+    entity = disconnected_source_mock
     assert not entity.available
 
     # "Reconnect" the device
@@ -644,13 +644,15 @@ async def test_ssdp_bootid(
 
 
 async def test_repeated_connect(
-    caplog: pytest.LogCaptureFixture, mock_entity: DmsEntity, upnp_factory_mock: Mock
+    caplog: pytest.LogCaptureFixture,
+    connected_source_mock: DmsDeviceSource,
+    upnp_factory_mock: Mock,
 ) -> None:
     """Test trying to connect an already connected device is safely ignored."""
     upnp_factory_mock.async_create_device.reset_mock()
     # Calling internal function directly to skip trying to time 2 SSDP messages carefully
     with caplog.at_level(logging.DEBUG):
-        await mock_entity.device_connect()
+        await connected_source_mock.device_connect()
     assert (
         "Trying to connect when device already connected" == caplog.records[-1].message
     )
@@ -659,22 +661,22 @@ async def test_repeated_connect(
 
 async def test_connect_no_location(
     caplog: pytest.LogCaptureFixture,
-    mock_disconnected_entity: DmsEntity,
+    disconnected_source_mock: DmsDeviceSource,
     upnp_factory_mock: Mock,
 ) -> None:
     """Test trying to connect without a location is safely ignored."""
-    mock_disconnected_entity.location = ""
+    disconnected_source_mock.location = ""
     upnp_factory_mock.async_create_device.reset_mock()
     # Calling internal function directly to skip trying to time 2 SSDP messages carefully
     with caplog.at_level(logging.DEBUG):
-        await mock_disconnected_entity.device_connect()
+        await disconnected_source_mock.device_connect()
     assert "Not connecting because location is not known" == caplog.records[-1].message
     assert not upnp_factory_mock.async_create_device.await_count
 
 
 async def test_become_unavailable(
     hass: HomeAssistant,
-    mock_entity: DmsEntity,
+    connected_source_mock: DmsDeviceSource,
     dms_device_mock: Mock,
 ) -> None:
     """Test a device becoming unavailable."""
@@ -687,17 +689,17 @@ async def test_become_unavailable(
     )
 
     # Check async_resolve_object currently works
-    await mock_entity.async_resolve_media(":object_id")
+    await connected_source_mock.async_resolve_media(":object_id")
 
     # Now break the network connection
     dms_device_mock.async_browse_metadata.side_effect = UpnpConnectionError
 
     # The device should be considered available until next contacted
-    assert mock_entity.available
+    assert connected_source_mock.available
 
     # async_resolve_object should fail
     with pytest.raises(Unresolvable):
-        await mock_entity.async_resolve_media(":object_id")
+        await connected_source_mock.async_resolve_media(":object_id")
 
     # The device should now be unavailable
-    assert not mock_entity.available
+    assert not connected_source_mock.available

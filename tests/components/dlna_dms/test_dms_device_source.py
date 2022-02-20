@@ -1,6 +1,5 @@
-"""Test the interface methods of DmsEntity, except availability."""
+"""Test the interface methods of DmsDeviceSource, except availability."""
 from collections.abc import AsyncIterable
-import logging
 from typing import Final, Union
 from unittest.mock import ANY, Mock, call
 
@@ -14,12 +13,12 @@ from homeassistant.components.dlna_dms.dms import (
     ActionError,
     DeviceConnectionError,
     DlnaDmsData,
-    DmsEntity,
+    DmsDeviceSource,
 )
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import BrowseMediaSource
-from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITY_ID, CONF_URL
+from homeassistant.const import CONF_DEVICE_ID, CONF_URL
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
@@ -36,20 +35,20 @@ BrowseResultList = list[Union[didl_lite.DidlObject, didl_lite.Descriptor]]
 
 
 @pytest.fixture
-async def entity(
+async def device_source_mock(
     hass: HomeAssistant,
     config_entry_mock: MockConfigEntry,
     ssdp_scanner_mock: Mock,
     dms_device_mock: Mock,
     domain_data_mock: DlnaDmsData,
-) -> AsyncIterable[DmsEntity]:
-    """Fixture to set up a DmsEntity in a connected state and cleanup at completion."""
+) -> AsyncIterable[DmsDeviceSource]:
+    """Fixture to set up a DmsDeviceSource in a connected state and cleanup at completion."""
     await hass.config_entries.async_add(config_entry_mock)
     await hass.async_block_till_done()
 
-    mock_entity = domain_data_mock.entities[MOCK_DEVICE_USN]
+    mock_entity = domain_data_mock.devices[MOCK_DEVICE_USN]
 
-    # Check the entity has registered all needed listeners
+    # Check the DmsDeviceSource has registered all needed listeners
     assert len(config_entry_mock.update_listeners) == 1
     assert ssdp_scanner_mock.async_register_callback.await_count == 2
     assert ssdp_scanner_mock.async_register_callback.return_value.call_count == 0
@@ -62,30 +61,30 @@ async def entity(
         "require_restart": False
     }
 
-    # Check entity has cleaned up its resources
+    # Check DmsDeviceSource has cleaned up its resources
     assert not config_entry_mock.update_listeners
     assert (
         ssdp_scanner_mock.async_register_callback.await_count
         == ssdp_scanner_mock.async_register_callback.return_value.call_count
     )
-    assert MOCK_DEVICE_USN not in domain_data_mock.entities
+    assert MOCK_DEVICE_USN not in domain_data_mock.devices
     assert MOCK_SOURCE_ID not in domain_data_mock.sources
 
 
 async def test_update_source_id(
     hass: HomeAssistant,
     config_entry_mock: MockConfigEntry,
-    entity: DmsEntity,
+    device_source_mock: DmsDeviceSource,
     domain_data_mock: DlnaDmsData,
 ) -> None:
-    """Test the config listener updates the source_id and source list."""
-    new_source_id: Final = "new_source_id"
-    hass.config_entries.async_update_entry(
-        config_entry_mock, options={CONF_ENTITY_ID: new_source_id}
-    )
+    """Test the config listener updates the source_id and source list upon title change."""
+    new_title: Final = "New Name"
+    new_source_id: Final = "new_name"
+    assert domain_data_mock.sources.keys() == {MOCK_SOURCE_ID}
+    hass.config_entries.async_update_entry(config_entry_mock, title=new_title)
     await hass.async_block_till_done()
 
-    assert entity.source_id == new_source_id
+    assert device_source_mock.source_id == new_source_id
     assert domain_data_mock.sources.keys() == {new_source_id}
 
 
@@ -93,11 +92,13 @@ async def test_update_existing_source_id(
     caplog: pytest.LogCaptureFixture,
     hass: HomeAssistant,
     config_entry_mock: MockConfigEntry,
-    entity: DmsEntity,
+    device_source_mock: DmsDeviceSource,
     domain_data_mock: DlnaDmsData,
 ) -> None:
-    """Test the config listener logs error and does not update source_id upon collision."""
-    new_source_id: Final = "new_source_id"
+    """Test the config listener gracefully handles colliding source_id."""
+    new_title: Final = "New Name"
+    new_source_id: Final = "new_name"
+    new_source_id_2: Final = "new_name_1"
     # Set up another config entry to collide with the new source_id
     colliding_entry = MockConfigEntry(
         unique_id=f"different-udn::{MOCK_DEVICE_TYPE}",
@@ -106,122 +107,116 @@ async def test_update_existing_source_id(
             CONF_URL: "http://192.88.99.22/dms_description.xml",
             CONF_DEVICE_ID: f"different-udn::{MOCK_DEVICE_TYPE}",
         },
-        title="Different name",
-        options={CONF_ENTITY_ID: new_source_id},
+        title=new_title,
     )
     await hass.config_entries.async_add(colliding_entry)
     await hass.async_block_till_done()
 
-    assert entity.source_id == MOCK_SOURCE_ID
+    assert device_source_mock.source_id == MOCK_SOURCE_ID
     assert domain_data_mock.sources.keys() == {MOCK_SOURCE_ID, new_source_id}
-    assert domain_data_mock.sources[MOCK_SOURCE_ID] is entity
+    assert domain_data_mock.sources[MOCK_SOURCE_ID] is device_source_mock
 
-    # Now try to update the existing entry, which should do nothing but log
-    with caplog.at_level(logging.DEBUG):
-        hass.config_entries.async_update_entry(
-            config_entry_mock, options={CONF_ENTITY_ID: new_source_id}
-        )
-        await hass.async_block_till_done()
-
-    assert (
-        f"New source_id ({new_source_id}) is already in use"
-        == caplog.records[-1].message
-    )
-
-    assert entity.source_id == MOCK_SOURCE_ID
-    assert domain_data_mock.sources.keys() == {MOCK_SOURCE_ID, new_source_id}
-    assert domain_data_mock.sources[MOCK_SOURCE_ID] is entity
-
-    # Changing back to the old name should not cause issues
-    hass.config_entries.async_update_entry(
-        config_entry_mock, options={CONF_ENTITY_ID: MOCK_SOURCE_ID}
-    )
+    # Update the existing entry to match the other entry's name
+    hass.config_entries.async_update_entry(config_entry_mock, title=new_title)
     await hass.async_block_till_done()
 
-    assert entity.source_id == MOCK_SOURCE_ID
+    # The existing device's source ID should be a newly generated slug
+    assert device_source_mock.source_id == new_source_id_2
+    assert domain_data_mock.sources.keys() == {new_source_id, new_source_id_2}
+    assert domain_data_mock.sources[new_source_id_2] is device_source_mock
+
+    # Changing back to the old name should not cause issues
+    hass.config_entries.async_update_entry(config_entry_mock, title=MOCK_DEVICE_NAME)
+    await hass.async_block_till_done()
+
+    assert device_source_mock.source_id == MOCK_SOURCE_ID
     assert domain_data_mock.sources.keys() == {MOCK_SOURCE_ID, new_source_id}
-    assert domain_data_mock.sources[MOCK_SOURCE_ID] is entity
+    assert domain_data_mock.sources[MOCK_SOURCE_ID] is device_source_mock
 
     # Remove the collision and try again
     await hass.config_entries.async_remove(colliding_entry.entry_id)
     assert domain_data_mock.sources.keys() == {MOCK_SOURCE_ID}
 
-    hass.config_entries.async_update_entry(
-        config_entry_mock, options={CONF_ENTITY_ID: new_source_id}
-    )
+    hass.config_entries.async_update_entry(config_entry_mock, title=new_title)
     await hass.async_block_till_done()
 
-    assert entity.source_id == new_source_id
+    assert device_source_mock.source_id == new_source_id
     assert domain_data_mock.sources.keys() == {new_source_id}
 
 
-async def test_catch_request_error_unavailable(entity: DmsEntity) -> None:
+async def test_catch_request_error_unavailable(
+    device_source_mock: DmsDeviceSource,
+) -> None:
     """Test the device is checked for availability before trying requests."""
-    entity._device = None
+    device_source_mock._device = None
 
     with pytest.raises(DeviceConnectionError):
-        await entity.async_resolve_object("id")
+        await device_source_mock.async_resolve_object("id")
     with pytest.raises(DeviceConnectionError):
-        await entity.async_resolve_path("path")
+        await device_source_mock.async_resolve_path("path")
     with pytest.raises(DeviceConnectionError):
-        await entity.async_resolve_search("query")
+        await device_source_mock.async_resolve_search("query")
     with pytest.raises(DeviceConnectionError):
-        await entity.async_browse_object("object_id")
+        await device_source_mock.async_browse_object("object_id")
     with pytest.raises(DeviceConnectionError):
-        await entity.async_browse_search("query")
+        await device_source_mock.async_browse_search("query")
 
 
-async def test_catch_request_error(entity: DmsEntity, dms_device_mock: Mock) -> None:
+async def test_catch_request_error(
+    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+) -> None:
     """Test errors when making requests to the device are handled."""
     dms_device_mock.async_browse_metadata.side_effect = UpnpActionError(
         error_code=ContentDirectoryErrorCode.NO_SUCH_OBJECT
     )
     with pytest.raises(ActionError, match="No such object: bad_id"):
-        await entity.async_resolve_media(":bad_id")
+        await device_source_mock.async_resolve_media(":bad_id")
 
     dms_device_mock.async_search_directory.side_effect = UpnpActionError(
         error_code=ContentDirectoryErrorCode.INVALID_SEARCH_CRITERIA
     )
     with pytest.raises(ActionError, match="Invalid query: bad query"):
-        await entity.async_resolve_media("?bad query")
+        await device_source_mock.async_resolve_media("?bad query")
 
     dms_device_mock.async_browse_metadata.side_effect = UpnpActionError(
         error_code=ContentDirectoryErrorCode.CANNOT_PROCESS_REQUEST
     )
     with pytest.raises(DeviceConnectionError, match="Server failure: "):
-        await entity.async_resolve_media(":good_id")
+        await device_source_mock.async_resolve_media(":good_id")
 
     dms_device_mock.async_browse_metadata.side_effect = UpnpError
     with pytest.raises(
         DeviceConnectionError, match="Server communication failure: UpnpError(.*)"
     ):
-        await entity.async_resolve_media(":bad_id")
+        await device_source_mock.async_resolve_media(":bad_id")
 
-    # UpnpConnectionErrors will cause the entity to disconnect from the device
-    assert entity.available
+    # UpnpConnectionErrors will cause the device_source_mock to disconnect from the device
+    assert device_source_mock.available
     dms_device_mock.async_browse_metadata.side_effect = UpnpConnectionError
     with pytest.raises(
         DeviceConnectionError, match="Server disconnected: UpnpConnectionError(.*)"
     ):
-        await entity.async_resolve_media(":bad_id")
-    assert not entity.available
+        await device_source_mock.async_resolve_media(":bad_id")
+    assert not device_source_mock.available
 
 
-async def test_icon(entity: DmsEntity, dms_device_mock: Mock) -> None:
+async def test_icon(device_source_mock: DmsDeviceSource, dms_device_mock: Mock) -> None:
     """Test the device's icon URL is returned."""
-    assert entity.icon == dms_device_mock.icon
+    assert device_source_mock.icon == dms_device_mock.icon
 
-    entity._device = None
-    assert entity.icon is None
+    device_source_mock._device = None
+    assert device_source_mock.icon is None
 
 
-async def test_resolve_media_invalid(entity: DmsEntity) -> None:
+async def test_resolve_media_invalid(device_source_mock: DmsDeviceSource) -> None:
     """Test async_resolve_media will raise Unresolvable when an identifier isn't supplied."""
     with pytest.raises(Unresolvable, match="Invalid identifier.*"):
-        await entity.async_resolve_media("")
+        await device_source_mock.async_resolve_media("")
 
 
-async def test_resolve_media_object(entity: DmsEntity, dms_device_mock: Mock) -> None:
+async def test_resolve_media_object(
+    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+) -> None:
     """Test the async_resolve_object method via async_resolve_media."""
     object_id: Final = "123"
     res_url: Final = "foo/bar"
@@ -235,7 +230,7 @@ async def test_resolve_media_object(entity: DmsEntity, dms_device_mock: Mock) ->
         res=[didl_lite.Resource(uri=res_url, protocol_info=f"http-get:*:{res_mime}:")],
     )
     dms_device_mock.async_browse_metadata.return_value = didl_item
-    result = await entity.async_resolve_media(f":{object_id}")
+    result = await device_source_mock.async_resolve_media(f":{object_id}")
     dms_device_mock.async_browse_metadata.assert_awaited_once_with(
         object_id, metadata_filter="*"
     )
@@ -256,7 +251,7 @@ async def test_resolve_media_object(entity: DmsEntity, dms_device_mock: Mock) ->
         ],
     )
     dms_device_mock.async_browse_metadata.return_value = didl_item
-    result = await entity.async_resolve_media(f":{object_id}")
+    result = await device_source_mock.async_resolve_media(f":{object_id}")
     assert result.url == res_abs_url
     assert result.mime_type == res_mime
     assert result.didl_metadata is didl_item
@@ -273,7 +268,7 @@ async def test_resolve_media_object(entity: DmsEntity, dms_device_mock: Mock) ->
         ],
     )
     dms_device_mock.async_browse_metadata.return_value = didl_item
-    result = await entity.async_resolve_media(f":{object_id}")
+    result = await device_source_mock.async_resolve_media(f":{object_id}")
     assert result.url == res_abs_url
     assert result.mime_type == res_mime
     assert result.didl_metadata is didl_item
@@ -287,7 +282,7 @@ async def test_resolve_media_object(entity: DmsEntity, dms_device_mock: Mock) ->
     )
     dms_device_mock.async_browse_metadata.return_value = didl_item
     with pytest.raises(Unresolvable, match="Object has no resources"):
-        await entity.async_resolve_media(f":{object_id}")
+        await device_source_mock.async_resolve_media(f":{object_id}")
 
     # Failure case: resources are not playable
     didl_item = didl_lite.Item(
@@ -298,10 +293,12 @@ async def test_resolve_media_object(entity: DmsEntity, dms_device_mock: Mock) ->
     )
     dms_device_mock.async_browse_metadata.return_value = didl_item
     with pytest.raises(Unresolvable, match="Object has no playable resources"):
-        await entity.async_resolve_media(f":{object_id}")
+        await device_source_mock.async_resolve_media(f":{object_id}")
 
 
-async def test_resolve_media_path(entity: DmsEntity, dms_device_mock: Mock) -> None:
+async def test_resolve_media_path(
+    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+) -> None:
     """Test the async_resolve_path method via async_resolve_media."""
     path: Final = "path/to/thing"
     object_ids: Final = ["path_id", "to_id", "thing_id"]
@@ -327,7 +324,7 @@ async def test_resolve_media_path(entity: DmsEntity, dms_device_mock: Mock) -> N
         title="thing",
         res=[didl_lite.Resource(uri=res_url, protocol_info=f"http-get:*:{res_mime}:")],
     )
-    result = await entity.async_resolve_media(f"/{path}")
+    result = await device_source_mock.async_resolve_media(f"/{path}")
     assert dms_device_mock.async_search_directory.await_args_list == [
         call(
             parent_id,
@@ -343,7 +340,7 @@ async def test_resolve_media_path(entity: DmsEntity, dms_device_mock: Mock) -> N
     # Test a path starting with a / (first / is path action, second / is root of path)
     dms_device_mock.async_search_directory.reset_mock()
     dms_device_mock.async_search_directory.side_effect = search_directory_result
-    result = await entity.async_resolve_media(f"//{path}")
+    result = await device_source_mock.async_resolve_media(f"//{path}")
     assert dms_device_mock.async_search_directory.await_args_list == [
         call(
             parent_id,
@@ -357,7 +354,9 @@ async def test_resolve_media_path(entity: DmsEntity, dms_device_mock: Mock) -> N
     assert result.mime_type == res_mime
 
 
-async def test_resolve_path_simple(entity: DmsEntity, dms_device_mock: Mock) -> None:
+async def test_resolve_path_simple(
+    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+) -> None:
     """Test async_resolve_path for simple success as for test_resolve_media_path."""
     path: Final = "path/to/thing"
     object_ids: Final = ["path_id", "to_id", "thing_id"]
@@ -372,7 +371,7 @@ async def test_resolve_path_simple(entity: DmsEntity, dms_device_mock: Mock) -> 
         search_directory_result.append(DmsDevice.BrowseResult([didl_item], 1, 1, 0))
 
     dms_device_mock.async_search_directory.side_effect = search_directory_result
-    result = await entity.async_resolve_path(path)
+    result = await device_source_mock.async_resolve_path(path)
     assert dms_device_mock.async_search_directory.call_args_list == [
         call(
             parent_id,
@@ -386,7 +385,9 @@ async def test_resolve_path_simple(entity: DmsEntity, dms_device_mock: Mock) -> 
     assert not dms_device_mock.async_browse_direct_children.await_count
 
 
-async def test_resolve_path_browsed(entity: DmsEntity, dms_device_mock: Mock) -> None:
+async def test_resolve_path_browsed(
+    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+) -> None:
     """Test async_resolve_path: action error results in browsing."""
     path: Final = "path/to/thing"
     object_ids: Final = ["path_id", "to_id", "thing_id"]
@@ -416,7 +417,7 @@ async def test_resolve_path_browsed(entity: DmsEntity, dms_device_mock: Mock) ->
         DmsDevice.BrowseResult(browse_children_result, 3, 3, 0)
     ]
 
-    result = await entity.async_resolve_path(path)
+    result = await device_source_mock.async_resolve_path(path)
     # All levels should have an attempted search
     assert dms_device_mock.async_search_directory.await_args_list == [
         call(
@@ -435,7 +436,7 @@ async def test_resolve_path_browsed(entity: DmsEntity, dms_device_mock: Mock) ->
 
 
 async def test_resolve_path_browsed_nothing(
-    entity: DmsEntity, dms_device_mock: Mock
+    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
 ) -> None:
     """Test async_resolve_path: action error results in browsing, but nothing found."""
     dms_device_mock.async_search_directory.side_effect = UpnpActionError()
@@ -444,7 +445,7 @@ async def test_resolve_path_browsed_nothing(
         DmsDevice.BrowseResult([], 0, 0, 0)
     ]
     with pytest.raises(Unresolvable, match="No contents for thing in thing/other"):
-        await entity.async_resolve_path(r"thing/other")
+        await device_source_mock.async_resolve_path(r"thing/other")
 
     # There are children, but they don't match
     dms_device_mock.async_browse_direct_children.side_effect = [
@@ -460,10 +461,12 @@ async def test_resolve_path_browsed_nothing(
         )
     ]
     with pytest.raises(Unresolvable, match="Nothing found for thing in thing/other"):
-        await entity.async_resolve_path(r"thing/other")
+        await device_source_mock.async_resolve_path(r"thing/other")
 
 
-async def test_resolve_path_quoted(entity: DmsEntity, dms_device_mock: Mock) -> None:
+async def test_resolve_path_quoted(
+    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+) -> None:
     """Test async_resolve_path: quotes and backslashes in the path get escaped correctly."""
     dms_device_mock.async_search_directory.side_effect = [
         DmsDevice.BrowseResult(
@@ -482,7 +485,7 @@ async def test_resolve_path_quoted(entity: DmsEntity, dms_device_mock: Mock) -> 
         UpnpError("Quick abort"),
     ]
     with pytest.raises(DeviceConnectionError):
-        await entity.async_resolve_path(r'path/quote"back\slash')
+        await device_source_mock.async_resolve_path(r'path/quote"back\slash')
     assert dms_device_mock.async_search_directory.await_args_list == [
         call(
             "0",
@@ -499,7 +502,9 @@ async def test_resolve_path_quoted(entity: DmsEntity, dms_device_mock: Mock) -> 
     ]
 
 
-async def test_resolve_path_ambiguous(entity: DmsEntity, dms_device_mock: Mock) -> None:
+async def test_resolve_path_ambiguous(
+    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+) -> None:
     """Test async_resolve_path: ambiguous results (too many matches) gives error."""
     dms_device_mock.async_search_directory.side_effect = [
         DmsDevice.BrowseResult(
@@ -525,21 +530,23 @@ async def test_resolve_path_ambiguous(entity: DmsEntity, dms_device_mock: Mock) 
     with pytest.raises(
         Unresolvable, match="Too many items found for thing in thing/other"
     ):
-        await entity.async_resolve_path(r"thing/other")
+        await device_source_mock.async_resolve_path(r"thing/other")
 
 
 async def test_resolve_path_no_such_container(
-    entity: DmsEntity, dms_device_mock: Mock
+    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
 ) -> None:
     """Test async_resolve_path: Explicit check for NO_SUCH_CONTAINER."""
     dms_device_mock.async_search_directory.side_effect = UpnpActionError(
         error_code=ContentDirectoryErrorCode.NO_SUCH_CONTAINER
     )
     with pytest.raises(Unresolvable, match="No such container: 0"):
-        await entity.async_resolve_path(r"thing/other")
+        await device_source_mock.async_resolve_path(r"thing/other")
 
 
-async def test_resolve_media_search(entity: DmsEntity, dms_device_mock: Mock) -> None:
+async def test_resolve_media_search(
+    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+) -> None:
     """Test the async_resolve_search method via async_resolve_media."""
     res_url: Final = "foo/bar"
     res_abs_url: Final = f"{MOCK_DEVICE_BASE_URL}/{res_url}"
@@ -550,7 +557,7 @@ async def test_resolve_media_search(entity: DmsEntity, dms_device_mock: Mock) ->
         [], 0, 0, 0
     )
     with pytest.raises(Unresolvable, match='Nothing found for dc:title="thing"'):
-        await entity.async_resolve_media('?dc:title="thing"')
+        await device_source_mock.async_resolve_media('?dc:title="thing"')
     assert dms_device_mock.async_search_directory.await_args_list == [
         call(
             container_id="0",
@@ -571,7 +578,7 @@ async def test_resolve_media_search(entity: DmsEntity, dms_device_mock: Mock) ->
     dms_device_mock.async_search_directory.return_value = DmsDevice.BrowseResult(
         [didl_item], 1, 1, 0
     )
-    result = await entity.async_resolve_media('?dc:title="thing"')
+    result = await device_source_mock.async_resolve_media('?dc:title="thing"')
     assert result.url == res_abs_url
     assert result.mime_type == res_mime
     assert result.didl_metadata is didl_item
@@ -583,7 +590,7 @@ async def test_resolve_media_search(entity: DmsEntity, dms_device_mock: Mock) ->
     dms_device_mock.async_search_directory.return_value = DmsDevice.BrowseResult(
         [didl_item], 1, 2, 0
     )
-    result = await entity.async_resolve_media('?dc:title="thing"')
+    result = await device_source_mock.async_resolve_media('?dc:title="thing"')
     assert result.url == res_abs_url
     assert result.mime_type == res_mime
     assert result.didl_metadata is didl_item
@@ -593,10 +600,12 @@ async def test_resolve_media_search(entity: DmsEntity, dms_device_mock: Mock) ->
         [didl_lite.Descriptor("id", "namespace")], 1, 1, 0
     )
     with pytest.raises(Unresolvable, match="Descriptor.* is not a DidlObject"):
-        await entity.async_resolve_media('?dc:title="thing"')
+        await device_source_mock.async_resolve_media('?dc:title="thing"')
 
 
-async def test_browse_media_root(entity: DmsEntity, dms_device_mock: Mock) -> None:
+async def test_browse_media_root(
+    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+) -> None:
     """Test async_browse_media with no identifier will browse the root of the device."""
     dms_device_mock.async_browse_metadata.return_value = didl_lite.DidlObject(
         id="0", restricted="false", title="root"
@@ -605,7 +614,7 @@ async def test_browse_media_root(entity: DmsEntity, dms_device_mock: Mock) -> No
         [], 0, 0, 0
     )
     # No identifier (first opened in media browser)
-    result = await entity.async_browse_media(None)
+    result = await device_source_mock.async_browse_media(None)
     assert result.identifier == f"{MOCK_SOURCE_ID}/:0"
     assert result.title == MOCK_DEVICE_NAME
     dms_device_mock.async_browse_metadata.assert_awaited_once_with(
@@ -618,7 +627,7 @@ async def test_browse_media_root(entity: DmsEntity, dms_device_mock: Mock) -> No
     dms_device_mock.async_browse_metadata.reset_mock()
     dms_device_mock.async_browse_direct_children.reset_mock()
     # Empty string identifier
-    result = await entity.async_browse_media("")
+    result = await device_source_mock.async_browse_media("")
     assert result.identifier == f"{MOCK_SOURCE_ID}/:0"
     assert result.title == MOCK_DEVICE_NAME
     dms_device_mock.async_browse_metadata.assert_awaited_once_with(
@@ -629,7 +638,9 @@ async def test_browse_media_root(entity: DmsEntity, dms_device_mock: Mock) -> No
     )
 
 
-async def test_browse_media_object(entity: DmsEntity, dms_device_mock: Mock) -> None:
+async def test_browse_media_object(
+    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+) -> None:
     """Test async_browse_object via async_browse_media."""
     object_id = "1234"
     child_titles = ("Item 1", "Thing", "Item 2")
@@ -652,7 +663,7 @@ async def test_browse_media_object(entity: DmsEntity, dms_device_mock: Mock) -> 
         )
     dms_device_mock.async_browse_direct_children.return_value = children_result
 
-    result = await entity.async_browse_media(f":{object_id}")
+    result = await device_source_mock.async_browse_media(f":{object_id}")
     dms_device_mock.async_browse_metadata.assert_awaited_once_with(
         object_id, metadata_filter=ANY
     )
@@ -675,7 +686,9 @@ async def test_browse_media_object(entity: DmsEntity, dms_device_mock: Mock) -> 
         assert not child.children
 
 
-async def test_browse_media_path(entity: DmsEntity, dms_device_mock: Mock) -> None:
+async def test_browse_media_path(
+    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+) -> None:
     """Test async_browse_media with a path."""
     title = "folder"
     con_id = "123"
@@ -688,7 +701,7 @@ async def test_browse_media_path(entity: DmsEntity, dms_device_mock: Mock) -> No
         [], 0, 0, 0
     )
 
-    result = await entity.async_browse_media(f"{title}")
+    result = await device_source_mock.async_browse_media(f"{title}")
     assert result.identifier == f"{MOCK_SOURCE_ID}/:{con_id}"
     assert result.title == title
 
@@ -706,7 +719,9 @@ async def test_browse_media_path(entity: DmsEntity, dms_device_mock: Mock) -> No
     )
 
 
-async def test_browse_media_search(entity: DmsEntity, dms_device_mock: Mock) -> None:
+async def test_browse_media_search(
+    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+) -> None:
     """Test async_browse_media with a search query."""
     query = 'dc:title contains "FooBar"'
     object_details = (("111", "FooBar baz"), ("432", "Not FooBar"), ("99", "FooBar"))
@@ -724,7 +739,7 @@ async def test_browse_media_search(entity: DmsEntity, dms_device_mock: Mock) -> 
         1, didl_lite.Descriptor("id", "name_space")
     )
 
-    result = await entity.async_browse_media(f"?{query}")
+    result = await device_source_mock.async_browse_media(f"?{query}")
     assert result.identifier == f"{MOCK_SOURCE_ID}/?{query}"
     assert result.title == "Search results"
     assert result.children
@@ -736,18 +751,20 @@ async def test_browse_media_search(entity: DmsEntity, dms_device_mock: Mock) -> 
         assert not child.children
 
 
-async def test_browse_search_invalid(entity: DmsEntity, dms_device_mock: Mock) -> None:
+async def test_browse_search_invalid(
+    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+) -> None:
     """Test searching with an invalid query gives a BrowseError."""
     query = "title == FooBar"
     dms_device_mock.async_search_directory.side_effect = UpnpActionError(
         error_code=ContentDirectoryErrorCode.INVALID_SEARCH_CRITERIA
     )
     with pytest.raises(BrowseError, match=f"Invalid query: {query}"):
-        await entity.async_browse_media(f"?{query}")
+        await device_source_mock.async_browse_media(f"?{query}")
 
 
 async def test_browse_search_no_results(
-    entity: DmsEntity, dms_device_mock: Mock
+    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
 ) -> None:
     """Test a search with no results does not give an error."""
     query = 'dc:title contains "FooBar"'
@@ -755,13 +772,15 @@ async def test_browse_search_no_results(
         [], 0, 0, 0
     )
 
-    result = await entity.async_browse_media(f"?{query}")
+    result = await device_source_mock.async_browse_media(f"?{query}")
     assert result.identifier == f"{MOCK_SOURCE_ID}/?{query}"
     assert result.title == "Search results"
     assert not result.children
 
 
-async def test_thumbnail(entity: DmsEntity, dms_device_mock: Mock) -> None:
+async def test_thumbnail(
+    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+) -> None:
     """Test getting thumbnails URLs for items."""
     # Use browse_search to get multiple items at once for least effort
     dms_device_mock.async_search_directory.return_value = DmsDevice.BrowseResult(
@@ -807,14 +826,16 @@ async def test_thumbnail(entity: DmsEntity, dms_device_mock: Mock) -> None:
         0,
     )
 
-    result = await entity.async_browse_media("?query")
+    result = await device_source_mock.async_browse_media("?query")
     assert result.children
     assert result.children[0].thumbnail == f"{MOCK_DEVICE_BASE_URL}/a_thumb.jpg"
     assert result.children[1].thumbnail == f"{MOCK_DEVICE_BASE_URL}/b_thumb.png"
     assert result.children[2].thumbnail is None
 
 
-async def test_can_play(entity: DmsEntity, dms_device_mock: Mock) -> None:
+async def test_can_play(
+    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+) -> None:
     """Test determination of playability for items."""
     protocol_infos = [
         # No protocol info for resource
@@ -849,7 +870,7 @@ async def test_can_play(entity: DmsEntity, dms_device_mock: Mock) -> None:
         search_results, len(search_results), len(search_results), 0
     )
 
-    result = await entity.async_browse_media("?query")
+    result = await device_source_mock.async_browse_media("?query")
     assert result.children
     assert not result.children[0].can_play
     for idx, info_can_play in enumerate(protocol_infos):

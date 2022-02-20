@@ -12,8 +12,6 @@ Media identifiers can look like:
 
 from __future__ import annotations
 
-from typing import cast
-
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_CHANNEL,
     MEDIA_CLASS_DIRECTORY,
@@ -30,7 +28,7 @@ from homeassistant.components.media_source.models import (
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, LOGGER, PATH_OBJECT_ID_FLAG, ROOT_OBJECT_ID, SOURCE_SEP
-from .dms import DidlPlayMedia, DlnaDmsData
+from .dms import DidlPlayMedia, get_domain_data
 
 
 async def async_get_media_source(hass: HomeAssistant):
@@ -50,17 +48,11 @@ class DmsMediaSource(MediaSource):
 
         self.hass = hass
 
-    def _get_domain_data(self) -> DlnaDmsData | None:
-        """Obtain this integration's domain data if it exists."""
-        if DOMAIN in self.hass.data:
-            return cast(DlnaDmsData, self.hass.data[DOMAIN])
-        return None
-
     async def async_resolve_media(self, item: MediaSourceItem) -> DidlPlayMedia:
         """Resolve a media item to a playable item."""
-        dms_data = self._get_domain_data()
-        if not dms_data:
-            raise Unresolvable("dlna_dms has not been configured")
+        dms_data = get_domain_data(self.hass)
+        if not dms_data.sources:
+            raise Unresolvable("No sources have been configured")
 
         source_id, media_id = _parse_identifier(item)
         if not source_id:
@@ -77,9 +69,9 @@ class DmsMediaSource(MediaSource):
 
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Browse media."""
-        dms_data = self._get_domain_data()
-        if not dms_data or not dms_data.sources:
-            raise BrowseError("dlna_dms has not been configured")
+        dms_data = get_domain_data(self.hass)
+        if not dms_data.sources:
+            raise BrowseError("No sources have been configured")
 
         source_id, media_id = _parse_identifier(item)
         LOGGER.debug("Browsing for %s / %s", source_id, media_id)
