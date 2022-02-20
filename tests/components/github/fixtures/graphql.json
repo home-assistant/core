@@ -53,6 +53,16 @@
                 "name": "v1.0.0",
                 "url": "https://github.com/octocat/Hello-World/releases/v1.0.0",
                 "tag": "v1.0.0"
+            },
+            "refs": {
+                "tags": [
+                    {
+                        "name": "v1.0.0",
+                        "target": {
+                            "url": "https://github.com/octocat/Hello-World/commit/6dcb09b5b57875f334f61aebed695e2e4193db5e"
+                        }
+                    }
+                ]
             }
         }
     }
