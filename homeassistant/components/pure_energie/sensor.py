@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, ENERGY_KILO_WATT_HOUR, POWER_WATT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -98,7 +97,6 @@ class PureEnergieSensorEntity(CoordinatorEntity[PureEnergieData], SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.data.device.n2g_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.data.device.n2g_id)},
             configuration_url=f"http://{coordinator.config_entry.data[CONF_HOST]}",
             sw_version=coordinator.data.device.firmware,
