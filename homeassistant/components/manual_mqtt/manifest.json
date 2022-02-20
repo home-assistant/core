@@ -1,7 +1,7 @@
 {
   "domain": "manual_mqtt",
-  "name": "Manual MQTT",
-  "documentation": "https://www.home-assistant.io/integrations/manual_mqtt",
+  "name": "Manual MQTT Alarm",
+  "documentation": "https://www.home-assistant.io/integrations/alarm_control_panel.manual_mqtt",
   "dependencies": ["mqtt"],
   "codeowners": [],
   "iot_class": "local_push"
