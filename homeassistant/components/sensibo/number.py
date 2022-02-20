@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 
 from aiohttp.client_exceptions import ClientConnectionError
 import async_timeout
@@ -18,26 +19,43 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, LOGGER, TIMEOUT
 from .coordinator import SensiboDataUpdateCoordinator
 
-NUMBER_TYPES: tuple[NumberEntityDescription, ...] = (
-    NumberEntityDescription(
+
+@dataclass
+class SensiboEntityDescriptionMixin:
+    """Mixin values for Sensibo entities."""
+
+    remote_key: str
+
+
+@dataclass
+class SensiboNumberEntityDescription(
+    NumberEntityDescription, SensiboEntityDescriptionMixin
+):
+    """Class describing Sensibo Number entities."""
+
+
+NUMBER_TYPES = (
+    SensiboNumberEntityDescription(
         key="calibration_temp",
+        remote_key="temperature",
         name="Temperature calibration",
         icon="mdi:thermometer",
-        entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
         min_value=-10,
         max_value=10,
-        step=1,
+        step=0.1,
     ),
-    NumberEntityDescription(
+    SensiboNumberEntityDescription(
         key="calibration_hum",
+        remote_key="humidity",
         name="Humidity calibration",
         icon="mdi:water",
-        entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
         min_value=-10,
         max_value=10,
-        step=1,
+        step=0.1,
     ),
 )
 
@@ -49,28 +67,25 @@ async def async_setup_entry(
 
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities = [
-        [
-            SensiboNumber(coordinator, device_id, description)
-            for device_id, device_data in coordinator.data.items()
-            if device_data["hvac_modes"] and device_data["temp"]
-        ]
+    async_add_entities(
+        SensiboNumber(coordinator, device_id, description)
+        for device_id, device_data in coordinator.data.items()
         for description in NUMBER_TYPES
-    ]
-    async_add_entities(entities)
+        if device_data["hvac_modes"] and device_data["temp"]
+    )
 
 
 class SensiboNumber(CoordinatorEntity, NumberEntity):
     """Representation of a Sensibo numbers."""
 
     coordinator: SensiboDataUpdateCoordinator
-    entity_description: NumberEntityDescription
+    entity_description: SensiboNumberEntityDescription
 
     def __init__(
         self,
         coordinator: SensiboDataUpdateCoordinator,
         device_id: str,
-        entity_description: NumberEntityDescription,
+        entity_description: SensiboNumberEntityDescription,
     ) -> None:
         """Initiate Sensibo Number."""
         super().__init__(coordinator)
@@ -99,11 +114,12 @@ class SensiboNumber(CoordinatorEntity, NumberEntity):
 
     async def async_set_value(self, value: float) -> None:
         """Set value not implemented."""
+        data = {self.entity_description.remote_key: value}
         try:
             async with async_timeout.timeout(TIMEOUT):
                 result = await self._client.async_set_calibration(
-                    self.unique_id,
-                    value,
+                    self._device_id,
+                    data,
                 )
         except (
             ClientConnectionError,
@@ -115,10 +131,6 @@ class SensiboNumber(CoordinatorEntity, NumberEntity):
                 f"Failed to set calibration for device {self.name} to Sensibo servers: {err}"
             ) from err
         LOGGER.debug("Result: %s", result)
-        if result["status"] == "Success":
+        if result["status"] == "success":
             return
-
-        failure = result["failureReason"]
-        raise HomeAssistantError(
-            f"Could not set calibration for device {self.name} due to reason {failure}"
-        )
+        raise HomeAssistantError(f"Could not set calibration for device {self.name}")
