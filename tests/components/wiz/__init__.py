@@ -171,6 +171,11 @@ def _mocked_wizlight(device, extended_white_range, bulb_type) -> wizlight:
     bulb.start_push = AsyncMock(side_effect=_save_setup_callback)
     bulb.async_close = AsyncMock()
     bulb.set_speed = AsyncMock()
+    bulb.diagnostics = {
+        "mocked": "mocked",
+        "roomId": 123,
+        "homeId": 34,
+    }
     bulb.state = FAKE_STATE
     bulb.mac = FAKE_MAC
     bulb.bulbtype = bulb_type or FAKE_DIMMABLE_BULB
