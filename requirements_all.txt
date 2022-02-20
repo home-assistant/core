@@ -175,7 +175,7 @@ aioflo==2021.11.0
 aioftp==0.12.0
 
 # homeassistant.components.github
-aiogithubapi==22.2.0
+aiogithubapi==22.2.3
 
 # homeassistant.components.guardian
 aioguardian==2021.11.0
@@ -839,7 +839,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220214.0
+home-assistant-frontend==20220220.0
 
 # homeassistant.components.zwave
 # homeassistant-pyozw==0.1.10
@@ -1818,7 +1818,7 @@ pysaj==0.0.16
 pysdcp==1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.5
+pysensibo==1.0.6
 
 # homeassistant.components.serial
 # homeassistant.components.zha
@@ -2057,7 +2057,7 @@ pywemo==0.7.0
 pywilight==0.0.70
 
 # homeassistant.components.wiz
-pywizlight==0.5.9
+pywizlight==0.5.10
 
 # homeassistant.components.xeoma
 pyxeoma==1.4.1
