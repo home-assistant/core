@@ -49,6 +49,7 @@ FRITZ_SERVICES = "fritz_services"
 SERVICE_REBOOT = "reboot"
 SERVICE_RECONNECT = "reconnect"
 SERVICE_CLEANUP = "cleanup"
+SERVICE_SET_GUEST_WIFI_PW = "set_guest_wifi_password"
 
 SWITCH_TYPE_DEFLECTION = "CallDeflection"
 SWITCH_TYPE_PORTFORWARD = "PortForward"
@@ -63,3 +64,5 @@ FRITZ_EXCEPTIONS = (
     FritzServiceError,
     FritzLookUpError,
 )
+
+WIFI_STANDARD = {1: "2.4Ghz", 2: "5Ghz", 3: "5Ghz", 4: "Guest"}

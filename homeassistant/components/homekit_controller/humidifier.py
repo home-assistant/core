@@ -8,6 +8,8 @@ from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.humidifier import HumidifierDeviceClass, HumidifierEntity
 from homeassistant.components.humidifier.const import (
+    DEFAULT_MAX_HUMIDITY,
+    DEFAULT_MIN_HUMIDITY,
     MODE_AUTO,
     MODE_NORMAL,
     SUPPORT_MODES,
@@ -123,16 +125,22 @@ class HomeKitHumidifier(HomeKitEntity, HumidifierEntity):
     @property
     def min_humidity(self) -> int:
         """Return the minimum humidity."""
-        return self.service[
-            CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD
-        ].minValue
+        return int(
+            self.service[
+                CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD
+            ].minValue
+            or DEFAULT_MIN_HUMIDITY
+        )
 
     @property
     def max_humidity(self) -> int:
         """Return the maximum humidity."""
-        return self.service[
-            CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD
-        ].maxValue
+        return int(
+            self.service[
+                CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD
+            ].maxValue
+            or DEFAULT_MAX_HUMIDITY
+        )
 
 
 class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
@@ -225,16 +233,22 @@ class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
     @property
     def min_humidity(self) -> int:
         """Return the minimum humidity."""
-        return self.service[
-            CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
-        ].minValue
+        return int(
+            self.service[
+                CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
+            ].minValue
+            or DEFAULT_MIN_HUMIDITY
+        )
 
     @property
     def max_humidity(self) -> int:
         """Return the maximum humidity."""
-        return self.service[
-            CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
-        ].maxValue
+        return int(
+            self.service[
+                CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
+            ].maxValue
+            or DEFAULT_MAX_HUMIDITY
+        )
 
     @property
     def unique_id(self) -> str:

@@ -4,7 +4,8 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
-import pysensibo
+from pysensibo import SensiboClient
+from pysensibo.exceptions import AuthenticationError, SensiboError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
@@ -20,7 +21,7 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the Sensibo coordinator."""
-        self.client = pysensibo.SensiboClient(
+        self.client = SensiboClient(
             entry.data[CONF_API_KEY],
             session=async_get_clientsession(hass),
             timeout=TIMEOUT,
@@ -37,9 +38,10 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
 
         devices = []
         try:
-            for dev in await self.client.async_get_devices():
+            data = await self.client.async_get_devices()
+            for dev in data["result"]:
                 devices.append(dev)
-        except (pysensibo.SensiboError) as error:
+        except (AuthenticationError, SensiboError) as error:
             raise UpdateFailed from error
 
         device_data: dict[str, dict[str, Any]] = {}
@@ -68,11 +70,21 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
             temperatures_list = (
                 current_capabilities["temperatures"]
                 .get(temperature_unit_key, {})
-                .get("values", [0])
+                .get("values", [0, 1])
             )
             if temperatures_list:
                 temperature_step = temperatures_list[1] - temperatures_list[0]
-            features = list(ac_states)
+
+            active_features = list(ac_states)
+            full_features = set()
+            for mode in capabilities["modes"]:
+                if "temperatures" in capabilities["modes"][mode]:
+                    full_features.add("targetTemperature")
+                if "swing" in capabilities["modes"][mode]:
+                    full_features.add("swing")
+                if "fanLevels" in capabilities["modes"][mode]:
+                    full_features.add("fanLevel")
+
             state = hvac_mode if hvac_mode else "off"
 
             fw_ver = dev["firmwareVersion"]
@@ -100,12 +112,14 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 "temp_unit": temperature_unit_key,
                 "temp_list": temperatures_list,
                 "temp_step": temperature_step,
-                "features": features,
+                "active_features": active_features,
+                "full_features": full_features,
                 "state": state,
                 "fw_ver": fw_ver,
                 "fw_type": fw_type,
                 "model": model,
                 "calibration_temp": calibration_temp,
                 "calibration_hum": calibration_hum,
+                "full_capabilities": capabilities,
             }
         return device_data

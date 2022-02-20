@@ -41,6 +41,7 @@ from ..const import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
+    PAYLOAD_NONE,
 )
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
@@ -109,7 +110,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize a MQTT Template light."""
-        self._state = False
+        self._state = None
 
         self._topics = None
         self._templates = None
@@ -173,6 +174,8 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                 self._state = True
             elif state == STATE_OFF:
                 self._state = False
+            elif state == PAYLOAD_NONE:
+                self._state = None
             else:
                 _LOGGER.warning("Invalid state value received")
 
@@ -388,8 +391,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         if ATTR_TRANSITION in kwargs:
             values["transition"] = kwargs[ATTR_TRANSITION]
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topics[CONF_COMMAND_TOPIC],
             self._templates[CONF_COMMAND_ON_TEMPLATE].async_render(
                 parse_result=False, **values
@@ -414,8 +416,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         if ATTR_TRANSITION in kwargs:
             values["transition"] = kwargs[ATTR_TRANSITION]
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topics[CONF_COMMAND_TOPIC],
             self._templates[CONF_COMMAND_OFF_TEMPLATE].async_render(
                 parse_result=False, **values

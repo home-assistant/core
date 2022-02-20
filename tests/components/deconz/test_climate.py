@@ -111,7 +111,7 @@ async def test_simple_climate_device(hass, aioclient_mock, mock_deconz_websocket
     assert climate_thermostat.attributes["current_temperature"] == 21.0
     assert climate_thermostat.attributes["temperature"] == 21.0
     assert climate_thermostat.attributes["locked"] is True
-    assert hass.states.get("sensor.thermostat_battery_level").state == "59"
+    assert hass.states.get("sensor.thermostat_battery").state == "59"
 
     # Event signals thermostat configured off
 
@@ -211,7 +211,7 @@ async def test_climate_device_without_cooling_support(
     assert climate_thermostat.attributes["current_temperature"] == 22.6
     assert climate_thermostat.attributes["temperature"] == 22.0
     assert hass.states.get("sensor.thermostat") is None
-    assert hass.states.get("sensor.thermostat_battery_level").state == "100"
+    assert hass.states.get("sensor.thermostat_battery").state == "100"
     assert hass.states.get("climate.presence_sensor") is None
     assert hass.states.get("climate.clip_thermostat") is None
 
@@ -385,7 +385,7 @@ async def test_climate_device_with_cooling_support(
     ]
     assert climate_thermostat.attributes["current_temperature"] == 23.2
     assert climate_thermostat.attributes["temperature"] == 22.2
-    assert hass.states.get("sensor.zen_01_battery_level").state == "25"
+    assert hass.states.get("sensor.zen_01_battery").state == "25"
 
     # Event signals thermostat state cool
 
@@ -787,4 +787,4 @@ async def test_add_new_climate_device(hass, aioclient_mock, mock_deconz_websocke
 
     assert len(hass.states.async_all()) == 2
     assert hass.states.get("climate.thermostat").state == HVAC_MODE_AUTO
-    assert hass.states.get("sensor.thermostat_battery_level").state == "100"
+    assert hass.states.get("sensor.thermostat_battery").state == "100"

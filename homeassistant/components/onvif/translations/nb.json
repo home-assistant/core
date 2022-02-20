@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "configure": {
+                "data": {
+                    "username": "Brukernavn"
+                }
+            }
+        }
+    }
+}

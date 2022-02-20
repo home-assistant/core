@@ -24,6 +24,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_integration
+from homeassistant.util.network import is_ip_address
 
 from .const import (
     CONF_ALL_UPDATES,
@@ -81,10 +82,10 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         async_start_discovery(self.hass)
         return self.async_abort(reason="discovery_started")
 
-    async def async_step_discovery(
+    async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
-        """Handle discovery."""
+        """Handle integration discovery."""
         self._discovered_device = discovery_info
         mac = _async_unifi_mac_from_hass(discovery_info["hw_addr"])
         await self.async_set_unique_id(mac)
@@ -105,7 +106,11 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     and entry_host != direct_connect_domain
                 ):
                     new_host = direct_connect_domain
-                elif not entry_has_direct_connect and entry_host != source_ip:
+                elif (
+                    not entry_has_direct_connect
+                    and is_ip_address(entry_host)
+                    and entry_host != source_ip
+                ):
                     new_host = source_ip
                 if new_host:
                     self.hass.config_entries.async_update_entry(

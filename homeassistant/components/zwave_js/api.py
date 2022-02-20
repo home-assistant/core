@@ -133,6 +133,7 @@ APPLICATION_VERSION = "application_version"
 MAX_INCLUSION_REQUEST_INTERVAL = "max_inclusion_request_interval"
 UUID = "uuid"
 SUPPORTED_PROTOCOLS = "supported_protocols"
+ADDITIONAL_PROPERTIES = "additional_properties"
 
 FEATURE = "feature"
 UNPROVISION = "unprovision"
@@ -170,6 +171,7 @@ def convert_qr_provisioning_information(info: dict) -> QRProvisioningInformation
         max_inclusion_request_interval=info.get(MAX_INCLUSION_REQUEST_INTERVAL),
         uuid=info.get(UUID),
         supported_protocols=protocols if protocols else None,
+        additional_properties=info.get(ADDITIONAL_PROPERTIES, {}),
     )
     return info
 
@@ -212,6 +214,7 @@ QR_PROVISIONING_INFORMATION_SCHEMA = vol.All(
                 cv.ensure_list,
                 [vol.Coerce(Protocols)],
             ),
+            vol.Optional(ADDITIONAL_PROPERTIES): dict,
         }
     ),
     convert_qr_provisioning_information,
@@ -364,6 +367,7 @@ async def websocket_network_status(
 ) -> None:
     """Get the status of the Z-Wave JS network."""
     controller = client.driver.controller
+    await controller.async_get_state()
     data = {
         "client": {
             "ws_server_url": client.ws_server_url,
@@ -390,6 +394,7 @@ async def websocket_network_status(
             "suc_node_id": controller.suc_node_id,
             "supports_timers": controller.supports_timers,
             "is_heal_network_active": controller.is_heal_network_active,
+            "inclusion_state": controller.inclusion_state,
             "nodes": list(client.driver.controller.nodes),
         },
     }
@@ -459,6 +464,7 @@ async def websocket_node_status(
         "ready": node.ready,
         "zwave_plus_version": node.zwave_plus_version,
         "highest_security_class": node.highest_security_class,
+        "is_controller_node": node.is_controller_node,
     }
     connection.send_result(
         msg[ID],

@@ -84,6 +84,7 @@ async def test_form_zeroconf_wrong_oui(hass):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.8",
+            addresses=["192.168.1.8"],
             hostname="mock_hostname",
             name="Doorstation - abc123._axis-video._tcp.local.",
             port=None,
@@ -103,6 +104,7 @@ async def test_form_zeroconf_link_local_ignored(hass):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="169.254.103.61",
+            addresses=["169.254.103.61"],
             hostname="mock_hostname",
             name="Doorstation - abc123._axis-video._tcp.local.",
             port=None,
@@ -129,6 +131,7 @@ async def test_form_zeroconf_correct_oui(hass):
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
                 host="192.168.1.5",
+                addresses=["192.168.1.5"],
                 hostname="mock_hostname",
                 name="Doorstation - abc123._axis-video._tcp.local.",
                 port=None,
@@ -191,6 +194,7 @@ async def test_form_zeroconf_correct_oui_wrong_device(hass, doorbell_state_side_
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
                 host="192.168.1.5",
+                addresses=["192.168.1.5"],
                 hostname="mock_hostname",
                 name="Doorstation - abc123._axis-video._tcp.local.",
                 port=None,

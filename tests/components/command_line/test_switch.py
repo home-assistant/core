@@ -8,6 +8,8 @@ import tempfile
 from typing import Any
 from unittest.mock import patch
 
+from pytest import LogCaptureFixture
+
 from homeassistant import setup
 from homeassistant.components.switch import DOMAIN, SCAN_INTERVAL
 from homeassistant.const import (
@@ -269,10 +271,13 @@ async def test_name_is_set_correctly(hass: HomeAssistant) -> None:
     )
 
     entity_state = hass.states.get("switch.test")
+    assert entity_state
     assert entity_state.name == "Test friendly name!"
 
 
-async def test_switch_command_state_fail(caplog: Any, hass: HomeAssistant) -> None:
+async def test_switch_command_state_fail(
+    caplog: LogCaptureFixture, hass: HomeAssistant
+) -> None:
     """Test that switch failures are handled correctly."""
     await setup_test_entity(
         hass,
@@ -289,6 +294,7 @@ async def test_switch_command_state_fail(caplog: Any, hass: HomeAssistant) -> No
     await hass.async_block_till_done()
 
     entity_state = hass.states.get("switch.test")
+    assert entity_state
     assert entity_state.state == "on"
 
     await hass.services.async_call(
@@ -300,13 +306,14 @@ async def test_switch_command_state_fail(caplog: Any, hass: HomeAssistant) -> No
     await hass.async_block_till_done()
 
     entity_state = hass.states.get("switch.test")
+    assert entity_state
     assert entity_state.state == "on"
 
     assert "Command failed" in caplog.text
 
 
 async def test_switch_command_state_code_exceptions(
-    caplog: Any, hass: HomeAssistant
+    caplog: LogCaptureFixture, hass: HomeAssistant
 ) -> None:
     """Test that switch state code exceptions are handled correctly."""
 
@@ -339,7 +346,7 @@ async def test_switch_command_state_code_exceptions(
 
 
 async def test_switch_command_state_value_exceptions(
-    caplog: Any, hass: HomeAssistant
+    caplog: LogCaptureFixture, hass: HomeAssistant
 ) -> None:
     """Test that switch state value exceptions are handled correctly."""
 
@@ -372,14 +379,14 @@ async def test_switch_command_state_value_exceptions(
         assert "Error trying to exec command" in caplog.text
 
 
-async def test_no_switches(caplog: Any, hass: HomeAssistant) -> None:
+async def test_no_switches(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
     """Test with no switches."""
 
     await setup_test_entity(hass, {})
     assert "No switches" in caplog.text
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass: HomeAssistant) -> None:
     """Test unique_id option and if it only creates one switch per id."""
     await setup_test_entity(
         hass,

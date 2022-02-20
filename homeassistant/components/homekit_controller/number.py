@@ -9,6 +9,11 @@ from __future__ import annotations
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number.const import (
+    DEFAULT_MAX_VALUE,
+    DEFAULT_MIN_VALUE,
+    DEFAULT_STEP,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
@@ -137,17 +142,17 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
     @property
     def min_value(self) -> float:
         """Return the minimum value."""
-        return self._char.minValue
+        return self._char.minValue or DEFAULT_MIN_VALUE
 
     @property
     def max_value(self) -> float:
         """Return the maximum value."""
-        return self._char.maxValue
+        return self._char.maxValue or DEFAULT_MAX_VALUE
 
     @property
     def step(self) -> float:
         """Return the increment/decrement step."""
-        return self._char.minStep
+        return self._char.minStep or DEFAULT_STEP
 
     @property
     def value(self) -> float:
@@ -181,17 +186,17 @@ class HomeKitEcobeeFanModeNumber(CharacteristicEntity, NumberEntity):
     @property
     def min_value(self) -> float:
         """Return the minimum value."""
-        return self._char.minValue
+        return self._char.minValue or DEFAULT_MIN_VALUE
 
     @property
     def max_value(self) -> float:
         """Return the maximum value."""
-        return self._char.maxValue
+        return self._char.maxValue or DEFAULT_MAX_VALUE
 
     @property
     def step(self) -> float:
         """Return the increment/decrement step."""
-        return self._char.minStep
+        return self._char.minStep or DEFAULT_STEP
 
     @property
     def value(self) -> float:

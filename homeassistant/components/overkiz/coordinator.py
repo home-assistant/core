@@ -9,8 +9,10 @@ from pyoverkiz.client import OverkizClient
 from pyoverkiz.enums import EventName, ExecutionState
 from pyoverkiz.exceptions import (
     BadCredentialsException,
+    InvalidEventListenerIdException,
     MaintenanceException,
     NotAuthenticatedException,
+    TooManyConcurrentRequestsException,
     TooManyRequestsException,
 )
 from pyoverkiz.models import Device, Event, Place
@@ -67,10 +69,14 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             events = await self.client.fetch_events()
         except BadCredentialsException as exception:
             raise ConfigEntryAuthFailed("Invalid authentication.") from exception
+        except TooManyConcurrentRequestsException as exception:
+            raise UpdateFailed("Too many concurrent requests.") from exception
         except TooManyRequestsException as exception:
             raise UpdateFailed("Too many requests, try again later.") from exception
         except MaintenanceException as exception:
             raise UpdateFailed("Server is down for maintenance.") from exception
+        except InvalidEventListenerIdException as exception:
+            raise UpdateFailed(exception) from exception
         except TimeoutError as exception:
             raise UpdateFailed("Failed to connect.") from exception
         except (ServerDisconnectedError, NotAuthenticatedException):
