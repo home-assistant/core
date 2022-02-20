@@ -20,6 +20,8 @@ LEVEL_TYPES = {
     "bass": (-10, 10),
     "treble": (-10, 10),
     "sub_gain": (-15, 15),
+    "surround_volume_tv": (-15, 15),
+    "surround_volume_music": (-15, 15),
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,6 +40,7 @@ async def async_setup_entry(
             if (state := getattr(speaker.soco, level_type, None)) is not None:
                 setattr(speaker, level_type, state)
                 features.append((level_type, valid_range))
+
         return features
 
     async def _async_create_entities(speaker: SonosSpeaker) -> None:

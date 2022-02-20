@@ -8,7 +8,7 @@ import datetime
 from functools import partial
 import logging
 import time
-from typing import Any
+from typing import Any, NamedTuple
 
 import async_timeout
 import defusedxml.ElementTree as ET
@@ -154,7 +154,9 @@ class SonosSpeaker:
         self.sub_enabled: bool | None = None
         self.sub_gain: int | None = None
         self.surround_enabled: bool | None = None
-
+        self.surround_mode: bool | None = None  # surround ambient mode
+        self.surround_level: int | None = None
+        self.music_surround_level: int | None = None
         # Misc features
         self.buttons_enabled: bool | None = None
         self.mic_enabled: bool | None = None
@@ -478,24 +480,67 @@ class SonosSpeaker:
         self.event_stats.process(event)
         variables = event.variables
 
+        _LOGGER.debug("Received volume update: %s", variables)
+
         if "volume" in variables:
             self.volume = int(variables["volume"]["Master"])
 
         if "mute" in variables:
             self.muted = variables["mute"]["Master"] == "1"
 
-        for bool_var in (
-            "dialog_level",
-            "night_mode",
-            "sub_enabled",
-            "surround_enabled",
-        ):
-            if bool_var in variables:
-                setattr(self, bool_var, variables[bool_var] == "1")
+        class Variable(NamedTuple):
+            """Container for mapping sonos notification variable to our local one."""
 
-        for int_var in ("audio_delay", "bass", "treble", "sub_gain"):
-            if int_var in variables:
-                setattr(self, int_var, variables[int_var])
+            sonos_variable: str  # name in notification
+            variable_type: type
+            local_variable: str | None = None  # our local variable name
+
+        variable_list = [
+            # Switch variables
+            Variable(sonos_variable="dialog_level", variable_type=bool),
+            Variable(sonos_variable="night_mode", variable_type=bool),
+            Variable(sonos_variable="sub_enabled", variable_type=bool),
+            Variable(sonos_variable="surround_enabled", variable_type=bool),
+            Variable(
+                sonos_variable="surround_mode",
+                local_variable="surround_ambient_enabled",
+                variable_type=bool,
+            ),
+            # Number entity variables
+            Variable(
+                sonos_variable="surround_level",
+                local_variable="surround_volume_tv",
+                variable_type=int,
+            ),
+            Variable(
+                sonos_variable="music_surround_level",
+                local_variable="surround_volume_music",
+                variable_type=int,
+            ),
+            Variable(sonos_variable="audio_delay", variable_type=int),
+            Variable(sonos_variable="bass", variable_type=int),
+            Variable(sonos_variable="treble", variable_type=int),
+            Variable(sonos_variable="sub_gain", variable_type=int),
+        ]
+
+        variable_map: dict[str, Variable] = {v.sonos_variable: v for v in variable_list}
+
+        for var in variables:
+            info = variable_map.get(var)
+            if info is None:
+                _LOGGER.debug("No definition for %s", var)
+                continue
+
+            # If local_variable is not defined, fall back to sonos one
+            target = info.local_variable or info.sonos_variable
+            variable_type = info.variable_type
+
+            if variable_type == bool:
+                setattr(self, target, variables[info.sonos_variable] == "1")
+            elif variable_type == int:
+                setattr(self, target, variables[info.sonos_variable])
+            else:
+                _LOGGER.warning("Unhandled variable type %s", variable_type)
 
         self.async_write_entity_states()
 

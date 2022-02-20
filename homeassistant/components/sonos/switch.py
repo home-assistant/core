@@ -43,6 +43,7 @@ ATTR_SPEECH_ENHANCEMENT = "dialog_level"
 ATTR_STATUS_LIGHT = "status_light"
 ATTR_SUB_ENABLED = "sub_enabled"
 ATTR_SURROUND_ENABLED = "surround_enabled"
+ATTR_SURROUND_AMBIENT_ENABLED = "surround_ambient_enabled"
 ATTR_TOUCH_CONTROLS = "buttons_enabled"
 
 ALL_FEATURES = (
@@ -52,6 +53,7 @@ ALL_FEATURES = (
     ATTR_SPEECH_ENHANCEMENT,
     ATTR_SUB_ENABLED,
     ATTR_SURROUND_ENABLED,
+    ATTR_SURROUND_AMBIENT_ENABLED,
     ATTR_STATUS_LIGHT,
 )
 
@@ -69,6 +71,7 @@ FRIENDLY_NAMES = {
     ATTR_STATUS_LIGHT: "Status Light",
     ATTR_SUB_ENABLED: "Subwoofer Enabled",
     ATTR_SURROUND_ENABLED: "Surround Enabled",
+    ATTR_SURROUND_AMBIENT_ENABLED: "Surround Ambient Mode",
     ATTR_TOUCH_CONTROLS: "Touch Controls",
 }
 
@@ -79,6 +82,7 @@ FEATURE_ICONS = {
     ATTR_STATUS_LIGHT: "mdi:led-on",
     ATTR_SUB_ENABLED: "mdi:dog",
     ATTR_SURROUND_ENABLED: "mdi:surround-sound",
+    ATTR_SURROUND_AMBIENT_ENABLED: "mdi:surround-sound",
     ATTR_TOUCH_CONTROLS: "mdi:gesture-tap",
 }
 
