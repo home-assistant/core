@@ -119,14 +119,10 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
     elif state.domain == "cover":
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
-        if (
-            device_class
-            in (
-                cover.CoverDeviceClass.GARAGE,
-                cover.CoverDeviceClass.GATE,
-            )
-            and features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE)
-        ):
+        if device_class in (
+            cover.CoverDeviceClass.GARAGE,
+            cover.CoverDeviceClass.GATE,
+        ) and features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE):
             a_type = "GarageDoorOpener"
         elif (
             device_class == cover.CoverDeviceClass.WINDOW

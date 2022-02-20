@@ -26,6 +26,7 @@ from homeassistant.const import (
 )
 
 from tests.common import MockConfigEntry
+from tests.components.google_travel_time.const import MOCK_CONFIG
 
 
 async def test_minimum_fields(hass, validate_config_entry, bypass_setup):
@@ -38,11 +39,7 @@ async def test_minimum_fields(hass, validate_config_entry, bypass_setup):
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_API_KEY: "api_key",
-            CONF_ORIGIN: "location1",
-            CONF_DESTINATION: "location2",
-        },
+        MOCK_CONFIG,
     )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -64,11 +61,7 @@ async def test_invalid_config_entry(hass, invalidate_config_entry):
     assert result["errors"] == {}
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_API_KEY: "api_key",
-            CONF_ORIGIN: "location1",
-            CONF_DESTINATION: "location2",
-        },
+        MOCK_CONFIG,
     )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -79,11 +72,7 @@ async def test_options_flow(hass, validate_config_entry, bypass_update):
     """Test options flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_API_KEY: "api_key",
-            CONF_ORIGIN: "location1",
-            CONF_DESTINATION: "location2",
-        },
+        data=MOCK_CONFIG,
         options={
             CONF_MODE: "driving",
             CONF_ARRIVAL_TIME: "test",
@@ -142,11 +131,7 @@ async def test_options_flow_departure_time(hass, validate_config_entry, bypass_u
     """Test options flow wiith departure time."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_API_KEY: "api_key",
-            CONF_ORIGIN: "location1",
-            CONF_DESTINATION: "location2",
-        },
+        data=MOCK_CONFIG,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)

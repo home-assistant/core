@@ -12,14 +12,18 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import PLATFORMS, subscription
+from . import subscription
 from .. import mqtt
-from .const import CONF_QOS, CONF_TOPIC, DOMAIN
+from .const import CONF_QOS, CONF_TOPIC
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+    async_setup_platform_helper,
+)
 
 DEFAULT_NAME = "MQTT Camera"
 
@@ -49,8 +53,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up MQTT camera through configuration.yaml."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(hass, async_add_entities, config)
+    await async_setup_platform_helper(
+        hass, camera.DOMAIN, config, async_add_entities, _async_setup_entity
+    )
 
 
 async def async_setup_entry(

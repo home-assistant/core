@@ -158,7 +158,8 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         self.hass = hass
         self.host = host
         self.mesh_role = MeshRoles.NONE
-        self.device_is_router: bool = True
+        self.device_conn_type: str | None = None
+        self.device_is_router: bool = False
         self.password = password
         self.port = port
         self.username = username
@@ -217,7 +218,15 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         self._current_firmware = info.get("NewSoftwareVersion")
 
         self._update_available, self._latest_firmware = self._update_device_info()
-        self.device_is_router = "WANIPConn1" in self.connection.services
+        if "Layer3Forwarding1" in self.connection.services:
+            if connection_type := self.connection.call_action(
+                "Layer3Forwarding1", "GetDefaultConnectionService"
+            ).get("NewDefaultConnectionService"):
+                # Return NewDefaultConnectionService sample: "1.WANPPPConnection.1"
+                self.device_conn_type = connection_type[2:][:-2]
+                self.device_is_router = self.connection.call_action(
+                    self.device_conn_type, "GetInfo"
+                ).get("NewEnable")
 
     @callback
     async def _async_update_data(self) -> None:
@@ -322,11 +331,20 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         _LOGGER.debug("Checking host info for FRITZ!Box device %s", self.host)
         self._update_available, self._latest_firmware = self._update_device_info()
 
-        try:
-            topology = self.fritz_hosts.get_mesh_topology()
-        except FritzActionError:
-            self.mesh_role = MeshRoles.SLAVE
-            return
+        topology: dict = {}
+        if (
+            "Hosts1" not in self.connection.services
+            or "X_AVM-DE_GetMeshListPath"
+            not in self.connection.services["Hosts1"].actions
+        ):
+            self.mesh_role = MeshRoles.NONE
+        else:
+            try:
+                topology = self.fritz_hosts.get_mesh_topology()
+            except FritzActionError:
+                self.mesh_role = MeshRoles.SLAVE
+                # Avoid duplicating device trackers
+                return
 
         _LOGGER.debug("Checking devices for FRITZ!Box device %s", self.host)
         _default_consider_home = DEFAULT_CONSIDER_HOME.total_seconds()
@@ -355,7 +373,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
 
         mesh_intf = {}
         # first get all meshed devices
-        for node in topology["nodes"]:
+        for node in topology.get("nodes", []):
             if not node["is_meshed"]:
                 continue
 
@@ -372,7 +390,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                     self.mesh_role = MeshRoles(node["mesh_role"])
 
         # second get all client devices
-        for node in topology["nodes"]:
+        for node in topology.get("nodes", []):
             if node["is_meshed"]:
                 continue
 
@@ -586,13 +604,6 @@ class AvmWrapper(FritzBoxTools):
             )
         return {}
 
-    async def async_get_wan_dsl_interface_config(self) -> dict[str, Any]:
-        """Call WANDSLInterfaceConfig service."""
-
-        return await self.hass.async_add_executor_job(
-            partial(self.get_wan_dsl_interface_config)
-        )
-
     async def async_get_wan_link_properties(self) -> dict[str, Any]:
         """Call WANCommonInterfaceConfig service."""
 
@@ -696,11 +707,6 @@ class AvmWrapper(FritzBoxTools):
         """Call WLANConfiguration service."""
 
         return self._service_call_action("WLANConfiguration", str(index), "GetInfo")
-
-    def get_wan_dsl_interface_config(self) -> dict[str, Any]:
-        """Call WANDSLInterfaceConfig service."""
-
-        return self._service_call_action("WANDSLInterfaceConfig", "1", "GetInfo")
 
     def get_wan_link_properties(self) -> dict[str, Any]:
         """Call WANCommonInterfaceConfig service."""

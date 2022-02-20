@@ -158,6 +158,7 @@ async def test_zeroconf_sonos_v1(hass: core.HomeAssistant):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.107",
+            addresses=["192.168.1.107"],
             port=1443,
             hostname="sonos5CAAFDE47AC8.local.",
             type="_sonos._tcp.local.",

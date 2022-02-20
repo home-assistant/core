@@ -118,7 +118,7 @@ BASE_COMPONENT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_ADDRESS): cv.positive_int,
-        vol.Optional(CONF_SLAVE): cv.positive_int,
+        vol.Optional(CONF_SLAVE, default=0): cv.positive_int,
         vol.Optional(
             CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
         ): cv.positive_int,
@@ -139,9 +139,11 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_COUNT): cv.positive_int,
         vol.Optional(CONF_DATA_TYPE, default=DataType.INT): vol.In(
             [
+                DataType.INT8,
                 DataType.INT16,
                 DataType.INT32,
                 DataType.INT64,
+                DataType.UINT8,
                 DataType.UINT16,
                 DataType.UINT32,
                 DataType.UINT64,

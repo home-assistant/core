@@ -220,7 +220,15 @@ async def test_node_status_sensor_not_ready(
     assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
 
     # Mark node as ready
-    event = Event("ready", {"nodeState": lock_id_lock_as_id150_state})
+    event = Event(
+        "ready",
+        {
+            "source": "node",
+            "event": "ready",
+            "nodeId": node.node_id,
+            "nodeState": lock_id_lock_as_id150_state,
+        },
+    )
     node.receive_event(event)
     assert node.ready
     assert hass.states.get(NODE_STATUS_ENTITY)

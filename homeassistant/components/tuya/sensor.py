@@ -295,6 +295,9 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
+    # Door and Window Controller
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r5zjsy9
+    "mc": BATTERY_SENSORS,
     # Door Window Sensor
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
     "mcs": BATTERY_SENSORS,
@@ -740,6 +743,34 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Last Operation Duration",
             entity_category=EntityCategory.DIAGNOSTIC,
             icon="mdi:progress-clock",
+        ),
+    ),
+    # Humidifier
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48qwjz0i3
+    "jsq": (
+        TuyaSensorEntityDescription(
+            key=DPCode.HUMIDITY_CURRENT,
+            name="Humidity",
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            name="Temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT_F,
+            name="Temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.LEVEL_CURRENT,
+            name="Water Level",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            icon="mdi:waves-arrow-up",
         ),
     ),
     # Air Purifier

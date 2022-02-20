@@ -55,7 +55,7 @@ class MultiFactorAuthModule:
     @property
     def type(self) -> str:
         """Return type of the module."""
-        return self.config[CONF_TYPE]  # type: ignore
+        return self.config[CONF_TYPE]  # type: ignore[no-any-return]
 
     @property
     def name(self) -> str:
@@ -142,7 +142,7 @@ async def auth_mfa_module_from_config(
         )
         raise
 
-    return MULTI_FACTOR_AUTH_MODULES[module_name](hass, config)  # type: ignore
+    return MULTI_FACTOR_AUTH_MODULES[module_name](hass, config)  # type: ignore[no-any-return]
 
 
 async def _load_mfa_module(hass: HomeAssistant, module_name: str) -> types.ModuleType:

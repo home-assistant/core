@@ -15,7 +15,6 @@ from .const import (
     SERVICE_SHUTDOWN,
     SERVICES,
     SYNO_API,
-    SYSTEM_LOADED,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -46,8 +45,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             return
 
         if call.service in [SERVICE_REBOOT, SERVICE_SHUTDOWN]:
-            dsm_device = hass.data[DOMAIN].get(serial)
-            if not dsm_device:
+            if not (dsm_device := hass.data[DOMAIN].get(serial)):
                 LOGGER.error("DSM with specified serial %s not found", serial)
                 return
             LOGGER.debug("%s DSM with serial %s", call.service, serial)
@@ -57,7 +55,6 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             )
             dsm_api: SynoApi = dsm_device[SYNO_API]
             try:
-                dsm_device[SYSTEM_LOADED] = False
                 await getattr(dsm_api, f"async_{call.service}")()
             except SynologyDSMException as ex:
                 LOGGER.error(

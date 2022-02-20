@@ -485,7 +485,7 @@ async def async_get_all_descriptions(
             # Cache missing descriptions
             if description is None:
                 domain_yaml = loaded[domain]
-                yaml_description = domain_yaml.get(service, {})  # type: ignore
+                yaml_description = domain_yaml.get(service, {})  # type: ignore[union-attr]
 
                 # Don't warn for missing services, because it triggers false
                 # positives for things like scripts, that register as a service
@@ -696,7 +696,7 @@ async def _handle_entity_call(
     entity.async_set_context(context)
 
     if isinstance(func, str):
-        result = hass.async_run_job(partial(getattr(entity, func), **data))  # type: ignore
+        result = hass.async_run_job(partial(getattr(entity, func), **data))  # type: ignore[arg-type]
     else:
         result = hass.async_run_job(func, entity, data)
 

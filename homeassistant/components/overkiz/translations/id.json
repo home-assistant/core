@@ -12,6 +12,7 @@
             "too_many_requests": "Terlalu banyak permintaan, coba lagi nanti.",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
+        "flow_title": "Gateway: {gateway_id}",
         "step": {
             "user": {
                 "data": {

@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Le compte est d\u00e9j\u00e0 configur\u00e9"
+            "already_configured": "Le compte est d\u00e9j\u00e0 configur\u00e9",
+            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi",
+            "reauth_wrong_account": "Vous ne pouvez r\u00e9authentifier cette entr\u00e9e qu'avec le m\u00eame compte et hub Overkiz"
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
@@ -10,6 +12,7 @@
             "too_many_requests": "Trop de demandes, r\u00e9essayez plus tard.",
             "unknown": "Erreur inattendue"
         },
+        "flow_title": "Passerelle : {gateway_id}",
         "step": {
             "user": {
                 "data": {

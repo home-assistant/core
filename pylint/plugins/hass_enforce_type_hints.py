@@ -10,7 +10,8 @@ from pylint.interfaces import IAstroidChecker
 from pylint.lint import PyLinter
 
 from homeassistant.const import Platform
-from homeassistant.helpers.typing import UNDEFINED
+
+UNDEFINED = object()
 
 
 @dataclass
@@ -43,6 +44,8 @@ _MODULE_FILTERS: dict[str, re.Pattern] = {
     "device_tracker": re.compile(r"^homeassistant\.components\.\w+\.(device_tracker)$"),
     # diagnostics matches only in the package root (diagnostics.py)
     "diagnostics": re.compile(r"^homeassistant\.components\.\w+\.(diagnostics)$"),
+    # config_flow matches only in the package root (config_flow.py)
+    "config_flow": re.compile(r"^homeassistant\.components\.\w+\.(config_flow)$")
 }
 
 _METHOD_MATCH: list[TypeHintMatch] = [
@@ -190,6 +193,14 @@ _METHOD_MATCH: list[TypeHintMatch] = [
             2: "DeviceEntry",
         },
         return_type=UNDEFINED,
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["config_flow"],
+        function_name="_async_has_devices",
+        arg_types={
+            0: "HomeAssistant",
+        },
+        return_type="bool",
     ),
 ]
 

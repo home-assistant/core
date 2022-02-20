@@ -38,7 +38,6 @@ async def test_form(hass: HomeAssistant) -> None:
             {
                 "username": "test-username",
                 "password": "test-password",
-                "name": "Yale Smart Alarm",
                 "area_id": "1",
             },
         )
@@ -81,7 +80,6 @@ async def test_form_invalid_auth(
             {
                 "username": "test-username",
                 "password": "test-password",
-                "name": "Yale Smart Alarm",
                 "area_id": "1",
             },
         )
@@ -101,7 +99,6 @@ async def test_form_invalid_auth(
             {
                 "username": "test-username",
                 "password": "test-password",
-                "name": "Yale Smart Alarm",
                 "area_id": "1",
             },
         )
@@ -124,7 +121,6 @@ async def test_form_invalid_auth(
             {
                 "username": "test-username",
                 "password": "test-password",
-                "name": "Yale Smart Alarm",
                 "area_id": "1",
             },
             {
