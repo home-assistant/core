@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LOGGER, SENSIBOERRORS, TIMEOUT
+from .const import DOMAIN, LOGGER, SENSIBO_ERRORS, TIMEOUT
 from .coordinator import SensiboDataUpdateCoordinator
 
 
@@ -118,7 +118,7 @@ class SensiboNumber(CoordinatorEntity, NumberEntity):
                     self._device_id,
                     data,
                 )
-        except SENSIBOERRORS as err:
+        except SENSIBO_ERRORS as err:
             raise HomeAssistantError(
                 f"Failed to set calibration for device {self.name} to Sensibo servers: {err}"
             ) from err

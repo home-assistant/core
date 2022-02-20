@@ -17,7 +17,7 @@ ALL = ["all"]
 DEFAULT_NAME = "Sensibo"
 TIMEOUT = 8
 
-SENSIBOERRORS = (
+SENSIBO_ERRORS = (
     ClientConnectionError,
     asyncio.TimeoutError,
     AuthenticationError,
