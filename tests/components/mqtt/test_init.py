@@ -1172,7 +1172,7 @@ async def test_publish_error(hass, caplog):
 
 
 async def test_handle_message_callback(hass, caplog, mqtt_mock, mqtt_client_mock):
-    """Test for handling an incoming message callback."""
+    """Test for handling an incoming message callback via _mqtt_on_message."""
     msg = ReceiveMessage("some-topic", b"test-payload", 0, False)
     mqtt_mock().connected = True
     await mqtt.async_subscribe(hass, "some-topic", lambda *args: 0)
@@ -2343,12 +2343,13 @@ async def test_subscribe_connection_status(hass, mqtt_mock, mqtt_client_mock):
     await hass.async_block_till_done()
 
     # Mock connection status
-    mqtt_mock._mqtt_on_connect(None, None, 0, 0)
+    # mqtt_mock._mqtt_on_connect(None, None, 0, 0)
+    mqtt_client_mock.on_connect(None, None, 0, 0)
     await hass.async_block_till_done()
     assert mqtt.is_connected(hass) is True
 
     # Mock disconnect status
-    mqtt_mock._mqtt_on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0)
     await hass.async_block_till_done()
 
     # Unsubscribe
