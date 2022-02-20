@@ -11,11 +11,14 @@ MANUFACTURER = "HomeWizard"
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
 # Platform config.
-CONF_SERIAL: Final = "serial"
+CONF_API_ENABLED: Final = "api_enabled"
+CONF_DATA: Final = "data"
+CONF_DEVICE: Final = "device"
+CONF_PATH: Final = "path"
 CONF_PRODUCT_NAME: Final = "product_name"
 CONF_PRODUCT_TYPE: Final = "product_type"
-CONF_DEVICE: Final = "device"
-CONF_DATA: Final = "data"
+CONF_SERIAL: Final = "serial"
+
 
 # Services
 SERVICE_DEVICE: Final = "device"
