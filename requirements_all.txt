@@ -125,7 +125,7 @@ aioaseko==0.0.2
 aioasuswrt==1.4.0
 
 # homeassistant.components.azure_devops
-aioazuredevops==1.4.1
+aioazuredevops==1.4.2
 
 # homeassistant.components.baf
 aiobafi6==0.6.0
