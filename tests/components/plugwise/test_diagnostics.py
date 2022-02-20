@@ -20,12 +20,10 @@ async def test_diagnostics(
         hass, hass_client, init_integration
     ) == {
         "gateway": {
-            "active_device": True,
-            "cooling_present": False,
+            "smile_name": "Adam",
             "gateway_id": "fe799307f1624099878210aa0b9f1475",
             "heater_id": "90986d591dcd426cae3ec3e8111ff730",
-            "single_master_thermostat": False,
-            "smile_name": "Adam",
+            "cooling_present": False,
             "notifications": {
                 "af82e4ccf9c548528166d38e560662a4": {
                     "warning": "Node Plug (with MAC address 000D6F000D13CB01, in room 'n.a.') has been unreachable since 23:03 2020-01-18. Please check the connection and restart the device."
@@ -221,8 +219,7 @@ async def test_diagnostics(
                 "lower_bound": 10,
                 "upper_bound": 90,
                 "resolution": 1,
-                "cooling_active": False,
-                "heating_state": True,
+                "binary_sensors": {"heating_state": True},
                 "sensors": {
                     "water_temperature": 70.0,
                     "intended_boiler_temperature": 70.0,
