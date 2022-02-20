@@ -564,7 +564,7 @@ homematicip==1.0.2
 homepluscontrol==0.0.5
 
 # homeassistant.components.homewizard
-homewizard_energy==0.2.0
+homewizard_energy==1.0.0
 
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk
