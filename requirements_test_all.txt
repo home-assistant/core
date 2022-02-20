@@ -1205,6 +1205,9 @@ python-ecobee-api==0.2.14
 # homeassistant.components.darksky
 python-forecastio==1.4.0
 
+# homeassistant.components.homewizard
+python-homewizard-energy==1.0.0
+
 # homeassistant.components.izone
 python-izone==1.2.3
 
@@ -1240,9 +1243,6 @@ python-twitch-client==0.6.0
 
 # homeassistant.components.awair
 python_awair==0.2.1
-
-# homeassistant.components.homewizard
-python_homewizard-energy==1.0.0
 
 # homeassistant.components.tile
 pytile==2022.02.0

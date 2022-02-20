@@ -1926,6 +1926,9 @@ python-gc100==1.0.3a0
 # homeassistant.components.gitlab_ci
 python-gitlab==1.6.0
 
+# homeassistant.components.homewizard
+python-homewizard-energy==1.0.0
+
 # homeassistant.components.hp_ilo
 python-hpilo==4.3
 
@@ -1991,9 +1994,6 @@ python-vlc==1.1.2
 
 # homeassistant.components.awair
 python_awair==0.2.1
-
-# homeassistant.components.homewizard
-python_homewizard-energy==1.0.0
 
 # homeassistant.components.swiss_public_transport
 python_opendata_transport==0.3.0
