@@ -34,7 +34,6 @@ class BaseEntityDescription(SensorEntityDescription):
     """Describes GitHub sensor entity default overrides."""
 
     icon: str = "mdi:github"
-    entity_registry_enabled_default: bool = False
     attr_fn: Callable[[dict[str, Any]], Mapping[str, Any] | None] = lambda data: None
     avabl_fn: Callable[[dict[str, Any]], bool] = lambda data: True
 
@@ -100,7 +99,6 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
     GitHubSensorEntityDescription(
         key="latest_release",
         name="Latest Release",
-        entity_registry_enabled_default=True,
         avabl_fn=lambda data: data["release"] is not None,
         value_fn=lambda data: data["release"]["name"][:255],
         attr_fn=lambda data: {
