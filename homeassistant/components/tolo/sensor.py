@@ -1,8 +1,13 @@
 """TOLO Sauna (non-binary, general) sensors."""
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from tololib.message_info import StatusInfo
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -15,6 +20,42 @@ from . import ToloSaunaCoordinatorEntity, ToloSaunaUpdateCoordinator
 from .const import DOMAIN
 
 
+@dataclass
+class ToloSensorEntityDescriptionBase:
+    """Required values when describing TOLO Sensor entities."""
+
+    getter: Callable[[StatusInfo], int]
+
+
+@dataclass
+class ToloSensorEntityDescription(
+    SensorEntityDescription, ToloSensorEntityDescriptionBase
+):
+    """Class describing TOLO Sensor entities."""
+
+
+SENSORS = (
+    ToloSensorEntityDescription(
+        key="water_level",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:waves-arrow-up",
+        name="Water Level",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        getter=lambda s: s.water_level_percent,
+    ),
+    ToloSensorEntityDescription(
+        key="tank_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        name="Tank Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        getter=lambda s: s.tank_temperature,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -23,54 +64,27 @@ async def async_setup_entry(
     """Set up (non-binary, general) sensors for TOLO Sauna."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            ToloWaterLevelSensor(coordinator, entry),
-            ToloTankTemperatureSensor(coordinator, entry),
-        ]
+        ToloSensorEntity(coordinator, entry, description) for description in SENSORS
     )
 
 
-class ToloWaterLevelSensor(ToloSaunaCoordinatorEntity, SensorEntity):
-    """Sensor for tank water level."""
+class ToloSensorEntity(ToloSaunaCoordinatorEntity, SensorEntity):
+    """TOLO Number entity."""
 
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_name = "Water Level"
-    _attr_icon = "mdi:waves-arrow-up"
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = PERCENTAGE
+    entity_description: ToloSensorEntityDescription
 
     def __init__(
-        self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry
+        self,
+        coordinator: ToloSaunaUpdateCoordinator,
+        entry: ConfigEntry,
+        entity_description: ToloSensorEntityDescription,
     ) -> None:
-        """Initialize TOLO Sauna tank water level sensor entity."""
+        """Initialize TOLO Number entity."""
         super().__init__(coordinator, entry)
-
-        self._attr_unique_id = f"{entry.entry_id}_water_level"
+        self.entity_description = entity_description
+        self._attr_unique_id = f"{entry.entry_id}_{entity_description.key}"
 
     @property
     def native_value(self) -> int:
-        """Return current tank water level."""
-        return self.coordinator.data.status.water_level_percent
-
-
-class ToloTankTemperatureSensor(ToloSaunaCoordinatorEntity, SensorEntity):
-    """Sensor for tank temperature."""
-
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_name = "Tank Temperature"
-    _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
-
-    def __init__(
-        self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry
-    ) -> None:
-        """Initialize TOLO Sauna tank temperature sensor entity."""
-        super().__init__(coordinator, entry)
-
-        self._attr_unique_id = f"{entry.entry_id}_tank_temperature"
-
-    @property
-    def native_value(self) -> int:
-        """Return current tank temperature."""
-        return self.coordinator.data.status.tank_temperature
+        """Return native value of the TOLO sensor."""
+        return self.entity_description.getter(self.coordinator.data.status)
