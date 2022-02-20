@@ -7,10 +7,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_ENDPOINT, CONF_URL, CONF_UUID, DOMAIN
+from .const import CONF_ENDPOINT, DOMAIN
 
 SONGPAL_CONFIG_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_NAME): cv.string, vol.Required(CONF_ENDPOINT): cv.string, vol.Optional(CONF_URL): cv.string, vol.Optional(CONF_UUID): cv.string}
+    {vol.Optional(CONF_NAME): cv.string, vol.Required(CONF_ENDPOINT): cv.string}
 )
 
 CONFIG_SCHEMA = vol.Schema(
