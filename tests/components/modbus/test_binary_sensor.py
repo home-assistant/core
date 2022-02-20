@@ -243,6 +243,7 @@ TEST_NAME = "test_sensor"
 async def test_config_slave_binary_sensor(hass, mock_modbus):
     """Run config test for binary sensor."""
     assert SENSOR_DOMAIN in hass.config.components
+
     for addon in ["", "_1", "_2", "_3"]:
         entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}{addon}"
         assert hass.states.get(entity_id) is not None
@@ -312,6 +313,7 @@ async def test_config_slave_binary_sensor(hass, mock_modbus):
 async def test_slave_binary_sensor(hass, expected, slaves, mock_do_cycle):
     """Run test for given config."""
     assert hass.states.get(ENTITY_ID).state == expected
+
     for i in range(8):
         entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}_{i+1}"
         assert hass.states.get(entity_id).state == slaves[i]
