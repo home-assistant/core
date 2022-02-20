@@ -45,6 +45,14 @@ class GitHubSensorEntityDescription(BaseEntityDescription, BaseEntityDescription
 
 SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
     GitHubSensorEntityDescription(
+        key="discussions_count",
+        name="Discussions",
+        native_unit_of_measurement="Discussions",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data["discussion"]["total"],
+    ),
+    GitHubSensorEntityDescription(
         key="stargazers_count",
         name="Stars",
         icon="mdi:star",
@@ -94,6 +102,16 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
         attr_fn=lambda data: {
             "sha": data["default_branch_ref"]["commit"]["sha"],
             "url": data["default_branch_ref"]["commit"]["url"],
+        },
+    ),
+    GitHubSensorEntityDescription(
+        key="latest_discussion",
+        name="Latest Discussion",
+        avabl_fn=lambda data: data["discussion"]["discussions"],
+        value_fn=lambda data: data["discussion"]["discussions"][0]["title"][:255],
+        attr_fn=lambda data: {
+            "url": data["discussion"]["discussions"][0]["url"],
+            "number": data["discussion"]["discussions"][0]["number"],
         },
     ),
     GitHubSensorEntityDescription(

@@ -39,6 +39,17 @@ query ($owner: String!, $repository: String!) {
     watchers(first: 1) {
       total: totalCount
     }
+    discussion: discussions(
+      first: 1
+      orderBy: {field: CREATED_AT, direction: DESC}
+    ) {
+      total: totalCount
+      discussions: nodes {
+        title
+        url
+        number
+      }
+    }
     issue: issues(
       first: 1
       states: OPEN
