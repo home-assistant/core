@@ -850,9 +850,6 @@ homematicip==1.0.2
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5
 
-# homeassistant.components.homewizard
-homewizard_energy==1.0.0
-
 # homeassistant.components.horizon
 horimote==0.4.1
 
@@ -1994,6 +1991,9 @@ python-vlc==1.1.2
 
 # homeassistant.components.awair
 python_awair==0.2.1
+
+# homeassistant.components.homewizard
+python_homewizard-energy==1.0.0
 
 # homeassistant.components.swiss_public_transport
 python_opendata_transport==0.3.0

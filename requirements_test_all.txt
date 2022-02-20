@@ -563,9 +563,6 @@ homematicip==1.0.2
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5
 
-# homeassistant.components.homewizard
-homewizard_energy==1.0.0
-
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk
 httplib2==0.19.0
@@ -1243,6 +1240,9 @@ python-twitch-client==0.6.0
 
 # homeassistant.components.awair
 python_awair==0.2.1
+
+# homeassistant.components.homewizard
+python_homewizard-energy==1.0.0
 
 # homeassistant.components.tile
 pytile==2022.02.0
