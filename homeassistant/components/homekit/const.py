@@ -13,6 +13,7 @@ HOMEKIT = "homekit"
 SHUTDOWN_TIMEOUT = 30
 CONF_ENTRY_INDEX = "index"
 PERSIST_LOCK = "persist_lock"
+CURRENT_HVAC_AUTO_BYPASS = "autoBypass"
 
 # ### Codecs ####
 VIDEO_CODEC_COPY = "copy"
