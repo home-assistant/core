@@ -95,6 +95,7 @@ FLOWS = [
     "ezviz",
     "faa_delays",
     "fireservicerota",
+    "fivem",
     "fjaraskupan",
     "flick_electric",
     "flipr",
@@ -195,9 +196,11 @@ FLOWS = [
     "mikrotik",
     "mill",
     "minecraft_server",
+    "mjpeg",
     "mobile_app",
     "modem_callerid",
     "modern_forms",
+    "moehlenhoff_alpha2",
     "monoprice",
     "motion_blinds",
     "motioneye",
@@ -254,6 +257,7 @@ FLOWS = [
     "progettihwsw",
     "prosegur",
     "ps4",
+    "pure_energie",
     "pvoutput",
     "pvpc_hourly_pricing",
     "rachio",
@@ -284,6 +288,7 @@ FLOWS = [
     "shopping_list",
     "sia",
     "simplisafe",
+    "sleepiq",
     "sma",
     "smappee",
     "smart_meter_texas",
@@ -378,5 +383,6 @@ FLOWS = [
     "zerproc",
     "zha",
     "zwave",
-    "zwave_js"
+    "zwave_js",
+    "zwave_me"
 ]

@@ -31,7 +31,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
@@ -300,12 +300,12 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity):
                 self._to_render_simple.append(key)
                 self._parse_result.add(key)
 
-        self._delay_cancel = None
+        self._delay_cancel: CALLBACK_TYPE | None = None
         self._auto_off_cancel = None
-        self._state = None
+        self._state: bool | None = None
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return state of the sensor."""
         return self._state
 

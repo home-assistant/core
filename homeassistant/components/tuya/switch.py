@@ -290,6 +290,15 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             device_class=SwitchDeviceClass.OUTLET,
         ),
     ),
+    # Unknown product with switch capabilities
+    # Fond in some diffusers, plugs and PIR flood lights
+    # Not documented
+    "qjdcz": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            name="Switch",
+        ),
+    ),
     # Heater
     # https://developer.tuya.com/en/docs/iot/categoryqn?id=Kaiuz18kih0sm
     "qn": (
@@ -555,6 +564,28 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.OPPOSITE,
             name="Reverse",
             icon="mdi:swap-horizontal",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Humidifier
+    # https://developer.tuya.com/en/docs/iot/categoryjsq?id=Kaiuz1smr440b
+    "jsq": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_SOUND,
+            name="Voice",
+            icon="mdi:account-voice",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SLEEP,
+            name="Sleep",
+            icon="mdi:power-sleep",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.STERILIZATION,
+            name="Sterilization",
+            icon="mdi:minus-circle-outline",
             entity_category=EntityCategory.CONFIG,
         ),
     ),

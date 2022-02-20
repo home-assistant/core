@@ -7,6 +7,8 @@ import logging
 
 from pysiaalarm import SIAEvent
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PORT
 from homeassistant.core import CALLBACK_TYPE, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
@@ -14,8 +16,20 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 
-from .const import AVAILABILITY_EVENT_CODE, DOMAIN, SIA_EVENT, SIA_HUB_ZONE
-from .utils import get_attr_from_sia_event, get_unavailability_interval
+from .const import (
+    AVAILABILITY_EVENT_CODE,
+    CONF_ACCOUNT,
+    CONF_ACCOUNTS,
+    CONF_PING_INTERVAL,
+    DOMAIN,
+    SIA_EVENT,
+    SIA_HUB_ZONE,
+)
+from .utils import (
+    get_attr_from_sia_event,
+    get_unavailability_interval,
+    get_unique_id_and_name,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,29 +53,32 @@ class SIABaseEntity(RestoreEntity):
 
     def __init__(
         self,
-        port: int,
+        entry: ConfigEntry,
         account: str,
-        zone: int | None,
-        ping_interval: int,
+        zone: int,
         entity_description: SIAEntityDescription,
-        unique_id: str,
-        name: str,
     ) -> None:
         """Create SIABaseEntity object."""
-        self.port = port
+        self.port = entry.data[CONF_PORT]
         self.account = account
         self.zone = zone
-        self.ping_interval = ping_interval
         self.entity_description = entity_description
-        self._attr_unique_id = unique_id
-        self._attr_name = name
+
+        self.ping_interval: int = next(
+            acc[CONF_PING_INTERVAL]
+            for acc in entry.data[CONF_ACCOUNTS]
+            if acc[CONF_ACCOUNT] == account
+        )
+        self._attr_unique_id, self._attr_name = get_unique_id_and_name(
+            entry.entry_id, entry.data[CONF_PORT], account, zone, entity_description.key
+        )
         self._attr_device_info = DeviceInfo(
-            name=name,
-            identifiers={(DOMAIN, unique_id)},
-            via_device=(DOMAIN, f"{port}_{account}"),
+            name=self._attr_name,
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            via_device=(DOMAIN, f"{entry.data[CONF_PORT]}_{account}"),
         )
 
-        self._cancel_availability_cb: CALLBACK_TYPE | None = None
+        self._post_interval_update_cb_canceller: CALLBACK_TYPE | None = None
         self._attr_extra_state_attributes = {}
         self._attr_should_poll = False
 
@@ -83,7 +100,7 @@ class SIABaseEntity(RestoreEntity):
         )
         self.handle_last_state(await self.async_get_last_state())
         if self._attr_available:
-            self.async_create_availability_cb()
+            self.async_create_post_interval_update_cb()
 
     @abstractmethod
     def handle_last_state(self, last_state: State | None) -> None:
@@ -94,43 +111,57 @@ class SIABaseEntity(RestoreEntity):
 
         Overridden from Entity.
         """
-        if self._cancel_availability_cb:
-            self._cancel_availability_cb()
+        self._cancel_post_interval_update_cb()
 
     @callback
     def async_handle_event(self, sia_event: SIAEvent) -> None:
-        """Listen to dispatcher events for this port and account and update state and attributes."""
+        """Listen to dispatcher events for this port and account and update state and attributes.
+
+        If the event is for either the zone or the 0 zone (hub zone), then handle it further.
+        If the event had a code that was relevant for the entity, then update the attributes.
+        If the event had a code that was relevant or it was a availability event then update the availability and schedule the next unavailability check.
+        """
         _LOGGER.debug("Received event: %s", sia_event)
         if int(sia_event.ri) not in (self.zone, SIA_HUB_ZONE):
             return
-        self._attr_extra_state_attributes.update(get_attr_from_sia_event(sia_event))
-        state_changed = self.update_state(sia_event)
-        if state_changed or sia_event.code == AVAILABILITY_EVENT_CODE:
-            self.async_reset_availability_cb()
+
+        relevant_event = self.update_state(sia_event)
+
+        if relevant_event:
+            self._attr_extra_state_attributes.update(get_attr_from_sia_event(sia_event))
+
+        if relevant_event or sia_event.code == AVAILABILITY_EVENT_CODE:
+            self._attr_available = True
+            self._cancel_post_interval_update_cb()
+            self.async_create_post_interval_update_cb()
+
         self.async_write_ha_state()
 
     @abstractmethod
     def update_state(self, sia_event: SIAEvent) -> bool:
-        """Do the entity specific state updates."""
+        """Do the entity specific state updates.
+
+        Return True if the event was relevant for this entity.
+        """
 
     @callback
-    def async_reset_availability_cb(self) -> None:
-        """Reset availability cb by cancelling the current and creating a new one."""
-        self._attr_available = True
-        if self._cancel_availability_cb:
-            self._cancel_availability_cb()
-        self.async_create_availability_cb()
-
-    def async_create_availability_cb(self) -> None:
-        """Create a availability cb and return the callback."""
-        self._cancel_availability_cb = async_call_later(
+    def async_create_post_interval_update_cb(self) -> None:
+        """Create a port interval update cb and store the callback."""
+        self._post_interval_update_cb_canceller = async_call_later(
             self.hass,
             get_unavailability_interval(self.ping_interval),
-            self.async_set_unavailable,
+            self.async_post_interval_update,
         )
 
     @callback
-    def async_set_unavailable(self, _) -> None:
-        """Set unavailable."""
+    def async_post_interval_update(self, _) -> None:
+        """Set unavailable after a ping interval."""
         self._attr_available = False
         self.async_write_ha_state()
+
+    @callback
+    def _cancel_post_interval_update_cb(self) -> None:
+        """Cancel the callback."""
+        if self._post_interval_update_cb_canceller:
+            self._post_interval_update_cb_canceller()
+            self._post_interval_update_cb_canceller = None

@@ -32,7 +32,8 @@
     },
     "device_automation": {
         "action_type": {
-            "send_command": "\u0391\u03c0\u03bf\u03c3\u03c4\u03bf\u03bb\u03ae \u03b5\u03bd\u03c4\u03bf\u03bb\u03ae\u03c2: {subtype}"
+            "send_command": "\u0391\u03c0\u03bf\u03c3\u03c4\u03bf\u03bb\u03ae \u03b5\u03bd\u03c4\u03bf\u03bb\u03ae\u03c2: {subtype}",
+            "send_status": "\u0391\u03c0\u03bf\u03c3\u03c4\u03bf\u03bb\u03ae \u03b5\u03bd\u03b7\u03bc\u03ad\u03c1\u03c9\u03c3\u03b7\u03c2 \u03ba\u03b1\u03c4\u03ac\u03c3\u03c4\u03b1\u03c3\u03b7\u03c2: {subtype}"
         },
         "trigger_type": {
             "command": "\u039b\u03ae\u03c6\u03b8\u03b7\u03ba\u03b5 \u03b5\u03bd\u03c4\u03bf\u03bb\u03ae: {subtype}",
