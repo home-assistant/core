@@ -9,7 +9,10 @@ from typing import Final
 from aioazuredevops.builds import DevOpsBuild
 from aioazuredevops.client import DevOpsClient
 from aioazuredevops.core import DevOpsProject
+from aioazuredevops.wiql import DevOpsWiqlResult
+from aioazuredevops.work_item import DevOpsWorkItemValue
 import aiohttp
+import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -44,7 +47,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Azure DevOps from a config entry."""
     client = DevOpsClient()
 
-    if entry.data.get(CONF_PAT) is not None:
+    pat = entry.data.get(CONF_PAT)
+    if pat is not None:
         await client.authorize(entry.data[CONF_PAT], entry.data[CONF_ORG])
         if not client.authorized:
             raise ConfigEntryAuthFailed(
@@ -56,17 +60,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_PROJECT],
     )
 
-    async def async_update_data() -> list[DevOpsBuild]:
+    async def async_update_data() -> tuple[
+        list[DevOpsBuild], list[DevOpsWorkItemValue] | None
+    ]:
         """Fetch data from Azure DevOps."""
+        async with async_timeout.timeout(20):
+            try:
+                builds: list[DevOpsBuild] = await client.get_builds(
+                    entry.data[CONF_ORG],
+                    entry.data[CONF_PROJECT],
+                    BUILDS_QUERY,
+                )
+                if pat is not None:
+                    wiql_result: DevOpsWiqlResult = await client.get_work_items_ids_all(
+                        entry.data[CONF_ORG],
+                        entry.data[CONF_PROJECT],
+                    )
+                    if wiql_result:
+                        ids: list[int] = [item.id for item in wiql_result.work_items]
+                        work_items: list[DevOpsWorkItemValue] = (
+                            await client.get_work_items(
+                                entry.data[CONF_ORG],
+                                entry.data[CONF_PROJECT],
+                                ids,
+                            )
+                        ).value
+                        return builds, work_items
 
-        try:
-            return await client.get_builds(
-                entry.data[CONF_ORG],
-                entry.data[CONF_PROJECT],
-                BUILDS_QUERY,
-            )
-        except (aiohttp.ClientError, aiohttp.ClientError) as exception:
-            raise UpdateFailed from exception
+                return builds, None
+            except (aiohttp.ClientError, aiohttp.ClientError) as exception:
+                raise UpdateFailed from exception
 
     coordinator = DataUpdateCoordinator(
         hass,
