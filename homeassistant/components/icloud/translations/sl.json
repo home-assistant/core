@@ -5,7 +5,6 @@
             "no_device": "V nobeni od va\u0161ih naprav ni aktiviran \u00bbFind my iPhone\u00ab"
         },
         "error": {
-            "login": "Napaka pri prijavi: preverite svoj e-po\u0161tni naslov in geslo",
             "send_verification_code": "Kode za preverjanje ni bilo mogo\u010de poslati",
             "validate_verification_code": "Kode za preverjanje ni bilo mogo\u010de preveriti, izberi napravo za zaupanje in znova za\u017eeni preverjanje"
         },

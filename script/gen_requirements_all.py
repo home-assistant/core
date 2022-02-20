@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate an updated requirements_all.txt."""
+import configparser
 import difflib
 import importlib
 import os
@@ -8,26 +9,27 @@ import pkgutil
 import re
 import sys
 
-from script.hassfest.model import Integration
-
 from homeassistant.util.yaml.loader import load_yaml
+from script.hassfest.model import Integration
 
 COMMENT_REQUIREMENTS = (
     "Adafruit_BBIO",
-    "Adafruit-DHT",
+    "avea",  # depends on bluepy
     "avion",
     "beacontools",
+    "beewi_smartclim",  # depends on bluepy
     "blinkt",
     "bluepy",
+    "bme280spi",
     "bme680",
-    "credstash",
     "decora",
+    "decora_wifi",
     "envirophat",
     "evdev",
     "face_recognition",
+    "homeassistant-pyozw",
     "i2csense",
     "opencv-python-headless",
-    "py_noaa",
     "pybluez",
     "pycups",
     "PySwitchbot",
@@ -45,7 +47,11 @@ COMMENT_REQUIREMENTS = (
     "VL53L1X2",
 )
 
-IGNORE_PIN = ("colorlog>2.1,<3", "keyring>=9.3,<10.0", "urllib3")
+COMMENT_REQUIREMENTS_NORMALIZED = {
+    commented.lower().replace("_", "-") for commented in COMMENT_REQUIREMENTS
+}
+
+IGNORE_PIN = ("colorlog>2.1,<3", "urllib3")
 
 URL_PIN = (
     "https://developers.home-assistant.io/docs/"
@@ -57,19 +63,67 @@ CONSTRAINT_PATH = os.path.join(
     os.path.dirname(__file__), "../homeassistant/package_constraints.txt"
 )
 CONSTRAINT_BASE = """
+# Constrain pycryptodome to avoid vulnerability
+# see https://github.com/home-assistant/core/pull/16238
 pycryptodome>=3.6.6
 
-# Constrain urllib3 to ensure we deal with CVE-2019-11236 & CVE-2019-11324
-urllib3>=1.24.3
+# Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
+urllib3>=1.26.5
 
-# Constrain httplib2 to protect against CVE-2020-11078
-httplib2>=0.18.0
+# Constrain httplib2 to protect against GHSA-93xj-8mrv-444m
+# https://github.com/advisories/GHSA-93xj-8mrv-444m
+httplib2>=0.19.0
 
-# Not needed for our supported Python versions
-enum34==1000000000.0.0
+# gRPC is an implicit dependency that we want to make explicit so we manage
+# upgrades intentionally. It is a large package to build from source and we
+# want to ensure we have wheels built.
+grpcio==1.44.0
+
+# libcst >=0.4.0 requires a newer Rust than we currently have available,
+# thus our wheels builds fail. This pins it to the last working version,
+# which at this point satisfies our needs.
+libcst==0.3.23
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
+
+# To remove reliance on typing
+btlewrap>=0.0.10
+
+# This overrides a built-in Python package
+enum34==1000000000.0.0
+typing==1000000000.0.0
+uuid==1000000000.0.0
+
+# regex causes segfault with version 2021.8.27
+# https://bitbucket.org/mrabarnett/mrab-regex/issues/421/2021827-results-in-fatal-python-error
+# This is fixed in 2021.8.28
+regex==2021.8.28
+
+# httpx requires httpcore, and httpcore requires anyio and h11, but the version constraints on
+# these requirements are quite loose. As the entire stack has some outstanding issues, and
+# even newer versions seem to introduce new issues, it's useful for us to pin all these
+# requirements so we can directly link HA versions to these library versions.
+anyio==3.5.0
+h11==0.12.0
+httpcore==0.14.5
+
+# Ensure we have a hyperframe version that works in Python 3.10
+# 5.2.0 fixed a collections abc deprecation
+hyperframe>=5.2.0
+
+# pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
+pytest_asyncio==1000000000.0.0
+
+# Prevent dependency conflicts between sisyphus-control and aioambient
+# until upper bounds for sisyphus-control have been updated
+# https://github.com/jkeljo/sisyphus-control/issues/6
+python-engineio>=3.13.1,<4.0
+python-socketio>=4.6.0,<5.0
+
+# Constrain multidict to avoid typing issues
+# https://github.com/home-assistant/core/pull/64792
+multidict<6.0.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
@@ -77,29 +131,22 @@ IGNORE_PRE_COMMIT_HOOK_ID = (
     "check-json",
     "no-commit-to-branch",
     "prettier",
+    "python-typing-update",
 )
+
+PACKAGE_REGEX = re.compile(r"^(?:--.+\s)?([-_\.\w\d]+).*==.+$")
 
 
 def has_tests(module: str):
     """Test if a module has tests.
 
     Module format: homeassistant.components.hue
-    Test if exists: tests/components/hue
+    Test if exists: tests/components/hue/__init__.py
     """
-    path = Path(module.replace(".", "/").replace("homeassistant", "tests"))
-    if not path.exists():
-        return False
-
-    if not path.is_dir():
-        return True
-
-    # Dev environments might have stale directories around
-    # from removed tests. Check for that.
-    content = [f.name for f in path.glob("*")]
-
-    # Directories need to contain more than `__pycache__`
-    # to exist in Git and so be seen by CI.
-    return content != ["__pycache__"]
+    path = (
+        Path(module.replace(".", "/").replace("homeassistant", "tests")) / "__init__.py"
+    )
+    return path.exists()
 
 
 def explore_module(package, explore_children):
@@ -122,10 +169,9 @@ def explore_module(package, explore_children):
 
 def core_requirements():
     """Gather core requirements out of setup.py."""
-    reqs_raw = re.search(
-        r"REQUIRES = \[(.*?)\]", Path("setup.py").read_text(), re.S
-    ).group(1)
-    return [x[1] for x in re.findall(r"(['\"])(.*?)\1", reqs_raw)]
+    parser = configparser.ConfigParser()
+    parser.read("setup.cfg")
+    return parser["options"]["install_requires"].strip().split("\n")
 
 
 def gather_recursive_requirements(domain, seen=None):
@@ -136,15 +182,30 @@ def gather_recursive_requirements(domain, seen=None):
     seen.add(domain)
     integration = Integration(Path(f"homeassistant/components/{domain}"))
     integration.load_manifest()
-    reqs = set(integration.requirements)
+    reqs = {x for x in integration.requirements if x not in CONSTRAINT_BASE}
     for dep_domain in integration.dependencies:
         reqs.update(gather_recursive_requirements(dep_domain, seen))
     return reqs
 
 
+def normalize_package_name(requirement: str) -> str:
+    """Return a normalized package name from a requirement string."""
+    # This function is also used in hassfest.
+    match = PACKAGE_REGEX.search(requirement)
+    if not match:
+        return ""
+
+    # pipdeptree needs lowercase and dash instead of underscore as separator
+    package = match.group(1).lower().replace("_", "-")
+
+    return package
+
+
 def comment_requirement(req):
     """Comment out requirement. Some don't install on all systems."""
-    return any(ign.lower() in req.lower() for ign in COMMENT_REQUIREMENTS)
+    return any(
+        normalize_package_name(req) == ign for ign in COMMENT_REQUIREMENTS_NORMALIZED
+    )
 
 
 def gather_modules():
@@ -175,6 +236,9 @@ def gather_requirements_from_manifests(errors, reqs):
 
         if not integration.manifest:
             errors.append(f"The manifest for integration {domain} is invalid.")
+            continue
+
+        if integration.disabled:
             continue
 
         process_requirements(
@@ -239,8 +303,7 @@ def requirements_output(reqs):
 def requirements_all_output(reqs):
     """Generate output for requirements_all."""
     output = [
-        "# Home Assistant Core, full dependency set\n"
-        "-c homeassistant/package_constraints.txt\n",
+        "# Home Assistant Core, full dependency set\n",
         "-r requirements.txt\n",
     ]
     output.append(generate_requirements_list(reqs))
@@ -248,15 +311,14 @@ def requirements_all_output(reqs):
     return "".join(output)
 
 
-def requirements_test_output(reqs):
+def requirements_test_all_output(reqs):
     """Generate output for test_requirements."""
     output = [
         "# Home Assistant tests, full dependency set\n",
         f"# Automatically generated by {Path(__file__).name}, do not edit\n",
         "\n",
-        "-c homeassistant/package_constraints.txt\n",
+        "-r requirements_test.txt\n",
     ]
-    output.append("-r requirements_test.txt\n")
 
     filtered = {
         requirement: modules
@@ -335,7 +397,7 @@ def main(validate):
 
     reqs_file = requirements_output(data)
     reqs_all_file = requirements_all_output(data)
-    reqs_test_file = requirements_test_output(data)
+    reqs_test_all_file = requirements_test_all_output(data)
     reqs_pre_commit_file = requirements_pre_commit_output()
     constraints = gather_constraints()
 
@@ -343,7 +405,7 @@ def main(validate):
         ("requirements.txt", reqs_file),
         ("requirements_all.txt", reqs_all_file),
         ("requirements_test_pre_commit.txt", reqs_pre_commit_file),
-        ("requirements_test_all.txt", reqs_test_file),
+        ("requirements_test_all.txt", reqs_test_all_file),
         ("homeassistant/package_constraints.txt", constraints),
     )
 

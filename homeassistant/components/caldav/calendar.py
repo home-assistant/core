@@ -1,4 +1,6 @@
 """Support for WebDav Calendar."""
+from __future__ import annotations
+
 import copy
 from datetime import datetime, timedelta
 import logging
@@ -22,8 +24,11 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle, dt
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,7 +68,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 
-def setup_platform(hass, config, add_entities, disc_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    disc_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the WebDav Calendar platform."""
     url = config[CONF_URL]
     username = config.get(CONF_USERNAME)
@@ -119,23 +129,12 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
         self.data = WebDavCalendarData(calendar, days, all_day, search)
         self.entity_id = entity_id
         self._event = None
-        self._name = name
-        self._offset_reached = False
-
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        return {"offset_reached": self._offset_reached}
+        self._attr_name = name
 
     @property
     def event(self):
         """Return the next upcoming event."""
         return self._event
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
 
     async def async_get_events(self, hass, start_date, end_date):
         """Get all events in a specific time frame."""
@@ -149,8 +148,8 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
             self._event = event
             return
         event = calculate_offset(event, OFFSET)
-        self._offset_reached = is_offset_reached(event)
         self._event = event
+        self._attr_extra_state_attributes = {"offset_reached": is_offset_reached(event)}
 
 
 class WebDavCalendarData:
@@ -167,12 +166,17 @@ class WebDavCalendarData:
     async def async_get_events(self, hass, start_date, end_date):
         """Get all events in a specific time frame."""
         # Get event list from the current calendar
-        vevent_list = await hass.async_add_job(
+        vevent_list = await hass.async_add_executor_job(
             self.calendar.date_search, start_date, end_date
         )
         event_list = []
         for event in vevent_list:
+            if not hasattr(event.instance, "vevent"):
+                _LOGGER.warning("Skipped event with missing 'vevent' property")
+                continue
             vevent = event.instance.vevent
+            if not self.is_matching(vevent, self.search):
+                continue
             uid = None
             if hasattr(vevent, "uid"):
                 uid = vevent.uid.value
@@ -207,6 +211,9 @@ class WebDavCalendarData:
         # and they would not be properly parsed using their original start/end dates.
         new_events = []
         for event in results:
+            if not hasattr(event.instance, "vevent"):
+                _LOGGER.warning("Skipped event with missing 'vevent' property")
+                continue
             vevent = event.instance.vevent
             for start_dt in vevent.getrruleset() or []:
                 _start_of_today = start_of_today
@@ -225,7 +232,11 @@ class WebDavCalendarData:
                     new_events.append(new_event)
                 elif _start_of_tomorrow <= start_dt:
                     break
-        vevents = [event.instance.vevent for event in results + new_events]
+        vevents = [
+            event.instance.vevent
+            for event in results + new_events
+            if hasattr(event.instance, "vevent")
+        ]
 
         # dtstart can be a date or datetime depending if the event lasts a
         # whole day. Convert everything to datetime to be able to sort it
@@ -308,7 +319,9 @@ class WebDavCalendarData:
                 # represent same time regardless of which time zone is currently being observed
                 return obj.replace(tzinfo=dt.DEFAULT_TIME_ZONE)
             return obj
-        return dt.as_local(dt.dt.datetime.combine(obj, dt.dt.time.min))
+        return dt.dt.datetime.combine(obj, dt.dt.time.min).replace(
+            tzinfo=dt.DEFAULT_TIME_ZONE
+        )
 
     @staticmethod
     def get_attr_value(obj, attribute):

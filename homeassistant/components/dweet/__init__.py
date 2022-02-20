@@ -6,13 +6,16 @@ import dweepy
 import voluptuous as vol
 
 from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
     CONF_NAME,
     CONF_WHITELIST,
     EVENT_STATE_CHANGED,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +39,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Dweet.io component."""
     conf = config[DOMAIN]
     name = conf.get(CONF_NAME)
@@ -58,7 +61,7 @@ def setup(hass, config):
         except ValueError:
             _state = state.state
 
-        json_body[state.attributes.get("friendly_name")] = _state
+        json_body[state.attributes.get(ATTR_FRIENDLY_NAME)] = _state
 
         send_data(name, json_body)
 

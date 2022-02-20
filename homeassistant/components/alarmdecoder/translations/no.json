@@ -1,0 +1,74 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "create_entry": {
+            "default": "Vellykket koblet til AlarmDecoder."
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "step": {
+            "protocol": {
+                "data": {
+                    "device_baudrate": "Baud-hastighet for enhet",
+                    "device_path": "Bane til enheten",
+                    "host": "Vert",
+                    "port": "Port"
+                },
+                "title": "Konfigurer tilkoblingsinnstillinger"
+            },
+            "user": {
+                "data": {
+                    "protocol": "Protokoll"
+                },
+                "title": "Velg AlarmDecoder Protokoll"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "int": "Feltet nedenfor m\u00e5 v\u00e6re et helt tall.",
+            "loop_range": "RF Loop m\u00e5 v\u00e6re et heltall mellom 1 og 4.",
+            "loop_rfid": "RF Loop kan ikke brukes uten RF Serial.",
+            "relay_inclusive": "Rel\u00e9adresse og rel\u00e9kanal er kodeavhengige og m\u00e5 inkluderes sammen."
+        },
+        "step": {
+            "arm_settings": {
+                "data": {
+                    "alt_night_mode": "Alternativ nattmodus",
+                    "auto_bypass": "Auto bypass p\u00e5 Arm",
+                    "code_arm_required": "Kode kreves for tilkobling"
+                },
+                "title": "Konfigurer AlarmDecoder"
+            },
+            "init": {
+                "data": {
+                    "edit_select": "Rediger"
+                },
+                "description": "Hva \u00f8nsker du \u00e5 redigere?",
+                "title": "Konfigurer AlarmDecoder"
+            },
+            "zone_details": {
+                "data": {
+                    "zone_loop": "RF Loop",
+                    "zone_name": "Sonenavn",
+                    "zone_relayaddr": "Rel\u00e9 adresse",
+                    "zone_relaychan": "Rel\u00e9 kanal",
+                    "zone_rfid": "RF seriell",
+                    "zone_type": "Sone type"
+                },
+                "description": "Angi detaljer for sonen {zone_number}. Hvis du vil slette sonen {zone_number}, lar du Sonenavn st\u00e5 tomt.",
+                "title": "Konfigurer AlarmDecoder"
+            },
+            "zone_select": {
+                "data": {
+                    "zone_number": "Sone nummer"
+                },
+                "description": "Angi sonenummeret du vil legge til, redigere eller fjerne.",
+                "title": "Konfigurer AlarmDecoder"
+            }
+        }
+    }
+}

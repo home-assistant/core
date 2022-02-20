@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/google_assistant",
   "dependencies": ["http"],
   "after_dependencies": ["camera"],
-  "codeowners": ["@home-assistant/cloud"]
+  "codeowners": ["@home-assistant/cloud"],
+  "iot_class": "cloud_push"
 }

@@ -1,4 +1,6 @@
 """Provide functionality to interact with vlc devices on the network."""
+from __future__ import annotations
+
 import logging
 
 import vlc
@@ -15,7 +17,10 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,7 +45,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the vlc platform."""
     add_entities(
         [VlcDevice(config.get(CONF_NAME, DEFAULT_NAME), config.get(CONF_ARGUMENTS))]
@@ -159,7 +169,7 @@ class VlcDevice(MediaPlayerEntity):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play media from a URL or file."""
-        if not media_type == MEDIA_TYPE_MUSIC:
+        if media_type != MEDIA_TYPE_MUSIC:
             _LOGGER.error(
                 "Invalid media type %s. Only %s is supported",
                 media_type,

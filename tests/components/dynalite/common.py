@@ -1,11 +1,12 @@
 """Common functions for tests."""
-from homeassistant.components import dynalite
-from homeassistant.helpers import entity_registry
+from unittest.mock import AsyncMock, Mock, call, patch
 
-from tests.async_mock import AsyncMock, Mock, call, patch
+from homeassistant.components import dynalite
+from homeassistant.const import ATTR_SERVICE
+from homeassistant.helpers import entity_registry as er
+
 from tests.common import MockConfigEntry
 
-ATTR_SERVICE = "service"
 ATTR_METHOD = "method"
 ATTR_ARGS = "args"
 
@@ -22,7 +23,7 @@ def create_mock_device(platform, spec):
 
 async def get_entry_id_from_hass(hass):
     """Get the config entry id from hass."""
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
     assert ent_reg
     conf_entries = hass.config_entries.async_entries(dynalite.DOMAIN)
     assert len(conf_entries) == 1

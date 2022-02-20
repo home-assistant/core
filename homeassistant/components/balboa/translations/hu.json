@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "C\u00edm"
+                },
+                "title": "Csatlakoz\u00e1s a Balboa Wi-Fi eszk\u00f6zh\u00f6z"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "sync_time": "Balboa Spa kliens \u00f3r\u00e1j\u00e1nak szinkroniz\u00e1l\u00e1sa Home Assistanthoz"
+                }
+            }
+        }
+    }
+}

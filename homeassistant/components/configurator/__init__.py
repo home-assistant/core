@@ -6,20 +6,26 @@ This will return a request id that has to be used for future calls.
 A callback has to be provided to `request_config` which will be called when
 the user has submitted configuration information.
 """
+from contextlib import suppress
 import functools as ft
-import logging
+from typing import Any
 
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
     EVENT_TIME_CHANGED,
 )
-from homeassistant.core import Event, callback as async_callback
+from homeassistant.core import (
+    Event,
+    HomeAssistant,
+    ServiceCall,
+    callback as async_callback,
+)
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
 
-_LOGGER = logging.getLogger(__name__)
 _KEY_INSTANCE = "configurator"
 
 DATA_REQUESTS = "configurator_requests"
@@ -55,7 +61,7 @@ def async_request_config(
     link_name=None,
     link_url=None,
     entity_picture=None,
-):
+) -> str:
     """Create a new request for configuration.
 
     Will return an ID to be used for sequent calls.
@@ -66,9 +72,7 @@ def async_request_config(
     if description_image is not None:
         description += f"\n\n![Description image]({description_image})"
 
-    instance = hass.data.get(_KEY_INSTANCE)
-
-    if instance is None:
+    if (instance := hass.data.get(_KEY_INSTANCE)) is None:
         instance = hass.data[_KEY_INSTANCE] = Configurator(hass)
 
     request_id = instance.async_request_config(
@@ -84,7 +88,7 @@ def async_request_config(
 
 
 @bind_hass
-def request_config(hass, *args, **kwargs):
+def request_config(hass: HomeAssistant, *args: Any, **kwargs: Any) -> str:
     """Create a new request for configuration.
 
     Will return an ID to be used for sequent calls.
@@ -98,15 +102,12 @@ def request_config(hass, *args, **kwargs):
 @async_callback
 def async_notify_errors(hass, request_id, error):
     """Add errors to a config request."""
-    try:
+    with suppress(KeyError):  # If request_id does not exist
         hass.data[DATA_REQUESTS][request_id].async_notify_errors(request_id, error)
-    except KeyError:
-        # If request_id does not exist
-        pass
 
 
 @bind_hass
-def notify_errors(hass, request_id, error):
+def notify_errors(hass: HomeAssistant, request_id: str, error: str) -> None:
     """Add errors to a config request."""
     return run_callback_threadsafe(
         hass.loop, async_notify_errors, hass, request_id, error
@@ -115,24 +116,21 @@ def notify_errors(hass, request_id, error):
 
 @bind_hass
 @async_callback
-def async_request_done(hass, request_id):
+def async_request_done(hass: HomeAssistant, request_id: str) -> None:
     """Mark a configuration request as done."""
-    try:
+    with suppress(KeyError):  # If request_id does not exist
         hass.data[DATA_REQUESTS].pop(request_id).async_request_done(request_id)
-    except KeyError:
-        # If request_id does not exist
-        pass
 
 
 @bind_hass
-def request_done(hass, request_id):
+def request_done(hass: HomeAssistant, request_id: str) -> None:
     """Mark a configuration request as done."""
     return run_callback_threadsafe(
         hass.loop, async_request_done, hass, request_id
     ).result()
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the configurator component."""
     return True
 
@@ -152,7 +150,7 @@ class Configurator:
     @async_callback
     def async_request_config(
         self, name, callback, description, submit_caption, fields, entity_picture
-    ):
+    ) -> str:
         """Set up a request for configuration."""
         entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, name, hass=self.hass)
 
@@ -173,10 +171,10 @@ class Configurator:
         data.update(
             {
                 key: value
-                for key, value in [
+                for key, value in (
                     (ATTR_DESCRIPTION, description),
                     (ATTR_SUBMIT_CAPTION, submit_caption),
-                ]
+                )
                 if value is not None
             }
         )
@@ -214,13 +212,14 @@ class Configurator:
         # it shortly after so that it is deleted when the client updates.
         self.hass.states.async_set(entity_id, STATE_CONFIGURED)
 
+        @async_callback
         def deferred_remove(event: Event):
             """Remove the request state."""
             self.hass.states.async_remove(entity_id, context=event.context)
 
         self.hass.bus.async_listen_once(EVENT_TIME_CHANGED, deferred_remove)
 
-    async def async_handle_service_call(self, call):
+    async def async_handle_service_call(self, call: ServiceCall) -> None:
         """Handle a configure service call."""
         request_id = call.data.get(ATTR_CONFIGURE_ID)
 

@@ -1,4 +1,15 @@
 {
+    "device_class": {
+        "cold": "hideg",
+        "gas": "g\u00e1z",
+        "heat": "h\u0151",
+        "moisture": "p\u00e1ratartalom",
+        "motion": "mozg\u00e1s",
+        "problem": "probl\u00e9ma",
+        "smoke": "f\u00fcst",
+        "sound": "hang",
+        "vibration": "rezg\u00e9s"
+    },
     "state": {
         "_": {
             "off": "Af",

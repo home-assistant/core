@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt"
+        },
+        "error": {
+            "connection_error": "Verbindung fehlgeschlagen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP-Adresse"
+                },
+                "description": "Mit Wechselrichter verbinden",
+                "title": "GoodWe-Wechselrichter"
+            }
+        }
+    }
+}

@@ -1,4 +1,6 @@
 """Support for MQTT room presence detection."""
+from __future__ import annotations
+
 from datetime import timedelta
 import json
 import logging
@@ -7,20 +9,26 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ID, CONF_NAME, CONF_TIMEOUT, STATE_NOT_HOME
-from homeassistant.core import callback
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_ID,
+    CONF_DEVICE_ID,
+    CONF_NAME,
+    CONF_TIMEOUT,
+    STATE_NOT_HOME,
+)
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt, slugify
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DEVICE_ID = "device_id"
 ATTR_DISTANCE = "distance"
 ATTR_ROOM = "room"
 
-CONF_DEVICE_ID = "device_id"
 CONF_AWAY_TIMEOUT = "away_timeout"
 
 DEFAULT_AWAY_TIMEOUT = 0
@@ -51,7 +59,12 @@ MQTT_PAYLOAD = vol.Schema(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up MQTT room Sensor."""
     async_add_entities(
         [
@@ -66,7 +79,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class MQTTRoomSensor(Entity):
+class MQTTRoomSensor(SensorEntity):
     """Representation of a room sensor that is updated via MQTT."""
 
     def __init__(self, name, state_topic, device_id, timeout, consider_home):
@@ -116,7 +129,7 @@ class MQTTRoomSensor(Entity):
                     if (
                         device.get(ATTR_ROOM) == self._state
                         or device.get(ATTR_DISTANCE) < self._distance
-                        or timediff.seconds >= self._timeout
+                        or timediff.total_seconds() >= self._timeout
                     ):
                         update_state(**device)
 
@@ -130,12 +143,12 @@ class MQTTRoomSensor(Entity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_DISTANCE: self._distance}
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current room of the entity."""
         return self._state
 

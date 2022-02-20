@@ -1,4 +1,6 @@
 """Support for manual alarms controllable via MQTT."""
+from __future__ import annotations
+
 import copy
 import datetime
 import logging
@@ -29,11 +31,14 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_state_change_event,
     track_point_in_time,
 )
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -163,7 +168,12 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the manual MQTT alarm platform."""
     add_entities(
         [
@@ -406,22 +416,23 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         if isinstance(self._code, str):
             alarm_code = self._code
         else:
-            alarm_code = self._code.render(from_state=self._state, to_state=state)
+            alarm_code = self._code.render(
+                from_state=self._state, to_state=state, parse_result=False
+            )
         check = not alarm_code or code == alarm_code
         if not check:
             _LOGGER.warning("Invalid code given for %s", state)
         return check
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        state_attr = {}
-
-        if self.state == STATE_ALARM_PENDING:
-            state_attr[ATTR_PRE_PENDING_STATE] = self._previous_state
-            state_attr[ATTR_POST_PENDING_STATE] = self._state
-
-        return state_attr
+        if self.state != STATE_ALARM_PENDING:
+            return {}
+        return {
+            ATTR_PRE_PENDING_STATE: self._previous_state,
+            ATTR_POST_PENDING_STATE: self._state,
+        }
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
@@ -449,9 +460,8 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
 
     async def _async_state_changed_listener(self, event):
         """Publish state change to MQTT."""
-        new_state = event.data.get("new_state")
-        if new_state is None:
+        if (new_state := event.data.get("new_state")) is None:
             return
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass, self._state_topic, new_state.state, self._qos, True
         )

@@ -1,102 +1,172 @@
-"""Support for Zyxel Keenetic NDMS2 based routers."""
+"""Support for Keenetic routers as device tracker."""
+from __future__ import annotations
+
 import logging
 
-from ndms2_client import Client, ConnectionException, TelnetConnection
-import voluptuous as vol
+from ndms2_client import Device
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA,
-    DeviceScanner,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    SOURCE_TYPE_ROUTER,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+import homeassistant.util.dt as dt_util
+
+from .const import DOMAIN, ROUTER
+from .router import KeeneticRouter
 
 _LOGGER = logging.getLogger(__name__)
 
-# Interface name to track devices for. Most likely one will not need to
-# change it from default 'Home'. This is needed not to track Guest WI-FI-
-# clients and router itself
-CONF_INTERFACE = "interface"
 
-DEFAULT_INTERFACE = "Home"
-DEFAULT_PORT = 23
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up device tracker for Keenetic NDMS2 component."""
+    router: KeeneticRouter = hass.data[DOMAIN][config_entry.entry_id][ROUTER]
+
+    tracked: set[str] = set()
+
+    @callback
+    def update_from_router():
+        """Update the status of devices."""
+        update_items(router, async_add_entities, tracked)
+
+    update_from_router()
+
+    registry = await entity_registry.async_get_registry(hass)
+    # Restore devices that are not a part of active clients list.
+    restored = []
+    for entity_entry in registry.entities.values():
+        if (
+            entity_entry.config_entry_id == config_entry.entry_id
+            and entity_entry.domain == DEVICE_TRACKER_DOMAIN
+        ):
+            mac = entity_entry.unique_id.partition("_")[0]
+            if mac not in tracked:
+                tracked.add(mac)
+                restored.append(
+                    KeeneticTracker(
+                        Device(
+                            mac=mac,
+                            # restore the original name as set by the router before
+                            name=entity_entry.original_name,
+                            ip=None,
+                            interface=None,
+                        ),
+                        router,
+                    )
+                )
+
+    if restored:
+        async_add_entities(restored)
+
+    async_dispatcher_connect(hass, router.signal_update, update_from_router)
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_INTERFACE, default=DEFAULT_INTERFACE): cv.string,
-    }
-)
+@callback
+def update_items(router: KeeneticRouter, async_add_entities, tracked: set[str]):
+    """Update tracked device state from the hub."""
+    new_tracked: list[KeeneticTracker] = []
+    for mac, device in router.last_devices.items():
+        if mac not in tracked:
+            tracked.add(mac)
+            new_tracked.append(KeeneticTracker(device, router))
+
+    if new_tracked:
+        async_add_entities(new_tracked)
 
 
-def get_scanner(_hass, config):
-    """Validate the configuration and return a Keenetic NDMS2 scanner."""
-    scanner = KeeneticNDMS2DeviceScanner(config[DOMAIN])
+class KeeneticTracker(ScannerEntity):
+    """Representation of network device."""
 
-    return scanner if scanner.success_init else None
+    def __init__(self, device: Device, router: KeeneticRouter) -> None:
+        """Initialize the tracked device."""
+        self._device = device
+        self._router = router
+        self._last_seen = (
+            dt_util.utcnow() if device.mac in router.last_devices else None
+        )
 
+    @property
+    def should_poll(self) -> bool:
+        """Return False since entity pushes its state to HA."""
+        return False
 
-class KeeneticNDMS2DeviceScanner(DeviceScanner):
-    """This class scans for devices using keenetic NDMS2 web interface."""
+    @property
+    def is_connected(self):
+        """Return true if the device is connected to the network."""
+        return (
+            self._last_seen
+            and (dt_util.utcnow() - self._last_seen)
+            < self._router.consider_home_interval
+        )
 
-    def __init__(self, config):
-        """Initialize the scanner."""
+    @property
+    def source_type(self):
+        """Return the source type of the client."""
+        return SOURCE_TYPE_ROUTER
 
-        self.last_results = []
+    @property
+    def name(self) -> str:
+        """Return the name of the device."""
+        return self._device.name or self._device.mac
 
-        self._interface = config[CONF_INTERFACE]
+    @property
+    def unique_id(self) -> str:
+        """Return a unique identifier for this device."""
+        return f"{self._device.mac}_{self._router.config_entry.entry_id}"
 
-        self._client = Client(
-            TelnetConnection(
-                config.get(CONF_HOST),
-                config.get(CONF_PORT),
-                config.get(CONF_USERNAME),
-                config.get(CONF_PASSWORD),
+    @property
+    def ip_address(self) -> str:
+        """Return the primary ip address of the device."""
+        return self._device.ip if self.is_connected else None
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the device."""
+        return self._device.mac
+
+    @property
+    def available(self) -> bool:
+        """Return if controller is available."""
+        return self._router.available
+
+    @property
+    def extra_state_attributes(self):
+        """Return the device state attributes."""
+        if self.is_connected:
+            return {
+                "interface": self._device.interface,
+            }
+        return None
+
+    async def async_added_to_hass(self):
+        """Client entity created."""
+        _LOGGER.debug("New network device tracker %s (%s)", self.name, self.unique_id)
+
+        @callback
+        def update_device():
+            _LOGGER.debug(
+                "Updating Keenetic tracked device %s (%s)",
+                self.entity_id,
+                self.unique_id,
+            )
+            new_device = self._router.last_devices.get(self._device.mac)
+            if new_device:
+                self._device = new_device
+                self._last_seen = dt_util.utcnow()
+
+            self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, self._router.signal_update, update_device
             )
         )
-
-        self.success_init = self._update_info()
-        _LOGGER.info("Scanner initialized")
-
-    def scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-        self._update_info()
-
-        return [device.mac for device in self.last_results]
-
-    def get_device_name(self, device):
-        """Return the name of the given device or None if we don't know."""
-        name = next(
-            (result.name for result in self.last_results if result.mac == device), None
-        )
-        return name
-
-    def get_extra_attributes(self, device):
-        """Return the IP of the given device."""
-        attributes = next(
-            ({"ip": result.ip} for result in self.last_results if result.mac == device),
-            {},
-        )
-        return attributes
-
-    def _update_info(self):
-        """Get ARP from keenetic router."""
-        _LOGGER.debug("Fetching devices from router...")
-
-        try:
-            self.last_results = [
-                dev
-                for dev in self._client.get_devices()
-                if dev.interface == self._interface
-            ]
-            _LOGGER.debug("Successfully fetched data from router")
-            return True
-
-        except ConnectionException:
-            _LOGGER.error("Error fetching data from router")
-            return False

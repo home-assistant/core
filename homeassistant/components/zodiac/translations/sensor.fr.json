@@ -1,0 +1,18 @@
+{
+    "state": {
+        "zodiac__sign": {
+            "aquarius": "Verseau",
+            "aries": "B\u00e9lier",
+            "cancer": "Cancer",
+            "capricorn": "Capricorne",
+            "gemini": "G\u00e9meaux",
+            "leo": "Lion",
+            "libra": "Balance",
+            "pisces": "Poissons",
+            "sagittarius": "Sagittaire",
+            "scorpio": "Scorpion",
+            "taurus": "Taureau",
+            "virgo": "Vierge"
+        }
+    }
+}

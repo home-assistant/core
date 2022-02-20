@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Ongeldige authenticatie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                },
+                "description": "Voer de inloggegevens in die zijn gebruikt om in te loggen op mytotalconnectcomfort.com.",
+                "title": "Honeywell Total Connect Comfort (US)"
+            }
+        }
+    }
+}

@@ -1,21 +1,30 @@
 """Support for monitoring a Smappee appliance binary sensor."""
-import logging
+from __future__ import annotations
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import BASE, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
 BINARY_SENSOR_PREFIX = "Appliance"
 PRESENCE_PREFIX = "Presence"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Smappee binary sensor."""
-    smappee_base = hass.data[DOMAIN][BASE]
+    smappee_base = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities = []
+    entities: list[BinarySensorEntity] = []
     for service_location in smappee_base.smappee.service_locations.values():
         for appliance_id, appliance in service_location.appliances.items():
             if appliance.type != "Find me" and appliance.source_type == "NILM":
@@ -29,7 +38,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     )
                 )
 
-        entities.append(SmappeePresence(smappee_base, service_location))
+        if not smappee_base.smappee.local_polling:
+            # presence value only available in cloud env
+            entities.append(SmappeePresence(smappee_base, service_location))
 
     async_add_entities(entities, True)
 
@@ -56,27 +67,29 @@ class SmappeePresence(BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return "presence"
+        return BinarySensorDeviceClass.PRESENCE
 
     @property
-    def unique_id(self,):
+    def unique_id(
+        self,
+    ):
         """Return the unique ID for this binary sensor."""
         return (
             f"{self._service_location.device_serial_number}-"
             f"{self._service_location.service_location_id}-"
-            f"presence"
+            f"{BinarySensorDeviceClass.PRESENCE}"
         )
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info for this binary sensor."""
-        return {
-            "identifiers": {(DOMAIN, self._service_location.device_serial_number)},
-            "name": self._service_location.service_location_name,
-            "manufacturer": "Smappee",
-            "model": self._service_location.device_model,
-            "sw_version": self._service_location.firmware_version,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._service_location.device_serial_number)},
+            manufacturer="Smappee",
+            model=self._service_location.device_model,
+            name=self._service_location.service_location_name,
+            sw_version=self._service_location.firmware_version,
+        )
 
     async def async_update(self):
         """Get the latest data from Smappee and update the state."""
@@ -140,7 +153,9 @@ class SmappeeAppliance(BinarySensorEntity):
         return icon_mapping.get(self._appliance_type)
 
     @property
-    def unique_id(self,):
+    def unique_id(
+        self,
+    ):
         """Return the unique ID for this binary sensor."""
         return (
             f"{self._service_location.device_serial_number}-"
@@ -149,15 +164,15 @@ class SmappeeAppliance(BinarySensorEntity):
         )
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info for this binary sensor."""
-        return {
-            "identifiers": {(DOMAIN, self._service_location.device_serial_number)},
-            "name": self._service_location.service_location_name,
-            "manufacturer": "Smappee",
-            "model": self._service_location.device_model,
-            "sw_version": self._service_location.firmware_version,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._service_location.device_serial_number)},
+            manufacturer="Smappee",
+            model=self._service_location.device_model,
+            name=self._service_location.service_location_name,
+            sw_version=self._service_location.firmware_version,
+        )
 
     async def async_update(self):
         """Get the latest data from Smappee and update the state."""

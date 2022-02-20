@@ -3,11 +3,7 @@
         "abort": {
             "already_configured": "Ta AVM FRITZ! Box je \u017ee konfiguriran.",
             "already_in_progress": "Konfiguracija AVM FRITZ! Box je \u017ee v teku.",
-            "not_found": "V omre\u017eju ni bilo najdenih nobenih podprtih naprav AVM Fritz!Box.",
             "not_supported": "Povezani z AVM FRITZ! Box, vendar ne morete upravljati pametnih naprav."
-        },
-        "error": {
-            "auth_failed": "Uporabni\u0161ko ime in/ali geslo sta napa\u010dna."
         },
         "flow_title": "AVM FRITZ!Box: {name}",
         "step": {

@@ -6,11 +6,6 @@ from blinkpy.blinkpy import Blink, BlinkSetupError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.components.blink.const import (
-    DEFAULT_SCAN_INTERVAL,
-    DEVICE_ID,
-    DOMAIN,
-)
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PIN,
@@ -19,6 +14,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
+from .const import DEFAULT_SCAN_INTERVAL, DEVICE_ID, DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -26,8 +23,8 @@ def validate_input(hass: core.HomeAssistant, auth):
     """Validate the user input allows us to connect."""
     try:
         auth.startup()
-    except (LoginError, TokenRefreshFailed):
-        raise InvalidAuth
+    except (LoginError, TokenRefreshFailed) as err:
+        raise InvalidAuth from err
     if auth.check_key_required():
         raise Require2FA
 
@@ -36,6 +33,7 @@ def _send_blink_2fa_pin(auth, pin):
     """Send 2FA pin to blink servers."""
     blink = Blink()
     blink.auth = auth
+    blink.setup_login_ids()
     blink.setup_urls()
     return auth.send_auth_key(blink, pin)
 
@@ -43,8 +41,7 @@ def _send_blink_2fa_pin(auth, pin):
 class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Blink config flow."""
 
-    VERSION = 2
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+    VERSION = 3
 
     def __init__(self):
         """Initialize the blink flow."""
@@ -86,7 +83,9 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(data_schema), errors=errors,
+            step_id="user",
+            data_schema=vol.Schema(data_schema),
+            errors=errors,
         )
 
     async def async_step_2fa(self, user_input=None):
@@ -156,7 +155,12 @@ class BlinkOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="simple_options",
             data_schema=vol.Schema(
-                {vol.Optional(CONF_SCAN_INTERVAL, default=scan_interval,): int}
+                {
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL,
+                        default=scan_interval,
+                    ): int
+                }
             ),
         )
 

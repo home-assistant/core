@@ -12,14 +12,15 @@ from pyjoin import (
 )
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID, CONF_NAME
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "joaoapps_join"
 
-CONF_DEVICE_ID = "device_id"
 CONF_DEVICE_IDS = "device_ids"
 CONF_DEVICE_NAMES = "device_names"
 
@@ -45,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema(
 def register_device(hass, api_key, name, device_id, device_ids, device_names):
     """Register services for each join device listed."""
 
-    def ring_service(service):
+    def ring_service(service: ServiceCall) -> None:
         """Service to ring devices."""
         ring_device(
             api_key=api_key,
@@ -54,7 +55,7 @@ def register_device(hass, api_key, name, device_id, device_ids, device_names):
             device_names=device_names,
         )
 
-    def set_wallpaper_service(service):
+    def set_wallpaper_service(service: ServiceCall) -> None:
         """Service to set wallpaper on devices."""
         set_wallpaper(
             api_key=api_key,
@@ -64,7 +65,7 @@ def register_device(hass, api_key, name, device_id, device_ids, device_names):
             url=service.data.get("url"),
         )
 
-    def send_file_service(service):
+    def send_file_service(service: ServiceCall) -> None:
         """Service to send files to devices."""
         send_file(
             api_key=api_key,
@@ -74,7 +75,7 @@ def register_device(hass, api_key, name, device_id, device_ids, device_names):
             url=service.data.get("url"),
         )
 
-    def send_url_service(service):
+    def send_url_service(service: ServiceCall) -> None:
         """Service to open url on devices."""
         send_url(
             api_key=api_key,
@@ -84,7 +85,7 @@ def register_device(hass, api_key, name, device_id, device_ids, device_names):
             url=service.data.get("url"),
         )
 
-    def send_tasker_service(service):
+    def send_tasker_service(service: ServiceCall) -> None:
         """Service to open url on devices."""
         send_notification(
             api_key=api_key,
@@ -94,7 +95,7 @@ def register_device(hass, api_key, name, device_id, device_ids, device_names):
             text=service.data.get("command"),
         )
 
-    def send_sms_service(service):
+    def send_sms_service(service: ServiceCall) -> None:
         """Service to send sms from devices."""
         send_sms(
             device_id=device_id,
@@ -113,9 +114,8 @@ def register_device(hass, api_key, name, device_id, device_ids, device_names):
     hass.services.register(DOMAIN, f"{name}send_tasker", send_tasker_service)
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Join services."""
-
     for device in config[DOMAIN]:
         api_key = device.get(CONF_API_KEY)
         device_id = device.get(CONF_DEVICE_ID)
@@ -123,10 +123,9 @@ def setup(hass, config):
         device_names = device.get(CONF_DEVICE_NAMES)
         name = device.get(CONF_NAME)
         name = f"{name.lower().replace(' ', '_')}_" if name else ""
-        if api_key:
-            if not get_devices(api_key):
-                _LOGGER.error("Error connecting to Join, check API key")
-                return False
+        if api_key and not get_devices(api_key):
+            _LOGGER.error("Error connecting to Join, check API key")
+            return False
         if device_id is None and device_ids is None and device_names is None:
             _LOGGER.error(
                 "No device was provided. Please specify device_id"

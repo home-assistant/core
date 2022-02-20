@@ -1,18 +1,19 @@
 """Test the NuHeat config flow."""
+from http import HTTPStatus
+from unittest.mock import MagicMock, patch
+
 import requests
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.nuheat.const import CONF_SERIAL_NUMBER, DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_INTERNAL_SERVER_ERROR
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .mocks import _get_mock_thermostat_run
-
-from tests.async_mock import MagicMock, patch
 
 
 async def test_form_user(hass):
     """Test we get the form with user source."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -28,8 +29,6 @@ async def test_form_user(hass):
         "homeassistant.components.nuheat.config_flow.nuheat.NuHeat.get_thermostat",
         return_value=mock_thermostat,
     ), patch(
-        "homeassistant.components.nuheat.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.nuheat.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -40,6 +39,7 @@ async def test_form_user(hass):
                 CONF_PASSWORD: "test-password",
             },
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Master bathroom"
@@ -48,47 +48,6 @@ async def test_form_user(hass):
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
     }
-    await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_import(hass):
-    """Test we get the form with import source."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    mock_thermostat = _get_mock_thermostat_run()
-
-    with patch(
-        "homeassistant.components.nuheat.config_flow.nuheat.NuHeat.authenticate",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.nuheat.config_flow.nuheat.NuHeat.get_thermostat",
-        return_value=mock_thermostat,
-    ), patch(
-        "homeassistant.components.nuheat.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.nuheat.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_SERIAL_NUMBER: "12345",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "Master bathroom"
-    assert result["data"] == {
-        CONF_SERIAL_NUMBER: "12345",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-    await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -140,7 +99,7 @@ async def test_form_invalid_thermostat(hass):
     )
 
     response_mock = MagicMock()
-    type(response_mock).status_code = HTTP_INTERNAL_SERVER_ERROR
+    type(response_mock).status_code = HTTPStatus.INTERNAL_SERVER_ERROR
 
     with patch(
         "homeassistant.components.nuheat.config_flow.nuheat.NuHeat.authenticate",

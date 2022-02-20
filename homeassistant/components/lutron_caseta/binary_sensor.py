@@ -2,26 +2,35 @@
 from pylutron_caseta import OCCUPANCY_GROUP_OCCUPIED
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_OCCUPANCY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice
+from .const import BRIDGE_DEVICE, BRIDGE_LEAP
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Lutron Caseta binary_sensor platform.
 
     Adds occupancy groups from the Caseta bridge associated with the
     config_entry as binary_sensor entities.
     """
-
     entities = []
-    bridge = hass.data[CASETA_DOMAIN][config_entry.entry_id]
+    data = hass.data[CASETA_DOMAIN][config_entry.entry_id]
+    bridge = data[BRIDGE_LEAP]
+    bridge_device = data[BRIDGE_DEVICE]
     occupancy_groups = bridge.occupancy_groups
 
     for occupancy_group in occupancy_groups.values():
-        entity = LutronOccupancySensor(occupancy_group, bridge)
+        entity = LutronOccupancySensor(occupancy_group, bridge, bridge_device)
         entities.append(entity)
 
     async_add_entities(entities, True)
@@ -33,7 +42,7 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
     @property
     def device_class(self):
         """Flag supported features."""
-        return DEVICE_CLASS_OCCUPANCY
+        return BinarySensorDeviceClass.OCCUPANCY
 
     @property
     def is_on(self):
@@ -64,9 +73,9 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
         sensors by each room. Therefore, there shouldn't be devices
         related to any sensor entities.
         """
-        return None  # pylint: disable=useless-return
+        return None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {"device_id": self.device_id}

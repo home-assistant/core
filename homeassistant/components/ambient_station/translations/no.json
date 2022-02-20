@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denne app n\u00f8kkelen er allerede i bruk."
+            "already_configured": "Tjenesten er allerede konfigurert"
         },
         "error": {
-            "invalid_key": "Ugyldig API-n\u00f8kkel og/eller programn\u00f8kkel",
+            "invalid_key": "Ugyldig API-n\u00f8kkel",
             "no_devices": "Ingen enheter funnet i kontoen"
         },
         "step": {

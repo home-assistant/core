@@ -1,14 +1,17 @@
 """Allows to configure a switch using RPi GPIO."""
+from __future__ import annotations
+
 import logging
 
-from pi4ioe5v9xxxx import pi4ioe5v9xxxx  # pylint: disable=import-error
+from pi4ioe5v9xxxx import pi4ioe5v9xxxx
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import DEVICE_DEFAULT_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_PINS = "pins"
 CONF_INVERT_LOGIC = "invert_logic"
@@ -33,10 +36,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+_LOGGER = logging.getLogger(__name__)
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the swiches devices."""
-    pins = config.get(CONF_PINS)
+    _LOGGER.warning(
+        "The pi4ioe5v9xxxx IO Expander integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
+
+    pins = config[CONF_PINS]
     switches = []
 
     pi4ioe5v9xxxx.setup(
@@ -59,7 +76,7 @@ class Pi4ioe5v9Switch(SwitchEntity):
         self._name = name or DEVICE_DEFAULT_NAME
         self._pin = pin
         self._invert_logic = invert_logic
-        self._state = False
+        self._state = not invert_logic
 
     @property
     def name(self):

@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Lokasi sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "destination": "Tujuan",
+                    "name": "Nama",
+                    "origin": "Asal",
+                    "region": "Wilayah"
+                },
+                "description": "Untuk Asal dan Tujuan, masukkan alamat atau koordinat GPS lokasi (koordinat GPS harus dipisahkan dengan koma). Anda juga dapat memasukkan ID entitas yang menyediakan informasi ini dalam statusnya, ID entitas dengan atribut garis lintang dan garis bujur, atau nama ramah zona."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "avoid_ferries": "Hindari Feri?",
+                    "avoid_subscription_roads": "Hindari Jalan Berbayar?",
+                    "avoid_toll_roads": "Hindari Jalan Tol?",
+                    "excl_filter": "Substring TIDAK dalam Deskripsi Rute yang Dipilih",
+                    "incl_filter": "Substring dalam Deskripsi Rute yang Dipilih",
+                    "realtime": "Waktu Perjalanan Waktu Nyata?",
+                    "units": "Unit",
+                    "vehicle_type": "Jenis Kendaraan"
+                },
+                "description": "Input `substring` akan memungkinkan Anda untuk memaksa integrasi untuk menggunakan rute tertentu atau menghindari rute tertentu dalam perhitungan waktu perjalanan."
+            }
+        }
+    },
+    "title": "Waktu Perjalanan Waze"
+}

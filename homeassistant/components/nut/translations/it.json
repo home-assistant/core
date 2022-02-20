@@ -4,7 +4,7 @@
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi, si prega di riprovare",
+            "cannot_connect": "Impossibile connettersi",
             "unknown": "Errore imprevisto"
         },
         "step": {
@@ -12,14 +12,14 @@
                 "data": {
                     "resources": "Risorse"
                 },
-                "title": "Scegliere le risorse da monitorare"
+                "title": "Scegli le risorse da monitorare"
             },
             "ups": {
                 "data": {
                     "alias": "Alias",
                     "resources": "Risorse"
                 },
-                "title": "Scegliere l'UPS da monitorare"
+                "title": "Scegli l'UPS da monitorare"
             },
             "user": {
                 "data": {
@@ -28,18 +28,22 @@
                     "port": "Porta",
                     "username": "Nome utente"
                 },
-                "title": "Connessione al server NUT"
+                "title": "Connettiti al server NUT"
             }
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "unknown": "Errore imprevisto"
+        },
         "step": {
             "init": {
                 "data": {
                     "resources": "Risorse",
                     "scan_interval": "Intervallo di scansione (secondi)"
                 },
-                "description": "Scegliere le Risorse del Sensore."
+                "description": "Scegli le risorse del sensore."
             }
         }
     }

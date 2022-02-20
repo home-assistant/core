@@ -1,4 +1,19 @@
 """Support for deCONZ lights."""
+
+from __future__ import annotations
+
+from collections.abc import ValuesView
+from typing import Any
+
+from pydeconz.group import Group
+from pydeconz.light import (
+    ALERT_LONG,
+    ALERT_SHORT,
+    EFFECT_COLOR_LOOP,
+    EFFECT_NONE,
+    Light,
+)
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -6,60 +21,76 @@ from homeassistant.components.light import (
     ATTR_FLASH,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
+    ATTR_XY_COLOR,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_HS,
+    COLOR_MODE_ONOFF,
+    COLOR_MODE_XY,
+    DOMAIN,
     EFFECT_COLORLOOP,
     FLASH_LONG,
     FLASH_SHORT,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
     LightEntity,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-import homeassistant.util.color as color_util
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.color import color_hs_to_xy
 
-from .const import (
-    CONF_GROUP_ID_BASE,
-    COVER_TYPES,
-    DOMAIN as DECONZ_DOMAIN,
-    NEW_GROUP,
-    NEW_LIGHT,
-    SWITCH_TYPES,
-)
+from .const import DOMAIN as DECONZ_DOMAIN, POWER_PLUGS
 from .deconz_device import DeconzDevice
-from .gateway import get_gateway_from_config_entry
+from .gateway import DeconzGateway, get_gateway_from_config_entry
+
+DECONZ_GROUP = "is_deconz_group"
+EFFECT_TO_DECONZ = {EFFECT_COLORLOOP: EFFECT_COLOR_LOOP, "None": EFFECT_NONE}
+FLASH_TO_DECONZ = {FLASH_SHORT: ALERT_SHORT, FLASH_LONG: ALERT_LONG}
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up deCONZ platforms."""
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the deCONZ lights and groups from a config entry."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
+    gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_light(lights):
+    def async_add_light(
+        lights: list[Light] | ValuesView[Light] = gateway.api.lights.values(),
+    ) -> None:
         """Add light from deCONZ."""
         entities = []
 
         for light in lights:
-            if light.type not in COVER_TYPES + SWITCH_TYPES:
+            if (
+                isinstance(light, Light)
+                and light.type not in POWER_PLUGS
+                and light.unique_id not in gateway.entities[DOMAIN]
+            ):
                 entities.append(DeconzLight(light, gateway))
 
-        async_add_entities(entities, True)
+        if entities:
+            async_add_entities(entities)
 
-    gateway.listeners.append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
-            hass, gateway.async_signal_new_device(NEW_LIGHT), async_add_light
+            hass,
+            gateway.signal_new_light,
+            async_add_light,
         )
     )
 
     @callback
-    def async_add_group(groups):
+    def async_add_group(
+        groups: list[Group] | ValuesView[Group] = gateway.api.groups.values(),
+    ) -> None:
         """Add group from deCONZ."""
         if not gateway.option_allow_deconz_groups:
             return
@@ -67,192 +98,206 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities = []
 
         for group in groups:
-            if group.lights:
-                entities.append(DeconzGroup(group, gateway))
+            if not group.lights:
+                continue
 
-        async_add_entities(entities, True)
+            known_groups = set(gateway.entities[DOMAIN])
+            new_group = DeconzGroup(group, gateway)
+            if new_group.unique_id not in known_groups:
+                entities.append(new_group)
 
-    gateway.listeners.append(
+        if entities:
+            async_add_entities(entities)
+
+    config_entry.async_on_unload(
         async_dispatcher_connect(
-            hass, gateway.async_signal_new_device(NEW_GROUP), async_add_group
+            hass,
+            gateway.signal_new_group,
+            async_add_group,
         )
     )
 
-    async_add_light(gateway.api.lights.values())
-    async_add_group(gateway.api.groups.values())
+    async_add_light()
+    async_add_group()
 
 
 class DeconzBaseLight(DeconzDevice, LightEntity):
     """Representation of a deCONZ light."""
 
-    def __init__(self, device, gateway):
+    TYPE = DOMAIN
+
+    def __init__(self, device: Group | Light, gateway: DeconzGateway) -> None:
         """Set up light."""
         super().__init__(device, gateway)
 
-        self._features = 0
+        self._attr_supported_color_modes: set[str] = set()
 
-        if self._device.brightness is not None:
-            self._features |= SUPPORT_BRIGHTNESS
-            self._features |= SUPPORT_FLASH
-            self._features |= SUPPORT_TRANSITION
+        if device.color_temp is not None:
+            self._attr_supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
 
-        if self._device.ct is not None:
-            self._features |= SUPPORT_COLOR_TEMP
+        if device.hue is not None and device.saturation is not None:
+            self._attr_supported_color_modes.add(COLOR_MODE_HS)
 
-        if self._device.xy is not None:
-            self._features |= SUPPORT_COLOR
+        if device.xy is not None:
+            self._attr_supported_color_modes.add(COLOR_MODE_XY)
 
-        if self._device.effect is not None:
-            self._features |= SUPPORT_EFFECT
+        if not self._attr_supported_color_modes and device.brightness is not None:
+            self._attr_supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+
+        if not self._attr_supported_color_modes:
+            self._attr_supported_color_modes.add(COLOR_MODE_ONOFF)
+
+        if device.brightness is not None:
+            self._attr_supported_features |= SUPPORT_FLASH
+            self._attr_supported_features |= SUPPORT_TRANSITION
+
+        if device.effect is not None:
+            self._attr_supported_features |= SUPPORT_EFFECT
+            self._attr_effect_list = [EFFECT_COLORLOOP]
 
     @property
-    def brightness(self):
+    def color_mode(self) -> str:
+        """Return the color mode of the light."""
+        if self._device.color_mode == "ct":
+            color_mode = COLOR_MODE_COLOR_TEMP
+        elif self._device.color_mode == "hs":
+            color_mode = COLOR_MODE_HS
+        elif self._device.color_mode == "xy":
+            color_mode = COLOR_MODE_XY
+        elif self._device.brightness is not None:
+            color_mode = COLOR_MODE_BRIGHTNESS
+        else:
+            color_mode = COLOR_MODE_ONOFF
+        return color_mode
+
+    @property
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
-        return self._device.brightness
+        return self._device.brightness  # type: ignore[no-any-return]
 
     @property
-    def effect_list(self):
-        """Return the list of supported effects."""
-        return [EFFECT_COLORLOOP]
-
-    @property
-    def color_temp(self):
+    def color_temp(self) -> int:
         """Return the CT color value."""
-        if self._device.colormode != "ct":
-            return None
-
-        return self._device.ct
+        return self._device.color_temp  # type: ignore[no-any-return]
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[float, float]:
         """Return the hs color value."""
-        if self._device.colormode in ("xy", "hs") and self._device.xy:
-            return color_util.color_xy_to_hs(*self._device.xy)
-        return None
+        return (self._device.hue / 65535 * 360, self._device.saturation / 255 * 100)
 
     @property
-    def is_on(self):
+    def xy_color(self) -> tuple[float, float] | None:
+        """Return the XY color value."""
+        return self._device.xy  # type: ignore[no-any-return]
+
+    @property
+    def is_on(self) -> bool:
         """Return true if light is on."""
-        return self._device.state
+        return self._device.state  # type: ignore[no-any-return]
 
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return self._features
-
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
-        data = {"on": True}
+        data: dict[str, bool | float | int | str | tuple[float, float]] = {"on": True}
 
-        if ATTR_COLOR_TEMP in kwargs:
-            data["ct"] = kwargs[ATTR_COLOR_TEMP]
+        if (attr_brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
+            data["brightness"] = attr_brightness
 
-        if ATTR_HS_COLOR in kwargs:
-            data["xy"] = color_util.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
+        if attr_color_temp := kwargs.get(ATTR_COLOR_TEMP):
+            data["color_temperature"] = attr_color_temp
 
-        if ATTR_BRIGHTNESS in kwargs:
-            data["bri"] = kwargs[ATTR_BRIGHTNESS]
-
-        if ATTR_TRANSITION in kwargs:
-            data["transitiontime"] = int(kwargs[ATTR_TRANSITION] * 10)
-        elif "IKEA" in self._device.manufacturer:
-            data["transitiontime"] = 0
-
-        if ATTR_FLASH in kwargs:
-            if kwargs[ATTR_FLASH] == FLASH_SHORT:
-                data["alert"] = "select"
-                del data["on"]
-            elif kwargs[ATTR_FLASH] == FLASH_LONG:
-                data["alert"] = "lselect"
-                del data["on"]
-
-        if ATTR_EFFECT in kwargs:
-            if kwargs[ATTR_EFFECT] == EFFECT_COLORLOOP:
-                data["effect"] = "colorloop"
+        if attr_hs_color := kwargs.get(ATTR_HS_COLOR):
+            if COLOR_MODE_XY in self._attr_supported_color_modes:
+                data["xy"] = color_hs_to_xy(*attr_hs_color)
             else:
-                data["effect"] = "none"
+                data["hue"] = int(attr_hs_color[0] / 360 * 65535)
+                data["saturation"] = int(attr_hs_color[1] / 100 * 255)
 
-        await self._device.async_set_state(data)
+        if ATTR_XY_COLOR in kwargs:
+            data["xy"] = kwargs[ATTR_XY_COLOR]
 
-    async def async_turn_off(self, **kwargs):
+        if (attr_transition := kwargs.get(ATTR_TRANSITION)) is not None:
+            data["transition_time"] = int(attr_transition * 10)
+        elif "IKEA" in self._device.manufacturer:
+            data["transition_time"] = 0
+
+        if (alert := FLASH_TO_DECONZ.get(kwargs.get(ATTR_FLASH))) is not None:
+            data["alert"] = alert
+            del data["on"]
+
+        if (effect := EFFECT_TO_DECONZ.get(kwargs.get(ATTR_EFFECT))) is not None:
+            data["effect"] = effect
+
+        await self._device.set_state(**data)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
         if not self._device.state:
             return
 
-        data = {"on": False}
+        data: dict[str, bool | int | str] = {"on": False}
 
-        if ATTR_TRANSITION in kwargs:
-            data["bri"] = 0
-            data["transitiontime"] = int(kwargs[ATTR_TRANSITION] * 10)
+        if (attr_transition := kwargs.get(ATTR_TRANSITION)) is not None:
+            data["brightness"] = 0
+            data["transition_time"] = int(attr_transition * 10)
 
-        if ATTR_FLASH in kwargs:
-            if kwargs[ATTR_FLASH] == FLASH_SHORT:
-                data["alert"] = "select"
-                del data["on"]
-            elif kwargs[ATTR_FLASH] == FLASH_LONG:
-                data["alert"] = "lselect"
-                del data["on"]
+        if (alert := FLASH_TO_DECONZ.get(kwargs.get(ATTR_FLASH))) is not None:
+            data["alert"] = alert
+            del data["on"]
 
-        await self._device.async_set_state(data)
+        await self._device.set_state(**data)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, bool]:
         """Return the device state attributes."""
-        attributes = {}
-        attributes["is_deconz_group"] = self._device.type == "LightGroup"
-
-        return attributes
+        return {DECONZ_GROUP: isinstance(self._device, Group)}
 
 
 class DeconzLight(DeconzBaseLight):
     """Representation of a deCONZ light."""
 
-    @property
-    def max_mireds(self):
-        """Return the warmest color_temp that this light supports."""
-        return self._device.ctmax or super().max_mireds
+    _device: Light
 
     @property
-    def min_mireds(self):
+    def max_mireds(self) -> int:
+        """Return the warmest color_temp that this light supports."""
+        return self._device.max_color_temp or super().max_mireds
+
+    @property
+    def min_mireds(self) -> int:
         """Return the coldest color_temp that this light supports."""
-        return self._device.ctmin or super().min_mireds
+        return self._device.min_color_temp or super().min_mireds
 
 
 class DeconzGroup(DeconzBaseLight):
     """Representation of a deCONZ group."""
 
-    def __init__(self, device, gateway):
+    _device: Group
+
+    def __init__(self, device: Group, gateway: DeconzGateway) -> None:
         """Set up group and create an unique id."""
+        self._unique_id = f"{gateway.bridgeid}-{device.deconz_id}"
         super().__init__(device, gateway)
 
-        group_id_base = self.gateway.config_entry.unique_id
-        if CONF_GROUP_ID_BASE in self.gateway.config_entry.data:
-            group_id_base = self.gateway.config_entry.data[CONF_GROUP_ID_BASE]
-
-        self._unique_id = f"{group_id_base}-{self._device.deconz_id}"
-
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique identifier for this device."""
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
-        bridgeid = self.gateway.api.config.bridgeid
-
-        return {
-            "identifiers": {(DECONZ_DOMAIN, self.unique_id)},
-            "manufacturer": "Dresden Elektronik",
-            "model": "deCONZ group",
-            "name": self._device.name,
-            "via_device": (DECONZ_DOMAIN, bridgeid),
-        }
+        return DeviceInfo(
+            identifiers={(DECONZ_DOMAIN, self.unique_id)},
+            manufacturer="Dresden Elektronik",
+            model="deCONZ group",
+            name=self._device.name,
+            via_device=(DECONZ_DOMAIN, self.gateway.api.config.bridge_id),
+        )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, bool]:
         """Return the device state attributes."""
-        attributes = dict(super().device_state_attributes)
+        attributes = dict(super().extra_state_attributes)
         attributes["all_on"] = self._device.all_on
 
         return attributes

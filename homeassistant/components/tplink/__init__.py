@@ -1,124 +1,110 @@
 """Component to embed TP-Link smart home devices."""
-import logging
+from __future__ import annotations
 
-import voluptuous as vol
+import asyncio
+from datetime import timedelta
+from typing import Any
+
+from kasa import SmartDevice, SmartDeviceException
+from kasa.discover import Discover
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-
-from .common import (
-    ATTR_CONFIG,
-    CONF_DIMMER,
-    CONF_DISCOVERY,
-    CONF_LIGHT,
-    CONF_STRIP,
-    CONF_SWITCH,
-    SmartDevices,
-    async_discover_devices,
-    get_static_devices,
+from homeassistant.components import network
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    EVENT_HOMEASSISTANT_STARTED,
 )
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, PLATFORMS
+from .coordinator import TPLinkDataUpdateCoordinator
 
-DOMAIN = "tplink"
-
-TPLINK_HOST_SCHEMA = vol.Schema({vol.Required(CONF_HOST): cv.string})
-
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_LIGHT, default=[]): vol.All(
-                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
-                ),
-                vol.Optional(CONF_SWITCH, default=[]): vol.All(
-                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
-                ),
-                vol.Optional(CONF_STRIP, default=[]): vol.All(
-                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
-                ),
-                vol.Optional(CONF_DIMMER, default=[]): vol.All(
-                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
-                ),
-                vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+DISCOVERY_INTERVAL = timedelta(minutes=15)
 
 
-async def async_setup(hass, config):
-    """Set up the TP-Link component."""
-    conf = config.get(DOMAIN)
-
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][ATTR_CONFIG] = conf
-
-    if conf is not None:
+@callback
+def async_trigger_discovery(
+    hass: HomeAssistant,
+    discovered_devices: dict[str, SmartDevice],
+) -> None:
+    """Trigger config flows for discovered devices."""
+    for formatted_mac, device in discovered_devices.items():
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
+                DOMAIN,
+                context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+                data={
+                    CONF_NAME: device.alias,
+                    CONF_HOST: device.host,
+                    CONF_MAC: formatted_mac,
+                },
             )
         )
 
+
+async def async_discover_devices(hass: HomeAssistant) -> dict[str, SmartDevice]:
+    """Discover TPLink devices on configured network interfaces."""
+    broadcast_addresses = await network.async_get_ipv4_broadcast_addresses(hass)
+    tasks = [Discover.discover(target=str(address)) for address in broadcast_addresses]
+    discovered_devices: dict[str, SmartDevice] = {}
+    for device_list in await asyncio.gather(*tasks):
+        for device in device_list.values():
+            discovered_devices[dr.format_mac(device.mac)] = device
+    return discovered_devices
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the TP-Link component."""
+    hass.data[DOMAIN] = {}
+
+    if discovered_devices := await async_discover_devices(hass):
+        async_trigger_discovery(hass, discovered_devices)
+
+    async def _async_discovery(*_: Any) -> None:
+        if discovered := await async_discover_devices(hass):
+            async_trigger_discovery(hass, discovered)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_discovery)
+    async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
+
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigType):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up TPLink from a config entry."""
-    config_data = hass.data[DOMAIN].get(ATTR_CONFIG)
+    try:
+        device: SmartDevice = await Discover.discover_single(entry.data[CONF_HOST])
+    except SmartDeviceException as ex:
+        raise ConfigEntryNotReady from ex
 
-    # These will contain the initialized devices
-    lights = hass.data[DOMAIN][CONF_LIGHT] = []
-    switches = hass.data[DOMAIN][CONF_SWITCH] = []
-
-    # Add static devices
-    static_devices = SmartDevices()
-    if config_data is not None:
-        static_devices = get_static_devices(config_data)
-
-        lights.extend(static_devices.lights)
-        switches.extend(static_devices.switches)
-
-    # Add discovered devices
-    if config_data is None or config_data[CONF_DISCOVERY]:
-        discovered_devices = await async_discover_devices(hass, static_devices)
-
-        lights.extend(discovered_devices.lights)
-        switches.extend(discovered_devices.switches)
-
-    forward_setup = hass.config_entries.async_forward_entry_setup
-    if lights:
-        _LOGGER.debug(
-            "Got %s lights: %s", len(lights), ", ".join([d.host for d in lights])
-        )
-        hass.async_create_task(forward_setup(config_entry, "light"))
-    if switches:
-        _LOGGER.debug(
-            "Got %s switches: %s", len(switches), ", ".join([d.host for d in switches])
-        )
-        hass.async_create_task(forward_setup(config_entry, "switch"))
+    hass.data[DOMAIN][entry.entry_id] = TPLinkDataUpdateCoordinator(hass, device)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    forward_unload = hass.config_entries.async_forward_entry_unload
-    remove_lights = remove_switches = False
-    if hass.data[DOMAIN][CONF_LIGHT]:
-        remove_lights = await forward_unload(entry, "light")
-    if hass.data[DOMAIN][CONF_SWITCH]:
-        remove_switches = await forward_unload(entry, "switch")
+    hass_data: dict[str, Any] = hass.data[DOMAIN]
+    device: SmartDevice = hass_data[entry.entry_id].device
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass_data.pop(entry.entry_id)
+    await device.protocol.close()  # type: ignore[no-untyped-call]
+    return unload_ok
 
-    if remove_lights or remove_switches:
-        hass.data[DOMAIN].clear()
-        return True
 
-    # We were not able to unload the platforms, either because there
-    # were none or one of the forward_unloads failed.
-    return False
+def legacy_device_id(device: SmartDevice) -> str:
+    """Convert the device id so it matches what was used in the original version."""
+    device_id: str = device.device_id
+    # Plugs are prefixed with the mac in python-kasa but not
+    # in pyHS100 so we need to strip off the mac
+    if "_" not in device_id:
+        return device_id
+    return device_id.split("_")[1]

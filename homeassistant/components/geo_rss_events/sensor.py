@@ -5,14 +5,16 @@ Retrieves current events (typically incidents or alerts) in GeoRSS format, and
 shows information on events filtered by distance to the HA instance's location
 and grouped by category.
 """
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 from georss_client import UPDATE_OK, UPDATE_OK_NO_DATA
-from georss_client.generic_feed import GenericFeed
+from georss_generic_client import GenericFeed
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -22,8 +24,10 @@ from homeassistant.const import (
     CONF_URL,
     LENGTH_KILOMETERS,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +61,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the GeoRSS component."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
@@ -96,7 +105,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class GeoRssServiceSensor(Entity):
+class GeoRssServiceSensor(SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(
@@ -122,12 +131,12 @@ class GeoRssServiceSensor(Entity):
         return f"{self._service_name} {'Any' if self._category is None else self._category}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
@@ -137,7 +146,7 @@ class GeoRssServiceSensor(Entity):
         return DEFAULT_ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._state_attributes
 

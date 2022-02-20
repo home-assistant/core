@@ -12,6 +12,11 @@ SSDP = {
             "manufacturer": "ARCAM"
         }
     ],
+    "axis": [
+        {
+            "manufacturer": "AXIS"
+        }
+    ],
     "control4": [
         {
             "st": "c4:director"
@@ -78,6 +83,25 @@ SSDP = {
             "manufacturer": "DIRECTV"
         }
     ],
+    "dlna_dmr": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "st": "urn:schemas-upnp-org:device:MediaRenderer:1"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+            "st": "urn:schemas-upnp-org:device:MediaRenderer:2"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:3",
+            "st": "urn:schemas-upnp-org:device:MediaRenderer:3"
+        }
+    ],
+    "fritz": [
+        {
+            "st": "urn:schemas-upnp-org:device:fritzbox:1"
+        }
+    ],
     "fritzbox": [
         {
             "st": "urn:schemas-upnp-org:device:fritzbox:1"
@@ -114,15 +138,57 @@ SSDP = {
             "modelName": "Philips hue bridge 2015"
         }
     ],
+    "hyperion": [
+        {
+            "manufacturer": "Hyperion Open Source Ambient Lighting",
+            "st": "urn:hyperion-project.org:device:basic:1"
+        }
+    ],
     "isy994": [
         {
             "deviceType": "urn:udi-com:device:X_Insteon_Lighting_Device:1",
             "manufacturer": "Universal Devices Inc."
         }
     ],
+    "keenetic_ndms2": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "Keenetic Ltd."
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "ZyXEL Communications Corp."
+        }
+    ],
     "konnected": [
         {
             "manufacturer": "konnected.io"
+        }
+    ],
+    "nanoleaf": [
+        {
+            "st": "Nanoleaf_aurora:light"
+        },
+        {
+            "st": "nanoleaf:nl29"
+        },
+        {
+            "st": "nanoleaf:nl42"
+        },
+        {
+            "st": "nanoleaf:nl52"
+        }
+    ],
+    "netgear": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "NETGEAR, Inc."
+        }
+    ],
+    "octoprint": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:Basic:1",
+            "manufacturer": "The OctoPrint Project"
         }
     ],
     "roku": [
@@ -160,6 +226,34 @@ SSDP = {
             "manufacturer": "Synology"
         }
     ],
+    "unifi": [
+        {
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine"
+        },
+        {
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine Pro"
+        },
+        {
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine SE"
+        }
+    ],
+    "unifiprotect": [
+        {
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine"
+        },
+        {
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine Pro"
+        },
+        {
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine SE"
+        }
+    ],
     "upnp": [
         {
             "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
@@ -168,9 +262,24 @@ SSDP = {
             "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:2"
         }
     ],
+    "webostv": [
+        {
+            "st": "urn:lge-com:service:webos-second-screen:1"
+        }
+    ],
     "wemo": [
         {
             "manufacturer": "Belkin International Inc."
+        }
+    ],
+    "wilight": [
+        {
+            "manufacturer": "All Automacao Ltda"
+        }
+    ],
+    "yamaha_musiccast": [
+        {
+            "manufacturer": "Yamaha Corporation"
         }
     ]
 }

@@ -1,11 +1,24 @@
 """Support for Home Assistant Updater binary sensors."""
+from __future__ import annotations
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ATTR_NEWEST_VERSION, ATTR_RELEASE_NOTES, DOMAIN as UPDATER_DOMAIN
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the updater binary sensors."""
     if discovery_info is None:
         return
@@ -13,42 +26,25 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([UpdaterBinary(hass.data[UPDATER_DOMAIN])])
 
 
-class UpdaterBinary(BinarySensorEntity):
+class UpdaterBinary(CoordinatorEntity, BinarySensorEntity):
     """Representation of an updater binary sensor."""
 
-    def __init__(self, coordinator):
-        """Initialize the binary sensor."""
-        self.coordinator = coordinator
-
-    @property
-    def name(self) -> str:
-        """Return the name of the binary sensor, if any."""
-        return "Updater"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return "updater"
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if the binary sensor is on."""
-        if not self.coordinator.data:
-            return None
-        return self.coordinator.data.update_available
+    _attr_device_class = BinarySensorDeviceClass.UPDATE
+    _attr_name = "Updater"
+    _attr_unique_id = "updater"
 
     @property
     def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
+        """Return if entity is available."""
+        return True
 
     @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state."""
-        return False
+    def is_on(self) -> bool:
+        """Return true if there is an update available."""
+        return self.coordinator.data and self.coordinator.data.update_available
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict | None:
         """Return the optional state attributes."""
         if not self.coordinator.data:
             return None
@@ -58,16 +54,3 @@ class UpdaterBinary(BinarySensorEntity):
         if self.coordinator.data.newest_version:
             data[ATTR_NEWEST_VERSION] = self.coordinator.data.newest_version
         return data
-
-    async def async_added_to_hass(self):
-        """Register update dispatcher."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self.coordinator.async_request_refresh()

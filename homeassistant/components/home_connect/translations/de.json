@@ -1,14 +1,15 @@
 {
     "config": {
         "abort": {
-            "missing_configuration": "Die Komponente Home Connect ist nicht konfiguriert. Bitte folgen Sie der Dokumentation."
+            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen.",
+            "no_url_available": "Keine URL verf\u00fcgbar. Informationen zu diesem Fehler findest du [im Hilfebereich]({docs_url})."
         },
         "create_entry": {
-            "default": "Erfolgreich mit Home Connect authentifiziert."
+            "default": "Erfolgreich authentifiziert"
         },
         "step": {
             "pick_implementation": {
-                "title": "Authentifizierungsmethode ausw\u00e4hlen"
+                "title": "W\u00e4hle die Authentifizierungsmethode"
             }
         }
     }

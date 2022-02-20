@@ -1,4 +1,6 @@
 """Sensor for data from Austrian Zentralanstalt für Meteorologie."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -13,7 +15,10 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 # Reuse data and API logic from the sensor implementation
 from .sensor import (
@@ -40,7 +45,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ZAMG weather platform."""
     name = config.get(CONF_NAME)
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
@@ -55,14 +65,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             CONF_STATION_ID,
             station_id,
         )
-        return False
+        return
 
     probe = ZamgData(station_id=station_id)
     try:
         probe.update()
     except (ValueError, TypeError) as err:
         _LOGGER.error("Received error from ZAMG: %s", err)
-        return False
+        return
 
     add_entities([ZamgWeather(probe, name)], True)
 

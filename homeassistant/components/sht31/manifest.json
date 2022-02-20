@@ -3,5 +3,6 @@
   "name": "Sensirion SHT31",
   "documentation": "https://www.home-assistant.io/integrations/sht31",
   "requirements": ["Adafruit-GPIO==1.0.3", "Adafruit-SHT31==1.0.2"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

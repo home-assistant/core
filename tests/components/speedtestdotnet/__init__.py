@@ -9,7 +9,7 @@ MOCK_SERVERS = {
             "name": "Server1",
             "country": "Country1",
             "cc": "LL1",
-            "sponsor": "Server1",
+            "sponsor": "Sponsor1",
             "id": "1",
             "host": "server1:8080",
             "d": 1,
@@ -23,7 +23,7 @@ MOCK_SERVERS = {
             "name": "Server2",
             "country": "Country2",
             "cc": "LL2",
-            "sponsor": "server2",
+            "sponsor": "Sponsor2",
             "id": "2",
             "host": "server2:8080",
             "d": 2,
@@ -52,4 +52,4 @@ MOCK_RESULTS = {
     "share": None,
 }
 
-MOCK_STATES = {"ping": "18.465", "download": "1.02", "upload": "1.02"}
+MOCK_STATES = {"ping": "18", "download": "1.02", "upload": "1.02"}

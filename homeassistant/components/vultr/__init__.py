@@ -5,8 +5,11 @@ import logging
 import voluptuous as vol
 from vultr import Vultr as VultrAPI
 
-from homeassistant.const import CONF_API_KEY
+from homeassistant.components import persistent_notification
+from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,7 +38,7 @@ DOMAIN = "vultr"
 NOTIFICATION_ID = "vultr_notification"
 NOTIFICATION_TITLE = "Vultr Setup"
 
-VULTR_PLATFORMS = ["binary_sensor", "sensor", "switch"]
+VULTR_PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
@@ -44,7 +47,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Vultr component."""
     api_key = config[DOMAIN].get(CONF_API_KEY)
 
@@ -54,7 +57,8 @@ def setup(hass, config):
         vultr.update()
     except RuntimeError as ex:
         _LOGGER.error("Failed to make update API request because: %s", ex)
-        hass.components.persistent_notification.create(
+        persistent_notification.create(
+            hass,
             "Error: {}" "".format(ex),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,

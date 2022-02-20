@@ -1,4 +1,6 @@
 """Support to interface with the Emby API."""
+from __future__ import annotations
+
 import logging
 
 from pyemby import EmbyServer
@@ -30,8 +32,10 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,8 +47,6 @@ DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 8096
 DEFAULT_SSL_PORT = 8920
 DEFAULT_SSL = False
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_EMBY = (
     SUPPORT_PAUSE
@@ -65,7 +67,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Emby platform."""
 
     host = config.get(CONF_HOST)
@@ -80,15 +87,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     emby = EmbyServer(host, key, port, ssl, hass.loop)
 
-    active_emby_devices = {}
-    inactive_emby_devices = {}
+    active_emby_devices: dict[str, EmbyDevice] = {}
+    inactive_emby_devices: dict[str, EmbyDevice] = {}
 
     @callback
     def device_update_callback(data):
         """Handle devices which are added to Emby."""
         new_devices = []
         active_devices = []
-        for dev_id in emby.devices:
+        for dev_id, dev in emby.devices.items():
             active_devices.append(dev_id)
             if (
                 dev_id not in active_emby_devices
@@ -98,12 +105,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 active_emby_devices[dev_id] = new
                 new_devices.append(new)
 
-            elif dev_id in inactive_emby_devices:
-                if emby.devices[dev_id].state != "Off":
-                    add = inactive_emby_devices.pop(dev_id)
-                    active_emby_devices[dev_id] = add
-                    _LOGGER.debug("Showing %s, item: %s", dev_id, add)
-                    add.set_available(True)
+            elif dev_id in inactive_emby_devices and dev.state != "Off":
+                add = inactive_emby_devices.pop(dev_id)
+                active_emby_devices[dev_id] = add
+                _LOGGER.debug("Showing %s, item: %s", dev_id, add)
+                add.set_available(True)
 
         if new_devices:
             _LOGGER.debug("Adding new devices: %s", new_devices)

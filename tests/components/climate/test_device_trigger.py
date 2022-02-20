@@ -4,6 +4,7 @@ import voluptuous_serialize
 
 import homeassistant.components.automation as automation
 from homeassistant.components.climate import DOMAIN, const, device_trigger
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.setup import async_setup_component
@@ -16,6 +17,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -78,7 +80,9 @@ async def test_get_triggers(hass, device_reg, entity_reg):
             "entity_id": entity_id,
         },
     ]
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert_lists_same(triggers, expected_triggers)
 
 

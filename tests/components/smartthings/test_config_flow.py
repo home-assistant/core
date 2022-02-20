@@ -1,11 +1,13 @@
 """Tests for the SmartThings config flow module."""
+from http import HTTPStatus
+from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
 from aiohttp import ClientResponseError
 from pysmartthings import APIResponseError
 from pysmartthings.installedapp import format_install_url
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.smartthings import smartapp
 from homeassistant.components.smartthings.const import (
     CONF_APP_ID,
@@ -14,16 +16,8 @@ from homeassistant.components.smartthings.const import (
     DOMAIN,
 )
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    HTTP_FORBIDDEN,
-    HTTP_NOT_FOUND,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import MockConfigEntry
 
 
@@ -31,7 +25,7 @@ async def test_import_shows_user_step(hass):
     """Test import source shows the user form."""
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "import"}
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -56,7 +50,7 @@ async def test_entry_created(hass, app, app_oauth_client, location, smartthings_
 
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -100,7 +94,10 @@ async def test_entry_created(hass, app, app_oauth_client, location, smartthings_
     assert result["data"][CONF_CLIENT_SECRET] == app_oauth_client.client_secret
     assert result["data"][CONF_CLIENT_ID] == app_oauth_client.client_id
     assert result["title"] == location.name
-    entry = next((entry for entry in hass.config_entries.async_entries(DOMAIN)), None,)
+    entry = next(
+        (entry for entry in hass.config_entries.async_entries(DOMAIN)),
+        None,
+    )
     assert entry.unique_id == smartapp.format_unique_id(
         app.app_id, location.location_id
     )
@@ -124,7 +121,7 @@ async def test_entry_created_from_update_event(
 
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -168,7 +165,10 @@ async def test_entry_created_from_update_event(
     assert result["data"][CONF_CLIENT_SECRET] == app_oauth_client.client_secret
     assert result["data"][CONF_CLIENT_ID] == app_oauth_client.client_id
     assert result["title"] == location.name
-    entry = next((entry for entry in hass.config_entries.async_entries(DOMAIN)), None,)
+    entry = next(
+        (entry for entry in hass.config_entries.async_entries(DOMAIN)),
+        None,
+    )
     assert entry.unique_id == smartapp.format_unique_id(
         app.app_id, location.location_id
     )
@@ -192,7 +192,7 @@ async def test_entry_created_existing_app_new_oauth_client(
 
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -236,7 +236,10 @@ async def test_entry_created_existing_app_new_oauth_client(
     assert result["data"][CONF_CLIENT_SECRET] == app_oauth_client.client_secret
     assert result["data"][CONF_CLIENT_ID] == app_oauth_client.client_id
     assert result["title"] == location.name
-    entry = next((entry for entry in hass.config_entries.async_entries(DOMAIN)), None,)
+    entry = next(
+        (entry for entry in hass.config_entries.async_entries(DOMAIN)),
+        None,
+    )
     assert entry.unique_id == smartapp.format_unique_id(
         app.app_id, location.location_id
     )
@@ -273,7 +276,7 @@ async def test_entry_created_existing_app_copies_oauth_client(
 
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -352,9 +355,11 @@ async def test_entry_created_with_cloudhook(
     request.refresh_token = refresh_token
 
     with patch.object(
-        hass.components.cloud, "async_active_subscription", Mock(return_value=True)
+        smartapp.cloud,
+        "async_active_subscription",
+        Mock(return_value=True),
     ), patch.object(
-        hass.components.cloud,
+        smartapp.cloud,
         "async_create_cloudhook",
         AsyncMock(return_value="http://cloud.test"),
     ) as mock_create_cloudhook:
@@ -363,7 +368,7 @@ async def test_entry_created_with_cloudhook(
 
         # Webhook confirmation shown
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "user"
@@ -409,7 +414,8 @@ async def test_entry_created_with_cloudhook(
         assert result["data"][CONF_CLIENT_ID] == app_oauth_client.client_id
         assert result["title"] == location.name
         entry = next(
-            (entry for entry in hass.config_entries.async_entries(DOMAIN)), None,
+            (entry for entry in hass.config_entries.async_entries(DOMAIN)),
+            None,
         )
         assert entry.unique_id == smartapp.format_unique_id(
             app.app_id, location.location_id
@@ -420,10 +426,11 @@ async def test_invalid_webhook_aborts(hass):
     """Test flow aborts if webhook is invalid."""
     # Webhook confirmation shown
     await async_process_ha_core_config(
-        hass, {"external_url": "http://example.local:8123"},
+        hass,
+        {"external_url": "http://example.local:8123"},
     )
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "invalid_webhook_url"
@@ -439,7 +446,7 @@ async def test_invalid_token_shows_error(hass):
 
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -471,12 +478,12 @@ async def test_unauthorized_token_shows_error(hass, smartthings_mock):
     token = str(uuid4())
     request_info = Mock(real_url="http://example.com")
     smartthings_mock.apps.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=HTTP_UNAUTHORIZED
+        request_info=request_info, history=None, status=HTTPStatus.UNAUTHORIZED
     )
 
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -508,12 +515,12 @@ async def test_forbidden_token_shows_error(hass, smartthings_mock):
     token = str(uuid4())
     request_info = Mock(real_url="http://example.com")
     smartthings_mock.apps.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=HTTP_FORBIDDEN
+        request_info=request_info, history=None, status=HTTPStatus.FORBIDDEN
     )
 
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -546,14 +553,17 @@ async def test_webhook_problem_shows_error(hass, smartthings_mock):
     data = {"error": {}}
     request_info = Mock(real_url="http://example.com")
     error = APIResponseError(
-        request_info=request_info, history=None, data=data, status=422
+        request_info=request_info,
+        history=None,
+        data=data,
+        status=HTTPStatus.UNPROCESSABLE_ENTITY,
     )
     error.is_target_error = Mock(return_value=True)
     smartthings_mock.apps.side_effect = error
 
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -586,13 +596,16 @@ async def test_api_error_shows_error(hass, smartthings_mock):
     data = {"error": {}}
     request_info = Mock(real_url="http://example.com")
     error = APIResponseError(
-        request_info=request_info, history=None, data=data, status=400
+        request_info=request_info,
+        history=None,
+        data=data,
+        status=HTTPStatus.BAD_REQUEST,
     )
     smartthings_mock.apps.side_effect = error
 
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -624,13 +637,13 @@ async def test_unknown_response_error_shows_error(hass, smartthings_mock):
     token = str(uuid4())
     request_info = Mock(real_url="http://example.com")
     error = ClientResponseError(
-        request_info=request_info, history=None, status=HTTP_NOT_FOUND
+        request_info=request_info, history=None, status=HTTPStatus.NOT_FOUND
     )
     smartthings_mock.apps.side_effect = error
 
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -664,7 +677,7 @@ async def test_unknown_error_shows_error(hass, smartthings_mock):
 
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -706,7 +719,7 @@ async def test_no_available_locations_aborts(
 
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"

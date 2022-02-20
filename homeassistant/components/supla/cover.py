@@ -1,13 +1,15 @@
 """Support for Supla cover - curtains, rollershutters, entry gate etc."""
+from __future__ import annotations
+
 import logging
 from pprint import pformat
 
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    DEVICE_CLASS_GARAGE,
-    CoverEntity,
-)
-from homeassistant.components.supla import SuplaChannel
+from homeassistant.components.cover import ATTR_POSITION, CoverDeviceClass, CoverEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from . import DOMAIN, SUPLA_COORDINATORS, SUPLA_SERVERS, SuplaChannel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,21 +17,42 @@ SUPLA_SHUTTER = "CONTROLLINGTHEROLLERSHUTTER"
 SUPLA_GATE = "CONTROLLINGTHEGATE"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Supla covers."""
     if discovery_info is None:
         return
 
     _LOGGER.debug("Discovery: %s", pformat(discovery_info))
 
-    entities = []
-    for device in discovery_info:
-        device_name = device["function"]["name"]
+    entities: list[CoverEntity] = []
+    for device in discovery_info.values():
+        device_name = device["function_name"]
+        server_name = device["server_name"]
+
         if device_name == SUPLA_SHUTTER:
-            entities.append(SuplaCover(device))
+            entities.append(
+                SuplaCover(
+                    device,
+                    hass.data[DOMAIN][SUPLA_SERVERS][server_name],
+                    hass.data[DOMAIN][SUPLA_COORDINATORS][server_name],
+                )
+            )
+
         elif device_name == SUPLA_GATE:
-            entities.append(SuplaGateDoor(device))
-    add_entities(entities)
+            entities.append(
+                SuplaGateDoor(
+                    device,
+                    hass.data[DOMAIN][SUPLA_SERVERS][server_name],
+                    hass.data[DOMAIN][SUPLA_COORDINATORS][server_name],
+                )
+            )
+
+    async_add_entities(entities)
 
 
 class SuplaCover(SuplaChannel, CoverEntity):
@@ -38,14 +61,13 @@ class SuplaCover(SuplaChannel, CoverEntity):
     @property
     def current_cover_position(self):
         """Return current position of cover. 0 is closed, 100 is open."""
-        state = self.channel_data.get("state")
-        if state:
+        if state := self.channel_data.get("state"):
             return 100 - state["shut"]
         return None
 
-    def set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        self.action("REVEAL", percentage=kwargs.get(ATTR_POSITION))
+        await self.async_action("REVEAL", percentage=kwargs.get(ATTR_POSITION))
 
     @property
     def is_closed(self):
@@ -54,17 +76,17 @@ class SuplaCover(SuplaChannel, CoverEntity):
             return None
         return self.current_cover_position == 0
 
-    def open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        self.action("REVEAL")
+        await self.async_action("REVEAL")
 
-    def close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs):
         """Close the cover."""
-        self.action("SHUT")
+        await self.async_action("SHUT")
 
-    def stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
-        self.action("STOP")
+        await self.async_action("STOP")
 
 
 class SuplaGateDoor(SuplaChannel, CoverEntity):
@@ -78,25 +100,25 @@ class SuplaGateDoor(SuplaChannel, CoverEntity):
             return state.get("hi")
         return None
 
-    def open_cover(self, **kwargs) -> None:
+    async def async_open_cover(self, **kwargs) -> None:
         """Open the gate."""
         if self.is_closed:
-            self.action("OPEN_CLOSE")
+            await self.async_action("OPEN_CLOSE")
 
-    def close_cover(self, **kwargs) -> None:
+    async def async_close_cover(self, **kwargs) -> None:
         """Close the gate."""
         if not self.is_closed:
-            self.action("OPEN_CLOSE")
+            await self.async_action("OPEN_CLOSE")
 
-    def stop_cover(self, **kwargs) -> None:
+    async def async_stop_cover(self, **kwargs) -> None:
         """Stop the gate."""
-        self.action("OPEN_CLOSE")
+        await self.async_action("OPEN_CLOSE")
 
-    def toggle(self, **kwargs) -> None:
+    async def async_toggle(self, **kwargs) -> None:
         """Toggle the gate."""
-        self.action("OPEN_CLOSE")
+        await self.async_action("OPEN_CLOSE")
 
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_GARAGE
+        return CoverDeviceClass.GARAGE

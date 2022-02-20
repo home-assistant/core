@@ -1,0 +1,41 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "phonebook": {
+        "data": {
+          "phonebook": "Phonebook"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "insufficient_permissions": "User has insufficient permissions to access AVM FRITZ!Box settings and its phonebooks."
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Prefixes",
+        "data": {
+          "prefixes": "Prefixes (comma separated list)"
+        }
+      }
+    },
+    "error": {
+      "malformed_prefixes": "Prefixes are malformed, please check their format."
+    }
+  }
+}

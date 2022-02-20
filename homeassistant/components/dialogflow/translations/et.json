@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "cloud_not_connected": "Pilve\u00fchendus puudub",
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine.",
+            "webhook_not_internet_accessible": "Veebikonksu s\u00f5numite vastuv\u00f5tmiseks peab Home Assistant olema Interneti kaudu juurdep\u00e4\u00e4setav."
+        },
+        "create_entry": {
+            "default": "S\u00fcndmuste saatmiseks Home Assistantile peate seadistama [Dialogflow'i veebihaagii integreerimine] ( {dialogflow_url} ). \n\n Sisesta j\u00e4rgmine teave: \n\n - URL: \" {webhook_url} \" \n - Meetod: POST \n - Sisu t\u00fc\u00fcp: rakendus / json \n\n Lisateavet leiate [dokumentatsioonist] ( {docs_url} )."
+        },
+        "step": {
+            "user": {
+                "description": "Kas oled kindel, et soovid seadistada Dialogflow?",
+                "title": "Seadista Dialogflow veebihaak"
+            }
+        }
+    }
+}

@@ -1,9 +1,8 @@
 """The tests for the rmvtransport platform."""
 import datetime
+from unittest.mock import patch
 
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 VALID_CONFIG_MINIMAL = {
     "sensor": {"platform": "rmvtransport", "next_departure": [{"station": "3000010"}]}
@@ -160,7 +159,8 @@ def get_no_departures_mock():
 async def test_rmvtransport_min_config(hass):
     """Test minimal rmvtransport configuration."""
     with patch(
-        "RMVtransport.RMVtransport.get_departures", return_value=get_departures_mock(),
+        "RMVtransport.RMVtransport.get_departures",
+        return_value=get_departures_mock(),
     ):
         assert await async_setup_component(hass, "sensor", VALID_CONFIG_MINIMAL) is True
         await hass.async_block_till_done()
@@ -180,7 +180,8 @@ async def test_rmvtransport_min_config(hass):
 async def test_rmvtransport_name_config(hass):
     """Test custom name configuration."""
     with patch(
-        "RMVtransport.RMVtransport.get_departures", return_value=get_departures_mock(),
+        "RMVtransport.RMVtransport.get_departures",
+        return_value=get_departures_mock(),
     ):
         assert await async_setup_component(hass, "sensor", VALID_CONFIG_NAME)
         await hass.async_block_till_done()
@@ -192,7 +193,8 @@ async def test_rmvtransport_name_config(hass):
 async def test_rmvtransport_misc_config(hass):
     """Test misc configuration."""
     with patch(
-        "RMVtransport.RMVtransport.get_departures", return_value=get_departures_mock(),
+        "RMVtransport.RMVtransport.get_departures",
+        return_value=get_departures_mock(),
     ):
         assert await async_setup_component(hass, "sensor", VALID_CONFIG_MISC)
         await hass.async_block_till_done()
@@ -205,7 +207,8 @@ async def test_rmvtransport_misc_config(hass):
 async def test_rmvtransport_dest_config(hass):
     """Test destination configuration."""
     with patch(
-        "RMVtransport.RMVtransport.get_departures", return_value=get_departures_mock(),
+        "RMVtransport.RMVtransport.get_departures",
+        return_value=get_departures_mock(),
     ):
         assert await async_setup_component(hass, "sensor", VALID_CONFIG_DEST)
         await hass.async_block_till_done()

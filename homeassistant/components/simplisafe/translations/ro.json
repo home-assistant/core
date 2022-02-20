@@ -1,8 +1,7 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Contul este deja \u00eenregistrat",
-            "invalid_credentials": "Credentiale invalide"
+            "identifier_exists": "Contul este deja \u00eenregistrat"
         },
         "step": {
             "user": {

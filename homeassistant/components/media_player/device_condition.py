@@ -1,5 +1,5 @@
 """Provides device automations for Media player."""
-from typing import Dict, List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -21,7 +21,7 @@ from homeassistant.helpers import condition, config_validation as cv, entity_reg
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN
+from .const import DOMAIN
 
 CONDITION_TYPES = {"is_on", "is_off", "is_idle", "is_paused", "is_playing"}
 
@@ -35,7 +35,7 @@ CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str
-) -> List[Dict[str, str]]:
+) -> list[dict[str, str]]:
     """List device conditions for Media player devices."""
     registry = await entity_registry.async_get_registry(hass)
     conditions = []
@@ -46,62 +46,23 @@ async def async_get_conditions(
             continue
 
         # Add conditions for each entity that belongs to this integration
-        conditions.append(
-            {
-                CONF_CONDITION: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "is_on",
-            }
-        )
-        conditions.append(
-            {
-                CONF_CONDITION: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "is_off",
-            }
-        )
-        conditions.append(
-            {
-                CONF_CONDITION: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "is_idle",
-            }
-        )
-        conditions.append(
-            {
-                CONF_CONDITION: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "is_paused",
-            }
-        )
-        conditions.append(
-            {
-                CONF_CONDITION: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "is_playing",
-            }
-        )
+        base_condition = {
+            CONF_CONDITION: "device",
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.entity_id,
+        }
+
+        conditions += [{**base_condition, CONF_TYPE: cond} for cond in CONDITION_TYPES]
 
     return conditions
 
 
 @callback
 def async_condition_from_config(
-    config: ConfigType, config_validation: bool
+    hass: HomeAssistant, config: ConfigType
 ) -> condition.ConditionCheckerType:
     """Create a function to test a device condition."""
-    if config_validation:
-        config = CONDITION_SCHEMA(config)
     if config[CONF_TYPE] == "is_playing":
         state = STATE_PLAYING
     elif config[CONF_TYPE] == "is_idle":

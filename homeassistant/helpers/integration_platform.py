@@ -1,11 +1,15 @@
 """Helpers to help with integration platforms."""
-import asyncio
-import logging
-from typing import Any, Awaitable, Callable
+from __future__ import annotations
 
+import asyncio
+from collections.abc import Awaitable, Callable
+import logging
+from typing import Any
+
+from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.loader import async_get_integration, bind_hass
-from homeassistant.setup import ATTR_COMPONENT, EVENT_COMPONENT_LOADED
+from homeassistant.setup import ATTR_COMPONENT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +24,7 @@ async def async_process_integration_platforms(
     """Process a specific platform for all current and future loaded integrations."""
 
     async def _process(component_name: str) -> None:
-        """Process the intents of a component."""
+        """Process component being loaded."""
         if "." in component_name:
             return
 

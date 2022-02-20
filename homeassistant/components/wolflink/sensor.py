@@ -1,5 +1,5 @@
 """The Wolf SmartSet sensors."""
-import logging
+from __future__ import annotations
 
 from wolf_smartset.models import (
     HoursParameter,
@@ -11,33 +11,28 @@ from wolf_smartset.models import (
     Temperature,
 )
 
-from homeassistant.components.wolflink.const import (
-    COORDINATOR,
-    DEVICE_ID,
-    DOMAIN,
-    PARAMETERS,
-    STATES,
-)
-from homeassistant.const import (
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
-    PRESSURE_BAR,
-    TEMP_CELSIUS,
-    TIME_HOURS,
-)
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PRESSURE_BAR, TEMP_CELSIUS, TIME_HOURS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
+from .const import COORDINATOR, DEVICE_ID, DOMAIN, PARAMETERS, STATES
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up all entries for Wolf Platform."""
 
     coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
     parameters = hass.data[DOMAIN][config_entry.entry_id][PARAMETERS]
     device_id = hass.data[DOMAIN][config_entry.entry_id][DEVICE_ID]
 
-    entities = []
+    entities: list[WolfLinkSensor] = []
     for parameter in parameters:
         if isinstance(parameter, Temperature):
             entities.append(WolfLinkTemperature(coordinator, parameter, device_id))
@@ -55,14 +50,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class WolfLinkSensor(Entity):
+class WolfLinkSensor(CoordinatorEntity, SensorEntity):
     """Base class for all Wolf entities."""
 
     def __init__(self, coordinator, wolf_object: Parameter, device_id):
         """Initialize."""
-        self.coordinator = coordinator
+        super().__init__(coordinator)
         self.wolf_object = wolf_object
         self.device_id = device_id
+        self._state = None
 
     @property
     def name(self):
@@ -70,12 +66,16 @@ class WolfLinkSensor(Entity):
         return f"{self.wolf_object.name}"
 
     @property
-    def state(self):
-        """Return the state."""
-        return self.coordinator.data[self.wolf_object.value_id]
+    def native_value(self):
+        """Return the state. Wolf Client is returning only changed values so we need to store old value here."""
+        if self.wolf_object.parameter_id in self.coordinator.data:
+            new_state = self.coordinator.data[self.wolf_object.parameter_id]
+            self.wolf_object.value_id = new_state[0]
+            self._state = new_state[1]
+        return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             "parameter_id": self.wolf_object.parameter_id,
@@ -88,27 +88,6 @@ class WolfLinkSensor(Entity):
         """Return a unique_id for this entity."""
         return f"{self.device_id}:{self.wolf_object.parameter_id}"
 
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
-
-    @property
-    def should_poll(self):
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Update the sensor."""
-        await self.coordinator.async_request_refresh()
-        _LOGGER.debug("Updating %s", self.coordinator.data[self.wolf_object.value_id])
-
 
 class WolfLinkHours(WolfLinkSensor):
     """Class for hour based entities."""
@@ -119,7 +98,7 @@ class WolfLinkHours(WolfLinkSensor):
         return "mdi:clock"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return TIME_HOURS
 
@@ -130,10 +109,10 @@ class WolfLinkTemperature(WolfLinkSensor):
     @property
     def device_class(self):
         """Return the device_class."""
-        return DEVICE_CLASS_TEMPERATURE
+        return SensorDeviceClass.TEMPERATURE
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return TEMP_CELSIUS
 
@@ -144,10 +123,10 @@ class WolfLinkPressure(WolfLinkSensor):
     @property
     def device_class(self):
         """Return the device_class."""
-        return DEVICE_CLASS_PRESSURE
+        return SensorDeviceClass.PRESSURE
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return PRESSURE_BAR
 
@@ -156,7 +135,7 @@ class WolfLinkPercentage(WolfLinkSensor):
     """Class for percentage based entities."""
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self.wolf_object.unit
 
@@ -170,9 +149,9 @@ class WolfLinkState(WolfLinkSensor):
         return "wolflink__state"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state converting with supported values."""
-        state = self.coordinator.data[self.wolf_object.value_id]
+        state = super().native_value
         resolved_state = [
             item for item in self.wolf_object.items if item.value == int(state)
         ]

@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured_account": "Account is already configured"
+            "already_configured": "Account is already configured"
         },
         "error": {
-            "account_error": "Invalid authentication",
-            "session_error": "Failed to connect",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
         "step": {

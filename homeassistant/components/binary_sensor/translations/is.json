@@ -45,8 +45,12 @@
             "on": "Hreyfing"
         },
         "occupancy": {
-            "off": "Hreinsa",
+            "off": "Engin vi\u00f0vera",
             "on": "Uppg\u00f6tva\u00f0"
+        },
+        "opening": {
+            "off": "Loka\u00f0",
+            "on": "Opi\u00f0"
         },
         "presence": {
             "off": "Fjarverandi",
@@ -55,6 +59,10 @@
         "problem": {
             "off": "\u00cd lagi",
             "on": "Vandam\u00e1l"
+        },
+        "running": {
+            "off": "Ekki \u00ed gangi",
+            "on": "\u00cd gangi"
         },
         "safety": {
             "off": "\u00d6ruggt",

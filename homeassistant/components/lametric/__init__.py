@@ -5,7 +5,9 @@ from lmnotify import LaMetricManager
 import voluptuous as vol
 
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,15 +29,14 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LaMetricManager."""
     _LOGGER.debug("Setting up LaMetric platform")
     conf = config[DOMAIN]
     hlmn = HassLaMetricManager(
         client_id=conf[CONF_CLIENT_ID], client_secret=conf[CONF_CLIENT_SECRET]
     )
-    devices = hlmn.manager.get_devices()
-    if not devices:
+    if not (devices := hlmn.manager.get_devices()):
         _LOGGER.error("No LaMetric devices found")
         return False
 
@@ -49,7 +50,7 @@ def setup(hass, config):
 class HassLaMetricManager:
     """A class that encapsulated requests to the LaMetric manager."""
 
-    def __init__(self, client_id, client_secret):
+    def __init__(self, client_id: str, client_secret: str) -> None:
         """Initialize HassLaMetricManager and connect to LaMetric."""
 
         _LOGGER.debug("Connecting to LaMetric")

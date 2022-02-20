@@ -1,4 +1,6 @@
 """Support for Denon Network Receivers."""
+from __future__ import annotations
+
 import logging
 import telnetlib
 
@@ -18,7 +20,10 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +83,12 @@ MEDIA_MODES = {
 #  'Favorites': 'FVP'}
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Denon platform."""
     denon = DenonDevice(config[CONF_NAME], config[CONF_HOST])
 
@@ -111,10 +121,18 @@ class DenonDevice(MediaPlayerEntity):
         if nsfrn:
             self._name = nsfrn
 
-        # SSFUN - Configured sources with names
+        # SSFUN - Configured sources with (optional) names
         self._source_list = {}
         for line in self.telnet_request(telnet, "SSFUN ?", all_lines=True):
-            source, configured_name = line[len("SSFUN") :].split(" ", 1)
+            ssfun = line[len("SSFUN") :].split(" ", 1)
+
+            source = ssfun[0]
+            if len(ssfun) == 2 and ssfun[1]:
+                configured_name = ssfun[1]
+            else:
+                # No name configured, reusing the source name
+                configured_name = source
+
             self._source_list[configured_name] = source
 
         # SSSOD - Deleted sources
@@ -222,7 +240,7 @@ class DenonDevice(MediaPlayerEntity):
     @property
     def source_list(self):
         """Return the list of available input sources."""
-        return sorted(list(self._source_list.keys()))
+        return sorted(self._source_list)
 
     @property
     def media_title(self):

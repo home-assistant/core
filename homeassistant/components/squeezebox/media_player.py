@@ -1,15 +1,19 @@
 """Support for interfacing to the Logitech SqueezeBox API."""
+from __future__ import annotations
+
 import asyncio
+import json
 import logging
 
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_MUSIC,
+    MEDIA_TYPE_PLAYLIST,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -18,12 +22,13 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SEEK,
     SUPPORT_SHUFFLE_SET,
+    SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
-from homeassistant.config_entries import SOURCE_DISCOVERY
+from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
     CONF_HOST,
@@ -36,22 +41,20 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.util.dt import utcnow
 
-from .const import (
-    DEFAULT_PORT,
-    DISCOVERY_TASK,
-    DOMAIN,
-    KNOWN_PLAYERS,
-    PLAYER_DISCOVERY_UNSUB,
-)
+from .browse_media import build_item_response, generate_playlist, library_payload
+from .const import DISCOVERY_TASK, DOMAIN, KNOWN_PLAYERS, PLAYER_DISCOVERY_UNSUB
 
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
@@ -68,7 +71,8 @@ _LOGGER = logging.getLogger(__name__)
 DISCOVERY_INTERVAL = 60
 
 SUPPORT_SQUEEZEBOX = (
-    SUPPORT_PAUSE
+    SUPPORT_BROWSE_MEDIA
+    | SUPPORT_PAUSE
     | SUPPORT_VOLUME_SET
     | SUPPORT_VOLUME_MUTE
     | SUPPORT_PREVIOUS_TRACK
@@ -80,21 +84,7 @@ SUPPORT_SQUEEZEBOX = (
     | SUPPORT_PLAY
     | SUPPORT_SHUFFLE_SET
     | SUPPORT_CLEAR_PLAYLIST
-)
-
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_HOST),
-    cv.deprecated(CONF_PORT),
-    cv.deprecated(CONF_PASSWORD),
-    cv.deprecated(CONF_USERNAME),
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Optional(CONF_PASSWORD): cv.string,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Optional(CONF_USERNAME): cv.string,
-        }
-    ),
+    | SUPPORT_STOP
 )
 
 KNOWN_SERVERS = "known_servers"
@@ -120,7 +110,7 @@ async def start_server_discovery(hass):
         asyncio.create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
-                context={"source": SOURCE_DISCOVERY},
+                context={"source": SOURCE_INTEGRATION_DISCOVERY},
                 data={
                     CONF_HOST: server.host,
                     CONF_PORT: int(server.port),
@@ -137,16 +127,11 @@ async def start_server_discovery(hass):
         )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up squeezebox platform from platform entry in configuration.yaml (deprecated)."""
-
-    if config:
-        await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
-        )
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up an LMS Server from a config entry."""
     config = config_entry.data
     _LOGGER.debug("Reached async_setup_entry for host=%s", config[CONF_HOST])
@@ -161,8 +146,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     known_players = hass.data[DOMAIN].setdefault(KNOWN_PLAYERS, [])
 
+    session = async_get_clientsession(hass)
     _LOGGER.debug("Creating LMS object for %s", host)
-    lms = Server(async_get_clientsession(hass), host, port, username, password)
+    lms = Server(session, host, port, username, password)
 
     async def _discovery(now=None):
         """Discover squeezebox players by polling server."""
@@ -189,20 +175,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 known_players.append(entity)
                 async_add_entities([entity])
 
-        players = await lms.async_get_players()
-        if players:
+        if players := await lms.async_get_players():
             for player in players:
                 hass.async_create_task(_discovered_player(player))
 
         hass.data[DOMAIN][config_entry.entry_id][
             PLAYER_DISCOVERY_UNSUB
-        ] = hass.helpers.event.async_call_later(DISCOVERY_INTERVAL, _discovery)
+        ] = async_call_later(hass, DISCOVERY_INTERVAL, _discovery)
 
     _LOGGER.debug("Adding player discovery job for LMS server: %s", host)
     asyncio.create_task(_discovery())
 
     # Register entity services
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_CALL_METHOD,
         {
@@ -224,7 +209,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         "async_call_query",
     )
     platform.async_register_entity_service(
-        SERVICE_SYNC, {vol.Required(ATTR_OTHER_PLAYER): cv.string}, "async_sync",
+        SERVICE_SYNC,
+        {vol.Required(ATTR_OTHER_PLAYER): cv.string},
+        "async_sync",
     )
     platform.async_register_entity_service(SERVICE_UNSYNC, None, "async_unsync")
 
@@ -235,8 +222,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, start_server_discovery(hass)
         )
-
-    return True
 
 
 class SqueezeBoxEntity(MediaPlayerEntity):
@@ -255,7 +240,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         self._remove_dispatcher = None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device-specific attributes."""
         squeezebox_attr = {
             attr: getattr(self, attr)
@@ -273,7 +258,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._player.player_id
+        return format_mac(self._player.player_id)
 
     @property
     def available(self):
@@ -332,11 +317,20 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     @property
     def media_content_id(self):
         """Content ID of current playing media."""
+        if not self._player.playlist:
+            return None
+        if len(self._player.playlist) > 1:
+            urls = [{"url": track["url"]} for track in self._player.playlist]
+            return json.dumps({"index": self._player.current_index, "urls": urls})
         return self._player.url
 
     @property
     def media_content_type(self):
         """Content type of current playing media."""
+        if not self._player.playlist:
+            return None
+        if len(self._player.playlist) > 1:
+            return MEDIA_TYPE_PLAYLIST
         return MEDIA_TYPE_MUSIC
 
     @property
@@ -422,6 +416,10 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         """Mute (true) or unmute (false) media player."""
         await self._player.async_set_muting(mute)
 
+    async def async_media_stop(self):
+        """Send stop command to media player."""
+        await self._player.async_stop()
+
     async def async_media_play_pause(self):
         """Send pause command to media player."""
         await self._player.async_toggle_pause()
@@ -457,10 +455,40 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the current playlist.
         """
         cmd = "play"
+        index = None
+
         if kwargs.get(ATTR_MEDIA_ENQUEUE):
             cmd = "add"
 
-        await self._player.async_load_url(media_id, cmd)
+        if media_type == MEDIA_TYPE_MUSIC:
+            await self._player.async_load_url(media_id, cmd)
+            return
+
+        if media_type == MEDIA_TYPE_PLAYLIST:
+            try:
+                # a saved playlist by number
+                payload = {
+                    "search_id": int(media_id),
+                    "search_type": MEDIA_TYPE_PLAYLIST,
+                }
+                playlist = await generate_playlist(self._player, payload)
+            except ValueError:
+                # a list of urls
+                content = json.loads(media_id)
+                playlist = content["urls"]
+                index = content["index"]
+        else:
+            payload = {
+                "search_id": media_id,
+                "search_type": media_type,
+            }
+            playlist = await generate_playlist(self._player, payload)
+
+            _LOGGER.debug("Generated playlist: %s", playlist)
+
+        await self._player.async_load_playlist(playlist, cmd)
+        if index is not None:
+            await self._player.async_index(index)
 
     async def async_set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
@@ -508,8 +536,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         player_ids = {
             p.entity_id: p.unique_id for p in self.hass.data[DOMAIN][KNOWN_PLAYERS]
         }
-        other_player_id = player_ids.get(other_player)
-        if other_player_id:
+        if other_player_id := player_ids.get(other_player):
             await self._player.async_sync(other_player_id)
         else:
             _LOGGER.info("Could not find player_id for %s. Not syncing", other_player)
@@ -517,3 +544,37 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     async def async_unsync(self):
         """Unsync this Squeezebox player."""
         await self._player.async_unsync()
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        _LOGGER.debug(
+            "Reached async_browse_media with content_type %s and content_id %s",
+            media_content_type,
+            media_content_id,
+        )
+
+        if media_content_type in [None, "library"]:
+            return await library_payload(self._player)
+
+        payload = {
+            "search_type": media_content_type,
+            "search_id": media_content_id,
+        }
+
+        return await build_item_response(self, self._player, payload)
+
+    async def async_get_browse_image(
+        self,
+        media_content_type: str,
+        media_content_id: str,
+        media_image_id: str | None = None,
+    ) -> tuple[bytes | None, str | None]:
+        """Get album art from Squeezebox server."""
+        if media_image_id:
+            image_url = self._player.generate_image_url_from_track_id(media_image_id)
+            result = await self._async_fetch_image(image_url)
+            if result == (None, None):
+                _LOGGER.debug("Error retrieving proxied album art from %s", image_url)
+            return result
+
+        return (None, None)

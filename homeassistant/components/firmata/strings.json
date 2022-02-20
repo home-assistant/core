@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "cannot_connect": "Cannot connect to Firmata board during setup"
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
         },
         "step": {}
     }

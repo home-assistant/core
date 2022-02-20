@@ -1,8 +1,10 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Det h\u00e4r SimpliSafe-kontot har redan konfigurerats."
+        },
         "error": {
-            "identifier_exists": "Kontot \u00e4r redan registrerat",
-            "invalid_credentials": "Ogiltiga autentiseringsuppgifter"
+            "identifier_exists": "Kontot \u00e4r redan registrerat"
         },
         "step": {
             "user": {

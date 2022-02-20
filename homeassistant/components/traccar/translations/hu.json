@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "cloud_not_connected": "Nincs csatlakoztatva a Home Assistant Cloudhoz.",
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges.",
+            "webhook_not_internet_accessible": "A Home Assistant p\u00e9ld\u00e1ny\u00e1nak el\u00e9rhet\u0151nek kell lennie az internet fel\u0151l a webhook \u00fczenetek fogad\u00e1s\u00e1hoz."
+        },
+        "create_entry": {
+            "default": "Ha esem\u00e9nyeket szeretne k\u00fcldeni a Home Assistant alkalmaz\u00e1snak, be kell \u00e1ll\u00edtania a webhook funkci\u00f3t a Traccar-ban. \n\nHaszn\u00e1lja a k\u00f6vetkez\u0151 URL-t: `{webhook_url}`\n\nTov\u00e1bbi r\u00e9szletek\u00e9rt l\u00e1ssa a [dokument\u00e1ci\u00f3t]({docs_url})."
+        },
+        "step": {
+            "user": {
+                "description": "Biztosan be\u00e1ll\u00edtja a Traccar szolg\u00e1ltat\u00e1st?",
+                "title": "A Traccar be\u00e1ll\u00edt\u00e1sa"
+            }
+        }
+    }
+}

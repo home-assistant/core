@@ -1,7 +1,5 @@
 {
-  "title": "EnOcean",
   "config": {
-    "flow_title": "ENOcean setup",
     "step": {
       "detect": {
         "title": "Select the path to you ENOcean dongle",

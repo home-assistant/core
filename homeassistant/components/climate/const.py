@@ -63,12 +63,14 @@ FAN_AUTO = "auto"
 FAN_LOW = "low"
 FAN_MEDIUM = "medium"
 FAN_HIGH = "high"
+FAN_TOP = "top"
 FAN_MIDDLE = "middle"
 FAN_FOCUS = "focus"
 FAN_DIFFUSE = "diffuse"
 
 
 # Possible swing state
+SWING_ON = "on"
 SWING_OFF = "off"
 SWING_BOTH = "both"
 SWING_VERTICAL = "vertical"

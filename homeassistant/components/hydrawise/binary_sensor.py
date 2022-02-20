@@ -1,57 +1,91 @@
 """Support for Hydrawise sprinkler binary sensors."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import BINARY_SENSORS, DATA_HYDRAWISE, HydrawiseEntity
+from . import DATA_HYDRAWISE, HydrawiseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+BINARY_SENSOR_STATUS = BinarySensorEntityDescription(
+    key="status",
+    name="Status",
+    device_class=BinarySensorDeviceClass.CONNECTIVITY,
+)
+
+BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
+        key="is_watering",
+        name="Watering",
+        device_class=BinarySensorDeviceClass.MOISTURE,
+    ),
+)
+
+BINARY_SENSOR_KEYS: list[str] = [
+    desc.key for desc in (BINARY_SENSOR_STATUS, *BINARY_SENSOR_TYPES)
+]
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=BINARY_SENSORS): vol.All(
-            cv.ensure_list, [vol.In(BINARY_SENSORS)]
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=BINARY_SENSOR_KEYS): vol.All(
+            cv.ensure_list, [vol.In(BINARY_SENSOR_KEYS)]
         )
     }
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up a sensor for a Hydrawise device."""
     hydrawise = hass.data[DATA_HYDRAWISE].data
+    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
 
-    sensors = []
-    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-        if sensor_type == "status":
-            sensors.append(
-                HydrawiseBinarySensor(hydrawise.current_controller, sensor_type)
-            )
-        else:
-            # create a sensor for each zone
-            for zone in hydrawise.relays:
-                sensors.append(HydrawiseBinarySensor(zone, sensor_type))
+    entities = []
+    if BINARY_SENSOR_STATUS.key in monitored_conditions:
+        entities.append(
+            HydrawiseBinarySensor(hydrawise.current_controller, BINARY_SENSOR_STATUS)
+        )
 
-    add_entities(sensors, True)
+    # create a sensor for each zone
+    entities.extend(
+        [
+            HydrawiseBinarySensor(zone, description)
+            for zone in hydrawise.relays
+            for description in BINARY_SENSOR_TYPES
+            if description.key in monitored_conditions
+        ]
+    )
+
+    add_entities(entities, True)
 
 
 class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
     """A sensor implementation for Hydrawise device."""
 
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
-        return self._state
-
     def update(self):
         """Get the latest data and updates the state."""
-        _LOGGER.debug("Updating Hydrawise binary sensor: %s", self._name)
+        _LOGGER.debug("Updating Hydrawise binary sensor: %s", self.name)
         mydata = self.hass.data[DATA_HYDRAWISE].data
-        if self._sensor_type == "status":
-            self._state = mydata.status == "All good!"
-        elif self._sensor_type == "is_watering":
+        if self.entity_description.key == "status":
+            self._attr_is_on = mydata.status == "All good!"
+        elif self.entity_description.key == "is_watering":
             relay_data = mydata.relays[self.data["relay"] - 1]
-            self._state = relay_data["timestr"] == "Now"
+            self._attr_is_on = relay_data["timestr"] == "Now"

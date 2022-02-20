@@ -1,6 +1,5 @@
 """Support for Vivotek IP Cameras."""
-
-import logging
+from __future__ import annotations
 
 from libpyvivotek import VivotekCamera
 import voluptuous as vol
@@ -17,9 +16,10 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_FRAMERATE = "framerate"
 CONF_SECURITY_LEVEL = "security_level"
@@ -49,12 +49,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up a Vivotek IP Camera."""
     creds = f"{config[CONF_USERNAME]}:{config[CONF_PASSWORD]}"
-    args = dict(
-        config=config,
-        cam=VivotekCamera(
+    args = {
+        "config": config,
+        "cam": VivotekCamera(
             host=config[CONF_IP_ADDRESS],
             port=(443 if config[CONF_SSL] else 80),
             verify_ssl=config[CONF_VERIFY_SSL],
@@ -63,8 +68,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             digest_auth=config[CONF_AUTHENTICATION] == HTTP_DIGEST_AUTHENTICATION,
             sec_lvl=config[CONF_SECURITY_LEVEL],
         ),
-        stream_source=f"rtsp://{creds}@{config[CONF_IP_ADDRESS]}:554/{config[CONF_STREAM_PATH]}",
-    )
+        "stream_source": f"rtsp://{creds}@{config[CONF_IP_ADDRESS]}:554/{config[CONF_STREAM_PATH]}",
+    }
     add_entities([VivotekCam(**args)], True)
 
 
@@ -92,7 +97,9 @@ class VivotekCam(Camera):
         """Return the interval between frames of the mjpeg stream."""
         return self._frame_interval
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return bytes of camera image."""
         return self._cam.snapshot()
 

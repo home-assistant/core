@@ -1,230 +1,124 @@
 """SMA Solar Webconnect interface."""
-from datetime import timedelta
-import logging
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import pysma
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PATH,
-    CONF_SCAN_INTERVAL,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
-    EVENT_HOMEASSISTANT_STOP,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
-_LOGGER = logging.getLogger(__name__)
-
-CONF_CUSTOM = "custom"
-CONF_FACTOR = "factor"
-CONF_GROUP = "group"
-CONF_KEY = "key"
-CONF_SENSORS = "sensors"
-CONF_UNIT = "unit"
-
-GROUPS = ["user", "installer"]
+from .const import DOMAIN, PYSMA_COORDINATOR, PYSMA_DEVICE_INFO, PYSMA_SENSORS
 
 
-def _check_sensor_schema(conf):
-    """Check sensors and attributes are valid."""
-    try:
-        valid = [s.name for s in pysma.Sensors()]
-    except (ImportError, AttributeError):
-        return conf
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up SMA sensors."""
+    sma_data = hass.data[DOMAIN][config_entry.entry_id]
 
-    customs = list(conf[CONF_CUSTOM].keys())
+    coordinator = sma_data[PYSMA_COORDINATOR]
+    used_sensors = sma_data[PYSMA_SENSORS]
+    device_info = sma_data[PYSMA_DEVICE_INFO]
 
-    for sensor in conf[CONF_SENSORS]:
-        if sensor in customs:
-            _LOGGER.warning(
-                "All custom sensors will be added automatically, no need to include them in sensors: %s",
+    if TYPE_CHECKING:
+        assert config_entry.unique_id
+
+    entities = []
+    for sensor in used_sensors:
+        entities.append(
+            SMAsensor(
+                coordinator,
+                config_entry.unique_id,
+                device_info,
                 sensor,
             )
-        elif sensor not in valid:
-            raise vol.Invalid(f"{sensor} does not exist")
-    return conf
+        )
+
+    async_add_entities(entities)
 
 
-CUSTOM_SCHEMA = vol.Any(
-    {
-        vol.Required(CONF_KEY): vol.All(cv.string, vol.Length(min=13, max=15)),
-        vol.Required(CONF_UNIT): cv.string,
-        vol.Optional(CONF_FACTOR, default=1): vol.Coerce(float),
-        vol.Optional(CONF_PATH): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
-
-PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Optional(CONF_SSL, default=False): cv.boolean,
-            vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-            vol.Required(CONF_PASSWORD): cv.string,
-            vol.Optional(CONF_GROUP, default=GROUPS[0]): vol.In(GROUPS),
-            vol.Optional(CONF_SENSORS, default=[]): vol.Any(
-                cv.schema_with_slug_keys(cv.ensure_list),  # will be deprecated
-                vol.All(cv.ensure_list, [str]),
-            ),
-            vol.Optional(CONF_CUSTOM, default={}): cv.schema_with_slug_keys(
-                CUSTOM_SCHEMA
-            ),
-        },
-        extra=vol.PREVENT_EXTRA,
-    ),
-    _check_sensor_schema,
-)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up SMA WebConnect sensor."""
-
-    # Check config again during load - dependency available
-    config = _check_sensor_schema(config)
-
-    # Init all default sensors
-    sensor_def = pysma.Sensors()
-
-    # Sensor from the custom config
-    sensor_def.add(
-        [
-            pysma.Sensor(o[CONF_KEY], n, o[CONF_UNIT], o[CONF_FACTOR], o.get(CONF_PATH))
-            for n, o in config[CONF_CUSTOM].items()
-        ]
-    )
-
-    # Use all sensors by default
-    config_sensors = config[CONF_SENSORS]
-    hass_sensors = []
-    used_sensors = []
-
-    if isinstance(config_sensors, dict):  # will be remove from 0.99
-        if not config_sensors:  # Use all sensors by default
-            config_sensors = {s.name: [] for s in sensor_def}
-
-        # Prepare all Home Assistant sensor entities
-        for name, attr in config_sensors.items():
-            sub_sensors = [sensor_def[s] for s in attr]
-            hass_sensors.append(SMAsensor(sensor_def[name], sub_sensors))
-            used_sensors.append(name)
-            used_sensors.extend(attr)
-
-    if isinstance(config_sensors, list):
-        if not config_sensors:  # Use all sensors by default
-            config_sensors = [s.name for s in sensor_def]
-        used_sensors = list(set(config_sensors + list(config[CONF_CUSTOM].keys())))
-        for sensor in used_sensors:
-            hass_sensors.append(SMAsensor(sensor_def[sensor], []))
-
-    used_sensors = [sensor_def[s] for s in set(used_sensors)]
-    async_add_entities(hass_sensors)
-
-    # Init the SMA interface
-    session = async_get_clientsession(hass, verify_ssl=config[CONF_VERIFY_SSL])
-    grp = config[CONF_GROUP]
-
-    protocol = "https" if config[CONF_SSL] else "http"
-    url = f"{protocol}://{config[CONF_HOST]}"
-
-    sma = pysma.SMA(session, url, config[CONF_PASSWORD], group=grp)
-
-    # Ensure we logout on shutdown
-    async def async_close_session(event):
-        """Close the session."""
-        await sma.close_session()
-
-    hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, async_close_session)
-
-    backoff = 0
-    backoff_step = 0
-
-    async def async_sma(event):
-        """Update all the SMA sensors."""
-        nonlocal backoff, backoff_step
-        if backoff > 1:
-            backoff -= 1
-            return
-
-        values = await sma.read(used_sensors)
-        if not values:
-            try:
-                backoff = [1, 1, 1, 6, 30][backoff_step]
-                backoff_step += 1
-            except IndexError:
-                backoff = 60
-            return
-        backoff_step = 0
-
-        for sensor in hass_sensors:
-            sensor.async_update_values()
-
-    interval = config.get(CONF_SCAN_INTERVAL) or timedelta(seconds=5)
-    async_track_time_interval(hass, async_sma, interval)
-
-
-class SMAsensor(Entity):
+class SMAsensor(CoordinatorEntity, SensorEntity):
     """Representation of a SMA sensor."""
 
-    def __init__(self, pysma_sensor, sub_sensors):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        config_entry_unique_id: str,
+        device_info: DeviceInfo,
+        pysma_sensor: pysma.sensor.Sensor,
+    ) -> None:
         """Initialize the sensor."""
+        super().__init__(coordinator)
         self._sensor = pysma_sensor
-        self._sub_sensors = sub_sensors  # Can be remove from 0.99
+        self._enabled_default = self._sensor.enabled
+        self._config_entry_unique_id = config_entry_unique_id
+        self._attr_device_info = device_info
 
-        self._attr = {s.name: "" for s in sub_sensors}
-        self._state = self._sensor.value
+        if self.native_unit_of_measurement == ENERGY_KILO_WATT_HOUR:
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+            self._attr_device_class = SensorDeviceClass.ENERGY
+        if self.native_unit_of_measurement == POWER_WATT:
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+            self._attr_device_class = SensorDeviceClass.POWER
+
+        # Set sensor enabled to False.
+        # Will be enabled by async_added_to_hass if actually used.
+        self._sensor.enabled = False
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
-        return self._sensor.name
+        if self._attr_device_info is None or not (
+            name_prefix := self._attr_device_info.get("name")
+        ):
+            name_prefix = "SMA"
+
+        return f"{name_prefix} {self._sensor.name}"
 
     @property
-    def state(self):
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self._state
+        return self._sensor.value
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         return self._sensor.unit
 
     @property
-    def device_state_attributes(self):  # Can be remove from 0.99
-        """Return the state attributes of the sensor."""
-        return self._attr
-
-    @property
-    def poll(self):
-        """SMA sensors are updated & don't poll."""
-        return False
-
-    @callback
-    def async_update_values(self):
-        """Update this sensor."""
-        update = False
-
-        for sens in self._sub_sensors:  # Can be remove from 0.99
-            newval = f"{sens.value} {sens.unit}"
-            if self._attr[sens.name] != newval:
-                update = True
-                self._attr[sens.name] = newval
-
-        if self._sensor.value != self._state:
-            update = True
-            self._state = self._sensor.value
-
-        if update:
-            self.async_write_ha_state()
-
-    @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique identifier for this sensor."""
-        return f"sma-{self._sensor.key}-{self._sensor.name}"
+        return (
+            f"{self._config_entry_unique_id}-{self._sensor.key}_{self._sensor.key_idx}"
+        )
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._enabled_default
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        self._sensor.enabled = True
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        await super().async_will_remove_from_hass()
+        self._sensor.enabled = False

@@ -1,13 +1,13 @@
 """Tests for the Dexcom integration."""
 
 import json
+from unittest.mock import patch
 
 from pydexcom import GlucoseReading
 
 from homeassistant.components.dexcom.const import CONF_SERVER, DOMAIN, SERVER_US
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 
 CONFIG = {
@@ -16,7 +16,7 @@ CONFIG = {
     CONF_SERVER: SERVER_US,
 }
 
-GLUCOSE_READING = GlucoseReading(json.loads(load_fixture("dexcom_data.json")))
+GLUCOSE_READING = GlucoseReading(json.loads(load_fixture("data.json", "dexcom")))
 
 
 async def init_integration(hass) -> MockConfigEntry:

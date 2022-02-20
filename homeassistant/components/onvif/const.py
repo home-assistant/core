@@ -13,6 +13,7 @@ DEFAULT_ARGUMENTS = "-pred 1"
 
 CONF_DEVICE_ID = "deviceid"
 CONF_RTSP_TRANSPORT = "rtsp_transport"
+CONF_SNAPSHOT_AUTH = "snapshot_auth"
 
 RTSP_TRANS_PROTOCOLS = ["tcp", "udp", "udp_multicast", "http"]
 
@@ -38,5 +39,6 @@ CONTINUOUS_MOVE = "ContinuousMove"
 RELATIVE_MOVE = "RelativeMove"
 ABSOLUTE_MOVE = "AbsoluteMove"
 GOTOPRESET_MOVE = "GotoPreset"
+STOP_MOVE = "Stop"
 
 SERVICE_PTZ = "ptz"

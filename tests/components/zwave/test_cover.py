@@ -1,4 +1,8 @@
 """Test Z-Wave cover devices."""
+from unittest.mock import MagicMock
+
+import pytest
+
 from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN
 from homeassistant.components.zwave import (
     CONF_INVERT_OPENCLOSE_BUTTONS,
@@ -7,8 +11,10 @@ from homeassistant.components.zwave import (
     cover,
 )
 
-from tests.async_mock import MagicMock
 from tests.mock.zwave import MockEntityValues, MockNode, MockValue, value_changed
+
+# Integration is disabled
+pytest.skip("Integration has been disabled in the manifest", allow_module_level=True)
 
 
 def test_get_device_detects_none(hass, mock_openzwave):

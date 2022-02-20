@@ -1,13 +1,15 @@
 snapshot:
+  name: Snapshot
   description: Take a snapshot of the media player zone.
-  fields:
-    entity_id:
-      description: Name(s) of entities that will be snapshot. Platform dependent.
-      example: "media_player.living_room"
+  target:
+    entity:
+      integration: monoprice
+      domain: media_player
 
 restore:
+  name: Restore
   description: Restore a snapshot of the media player zone.
-  fields:
-    entity_id:
-      description: Name(s) of entities that will be restored. Platform dependent.
-      example: "media_player.living_room"
+  target:
+    entity:
+      integration: monoprice
+      domain: media_player

@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "cannot_connect": "Failed to connect",
+            "no_devices_found": "No devices found on the network"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "no_devices_found": "No devices found on the network",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "device_name": {
+                "data": {
+                    "name": "Name"
+                }
+            },
+            "discovery_confirm": {
+                "description": "Do you want to setup {name} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "ip_address": "IP Address"
+                }
+            }
+        }
+    }
+}

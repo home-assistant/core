@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A conta j\u00e1 foi configurada",
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "project_error": "N\u00e3o foi poss\u00edvel obter informa\u00e7\u00f5es do projeto."
+        },
+        "flow_title": "{project_url}",
+        "step": {
+            "reauth": {
+                "data": {
+                    "personal_access_token": "Token de acesso pessoal (PAT)"
+                },
+                "description": "A autentica\u00e7\u00e3o falhou para {project_url}. Por favor, insira suas credenciais atuais.",
+                "title": "Reautentica\u00e7\u00e3o"
+            },
+            "user": {
+                "data": {
+                    "organization": "Organiza\u00e7\u00e3o",
+                    "personal_access_token": "Token de acesso pessoal (PAT)",
+                    "project": "Projeto"
+                },
+                "description": "Configure uma inst\u00e2ncia do Azure DevOps para acessar seu projeto. Um token de acesso pessoal s\u00f3 \u00e9 necess\u00e1rio para um projeto privado.",
+                "title": "Adicionar o projeto 'Azure DevOps'"
+            }
+        }
+    }
+}

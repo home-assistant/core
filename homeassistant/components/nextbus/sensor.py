@@ -1,14 +1,22 @@
 """NextBus sensor."""
+from __future__ import annotations
+
 from itertools import chain
 import logging
 
 from py_nextbus import NextBusClient
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, DEVICE_CLASS_TIMESTAMP
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
+from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utc_from_timestamp
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,8 +26,6 @@ DOMAIN = "nextbus"
 CONF_AGENCY = "agency"
 CONF_ROUTE = "route"
 CONF_STOP = "stop"
-
-ICON = "mdi:bus"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -87,7 +93,12 @@ def validate_tags(client, agency, route, stop):
     return True
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Load values from configuration and initialize the platform."""
     agency = config[CONF_AGENCY]
     route = config[CONF_ROUTE]
@@ -104,7 +115,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([NextBusDepartureSensor(client, agency, route, stop, name)], True)
 
 
-class NextBusDepartureSensor(Entity):
+class NextBusDepartureSensor(SensorEntity):
     """Sensor class that displays upcoming NextBus times.
 
     To function, this requires knowing the agency tag as well as the tags for
@@ -114,6 +125,9 @@ class NextBusDepartureSensor(Entity):
     request to the service to get these values. Perhaps it can be simplifed in
     the future using fuzzy logic and matching.
     """
+
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_icon = "mdi:bus"
 
     def __init__(self, client, agency, route, stop, name=None):
         """Initialize sensor with all required config."""
@@ -146,26 +160,14 @@ class NextBusDepartureSensor(Entity):
         return self._name
 
     @property
-    def device_class(self):
-        """Return the device class."""
-        return DEVICE_CLASS_TIMESTAMP
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return current state of the sensor."""
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return additional state attributes."""
         return self._attributes
-
-    @property
-    def icon(self):
-        """Return icon to be used for this sensor."""
-        # Would be nice if we could determine if the line is a train or bus
-        # however that doesn't seem to be available to us. Using bus for now.
-        return ICON
 
     def update(self):
         """Update sensor with new departures times."""
@@ -226,10 +228,8 @@ class NextBusDepartureSensor(Entity):
 
         # Generate list of upcoming times
         self._attributes["upcoming"] = ", ".join(
-            sorted(p["minutes"] for p in predictions)
+            sorted((p["minutes"] for p in predictions), key=int)
         )
 
         latest_prediction = maybe_first(predictions)
-        self._state = utc_from_timestamp(
-            int(latest_prediction["epochTime"]) / 1000
-        ).isoformat()
+        self._state = utc_from_timestamp(int(latest_prediction["epochTime"]) / 1000)

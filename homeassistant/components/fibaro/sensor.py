@@ -1,17 +1,26 @@
 """Support for Fibaro sensors."""
-import logging
+from __future__ import annotations
 
-from homeassistant.components.sensor import DOMAIN
+from contextlib import suppress
+
+from homeassistant.components.sensor import (
+    DOMAIN,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE,
+    ENERGY_KILO_WATT_HOUR,
+    LIGHT_LUX,
+    PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import convert
 
 from . import FIBARO_DEVICES, FibaroDevice
 
@@ -20,7 +29,7 @@ SENSOR_TYPES = {
         "Temperature",
         None,
         None,
-        DEVICE_CLASS_TEMPERATURE,
+        SensorDeviceClass.TEMPERATURE,
     ],
     "com.fibaro.smokeSensor": [
         "Smoke",
@@ -28,30 +37,45 @@ SENSOR_TYPES = {
         "mdi:fire",
         None,
     ],
-    "CO2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, "mdi:cloud", None],
+    "CO2": [
+        "CO2",
+        CONCENTRATION_PARTS_PER_MILLION,
+        None,
+        None,
+        SensorDeviceClass.CO2,
+    ],
     "com.fibaro.humiditySensor": [
         "Humidity",
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         None,
-        DEVICE_CLASS_HUMIDITY,
+        SensorDeviceClass.HUMIDITY,
     ],
-    "com.fibaro.lightSensor": ["Light", "lx", None, DEVICE_CLASS_ILLUMINANCE],
+    "com.fibaro.lightSensor": ["Light", LIGHT_LUX, None, SensorDeviceClass.ILLUMINANCE],
 }
 
-_LOGGER = logging.getLogger(__name__)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Fibaro controller devices."""
     if discovery_info is None:
         return
 
-    add_entities(
-        [FibaroSensor(device) for device in hass.data[FIBARO_DEVICES]["sensor"]], True
-    )
+    entities: list[SensorEntity] = []
+    for device in hass.data[FIBARO_DEVICES]["sensor"]:
+        entities.append(FibaroSensor(device))
+    for device_type in ("cover", "light", "switch"):
+        for device in hass.data[FIBARO_DEVICES][device_type]:
+            if "energy" in device.interfaces:
+                entities.append(FibaroEnergySensor(device))
+
+    add_entities(entities, True)
 
 
-class FibaroSensor(FibaroDevice, Entity):
+class FibaroSensor(FibaroDevice, SensorEntity):
     """Representation of a Fibaro Sensor."""
 
     def __init__(self, fibaro_device):
@@ -68,26 +92,24 @@ class FibaroSensor(FibaroDevice, Entity):
             self._unit = None
             self._icon = None
             self._device_class = None
-        try:
+        with suppress(KeyError, ValueError):
             if not self._unit:
                 if self.fibaro_device.properties.unit == "lux":
-                    self._unit = "lx"
+                    self._unit = LIGHT_LUX
                 elif self.fibaro_device.properties.unit == "C":
                     self._unit = TEMP_CELSIUS
                 elif self.fibaro_device.properties.unit == "F":
                     self._unit = TEMP_FAHRENHEIT
                 else:
                     self._unit = self.fibaro_device.properties.unit
-        except (KeyError, ValueError):
-            pass
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self.current_value
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit
 
@@ -103,7 +125,27 @@ class FibaroSensor(FibaroDevice, Entity):
 
     def update(self):
         """Update the state."""
-        try:
+        with suppress(KeyError, ValueError):
             self.current_value = float(self.fibaro_device.properties.value)
-        except (KeyError, ValueError):
-            pass
+
+
+class FibaroEnergySensor(FibaroDevice, SensorEntity):
+    """Representation of a Fibaro Energy Sensor."""
+
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+
+    def __init__(self, fibaro_device):
+        """Initialize the sensor."""
+        super().__init__(fibaro_device)
+        self.entity_id = f"{DOMAIN}.{self.ha_id}_energy"
+        self._attr_name = f"{fibaro_device.friendly_name} Energy"
+        self._attr_unique_id = f"{fibaro_device.unique_id_str}_energy"
+
+    def update(self):
+        """Update the state."""
+        with suppress(KeyError, ValueError):
+            self._attr_native_value = convert(
+                self.fibaro_device.properties.energy, float
+            )

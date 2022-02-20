@@ -1,4 +1,6 @@
 """Define tests for the Acmeda config flow."""
+from unittest.mock import patch
+
 import aiopulse
 import pytest
 
@@ -7,7 +9,6 @@ from homeassistant.components.acmeda.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 DUMMY_HOST1 = "127.0.0.1"
@@ -47,7 +48,7 @@ async def test_show_form_no_hubs(hass, mock_hub_discover):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "all_configured"
+    assert result["reason"] == "no_devices_found"
 
     # Check we performed the discovery
     assert len(mock_hub_discover.mock_calls) == 1
@@ -68,7 +69,7 @@ async def test_show_form_one_hub(hass, mock_hub_discover, mock_hub_run):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == dummy_hub_1.id
     assert result["result"].data == {
-        "host": DUMMY_HOST1,
+        CONF_HOST: DUMMY_HOST1,
     }
 
     # Check we performed the discovery
@@ -119,7 +120,7 @@ async def test_create_second_entry(hass, mock_hub_run, mock_hub_discover):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == dummy_hub_2.id
     assert result["result"].data == {
-        "host": DUMMY_HOST2,
+        CONF_HOST: DUMMY_HOST2,
     }
 
 
@@ -140,4 +141,4 @@ async def test_already_configured(hass, mock_hub_discover):
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == "all_configured"
+    assert result["reason"] == "no_devices_found"

@@ -10,11 +10,11 @@
       }
     },
     "error": {
-      "invalid_key": "Invalid API Key and/or Application Key",
+      "invalid_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "no_devices": "No devices found in account"
     },
     "abort": {
-      "already_configured": "This app key is already in use."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   }
 }

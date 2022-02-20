@@ -1,5 +1,6 @@
 """Pushsafer platform for notify component."""
 import base64
+from http import HTTPStatus
 import logging
 import mimetypes
 
@@ -15,7 +16,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import HTTP_OK
+from homeassistant.const import ATTR_ICON
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +29,6 @@ CONF_TIMEOUT = 15
 # Top level attributes in 'data'
 ATTR_SOUND = "sound"
 ATTR_VIBRATION = "vibration"
-ATTR_ICON = "icon"
 ATTR_ICONCOLOR = "iconcolor"
 ATTR_URL = "url"
 ATTR_URLTITLE = "urltitle"
@@ -94,7 +94,7 @@ class PushsaferNotificationService(BaseNotificationService):
                 _LOGGER.debug("Loading image from file %s", local_path)
                 picture1_encoded = self.load_from_file(local_path)
             else:
-                _LOGGER.warning("missing url or local_path for picture1")
+                _LOGGER.warning("Missing url or local_path for picture1")
         else:
             _LOGGER.debug("picture1 is not specified")
 
@@ -119,7 +119,7 @@ class PushsaferNotificationService(BaseNotificationService):
         for target in targets:
             payload["d"] = target
             response = requests.post(_RESOURCE, data=payload, timeout=CONF_TIMEOUT)
-            if response.status_code != HTTP_OK:
+            if response.status_code != HTTPStatus.OK:
                 _LOGGER.error("Pushsafer failed with: %s", response.text)
             else:
                 _LOGGER.debug("Push send: %s", response.json())
@@ -144,7 +144,7 @@ class PushsaferNotificationService(BaseNotificationService):
             else:
                 response = requests.get(url, timeout=CONF_TIMEOUT)
             return self.get_base64(response.content, response.headers["content-type"])
-        _LOGGER.warning("url not found in param")
+        _LOGGER.warning("No url was found in param")
 
         return None
 

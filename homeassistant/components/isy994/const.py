@@ -1,28 +1,12 @@
 """Constants for the ISY994 Platform."""
 import logging
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_COLD,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_HEAT,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_PROBLEM,
-    DEVICE_CLASS_SAFETY,
-    DEVICE_CLASS_SMOKE,
-    DEVICE_CLASS_SOUND,
-    DEVICE_CLASS_VIBRATION,
-    DOMAIN as BINARY_SENSOR,
-)
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_FAN,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
-    DOMAIN as CLIMATE,
     FAN_AUTO,
     FAN_HIGH,
     FAN_MEDIUM,
@@ -37,32 +21,45 @@ from homeassistant.components.climate.const import (
     PRESET_AWAY,
     PRESET_BOOST,
 )
-from homeassistant.components.cover import DOMAIN as COVER
-from homeassistant.components.fan import DOMAIN as FAN
-from homeassistant.components.light import DOMAIN as LIGHT
-from homeassistant.components.lock import DOMAIN as LOCK
-from homeassistant.components.sensor import DOMAIN as SENSOR
-from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
+    CURRENCY_CENT,
+    CURRENCY_DOLLAR,
     DEGREE,
+    ELECTRIC_CURRENT_MILLIAMPERE,
+    ELECTRIC_POTENTIAL_MILLIVOLT,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
+    ENERGY_WATT_HOUR,
     FREQUENCY_HERTZ,
+    IRRADIATION_WATTS_PER_SQUARE_METER,
     LENGTH_CENTIMETERS,
     LENGTH_FEET,
     LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
     LENGTH_MILES,
+    LENGTH_MILLIMETERS,
+    LIGHT_LUX,
     MASS_KILOGRAMS,
     MASS_POUNDS,
+    PERCENTAGE,
+    POWER_KILO_WATT,
     POWER_WATT,
+    PRECIPITATION_MILLIMETERS_PER_HOUR,
+    PRESSURE_HPA,
     PRESSURE_INHG,
+    PRESSURE_MBAR,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
+    SOUND_PRESSURE_DB,
+    SOUND_PRESSURE_WEIGHTED_DBA,
+    SPEED_INCHES_PER_DAY,
+    SPEED_INCHES_PER_HOUR,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
+    SPEED_MILLIMETERS_PER_DAY,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_LOCKED,
@@ -83,11 +80,14 @@ from homeassistant.const import (
     TIME_MONTHS,
     TIME_SECONDS,
     TIME_YEARS,
-    UNIT_PERCENTAGE,
     UV_INDEX,
-    VOLT,
+    VOLUME_CUBIC_FEET,
+    VOLUME_CUBIC_METERS,
+    VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
+    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
     VOLUME_GALLONS,
     VOLUME_LITERS,
+    Platform,
 )
 
 _LOGGER = logging.getLogger(__package__)
@@ -112,14 +112,29 @@ DEFAULT_VAR_SENSOR_STRING = "HA."
 KEY_ACTIONS = "actions"
 KEY_STATUS = "status"
 
-SUPPORTED_PLATFORMS = [BINARY_SENSOR, SENSOR, LOCK, FAN, COVER, LIGHT, SWITCH, CLIMATE]
-SUPPORTED_PROGRAM_PLATFORMS = [BINARY_SENSOR, LOCK, FAN, COVER, SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+PROGRAM_PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LOCK,
+    Platform.SWITCH,
+]
 
 SUPPORTED_BIN_SENS_CLASSES = ["moisture", "opening", "motion", "climate"]
 
 # ISY Scenes are more like Switches than Home Assistant Scenes
 # (they can turn off, and report their state)
-ISY_GROUP_PLATFORM = SWITCH
+ISY_GROUP_PLATFORM = Platform.SWITCH
 
 ISY994_ISY = "isy"
 ISY994_NODES = "isy994_nodes"
@@ -162,11 +177,10 @@ TYPE_CATEGORY_X10 = "113."
 TYPE_EZIO2X4 = "7.3.255."
 TYPE_INSTEON_MOTION = ("16.1.", "16.22.")
 
-UNDO_UPDATE_LISTENER = "undo_update_listener"
-
 # Used for discovery
 UDN_UUID_PREFIX = "uuid:"
 ISY_URL_POSTFIX = "/desc"
+EVENTS_SUFFIX = "_ISYSUB"
 
 # Special Units of Measure
 UOM_ISYV4_DEGREES = "degrees"
@@ -184,14 +198,15 @@ UOM_HVAC_MODE_INSTEON = "98"
 UOM_FAN_MODES = "99"
 UOM_INDEX = "25"
 UOM_ON_OFF = "2"
+UOM_PERCENTAGE = "51"
 
 # Do not use the Home Assistant consts for the states here - we're matching exact API
 # responses, not using them for Home Assistant states
 # Insteon Types: https://www.universal-devices.com/developers/wsdk/5.0.4/1_fam.xml
 # Z-Wave Categories: https://www.universal-devices.com/developers/wsdk/5.0.4/4_fam.xml
-NODE_FILTERS = {
-    BINARY_SENSOR: {
-        FILTER_UOM: [],
+NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
+    Platform.BINARY_SENSOR: {
+        FILTER_UOM: [UOM_ON_OFF],
         FILTER_STATES: [],
         FILTER_NODE_DEF_ID: [
             "BinaryAlarm",
@@ -210,7 +225,7 @@ NODE_FILTERS = {
         ],  # Does a startswith() match; include the dot
         FILTER_ZWAVE_CAT: (["104", "112", "138"] + list(map(str, range(148, 180)))),
     },
-    SENSOR: {
+    Platform.SENSOR: {
         # This is just a more-readable way of including MOST uoms between 1-100
         # (Remember that range() is non-inclusive of the stop value)
         FILTER_UOM: (
@@ -234,28 +249,28 @@ NODE_FILTERS = {
         FILTER_INSTEON_TYPE: ["0.16.", "0.17.", "0.18.", "9.0.", "9.7."],
         FILTER_ZWAVE_CAT: (["118", "143"] + list(map(str, range(180, 186)))),
     },
-    LOCK: {
+    Platform.LOCK: {
         FILTER_UOM: ["11"],
         FILTER_STATES: ["locked", "unlocked"],
         FILTER_NODE_DEF_ID: ["DoorLock"],
         FILTER_INSTEON_TYPE: [TYPE_CATEGORY_LOCK, "4.64."],
         FILTER_ZWAVE_CAT: ["111"],
     },
-    FAN: {
+    Platform.FAN: {
         FILTER_UOM: [],
         FILTER_STATES: ["off", "low", "med", "high"],
         FILTER_NODE_DEF_ID: ["FanLincMotor"],
         FILTER_INSTEON_TYPE: ["1.46."],
         FILTER_ZWAVE_CAT: [],
     },
-    COVER: {
+    Platform.COVER: {
         FILTER_UOM: [UOM_BARRIER],
         FILTER_STATES: ["open", "closed", "closing", "opening", "stopped"],
         FILTER_NODE_DEF_ID: ["DimmerMotorSwitch_ADV"],
         FILTER_INSTEON_TYPE: [TYPE_CATEGORY_COVER],
         FILTER_ZWAVE_CAT: [],
     },
-    LIGHT: {
+    Platform.LIGHT: {
         FILTER_UOM: ["51"],
         FILTER_STATES: ["on", "off", "%"],
         FILTER_NODE_DEF_ID: [
@@ -272,8 +287,8 @@ NODE_FILTERS = {
         FILTER_INSTEON_TYPE: [TYPE_CATEGORY_DIMMABLE],
         FILTER_ZWAVE_CAT: ["109", "119"],
     },
-    SWITCH: {
-        FILTER_UOM: [UOM_ON_OFF, "78"],
+    Platform.SWITCH: {
+        FILTER_UOM: ["78"],
         FILTER_STATES: ["on", "off"],
         FILTER_NODE_DEF_ID: [
             "AlertModuleArmed",
@@ -302,7 +317,7 @@ NODE_FILTERS = {
         ],
         FILTER_ZWAVE_CAT: ["121", "122", "123", "137", "141", "147"],
     },
-    CLIMATE: {
+    Platform.CLIMATE: {
         FILTER_UOM: [UOM_ON_OFF],
         FILTER_STATES: ["heating", "cooling", "idle", "fan_only", "off"],
         FILTER_NODE_DEF_ID: ["TempLinc", "Thermostat"],
@@ -313,16 +328,17 @@ NODE_FILTERS = {
 
 UOM_FRIENDLY_NAME = {
     "1": "A",
+    UOM_ON_OFF: "",  # Binary, no unit
     "3": f"btu/{TIME_HOURS}",
     "4": TEMP_CELSIUS,
     "5": LENGTH_CENTIMETERS,
-    "6": f"{LENGTH_FEET}³",
-    "7": f"{LENGTH_FEET}³/{TIME_MINUTES}",
-    "8": "m³",
+    "6": VOLUME_CUBIC_FEET,
+    "7": VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
+    "8": VOLUME_CUBIC_METERS,
     "9": TIME_DAYS,
     "10": TIME_DAYS,
-    "12": "dB",
-    "13": "dB A",
+    "12": SOUND_PRESSURE_DB,
+    "13": SOUND_PRESSURE_WEIGHTED_DBA,
     "14": DEGREE,
     "16": "macroseismic",
     "17": TEMP_FAHRENHEIT,
@@ -332,34 +348,34 @@ UOM_FRIENDLY_NAME = {
     "21": "%AH",
     "22": "%RH",
     "23": PRESSURE_INHG,
-    "24": f"{LENGTH_INCHES}/{TIME_HOURS}",
-    UOM_INDEX: "index",  # Index type. Use "node.formatted" for value
+    "24": SPEED_INCHES_PER_HOUR,
+    UOM_INDEX: UOM_INDEX,  # Index type. Use "node.formatted" for value
     "26": TEMP_KELVIN,
     "27": "keyword",
     "28": MASS_KILOGRAMS,
     "29": "kV",
-    "30": "kW",
+    "30": POWER_KILO_WATT,
     "31": "kPa",
     "32": SPEED_KILOMETERS_PER_HOUR,
     "33": ENERGY_KILO_WATT_HOUR,
     "34": "liedu",
     "35": VOLUME_LITERS,
-    "36": "lx",
+    "36": LIGHT_LUX,
     "37": "mercalli",
     "38": LENGTH_METERS,
-    "39": f"{LENGTH_METERS}³/{TIME_HOURS}",
+    "39": VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
     "40": SPEED_METERS_PER_SECOND,
-    "41": "mA",
+    "41": ELECTRIC_CURRENT_MILLIAMPERE,
     "42": TIME_MILLISECONDS,
-    "43": "mV",
+    "43": ELECTRIC_POTENTIAL_MILLIVOLT,
     "44": TIME_MINUTES,
     "45": TIME_MINUTES,
-    "46": f"mm/{TIME_HOURS}",
+    "46": PRECIPITATION_MILLIMETERS_PER_HOUR,
     "47": TIME_MONTHS,
     "48": SPEED_MILES_PER_HOUR,
     "49": SPEED_METERS_PER_SECOND,
     "50": "Ω",
-    "51": UNIT_PERCENTAGE,
+    UOM_PERCENTAGE: PERCENTAGE,
     "52": MASS_POUNDS,
     "53": "pf",
     "54": CONCENTRATION_PARTS_PER_MILLION,
@@ -375,17 +391,17 @@ UOM_FRIENDLY_NAME = {
     "65": "SML",
     "69": VOLUME_GALLONS,
     "71": UV_INDEX,
-    "72": VOLT,
+    "72": ELECTRIC_POTENTIAL_VOLT,
     "73": POWER_WATT,
-    "74": f"{POWER_WATT}/{LENGTH_METERS}²",
+    "74": IRRADIATION_WATTS_PER_SQUARE_METER,
     "75": "weekday",
     "76": DEGREE,
     "77": TIME_YEARS,
-    "82": "mm",
+    "82": LENGTH_MILLIMETERS,
     "83": LENGTH_KILOMETERS,
     "85": "Ω",
     "86": "kΩ",
-    "87": f"{LENGTH_METERS}³/{LENGTH_METERS}³",
+    "87": f"{VOLUME_CUBIC_METERS}/{VOLUME_CUBIC_METERS}",
     "88": "Water activity",
     "89": "RPM",
     "90": FREQUENCY_HERTZ,
@@ -394,10 +410,10 @@ UOM_FRIENDLY_NAME = {
     UOM_8_BIT_RANGE: "",  # Range 0-255, no unit.
     UOM_DOUBLE_TEMP: UOM_DOUBLE_TEMP,
     "102": "kWs",
-    "103": "$",
-    "104": "¢",
+    "103": CURRENCY_DOLLAR,
+    "104": CURRENCY_CENT,
     "105": LENGTH_INCHES,
-    "106": f"mm/{TIME_DAYS}",
+    "106": SPEED_MILLIMETERS_PER_DAY,
     "107": "",  # raw 1-byte unsigned value
     "108": "",  # raw 2-byte unsigned value
     "109": "",  # raw 3-byte unsigned value
@@ -407,10 +423,10 @@ UOM_FRIENDLY_NAME = {
     "113": "",  # raw 3-byte signed value
     "114": "",  # raw 4-byte signed value
     "116": LENGTH_MILES,
-    "117": "mbar",
-    "118": "hPa",
-    "119": f"{POWER_WATT}{TIME_HOURS}",
-    "120": f"{LENGTH_INCHES}/{TIME_DAYS}",
+    "117": PRESSURE_MBAR,
+    "118": PRESSURE_HPA,
+    "119": ENERGY_WATT_HOUR,
+    "120": SPEED_INCHES_PER_DAY,
 }
 
 UOM_TO_STATES = {
@@ -621,8 +637,8 @@ HA_HVAC_TO_ISY = {
 HA_FAN_TO_ISY = {FAN_ON: "on", FAN_AUTO: "auto"}
 
 BINARY_SENSOR_DEVICE_TYPES_ISY = {
-    DEVICE_CLASS_MOISTURE: ["16.8.", "16.13.", "16.14."],
-    DEVICE_CLASS_OPENING: [
+    BinarySensorDeviceClass.MOISTURE: ["16.8.", "16.13.", "16.14."],
+    BinarySensorDeviceClass.OPENING: [
         "16.9.",
         "16.6.",
         "16.7.",
@@ -631,20 +647,26 @@ BINARY_SENSOR_DEVICE_TYPES_ISY = {
         "16.20.",
         "16.21.",
     ],
-    DEVICE_CLASS_MOTION: ["16.1.", "16.4.", "16.5.", "16.3.", "16.22."],
+    BinarySensorDeviceClass.MOTION: ["16.1.", "16.4.", "16.5.", "16.3.", "16.22."],
 }
 
 BINARY_SENSOR_DEVICE_TYPES_ZWAVE = {
-    DEVICE_CLASS_SAFETY: ["137", "172", "176", "177", "178"],
-    DEVICE_CLASS_SMOKE: ["138", "156"],
-    DEVICE_CLASS_PROBLEM: ["148", "149", "157", "158", "164", "174", "175"],
-    DEVICE_CLASS_GAS: ["150", "151"],
-    DEVICE_CLASS_SOUND: ["153"],
-    DEVICE_CLASS_COLD: ["152", "168"],
-    DEVICE_CLASS_HEAT: ["154", "166", "167"],
-    DEVICE_CLASS_MOISTURE: ["159", "169"],
-    DEVICE_CLASS_DOOR: ["160"],
-    DEVICE_CLASS_BATTERY: ["162"],
-    DEVICE_CLASS_MOTION: ["155"],
-    DEVICE_CLASS_VIBRATION: ["173"],
+    BinarySensorDeviceClass.SAFETY: ["137", "172", "176", "177", "178"],
+    BinarySensorDeviceClass.SMOKE: ["138", "156"],
+    BinarySensorDeviceClass.PROBLEM: ["148", "149", "157", "158", "164", "174", "175"],
+    BinarySensorDeviceClass.GAS: ["150", "151"],
+    BinarySensorDeviceClass.SOUND: ["153"],
+    BinarySensorDeviceClass.COLD: ["152", "168"],
+    BinarySensorDeviceClass.HEAT: ["154", "166", "167"],
+    BinarySensorDeviceClass.MOISTURE: ["159", "169"],
+    BinarySensorDeviceClass.DOOR: ["160"],
+    BinarySensorDeviceClass.BATTERY: ["162"],
+    BinarySensorDeviceClass.MOTION: ["155"],
+    BinarySensorDeviceClass.VIBRATION: ["173"],
 }
+
+
+SCHEME_HTTP = "http"
+HTTP_PORT = 80
+SCHEME_HTTPS = "https"
+HTTPS_PORT = 443

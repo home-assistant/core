@@ -1,14 +1,15 @@
 """Support for binary sensor using Beaglebone Black GPIO."""
-import logging
+from __future__ import annotations
 
 import voluptuous as vol
 
 from homeassistant.components import bbb_gpio
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_PINS = "pins"
 CONF_BOUNCETIME = "bouncetime"
@@ -33,7 +34,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Beaglebone Black GPIO devices."""
     pins = config[CONF_PINS]
 
@@ -47,10 +53,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BBBGPIOBinarySensor(BinarySensorEntity):
     """Representation of a binary sensor that uses Beaglebone Black GPIO."""
 
+    _attr_should_poll = False
+
     def __init__(self, pin, params):
         """Initialize the Beaglebone Black binary sensor."""
         self._pin = pin
-        self._name = params[CONF_NAME] or DEVICE_DEFAULT_NAME
+        self._attr_name = params[CONF_NAME] or DEVICE_DEFAULT_NAME
         self._bouncetime = params[CONF_BOUNCETIME]
         self._pull_mode = params[CONF_PULL_MODE]
         self._invert_logic = params[CONF_INVERT_LOGIC]
@@ -66,16 +74,6 @@ class BBBGPIOBinarySensor(BinarySensorEntity):
         bbb_gpio.edge_detect(self._pin, read_gpio, self._bouncetime)
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the state of the entity."""
         return self._state != self._invert_logic

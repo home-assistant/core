@@ -2,14 +2,13 @@
     "config": {
         "abort": {
             "credential_error": "\u83b7\u53d6\u51ed\u636e\u65f6\u51fa\u9519\u3002",
-            "devices_configured": "\u6240\u6709\u53d1\u73b0\u7684\u8bbe\u5907\u90fd\u5df2\u914d\u7f6e\u5b8c\u6210\u3002",
             "no_devices_found": "\u6ca1\u6709\u5728\u7f51\u7edc\u4e0a\u627e\u5230 PlayStation 4 \u8bbe\u5907\u3002",
             "port_987_bind_error": "\u65e0\u6cd5\u7ed1\u5b9a\u7aef\u53e3 987\u3002",
             "port_997_bind_error": "\u65e0\u6cd5\u7ed1\u5b9a\u7aef\u53e3 997\u3002"
         },
         "error": {
-            "login_failed": "\u65e0\u6cd5\u4e0e PlayStation 4 \u914d\u5bf9\u3002\u8bf7\u786e\u8ba4 PIN \u662f\u5426\u6b63\u786e\u3002",
-            "not_ready": "PlayStation 4 \u672a\u5f00\u673a\u6216\u672a\u8fde\u63a5\u5230\u7f51\u7edc\u3002"
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
+            "login_failed": "\u65e0\u6cd5\u4e0e PlayStation 4 \u914d\u5bf9\u3002\u8bf7\u786e\u8ba4 PIN \u662f\u5426\u6b63\u786e\u3002"
         },
         "step": {
             "creds": {
@@ -24,6 +23,12 @@
                     "region": "\u5730\u533a"
                 },
                 "description": "\u8f93\u5165\u60a8\u7684 PlayStation 4 \u4fe1\u606f\u3002\u5bf9\u4e8e \"PIN\", \u8bf7\u5bfc\u822a\u5230 PlayStation 4 \u63a7\u5236\u53f0\u4e0a\u7684 \"\u8bbe\u7f6e\"\u3002\u7136\u540e\u5bfc\u822a\u5230 \"\u79fb\u52a8\u5e94\u7528\u8fde\u63a5\u8bbe\u7f6e\", \u7136\u540e\u9009\u62e9 \"\u6dfb\u52a0\u8bbe\u5907\"\u3002\u8f93\u5165\u663e\u793a\u7684 PIN\u3002",
+                "title": "PlayStation 4"
+            },
+            "mode": {
+                "data": {
+                    "mode": "\u8bbe\u7f6e\u6a21\u5f0f"
+                },
                 "title": "PlayStation 4"
             }
         }

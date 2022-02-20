@@ -1,5 +1,7 @@
 """Tests for the Arcam FMJ config flow module."""
 
+from unittest.mock import AsyncMock, patch
+
 from arcam.fmj.client import ConnectionFailed
 import pytest
 
@@ -19,7 +21,6 @@ from .conftest import (
     MOCK_UUID,
 )
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 MOCK_UPNP_DEVICE = f"""
@@ -32,16 +33,20 @@ MOCK_UPNP_DEVICE = f"""
 
 MOCK_UPNP_LOCATION = f"http://{MOCK_HOST}:8080/dd.xml"
 
-MOCK_DISCOVER = {
-    ssdp.ATTR_UPNP_MANUFACTURER: "ARCAM",
-    ssdp.ATTR_UPNP_MODEL_NAME: " ",
-    ssdp.ATTR_UPNP_MODEL_NUMBER: "AVR450, AVR750",
-    ssdp.ATTR_UPNP_FRIENDLY_NAME: f"Arcam media client {MOCK_UUID}",
-    ssdp.ATTR_UPNP_SERIAL: "12343",
-    ssdp.ATTR_SSDP_LOCATION: f"http://{MOCK_HOST}:8080/dd.xml",
-    ssdp.ATTR_UPNP_UDN: MOCK_UDN,
-    ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:MediaRenderer:1",
-}
+MOCK_DISCOVER = ssdp.SsdpServiceInfo(
+    ssdp_usn="mock_usn",
+    ssdp_st="mock_st",
+    ssdp_location=f"http://{MOCK_HOST}:8080/dd.xml",
+    upnp={
+        ssdp.ATTR_UPNP_MANUFACTURER: "ARCAM",
+        ssdp.ATTR_UPNP_MODEL_NAME: " ",
+        ssdp.ATTR_UPNP_MODEL_NUMBER: "AVR450, AVR750",
+        ssdp.ATTR_UPNP_FRIENDLY_NAME: f"Arcam media client {MOCK_UUID}",
+        ssdp.ATTR_UPNP_SERIAL: "12343",
+        ssdp.ATTR_UPNP_UDN: MOCK_UDN,
+        ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:MediaRenderer:1",
+    },
+)
 
 
 @pytest.fixture(name="dummy_client", autouse=True)
@@ -56,7 +61,9 @@ def dummy_client_fixture(hass):
 async def test_ssdp(hass, dummy_client):
     """Test a ssdp import flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=MOCK_DISCOVER,
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_SSDP},
+        data=MOCK_DISCOVER,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "confirm"
@@ -75,7 +82,9 @@ async def test_ssdp_abort(hass):
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=MOCK_DISCOVER,
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_SSDP},
+        data=MOCK_DISCOVER,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
@@ -86,14 +95,16 @@ async def test_ssdp_unable_to_connect(hass, dummy_client):
     dummy_client.start.side_effect = AsyncMock(side_effect=ConnectionFailed)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=MOCK_DISCOVER,
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_SSDP},
+        data=MOCK_DISCOVER,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "unable_to_connect"
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_ssdp_update(hass):
@@ -107,7 +118,9 @@ async def test_ssdp_update(hass):
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=MOCK_DISCOVER,
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_SSDP},
+        data=MOCK_DISCOVER,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
@@ -119,7 +132,9 @@ async def test_user(hass, aioclient_mock):
     """Test a manual user configuration flow."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=None,
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data=None,
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -149,7 +164,9 @@ async def test_invalid_ssdp(hass, aioclient_mock):
 
     aioclient_mock.get(MOCK_UPNP_LOCATION, text="")
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=user_input,
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data=user_input,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == f"Arcam FMJ ({MOCK_HOST})"
@@ -166,7 +183,9 @@ async def test_user_wrong(hass, aioclient_mock):
 
     aioclient_mock.get(MOCK_UPNP_LOCATION, status=404)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=user_input,
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data=user_input,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == f"Arcam FMJ ({MOCK_HOST})"

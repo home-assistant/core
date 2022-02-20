@@ -1,13 +1,16 @@
 """Script to run benchmarks."""
+from __future__ import annotations
+
 import argparse
 import asyncio
 import collections
+from collections.abc import Callable
 from contextlib import suppress
 from datetime import datetime
 import json
 import logging
 from timeit import default_timer as timer
-from typing import Callable, Dict, TypeVar
+from typing import TypeVar
 
 from homeassistant import core
 from homeassistant.components.websocket_api.const import JSON_DUMP
@@ -21,7 +24,7 @@ from homeassistant.util import dt as dt_util
 
 CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
 
-BENCHMARKS: Dict[str, Callable] = {}
+BENCHMARKS: dict[str, Callable] = {}
 
 
 def run(args):
@@ -62,7 +65,7 @@ async def fire_events(hass):
     """Fire a million events."""
     count = 0
     event_name = "benchmark_event"
-    event = asyncio.Event()
+    events_to_fire = 10**6
 
     @core.callback
     def listener(_):
@@ -70,17 +73,48 @@ async def fire_events(hass):
         nonlocal count
         count += 1
 
-        if count == 10 ** 6:
-            event.set()
-
     hass.bus.async_listen(event_name, listener)
 
-    for _ in range(10 ** 6):
+    for _ in range(events_to_fire):
         hass.bus.async_fire(event_name)
 
     start = timer()
 
-    await event.wait()
+    await hass.async_block_till_done()
+
+    assert count == events_to_fire
+
+    return timer() - start
+
+
+@benchmark
+async def fire_events_with_filter(hass):
+    """Fire a million events with a filter that rejects them."""
+    count = 0
+    event_name = "benchmark_event"
+    events_to_fire = 10**6
+
+    @core.callback
+    def event_filter(event):
+        """Filter event."""
+        return False
+
+    @core.callback
+    def listener(_):
+        """Handle event."""
+        nonlocal count
+        count += 1
+
+    hass.bus.async_listen(event_name, listener, event_filter=event_filter)
+
+    for _ in range(events_to_fire):
+        hass.bus.async_fire(event_name)
+
+    start = timer()
+
+    await hass.async_block_till_done()
+
+    assert count == 0
 
     return timer() - start
 
@@ -97,13 +131,13 @@ async def time_changed_helper(hass):
         nonlocal count
         count += 1
 
-        if count == 10 ** 6:
+        if count == 10**6:
             event.set()
 
     hass.helpers.event.async_track_time_change(listener, minute=0, second=0)
     event_data = {ATTR_NOW: datetime(2017, 10, 10, 15, 0, 0, tzinfo=dt_util.UTC)}
 
-    for _ in range(10 ** 6):
+    for _ in range(10**6):
         hass.bus.async_fire(EVENT_TIME_CHANGED, event_data)
 
     start = timer()
@@ -126,7 +160,7 @@ async def state_changed_helper(hass):
         nonlocal count
         count += 1
 
-        if count == 10 ** 6:
+        if count == 10**6:
             event.set()
 
     for idx in range(1000):
@@ -139,7 +173,7 @@ async def state_changed_helper(hass):
         "new_state": core.State(entity_id, "on"),
     }
 
-    for _ in range(10 ** 6):
+    for _ in range(10**6):
         hass.bus.async_fire(EVENT_STATE_CHANGED, event_data)
 
     start = timer()
@@ -154,16 +188,13 @@ async def state_changed_event_helper(hass):
     """Run a million events through state changed event helper with 1000 entities."""
     count = 0
     entity_id = "light.kitchen"
-    event = asyncio.Event()
+    events_to_fire = 10**6
 
     @core.callback
     def listener(*args):
         """Handle event."""
         nonlocal count
         count += 1
-
-        if count == 10 ** 6:
-            event.set()
 
     hass.helpers.event.async_track_state_change_event(
         [f"{entity_id}{idx}" for idx in range(1000)], listener
@@ -175,12 +206,49 @@ async def state_changed_event_helper(hass):
         "new_state": core.State(entity_id, "on"),
     }
 
-    for _ in range(10 ** 6):
+    for _ in range(events_to_fire):
         hass.bus.async_fire(EVENT_STATE_CHANGED, event_data)
 
     start = timer()
 
-    await event.wait()
+    await hass.async_block_till_done()
+
+    assert count == events_to_fire
+
+    return timer() - start
+
+
+@benchmark
+async def state_changed_event_filter_helper(hass):
+    """Run a million events through state changed event helper with 1000 entities that all get filtered."""
+    count = 0
+    entity_id = "light.kitchen"
+    events_to_fire = 10**6
+
+    @core.callback
+    def listener(*args):
+        """Handle event."""
+        nonlocal count
+        count += 1
+
+    hass.helpers.event.async_track_state_change_event(
+        [f"{entity_id}{idx}" for idx in range(1000)], listener
+    )
+
+    event_data = {
+        "entity_id": "switch.no_listeners",
+        "old_state": core.State(entity_id, "off"),
+        "new_state": core.State(entity_id, "on"),
+    }
+
+    for _ in range(events_to_fire):
+        hass.bus.async_fire(EVENT_STATE_CHANGED, event_data)
+
+    start = timer()
+
+    await hass.async_block_till_done()
+
+    assert count == 0
 
     return timer() - start
 
@@ -224,14 +292,14 @@ async def _logbook_filtering(hass, last_changed, last_updated):
     )
 
     def yield_events(event):
-        for _ in range(10 ** 5):
+        for _ in range(10**5):
             # pylint: disable=protected-access
             if logbook._keep_event(hass, event, entities_filter):
                 yield event
 
     start = timer()
 
-    list(logbook.humanify(hass, yield_events(event), entity_attr_cache))
+    list(logbook.humanify(hass, yield_events(event), entity_attr_cache, {}))
 
     return timer() - start
 
@@ -295,7 +363,7 @@ async def filtering_entity_id(hass):
 
     start = timer()
 
-    for i in range(10 ** 5):
+    for i in range(10**5):
         entities_filter(entity_ids[i % size])
 
     return timer() - start
@@ -305,7 +373,7 @@ async def filtering_entity_id(hass):
 async def valid_entity_id(hass):
     """Run valid entity ID a million times."""
     start = timer()
-    for _ in range(10 ** 6):
+    for _ in range(10**6):
         core.valid_entity_id("light.kitchen")
     return timer() - start
 
@@ -315,7 +383,7 @@ async def json_serialize_states(hass):
     """Serialize million states with websocket default encoder."""
     states = [
         core.State("light.kitchen", "on", {"friendly_name": "Kitchen Lights"})
-        for _ in range(10 ** 6)
+        for _ in range(10**6)
     ]
 
     start = timer()

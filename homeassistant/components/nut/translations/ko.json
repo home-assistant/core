@@ -4,7 +4,7 @@
             "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
         "error": {
-            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4. \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694.",
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
             "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
         },
         "step": {
@@ -33,13 +33,17 @@
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
         "step": {
             "init": {
                 "data": {
                     "resources": "\ub9ac\uc18c\uc2a4",
                     "scan_interval": "\uc2a4\uce94 \uac04\uaca9 (\ucd08)"
                 },
-                "description": "\uc13c\uc11c \ub9ac\uc18c\uc2a4 \uc120\ud0dd"
+                "description": "\uc13c\uc11c \ub9ac\uc18c\uc2a4\ub97c \uc120\ud0dd\ud574\uc8fc\uc138\uc694."
             }
         }
     }

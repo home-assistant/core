@@ -1,17 +1,20 @@
 """Support for binary sensor using I2C MCP23017 chip."""
+from __future__ import annotations
+
 import logging
 
-from adafruit_mcp230xx.mcp23017 import MCP23017  # pylint: disable=import-error
-import board  # pylint: disable=import-error
-import busio  # pylint: disable=import-error
-import digitalio  # pylint: disable=import-error
+from adafruit_mcp230xx.mcp23017 import MCP23017
+import board
+import busio
+import digitalio
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import DEVICE_DEFAULT_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_INVERT_LOGIC = "invert_logic"
 CONF_I2C_ADDRESS = "i2c_address"
@@ -38,9 +41,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+_LOGGER = logging.getLogger(__name__)
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_devices: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the MCP23017 binary sensors."""
+    _LOGGER.warning(
+        "The MCP23017 I/O Expander integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
     pull_mode = config[CONF_PULL_MODE]
     invert_logic = config[CONF_INVERT_LOGIC]
     i2c_address = config[CONF_I2C_ADDRESS]

@@ -1,10 +1,12 @@
 """Helpers to deal with Cast devices."""
-from typing import Optional, Tuple
+from __future__ import annotations
+
+from typing import Optional
 
 import attr
-from pychromecast.const import CAST_MANUFACTURERS
-
-from .const import DEFAULT_PORT
+from pychromecast import dial
+from pychromecast.const import CAST_TYPE_GROUP
+from pychromecast.models import CastInfo
 
 
 @attr.s(slots=True, frozen=True)
@@ -14,31 +16,50 @@ class ChromecastInfo:
     This also has the same attributes as the mDNS fields by zeroconf.
     """
 
-    services: Optional[set] = attr.ib()
-    host: Optional[str] = attr.ib(default=None)
-    port: Optional[int] = attr.ib(default=0)
-    uuid: Optional[str] = attr.ib(
-        converter=attr.converters.optional(str), default=None
-    )  # always convert UUID to string if not None
-    model_name: str = attr.ib(default="")
-    friendly_name: Optional[str] = attr.ib(default=None)
+    cast_info: CastInfo = attr.ib()
+    is_dynamic_group = attr.ib(type=Optional[bool], default=None)
+
+    @property
+    def friendly_name(self) -> str:
+        """Return the UUID."""
+        return self.cast_info.friendly_name
 
     @property
     def is_audio_group(self) -> bool:
-        """Return if this is an audio group."""
-        return self.port != DEFAULT_PORT
+        """Return if the cast is an audio group."""
+        return self.cast_info.cast_type == CAST_TYPE_GROUP
 
     @property
-    def host_port(self) -> Tuple[str, int]:
-        """Return the host+port tuple."""
-        return self.host, self.port
+    def uuid(self) -> bool:
+        """Return the UUID."""
+        return self.cast_info.uuid
 
-    @property
-    def manufacturer(self) -> str:
-        """Return the manufacturer."""
-        if not self.model_name:
-            return None
-        return CAST_MANUFACTURERS.get(self.model_name.lower(), "Google Inc.")
+    def fill_out_missing_chromecast_info(self) -> ChromecastInfo:
+        """Return a new ChromecastInfo object with missing attributes filled in.
+
+        Uses blocking HTTP / HTTPS.
+        """
+        if not self.is_audio_group or self.is_dynamic_group is not None:
+            # We have all information, no need to check HTTP API.
+            return self
+
+        # Fill out missing group information via HTTP API.
+        is_dynamic_group = False
+        http_group_status = None
+        http_group_status = dial.get_multizone_status(
+            None,
+            services=self.cast_info.services,
+            zconf=ChromeCastZeroconf.get_zeroconf(),
+        )
+        if http_group_status is not None:
+            is_dynamic_group = any(
+                g.uuid == self.cast_info.uuid for g in http_group_status.dynamic_groups
+            )
+
+        return ChromecastInfo(
+            cast_info=self.cast_info,
+            is_dynamic_group=is_dynamic_group,
+        )
 
 
 class ChromeCastZeroconf:
@@ -65,19 +86,22 @@ class CastStatusListener:
     potentially arrive. This class allows invalidating past chromecast objects.
     """
 
-    def __init__(self, cast_device, chromecast, mz_mgr):
+    def __init__(self, cast_device, chromecast, mz_mgr, mz_only=False):
         """Initialize the status listener."""
         self._cast_device = cast_device
         self._uuid = chromecast.uuid
         self._valid = True
         self._mz_mgr = mz_mgr
 
+        if cast_device._cast_info.is_audio_group:
+            self._mz_mgr.add_multizone(chromecast)
+        if mz_only:
+            return
+
         chromecast.register_status_listener(self)
         chromecast.socket_client.media_controller.register_status_listener(self)
         chromecast.register_connection_listener(self)
-        if cast_device._cast_info.is_audio_group:
-            self._mz_mgr.add_multizone(chromecast)
-        else:
+        if not cast_device._cast_info.is_audio_group:
             self._mz_mgr.register_listener(chromecast.uuid, self)
 
     def new_cast_status(self, cast_status):

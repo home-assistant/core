@@ -4,8 +4,7 @@
             "already_configured": "Enheten \u00e4r redan konfigurerad"
         },
         "error": {
-            "already_in_progress": "Konfigurationsfl\u00f6de f\u00f6r enhet p\u00e5g\u00e5r redan.",
-            "device_unavailable": "Enheten \u00e4r inte tillg\u00e4nglig"
+            "already_in_progress": "Konfigurationsfl\u00f6de f\u00f6r enhet p\u00e5g\u00e5r redan."
         },
         "step": {
             "user": {
@@ -16,6 +15,5 @@
                 "title": "Konfigurera DVR Agent"
             }
         }
-    },
-    "title": "DVR Agent"
+    }
 }

@@ -1,0 +1,52 @@
+{
+    "state": {
+        "yamaha_musiccast__dimmer": {
+            "auto": "Automatyczny"
+        },
+        "yamaha_musiccast__zone_equalizer_mode": {
+            "auto": "Automatycznie",
+            "bypass": "Pomijanie",
+            "manual": "R\u0119cznie"
+        },
+        "yamaha_musiccast__zone_link_audio_delay": {
+            "audio_sync": "Synchronizacja d\u017awi\u0119ku",
+            "audio_sync_off": "Synchronizacja d\u017awi\u0119ku wy\u0142\u0105czona",
+            "audio_sync_on": "Synchronizacja d\u017awi\u0119ku w\u0142\u0105czona",
+            "balanced": "Zr\u00f3wnowa\u017cone",
+            "lip_sync": "Synchronizacja ust"
+        },
+        "yamaha_musiccast__zone_link_audio_quality": {
+            "compressed": "Skompresowane",
+            "uncompressed": "Nieskompresowane"
+        },
+        "yamaha_musiccast__zone_link_control": {
+            "speed": "Pr\u0119dko\u015b\u0107",
+            "stability": "Stabilno\u015b\u0107",
+            "standard": "Normalnie"
+        },
+        "yamaha_musiccast__zone_sleep": {
+            "120 min": "120 minut",
+            "30 min": "30 minut",
+            "60 min": "60 minut",
+            "90 min": "90 minut",
+            "off": "Wy\u0142\u0105czone"
+        },
+        "yamaha_musiccast__zone_surr_decoder_type": {
+            "auto": "Automatycznie",
+            "dolby_pl": "Dolby ProLogic",
+            "dolby_pl2x_game": "Dolby ProLogic 2x (Gra)",
+            "dolby_pl2x_movie": "Dolby ProLogic 2x (Film)",
+            "dolby_pl2x_music": "Dolby ProLogic 2x (Muzyka)",
+            "dolby_surround": "Dolby Surround",
+            "dts_neo6_cinema": "DTS Neo:6 (Kino)",
+            "dts_neo6_music": "DTS Neo:6 (Muzyka)",
+            "dts_neural_x": "DTS Neural:X",
+            "toggle": "Prze\u0142\u0105cz"
+        },
+        "yamaha_musiccast__zone_tone_control_mode": {
+            "auto": "Automatyczna",
+            "bypass": "Pomijanie",
+            "manual": "R\u0119czna"
+        }
+    }
+}

@@ -1,10 +1,16 @@
-"""Provides device automations for NEW_NAME."""
-from typing import List
+"""Provides device triggers for NEW_NAME."""
+from __future__ import annotations
+
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.automation import AutomationActionType, state
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -23,7 +29,7 @@ from . import DOMAIN
 # TODO specify your supported trigger types.
 TRIGGER_TYPES = {"turned_on", "turned_off"}
 
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
@@ -31,7 +37,9 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """List device triggers for NEW_NAME devices."""
     registry = await entity_registry.async_get_registry(hass)
     triggers = []
@@ -50,24 +58,14 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
 
         # Add triggers for each entity that belongs to this integration
         # TODO add your own triggers.
-        triggers.append(
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "turned_on",
-            }
-        )
-        triggers.append(
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "turned_off",
-            }
-        )
+        base_trigger = {
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.entity_id,
+        }
+        triggers.append({**base_trigger, CONF_TYPE: "turned_on"})
+        triggers.append({**base_trigger, CONF_TYPE: "turned_off"})
 
     return triggers
 
@@ -76,29 +74,23 @@ async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: AutomationActionType,
-    automation_info: dict,
+    automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    config = TRIGGER_SCHEMA(config)
-
     # TODO Implement your own logic to attach triggers.
-    # Generally we suggest to re-use the existing state or event
-    # triggers from the automation integration.
+    # Use the existing state or event triggers from the automation integration.
 
     if config[CONF_TYPE] == "turned_on":
-        from_state = STATE_OFF
         to_state = STATE_ON
     else:
-        from_state = STATE_ON
         to_state = STATE_OFF
 
     state_config = {
-        state.CONF_PLATFORM: "state",
+        state_trigger.CONF_PLATFORM: "state",
         CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        state.CONF_FROM: from_state,
-        state.CONF_TO: to_state,
+        state_trigger.CONF_TO: to_state,
     }
-    state_config = state.TRIGGER_SCHEMA(state_config)
-    return await state.async_attach_trigger(
+    state_config = await state_trigger.async_validate_trigger_config(hass, state_config)
+    return await state_trigger.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"
     )

@@ -1,17 +1,17 @@
 """Support for showing the time in a different time zone."""
-import logging
+from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_TIME_ZONE
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 CONF_TIME_FORMAT = "time_format"
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Worldclock Sensor"
 ICON = "mdi:clock"
@@ -26,17 +26,29 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the World clock sensor."""
     name = config.get(CONF_NAME)
-    time_zone = dt_util.get_time_zone(config.get(CONF_TIME_ZONE))
+    time_zone = dt_util.get_time_zone(config[CONF_TIME_ZONE])
 
     async_add_entities(
-        [WorldClockSensor(time_zone, name, config.get(CONF_TIME_FORMAT),)], True,
+        [
+            WorldClockSensor(
+                time_zone,
+                name,
+                config.get(CONF_TIME_FORMAT),
+            )
+        ],
+        True,
     )
 
 
-class WorldClockSensor(Entity):
+class WorldClockSensor(SensorEntity):
     """Representation of a World clock sensor."""
 
     def __init__(self, time_zone, name, time_format):
@@ -52,7 +64,7 @@ class WorldClockSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 

@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tjenesten er allerede konfigurert",
+            "could_not_register": "Kunne ikke registrere integrasjon med GitHub"
+        },
+        "progress": {
+            "wait_for_device": "1. \u00c5pne {url}\n 2. Lim inn f\u00f8lgende n\u00f8kkel for \u00e5 autorisere integrasjonen:\n ```\n {code}\n ```\n"
+        },
+        "step": {
+            "repositories": {
+                "data": {
+                    "repositories": "Velg depoter \u00e5 spore."
+                },
+                "title": "Konfigurer depoter"
+            }
+        }
+    }
+}

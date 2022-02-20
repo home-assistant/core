@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
+            "already_in_progress": "Konfigurace ji\u017e prob\u00edh\u00e1",
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_host": "Neplatn\u00fd hostitel nebo IP adresa",
+            "not_supported": "Za\u0159\u00edzen\u00ed nen\u00ed podporov\u00e1no",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_host": "Neplatn\u00fd hostitel nebo IP adresa",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "flow_title": "{name} ({model} na {host})",
+        "step": {
+            "auth": {
+                "title": "Ov\u011b\u0159en\u00ed za\u0159\u00edzen\u00ed"
+            },
+            "finish": {
+                "data": {
+                    "name": "Jm\u00e9no"
+                },
+                "title": "Vyberte jm\u00e9no za\u0159\u00edzen\u00ed"
+            },
+            "reset": {
+                "description": "{name} ({model} na {host}) je uzam\u010deno. Chcete-li za\u0159\u00edzen\u00ed ov\u011b\u0159it a dokon\u010dit nastaven\u00ed, mus\u00edte ho odemknout. Instrukce:\n1. Otev\u0159ete aplikaci Broadlink.\n2. Klikn\u011bte na za\u0159\u00edzen\u00ed.\n3. Vpravo naho\u0159e klikn\u011bte na `...`.\n4. P\u0159ejd\u011bte do doln\u00ed \u010d\u00e1sti str\u00e1nky.\n5. Vypn\u011bte z\u00e1mek.",
+                "title": "Odemknout za\u0159\u00edzen\u00ed"
+            },
+            "unlock": {
+                "data": {
+                    "unlock": "Ano, ud\u011blej to."
+                },
+                "description": "{name} ({model} na {host}) je uzam\u010deno. To m\u016f\u017ee v\u00e9st k probl\u00e9m\u016fm s ov\u011b\u0159ov\u00e1n\u00edm v Home Assistant. Chcete jej odemknout?",
+                "title": "Odemknut\u00ed za\u0159\u00edzen\u00ed (voliteln\u00e9)"
+            },
+            "user": {
+                "data": {
+                    "host": "Hostitel",
+                    "timeout": "\u010casov\u00fd limit"
+                },
+                "title": "P\u0159ipojen\u00ed k za\u0159\u00edzen\u00ed"
+            }
+        }
+    }
+}

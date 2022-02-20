@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_token": "\u5b58\u53d6\u6b0a\u6756\u7121\u6548",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "not_allowing_new_tokens": "Nanoleaf \u4e0d\u5141\u8a31\u65b0\u6b0a\u6756\uff0c\u8acb\u8ddf\u96a8\u4e0a\u65b9\u8aaa\u660e\u9032\u884c\u64cd\u4f5c\u3002",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "link": {
+                "description": "\u6309\u4f4f Nanoleaf \u96fb\u6e90\u9375\u4e94\u79d2\u3001\u76f4\u5230 LED \u958b\u59cb\u9583\u720d\u5f8c\uff0c\u7136\u5f8c\u65bc 30 \u79d2\u5167\u9ede\u9078 **\u50b3\u9001**\u3002",
+                "title": "\u9023\u7d50 Nanoleaf"
+            },
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef"
+                }
+            }
+        }
+    }
+}

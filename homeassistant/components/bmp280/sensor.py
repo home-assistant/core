@@ -1,4 +1,6 @@
 """Platform for Bosch BMP280 Environmental Sensor integration."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -8,14 +10,16 @@ from busio import I2C
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
 )
 from homeassistant.const import CONF_NAME, PRESSURE_HPA, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,8 +44,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the sensor platform."""
+    _LOGGER.warning(
+        "The Bosch BMP280 Environmental Sensor integration is deprecated and "
+        "will be removed in Home Assistant Core 2022.4; "
+        "this integration is removed under Architectural Decision Record 0019, "
+        "more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
+
     try:
         # initializing I2C bus using the auto-detected pins
         i2c = I2C(board.SCL, board.SDA)
@@ -54,7 +71,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 "%s. Hint: Check wiring and make sure that the SDO pin is tied to either ground (0x76) or VCC (0x77)",
                 error.args[0],
             )
-            raise PlatformNotReady()
+            raise PlatformNotReady() from error
         _LOGGER.error(error)
         return
     # use custom name if there's any
@@ -65,7 +82,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class Bmp280Sensor(Entity):
+class Bmp280Sensor(SensorEntity):
     """Base class for BMP280 entities."""
 
     def __init__(
@@ -74,86 +91,58 @@ class Bmp280Sensor(Entity):
         name: str,
         unit_of_measurement: str,
         device_class: str,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self._bmp280 = bmp280
-        self._name = name
-        self._unit_of_measurement = unit_of_measurement
-        self._device_class = device_class
-        self._state = None
-        self._errored = False
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
-
-    @property
-    def available(self) -> bool:
-        """Return if the device is currently available."""
-        return not self._errored
+        self._attr_name = name
+        self._attr_native_unit_of_measurement = unit_of_measurement
 
 
 class Bmp280TemperatureSensor(Bmp280Sensor):
     """Representation of a Bosch BMP280 Temperature Sensor."""
 
-    def __init__(self, bmp280: Adafruit_BMP280_I2C, name: str):
+    def __init__(self, bmp280: Adafruit_BMP280_I2C, name: str) -> None:
         """Initialize the entity."""
         super().__init__(
-            bmp280, f"{name} Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE
+            bmp280, f"{name} Temperature", TEMP_CELSIUS, SensorDeviceClass.TEMPERATURE
         )
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Fetch new state data for the sensor."""
         try:
-            self._state = round(self._bmp280.temperature, 1)
-            if self._errored:
+            self._attr_native_value = round(self._bmp280.temperature, 1)
+            if not self.available:
                 _LOGGER.warning("Communication restored with temperature sensor")
-                self._errored = False
+                self._attr_available = True
         except OSError:
             # this is thrown when a working sensor is unplugged between two updates
             _LOGGER.warning(
                 "Unable to read temperature data due to a communication problem"
             )
-            self._errored = True
+            self._attr_available = False
 
 
 class Bmp280PressureSensor(Bmp280Sensor):
     """Representation of a Bosch BMP280 Barometric Pressure Sensor."""
 
-    def __init__(self, bmp280: Adafruit_BMP280_I2C, name: str):
+    def __init__(self, bmp280: Adafruit_BMP280_I2C, name: str) -> None:
         """Initialize the entity."""
         super().__init__(
-            bmp280, f"{name} Pressure", PRESSURE_HPA, DEVICE_CLASS_PRESSURE
+            bmp280, f"{name} Pressure", PRESSURE_HPA, SensorDeviceClass.PRESSURE
         )
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Fetch new state data for the sensor."""
         try:
-            self._state = round(self._bmp280.pressure)
-            if self._errored:
+            self._attr_native_value = round(self._bmp280.pressure)
+            if not self.available:
                 _LOGGER.warning("Communication restored with pressure sensor")
-                self._errored = False
+                self._attr_available = True
         except OSError:
             # this is thrown when a working sensor is unplugged between two updates
             _LOGGER.warning(
                 "Unable to read pressure data due to a communication problem"
             )
-            self._errored = True
+            self._attr_available = False

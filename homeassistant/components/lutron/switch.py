@@ -1,14 +1,20 @@
 """Support for Lutron switches."""
-import logging
+from __future__ import annotations
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
 
-_LOGGER = logging.getLogger(__name__)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Lutron switches."""
     devs = []
 
@@ -46,11 +52,9 @@ class LutronSwitch(LutronDevice, SwitchEntity):
         self._lutron_device.level = 0
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        attr = {}
-        attr["lutron_integration_id"] = self._lutron_device.id
-        return attr
+        return {"lutron_integration_id": self._lutron_device.id}
 
     @property
     def is_on(self):
@@ -81,14 +85,13 @@ class LutronLed(LutronDevice, SwitchEntity):
         self._lutron_device.state = 0
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        attr = {
+        return {
             "keypad": self._keypad_name,
             "scene": self._scene_name,
             "led": self._lutron_device.name,
         }
-        return attr
 
     @property
     def is_on(self):

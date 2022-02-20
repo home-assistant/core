@@ -1,4 +1,6 @@
 """Support for OpenWRT (luci) routers."""
+from __future__ import annotations
+
 import logging
 
 from openwrt_luci_rpc import OpenWrtRpc
@@ -6,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import (
@@ -16,14 +18,16 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
@@ -34,7 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
     """Validate the configuration and return a Luci scanner."""
     scanner = LuciDeviceScanner(config[DOMAIN])
 
@@ -94,6 +98,12 @@ class LuciDeviceScanner(DeviceScanner):
 
         last_results = []
         for device in result:
-            last_results.append(device)
+            if (
+                not hasattr(self.router.router.owrt_version, "release")
+                or not self.router.router.owrt_version.release
+                or self.router.router.owrt_version.release[0] < 19
+                or device.reachable
+            ):
+                last_results.append(device)
 
         self.last_results = last_results

@@ -1,13 +1,13 @@
 """Support for Firmata binary sensor input."""
-
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_NEGATE_STATE, CONF_PIN, CONF_PIN_MODE, DOMAIN
+from .const import CONF_NEGATE_STATE, CONF_PIN_MODE, DOMAIN
 from .entity import FirmataPinEntity
 from .pin import FirmataBinaryDigitalInput, FirmataPinUsedException
 
@@ -15,7 +15,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Firmata binary sensors."""
     new_entities = []
@@ -30,7 +32,7 @@ async def async_setup_entry(
             api.setup()
         except FirmataPinUsedException:
             _LOGGER.error(
-                "Could not setup binary sensor on pin %s since pin already in use.",
+                "Could not setup binary sensor on pin %s since pin already in use",
                 binary_sensor[CONF_PIN],
             )
             continue

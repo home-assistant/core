@@ -1,8 +1,8 @@
 {
     "config": {
         "error": {
-            "connection_error": "\u9023\u7dda\u81f3 CoolMasterNet \u5931\u6557\uff0c\u8acb\u6aa2\u67e5\u4e3b\u6a5f\u7aef\u3002",
-            "no_units": "\u7121\u6cd5\u65bc CoolMasterNet \u4e3b\u6a5f\u627e\u5230\u4efb\u4f55 HVAC \u8a2d\u5099\u3002"
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "no_units": "\u7121\u6cd5\u65bc CoolMasterNet \u4e3b\u6a5f\u627e\u5230\u4efb\u4f55 HVAC \u88dd\u7f6e\u3002"
         },
         "step": {
             "user": {

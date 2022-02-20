@@ -1,4 +1,6 @@
 """APNS Notification platform."""
+# pylint: disable=import-error
+from contextlib import suppress
 import logging
 
 from apns2.client import APNsClient
@@ -15,6 +17,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import ATTR_NAME, CONF_NAME, CONF_PLATFORM
+from homeassistant.core import ServiceCall
 from homeassistant.helpers import template as template_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_state_change
@@ -42,9 +45,16 @@ REGISTER_SERVICE_SCHEMA = vol.Schema(
     {vol.Required(ATTR_PUSH_ID): cv.string, vol.Optional(ATTR_NAME): cv.string}
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def get_service(hass, config, discovery_info=None):
     """Return push service."""
+    _LOGGER.warning(
+        "The Apple Push Notification Service (APNS) integration is deprecated "
+        "and will be removed in Home Assistant Core 2022.4"
+    )
+
     name = config[CONF_NAME]
     cert_file = config[CONF_CERTFILE]
     topic = config[CONF_TOPIC]
@@ -155,7 +165,7 @@ class ApnsNotificationService(BaseNotificationService):
         self.device_states = {}
         self.topic = topic
 
-        try:
+        with suppress(FileNotFoundError):
             self.devices = {
                 str(key): ApnsDevice(
                     str(key),
@@ -165,8 +175,6 @@ class ApnsNotificationService(BaseNotificationService):
                 )
                 for (key, value) in load_yaml_config_file(self.yaml_path).items()
             }
-        except FileNotFoundError:
-            pass
 
         tracking_ids = [
             device.full_tracking_device_id
@@ -185,11 +193,11 @@ class ApnsNotificationService(BaseNotificationService):
 
     def write_devices(self):
         """Write all known devices to file."""
-        with open(self.yaml_path, "w+") as out:
-            for _, device in self.devices.items():
+        with open(self.yaml_path, "w+", encoding="utf8") as out:
+            for device in self.devices.values():
                 _write_device(out, device)
 
-    def register(self, call):
+    def register(self, call: ServiceCall) -> None:
         """Register a device to receive push messages."""
         push_id = call.data.get(ATTR_PUSH_ID)
 
@@ -203,15 +211,13 @@ class ApnsNotificationService(BaseNotificationService):
 
         if current_device is None:
             self.devices[push_id] = device
-            with open(self.yaml_path, "a") as out:
+            with open(self.yaml_path, "a", encoding="utf8") as out:
                 _write_device(out, device)
-            return True
+            return
 
         if device != current_device:
             self.devices[push_id] = device
             self.write_devices()
-
-        return True
 
     def send_message(self, message=None, **kwargs):
         """Send push message to registered devices."""
@@ -221,15 +227,13 @@ class ApnsNotificationService(BaseNotificationService):
         )
 
         device_state = kwargs.get(ATTR_TARGET)
-        message_data = kwargs.get(ATTR_DATA)
-
-        if message_data is None:
+        if (message_data := kwargs.get(ATTR_DATA)) is None:
             message_data = {}
 
         if isinstance(message, str):
             rendered_message = message
         elif isinstance(message, template_helper.Template):
-            rendered_message = message.render()
+            rendered_message = message.render(parse_result=False)
         else:
             rendered_message = ""
 

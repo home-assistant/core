@@ -5,7 +5,6 @@
             "no_device": "Ninguno de sus dispositivos tiene activado \"Buscar mi iPhone\""
         },
         "error": {
-            "login": "Error de inicio de sesi\u00f3n: compruebe su correo electr\u00f3nico y contrase\u00f1a",
             "send_verification_code": "Error al enviar el c\u00f3digo de verificaci\u00f3n",
             "validate_verification_code": "No se pudo verificar su c\u00f3digo de verificaci\u00f3n, elija un dispositivo de confianza y comience la verificaci\u00f3n nuevamente"
         },

@@ -1,5 +1,6 @@
 """Support for monitoring plants."""
 from collections import deque
+from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
 
@@ -12,19 +13,21 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONDUCTIVITY,
     CONF_SENSORS,
+    LIGHT_LUX,
+    PERCENTAGE,
     STATE_OK,
     STATE_PROBLEM,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,7 +114,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: PLANT_SCHEMA}}, extra=vol.ALLOW_
 ENABLE_LOAD_HISTORY = False
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Plant component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -134,7 +137,7 @@ class Plant(Entity):
 
     READINGS = {
         READING_BATTERY: {
-            ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             "min": CONF_MIN_BATTERY_LEVEL,
         },
         READING_TEMPERATURE: {
@@ -143,7 +146,7 @@ class Plant(Entity):
             "max": CONF_MAX_TEMPERATURE,
         },
         READING_MOISTURE: {
-            ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             "min": CONF_MIN_MOISTURE,
             "max": CONF_MAX_MOISTURE,
         },
@@ -153,7 +156,7 @@ class Plant(Entity):
             "max": CONF_MAX_CONDUCTIVITY,
         },
         READING_BRIGHTNESS: {
-            ATTR_UNIT_OF_MEASUREMENT: "lux",
+            ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX,
             "min": CONF_MIN_BRIGHTNESS,
             "max": CONF_MAX_BRIGHTNESS,
         },
@@ -236,8 +239,7 @@ class Plant(Entity):
         result = []
         for sensor_name in self._sensormap.values():
             params = self.READINGS[sensor_name]
-            value = getattr(self, f"_{sensor_name}")
-            if value is not None:
+            if (value := getattr(self, f"_{sensor_name}")) is not None:
                 if value == STATE_UNAVAILABLE:
                     result.append(f"{sensor_name} unavailable")
                 else:
@@ -281,18 +283,18 @@ class Plant(Entity):
         """After being added to hass, load from history."""
         if ENABLE_LOAD_HISTORY and "recorder" in self.hass.config.components:
             # only use the database if it's configured
-            self.hass.async_add_job(self._load_history_from_db)
+            await self.hass.async_add_executor_job(self._load_history_from_db)
+            self.async_write_ha_state()
 
         async_track_state_change_event(
             self.hass, list(self._sensormap), self._state_changed_event
         )
 
         for entity_id in self._sensormap:
-            state = self.hass.states.get(entity_id)
-            if state is not None:
+            if (state := self.hass.states.get(entity_id)) is not None:
                 self.state_changed(entity_id, state)
 
-    async def _load_history_from_db(self):
+    def _load_history_from_db(self):
         """Load the history of the brightness values from the database.
 
         This only needs to be done once during startup.
@@ -322,14 +324,11 @@ class Plant(Entity):
             for state in states:
                 # filter out all None, NaN and "unknown" states
                 # only keep real values
-                try:
+                with suppress(ValueError):
                     self._brightness_history.add_measurement(
                         int(state.state), state.last_updated
                     )
-                except ValueError:
-                    pass
         _LOGGER.debug("Initializing from database completed")
-        self.async_write_ha_state()
 
     @property
     def should_poll(self):
@@ -347,7 +346,7 @@ class Plant(Entity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attributes of the entity.
 
         Provide the individual measurements from the

@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Anahtar\u0131"
+                },
+                "description": "https://app.rach.io/ adresinden API Anahtar\u0131na ihtiyac\u0131n\u0131z olacak. Ayarlar'a gidin, ard\u0131ndan 'API ANAHTARI AL' se\u00e7ene\u011fini t\u0131klay\u0131n.",
+                "title": "Rachio cihaz\u0131n\u0131za ba\u011flan\u0131n"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "manual_run_mins": "Bir b\u00f6lge anahtar\u0131 etkinle\u015ftirilirken \u00e7al\u0131\u015ft\u0131r\u0131lacak dakika cinsinden s\u00fcre"
+                }
+            }
+        }
+    }
+}

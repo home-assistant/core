@@ -31,6 +31,9 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 from tests.mock.zwave import MockEntityValues, MockNode, MockValue, value_changed
 
+# Integration is disabled
+pytest.skip("Integration has been disabled in the manifest", allow_module_level=True)
+
 
 @pytest.fixture
 def device(hass, mock_openzwave):
@@ -845,10 +848,10 @@ def test_hvac_action_value_changed_unknown(device_unknown):
 
 def test_fan_action_value_changed(device):
     """Test values changed for climate device."""
-    assert device.device_state_attributes[climate.ATTR_FAN_ACTION] == 7
+    assert device.extra_state_attributes[climate.ATTR_FAN_ACTION] == 7
     device.values.fan_action.data = 9
     value_changed(device.values.fan_action)
-    assert device.device_state_attributes[climate.ATTR_FAN_ACTION] == 9
+    assert device.extra_state_attributes[climate.ATTR_FAN_ACTION] == 9
 
 
 def test_aux_heat_unsupported_set(device):

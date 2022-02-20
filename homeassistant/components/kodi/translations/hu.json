@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "no_uuid": "A Kodi p\u00e9ld\u00e1nynak nincs egyedi azonos\u00edt\u00f3ja. Ennek oka val\u00f3sz\u00edn\u0171leg egy r\u00e9gi Kodi verzi\u00f3 (17.x vagy alacsonyabb). Be\u00e1ll\u00edthatja manu\u00e1lisan az integr\u00e1ci\u00f3t, vagy friss\u00edthet egy \u00fajabb Kodi verzi\u00f3ra.",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "credentials": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "description": "Adja meg a Kodi felhaszn\u00e1l\u00f3nevet \u00e9s jelsz\u00f3t. Ezek megtal\u00e1lhat\u00f3k a Rendszer/Be\u00e1ll\u00edt\u00e1sok/H\u00e1l\u00f3zat/Szolg\u00e1ltat\u00e1sok r\u00e9szben."
+            },
+            "discovery_confirm": {
+                "description": "Szeretn\u00e9 hozz\u00e1adni a Kodi (`{name}`)-t Home Assistanthoz?",
+                "title": "Kodi felfedezve"
+            },
+            "user": {
+                "data": {
+                    "host": "C\u00edm",
+                    "port": "Port",
+                    "ssl": "SSL tan\u00fas\u00edtv\u00e1ny haszn\u00e1lata"
+                },
+                "description": "Kodi csatlakoz\u00e1si inform\u00e1ci\u00f3k. A Rendszer / Be\u00e1ll\u00edt\u00e1sok / H\u00e1l\u00f3zat / Szolg\u00e1ltat\u00e1sok men\u00fcben enged\u00e9lyezze a \"Kodi vez\u00e9rl\u00e9s\u00e9nek enged\u00e9lyez\u00e9se HTTP-n kereszt\u00fcl\" lehet\u0151s\u00e9get."
+            },
+            "ws_port": {
+                "data": {
+                    "ws_port": "Port"
+                },
+                "description": "A WebSocket port (n\u00e9ha TCP-portnak h\u00edvj\u00e1k a Kodi-ban). A WebSocketen kereszt\u00fcli kapcsol\u00f3d\u00e1shoz enged\u00e9lyeznie kell a \"Programok enged\u00e9lyez\u00e9se ... a Kodi vez\u00e9rl\u00e9s\u00e9t\" lehet\u0151s\u00e9get a Rendszer / Be\u00e1ll\u00edt\u00e1sok / H\u00e1l\u00f3zat / Szolg\u00e1ltat\u00e1sok men\u00fcben. Ha a WebSocket nincs enged\u00e9lyezve, t\u00e1vol\u00edtsa el a portot, \u00e9s hagyja \u00fcresen."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "{entity_name} kikapcsol\u00e1s\u00e1t k\u00e9rt\u00e9k",
+            "turn_on": "{entity_name} bekapcsol\u00e1s\u00e1t k\u00e9rt\u00e9k"
+        }
+    }
+}

@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Um\u00edst\u011bn\u00ed je ji\u017e nastaveno",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
         "error": {
             "empty": "\u017d\u00e1dn\u00fd v\u00fdsledek p\u0159i hled\u00e1n\u00ed m\u011bsta: zkontrolujte pros\u00edm pole m\u011bsta"
         },
@@ -8,7 +12,15 @@
                 "data": {
                     "city": "M\u011bsto"
                 },
-                "description": "Vyberte m\u011bsto ze seznamu"
+                "description": "Vyberte m\u011bsto ze seznamu",
+                "title": "M\u00e9t\u00e9o-France"
+            },
+            "user": {
+                "data": {
+                    "city": "M\u011bsto"
+                },
+                "description": "Zadejte PS\u010c (pouze pro Francii, doporu\u010deno) nebo jm\u00e9no m\u011bsta.",
+                "title": "M\u00e9t\u00e9o-France"
             }
         }
     },

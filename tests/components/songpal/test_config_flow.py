@@ -1,5 +1,7 @@
 """Test the songpal config flow."""
 import copy
+import dataclasses
+from unittest.mock import patch
 
 from homeassistant.components import ssdp
 from homeassistant.components.songpal.const import CONF_ENDPOINT, DOMAIN
@@ -21,22 +23,25 @@ from . import (
     _patch_config_flow_device,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 UDN = "uuid:1234"
 
-SSDP_DATA = {
-    ssdp.ATTR_UPNP_UDN: UDN,
-    ssdp.ATTR_UPNP_FRIENDLY_NAME: FRIENDLY_NAME,
-    ssdp.ATTR_SSDP_LOCATION: f"http://{HOST}:52323/dmr.xml",
-    "X_ScalarWebAPI_DeviceInfo": {
-        "X_ScalarWebAPI_BaseURL": ENDPOINT,
-        "X_ScalarWebAPI_ServiceList": {
-            "X_ScalarWebAPI_ServiceType": ["guide", "system", "audio", "avContent"],
+SSDP_DATA = ssdp.SsdpServiceInfo(
+    ssdp_usn="mock_usn",
+    ssdp_st="mock_st",
+    ssdp_location=f"http://{HOST}:52323/dmr.xml",
+    upnp={
+        ssdp.ATTR_UPNP_UDN: UDN,
+        ssdp.ATTR_UPNP_FRIENDLY_NAME: FRIENDLY_NAME,
+        "X_ScalarWebAPI_DeviceInfo": {
+            "X_ScalarWebAPI_BaseURL": ENDPOINT,
+            "X_ScalarWebAPI_ServiceList": {
+                "X_ScalarWebAPI_ServiceType": ["guide", "system", "audio", "avContent"],
+            },
         },
     },
-}
+)
 
 
 def _flow_next(hass, flow_id):
@@ -49,14 +54,17 @@ def _flow_next(hass, flow_id):
 
 def _patch_setup():
     return patch(
-        "homeassistant.components.songpal.async_setup_entry", return_value=True,
+        "homeassistant.components.songpal.async_setup_entry",
+        return_value=True,
     )
 
 
 async def test_flow_ssdp(hass):
     """Test working ssdp flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_SSDP}, data=SSDP_DATA,
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=SSDP_DATA,
     )
     assert result["type"] == "form"
     assert result["step_id"] == "init"
@@ -82,7 +90,8 @@ async def test_flow_user(hass):
 
     with _patch_config_flow_device(mocked_device), _patch_setup():
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER},
+            DOMAIN,
+            context={"source": SOURCE_USER},
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
@@ -90,7 +99,8 @@ async def test_flow_user(hass):
         _flow_next(hass, result["flow_id"])
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_ENDPOINT: ENDPOINT},
+            result["flow_id"],
+            user_input={CONF_ENDPOINT: ENDPOINT},
         )
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == MODEL
@@ -136,19 +146,24 @@ async def test_flow_import_without_name(hass):
 
 
 def _create_mock_config_entry(hass):
-    MockConfigEntry(domain=DOMAIN, unique_id="uuid:0000", data=CONF_DATA,).add_to_hass(
-        hass
-    )
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="uuid:0000",
+        data=CONF_DATA,
+    ).add_to_hass(hass)
 
 
 async def test_ssdp_bravia(hass):
     """Test discovering a bravia TV."""
-    ssdp_data = copy.deepcopy(SSDP_DATA)
-    ssdp_data["X_ScalarWebAPI_DeviceInfo"]["X_ScalarWebAPI_ServiceList"][
+    ssdp_data = dataclasses.replace(SSDP_DATA)
+    ssdp_data.upnp = copy.deepcopy(ssdp_data.upnp)
+    ssdp_data.upnp["X_ScalarWebAPI_DeviceInfo"]["X_ScalarWebAPI_ServiceList"][
         "X_ScalarWebAPI_ServiceType"
     ].append("videoScreen")
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_SSDP}, data=ssdp_data,
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=ssdp_data,
     )
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "not_songpal_device"
@@ -158,7 +173,9 @@ async def test_sddp_exist(hass):
     """Test discovering existed device."""
     _create_mock_config_entry(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_SSDP}, data=SSDP_DATA,
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=SSDP_DATA,
     )
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"

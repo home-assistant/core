@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Layanan sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "flow_type": "Jenis koneksi"
+                },
+                "description": "Produk:",
+                "title": "Jenis Plugwise"
+            },
+            "user_gateway": {
+                "data": {
+                    "host": "Alamat IP",
+                    "password": "ID Smile",
+                    "port": "Port",
+                    "username": "Nama Pengguna Smile"
+                },
+                "description": "Masukkan",
+                "title": "Hubungkan ke Smile"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Interval Pindai (detik)"
+                },
+                "description": "Sesuaikan Opsi Plugwise"
+            }
+        }
+    }
+}

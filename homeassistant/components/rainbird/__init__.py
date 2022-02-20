@@ -1,22 +1,28 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
+from __future__ import annotations
+
 import logging
 
 from pyrainbird import RainbirdController
 import voluptuous as vol
 
-from homeassistant.components import binary_sensor, sensor, switch
+from homeassistant.components.binary_sensor import BinarySensorEntityDescription
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import (
     CONF_FRIENDLY_NAME,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_TRIGGER_TIME,
+    Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 CONF_ZONES = "zones"
 
-SUPPORTED_PLATFORMS = [switch.DOMAIN, sensor.DOMAIN, binary_sensor.DOMAIN]
+PLATFORMS = [Platform.SWITCH, Platform.SENSOR, Platform.BINARY_SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,11 +32,33 @@ DOMAIN = "rainbird"
 
 SENSOR_TYPE_RAINDELAY = "raindelay"
 SENSOR_TYPE_RAINSENSOR = "rainsensor"
-# sensor_type [ description, unit, icon ]
-SENSOR_TYPES = {
-    SENSOR_TYPE_RAINSENSOR: ["Rainsensor", None, "mdi:water"],
-    SENSOR_TYPE_RAINDELAY: ["Raindelay", None, "mdi:water-off"],
-}
+
+
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=SENSOR_TYPE_RAINSENSOR,
+        name="Rainsensor",
+        icon="mdi:water",
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_RAINDELAY,
+        name="Raindelay",
+        icon="mdi:water-off",
+    ),
+)
+
+BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
+        key=SENSOR_TYPE_RAINSENSOR,
+        name="Rainsensor",
+        icon="mdi:water",
+    ),
+    BinarySensorEntityDescription(
+        key=SENSOR_TYPE_RAINDELAY,
+        name="Raindelay",
+        icon="mdi:water-off",
+    ),
+)
 
 TRIGGER_TIME_SCHEMA = vol.All(
     cv.time_period, cv.positive_timedelta, lambda td: (td.total_seconds() // 60)
@@ -56,7 +84,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Rain Bird component."""
 
     hass.data[DATA_RAINBIRD] = []
@@ -80,7 +108,7 @@ def _setup_controller(hass, controller_config, config):
         return False
     hass.data[DATA_RAINBIRD].append(controller)
     _LOGGER.debug("Rain Bird Controller %d set to: %s", position, server)
-    for platform in SUPPORTED_PLATFORMS:
+    for platform in PLATFORMS:
         discovery.load_platform(
             hass,
             platform,

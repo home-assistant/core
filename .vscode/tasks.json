@@ -2,13 +2,10 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Preview",
+      "label": "Run Home Assistant Core",
       "type": "shell",
       "command": "hass -c ./config",
-      "group": {
-        "kind": "test",
-        "isDefault": true
-      },
+      "group": "test",
       "presentation": {
         "reveal": "always",
         "panel": "new"
@@ -60,6 +57,21 @@
       "problemMatcher": []
     },
     {
+      "label": "Code Coverage",
+      "detail": "Generate code coverage report for a given integration.",
+      "type": "shell",
+      "command": "pytest ./tests/components/${input:integrationName}/ --cov=homeassistant.components.${input:integrationName} --cov-report term-missing --durations-min=1 --durations=0 --numprocesses=auto",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "Generate Requirements",
       "type": "shell",
       "command": "./script/gen_requirements_all.py",
@@ -76,7 +88,7 @@
     {
       "label": "Install all Requirements",
       "type": "shell",
-      "command": "pip3 install -r requirements_all.txt",
+      "command": "pip3 install --use-deprecated=legacy-resolver -r requirements_all.txt",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -90,7 +102,7 @@
     {
       "label": "Install all Test Requirements",
       "type": "shell",
-      "command": "pip3 install -r requirements_test_all.txt",
+      "command": "pip3 install --use-deprecated=legacy-resolver -r requirements_test_all.txt",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -100,6 +112,28 @@
         "panel": "new"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "Compile translations",
+      "detail": "In order to test changes to translation files, the translation strings must be compiled into Home Assistant's translation directories.",
+      "type": "shell",
+      "command": "python3 -m script.translations develop --integration ${input:integrationName}",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "integrationName",
+      "type": "promptString",
+      "description": "For which integration should the task run?"
     }
   ]
 }

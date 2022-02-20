@@ -1,31 +1,30 @@
 {
-  "title": "Panasonic Viera",
   "config": {
     "step": {
       "user": {
         "title": "Setup your TV",
-        "description": "Enter your Panasonic Viera TV's IP address",
+        "description": "Enter your Panasonic Viera TV's [%key:common::config_flow::data::ip%]",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]",
-          "name": "Name"
+          "name": "[%key:common::config_flow::data::name%]"
         }
       },
       "pairing": {
         "title": "Pairing",
-        "description": "Enter the PIN displayed on your TV",
+        "description": "Enter the [%key:common::config_flow::data::pin%] displayed on your TV",
         "data": {
-          "pin": "PIN"
+          "pin": "[%key:common::config_flow::data::pin%]"
         }
       }
     },
     "error": {
-      "not_connected": "Could not establish a remote connection with your Panasonic Viera TV",
-      "invalid_pin_code": "The PIN code you entered was invalid"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_pin_code": "The [%key:common::config_flow::data::pin%] you entered was invalid"
     },
     "abort": {
-      "already_configured": "This Panasonic Viera TV is already configured.",
-      "not_connected": "The remote connection with your Panasonic Viera TV was lost. Check the logs for more information.",
-      "unknown": "An unknown error occured. Check the logs for more information."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   }
 }

@@ -1,9 +1,13 @@
 """Support for Google Calendar Search binary sensors."""
-import copy
-from datetime import timedelta
-import logging
+from __future__ import annotations
 
-from httplib2 import ServerNotFoundError  # pylint: disable=import-error
+import copy
+from datetime import datetime, timedelta
+import logging
+from typing import Any
+
+from googleapiclient import discovery as google_discovery
+from httplib2 import ServerNotFoundError
 
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
@@ -11,17 +15,16 @@ from homeassistant.components.calendar import (
     calculate_offset,
     is_offset_reached,
 )
+from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITIES, CONF_NAME, CONF_OFFSET
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle, dt
 
 from . import (
     CONF_CAL_ID,
-    CONF_DEVICE_ID,
-    CONF_ENTITIES,
     CONF_IGNORE_AVAILABILITY,
-    CONF_MAX_RESULTS,
-    CONF_NAME,
-    CONF_OFFSET,
     CONF_SEARCH,
     CONF_TRACK,
     DEFAULT_CONF_OFFSET,
@@ -33,14 +36,18 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_GOOGLE_SEARCH_PARAMS = {
     "orderBy": "startTime",
-    "maxResults": 5,
     "singleEvents": True,
 }
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 
-def setup_platform(hass, config, add_entities, disc_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    disc_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the calendar platform for event devices."""
     if disc_info is None:
         return
@@ -67,41 +74,48 @@ def setup_platform(hass, config, add_entities, disc_info=None):
 class GoogleCalendarEventDevice(CalendarEventDevice):
     """A calendar event device."""
 
-    def __init__(self, calendar_service, calendar, data, entity_id):
+    def __init__(
+        self,
+        calendar_service: GoogleCalendarService,
+        calendar_id: str,
+        data: dict[str, Any],
+        entity_id: str,
+    ) -> None:
         """Create the Calendar event device."""
         self.data = GoogleCalendarData(
             calendar_service,
-            calendar,
+            calendar_id,
             data.get(CONF_SEARCH),
-            data.get(CONF_IGNORE_AVAILABILITY),
-            data.get(CONF_MAX_RESULTS),
+            data.get(CONF_IGNORE_AVAILABILITY, False),
         )
-        self._event = None
-        self._name = data[CONF_NAME]
+        self._event: dict[str, Any] | None = None
+        self._name: str = data[CONF_NAME]
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
         self._offset_reached = False
         self.entity_id = entity_id
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, bool]:
         """Return the device state attributes."""
         return {"offset_reached": self._offset_reached}
 
     @property
-    def event(self):
+    def event(self) -> dict[str, Any] | None:
         """Return the next upcoming event."""
         return self._event
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the entity."""
         return self._name
 
-    async def async_get_events(self, hass, start_date, end_date):
+    async def async_get_events(
+        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
+    ) -> list[dict[str, Any]]:
         """Get all events in a specific time frame."""
         return await self.data.async_get_events(hass, start_date, end_date)
 
-    def update(self):
+    def update(self) -> None:
         """Update event data."""
         self.data.update()
         event = copy.deepcopy(self.data.event)
@@ -117,57 +131,83 @@ class GoogleCalendarData:
     """Class to utilize calendar service object to get next event."""
 
     def __init__(
-        self, calendar_service, calendar_id, search, ignore_availability, max_results
-    ):
+        self,
+        calendar_service: GoogleCalendarService,
+        calendar_id: str,
+        search: str | None,
+        ignore_availability: bool,
+    ) -> None:
         """Set up how we are going to search the google calendar."""
         self.calendar_service = calendar_service
         self.calendar_id = calendar_id
         self.search = search
         self.ignore_availability = ignore_availability
-        self.max_results = max_results
-        self.event = None
+        self.event: dict[str, Any] | None = None
 
-    def _prepare_query(self):
+    def _prepare_query(
+        self,
+    ) -> tuple[google_discovery.Resource | None, dict[str, Any] | None]:
         try:
             service = self.calendar_service.get()
-        except ServerNotFoundError:
-            _LOGGER.error("Unable to connect to Google")
+        except ServerNotFoundError as err:
+            _LOGGER.error("Unable to connect to Google: %s", err)
             return None, None
         params = dict(DEFAULT_GOOGLE_SEARCH_PARAMS)
         params["calendarId"] = self.calendar_id
-        if self.max_results:
-            params["maxResults"] = self.max_results
+        params["maxResults"] = 100  # Page size
+
         if self.search:
             params["q"] = self.search
 
         return service, params
 
-    async def async_get_events(self, hass, start_date, end_date):
+    async def async_get_events(
+        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
+    ) -> list[dict[str, Any]]:
         """Get all events in a specific time frame."""
         service, params = await hass.async_add_executor_job(self._prepare_query)
-        if service is None:
+        if service is None or params is None:
             return []
         params["timeMin"] = start_date.isoformat("T")
         params["timeMax"] = end_date.isoformat("T")
 
+        event_list: list[dict[str, Any]] = []
         events = await hass.async_add_executor_job(service.events)
+        page_token: str | None = None
+        while True:
+            page_token = await self.async_get_events_page(
+                hass, events, params, page_token, event_list
+            )
+            if not page_token:
+                break
+        return event_list
+
+    async def async_get_events_page(
+        self,
+        hass: HomeAssistant,
+        events: google_discovery.Resource,
+        params: dict[str, Any],
+        page_token: str | None,
+        event_list: list[dict[str, Any]],
+    ) -> str | None:
+        """Get a page of events in a specific time frame."""
+        params["pageToken"] = page_token
         result = await hass.async_add_executor_job(events.list(**params).execute)
 
         items = result.get("items", [])
-        event_list = []
         for item in items:
-            if not self.ignore_availability and "transparency" in item.keys():
+            if not self.ignore_availability and "transparency" in item:
                 if item["transparency"] == "opaque":
                     event_list.append(item)
             else:
                 event_list.append(item)
-        return event_list
+        return result.get("nextPageToken")
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self) -> None:
         """Get the latest data."""
         service, params = self._prepare_query()
-        if service is None:
+        if service is None or params is None:
             return
         params["timeMin"] = dt.now().isoformat("T")
 
@@ -178,7 +218,7 @@ class GoogleCalendarData:
 
         new_event = None
         for item in items:
-            if not self.ignore_availability and "transparency" in item.keys():
+            if not self.ignore_availability and "transparency" in item:
                 if item["transparency"] == "opaque":
                     new_event = item
                     break

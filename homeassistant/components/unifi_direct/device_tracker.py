@@ -1,4 +1,6 @@
 """Support for Unifi AP direct access."""
+from __future__ import annotations
+
 import json
 import logging
 
@@ -7,11 +9,13 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +24,7 @@ UNIFI_COMMAND = 'mca-dump | tr -d "\n"'
 UNIFI_SSID_TABLE = "vap_table"
 UNIFI_CLIENT_TABLE = "sta_table"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -30,11 +34,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
     """Validate the configuration and return a Unifi direct scanner."""
     scanner = UnifiDeviceScanner(config[DOMAIN])
     if not scanner.connected:
-        return False
+        return None
     return scanner
 
 

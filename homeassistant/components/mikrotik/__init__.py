@@ -1,7 +1,7 @@
 """The Mikrotik component."""
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -10,7 +10,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_MANUFACTURER,
@@ -21,6 +23,7 @@ from .const import (
     DEFAULT_DETECTION_TIME,
     DEFAULT_NAME,
     DOMAIN,
+    PLATFORMS,
 )
 from .hub import MikrotikHub
 
@@ -42,12 +45,16 @@ MIKROTIK_SCHEMA = vol.All(
     )
 )
 
+
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [MIKROTIK_SCHEMA])}, extra=vol.ALLOW_EXTRA
+    vol.All(
+        cv.deprecated(DOMAIN), {DOMAIN: vol.All(cv.ensure_list, [MIKROTIK_SCHEMA])}
+    ),
+    extra=vol.ALLOW_EXTRA,
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Import the Mikrotik component from config."""
 
     if DOMAIN in config:
@@ -61,7 +68,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Mikrotik component."""
 
     hub = MikrotikHub(hass, config_entry)
@@ -82,10 +89,12 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    await hass.config_entries.async_forward_entry_unload(config_entry, "device_tracker")
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
 
     hass.data[DOMAIN].pop(config_entry.entry_id)
 
-    return True
+    return unload_ok

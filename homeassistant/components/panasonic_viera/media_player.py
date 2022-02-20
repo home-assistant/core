@@ -1,9 +1,14 @@
 """Media player support for Panasonic Viera TV."""
+from __future__ import annotations
+
 import logging
 
 from panasonic_viera import Keys
 
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_URL,
     SUPPORT_NEXT_TRACK,
@@ -18,9 +23,22 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_REMOTE, DOMAIN
+from .const import (
+    ATTR_DEVICE_INFO,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL_NUMBER,
+    ATTR_REMOTE,
+    ATTR_UDN,
+    DEFAULT_MANUFACTURER,
+    DEFAULT_MODEL_NUMBER,
+    DOMAIN,
+)
 
 SUPPORT_VIERATV = (
     SUPPORT_PAUSE
@@ -39,31 +57,55 @@ SUPPORT_VIERATV = (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Panasonic Viera TV from a config entry."""
 
     config = config_entry.data
 
     remote = hass.data[DOMAIN][config_entry.entry_id][ATTR_REMOTE]
     name = config[CONF_NAME]
+    device_info = config[ATTR_DEVICE_INFO]
 
-    tv_device = PanasonicVieraTVEntity(remote, name)
+    tv_device = PanasonicVieraTVEntity(remote, name, device_info)
     async_add_entities([tv_device])
 
 
 class PanasonicVieraTVEntity(MediaPlayerEntity):
     """Representation of a Panasonic Viera TV."""
 
-    def __init__(self, remote, name, uuid=None):
+    def __init__(self, remote, name, device_info):
         """Initialize the entity."""
         self._remote = remote
         self._name = name
-        self._uuid = uuid
+        self._device_info = device_info
 
     @property
     def unique_id(self):
         """Return the unique ID of the device."""
-        return self._uuid
+        if self._device_info is None:
+            return None
+        return self._device_info[ATTR_UDN]
+
+    @property
+    def device_info(self) -> DeviceInfo | None:
+        """Return device specific attributes."""
+        if self._device_info is None:
+            return None
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_info[ATTR_UDN])},
+            manufacturer=self._device_info.get(ATTR_MANUFACTURER, DEFAULT_MANUFACTURER),
+            model=self._device_info.get(ATTR_MODEL_NUMBER, DEFAULT_MODEL_NUMBER),
+            name=self._name,
+        )
+
+    @property
+    def device_class(self):
+        """Return the device class of the device."""
+        return MediaPlayerDeviceClass.TV
 
     @property
     def name(self):
@@ -101,7 +143,7 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
 
     async def async_turn_on(self):
         """Turn on the media player."""
-        await self._remote.async_turn_on()
+        await self._remote.async_turn_on(context=self._context)
 
     async def async_turn_off(self):
         """Turn off media player."""

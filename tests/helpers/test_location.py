@@ -1,5 +1,5 @@
 """Tests Home Assistant location helpers."""
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import State
 from homeassistant.helpers import location
 
@@ -62,13 +62,30 @@ async def test_coordinates_function_as_state(hass):
 async def test_coordinates_function_device_tracker_in_zone(hass):
     """Test coordinates function."""
     hass.states.async_set(
-        "zone.home", "zoning", {"latitude": 32.87336, "longitude": -117.22943},
+        "zone.home",
+        "zoning",
+        {"latitude": 32.87336, "longitude": -117.22943},
     )
     hass.states.async_set("device_tracker.device", "home")
     assert (
         location.find_coordinates(hass, "device_tracker.device")
         == "32.87336,-117.22943"
     )
+
+
+async def test_coordinates_function_zone_friendly_name(hass):
+    """Test coordinates function."""
+    hass.states.async_set(
+        "zone.home",
+        "zoning",
+        {"latitude": 32.87336, "longitude": -117.22943, ATTR_FRIENDLY_NAME: "my_home"},
+    )
+    hass.states.async_set(
+        "test.object",
+        "my_home",
+    )
+    assert location.find_coordinates(hass, "test.object") == "32.87336,-117.22943"
+    assert location.find_coordinates(hass, "my_home") == "32.87336,-117.22943"
 
 
 async def test_coordinates_function_device_tracker_from_input_select(hass):
@@ -87,20 +104,23 @@ async def test_coordinates_function_device_tracker_from_input_select(hass):
 def test_coordinates_function_returns_none_on_recursion(hass):
     """Test coordinates function."""
     hass.states.async_set(
-        "test.first", "test.second",
+        "test.first",
+        "test.second",
     )
     hass.states.async_set("test.second", "test.first")
     assert location.find_coordinates(hass, "test.first") is None
 
 
-async def test_coordinates_function_returns_none_if_invalid_coord(hass):
+async def test_coordinates_function_returns_state_if_no_coords(hass):
     """Test test_coordinates function."""
     hass.states.async_set(
-        "test.object", "abc",
+        "test.object",
+        "abc",
     )
-    assert location.find_coordinates(hass, "test.object") is None
+    assert location.find_coordinates(hass, "test.object") == "abc"
 
 
-def test_coordinates_function_returns_none_if_invalid_input(hass):
+def test_coordinates_function_returns_input_if_no_coords(hass):
     """Test test_coordinates function."""
-    assert location.find_coordinates(hass, "test.abc") is None
+    assert location.find_coordinates(hass, "test.abc") == "test.abc"
+    assert location.find_coordinates(hass, "abc") == "abc"

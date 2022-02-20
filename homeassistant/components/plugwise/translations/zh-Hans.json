@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user_gateway": {
+                "data": {
+                    "host": "IP\u5730\u5740",
+                    "port": "\u7aef\u53e3"
+                }
+            }
+        }
+    }
+}

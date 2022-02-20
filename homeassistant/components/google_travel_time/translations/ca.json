@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Clau API",
+                    "destination": "Destinaci\u00f3",
+                    "name": "Nom",
+                    "origin": "Origen"
+                },
+                "description": "Quan especifiquis l'origen i la destinaci\u00f3, pots proporcionar m\u00e9s d'una ubicaci\u00f3 (les has de separar pel car\u00e0cter 'pipe'); poden ser en forma d'adre\u00e7a, coordenades de latitud/longitud o un identificador de lloc de Google. En especificar la ubicaci\u00f3 mitjan\u00e7ant un ID de lloc de Google, l'identificador ha de tenir el prefix `place_id:`."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "avoid": "Evita",
+                    "language": "Idioma",
+                    "mode": "Mode de transport",
+                    "time": "Temps",
+                    "time_type": "Tipus de temps",
+                    "transit_mode": "Tipus de transport",
+                    "transit_routing_preference": "Prefer\u00e8ncia de rutes de tr\u00e0nsit",
+                    "units": "Unitats"
+                },
+                "description": "Opcionalment, pots especificar una hora de sortida o una hora d'arribada. Si especifiques una hora de sortida, pots introduir `ara`, una marca de temps Unix o una cadena de temps de 24 hores com per exemple `08:00:00`. Si especifiques una hora d'arribada, pots utilitzar els mateixos formats excepte `ara`."
+            }
+        }
+    },
+    "title": "Temps de viatge de Google Maps"
+}

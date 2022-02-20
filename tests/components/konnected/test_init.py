@@ -1,13 +1,14 @@
 """Test Konnected setup process."""
+from http import HTTPStatus
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import konnected
 from homeassistant.components.konnected import config_flow
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -387,7 +388,8 @@ async def test_config_passed_to_config_entry(hass):
 async def test_unload_entry(hass, mock_panel):
     """Test being able to unload an entry."""
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
     entry = MockConfigEntry(
         domain=konnected.DOMAIN, data={konnected.CONF_ID: "aabbccddeeff"}
@@ -400,7 +402,7 @@ async def test_unload_entry(hass, mock_panel):
     assert hass.data[konnected.DOMAIN]["devices"] == {}
 
 
-async def test_api(hass, aiohttp_client, mock_panel):
+async def test_api(hass, hass_client_no_auth, mock_panel):
     """Test callback view."""
     await async_setup_component(hass, "http", {"http": {}})
 
@@ -411,12 +413,14 @@ async def test_api(hass, aiohttp_client, mock_panel):
             "id": "112233445566",
             "model": "Konnected Pro",
             "access_token": "abcdefgh",
+            "api_host": "http://192.168.86.32:8123",
             "default_options": config_flow.OPTIONS_SCHEMA({config_flow.CONF_IO: {}}),
         }
     )
 
     device_options = config_flow.OPTIONS_SCHEMA(
         {
+            "api_host": "http://192.168.86.32:8123",
             "io": {
                 "1": "Binary Sensor",
                 "2": "Binary Sensor",
@@ -466,48 +470,48 @@ async def test_api(hass, aiohttp_client, mock_panel):
         is True
     )
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     # Test the get endpoint for switch status polling
     resp = await client.get("/api/konnected")
-    assert resp.status == HTTP_NOT_FOUND  # no device provided
+    assert resp.status == HTTPStatus.NOT_FOUND  # no device provided
 
     resp = await client.get("/api/konnected/223344556677")
-    assert resp.status == HTTP_NOT_FOUND  # unknown device provided
+    assert resp.status == HTTPStatus.NOT_FOUND  # unknown device provided
 
     resp = await client.get("/api/konnected/device/112233445566")
-    assert resp.status == HTTP_NOT_FOUND  # no zone provided
+    assert resp.status == HTTPStatus.NOT_FOUND  # no zone provided
     result = await resp.json()
     assert result == {"message": "Switch on zone or pin unknown not configured"}
 
     resp = await client.get("/api/konnected/device/112233445566?zone=8")
-    assert resp.status == HTTP_NOT_FOUND  # invalid zone
+    assert resp.status == HTTPStatus.NOT_FOUND  # invalid zone
     result = await resp.json()
     assert result == {"message": "Switch on zone or pin 8 not configured"}
 
     resp = await client.get("/api/konnected/device/112233445566?pin=12")
-    assert resp.status == HTTP_NOT_FOUND  # invalid pin
+    assert resp.status == HTTPStatus.NOT_FOUND  # invalid pin
     result = await resp.json()
     assert result == {"message": "Switch on zone or pin 12 not configured"}
 
     resp = await client.get("/api/konnected/device/112233445566?zone=out")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"state": 1, "zone": "out"}
 
     resp = await client.get("/api/konnected/device/112233445566?pin=8")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"state": 1, "pin": "8"}
 
     # Test the post endpoint for sensor updates
     resp = await client.post("/api/konnected/device", json={"zone": "1", "state": 1})
-    assert resp.status == HTTP_NOT_FOUND
+    assert resp.status == HTTPStatus.NOT_FOUND
 
     resp = await client.post(
         "/api/konnected/device/112233445566", json={"zone": "1", "state": 1}
     )
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
     result = await resp.json()
     assert result == {"message": "unauthorized"}
 
@@ -516,14 +520,14 @@ async def test_api(hass, aiohttp_client, mock_panel):
         headers={"Authorization": "Bearer abcdefgh"},
         json={"zone": "1", "state": 1},
     )
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
     resp = await client.post(
         "/api/konnected/device/112233445566",
         headers={"Authorization": "Bearer abcdefgh"},
         json={"zone": "15", "state": 1},
     )
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
     result = await resp.json()
     assert result == {"message": "unregistered sensor/actuator"}
 
@@ -532,7 +536,7 @@ async def test_api(hass, aiohttp_client, mock_panel):
         headers={"Authorization": "Bearer abcdefgh"},
         json={"zone": "1", "state": 1},
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"message": "ok"}
 
@@ -541,7 +545,7 @@ async def test_api(hass, aiohttp_client, mock_panel):
         headers={"Authorization": "Bearer globaltoken"},
         json={"zone": "1", "state": 1},
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"message": "ok"}
 
@@ -550,7 +554,7 @@ async def test_api(hass, aiohttp_client, mock_panel):
         headers={"Authorization": "Bearer abcdefgh"},
         json={"zone": "4", "temp": 22, "humi": 20},
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"message": "ok"}
 
@@ -560,15 +564,16 @@ async def test_api(hass, aiohttp_client, mock_panel):
         headers={"Authorization": "Bearer abcdefgh"},
         json={"zone": "1", "state": 1},
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"message": "ok"}
 
 
-async def test_state_updates_zone(hass, aiohttp_client, mock_panel):
+async def test_state_updates_zone(hass, hass_client_no_auth, mock_panel):
     """Test callback view."""
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
 
     device_config = config_flow.CONFIG_ENTRY_SCHEMA(
@@ -637,7 +642,7 @@ async def test_state_updates_zone(hass, aiohttp_client, mock_panel):
         is True
     )
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     # Test updating a binary sensor
     resp = await client.post(
@@ -645,7 +650,7 @@ async def test_state_updates_zone(hass, aiohttp_client, mock_panel):
         headers={"Authorization": "Bearer abcdefgh"},
         json={"zone": "1", "state": 0},
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
@@ -656,7 +661,7 @@ async def test_state_updates_zone(hass, aiohttp_client, mock_panel):
         headers={"Authorization": "Bearer abcdefgh"},
         json={"zone": "1", "state": 1},
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
@@ -668,7 +673,7 @@ async def test_state_updates_zone(hass, aiohttp_client, mock_panel):
         headers={"Authorization": "Bearer abcdefgh"},
         json={"zone": "4", "temp": 22, "humi": 20},
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
@@ -682,7 +687,7 @@ async def test_state_updates_zone(hass, aiohttp_client, mock_panel):
         headers={"Authorization": "Bearer abcdefgh"},
         json={"zone": "4", "temp": 25, "humi": 23},
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
@@ -697,7 +702,7 @@ async def test_state_updates_zone(hass, aiohttp_client, mock_panel):
         headers={"Authorization": "Bearer abcdefgh"},
         json={"zone": "5", "temp": 32, "addr": 1},
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
@@ -708,17 +713,18 @@ async def test_state_updates_zone(hass, aiohttp_client, mock_panel):
         headers={"Authorization": "Bearer abcdefgh"},
         json={"zone": "5", "temp": 42, "addr": 1},
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
     assert hass.states.get("sensor.temper_temperature").state == "42.0"
 
 
-async def test_state_updates_pin(hass, aiohttp_client, mock_panel):
+async def test_state_updates_pin(hass, hass_client_no_auth, mock_panel):
     """Test callback view."""
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
 
     device_config = config_flow.CONFIG_ENTRY_SCHEMA(
@@ -775,7 +781,11 @@ async def test_state_updates_pin(hass, aiohttp_client, mock_panel):
     entry.add_to_hass(hass)
 
     # Add empty data field to ensure we process it correctly (possible if entry is ignored)
-    entry = MockConfigEntry(domain="konnected", title="Konnected Alarm Panel", data={},)
+    entry = MockConfigEntry(
+        domain="konnected",
+        title="Konnected Alarm Panel",
+        data={},
+    )
     entry.add_to_hass(hass)
 
     assert (
@@ -787,7 +797,7 @@ async def test_state_updates_pin(hass, aiohttp_client, mock_panel):
         is True
     )
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     # Test updating a binary sensor
     resp = await client.post(
@@ -795,7 +805,7 @@ async def test_state_updates_pin(hass, aiohttp_client, mock_panel):
         headers={"Authorization": "Bearer abcdefgh"},
         json={"pin": "1", "state": 0},
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
@@ -806,7 +816,7 @@ async def test_state_updates_pin(hass, aiohttp_client, mock_panel):
         headers={"Authorization": "Bearer abcdefgh"},
         json={"pin": "1", "state": 1},
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
@@ -818,7 +828,7 @@ async def test_state_updates_pin(hass, aiohttp_client, mock_panel):
         headers={"Authorization": "Bearer abcdefgh"},
         json={"pin": "6", "temp": 22, "humi": 20},
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
@@ -832,7 +842,7 @@ async def test_state_updates_pin(hass, aiohttp_client, mock_panel):
         headers={"Authorization": "Bearer abcdefgh"},
         json={"pin": "6", "temp": 25, "humi": 23},
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
@@ -847,7 +857,7 @@ async def test_state_updates_pin(hass, aiohttp_client, mock_panel):
         headers={"Authorization": "Bearer abcdefgh"},
         json={"pin": "7", "temp": 32, "addr": 1},
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
@@ -858,7 +868,7 @@ async def test_state_updates_pin(hass, aiohttp_client, mock_panel):
         headers={"Authorization": "Bearer abcdefgh"},
         json={"pin": "7", "temp": 42, "addr": 1},
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()

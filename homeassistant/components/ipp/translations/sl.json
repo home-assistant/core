@@ -2,14 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Ta tiskalnik je \u017ee konfiguriran.",
-            "connection_error": "Povezava s tiskalnikom ni uspela.",
             "connection_upgrade": "Povezava s tiskalnikom ni uspela, ker je potrebna nadgradnja povezave.",
             "ipp_error": "Naletel na napako IPP.",
             "ipp_version_error": "Razli\u010dica IPP ni podprta s tiskalnikom.",
             "parse_error": "Odziva tiskalnika ni bilo mogo\u010de raz\u010dleniti."
         },
         "error": {
-            "connection_error": "Povezava s tiskalnikom ni uspela.",
             "connection_upgrade": "Povezave s tiskalnikom ni bilo mogo\u010de vzpostaviti. Prosimo, poskusite znova z odkljukano mo\u017enostjo SSL/TLS."
         },
         "flow_title": "Tiskalnik: {name}",

@@ -12,9 +12,13 @@ from homeassistant.const import (
     CONF_SWITCHES,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
+    PERCENTAGE,
+    Platform,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +35,6 @@ CONF_DST_UNIT = "unit"
 DEFAULT_INVERT_LOGIC = False
 DEFAULT_SRC_RANGE = [0, 1024]
 DEFAULT_DST_RANGE = [0.0, 100.0]
-DEFAULT_UNIT = "%"
 DEFAULT_DEV = [f"/dev/ttyACM{i}" for i in range(10)]
 
 PORT_RANGE = range(1, 8)  # ports 0-7 are ADC capable
@@ -57,8 +60,8 @@ def float_range(rng):
         coe = vol.Coerce(float)
         coe(rng[0])
         coe(rng[1])
-    except vol.CoerceInvalid:
-        raise vol.Invalid(f"Only int or float values are allowed: {rng}")
+    except vol.CoerceInvalid as err:
+        raise vol.Invalid(f"Only int or float values are allowed: {rng}") from err
     if len(rng) != 2:
         raise vol.Invalid(f"Only two numbers allowed in a range: {rng}")
     if rng[0] > rng[1]:
@@ -70,8 +73,8 @@ def adc_port_number(num):
     """Validate input number to be in the range of ADC enabled ports."""
     try:
         num = int(num)
-    except (ValueError):
-        raise vol.Invalid(f"Port numbers must be integers: {num}")
+    except ValueError as err:
+        raise vol.Invalid(f"Port numbers must be integers: {num}") from err
     if num not in range(1, 8):
         raise vol.Invalid(f"Only port numbers from 1 to 7 are ADC capable: {num}")
     return num
@@ -82,7 +85,7 @@ ADC_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_SRC_RANGE, default=DEFAULT_SRC_RANGE): int_range,
         vol.Optional(CONF_DST_RANGE, default=DEFAULT_DST_RANGE): float_range,
-        vol.Optional(CONF_DST_UNIT, default=DEFAULT_UNIT): cv.string,
+        vol.Optional(CONF_DST_UNIT, default=PERCENTAGE): cv.string,
     }
 )
 
@@ -117,7 +120,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the numato integration.
 
     Discovers available Numato devices and loads the binary_sensor, sensor and
@@ -159,9 +162,9 @@ def setup(hass, config):
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, prepare_gpio)
 
-    load_platform(hass, "binary_sensor", DOMAIN, {}, config)
-    load_platform(hass, "sensor", DOMAIN, {}, config)
-    load_platform(hass, "switch", DOMAIN, {}, config)
+    load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
+    load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
+    load_platform(hass, Platform.SWITCH, DOMAIN, {}, config)
     return True
 
 
@@ -171,7 +174,7 @@ class NumatoAPI:
 
     def __init__(self):
         """Initialize API state."""
-        self.ports_registered = dict()
+        self.ports_registered = {}
 
     def check_port_free(self, device_id, port, direction):
         """Check whether a port is still free set up.

@@ -11,10 +11,10 @@
     "state": {
         "_": {
             "idle": "Ne\u010dinn\u00fd",
-            "off": "Neaktivn\u00ed",
-            "on": "Aktivn\u00ed",
+            "off": "Vypnuto",
+            "on": "Zapnuto",
             "paused": "Pozastaveno",
-            "playing": "P\u0159ehr\u00e1v\u00e1n\u00ed",
+            "playing": "P\u0159ehr\u00e1v\u00e1",
             "standby": "Pohotovostn\u00ed re\u017eim"
         }
     },

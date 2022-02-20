@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "no_server_found": "Nem tal\u00e1lhat\u00f3 LMS szerver."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "no_server_found": "Nem siker\u00fclt automatikusan felfedezni a szervert.",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "flow_title": "{host}",
+        "step": {
+            "edit": {
+                "data": {
+                    "host": "C\u00edm",
+                    "password": "Jelsz\u00f3",
+                    "port": "Port",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "title": "Kapcsolati inform\u00e1ci\u00f3k szerkeszt\u00e9se"
+            },
+            "user": {
+                "data": {
+                    "host": "C\u00edm"
+                }
+            }
+        }
+    }
+}

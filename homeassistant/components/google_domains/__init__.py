@@ -8,7 +8,10 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.const import CONF_DOMAIN, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,14 +36,14 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the Google Domains component."""
     domain = config[DOMAIN].get(CONF_DOMAIN)
     user = config[DOMAIN].get(CONF_USERNAME)
     password = config[DOMAIN].get(CONF_PASSWORD)
     timeout = config[DOMAIN].get(CONF_TIMEOUT)
 
-    session = hass.helpers.aiohttp_client.async_get_clientsession()
+    session = async_get_clientsession(hass)
 
     result = await _update_google_domains(
         hass, session, domain, user, password, timeout
@@ -65,7 +68,7 @@ async def _update_google_domains(hass, session, domain, user, password, timeout)
     params = {"hostname": domain}
 
     try:
-        with async_timeout.timeout(timeout):
+        async with async_timeout.timeout(timeout):
             resp = await session.get(url, params=params)
             body = await resp.text()
 

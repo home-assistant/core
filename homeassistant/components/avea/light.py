@@ -1,7 +1,7 @@
 """Support for the Elgato Avea lights."""
-import logging
+from __future__ import annotations
 
-import avea
+import avea  # pylint: disable=import-error
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -10,15 +10,21 @@ from homeassistant.components.light import (
     SUPPORT_COLOR,
     LightEntity,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_AVEA = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Avea platform."""
     try:
         nearby_bulbs = avea.discover_avea_bulbs()
@@ -34,32 +40,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AveaLight(LightEntity):
     """Representation of an Avea."""
 
+    _attr_supported_features = SUPPORT_AVEA
+
     def __init__(self, light):
         """Initialize an AveaLight."""
         self._light = light
-        self._name = light.name
-        self._state = None
-        self._brightness = light.brightness
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_AVEA
-
-    @property
-    def name(self):
-        """Return the display name of this light."""
-        return self._name
-
-    @property
-    def brightness(self):
-        """Return the brightness of the light."""
-        return self._brightness
-
-    @property
-    def is_on(self):
-        """Return true if light is on."""
-        return self._state
+        self._attr_name = light.name
+        self._attr_brightness = light.brightness
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
@@ -82,10 +69,6 @@ class AveaLight(LightEntity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
-        brightness = self._light.get_brightness()
-        if brightness is not None:
-            if brightness == 0:
-                self._state = False
-            else:
-                self._state = True
-            self._brightness = round(255 * (brightness / 4095))
+        if (brightness := self._light.get_brightness()) is not None:
+            self._attr_is_on = brightness != 0
+            self._attr_brightness = round(255 * (brightness / 4095))

@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Vill du starta konfigurationen?"
+            }
+        }
+    }
+}

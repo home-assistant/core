@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hesap zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "project_error": "Proje bilgileri al\u0131namad\u0131."
+        },
+        "flow_title": "{project_url}",
+        "step": {
+            "reauth": {
+                "data": {
+                    "personal_access_token": "Ki\u015fisel Eri\u015fim Anahtar\u0131 (PAT)"
+                },
+                "description": "{project_url} i\u00e7in kimlik do\u011frulama ba\u015far\u0131s\u0131z oldu. L\u00fctfen mevcut kimlik bilgilerinizi girin.",
+                "title": "Yeniden kimlik do\u011frulama"
+            },
+            "user": {
+                "data": {
+                    "organization": "Organizasyon",
+                    "personal_access_token": "Ki\u015fisel Eri\u015fim Belirteci (PAT)",
+                    "project": "Proje"
+                },
+                "description": "Projenize eri\u015fmek i\u00e7in bir Azure DevOps \u00f6rne\u011fi ayarlay\u0131n. Ki\u015fisel Eri\u015fim Jetonu yaln\u0131zca \u00f6zel bir proje i\u00e7in gereklidir.",
+                "title": "Azure DevOps Projesi Ekle"
+            }
+        }
+    }
+}

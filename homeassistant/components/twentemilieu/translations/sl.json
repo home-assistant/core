@@ -1,10 +1,6 @@
 {
     "config": {
-        "abort": {
-            "address_exists": "Naslov je \u017ee nastavljen."
-        },
         "error": {
-            "connection_error": "Povezava ni uspela.",
             "invalid_address": "V storitvenem obmo\u010dju Twente Milieu ni mogo\u010de najti naslova."
         },
         "step": {

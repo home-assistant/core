@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_api_key": "\u00c9rv\u00e9nytelen API kulcs",
+            "requests_exceeded": "Accuweather API-hoz enged\u00e9lyezett lek\u00e9r\u00e9sek sz\u00e1ma t\u00fal lett l\u00e9pve. Meg kell v\u00e1rnia m\u00edg a tilt\u00e1s lej\u00e1r vagy m\u00f3dos\u00edtania kell az API-kulcsot."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API kulcs",
+                    "latitude": "Sz\u00e9less\u00e9g",
+                    "longitude": "Hossz\u00fas\u00e1g",
+                    "name": "N\u00e9v"
+                },
+                "description": "Ha seg\u00edts\u00e9gre van sz\u00fcks\u00e9ge a konfigur\u00e1l\u00e1shoz, n\u00e9zze meg itt: https://www.home-assistant.io/integrations/accuweather/ \n\nEgyes \u00e9rz\u00e9kel\u0151k alap\u00e9rtelmez\u00e9s szerint nincsenek enged\u00e9lyezve. Az integr\u00e1ci\u00f3s konfigur\u00e1ci\u00f3 ut\u00e1n enged\u00e9lyezheti \u0151ket az entit\u00e1s-nyilv\u00e1ntart\u00e1sban.\nAz id\u0151j\u00e1r\u00e1s-el\u0151rejelz\u00e9s alap\u00e9rtelmez\u00e9s szerint nincs enged\u00e9lyezve. Ezt az integr\u00e1ci\u00f3s be\u00e1ll\u00edt\u00e1sokban enged\u00e9lyezheti.",
+                "title": "AccuWeather"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "forecast": "Id\u0151j\u00e1r\u00e1s el\u0151rejelz\u00e9s"
+                },
+                "description": "Az AccuWeather API kulcs ingyenes verzi\u00f3j\u00e1nak korl\u00e1tai miatt, amikor enged\u00e9lyezi az id\u0151j\u00e1r\u00e1s -el\u0151rejelz\u00e9st, az adatfriss\u00edt\u00e9seket 40 percenk\u00e9nt 80 percenk\u00e9nt hajtj\u00e1k v\u00e9gre.",
+                "title": "AccuWeather be\u00e1ll\u00edt\u00e1sok"
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "\u00c9rje el az AccuWeather szervert",
+            "remaining_requests": "Fennmarad\u00f3 enged\u00e9lyezett k\u00e9r\u00e9sek"
+        }
+    }
+}

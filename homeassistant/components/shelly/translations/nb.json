@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "credentials": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                }
+            }
+        }
+    }
+}

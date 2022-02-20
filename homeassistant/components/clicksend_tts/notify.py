@@ -1,4 +1,5 @@
 """clicksend_tts platform for notify component."""
+from http import HTTPStatus
 import json
 import logging
 
@@ -12,7 +13,6 @@ from homeassistant.const import (
     CONF_RECIPIENT,
     CONF_USERNAME,
     CONTENT_TYPE_JSON,
-    HTTP_OK,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -88,7 +88,7 @@ class ClicksendNotificationService(BaseNotificationService):
             timeout=TIMEOUT,
         )
 
-        if resp.status_code == HTTP_OK:
+        if resp.status_code == HTTPStatus.OK:
             return
         obj = json.loads(resp.text)
         response_msg = obj["response_msg"]
@@ -108,7 +108,4 @@ def _authenticate(config):
         timeout=TIMEOUT,
     )
 
-    if resp.status_code != HTTP_OK:
-        return False
-
-    return True
+    return resp.status_code == HTTPStatus.OK

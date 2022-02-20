@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+        },
+        "error": {
+            "open_failed": "A megadott soros port nem nyithat\u00f3 meg."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port"
+                },
+                "description": "Csatlakoztassa a LiteJet RS232-2 portj\u00e1t a sz\u00e1m\u00edt\u00f3g\u00e9p\u00e9hez, \u00e9s adja meg a soros port eszk\u00f6z\u00e9nek el\u00e9r\u00e9si \u00fatj\u00e1t. \n\n A LiteJet MCP-t 19,2 K baudra, 8 adatbitre, 1 stopbitre, parit\u00e1s n\u00e9lk\u00fcl kell konfigur\u00e1lni, \u00e9s minden v\u00e1lasz ut\u00e1n \u201eCR\u201d jelet kell tov\u00e1bb\u00edtania.",
+                "title": "Csatlakoz\u00e1s a LiteJet-hez"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "default_transition": "Alap\u00e9rtelmezett \u00e1tmenet (m\u00e1sodperc)"
+                },
+                "title": "A LiteJet konfigur\u00e1l\u00e1sa"
+            }
+        }
+    }
+}

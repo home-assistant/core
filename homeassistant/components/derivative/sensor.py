@@ -1,10 +1,12 @@
 """Numeric derivative of data coming from a source sensor over time."""
+from __future__ import annotations
+
 from decimal import Decimal, DecimalException
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
@@ -16,10 +18,12 @@ from homeassistant.const import (
     TIME_MINUTES,
     TIME_SECONDS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -71,7 +75,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the derivative sensor."""
     derivative = DerivativeSensor(
         source_entity=config[CONF_SOURCE],
@@ -86,7 +95,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([derivative])
 
 
-class DerivativeSensor(RestoreEntity):
+class DerivativeSensor(RestoreEntity, SensorEntity):
     """Representation of an derivative sensor."""
 
     def __init__(
@@ -122,8 +131,7 @@ class DerivativeSensor(RestoreEntity):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if state is not None:
+        if (state := await self.async_get_last_state()) is not None:
             try:
                 self._state = Decimal(state.state)
             except SyntaxError as err:
@@ -136,8 +144,8 @@ class DerivativeSensor(RestoreEntity):
             new_state = event.data.get("new_state")
             if (
                 old_state is None
-                or old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
-                or new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+                or old_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+                or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
             ):
                 return
 
@@ -196,12 +204,12 @@ class DerivativeSensor(RestoreEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return round(self._state, self._round_digits)
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
@@ -211,10 +219,9 @@ class DerivativeSensor(RestoreEntity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
-        state_attr = {ATTR_SOURCE_ID: self._sensor_source_id}
-        return state_attr
+        return {ATTR_SOURCE_ID: self._sensor_source_id}
 
     @property
     def icon(self):

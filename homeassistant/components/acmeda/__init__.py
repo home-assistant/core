@@ -1,55 +1,37 @@
 """The Rollease Acmeda Automate integration."""
-import asyncio
-
-from homeassistant import config_entries, core
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 from .hub import PulseHub
 
 CONF_HUBS = "hubs"
 
-PLATFORMS = ["cover", "sensor"]
+PLATFORMS = [Platform.COVER, Platform.SENSOR]
 
 
-async def async_setup(hass: core.HomeAssistant, config: dict):
-    """Set up the Rollease Acmeda Automate component."""
-    return True
-
-
-async def async_setup_entry(
-    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
-):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Rollease Acmeda Automate hub from a config entry."""
     hub = PulseHub(hass, config_entry)
 
     if not await hub.async_setup():
         return False
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = hub
-
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = hub
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(
-    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
-):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     hub = hass.data[DOMAIN][config_entry.entry_id]
 
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
+
     if not await hub.async_reset():
         return False
 

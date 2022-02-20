@@ -1,5 +1,4 @@
 """BleBox climate entity."""
-
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
@@ -9,12 +8,19 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxEntity, create_blebox_entities
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up a BleBox climate entity."""
 
     create_blebox_entities(
@@ -25,10 +31,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class BleBoxClimateEntity(BleBoxEntity, ClimateEntity):
     """Representation of a BleBox climate feature (saunaBox)."""
 
-    @property
-    def supported_features(self):
-        """Return the supported climate features."""
-        return SUPPORT_TARGET_TEMPERATURE
+    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+    _attr_hvac_modes = [HVAC_MODE_OFF, HVAC_MODE_HEAT]
+    _attr_temperature_unit = TEMP_CELSIUS
 
     @property
     def hvac_mode(self):
@@ -41,22 +46,11 @@ class BleBoxClimateEntity(BleBoxEntity, ClimateEntity):
     @property
     def hvac_action(self):
         """Return the actual current HVAC action."""
-        is_on = self._feature.is_on
-        if not is_on:
+        if not (is_on := self._feature.is_on):
             return None if is_on is None else CURRENT_HVAC_OFF
 
         # NOTE: In practice, there's no need to handle case when is_heating is None
         return CURRENT_HVAC_HEAT if self._feature.is_heating else CURRENT_HVAC_IDLE
-
-    @property
-    def hvac_modes(self):
-        """Return a list of possible HVAC modes."""
-        return [HVAC_MODE_OFF, HVAC_MODE_HEAT]
-
-    @property
-    def temperature_unit(self):
-        """Return the temperature unit."""
-        return TEMP_CELSIUS
 
     @property
     def max_temp(self):

@@ -16,6 +16,7 @@ from homeassistant.components.homekit.const import (
     PROP_VALID_VALUES,
 )
 from homeassistant.components.homekit.type_humidifiers import HumidifierDehumidifier
+from homeassistant.components.humidifier import HumidifierDeviceClass
 from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
@@ -27,17 +28,17 @@ from homeassistant.components.humidifier.const import (
     DOMAIN,
     SERVICE_SET_HUMIDITY,
 )
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_HUMIDITY,
+    PERCENTAGE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    UNIT_PERCENTAGE,
 )
 
 from tests.common import async_mock_service
@@ -54,7 +55,7 @@ async def test_humidifier(hass, hk_driver, events):
     )
     hk_driver.add_accessory(acc)
 
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 1
@@ -74,7 +75,9 @@ async def test_humidifier(hass, hk_driver, events):
     }
 
     hass.states.async_set(
-        entity_id, STATE_ON, {ATTR_HUMIDITY: 47},
+        entity_id,
+        STATE_ON,
+        {ATTR_HUMIDITY: 47},
     )
     await hass.async_block_till_done()
     assert acc.char_target_humidity.value == 47.0
@@ -133,7 +136,7 @@ async def test_dehumidifier(hass, hk_driver, events):
     )
     hk_driver.add_accessory(acc)
 
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 1
@@ -153,7 +156,9 @@ async def test_dehumidifier(hass, hk_driver, events):
     }
 
     hass.states.async_set(
-        entity_id, STATE_ON, {ATTR_HUMIDITY: 30},
+        entity_id,
+        STATE_ON,
+        {ATTR_HUMIDITY: 30},
     )
     await hass.async_block_till_done()
     assert acc.char_target_humidity.value == 30.0
@@ -162,7 +167,9 @@ async def test_dehumidifier(hass, hk_driver, events):
     assert acc.char_active.value == 1
 
     hass.states.async_set(
-        entity_id, STATE_OFF, {ATTR_HUMIDITY: 42},
+        entity_id,
+        STATE_OFF,
+        {ATTR_HUMIDITY: 42},
     )
     await hass.async_block_till_done()
     assert acc.char_target_humidity.value == 42.0
@@ -204,7 +211,9 @@ async def test_hygrostat_power_state(hass, hk_driver, events):
     entity_id = "humidifier.test"
 
     hass.states.async_set(
-        entity_id, STATE_ON, {ATTR_HUMIDITY: 43},
+        entity_id,
+        STATE_ON,
+        {ATTR_HUMIDITY: 43},
     )
     await hass.async_block_till_done()
     acc = HumidifierDehumidifier(
@@ -212,7 +221,7 @@ async def test_hygrostat_power_state(hass, hk_driver, events):
     )
     hk_driver.add_accessory(acc)
 
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
 
     assert acc.char_current_humidifier_dehumidifier.value == 2
@@ -220,7 +229,9 @@ async def test_hygrostat_power_state(hass, hk_driver, events):
     assert acc.char_active.value == 1
 
     hass.states.async_set(
-        entity_id, STATE_OFF, {ATTR_HUMIDITY: 43},
+        entity_id,
+        STATE_OFF,
+        {ATTR_HUMIDITY: 43},
     )
     await hass.async_block_till_done()
     assert acc.char_current_humidifier_dehumidifier.value == 0
@@ -288,7 +299,7 @@ async def test_hygrostat_get_humidity_range(hass, hk_driver):
     )
     hk_driver.add_accessory(acc)
 
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
 
     assert acc.char_target_humidity.properties[PROP_MAX_VALUE] == 45
@@ -303,8 +314,8 @@ async def test_humidifier_with_linked_humidity_sensor(hass, hk_driver):
         humidity_sensor_entity_id,
         "42.0",
         {
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-            ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
         },
     )
     await hass.async_block_till_done()
@@ -322,7 +333,7 @@ async def test_humidifier_with_linked_humidity_sensor(hass, hk_driver):
     )
     hk_driver.add_accessory(acc)
 
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
 
     assert acc.char_current_humidity.value == 42.0
@@ -331,8 +342,8 @@ async def test_humidifier_with_linked_humidity_sensor(hass, hk_driver):
         humidity_sensor_entity_id,
         "43.0",
         {
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-            ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
         },
     )
     await hass.async_block_till_done()
@@ -343,8 +354,8 @@ async def test_humidifier_with_linked_humidity_sensor(hass, hk_driver):
         humidity_sensor_entity_id,
         STATE_UNAVAILABLE,
         {
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-            ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
         },
     )
     await hass.async_block_till_done()
@@ -374,7 +385,7 @@ async def test_humidifier_with_a_missing_linked_humidity_sensor(hass, hk_driver)
     )
     hk_driver.add_accessory(acc)
 
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
 
     assert acc.char_current_humidity.value == 0
@@ -384,22 +395,24 @@ async def test_humidifier_as_dehumidifier(hass, hk_driver, events, caplog):
     """Test an invalid char_target_humidifier_dehumidifier from HomeKit."""
     entity_id = "humidifier.test"
 
-    hass.states.async_set(entity_id, STATE_OFF)
+    hass.states.async_set(
+        entity_id, STATE_OFF, {ATTR_DEVICE_CLASS: HumidifierDeviceClass.HUMIDIFIER}
+    )
     await hass.async_block_till_done()
     acc = HumidifierDehumidifier(
         hass, hk_driver, "HumidifierDehumidifier", entity_id, 1, None
     )
     hk_driver.add_accessory(acc)
 
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
 
     assert acc.char_target_humidifier_dehumidifier.value == 1
 
     # Set from HomeKit
-    char_target_humidifier_dehumidifier_iid = acc.char_target_humidifier_dehumidifier.to_HAP()[
-        HAP_REPR_IID
-    ]
+    char_target_humidifier_dehumidifier_iid = (
+        acc.char_target_humidifier_dehumidifier.to_HAP()[HAP_REPR_IID]
+    )
 
     hk_driver.set_characteristics(
         {
@@ -408,6 +421,47 @@ async def test_humidifier_as_dehumidifier(hass, hk_driver, events, caplog):
                     HAP_REPR_AID: acc.aid,
                     HAP_REPR_IID: char_target_humidifier_dehumidifier_iid,
                     HAP_REPR_VALUE: 0,
+                },
+            ]
+        },
+        "mock_addr",
+    )
+
+    await hass.async_block_till_done()
+    assert "TargetHumidifierDehumidifierState is not supported" in caplog.text
+    assert len(events) == 0
+
+
+async def test_dehumidifier_as_humidifier(hass, hk_driver, events, caplog):
+    """Test an invalid char_target_humidifier_dehumidifier from HomeKit."""
+    entity_id = "humidifier.test"
+
+    hass.states.async_set(
+        entity_id, STATE_OFF, {ATTR_DEVICE_CLASS: HumidifierDeviceClass.DEHUMIDIFIER}
+    )
+    await hass.async_block_till_done()
+    acc = HumidifierDehumidifier(
+        hass, hk_driver, "HumidifierDehumidifier", entity_id, 1, None
+    )
+    hk_driver.add_accessory(acc)
+
+    await acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.char_target_humidifier_dehumidifier.value == 2
+
+    # Set from HomeKit
+    char_target_humidifier_dehumidifier_iid = (
+        acc.char_target_humidifier_dehumidifier.to_HAP()[HAP_REPR_IID]
+    )
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_target_humidifier_dehumidifier_iid,
+                    HAP_REPR_VALUE: 1,
                 },
             ]
         },

@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Twinkly",
+        "description": "Set up your Twinkly led string",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to setup {name} - {model} ({host})?"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "device_exists": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

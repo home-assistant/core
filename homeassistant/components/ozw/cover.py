@@ -1,32 +1,33 @@
 """Support for Z-Wave cover devices."""
-import logging
-
 from openzwavemqtt.const import CommandClass
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_GARAGE,
     DOMAIN as COVER_DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
+    CoverDeviceClass,
     CoverEntity,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_UNSUBSCRIBE, DOMAIN
 from .entity import ZWaveDeviceEntity
 
-_LOGGER = logging.getLogger(__name__)
-
-
-SUPPORTED_FEATURES_POSITION = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
 VALUE_SELECTED_ID = "Selected_id"
+PRESS_BUTTON = True
+RELEASE_BUTTON = False
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Z-Wave Cover from Config Entry."""
 
     @callback
@@ -58,11 +59,6 @@ class ZWaveCoverEntity(ZWaveDeviceEntity, CoverEntity):
     """Representation of a Z-Wave Cover device."""
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORTED_FEATURES_POSITION
-
-    @property
     def is_closed(self):
         """Return true if cover is closed."""
         return self.values.primary.value == 0
@@ -78,11 +74,20 @@ class ZWaveCoverEntity(ZWaveDeviceEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        self.values.primary.send_value(99)
+        self.values.open.send_value(PRESS_BUTTON)
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
-        self.values.primary.send_value(0)
+        self.values.close.send_value(PRESS_BUTTON)
+
+    async def async_stop_cover(self, **kwargs):
+        """Stop cover."""
+        # Need to issue both buttons release since qt-openzwave implements idempotency
+        # keeping internal state of model to trigger actual updates. We could also keep
+        # another state in Home Assistant to know which button to release,
+        # but this implementation is simpler.
+        self.values.open.send_value(RELEASE_BUTTON)
+        self.values.close.send_value(RELEASE_BUTTON)
 
 
 class ZwaveGarageDoorBarrier(ZWaveDeviceEntity, CoverEntity):
@@ -95,8 +100,8 @@ class ZwaveGarageDoorBarrier(ZWaveDeviceEntity, CoverEntity):
 
     @property
     def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_GARAGE
+        """Return the class of this device, from CoverDeviceClass."""
+        return CoverDeviceClass.GARAGE
 
     @property
     def is_opening(self):

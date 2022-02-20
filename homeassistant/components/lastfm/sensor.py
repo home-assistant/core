@@ -1,4 +1,6 @@
 """Sensor for Last.fm account status."""
+from __future__ import annotations
+
 import hashlib
 import logging
 import re
@@ -7,10 +9,12 @@ import pylast as lastfm
 from pylast import WSError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,10 +37,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Last.fm sensor platform."""
     api_key = config[CONF_API_KEY]
-    users = config.get(CONF_USERS)
+    users = config[CONF_USERS]
 
     lastfm_api = lastfm.LastFMNetwork(api_key=api_key)
 
@@ -52,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(entities, True)
 
 
-class LastfmSensor(Entity):
+class LastfmSensor(SensorEntity):
     """A class for the Last.fm account."""
 
     def __init__(self, user, lastfm_api):
@@ -78,7 +87,7 @@ class LastfmSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -87,27 +96,24 @@ class LastfmSensor(Entity):
         self._cover = self._user.get_image()
         self._playcount = self._user.get_playcount()
 
-        recent_tracks = self._user.get_recent_tracks(limit=2)
-        if recent_tracks:
+        if recent_tracks := self._user.get_recent_tracks(limit=2):
             last = recent_tracks[0]
             self._lastplayed = f"{last.track.artist} - {last.track.title}"
 
-        top_tracks = self._user.get_top_tracks(limit=1)
-        if top_tracks:
+        if top_tracks := self._user.get_top_tracks(limit=1):
             top = top_tracks[0]
             toptitle = re.search("', '(.+?)',", str(top))
             topartist = re.search("'(.+?)',", str(top))
             self._topplayed = f"{topartist.group(1)} - {toptitle.group(1)}"
 
-        now_playing = self._user.get_now_playing()
-        if now_playing is None:
+        if (now_playing := self._user.get_now_playing()) is None:
             self._state = STATE_NOT_SCROBBLING
             return
 
         self._state = f"{now_playing.artist} - {now_playing.title}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,

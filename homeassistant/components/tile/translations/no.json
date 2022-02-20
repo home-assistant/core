@@ -1,12 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denne Tile kontoen er allerede registrert."
+            "already_configured": "Kontoen er allerede konfigurert",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
         },
         "error": {
-            "invalid_credentials": "Ugyldige Tile registreringsinformasjon gitt."
+            "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord"
+                },
+                "title": "Autentiser Tile p\u00e5 nytt"
+            },
             "user": {
                 "data": {
                     "password": "Passord",

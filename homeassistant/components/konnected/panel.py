@@ -10,11 +10,13 @@ from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_BINARY_SENSORS,
     CONF_DEVICES,
+    CONF_DISCOVERY,
     CONF_HOST,
     CONF_ID,
     CONF_NAME,
     CONF_PIN,
     CONF_PORT,
+    CONF_REPEAT,
     CONF_SENSORS,
     CONF_SWITCHES,
     CONF_TYPE,
@@ -23,6 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 
 from .const import (
@@ -31,13 +34,11 @@ from .const import (
     CONF_BLINK,
     CONF_DEFAULT_OPTIONS,
     CONF_DHT_SENSORS,
-    CONF_DISCOVERY,
     CONF_DS18B20_SENSORS,
     CONF_INVERSE,
     CONF_MOMENTARY,
     CONF_PAUSE,
     CONF_POLL_INTERVAL,
-    CONF_REPEAT,
     DOMAIN,
     ENDPOINT_ROOT,
     STATE_LOW,
@@ -73,6 +74,9 @@ class AlarmPanel:
         self.client = None
         self.status = None
         self.api_version = KONN_API_VERSIONS[KONN_MODEL]
+        self.connected = False
+        self.connect_attempts = 0
+        self.cancel_connect_retry = None
 
     @property
     def device_id(self):
@@ -84,6 +88,11 @@ class AlarmPanel:
         """Return the configuration stored in `hass.data` for this device."""
         return self.hass.data[DOMAIN][CONF_DEVICES].get(self.device_id)
 
+    @property
+    def available(self):
+        """Return whether the device is available."""
+        return self.connected
+
     def format_zone(self, zone, other_items=None):
         """Get zone or pin based dict based on the client type."""
         payload = {
@@ -94,8 +103,15 @@ class AlarmPanel:
         payload.update(other_items or {})
         return payload
 
-    async def async_connect(self):
+    async def async_connect(self, now=None):
         """Connect to and setup a Konnected device."""
+        if self.connected:
+            return
+
+        if self.cancel_connect_retry:
+            # cancel any pending connect attempt and try now
+            self.cancel_connect_retry()
+
         try:
             self.client = konnected.Client(
                 host=self.host,
@@ -118,8 +134,16 @@ class AlarmPanel:
 
         except self.client.ClientError as err:
             _LOGGER.warning("Exception trying to connect to panel: %s", err)
-            raise CannotConnect
 
+            # retry in a bit, never more than ~3 min
+            self.connect_attempts += 1
+            self.cancel_connect_retry = async_call_later(
+                self.hass, 2 ** min(self.connect_attempts, 5) * 5, self.async_connect
+            )
+            return
+
+        self.connect_attempts = 0
+        self.connected = True
         _LOGGER.info(
             "Set up Konnected device %s. Open http://%s:%s in a "
             "web browser to view device status",
@@ -128,8 +152,7 @@ class AlarmPanel:
             self.port,
         )
 
-        device_registry = await dr.async_get_registry(self.hass)
-
+        device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, self.status.get("mac"))},
@@ -146,12 +169,20 @@ class AlarmPanel:
             if self.client:
                 if self.api_version == CONF_ZONE:
                     return await self.client.put_zone(
-                        zone, state, momentary, times, pause,
+                        zone,
+                        state,
+                        momentary,
+                        times,
+                        pause,
                     )
 
                 # device endpoint uses pin number instead of zone
                 return await self.client.put_device(
-                    ZONE_TO_PIN[zone], state, momentary, times, pause,
+                    ZONE_TO_PIN[zone],
+                    state,
+                    momentary,
+                    times,
+                    pause,
                 )
 
         except self.client.ClientError as err:
@@ -186,7 +217,8 @@ class AlarmPanel:
             act = {
                 CONF_ZONE: zone,
                 CONF_NAME: entity.get(
-                    CONF_NAME, f"Konnected {self.device_id[6:]} Actuator {zone}",
+                    CONF_NAME,
+                    f"Konnected {self.device_id[6:]} Actuator {zone}",
                 ),
                 ATTR_STATE: None,
                 CONF_ACTIVATION: entity[CONF_ACTIVATION],
@@ -273,7 +305,9 @@ class AlarmPanel:
     def async_ds18b20_sensor_configuration(self):
         """Return the configuration map for syncing DS18B20 sensors."""
         return [
-            self.format_zone(sensor[CONF_ZONE])
+            self.format_zone(
+                sensor[CONF_ZONE], {CONF_POLL_INTERVAL: sensor[CONF_POLL_INTERVAL]}
+            )
             for sensor in self.stored_configuration[CONF_SENSORS]
             if sensor[CONF_TYPE] == "ds18b20"
         ]
@@ -316,9 +350,7 @@ class AlarmPanel:
     @callback
     def async_current_settings_payload(self):
         """Return a dict of configuration currently stored on the device."""
-        settings = self.status["settings"]
-        if not settings:
-            settings = {}
+        settings = self.status["settings"] or {}
 
         return {
             "sensors": [
@@ -345,7 +377,7 @@ class AlarmPanel:
             self.async_desired_settings_payload()
             != self.async_current_settings_payload()
         ):
-            _LOGGER.info("pushing settings to device %s", self.device_id)
+            _LOGGER.info("Pushing settings to device %s", self.device_id)
             await self.client.put_settings(**self.async_desired_settings_payload())
 
 
@@ -359,4 +391,4 @@ async def get_status(hass, host, port):
 
     except client.ClientError as err:
         _LOGGER.error("Exception trying to get panel status: %s", err)
-        raise CannotConnect
+        raise CannotConnect from err

@@ -1,15 +1,18 @@
 """Support for OpenERZ API for Zurich city waste disposal system."""
+from __future__ import annotations
+
 from datetime import timedelta
-import logging
 
 from openerz_api.main import OpenERZConnector
 import voluptuous as vol
 
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-_LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(hours=12)
 
 CONF_ZIP = "zip"
@@ -25,13 +28,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the sensor platform."""
     api_connector = OpenERZConnector(config[CONF_ZIP], config[CONF_WASTE_TYPE])
     add_entities([OpenERZSensor(api_connector, config.get(CONF_NAME))], True)
 
 
-class OpenERZSensor(Entity):
+class OpenERZSensor(SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(self, api_connector, name):
@@ -46,7 +54,7 @@ class OpenERZSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 

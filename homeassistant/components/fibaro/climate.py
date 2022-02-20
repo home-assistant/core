@@ -1,4 +1,6 @@
 """Support for Fibaro thermostats."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.climate import ClimateEntity
@@ -16,6 +18,9 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import FIBARO_DEVICES, FibaroDevice
 
@@ -93,7 +98,12 @@ HA_OPMODES_HVAC = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Perform the setup for Fibaro controller devices."""
     if discovery_info is None:
         return
@@ -120,22 +130,40 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
         self._preset_support = []
         self._fan_support = []
 
-        siblings = fibaro_device.fibaro_controller.get_siblings(fibaro_device.id)
+        siblings = fibaro_device.fibaro_controller.get_siblings(fibaro_device)
+        _LOGGER.debug("%s siblings: %s", fibaro_device.ha_id, siblings)
         tempunit = "C"
         for device in siblings:
+            # Detecting temperature device, one strong and one weak way of
+            # doing so, so we prefer the hard evidence, if there is such.
             if device.type == "com.fibaro.temperatureSensor":
                 self._temp_sensor_device = FibaroDevice(device)
                 tempunit = device.properties.unit
+            elif (
+                self._temp_sensor_device is None
+                and "unit" in device.properties
+                and (
+                    "value" in device.properties
+                    or "heatingThermostatSetpoint" in device.properties
+                )
+                and device.properties.unit in ("C", "F")
+            ):
+                self._temp_sensor_device = FibaroDevice(device)
+                tempunit = device.properties.unit
+
             if (
                 "setTargetLevel" in device.actions
                 or "setThermostatSetpoint" in device.actions
+                or "setHeatingThermostatSetpoint" in device.actions
             ):
                 self._target_temp_device = FibaroDevice(device)
                 self._support_flags |= SUPPORT_TARGET_TEMPERATURE
                 tempunit = device.properties.unit
+
             if "setMode" in device.actions or "setOperatingMode" in device.actions:
                 self._op_mode_device = FibaroDevice(device)
                 self._support_flags |= SUPPORT_PRESET_MODE
+
             if "setFanMode" in device.actions:
                 self._fan_mode_device = FibaroDevice(device)
                 self._support_flags |= SUPPORT_FAN_MODE
@@ -146,8 +174,8 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
             self._unit_of_temp = TEMP_CELSIUS
 
         if self._fan_mode_device:
-            fan_modes = self._fan_mode_device.fibaro_device.properties.supportedModes.split(
-                ","
+            fan_modes = (
+                self._fan_mode_device.fibaro_device.properties.supportedModes.split(",")
             )
             for mode in fan_modes:
                 mode = int(mode)
@@ -188,9 +216,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
         await super().async_added_to_hass()
 
         # Register update callback for child devices
-        siblings = self.fibaro_device.fibaro_controller.get_siblings(
-            self.fibaro_device.id
-        )
+        siblings = self.fibaro_device.fibaro_controller.get_siblings(self.fibaro_device)
         for device in siblings:
             if device != self.fibaro_device:
                 self.controller.register(device.id, self._update_callback)
@@ -225,7 +251,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
     def fibaro_op_mode(self):
         """Return the operating mode of the device."""
         if not self._op_mode_device:
-            return 6  # Fan only
+            return 3  # Default to AUTO
 
         if "operatingMode" in self._op_mode_device.fibaro_device.properties:
             return int(self._op_mode_device.fibaro_device.properties.operatingMode)
@@ -241,7 +267,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
     def hvac_modes(self):
         """Return the list of available operation modes."""
         if not self._op_mode_device:
-            return [HVAC_MODE_FAN_ONLY]
+            return [HVAC_MODE_AUTO]  # Default to this
         return self._hvac_support
 
     def set_hvac_mode(self, hvac_mode):
@@ -305,6 +331,8 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
         """Return the current temperature."""
         if self._temp_sensor_device:
             device = self._temp_sensor_device.fibaro_device
+            if "heatingThermostatSetpoint" in device.properties:
+                return float(device.properties.heatingThermostatSetpoint)
             return float(device.properties.value)
         return None
 
@@ -313,6 +341,8 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
         """Return the temperature we try to reach."""
         if self._target_temp_device:
             device = self._target_temp_device.fibaro_device
+            if "heatingThermostatSetpointFuture" in device.properties:
+                return float(device.properties.heatingThermostatSetpointFuture)
             return float(device.properties.targetLevel)
         return None
 
@@ -323,5 +353,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
         if temperature is not None:
             if "setThermostatSetpoint" in target.fibaro_device.actions:
                 target.action("setThermostatSetpoint", self.fibaro_op_mode, temperature)
+            elif "setHeatingThermostatSetpoint" in target.fibaro_device.actions:
+                target.action("setHeatingThermostatSetpoint", temperature)
             else:
                 target.action("setTargetLevel", temperature)

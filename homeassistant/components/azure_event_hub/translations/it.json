@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato",
+            "cannot_connect": "Connessione con le credenziali da configuration.yaml non riuscita, rimuovi da yaml e utilizza il flusso di configurazione.",
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione.",
+            "unknown": "La connessione con le credenziali da configuration.yaml non \u00e8 riuscita con un errore sconosciuto, rimuovi da yaml e utilizza il flusso di configurazione."
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "conn_string": {
+                "data": {
+                    "event_hub_connection_string": "Stringa di connessione dell'Event Hub"
+                },
+                "description": "Inserisci la stringa di connessione per: {event_hub_instance_name}",
+                "title": "Metodo della stringa di connessione"
+            },
+            "sas": {
+                "data": {
+                    "event_hub_namespace": "Spazio dei nomi dell'Event Hub",
+                    "event_hub_sas_key": "Chiave SAS dell'Event Hub",
+                    "event_hub_sas_policy": "Criteri SAS dell'Event Hub"
+                },
+                "description": "Inserisci le credenziali SAS (firma di accesso condiviso) per: {event_hub_instance_name}",
+                "title": "Metodo delle credenziali SAS"
+            },
+            "user": {
+                "data": {
+                    "event_hub_instance_name": "Nome dell'istanza dell'Event Hub",
+                    "use_connection_string": "Usa stringa di connessione"
+                },
+                "title": "Configura l'integrazione di Azure Event Hub"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "data": {
+                    "send_interval": "Intervallo tra l'invio di batch all'hub."
+                },
+                "title": "Opzioni per Azure Event Hub."
+            }
+        }
+    }
+}

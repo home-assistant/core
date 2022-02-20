@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
+            "unknown_entry": "Nie mo\u017cna znale\u017a\u0107 istniej\u0105cego wpisu."
+        },
+        "error": {
+            "invalid_code": "Nie uda\u0142o si\u0119 zalogowa\u0107 do Hive. Tw\u00f3j kod uwierzytelniania dwusk\u0142adnikowego by\u0142 nieprawid\u0142owy.",
+            "invalid_password": "Nie uda\u0142o si\u0119 zalogowa\u0107 do Hive. Nieprawid\u0142owe has\u0142o, spr\u00f3buj ponownie.",
+            "invalid_username": "Nie uda\u0142o si\u0119 zalogowa\u0107 do Hive. Tw\u00f3j adres e-mail nie zosta\u0142 rozpoznany.",
+            "no_internet_available": "Do po\u0142\u0105czenia z Hive wymagane jest po\u0142\u0105czenie z internetem.",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "Kod uwierzytelniania dwusk\u0142adnikowego"
+                },
+                "description": "Wprowad\u017a sw\u00f3j kod uwierzytelniaj\u0105cy Hive. \n\nWprowad\u017a kod 0000, aby poprosi\u0107 o kolejny kod.",
+                "title": "Uwierzytelnianie dwusk\u0142adnikowe Hive"
+            },
+            "reauth": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Wprowad\u017a ponownie swoje dane logowania do Hive.",
+                "title": "Login Hive"
+            },
+            "user": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "scan_interval": "Cz\u0119stotliwo\u015b\u0107 skanowania (w sekundach)",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Wprowad\u017a dane logowania i konfiguracj\u0119 Hive.",
+                "title": "Login Hive"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "scan_interval": "Cz\u0119stotliwo\u015b\u0107 skanowania (w sekundach)"
+                },
+                "description": "Zaktualizuj cz\u0119stotliwo\u015b\u0107 skanowania, aby cz\u0119\u015bciej sondowa\u0107 dane.",
+                "title": "Opcje Hive"
+            }
+        }
+    }
+}

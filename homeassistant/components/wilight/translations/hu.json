@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "not_supported_device": "Ez a WiLight jelenleg nem t\u00e1mogatott",
+            "not_wilight_device": "Ez az eszk\u00f6z nem WiLight eszk\u00f6z"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani a WiLight {name}-t ? \n\nT\u00e1mogatja: {components}",
+                "title": "WiLight"
+            }
+        }
+    }
+}

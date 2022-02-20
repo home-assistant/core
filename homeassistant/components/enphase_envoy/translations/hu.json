@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "reauth_successful": "Az \u00fajhiteles\u00edt\u00e9s sikeres volt"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "flow_title": "{serial} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "C\u00edm",
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "description": "\u00dajabb t\u00edpusok eset\u00e9n adja meg az `envoy` felhaszn\u00e1l\u00f3nevet jelsz\u00f3 n\u00e9lk\u00fcl. R\u00e9gebbi t\u00edpusok eset\u00e9n adja meg a `installer` felhaszn\u00e1l\u00f3nevet jelsz\u00f3 n\u00e9lk\u00fcl. Minden m\u00e1s t\u00edpus eset\u00e9ben adjon meg egy \u00e9rv\u00e9nyes felhaszn\u00e1l\u00f3nevet \u00e9s jelsz\u00f3t."
+            }
+        }
+    }
+}

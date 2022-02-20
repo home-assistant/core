@@ -1,13 +1,17 @@
 """Demo platform for the geolocation component."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 from math import cos, pi, radians, sin
 import random
-from typing import Optional
 
 from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.const import LENGTH_KILOMETERS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +41,12 @@ EVENT_NAMES = [
 SOURCE = "demo"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Demo geolocations."""
     DemoManager(hass, add_entities)
 
@@ -117,7 +126,7 @@ class DemoGeolocationEvent(GeolocationEvent):
         return SOURCE
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the event."""
         return self._name
 
@@ -127,17 +136,17 @@ class DemoGeolocationEvent(GeolocationEvent):
         return False
 
     @property
-    def distance(self) -> Optional[float]:
+    def distance(self) -> float | None:
         """Return distance value of this external event."""
         return self._distance
 
     @property
-    def latitude(self) -> Optional[float]:
+    def latitude(self) -> float | None:
         """Return latitude value of this external event."""
         return self._latitude
 
     @property
-    def longitude(self) -> Optional[float]:
+    def longitude(self) -> float | None:
         """Return longitude value of this external event."""
         return self._longitude
 

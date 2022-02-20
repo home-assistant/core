@@ -1,4 +1,5 @@
 """Tests for the Awair sensor platform."""
+from unittest.mock import patch
 
 from homeassistant.components.awair.const import (
     API_CO2,
@@ -10,9 +11,10 @@ from homeassistant.components.awair.const import (
     API_SPL_A,
     API_TEMP,
     API_VOC,
-    ATTR_UNIQUE_ID,
     DOMAIN,
+    SENSOR_TYPE_SCORE,
     SENSOR_TYPES,
+    SENSOR_TYPES_DUST,
 )
 from homeassistant.const import (
     ATTR_ICON,
@@ -20,10 +22,12 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
+    LIGHT_LUX,
+    PERCENTAGE,
     STATE_UNAVAILABLE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
+from homeassistant.helpers import entity_registry as er
 
 from .const import (
     AWAIR_UUID,
@@ -39,8 +43,11 @@ from .const import (
     USER_FIXTURE,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
+
+SENSOR_TYPES_MAP = {
+    desc.key: desc for desc in (SENSOR_TYPE_SCORE, *SENSOR_TYPES, *SENSOR_TYPES_DUST)
+}
 
 
 async def setup_awair(hass, fixtures):
@@ -72,13 +79,13 @@ async def test_awair_gen1_sensors(hass):
 
     fixtures = [USER_FIXTURE, DEVICES_FIXTURE, GEN1_DATA_FIXTURE]
     await setup_awair(hass, fixtures)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,
         registry,
         "sensor.living_room_awair_score",
-        f"{AWAIR_UUID}_{SENSOR_TYPES[API_SCORE][ATTR_UNIQUE_ID]}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "88",
         {ATTR_ICON: "mdi:blur"},
     )
@@ -87,7 +94,7 @@ async def test_awair_gen1_sensors(hass):
         hass,
         registry,
         "sensor.living_room_temperature",
-        f"{AWAIR_UUID}_{SENSOR_TYPES[API_TEMP][ATTR_UNIQUE_ID]}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_TEMP].unique_id_tag}",
         "21.8",
         {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS, "awair_index": 1.0},
     )
@@ -96,16 +103,16 @@ async def test_awair_gen1_sensors(hass):
         hass,
         registry,
         "sensor.living_room_humidity",
-        f"{AWAIR_UUID}_{SENSOR_TYPES[API_HUMID][ATTR_UNIQUE_ID]}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_HUMID].unique_id_tag}",
         "41.59",
-        {ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE, "awair_index": 0.0},
+        {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, "awair_index": 0.0},
     )
 
     assert_expected_properties(
         hass,
         registry,
         "sensor.living_room_carbon_dioxide",
-        f"{AWAIR_UUID}_{SENSOR_TYPES[API_CO2][ATTR_UNIQUE_ID]}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_CO2].unique_id_tag}",
         "654.0",
         {
             ATTR_ICON: "mdi:cloud",
@@ -118,7 +125,7 @@ async def test_awair_gen1_sensors(hass):
         hass,
         registry,
         "sensor.living_room_volatile_organic_compounds",
-        f"{AWAIR_UUID}_{SENSOR_TYPES[API_VOC][ATTR_UNIQUE_ID]}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_VOC].unique_id_tag}",
         "366",
         {
             ATTR_ICON: "mdi:cloud",
@@ -145,7 +152,7 @@ async def test_awair_gen1_sensors(hass):
         hass,
         registry,
         "sensor.living_room_pm10",
-        f"{AWAIR_UUID}_{SENSOR_TYPES[API_PM10][ATTR_UNIQUE_ID]}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_PM10].unique_id_tag}",
         "14.3",
         {
             ATTR_ICON: "mdi:blur",
@@ -168,13 +175,13 @@ async def test_awair_gen2_sensors(hass):
 
     fixtures = [USER_FIXTURE, DEVICES_FIXTURE, GEN2_DATA_FIXTURE]
     await setup_awair(hass, fixtures)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,
         registry,
         "sensor.living_room_awair_score",
-        f"{AWAIR_UUID}_{SENSOR_TYPES[API_SCORE][ATTR_UNIQUE_ID]}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "97",
         {ATTR_ICON: "mdi:blur"},
     )
@@ -183,7 +190,7 @@ async def test_awair_gen2_sensors(hass):
         hass,
         registry,
         "sensor.living_room_pm2_5",
-        f"{AWAIR_UUID}_{SENSOR_TYPES[API_PM25][ATTR_UNIQUE_ID]}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_PM25].unique_id_tag}",
         "2.0",
         {
             ATTR_ICON: "mdi:blur",
@@ -202,13 +209,13 @@ async def test_awair_mint_sensors(hass):
 
     fixtures = [USER_FIXTURE, DEVICES_FIXTURE, MINT_DATA_FIXTURE]
     await setup_awair(hass, fixtures)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,
         registry,
         "sensor.living_room_awair_score",
-        f"{AWAIR_UUID}_{SENSOR_TYPES[API_SCORE][ATTR_UNIQUE_ID]}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "98",
         {ATTR_ICON: "mdi:blur"},
     )
@@ -217,7 +224,7 @@ async def test_awair_mint_sensors(hass):
         hass,
         registry,
         "sensor.living_room_pm2_5",
-        f"{AWAIR_UUID}_{SENSOR_TYPES[API_PM25][ATTR_UNIQUE_ID]}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_PM25].unique_id_tag}",
         "1.0",
         {
             ATTR_ICON: "mdi:blur",
@@ -230,9 +237,9 @@ async def test_awair_mint_sensors(hass):
         hass,
         registry,
         "sensor.living_room_illuminance",
-        f"{AWAIR_UUID}_{SENSOR_TYPES[API_LUX][ATTR_UNIQUE_ID]}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_LUX].unique_id_tag}",
         "441.7",
-        {ATTR_UNIT_OF_MEASUREMENT: "lx"},
+        {ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX},
     )
 
     # The Mint does not have a CO2 sensor.
@@ -244,13 +251,13 @@ async def test_awair_glow_sensors(hass):
 
     fixtures = [USER_FIXTURE, DEVICES_FIXTURE, GLOW_DATA_FIXTURE]
     await setup_awair(hass, fixtures)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,
         registry,
         "sensor.living_room_awair_score",
-        f"{AWAIR_UUID}_{SENSOR_TYPES[API_SCORE][ATTR_UNIQUE_ID]}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "93",
         {ATTR_ICON: "mdi:blur"},
     )
@@ -264,13 +271,13 @@ async def test_awair_omni_sensors(hass):
 
     fixtures = [USER_FIXTURE, DEVICES_FIXTURE, OMNI_DATA_FIXTURE]
     await setup_awair(hass, fixtures)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,
         registry,
         "sensor.living_room_awair_score",
-        f"{AWAIR_UUID}_{SENSOR_TYPES[API_SCORE][ATTR_UNIQUE_ID]}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "99",
         {ATTR_ICON: "mdi:blur"},
     )
@@ -279,7 +286,7 @@ async def test_awair_omni_sensors(hass):
         hass,
         registry,
         "sensor.living_room_sound_level",
-        f"{AWAIR_UUID}_{SENSOR_TYPES[API_SPL_A][ATTR_UNIQUE_ID]}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SPL_A].unique_id_tag}",
         "47.0",
         {ATTR_ICON: "mdi:ear-hearing", ATTR_UNIT_OF_MEASUREMENT: "dBa"},
     )
@@ -288,9 +295,9 @@ async def test_awair_omni_sensors(hass):
         hass,
         registry,
         "sensor.living_room_illuminance",
-        f"{AWAIR_UUID}_{SENSOR_TYPES[API_LUX][ATTR_UNIQUE_ID]}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_LUX].unique_id_tag}",
         "804.9",
-        {ATTR_UNIT_OF_MEASUREMENT: "lx"},
+        {ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX},
     )
 
 
@@ -317,13 +324,13 @@ async def test_awair_unavailable(hass):
 
     fixtures = [USER_FIXTURE, DEVICES_FIXTURE, GEN1_DATA_FIXTURE]
     await setup_awair(hass, fixtures)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,
         registry,
         "sensor.living_room_awair_score",
-        f"{AWAIR_UUID}_{SENSOR_TYPES[API_SCORE][ATTR_UNIQUE_ID]}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "88",
         {ATTR_ICON: "mdi:blur"},
     )
@@ -336,7 +343,7 @@ async def test_awair_unavailable(hass):
             hass,
             registry,
             "sensor.living_room_awair_score",
-            f"{AWAIR_UUID}_{SENSOR_TYPES[API_SCORE][ATTR_UNIQUE_ID]}",
+            f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
             STATE_UNAVAILABLE,
             {ATTR_ICON: "mdi:blur"},
         )

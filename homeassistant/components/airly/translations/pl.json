@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Integracja Airly dla tych wsp\u00f3\u0142rz\u0119dnych jest ju\u017c skonfigurowana."
+            "already_configured": "Lokalizacja jest ju\u017c skonfigurowana"
         },
         "error": {
-            "auth": "Klucz API jest nieprawid\u0142owy.",
-            "wrong_location": "Brak stacji pomiarowych Airly w tym rejonie."
+            "invalid_api_key": "Nieprawid\u0142owy klucz API",
+            "wrong_location": "Brak stacji pomiarowych Airly w tym rejonie"
         },
         "step": {
             "user": {
@@ -13,11 +13,18 @@
                     "api_key": "Klucz API",
                     "latitude": "Szeroko\u015b\u0107 geograficzna",
                     "longitude": "D\u0142ugo\u015b\u0107 geograficzna",
-                    "name": "Nazwa integracji"
+                    "name": "Nazwa"
                 },
                 "description": "Konfiguracja integracji Airly. By wygenerowa\u0107 klucz API, przejd\u017a na stron\u0119 https://developer.airly.eu/register",
                 "title": "Airly"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Dost\u0119p do serwera Airly",
+            "requests_per_day": "Dozwolone dzienne \u017c\u0105dania",
+            "requests_remaining": "Pozosta\u0142o dozwolonych \u017c\u0105da\u0144"
         }
     }
 }

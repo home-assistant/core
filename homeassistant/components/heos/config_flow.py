@@ -1,4 +1,5 @@
 """Config flow to configure Heos."""
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 from pyheos import Heos, HeosError
@@ -7,6 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DATA_DISCOVERED_HOSTS, DOMAIN
 
@@ -16,23 +18,25 @@ def format_title(host: str) -> str:
     return f"Controller ({host})"
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class HeosFlowHandler(config_entries.ConfigFlow):
+class HeosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Define a flow for HEOS."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
-    async def async_step_ssdp(self, discovery_info):
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered Heos device."""
         # Store discovered host
-        hostname = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
-        friendly_name = f"{discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME]} ({hostname})"
+        if TYPE_CHECKING:
+            assert discovery_info.ssdp_location
+        hostname = urlparse(discovery_info.ssdp_location).hostname
+        friendly_name = (
+            f"{discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]} ({hostname})"
+        )
         self.hass.data.setdefault(DATA_DISCOVERED_HOSTS, {})
         self.hass.data[DATA_DISCOVERED_HOSTS][friendly_name] = hostname
         # Abort if other flows in progress or an entry already exists
         if self._async_in_progress() or self._async_current_entries():
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="single_instance_allowed")
         await self.async_set_unique_id(DOMAIN)
         # Show selection form
         return self.async_show_form(step_id="user")
@@ -50,7 +54,7 @@ class HeosFlowHandler(config_entries.ConfigFlow):
         self.hass.data.setdefault(DATA_DISCOVERED_HOSTS, {})
         # Only a single entry is needed for all devices
         if self._async_current_entries():
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="single_instance_allowed")
         # Try connecting to host if provided
         errors = {}
         host = None
@@ -64,7 +68,7 @@ class HeosFlowHandler(config_entries.ConfigFlow):
                 self.hass.data.pop(DATA_DISCOVERED_HOSTS)
                 return await self.async_step_import({CONF_HOST: host})
             except HeosError:
-                errors[CONF_HOST] = "connection_failure"
+                errors[CONF_HOST] = "cannot_connect"
             finally:
                 await heos.disconnect()
 

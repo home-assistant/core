@@ -1,14 +1,18 @@
 """Support for USCIS Case Status."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 import uscisstatus
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,7 +27,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the platform in Home Assistant and Case Information."""
     uscis = UscisSensor(config["case_id"], config[CONF_NAME])
     uscis.update()
@@ -33,7 +42,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Setup USCIS Sensor Fail check if your Case ID is Valid")
 
 
-class UscisSensor(Entity):
+class UscisSensor(SensorEntity):
     """USCIS Sensor will check case status on daily basis."""
 
     MIN_TIME_BETWEEN_UPDATES = timedelta(hours=24)
@@ -55,12 +64,12 @@ class UscisSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
 

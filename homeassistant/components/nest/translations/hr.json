@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "invalid_code": "Neispravan kod"
-        },
         "step": {
             "init": {
                 "data": {

@@ -6,6 +6,14 @@
             "is_on": "{entity_name} is ingeschakeld",
             "is_paused": "{entity_name} is gepauzeerd",
             "is_playing": "{entity_name} wordt afgespeeld"
+        },
+        "trigger_type": {
+            "changed_states": "{entity_name} veranderde van status",
+            "idle": "{entity_name} wordt inactief",
+            "paused": "{entity_name} is gepauzeerd",
+            "playing": "{entity_name} begint te spelen",
+            "turned_off": "{entity_name} uitgeschakeld",
+            "turned_on": "{entity_name} ingeschakeld"
         }
     },
     "state": {
@@ -15,7 +23,7 @@
             "on": "Aan",
             "paused": "Gepauzeerd",
             "playing": "Afspelen",
-            "standby": "Standby"
+            "standby": "Stand-by"
         }
     },
     "title": "Mediaspeler"

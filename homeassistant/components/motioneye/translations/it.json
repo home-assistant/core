@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "invalid_url": "URL non valido",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Vuoi configurare Home Assistant per connettersi al servizio motionEye fornito dal componente aggiuntivo: {addon}?",
+                "title": "motionEye tramite il componente aggiuntivo Home Assistant"
+            },
+            "user": {
+                "data": {
+                    "admin_password": "Password di amministrazione",
+                    "admin_username": "Amministratore Nome utente",
+                    "surveillance_password": "Password di sorveglianza",
+                    "surveillance_username": "Sorveglianza Nome utente",
+                    "url": "URL"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "stream_url_template": "Modello URL streaming",
+                    "webhook_set": "Configura i webhook di motionEye per segnalare gli eventi a Home Assistant",
+                    "webhook_set_overwrite": "Sovrascrivi webhook non riconosciuti"
+                }
+            }
+        }
+    }
+}

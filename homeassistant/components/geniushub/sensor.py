@@ -1,9 +1,14 @@
 """Support for Genius Hub sensor devices."""
-from datetime import timedelta
-from typing import Any, Dict
+from __future__ import annotations
 
-from homeassistant.const import DEVICE_CLASS_BATTERY, UNIT_PERCENTAGE
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from datetime import timedelta
+from typing import Any
+
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import PERCENTAGE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN, GeniusDevice, GeniusEntity
@@ -18,7 +23,10 @@ GH_LEVEL_MAPPING = {
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Genius Hub sensor entities."""
     if discovery_info is None:
@@ -36,7 +44,7 @@ async def async_setup_platform(
     async_add_entities(sensors + issues, update_before_add=True)
 
 
-class GeniusBattery(GeniusDevice):
+class GeniusBattery(GeniusDevice, SensorEntity):
     """Representation of a Genius Hub sensor."""
 
     def __init__(self, broker, device, state_attr) -> None:
@@ -72,21 +80,21 @@ class GeniusBattery(GeniusDevice):
     @property
     def device_class(self) -> str:
         """Return the device class of the sensor."""
-        return DEVICE_CLASS_BATTERY
+        return SensorDeviceClass.BATTERY
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement of the sensor."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         level = self._device.data["state"][self._state_attr]
         return level if level != 255 else 0
 
 
-class GeniusIssue(GeniusEntity):
+class GeniusIssue(GeniusEntity, SensorEntity):
     """Representation of a Genius Hub sensor."""
 
     def __init__(self, broker, level) -> None:
@@ -101,12 +109,12 @@ class GeniusIssue(GeniusEntity):
         self._issues = []
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the number of issues."""
         return len(self._issues)
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {f"{self._level}_list": self._issues}
 

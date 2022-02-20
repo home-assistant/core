@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Host jest ju\u017c skonfigurowany."
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z hostem",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "wrong_version": "Wersja nieobs\u0142ugiwana (tylko 2 lub 3)"
         },
         "step": {
@@ -14,9 +14,9 @@
                     "name": "Nazwa",
                     "password": "Has\u0142o",
                     "port": "Port",
-                    "ssl": "U\u017cyj SSL/TLS, aby po\u0142\u0105czy\u0107 si\u0119 z systemem Glances",
+                    "ssl": "Certyfikat SSL",
                     "username": "Nazwa u\u017cytkownika",
-                    "verify_ssl": "Sprawd\u017a certyfikacj\u0119 systemu",
+                    "verify_ssl": "Weryfikacja certyfikatu SSL",
                     "version": "Glances wersja API (2 lub 3)"
                 },
                 "title": "Konfiguracja Glances"

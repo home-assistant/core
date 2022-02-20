@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto on juba seadistatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendus nurjus",
+            "invalid_auth": "Tuvastamise viga",
+            "project_error": "Projekti teavet ei \u00f5nnestunud hankida."
+        },
+        "flow_title": "{project_url}",
+        "step": {
+            "reauth": {
+                "data": {
+                    "personal_access_token": "Isiklik juurdep\u00e4\u00e4suluba (PAT)"
+                },
+                "description": "{project_url} tuvastamine nurjus. Sisesta oma kehtivad andmed.",
+                "title": "Taastuvastamine"
+            },
+            "user": {
+                "data": {
+                    "organization": "Organisatsioon",
+                    "personal_access_token": "Isiklik juurdep\u00e4\u00e4suluba (PAT)",
+                    "project": "Projekt"
+                },
+                "description": "Projektile juurdep\u00e4\u00e4semiseks seadista Azure DevOpsi eksemplar. Isiklik juurdep\u00e4\u00e4suluba on vajalik ainult eraprojekti jaoks.",
+                "title": "Lisa Azure DevOps Project"
+            }
+        }
+    }
+}

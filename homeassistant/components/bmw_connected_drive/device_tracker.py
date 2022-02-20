@@ -1,51 +1,90 @@
 """Device tracker for BMW Connected Drive vehicles."""
+from __future__ import annotations
+
 import logging
+from typing import Literal
 
-from homeassistant.util import slugify
+from bimmer_connected.vehicle import ConnectedDriveVehicle
 
-from . import DOMAIN as BMW_DOMAIN
+from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
+from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from . import (
+    DOMAIN as BMW_DOMAIN,
+    BMWConnectedDriveAccount,
+    BMWConnectedDriveBaseEntity,
+)
+from .const import ATTR_DIRECTION, CONF_ACCOUNT, DATA_ENTRIES
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_scanner(hass, config, see, discovery_info=None):
-    """Set up the BMW tracker."""
-    accounts = hass.data[BMW_DOMAIN]
-    _LOGGER.debug("Found BMW accounts: %s", ", ".join([a.name for a in accounts]))
-    for account in accounts:
-        for vehicle in account.account.vehicles:
-            tracker = BMWDeviceTracker(see, vehicle)
-            account.add_update_listener(tracker.update)
-            tracker.update()
-    return True
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the BMW ConnectedDrive tracker from config entry."""
+    account: BMWConnectedDriveAccount = hass.data[BMW_DOMAIN][DATA_ENTRIES][
+        config_entry.entry_id
+    ][CONF_ACCOUNT]
+    entities: list[BMWDeviceTracker] = []
+
+    for vehicle in account.account.vehicles:
+        entities.append(BMWDeviceTracker(account, vehicle))
+        if not vehicle.is_vehicle_tracking_enabled:
+            _LOGGER.info(
+                "Tracking is (currently) disabled for vehicle %s (%s), defaulting to unknown",
+                vehicle.name,
+                vehicle.vin,
+            )
+    async_add_entities(entities, True)
 
 
-class BMWDeviceTracker:
+class BMWDeviceTracker(BMWConnectedDriveBaseEntity, TrackerEntity):
     """BMW Connected Drive device tracker."""
 
-    def __init__(self, see, vehicle):
+    _attr_force_update = False
+    _attr_icon = "mdi:car"
+
+    def __init__(
+        self,
+        account: BMWConnectedDriveAccount,
+        vehicle: ConnectedDriveVehicle,
+    ) -> None:
         """Initialize the Tracker."""
-        self._see = see
-        self.vehicle = vehicle
+        super().__init__(account, vehicle)
+
+        self._attr_unique_id = vehicle.vin
+        self._location = pos if (pos := vehicle.status.gps_position) else None
+        self._attr_name = vehicle.name
+
+    @property
+    def latitude(self) -> float | None:
+        """Return latitude value of the device."""
+        return self._location[0] if self._location else None
+
+    @property
+    def longitude(self) -> float | None:
+        """Return longitude value of the device."""
+        return self._location[1] if self._location else None
+
+    @property
+    def source_type(self) -> Literal["gps"]:
+        """Return the source type, eg gps or router, of the device."""
+        return SOURCE_TYPE_GPS
 
     def update(self) -> None:
-        """Update the device info.
-
-        Only update the state in Home Assistant if tracking in
-        the car is enabled.
-        """
-        dev_id = slugify(self.vehicle.name)
-
-        if not self.vehicle.state.is_vehicle_tracking_enabled:
-            _LOGGER.debug("Tracking is disabled for vehicle %s", dev_id)
-            return
-
-        _LOGGER.debug("Updating %s", dev_id)
-        attrs = {"vin": self.vehicle.vin}
-        self._see(
-            dev_id=dev_id,
-            host_name=self.vehicle.name,
-            gps=self.vehicle.state.gps_position,
-            attributes=attrs,
-            icon="mdi:car",
+        """Update state of the device tracker."""
+        _LOGGER.debug("Updating device tracker of %s", self._vehicle.name)
+        state_attrs = self._attrs
+        state_attrs[ATTR_DIRECTION] = self._vehicle.status.gps_heading
+        self._attr_extra_state_attributes = state_attrs
+        self._location = (
+            self._vehicle.status.gps_position
+            if self._vehicle.is_vehicle_tracking_enabled
+            else None
         )

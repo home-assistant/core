@@ -4,9 +4,11 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.lock import DOMAIN, LockEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ZWaveDeviceEntity, const
 
@@ -95,7 +97,7 @@ LOCK_ALARM_TYPE = {
     "27": "Auto re-lock",
     "33": "User deleted: ",
     "112": "Master code changed or User added: ",
-    "113": "Duplicate Pin-code: ",
+    "113": "Duplicate PIN code: ",
     "130": "RF module, power restored",
     "144": "Unlocked by NFC Tag or Card by user ",
     "161": "Tamper Alarm: ",
@@ -157,7 +159,11 @@ CLEAR_USERCODE_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Z-Wave Lock from Config Entry."""
 
     @callback
@@ -169,7 +175,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     network = hass.data[const.DATA_NETWORK]
 
-    def set_usercode(service):
+    def set_usercode(service: ServiceCall) -> None:
         """Set the usercode to index X on the lock."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         lock_node = network.nodes[node_id]
@@ -193,7 +199,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             value.data = str(usercode)
             break
 
-    def get_usercode(service):
+    def get_usercode(service: ServiceCall) -> None:
         """Get a usercode at index X on the lock."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         lock_node = network.nodes[node_id]
@@ -207,7 +213,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             _LOGGER.info("Usercode at slot %s is: %s", value.index, value.data)
             break
 
-    def clear_usercode(service):
+    def clear_usercode(service: ServiceCall) -> None:
         """Set usercode to slot X on the lock."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         lock_node = network.nodes[node_id]
@@ -291,17 +297,17 @@ class ZwaveLock(ZWaveDeviceEntity, LockEntity):
             if self._state_workaround:
                 self._state = LOCK_STATUS.get(str(notification_data))
                 _LOGGER.debug("workaround: lock state set to %s", self._state)
-            if self._v2btze:
-                if (
-                    self.values.v2btze_advanced
-                    and self.values.v2btze_advanced.data == CONFIG_ADVANCED
-                ):
-                    self._state = LOCK_STATUS.get(str(notification_data))
-                    _LOGGER.debug(
-                        "Lock state set from Access Control value and is %s, get=%s",
-                        str(notification_data),
-                        self.state,
-                    )
+            if (
+                self._v2btze
+                and self.values.v2btze_advanced
+                and self.values.v2btze_advanced.data == CONFIG_ADVANCED
+            ):
+                self._state = LOCK_STATUS.get(str(notification_data))
+                _LOGGER.debug(
+                    "Lock state set from Access Control value and is %s, get=%s",
+                    str(notification_data),
+                    self.state,
+                )
 
         if self._track_message_workaround:
             this_message = self.node.stats["lastReceivedMessage"][5]
@@ -374,9 +380,9 @@ class ZwaveLock(ZWaveDeviceEntity, LockEntity):
         self.values.primary.data = False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
-        data = super().device_state_attributes
+        data = super().extra_state_attributes
         if self._notification:
             data[ATTR_NOTIFICATION] = self._notification
         if self._lock_status:

@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konum zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "invalid_api_key": "Ge\u00e7ersiz API anahtar\u0131"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Anahtar\u0131",
+                    "elevation": "Y\u00fckseklik",
+                    "latitude": "Enlem",
+                    "longitude": "Boylam"
+                },
+                "title": "Bilgilerinizi doldurun"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "from_window": "Koruma penceresi i\u00e7in ba\u015flang\u0131\u00e7 UV indeksi",
+                    "to_window": "Koruma penceresi i\u00e7in UV indeksini sonland\u0131rma"
+                },
+                "title": "OpenUV'yi yap\u0131land\u0131r\u0131n"
+            }
+        }
+    }
+}

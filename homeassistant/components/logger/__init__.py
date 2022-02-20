@@ -3,8 +3,9 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "logger"
 
@@ -26,6 +27,7 @@ DEFAULT_LOGSEVERITY = "DEBUG"
 
 LOGGER_DEFAULT = "default"
 LOGGER_LOGS = "logs"
+LOGGER_FILTERS = "filters"
 
 ATTR_LEVEL = "level"
 
@@ -40,6 +42,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Optional(LOGGER_DEFAULT): _VALID_LOG_LEVEL,
                 vol.Optional(LOGGER_LOGS): vol.Schema({cv.string: _VALID_LOG_LEVEL}),
+                vol.Optional(LOGGER_FILTERS): vol.Schema({cv.string: [cv.is_regex]}),
             }
         )
     },
@@ -47,7 +50,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the logger component."""
     hass.data[DOMAIN] = {}
     logging.setLoggerClass(_get_logger_class(hass.data[DOMAIN]))
@@ -70,8 +73,13 @@ async def async_setup(hass, config):
     if LOGGER_LOGS in config[DOMAIN]:
         set_log_levels(config[DOMAIN][LOGGER_LOGS])
 
+    if LOGGER_FILTERS in config[DOMAIN]:
+        for key, value in config[DOMAIN][LOGGER_FILTERS].items():
+            logger = logging.getLogger(key)
+            _add_log_filter(logger, value)
+
     @callback
-    def async_service_handler(service):
+    def async_service_handler(service: ServiceCall) -> None:
         """Handle logger services."""
         if service.service == SERVICE_SET_DEFAULT_LEVEL:
             set_default_log_level(service.data.get(ATTR_LEVEL))
@@ -101,6 +109,15 @@ def _set_log_level(logger, level):
     Any logger fetched before this integration is loaded will use old class.
     """
     getattr(logger, "orig_setLevel", logger.setLevel)(LOGSEVERITY[level])
+
+
+def _add_log_filter(logger, patterns):
+    """Add a Filter to the logger based on a regexp of the filter_str."""
+
+    def filter_func(logrecord):
+        return not any(p.search(logrecord.getMessage()) for p in patterns)
+
+    logger.addFilter(filter_func)
 
 
 def _get_logger_class(hass_overrides):

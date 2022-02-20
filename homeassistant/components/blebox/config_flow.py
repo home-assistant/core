@@ -56,7 +56,6 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for BleBox devices."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize the BleBox config flow."""
@@ -92,7 +91,7 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         addr = host_port(user_input)
 
-        for entry in hass.config_entries.async_entries(DOMAIN):
+        for entry in self._async_current_entries():
             if addr == host_port(entry.data):
                 host, port = addr
                 return self.async_abort(

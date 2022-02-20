@@ -1,14 +1,15 @@
 """Define tests for the Brother Printer config flow."""
 import json
+from unittest.mock import patch
 
 from brother import SnmpError, UnsupportedModel
 
 from homeassistant import data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.brother.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_TYPE
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 
 CONFIG = {CONF_HOST: "localhost", CONF_TYPE: "laser"}
@@ -28,7 +29,7 @@ async def test_create_entry_with_hostname(hass):
     """Test that the user step works with printer hostname."""
     with patch(
         "brother.Brother._get_data",
-        return_value=json.loads(load_fixture("brother_printer_data.json")),
+        return_value=json.loads(load_fixture("printer_data.json", "brother")),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
@@ -40,11 +41,11 @@ async def test_create_entry_with_hostname(hass):
         assert result["data"][CONF_TYPE] == CONFIG[CONF_TYPE]
 
 
-async def test_create_entry_with_ip_address(hass):
-    """Test that the user step works with printer IP address."""
+async def test_create_entry_with_ipv4_address(hass):
+    """Test that the user step works with printer IPv4 address."""
     with patch(
         "brother.Brother._get_data",
-        return_value=json.loads(load_fixture("brother_printer_data.json")),
+        return_value=json.loads(load_fixture("printer_data.json", "brother")),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -55,6 +56,24 @@ async def test_create_entry_with_ip_address(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == "HL-L2340DW 0123456789"
         assert result["data"][CONF_HOST] == "127.0.0.1"
+        assert result["data"][CONF_TYPE] == "laser"
+
+
+async def test_create_entry_with_ipv6_address(hass):
+    """Test that the user step works with printer IPv6 address."""
+    with patch(
+        "brother.Brother._get_data",
+        return_value=json.loads(load_fixture("printer_data.json", "brother")),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_HOST: "2001:db8::1428:57ab", CONF_TYPE: "laser"},
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == "HL-L2340DW 0123456789"
+        assert result["data"][CONF_HOST] == "2001:db8::1428:57ab"
         assert result["data"][CONF_TYPE] == "laser"
 
 
@@ -76,7 +95,7 @@ async def test_connection_error(hass):
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["errors"] == {"base": "connection_error"}
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_snmp_error(hass):
@@ -105,7 +124,7 @@ async def test_device_exists_abort(hass):
     """Test we abort config flow if Brother printer already configured."""
     with patch(
         "brother.Brother._get_data",
-        return_value=json.loads(load_fixture("brother_printer_data.json")),
+        return_value=json.loads(load_fixture("printer_data.json", "brother")),
     ):
         MockConfigEntry(domain=DOMAIN, unique_id="0123456789", data=CONFIG).add_to_hass(
             hass
@@ -118,33 +137,6 @@ async def test_device_exists_abort(hass):
         assert result["reason"] == "already_configured"
 
 
-async def test_zeroconf_no_data(hass):
-    """Test we abort if zeroconf provides no data."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "connection_error"
-
-
-async def test_zeroconf_not_brother_printer_error(hass):
-    """Test we abort zeroconf flow if printer isn't Brother."""
-    with patch(
-        "brother.Brother._get_data",
-        return_value=json.loads(load_fixture("brother_printer_data.json")),
-    ):
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_ZEROCONF},
-            data={"hostname": "example.local.", "name": "Another Printer"},
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "not_brother_printer"
-
-
 async def test_zeroconf_snmp_error(hass):
     """Test we abort zeroconf flow on SNMP error."""
     with patch("brother.Brother._get_data", side_effect=SnmpError("error")):
@@ -152,18 +144,48 @@ async def test_zeroconf_snmp_error(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data={"hostname": "example.local.", "name": "Brother Printer"},
+            data=zeroconf.ZeroconfServiceInfo(
+                host="mock_host",
+                addresses=["mock_host"],
+                hostname="example.local.",
+                name="Brother Printer",
+                port=None,
+                properties={},
+                type="mock_type",
+            ),
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "connection_error"
+        assert result["reason"] == "cannot_connect"
+
+
+async def test_zeroconf_unsupported_model(hass):
+    """Test unsupported printer model error."""
+    with patch("brother.Brother._get_data") as mock_get_data:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=zeroconf.ZeroconfServiceInfo(
+                host="mock_host",
+                addresses=["mock_host"],
+                hostname="example.local.",
+                name="Brother Printer",
+                port=None,
+                properties={"product": "MFC-8660DN"},
+                type="mock_type",
+            ),
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "unsupported_model"
+        assert len(mock_get_data.mock_calls) == 0
 
 
 async def test_zeroconf_device_exists_abort(hass):
     """Test we abort zeroconf flow if Brother printer already configured."""
     with patch(
         "brother.Brother._get_data",
-        return_value=json.loads(load_fixture("brother_printer_data.json")),
+        return_value=json.loads(load_fixture("printer_data.json", "brother")),
     ):
         MockConfigEntry(domain=DOMAIN, unique_id="0123456789", data=CONFIG).add_to_hass(
             hass
@@ -172,24 +194,65 @@ async def test_zeroconf_device_exists_abort(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data={"hostname": "example.local.", "name": "Brother Printer"},
+            data=zeroconf.ZeroconfServiceInfo(
+                host="mock_host",
+                addresses=["mock_host"],
+                hostname="example.local.",
+                name="Brother Printer",
+                port=None,
+                properties={},
+                type="mock_type",
+            ),
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
 
 
+async def test_zeroconf_no_probe_existing_device(hass):
+    """Test we do not probe the device is the host is already configured."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="0123456789", data=CONFIG)
+    entry.add_to_hass(hass)
+    with patch("brother.Brother._get_data") as mock_get_data:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=zeroconf.ZeroconfServiceInfo(
+                host="mock_host",
+                addresses=["mock_host"],
+                hostname="localhost",
+                name="Brother Printer",
+                port=None,
+                properties={},
+                type="mock_type",
+            ),
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert len(mock_get_data.mock_calls) == 0
+
+
 async def test_zeroconf_confirm_create_entry(hass):
     """Test zeroconf confirmation and create config entry."""
     with patch(
         "brother.Brother._get_data",
-        return_value=json.loads(load_fixture("brother_printer_data.json")),
+        return_value=json.loads(load_fixture("printer_data.json", "brother")),
     ):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data={"hostname": "example.local.", "name": "Brother Printer"},
+            data=zeroconf.ZeroconfServiceInfo(
+                host="mock_host",
+                addresses=["mock_host"],
+                hostname="example.local.",
+                name="Brother Printer",
+                port=None,
+                properties={},
+                type="mock_type",
+            ),
         )
 
         assert result["step_id"] == "zeroconf_confirm"

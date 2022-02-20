@@ -1,11 +1,7 @@
 """Support for Keba notifications."""
-import logging
-
 from homeassistant.components.notify import ATTR_DATA, BaseNotificationService
 
 from . import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_get_service(hass, config, discovery_info=None):

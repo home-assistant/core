@@ -1,4 +1,13 @@
 {
+    "device_class": {
+        "cold": "\u0e40\u0e22\u0e47\u0e19",
+        "gas": "\u0e41\u0e01\u0e4a\u0e2a",
+        "heat": "\u0e04\u0e27\u0e32\u0e21\u0e23\u0e49\u0e2d\u0e19",
+        "problem": "\u0e1b\u0e31\u0e0d\u0e2b\u0e32",
+        "smoke": "\u0e04\u0e27\u0e31\u0e19",
+        "sound": "\u0e40\u0e2a\u0e35\u0e22\u0e07",
+        "vibration": "\u0e01\u0e32\u0e23\u0e2a\u0e31\u0e48\u0e19"
+    },
     "state": {
         "_": {
             "off": "\u0e1b\u0e34\u0e14",

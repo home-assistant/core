@@ -1,4 +1,6 @@
-"""Support for Ecovacs Ecovacs Vaccums."""
+"""Support for Ecovacs Ecovacs Vacuums."""
+from __future__ import annotations
+
 import logging
 
 import sucks
@@ -16,7 +18,10 @@ from homeassistant.components.vacuum import (
     SUPPORT_TURN_ON,
     VacuumEntity,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import ECOVACS_DEVICES
 
@@ -39,7 +44,12 @@ ATTR_ERROR = "error"
 ATTR_COMPONENT_PREFIX = "component_"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Ecovacs vacuums."""
     vacuums = []
     for device in hass.data[ECOVACS_DEVICES]:
@@ -189,7 +199,7 @@ class EcovacsVacuum(VacuumEntity):
         self.device.run(sucks.VacBotCommand(command, params))
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device-specific state attributes of this vacuum."""
         data = {}
         data[ATTR_ERROR] = self._error

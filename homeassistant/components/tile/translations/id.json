@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil"
+        },
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Kata Sandi"
+                },
+                "title": "Autentikasi Ulang Tile"
+            },
+            "user": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Email"
+                },
+                "title": "Konfigurasi Tile"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_inactive": "Tampilkan Tile yang tidak aktif"
+                },
+                "title": "Konfigurasi Tile"
+            }
+        }
+    }
+}

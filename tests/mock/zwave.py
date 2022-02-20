@@ -1,7 +1,9 @@
 """Mock helpers for Z-Wave component."""
-from pydispatch import dispatcher
+from unittest.mock import MagicMock
 
-from tests.async_mock import MagicMock
+# Integration & integration tests are disabled
+# from pydispatch import dispatcher
+dispatcher = MagicMock()
 
 
 def value_changed(value):
@@ -106,7 +108,7 @@ class MockNode(MagicMock):
     def __init__(
         self,
         *,
-        node_id="567",
+        node_id=567,
         name="Mock Node",
         manufacturer_id="ABCD",
         product_id="123",

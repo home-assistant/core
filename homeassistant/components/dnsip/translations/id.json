@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "invalid_hostname": "Nama host tidak valid"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "hostname": "Nama host untuk melakukan kueri DNS",
+                    "resolver": "Resolver untuk pencarian IPV4",
+                    "resolver_ipv6": "Resolver untuk pencarian IPV6"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_resolver": "Alamat IP tidak valid untuk resolver"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "resolver": "Resolver untuk pencarian IPV4",
+                    "resolver_ipv6": "Resolver untuk pencarian IPV6"
+                }
+            }
+        }
+    }
+}

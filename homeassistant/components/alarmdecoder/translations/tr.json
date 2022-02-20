@@ -1,0 +1,74 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "create_entry": {
+            "default": "AlarmDecoder'a ba\u015far\u0131yla ba\u011fland\u0131."
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "step": {
+            "protocol": {
+                "data": {
+                    "device_baudrate": "Cihaz Baud H\u0131z\u0131",
+                    "device_path": "Cihaz Yolu",
+                    "host": "Sunucu",
+                    "port": "Port"
+                },
+                "title": "Ba\u011flant\u0131 ayarlar\u0131n\u0131 yap\u0131land\u0131r\u0131n"
+            },
+            "user": {
+                "data": {
+                    "protocol": "Protokol"
+                },
+                "title": "AlarmDecoder Protokol\u00fcn\u00fc Se\u00e7in"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "int": "A\u015fa\u011f\u0131daki alan bir tamsay\u0131 olmal\u0131d\u0131r.",
+            "loop_range": "RF D\u00f6ng\u00fcs\u00fc 1 ile 4 aras\u0131nda bir tam say\u0131 olmal\u0131d\u0131r.",
+            "loop_rfid": "RF D\u00f6ng\u00fcs\u00fc, RF Seri olmadan kullan\u0131lamaz.",
+            "relay_inclusive": "R\u00f6le Adresi ve R\u00f6le Kanal\u0131 birbirine ba\u011fl\u0131d\u0131r ve birlikte eklenmelidir."
+        },
+        "step": {
+            "arm_settings": {
+                "data": {
+                    "alt_night_mode": "Alternatif Gece Modu",
+                    "auto_bypass": "Alarm a\u00e7\u0131kken otomatik Atlatma",
+                    "code_arm_required": "Kurmak i\u00e7in Gerekli Kod"
+                },
+                "title": "AlarmDecoder'\u0131 yap\u0131land\u0131r\u0131n"
+            },
+            "init": {
+                "data": {
+                    "edit_select": "D\u00fczenle"
+                },
+                "description": "Ne d\u00fczenlemek istersiniz?",
+                "title": "AlarmDecoder'\u0131 yap\u0131land\u0131r\u0131n"
+            },
+            "zone_details": {
+                "data": {
+                    "zone_loop": "RF D\u00f6ng\u00fcs\u00fc",
+                    "zone_name": "B\u00f6lge Ad\u0131",
+                    "zone_relayaddr": "R\u00f6le Adresi",
+                    "zone_relaychan": "R\u00f6le Kanal\u0131",
+                    "zone_rfid": "RF Id",
+                    "zone_type": "B\u00f6lge Tipi"
+                },
+                "description": "{zone_number} b\u00f6lgesi i\u00e7in ayr\u0131nt\u0131lar\u0131 girin. {zone_number} b\u00f6lgesini silmek i\u00e7in B\u00f6lge Ad\u0131n\u0131 bo\u015f b\u0131rak\u0131n.",
+                "title": "AlarmDecoder'\u0131 yap\u0131land\u0131r\u0131n"
+            },
+            "zone_select": {
+                "data": {
+                    "zone_number": "B\u00f6lge Numaras\u0131"
+                },
+                "description": "Eklemek, d\u00fczenlemek veya kald\u0131rmak istedi\u011finiz b\u00f6lge numaras\u0131n\u0131 girin.",
+                "title": "AlarmDecoder'\u0131 yap\u0131land\u0131r\u0131n"
+            }
+        }
+    }
+}

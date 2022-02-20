@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    }
+}

@@ -1,13 +1,17 @@
 """Support for Zabbix sensors."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components import zabbix
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,20 +35,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Zabbix sensor platform."""
-    sensors = []
+    sensors: list[ZabbixTriggerCountSensor] = []
 
-    zapi = hass.data[zabbix.DOMAIN]
-    if not zapi:
-        _LOGGER.error("zapi is None. Zabbix integration hasn't been loaded?")
-        return False
+    if not (zapi := hass.data[zabbix.DOMAIN]):
+        _LOGGER.error("Zabbix integration hasn't been loaded? zapi is None")
+        return
 
     _LOGGER.info("Connected to Zabbix API Version %s", zapi.api_version())
 
-    trigger_conf = config.get(_CONF_TRIGGERS)
     # The following code seems overly complex. Need to think about this...
-    if trigger_conf:
+    if trigger_conf := config.get(_CONF_TRIGGERS):
         hostids = trigger_conf.get(_CONF_HOSTIDS)
         individual = trigger_conf.get(_CONF_INDIVIDUAL)
         name = trigger_conf.get(CONF_NAME)
@@ -54,38 +61,38 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             if not hostids:
                 # We need hostids
                 _LOGGER.error("If using 'individual', must specify hostids")
-                return False
+                return
 
             for hostid in hostids:
                 _LOGGER.debug("Creating Zabbix Sensor: %s", str(hostid))
-                sensor = ZabbixSingleHostTriggerCountSensor(zapi, [hostid], name)
-                sensors.append(sensor)
+                sensors.append(ZabbixSingleHostTriggerCountSensor(zapi, [hostid], name))
         else:
             if not hostids:
                 # Single sensor that provides the total count of triggers.
                 _LOGGER.debug("Creating Zabbix Sensor")
-                sensor = ZabbixTriggerCountSensor(zapi, name)
+                sensors.append(ZabbixTriggerCountSensor(zapi, name))
             else:
                 # Single sensor that sums total issues for all hosts
                 _LOGGER.debug("Creating Zabbix Sensor group: %s", str(hostids))
-                sensor = ZabbixMultipleHostTriggerCountSensor(zapi, hostids, name)
-            sensors.append(sensor)
+                sensors.append(
+                    ZabbixMultipleHostTriggerCountSensor(zapi, hostids, name)
+                )
+
     else:
         # Single sensor that provides the total count of triggers.
         _LOGGER.debug("Creating Zabbix Sensor")
-        sensor = ZabbixTriggerCountSensor(zapi)
-        sensors.append(sensor)
+        sensors.append(ZabbixTriggerCountSensor(zapi))
 
     add_entities(sensors)
 
 
-class ZabbixTriggerCountSensor(Entity):
+class ZabbixTriggerCountSensor(SensorEntity):
     """Get the active trigger count for all Zabbix monitored hosts."""
 
-    def __init__(self, zApi, name="Zabbix"):
+    def __init__(self, zapi, name="Zabbix"):
         """Initialize Zabbix sensor."""
         self._name = name
-        self._zapi = zApi
+        self._zapi = zapi
         self._state = None
         self._attributes = {}
 
@@ -95,12 +102,12 @@ class ZabbixTriggerCountSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the units of measurement."""
         return "issues"
 
@@ -116,7 +123,7 @@ class ZabbixTriggerCountSensor(Entity):
         self._state = len(triggers)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return self._attributes
 
@@ -124,9 +131,9 @@ class ZabbixTriggerCountSensor(Entity):
 class ZabbixSingleHostTriggerCountSensor(ZabbixTriggerCountSensor):
     """Get the active trigger count for a single Zabbix monitored host."""
 
-    def __init__(self, zApi, hostid, name=None):
+    def __init__(self, zapi, hostid, name=None):
         """Initialize Zabbix sensor."""
-        super().__init__(zApi, name)
+        super().__init__(zapi, name)
         self._hostid = hostid
         if not name:
             self._name = self._zapi.host.get(hostids=self._hostid, output="extend")[0][
@@ -148,9 +155,9 @@ class ZabbixSingleHostTriggerCountSensor(ZabbixTriggerCountSensor):
 class ZabbixMultipleHostTriggerCountSensor(ZabbixTriggerCountSensor):
     """Get the active trigger count for specified Zabbix monitored hosts."""
 
-    def __init__(self, zApi, hostids, name=None):
+    def __init__(self, zapi, hostids, name=None):
         """Initialize Zabbix sensor."""
-        super().__init__(zApi, name)
+        super().__init__(zapi, name)
         self._hostids = hostids
         if not name:
             host_names = self._zapi.host.get(hostids=self._hostids, output="extend")

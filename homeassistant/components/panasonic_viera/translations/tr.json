@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "unknown": "Beklenmeyen hata"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_pin_code": "Girdi\u011finiz PIN Kodu ge\u00e7ersiz"
+        },
+        "step": {
+            "pairing": {
+                "data": {
+                    "pin": "PIN Kodu"
+                },
+                "description": "TV'nizde g\u00f6r\u00fcnt\u00fclenen PIN Kodu kodunu girin",
+                "title": "E\u015fle\u015ftirme"
+            },
+            "user": {
+                "data": {
+                    "host": "\u0130p Adresi",
+                    "name": "Ad"
+                },
+                "description": "Panasonic Viera TV'nizin IP Adresi 'ni girin",
+                "title": "TV'nizi kurun"
+            }
+        }
+    }
+}

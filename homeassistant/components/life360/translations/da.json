@@ -1,16 +1,10 @@
 {
     "config": {
-        "abort": {
-            "invalid_credentials": "Ugyldige legitimationsoplysninger"
-        },
         "create_entry": {
             "default": "Hvis du vil angive avancerede indstillinger skal du se [Life360 dokumentation]({docs_url})."
         },
         "error": {
-            "invalid_credentials": "Ugyldige legitimationsoplysninger",
-            "invalid_username": "Ugyldigt brugernavn",
-            "unexpected": "Uventet fejl under kommunikation med Life360-serveren",
-            "user_already_configured": "Kontoen er allerede konfigureret"
+            "invalid_username": "Ugyldigt brugernavn"
         },
         "step": {
             "user": {

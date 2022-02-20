@@ -1,77 +1,155 @@
 set_state:
-  description: Set a color/brightness and possibliy turn the light on/off.
+  name: Set State
+  description: Set a color/brightness and possibly turn the light on/off.
+  target:
+    entity:
+      integration: lifx
+      domain: light
   fields:
-    entity_id:
-      description: Name(s) of entities to set a state on.
-      example: "light.garage"
-    "...":
-      description: All turn_on parameters can be used to specify a color.
     infrared:
-      description: Automatic infrared level (0..255) when light brightness is low.
-      example: 255
+      name: infrared
+      description: Automatic infrared level when light brightness is low.
+      selector:
+        number:
+          min: 0
+          max: 255
     zones:
+      name: Zones
       description: List of zone numbers to affect (8 per LIFX Z, starts at 0).
       example: "[0,5]"
+      selector:
+        object:
     transition:
-      description: Duration in seconds it takes to get to the final state.
-      example: 10
+      name: Transition
+      description: Duration it takes to get to the final state.
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds
     power:
-      description: Turn the light on (True) or off (False). Leave out to keep the power as it is.
-      example: false
+      name: Power
+      description: Turn the light on or off. Leave out to keep the power as it is.
+      selector:
+        boolean:
 
 effect_pulse:
+  name: Pulse effect
   description: Run a flash effect by changing to a color and back.
+  target:
+    entity:
+      integration: lifx
+      domain: light
   fields:
-    entity_id:
-      description: Name(s) of entities to run the effect on.
-      example: "light.kitchen"
     mode:
-      description: "Decides how colors are changed. Possible values: blink, breathe, ping, strobe, solid."
-      example: strobe
+      name: Mode
+      description: "Decides how colors are changed."
+      selector:
+        select:
+          options:
+            - 'blink'
+            - 'breathe'
+            - 'ping'
+            - 'strobe'
+            - 'solid'
     brightness:
-      description: Number between 0..255 indicating brightness of the temporary color.
-      example: 120
+      name: Brightness
+      description: Number indicating brightness of the temporary color.
+      selector:
+        number:
+          min: 0
+          max: 255
     color_name:
+      name: Color name
       description: A human readable color name.
       example: "red"
+      selector:
+        text:
     rgb_color:
+      name: RGB color
       description: The temporary color in RGB-format.
       example: "[255, 100, 100]"
+      selector:
+        object:
     period:
-      description: Duration of the effect in seconds (default 1.0).
-      example: 3
+      name: Period
+      description: Duration of the effect.
+      default: 1.0
+      selector:
+        number:
+          min: 0.05
+          max: 60.00
+          step: 0.05
+          unit_of_measurement: seconds
     cycles:
-      description: Number of times the effect should run (default 1.0).
-      example: 2
+      name: Cycles
+      description: Number of times the effect should run.
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 10000
     power_on:
-      description: Powered off lights are temporarily turned on during the effect (default True).
-      example: false
+      name: Power on
+      description: Powered off lights are temporarily turned on during the effect.
+      default: true
+      selector:
+        boolean:
 
 effect_colorloop:
+  name: Color loop effect
   description: Run an effect with looping colors.
+  target:
+    entity:
+      integration: lifx
+      domain: light
   fields:
-    entity_id:
-      description: Name(s) of entities to run the effect on.
-      example: "light.disco1, light.disco2, light.disco3"
     brightness:
-      description: Number between 0 and 255 indicating brightness of the effect. Leave this out to maintain the current brightness of each participating light.
-      example: 120
+      name: Brightness
+      description: Number indicating brightness of the effect. Leave this out to maintain the current brightness of each participating light.
+      selector:
+        number:
+          min: 0
+          max: 255
     period:
-      description: Duration (in seconds) between color changes (default 60).
-      example: 180
+      name: Period
+      description: Duration between color changes.
+      default: 60
+      selector:
+        number:
+          min: 0.05
+          max: 3600.00
+          step: 0.05
+          unit_of_measurement: seconds
     change:
-      description: Hue movement per period, in degrees on a color wheel (ranges from 0 to 360, default 20).
-      example: 45
+      name: Change
+      description: Hue movement per period, in degrees on a color wheel.
+      default: 20
+      selector:
+        number:
+          min: 0
+          max: 360
+          unit_of_measurement: '°'
     spread:
-      description: Maximum hue difference between participating lights, in degrees on a color wheel (ranges from 0 to 360, default 30).
-      example: 0
+      name: Spread
+      description: Maximum hue difference between participating lights, in degrees on a color wheel.
+      default: 30
+      selector:
+        number:
+          min: 0
+          max: 360
+          unit_of_measurement: '°'
     power_on:
-      description: Powered off lights are temporarily turned on during the effect (default True).
-      example: false
+      name: Power on
+      description: Powered off lights are temporarily turned on during the effect.
+      default: true
+      selector:
+        boolean:
 
 effect_stop:
+  name: Stop effect
   description: Stop a running effect.
-  fields:
-    entity_id:
-      description: Name(s) of entities to stop effects on. Leave out to stop effects everywhere.
-      example: "light.bedroom"
+  target:
+    entity:
+      integration: lifx
+      domain: light

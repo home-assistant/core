@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Bu velbus ba\u011flant\u0131s\u0131n\u0131n ad\u0131",
+                    "port": "Ba\u011flant\u0131 dizesi"
+                },
+                "title": "Velbus ba\u011flant\u0131 t\u00fcr\u00fcn\u00fc tan\u0131mlay\u0131n"
+            }
+        }
+    }
+}

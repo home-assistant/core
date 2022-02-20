@@ -1,5 +1,5 @@
 """Support for Eufy lights."""
-import logging
+from __future__ import annotations
 
 import lakeside
 
@@ -12,19 +12,25 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     LightEntity,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 EUFY_MAX_KELVIN = 6500
 EUFY_MIN_KELVIN = 2700
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up Eufy bulbs."""
     if discovery_info is None:
         return
@@ -95,7 +101,7 @@ class EufyLight(LightEntity):
 
     @property
     def max_mireds(self):
-        """Return maximu supported color temperature."""
+        """Return maximum supported color temperature."""
         return kelvin_to_mired(EUFY_MIN_KELVIN)
 
     @property

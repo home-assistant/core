@@ -1,20 +1,29 @@
 """Support for Sense HAT sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-import os
+from pathlib import Path
 
 from sense_hat import SenseHat
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     CONF_DISPLAY_OPTIONS,
     CONF_NAME,
+    PERCENTAGE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,17 +33,30 @@ CONF_IS_HAT_ATTACHED = "is_hat_attached"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-SENSOR_TYPES = {
-    "temperature": ["temperature", TEMP_CELSIUS],
-    "humidity": ["humidity", UNIT_PERCENTAGE],
-    "pressure": ["pressure", "mb"],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="temperature",
+        name="temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="humidity",
+        name="humidity",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(
+        key="pressure",
+        name="pressure",
+        native_unit_of_measurement="mb",
+    ),
+)
+
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_DISPLAY_OPTIONS, default=list(SENSOR_TYPES)): [
-            vol.In(SENSOR_TYPES)
-        ],
+        vol.Required(CONF_DISPLAY_OPTIONS, default=SENSOR_KEYS): [vol.In(SENSOR_KEYS)],
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_IS_HAT_ATTACHED, default=True): cv.boolean,
     }
@@ -43,9 +65,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_cpu_temp():
     """Get CPU temperature."""
-    res = os.popen("vcgencmd measure_temp").readline()
-    t_cpu = float(res.replace("temp=", "").replace("'C\n", ""))
-    return t_cpu
+    t_cpu = (
+        Path("/sys/class/thermal/thermal_zone0/temp")
+        .read_text(encoding="utf-8")
+        .strip()
+    )
+    return float(t_cpu) * 0.001
 
 
 def get_average(temp_base):
@@ -59,41 +84,37 @@ def get_average(temp_base):
     return temp_avg
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Sense HAT sensor platform."""
+    _LOGGER.warning(
+        "The Sense HAT integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
     data = SenseHatData(config.get(CONF_IS_HAT_ATTACHED))
-    dev = []
-    for variable in config[CONF_DISPLAY_OPTIONS]:
-        dev.append(SenseHatSensor(data, variable))
+    display_options = config[CONF_DISPLAY_OPTIONS]
+    entities = [
+        SenseHatSensor(data, description)
+        for description in SENSOR_TYPES
+        if description.key in display_options
+    ]
 
-    add_entities(dev, True)
+    add_entities(entities, True)
 
 
-class SenseHatSensor(Entity):
+class SenseHatSensor(SensorEntity):
     """Representation of a Sense HAT sensor."""
 
-    def __init__(self, data, sensor_types):
+    def __init__(self, data, description: SensorEntityDescription):
         """Initialize the sensor."""
+        self.entity_description = description
         self.data = data
-        self._name = SENSOR_TYPES[sensor_types][0]
-        self._unit_of_measurement = SENSOR_TYPES[sensor_types][1]
-        self.type = sensor_types
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
 
     def update(self):
         """Get the latest data and updates the states."""
@@ -102,12 +123,13 @@ class SenseHatSensor(Entity):
             _LOGGER.error("Don't receive data")
             return
 
-        if self.type == "temperature":
-            self._state = self.data.temperature
-        if self.type == "humidity":
-            self._state = self.data.humidity
-        if self.type == "pressure":
-            self._state = self.data.pressure
+        sensor_type = self.entity_description.key
+        if sensor_type == "temperature":
+            self._attr_native_value = self.data.temperature
+        elif sensor_type == "humidity":
+            self._attr_native_value = self.data.humidity
+        elif sensor_type == "pressure":
+            self._attr_native_value = self.data.pressure
 
 
 class SenseHatData:

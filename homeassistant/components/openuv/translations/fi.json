@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Koordinaatit on jo rekister\u00f6ity",
             "invalid_api_key": "Virheellinen API-avain"
         },
         "step": {

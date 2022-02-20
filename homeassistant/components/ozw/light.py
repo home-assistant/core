@@ -5,18 +5,20 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
+    ATTR_RGBW_COLOR,
     ATTR_TRANSITION,
-    ATTR_WHITE_VALUE,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_HS,
+    COLOR_MODE_RGBW,
     DOMAIN as LIGHT_DOMAIN,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
     SUPPORT_TRANSITION,
-    SUPPORT_WHITE_VALUE,
     LightEntity,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
 from .const import DATA_UNSUBSCRIBE, DOMAIN
@@ -32,7 +34,11 @@ COLOR_CHANNEL_GREEN = 0x08
 COLOR_CHANNEL_BLUE = 0x10
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Z-Wave Light from Config Entry."""
 
     @callback
@@ -65,9 +71,11 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         super().__init__(values)
         self._color_channels = None
         self._hs = None
-        self._white = None
+        self._rgbw_color = None
         self._ct = None
-        self._supported_features = SUPPORT_BRIGHTNESS
+        self._attr_color_mode = None
+        self._attr_supported_features = 0
+        self._attr_supported_color_modes = set()
         self._min_mireds = 153  # 6500K as a safe default
         self._max_mireds = 370  # 2700K as a safe default
 
@@ -78,26 +86,32 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
     def on_value_update(self):
         """Call when the underlying value(s) is added or updated."""
         if self.values.dimming_duration is not None:
-            self._supported_features |= SUPPORT_TRANSITION
+            self._attr_supported_features |= SUPPORT_TRANSITION
 
-        if self.values.color is None or self.values.color_channels is None:
-            return
+        if self.values.color_channels is not None:
+            # Support Color Temp if both white channels
+            if (self.values.color_channels.value & COLOR_CHANNEL_WARM_WHITE) and (
+                self.values.color_channels.value & COLOR_CHANNEL_COLD_WHITE
+            ):
+                self._attr_supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
+                self._attr_supported_color_modes.add(COLOR_MODE_HS)
 
-        self._supported_features |= SUPPORT_COLOR
+            # Support White value if only a single white channel
+            if ((self.values.color_channels.value & COLOR_CHANNEL_WARM_WHITE) != 0) ^ (
+                (self.values.color_channels.value & COLOR_CHANNEL_COLD_WHITE) != 0
+            ):
+                self._attr_supported_color_modes.add(COLOR_MODE_RGBW)
 
-        # Support Color Temp if both white channels
-        if (self.values.color_channels.value & COLOR_CHANNEL_WARM_WHITE) and (
-            self.values.color_channels.value & COLOR_CHANNEL_COLD_WHITE
-        ):
-            self._supported_features |= SUPPORT_COLOR_TEMP
+        if not self._attr_supported_color_modes and self.values.color is not None:
+            self._attr_supported_color_modes.add(COLOR_MODE_HS)
 
-        # Support White value if only a single white channel
-        if ((self.values.color_channels.value & COLOR_CHANNEL_WARM_WHITE) != 0) ^ (
-            (self.values.color_channels.value & COLOR_CHANNEL_COLD_WHITE) != 0
-        ):
-            self._supported_features |= SUPPORT_WHITE_VALUE
+        if not self._attr_supported_color_modes:
+            self._attr_supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+            # Default: Brightness (no color)
+            self._attr_color_mode = COLOR_MODE_BRIGHTNESS
 
-        self._calculate_rgb_values()
+        if self.values.color is not None:
+            self._calculate_color_values()
 
     @property
     def brightness(self):
@@ -117,19 +131,14 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         return self.values.primary.value > 0
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return self._supported_features
-
-    @property
     def hs_color(self):
         """Return the hs color."""
         return self._hs
 
     @property
-    def white_value(self):
-        """Return the white value of this light between 0..255."""
-        return self._white
+    def rgbw_color(self):
+        """Return the rgbw color."""
+        return self._rgbw_color
 
     @property
     def color_temp(self):
@@ -172,10 +181,9 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
 
         else:
             # transition specified by user
-            new_value = max(0, min(7620, kwargs[ATTR_TRANSITION]))
+            new_value = int(max(0, min(7620, kwargs[ATTR_TRANSITION])))
             if ozw_version < (1, 6, 1205):
-                transition = kwargs[ATTR_TRANSITION]
-                if transition <= 127:
+                if (transition := kwargs[ATTR_TRANSITION]) <= 127:
                     new_value = int(transition)
                 else:
                     minutes = int(transition / 60)
@@ -196,22 +204,31 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         self.async_set_duration(**kwargs)
 
         rgbw = None
-        white = kwargs.get(ATTR_WHITE_VALUE)
         hs_color = kwargs.get(ATTR_HS_COLOR)
+        rgbw_color = kwargs.get(ATTR_RGBW_COLOR)
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
 
         if hs_color is not None:
             rgbw = "#"
             for colorval in color_util.color_hs_to_RGB(*hs_color):
                 rgbw += f"{colorval:02x}"
-            rgbw += "0000"
+            if self._color_channels and self._color_channels & COLOR_CHANNEL_COLD_WHITE:
+                rgbw += "0000"
+            else:
+                # trim the CW value or it will not work correctly
+                rgbw += "00"
             # white LED must be off in order for color to work
 
-        elif white is not None:
+        elif rgbw_color is not None:
+            red = rgbw_color[0]
+            green = rgbw_color[1]
+            blue = rgbw_color[2]
+            white = rgbw_color[3]
             if self._color_channels & COLOR_CHANNEL_WARM_WHITE:
-                rgbw = f"#000000{white:02x}00"
+                # trim the CW value or it will not work correctly
+                rgbw = f"#{red:02x}{green:02x}{blue:02x}{white:02x}"
             else:
-                rgbw = f"#00000000{white:02x}"
+                rgbw = f"#{red:02x}{green:02x}{blue:02x}00{white:02x}"
 
         elif color_temp is not None:
             # Limit color temp to min/max values
@@ -248,16 +265,23 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
 
         self.values.primary.send_value(0)
 
-    def _calculate_rgb_values(self):
-        # Color Channels
-        self._color_channels = self.values.color_channels.data[ATTR_VALUE]
-
+    def _calculate_color_values(self):
+        """Parse color rgb and color temperature data."""
         # Color Data String
         data = self.values.color.data[ATTR_VALUE]
 
         # RGB is always present in the OpenZWave color data string.
         rgb = [int(data[1:3], 16), int(data[3:5], 16), int(data[5:7], 16)]
         self._hs = color_util.color_RGB_to_hs(*rgb)
+
+        # Light supports color, set color mode to hs
+        self._attr_color_mode = COLOR_MODE_HS
+
+        if self.values.color_channels is None:
+            return
+
+        # Color Channels
+        self._color_channels = self.values.color_channels.data[ATTR_VALUE]
 
         # Parse remaining color channels. OpenZWave appends white channels
         # that are present.
@@ -277,15 +301,21 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
 
         # Warm white
         if self._color_channels & COLOR_CHANNEL_WARM_WHITE:
-            self._white = int(data[index : index + 2], 16)
-            temp_warm = self._white
+            white = int(data[index : index + 2], 16)
+            self._rgbw_color = [rgb[0], rgb[1], rgb[2], white]
+            temp_warm = white
+            # Light supports rgbw, set color mode to rgbw
+            self._attr_color_mode = COLOR_MODE_RGBW
 
         index += 2
 
         # Cold white
         if self._color_channels & COLOR_CHANNEL_COLD_WHITE:
-            self._white = int(data[index : index + 2], 16)
-            temp_cold = self._white
+            white = int(data[index : index + 2], 16)
+            self._rgbw_color = [rgb[0], rgb[1], rgb[2], white]
+            temp_cold = white
+            # Light supports rgbw, set color mode to rgbw
+            self._attr_color_mode = COLOR_MODE_RGBW
 
         # Calculate color temps based on white LED status
         if temp_cold or temp_warm:
@@ -293,6 +323,17 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
                 self._max_mireds
                 - ((temp_cold / 255) * (self._max_mireds - self._min_mireds))
             )
+
+        if (
+            self._color_channels & COLOR_CHANNEL_WARM_WHITE
+            and self._color_channels & COLOR_CHANNEL_COLD_WHITE
+        ):
+            # Light supports 5 channels, set color_mode to color_temp or hs
+            if rgb[0] == 0 and rgb[1] == 0 and rgb[2] == 0:
+                # Color channels turned off, set color mode to color_temp
+                self._attr_color_mode = COLOR_MODE_COLOR_TEMP
+            else:
+                self._attr_color_mode = COLOR_MODE_HS
 
         if not (
             self._color_channels & COLOR_CHANNEL_RED

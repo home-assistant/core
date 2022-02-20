@@ -15,5 +15,10 @@
                 "title": "Standort"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "IPMA-API-Endpunkt erreichbar"
+        }
     }
 }

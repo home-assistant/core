@@ -1,6 +1,10 @@
 """Support for binary sensor using Orange Pi GPIO."""
+from __future__ import annotations
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import edge_detect, read_input, setup_input, setup_mode
 from .const import CONF_INVERT_LOGIC, CONF_PIN_MODE, CONF_PORTS, PORT_SCHEMA
@@ -8,7 +12,12 @@ from .const import CONF_INVERT_LOGIC, CONF_PIN_MODE, CONF_PORTS, PORT_SCHEMA
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(PORT_SCHEMA)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Orange Pi GPIO platform."""
     binary_sensors = []
     invert_logic = config[CONF_INVERT_LOGIC]

@@ -1,29 +1,32 @@
 """Config flow to configure zone component."""
-from typing import Optional
+from __future__ import annotations
 
-from iaqualink import AqualinkClient, AqualinkLoginException
+from typing import Any
+
+from iaqualink.client import AqualinkClient
+from iaqualink.exception import (
+    AqualinkServiceException,
+    AqualinkServiceUnauthorizedException,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class AqualinkFlowHandler(config_entries.ConfigFlow):
+class AqualinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Aqualink config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    async def async_step_user(self, user_input: Optional[ConfigType] = None):
+    async def async_step_user(self, user_input: dict[str, Any] | None = None):
         """Handle a flow start."""
         # Supporting a single account.
-        entries = self.hass.config_entries.async_entries(DOMAIN)
+        entries = self._async_current_entries()
         if entries:
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="single_instance_allowed")
 
         errors = {}
 
@@ -32,20 +35,26 @@ class AqualinkFlowHandler(config_entries.ConfigFlow):
             password = user_input[CONF_PASSWORD]
 
             try:
-                aqualink = AqualinkClient(username, password)
-                await aqualink.login()
+                async with AqualinkClient(username, password):
+                    pass
+            except AqualinkServiceUnauthorizedException:
+                errors["base"] = "invalid_auth"
+            except AqualinkServiceException:
+                errors["base"] = "cannot_connect"
+            else:
                 return self.async_create_entry(title=username, data=user_input)
-            except AqualinkLoginException:
-                errors["base"] = "connection_failure"
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+                {
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
             ),
             errors=errors,
         )
 
-    async def async_step_import(self, user_input: Optional[ConfigType] = None):
+    async def async_step_import(self, user_input: dict[str, Any] | None = None):
         """Occurs when an entry is setup through config."""
         return await self.async_step_user(user_input)

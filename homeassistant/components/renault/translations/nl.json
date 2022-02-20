@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd",
+            "kamereon_no_account": "Kan Kamereon-account niet vinden.",
+            "reauth_successful": "Opnieuw verifi\u00ebren is gelukt"
+        },
+        "error": {
+            "invalid_credentials": "Ongeldige authenticatie"
+        },
+        "step": {
+            "kamereon": {
+                "data": {
+                    "kamereon_account_id": "Kamereon account id"
+                },
+                "title": "Selecteer Kamereon-account-ID"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Wachtwoord"
+                },
+                "description": "Werk uw wachtwoord voor {gebruikersnaam} bij",
+                "title": "Integratie opnieuw verifi\u00ebren"
+            },
+            "user": {
+                "data": {
+                    "locale": "Locale",
+                    "password": "Wachtwoord",
+                    "username": "E-mail"
+                },
+                "title": "Renault-inloggegevens instellen"
+            }
+        }
+    }
+}

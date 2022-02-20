@@ -1,4 +1,6 @@
 """Support for monitoring if a sensor value is below/above a threshold."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -13,11 +15,14 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
     CONF_NAME,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +61,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Threshold sensor."""
     entity_id = config.get(CONF_ENTITY_ID)
     name = config.get(CONF_NAME)
@@ -71,7 +81,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 hass, entity_id, name, lower, upper, hysteresis, device_class
             )
         ],
-        True,
     )
 
 
@@ -88,26 +97,28 @@ class ThresholdSensor(BinarySensorEntity):
         self._hysteresis = hysteresis
         self._device_class = device_class
 
-        self._state_position = None
-        self._state = False
+        self._state_position = POSITION_UNKNOWN
+        self._state = None
         self.sensor_value = None
 
         @callback
         def async_threshold_sensor_state_listener(event):
             """Handle sensor state changes."""
-            new_state = event.data.get("new_state")
-            if new_state is None:
+            if (new_state := event.data.get("new_state")) is None:
                 return
 
             try:
                 self.sensor_value = (
-                    None if new_state.state == STATE_UNKNOWN else float(new_state.state)
+                    None
+                    if new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+                    else float(new_state.state)
                 )
             except (ValueError, TypeError):
                 self.sensor_value = None
                 _LOGGER.warning("State is not numerical")
 
-            hass.async_add_job(self.async_update_ha_state, True)
+            self._update_state()
+            self.async_write_ha_state()
 
         async_track_state_change_event(
             hass, [entity_id], async_threshold_sensor_state_listener
@@ -144,7 +155,7 @@ class ThresholdSensor(BinarySensorEntity):
             return TYPE_UPPER
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
             ATTR_ENTITY_ID: self._entity_id,
@@ -156,8 +167,9 @@ class ThresholdSensor(BinarySensorEntity):
             ATTR_UPPER: self._threshold_upper,
         }
 
-    async def async_update(self):
-        """Get the latest data and updates the states."""
+    @callback
+    def _update_state(self):
+        """Update the state."""
 
         def below(threshold):
             """Determine if the sensor value is below a threshold."""

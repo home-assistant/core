@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "\u91cd\u65b0\u8ba4\u8bc1\u6210\u529f"
+        },
+        "error": {
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
+            "invalid_auth": "\u9a8c\u8bc1\u7801\u65e0\u6548"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "API Token",
+                    "description": "\u4f7f\u7528\u60a8\u7684 Cloudflare \u5e10\u6237\u91cd\u65b0\u8fdb\u884c\u8eab\u4efd\u9a8c\u8bc1\u3002"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_token": "API Token"
+                },
+                "title": "\u8fde\u63a5\u81f3 Cloudflare"
+            },
+            "zone": {
+                "data": {
+                    "zone": "\u533a\u57df"
+                }
+            }
+        }
+    }
+}

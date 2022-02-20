@@ -1,0 +1,23 @@
+{
+  "config": {
+    "flow_title": "MusicCast: {name}",
+    "step": {
+      "user": {
+        "description": "Set up MusicCast to integrate with Home Assistant.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "yxc_control_url_missing": "The control URL is not given in the ssdp description."
+    },
+    "error": {
+      "no_musiccast_device": "This device seems to be no MusicCast Device."
+    }
+  }
+}

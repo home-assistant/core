@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Layanan sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung ke server. Periksa host dan port lalu coba lagi. Pastikan juga Anda menjalankan Minecraft dengan versi minimal 1.7 di server Anda.",
+            "invalid_ip": "Alamat IP tidak valid (alamat MAC tidak dapat ditentukan). Perbaiki, lalu coba lagi.",
+            "invalid_port": "Port harus berada dalam rentang dari 1024 hingga 65535. Perbaiki, lalu coba lagi."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nama"
+                },
+                "description": "Siapkan instans Minecraft Server Anda untuk pemantauan.",
+                "title": "Tautkan Server Minecraft Anda"
+            }
+        }
+    }
+}

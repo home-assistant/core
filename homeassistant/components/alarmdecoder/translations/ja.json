@@ -1,0 +1,74 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30c7\u30d0\u30a4\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059"
+        },
+        "create_entry": {
+            "default": "AlarmDecoder\u3068\u306e\u63a5\u7d9a\u306b\u6210\u529f\u3057\u307e\u3057\u305f\u3002"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f"
+        },
+        "step": {
+            "protocol": {
+                "data": {
+                    "device_baudrate": "\u30c7\u30d0\u30a4\u30b9\u306e\u30dc\u30fc\u30ec\u30fc\u30c8",
+                    "device_path": "\u30c7\u30d0\u30a4\u30b9\u306e\u30d1\u30b9",
+                    "host": "\u30db\u30b9\u30c8",
+                    "port": "\u30dd\u30fc\u30c8"
+                },
+                "title": "\u63a5\u7d9a\u8a2d\u5b9a\u306e\u69cb\u6210"
+            },
+            "user": {
+                "data": {
+                    "protocol": "\u30d7\u30ed\u30c8\u30b3\u30eb"
+                },
+                "title": "AlarmDecoder\u30d7\u30ed\u30c8\u30b3\u30eb\u3092\u9078\u629e"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "int": "\u4ee5\u4e0b\u306e\u30d5\u30a3\u30fc\u30eb\u30c9\u306f\u6574\u6570\u3067\u3042\u308b\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059\u3002",
+            "loop_range": "RF\u30eb\u30fc\u30d7\u306f1\u304b\u30894\u307e\u3067\u306e\u6574\u6570\u3067\u306a\u3051\u308c\u3070\u306a\u308a\u307e\u305b\u3093\u3002",
+            "loop_rfid": "RF\u30eb\u30fc\u30d7\u306fRF\u30b7\u30ea\u30a2\u30eb\u306a\u3057\u3067\u306f\u4f7f\u7528\u3067\u304d\u307e\u305b\u3093\u3002",
+            "relay_inclusive": "\u30ea\u30ec\u30fc\u30a2\u30c9\u30ec\u30b9\u3068\u30ea\u30ec\u30fc\u30c1\u30e3\u30cd\u30eb\u306f\u76f8\u4e92\u306b\u4f9d\u5b58\u3057\u3066\u3044\u308b\u305f\u3081\u3001\u4e00\u7dd2\u306b\u542b\u3081\u308b\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059\u3002"
+        },
+        "step": {
+            "arm_settings": {
+                "data": {
+                    "alt_night_mode": "\u4ee3\u66ff\u30ca\u30a4\u30c8\u30e2\u30fc\u30c9",
+                    "auto_bypass": "\u8b66\u6212\u306e\u30aa\u30fc\u30c8\u30d0\u30a4\u30d1\u30b9",
+                    "code_arm_required": "\u8b66\u6212\u306b\u5fc5\u8981\u306a\u30b3\u30fc\u30c9"
+                },
+                "title": "AlarmDecoder\u306e\u8a2d\u5b9a"
+            },
+            "init": {
+                "data": {
+                    "edit_select": "\u7de8\u96c6"
+                },
+                "description": "\u4f55\u3092\u7de8\u96c6\u3057\u307e\u3059\u304b\uff1f",
+                "title": "AlarmDecoder\u306e\u8a2d\u5b9a"
+            },
+            "zone_details": {
+                "data": {
+                    "zone_loop": "RF\u30eb\u30fc\u30d7",
+                    "zone_name": "\u30be\u30fc\u30f3\u540d",
+                    "zone_relayaddr": "\u30ea\u30ec\u30fc\u30a2\u30c9\u30ec\u30b9",
+                    "zone_relaychan": "\u30ea\u30ec\u30fc\u30c1\u30e3\u30cd\u30eb",
+                    "zone_rfid": "RF\u30b7\u30ea\u30a2\u30eb",
+                    "zone_type": "\u30be\u30fc\u30f3\u306e\u7a2e\u985e"
+                },
+                "description": "{zone_number} \u306e\u8a73\u7d30\u3092\u5165\u529b\u3057\u307e\u3059\u3002 {zone_number} \u3092\u524a\u9664\u3059\u308b\u306b\u306f\u3001\u30be\u30fc\u30f3\u540d\u3092\u7a7a\u767d\u306e\u307e\u307e\u306b\u3057\u307e\u3059\u3002",
+                "title": "AlarmDecoder\u306e\u8a2d\u5b9a"
+            },
+            "zone_select": {
+                "data": {
+                    "zone_number": "\u30be\u30fc\u30f3\u756a\u53f7"
+                },
+                "description": "\u8ffd\u52a0\u3001\u7de8\u96c6\u3001\u307e\u305f\u306f\u524a\u9664\u3059\u308b\u30be\u30fc\u30f3\u756a\u53f7\u3092\u5165\u529b\u3057\u307e\u3059\u3002",
+                "title": "AlarmDecoder\u306e\u8a2d\u5b9a"
+            }
+        }
+    }
+}

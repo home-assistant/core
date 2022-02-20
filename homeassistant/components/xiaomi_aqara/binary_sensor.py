@@ -1,9 +1,15 @@
 """Support for Xiaomi aqara binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.core import callback
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import XiaomiDevice
 from .const import DOMAIN, GATEWAYS_KEY
@@ -22,29 +28,33 @@ DENSITY = "density"
 ATTR_DENSITY = "Density"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Perform the setup for Xiaomi devices."""
     entities = []
     gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
     for entity in gateway.devices["binary_sensor"]:
         model = entity["model"]
-        if model in ["motion", "sensor_motion", "sensor_motion.aq2"]:
+        if model in ("motion", "sensor_motion", "sensor_motion.aq2"):
             entities.append(XiaomiMotionSensor(entity, hass, gateway, config_entry))
-        elif model in ["magnet", "sensor_magnet", "sensor_magnet.aq2"]:
+        elif model in ("magnet", "sensor_magnet", "sensor_magnet.aq2"):
             entities.append(XiaomiDoorSensor(entity, gateway, config_entry))
         elif model == "sensor_wleak.aq1":
             entities.append(XiaomiWaterLeakSensor(entity, gateway, config_entry))
-        elif model in ["smoke", "sensor_smoke"]:
+        elif model in ("smoke", "sensor_smoke"):
             entities.append(XiaomiSmokeSensor(entity, gateway, config_entry))
-        elif model in ["natgas", "sensor_natgas"]:
+        elif model in ("natgas", "sensor_natgas"):
             entities.append(XiaomiNatgasSensor(entity, gateway, config_entry))
-        elif model in [
+        elif model in (
             "switch",
             "sensor_switch",
             "sensor_switch.aq2",
             "sensor_switch.aq3",
             "remote.b1acn01",
-        ]:
+        ):
             if "proto" not in entity or int(entity["proto"][0:1]) == 1:
                 data_key = "status"
             else:
@@ -52,13 +62,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entities.append(
                 XiaomiButton(entity, "Switch", data_key, hass, gateway, config_entry)
             )
-        elif model in [
+        elif model in (
             "86sw1",
             "sensor_86sw1",
             "sensor_86sw1.aq1",
             "remote.b186acn01",
             "remote.b186acn02",
-        ]:
+        ):
             if "proto" not in entity or int(entity["proto"][0:1]) == 1:
                 data_key = "channel_0"
             else:
@@ -68,13 +78,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     entity, "Wall Switch", data_key, hass, gateway, config_entry
                 )
             )
-        elif model in [
+        elif model in (
             "86sw2",
             "sensor_86sw2",
             "sensor_86sw2.aq1",
             "remote.b286acn01",
             "remote.b286acn02",
-        ]:
+        ):
             if "proto" not in entity or int(entity["proto"][0:1]) == 1:
                 data_key_left = "channel_0"
                 data_key_right = "channel_1"
@@ -111,9 +121,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     config_entry,
                 )
             )
-        elif model in ["cube", "sensor_cube", "sensor_cube.aqgl01"]:
+        elif model in ("cube", "sensor_cube", "sensor_cube.aqgl01"):
             entities.append(XiaomiCube(entity, hass, gateway, config_entry))
-        elif model in ["vibration", "vibration.aq1"]:
+        elif model in ("vibration", "vibration.aq1"):
             entities.append(
                 XiaomiVibration(entity, "Vibration", "status", gateway, config_entry)
             )
@@ -166,11 +176,16 @@ class XiaomiNatgasSensor(XiaomiBinarySensor):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {ATTR_DENSITY: self._density}
-        attrs.update(super().device_state_attributes)
+        attrs.update(super().extra_state_attributes)
         return attrs
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._state = False
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
@@ -210,10 +225,10 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {ATTR_NO_MOTION_SINCE: self._no_motion_since}
-        attrs.update(super().device_state_attributes)
+        attrs.update(super().extra_state_attributes)
         return attrs
 
     @callback
@@ -222,6 +237,11 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         self._unsub_set_no_motion = None
         self._state = False
         self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._state = False
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway.
@@ -250,7 +270,7 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
             _LOGGER.debug(
                 "Skipping heartbeat of the motion sensor. "
                 "It can introduce an incorrect state because of a firmware "
-                "bug (https://github.com/home-assistant/home-assistant/pull/"
+                "bug (https://github.com/home-assistant/core/pull/"
                 "11631#issuecomment-357507744)"
             )
             return
@@ -284,7 +304,7 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
             return True
 
 
-class XiaomiDoorSensor(XiaomiBinarySensor):
+class XiaomiDoorSensor(XiaomiBinarySensor, RestoreEntity):
     """Representation of a XiaomiDoorSensor."""
 
     def __init__(self, device, xiaomi_hub, config_entry):
@@ -295,15 +315,28 @@ class XiaomiDoorSensor(XiaomiBinarySensor):
         else:
             data_key = "window_status"
         super().__init__(
-            device, "Door Window Sensor", xiaomi_hub, data_key, "opening", config_entry,
+            device,
+            "Door Window Sensor",
+            xiaomi_hub,
+            data_key,
+            BinarySensorDeviceClass.OPENING,
+            config_entry,
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {ATTR_OPEN_SINCE: self._open_since}
-        attrs.update(super().device_state_attributes)
+        attrs.update(super().extra_state_attributes)
         return attrs
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        if (state := await self.async_get_last_state()) is None:
+            return
+
+        self._state = state.state == "on"
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
@@ -340,8 +373,18 @@ class XiaomiWaterLeakSensor(XiaomiBinarySensor):
         else:
             data_key = "wleak_status"
         super().__init__(
-            device, "Water Leak Sensor", xiaomi_hub, data_key, "moisture", config_entry,
+            device,
+            "Water Leak Sensor",
+            xiaomi_hub,
+            data_key,
+            BinarySensorDeviceClass.MOISTURE,
+            config_entry,
         )
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._state = False
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
@@ -375,11 +418,16 @@ class XiaomiSmokeSensor(XiaomiBinarySensor):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {ATTR_DENSITY: self._density}
-        attrs.update(super().device_state_attributes)
+        attrs.update(super().extra_state_attributes)
         return attrs
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._state = False
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
@@ -410,10 +458,10 @@ class XiaomiVibration(XiaomiBinarySensor):
         super().__init__(device, name, xiaomi_hub, data_key, None, config_entry)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {ATTR_LAST_ACTION: self._last_action}
-        attrs.update(super().device_state_attributes)
+        attrs.update(super().extra_state_attributes)
         return attrs
 
     def parse_data(self, data, raw_data):
@@ -445,10 +493,10 @@ class XiaomiButton(XiaomiBinarySensor):
         super().__init__(device, name, xiaomi_hub, data_key, None, config_entry)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {ATTR_LAST_ACTION: self._last_action}
-        attrs.update(super().device_state_attributes)
+        attrs.update(super().extra_state_attributes)
         return attrs
 
     def parse_data(self, data, raw_data):
@@ -505,10 +553,10 @@ class XiaomiCube(XiaomiBinarySensor):
         super().__init__(device, "Cube", xiaomi_hub, data_key, None, config_entry)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {ATTR_LAST_ACTION: self._last_action}
-        attrs.update(super().device_state_attributes)
+        attrs.update(super().extra_state_attributes)
         return attrs
 
     def parse_data(self, data, raw_data):

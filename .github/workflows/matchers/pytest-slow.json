@@ -1,0 +1,18 @@
+{
+  "problemMatcher": [
+    {
+      "owner": "python",
+      "pattern": [
+        {
+          "regexp": "^=+ slowest durations =+$"
+        },
+        {
+          "regexp": "^((.*s)\\s(call|setup|teardown)\\s+(.*)::(.*))$",
+          "message": 1,
+          "file": 2,
+          "loop": true
+        }
+      ]
+    }
+  ]
+}

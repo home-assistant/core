@@ -1,6 +1,12 @@
 {
     "device_automation": {
         "action_type": {
+            "close": "Zav\u0159\u00edt {entity_name}",
+            "close_tilt": "Sn\u00ed\u017eit n\u00e1klon {entity_name}",
+            "open": "Otev\u0159\u00edt {entity_name}",
+            "open_tilt": "Zv\u00fd\u0161it n\u00e1klon {entity_name}",
+            "set_position": "Nastavit pozici {entity_name}",
+            "set_tilt_position": "Nastavit n\u00e1klon {entity_name}",
             "stop": "Zastavit {entity_name}"
         },
         "condition_type": {
@@ -8,16 +14,24 @@
             "is_closing": "{entity_name} se zav\u00edr\u00e1",
             "is_open": "{entity_name} je otev\u0159eno",
             "is_opening": "{entity_name} se otev\u00edr\u00e1",
-            "is_position": "pozice {entity_name} je",
-            "is_tilt_position": "pozice naklon\u011bn\u00ed {entity_name} je"
+            "is_position": "Pozice {entity_name} je",
+            "is_tilt_position": "N\u00e1klon {entity_name} je"
+        },
+        "trigger_type": {
+            "closed": "{entity_name} zav\u0159eno",
+            "closing": "{entity_name} se zav\u00edr\u00e1",
+            "opened": "{entity_name} otev\u0159ena",
+            "opening": "{entity_name} se otv\u00edr\u00e1",
+            "position": "P\u0159i zm\u011bn\u011b pozice {entity_name}",
+            "tilt_position": "P\u0159i zm\u011bn\u011b n\u00e1klonu {entity_name}"
         }
     },
     "state": {
         "_": {
             "closed": "Zav\u0159eno",
-            "closing": "Zav\u00edr\u00e1n\u00ed",
+            "closing": "Zav\u00edr\u00e1 se",
             "open": "Otev\u0159eno",
-            "opening": "Otev\u00edr\u00e1n\u00ed",
+            "opening": "Otev\u00edr\u00e1 se",
             "stopped": "Zastaveno"
         }
     },

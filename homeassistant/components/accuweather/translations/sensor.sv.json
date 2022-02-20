@@ -1,0 +1,8 @@
+{
+    "state": {
+        "accuweather__pressure_tendency": {
+            "falling": "Fallande",
+            "rising": "Stigande"
+        }
+    }
+}

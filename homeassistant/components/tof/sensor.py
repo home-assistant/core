@@ -1,4 +1,5 @@
 """Platform for Time of Flight sensor VL53L1X from STMicroelectronics."""
+from __future__ import annotations
 
 import asyncio
 from functools import partial
@@ -8,14 +9,12 @@ from VL53L1X2 import VL53L1X  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components import rpi_gpio
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import CONF_NAME, LENGTH_MILLIMETERS
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
-
-LENGTH_MILLIMETERS = "mm"
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_I2C_ADDRESS = "i2c_address"
 CONF_I2C_BUS = "i2c_bus"
@@ -36,6 +35,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def init_tof_0(xshut, sensor):
     """XSHUT port LOW resets the device."""
@@ -50,8 +51,19 @@ def init_tof_1(xshut):
     rpi_gpio.write_output(xshut, 1)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Reset and initialize the VL53L1X ToF Sensor from STMicroelectronics."""
+    _LOGGER.warning(
+        "The Time of Flight integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
 
     name = config.get(CONF_NAME)
     bus_number = config.get(CONF_I2C_BUS)
@@ -70,7 +82,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(dev, True)
 
 
-class VL53L1XSensor(Entity):
+class VL53L1XSensor(SensorEntity):
     """Implementation of VL53L1X sensor."""
 
     def __init__(self, vl53l1x_sensor, name, unit, i2c_address):
@@ -88,12 +100,12 @@ class VL53L1XSensor(Entity):
         return self._name
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return self._unit_of_measurement
 

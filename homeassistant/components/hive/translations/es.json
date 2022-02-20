@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La cuenta ya ha sido configurada",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
+            "unknown_entry": "No se puede encontrar una entrada existente."
+        },
+        "error": {
+            "invalid_code": "No se ha podido iniciar la sesi\u00f3n en Hive. Tu c\u00f3digo de autenticaci\u00f3n de dos factores era incorrecto.",
+            "invalid_password": "No se ha podido iniciar la sesi\u00f3n en Hive. Contrase\u00f1a incorrecta, por favor, int\u00e9ntelo de nuevo.",
+            "invalid_username": "No se ha podido iniciar la sesi\u00f3n en Hive. No se reconoce su direcci\u00f3n de correo electr\u00f3nico.",
+            "no_internet_available": "Se requiere una conexi\u00f3n a Internet para conectarse a Hive.",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "C\u00f3digo de dos factores"
+                },
+                "description": "Introduzca su c\u00f3digo de autentificaci\u00f3n Hive. \n \n Introduzca el c\u00f3digo 0000 para solicitar otro c\u00f3digo.",
+                "title": "Autenticaci\u00f3n de dos factores de Hive."
+            },
+            "reauth": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Usuario"
+                },
+                "description": "Vuelva a introducir sus datos de acceso a Hive.",
+                "title": "Inicio de sesi\u00f3n en Hive"
+            },
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "scan_interval": "Intervalo de exploraci\u00f3n (segundos)",
+                    "username": "Usuario"
+                },
+                "description": "Ingrese su configuraci\u00f3n e informaci\u00f3n de inicio de sesi\u00f3n de Hive.",
+                "title": "Inicio de sesi\u00f3n en Hive"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "scan_interval": "Intervalo de exploraci\u00f3n (segundos)"
+                },
+                "description": "Actualice el intervalo de escaneo para buscar datos m\u00e1s a menudo.",
+                "title": "Opciones para Hive"
+            }
+        }
+    }
+}

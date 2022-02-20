@@ -1,6 +1,4 @@
 """Support for Hangouts notifications."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -17,8 +15,6 @@ from .const import (
     SERVICE_SEND_MESSAGE,
     TARGETS_SCHEMA,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_DEFAULT_CONVERSATIONS): [TARGETS_SCHEMA]}

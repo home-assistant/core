@@ -1,4 +1,19 @@
 {
+    "device_automation": {
+        "action_type": {
+            "lock": "{entity_name}: \u0437\u0430\u0431\u043b\u043e\u043a\u0443\u0432\u0430\u0442\u0438",
+            "open": "{entity_name}: \u0432\u0456\u0434\u043a\u0440\u0438\u0442\u0438",
+            "unlock": "{entity_name}: \u0440\u043e\u0437\u0431\u043b\u043e\u043a\u0443\u0432\u0430\u0442\u0438"
+        },
+        "condition_type": {
+            "is_locked": "{entity_name} \u0432 \u0437\u0430\u0431\u043b\u043e\u043a\u043e\u0432\u0430\u043d\u043e\u043c\u0443 \u0441\u0442\u0430\u043d\u0456",
+            "is_unlocked": "{entity_name} \u0432 \u0440\u043e\u0437\u0431\u043b\u043e\u043a\u043e\u0432\u0430\u043d\u043e\u043c\u0443 \u0441\u0442\u0430\u043d\u0456"
+        },
+        "trigger_type": {
+            "locked": "{entity_name} \u0431\u043b\u043e\u043a\u0443\u0454\u0442\u044c\u0441\u044f",
+            "unlocked": "{entity_name} \u0440\u043e\u0437\u0431\u043b\u043e\u043a\u0443\u0454\u0442\u044c\u0441\u044f"
+        }
+    },
     "state": {
         "_": {
             "locked": "\u0417\u0430\u0431\u043b\u043e\u043a\u043e\u0432\u0430\u043d\u043e",

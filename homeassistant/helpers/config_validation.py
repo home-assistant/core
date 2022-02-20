@@ -1,4 +1,8 @@
 """Helpers for config validation using voluptuous."""
+from __future__ import annotations
+
+from collections.abc import Callable, Hashable
+import contextlib
 from datetime import (
     date as date_sys,
     datetime as datetime_sys,
@@ -11,32 +15,23 @@ import logging
 from numbers import Number
 import os
 import re
-from socket import _GLOBAL_DEFAULT_TIMEOUT  # type: ignore # private, not in typeshed
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Hashable,
-    List,
-    Optional,
-    Pattern,
-    Type,
-    TypeVar,
-    Union,
-    cast,
+from socket import (  # type: ignore[attr-defined]  # private, not in typeshed
+    _GLOBAL_DEFAULT_TIMEOUT,
 )
+from typing import Any, TypeVar, cast, overload
 from urllib.parse import urlparse
 from uuid import UUID
 
-from pkg_resources import parse_version
 import voluptuous as vol
 import voluptuous_serialize
 
 from homeassistant.const import (
     ATTR_AREA_ID,
+    ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     CONF_ABOVE,
     CONF_ALIAS,
+    CONF_ATTRIBUTE,
     CONF_BELOW,
     CONF_CHOOSE,
     CONF_CONDITION,
@@ -53,6 +48,7 @@ from homeassistant.const import (
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
     CONF_FOR,
+    CONF_ID,
     CONF_PLATFORM,
     CONF_REPEAT,
     CONF_SCAN_INTERVAL,
@@ -61,11 +57,14 @@ from homeassistant.const import (
     CONF_SERVICE,
     CONF_SERVICE_TEMPLATE,
     CONF_STATE,
+    CONF_TARGET,
     CONF_TIMEOUT,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
     CONF_UNTIL,
     CONF_VALUE_TEMPLATE,
+    CONF_VARIABLES,
+    CONF_WAIT_FOR_TRIGGER,
     CONF_WAIT_TEMPLATE,
     CONF_WHILE,
     ENTITY_MATCH_ALL,
@@ -75,14 +74,13 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     WEEKDAYS,
-    __version__,
 )
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template as template_helper
-from homeassistant.helpers.logging import KeywordStyleAdapter
-from homeassistant.util import slugify as util_slugify
+from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
 import homeassistant.util.dt as dt_util
+
+from . import script_variables as script_variables_helper, template as template_helper
 
 # pylint: disable=invalid-name
 
@@ -92,6 +90,7 @@ TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
 small_float = vol.All(vol.Coerce(float), vol.Range(min=0, max=1))
 positive_int = vol.All(vol.Coerce(int), vol.Range(min=0))
+positive_float = vol.All(vol.Coerce(float), vol.Range(min=0))
 latitude = vol.All(
     vol.Coerce(float), vol.Range(min=-90, max=90), msg="invalid latitude"
 )
@@ -106,34 +105,49 @@ port = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
 T = TypeVar("T")
 
 
+def path(value: Any) -> str:
+    """Validate it's a safe path."""
+    if not isinstance(value, str):
+        raise vol.Invalid("Expected a string")
+
+    try:
+        raise_if_invalid_path(value)
+    except ValueError as err:
+        raise vol.Invalid("Invalid path") from err
+
+    return value
+
+
 # Adapted from:
 # https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
-def has_at_least_one_key(*keys: str) -> Callable:
+def has_at_least_one_key(*keys: Any) -> Callable[[dict], dict]:
     """Validate that at least one key exists."""
 
-    def validate(obj: Dict) -> Dict:
+    def validate(obj: dict) -> dict:
         """Test keys exist in dict."""
         if not isinstance(obj, dict):
             raise vol.Invalid("expected dictionary")
 
-        for k in obj.keys():
+        for k in obj:
             if k in keys:
                 return obj
-        raise vol.Invalid("must contain at least one of {}.".format(", ".join(keys)))
+        expected = ", ".join(str(k) for k in keys)
+        raise vol.Invalid(f"must contain at least one of {expected}.")
 
     return validate
 
 
-def has_at_most_one_key(*keys: str) -> Callable[[Dict], Dict]:
+def has_at_most_one_key(*keys: Any) -> Callable[[dict], dict]:
     """Validate that zero keys exist or one key exists."""
 
-    def validate(obj: Dict) -> Dict:
+    def validate(obj: dict) -> dict:
         """Test zero keys exist or one key exists in dict."""
         if not isinstance(obj, dict):
             raise vol.Invalid("expected dictionary")
 
         if len(set(keys) & set(obj)) > 1:
-            raise vol.Invalid("must contain at most one of {}.".format(", ".join(keys)))
+            expected = ", ".join(str(k) for k in keys)
+            raise vol.Invalid(f"must contain at most one of {expected}.")
         return obj
 
     return validate
@@ -151,8 +165,19 @@ def boolean(value: Any) -> bool:
             return False
     elif isinstance(value, Number):
         # type ignore: https://github.com/python/mypy/issues/3186
-        return value != 0  # type: ignore
+        return value != 0  # type: ignore[comparison-overlap]
     raise vol.Invalid(f"invalid boolean value {value}")
+
+
+_WS = re.compile("\\s*")
+
+
+def whitespace(value: Any) -> str:
+    """Validate result contains only whitespace."""
+    if isinstance(value, str) and _WS.fullmatch(value):
+        return value
+
+    raise vol.Invalid(f"contains non-whitespace: {value}")
 
 
 def isdevice(value: Any) -> str:
@@ -160,8 +185,8 @@ def isdevice(value: Any) -> str:
     try:
         os.stat(value)
         return str(value)
-    except OSError:
-        raise vol.Invalid(f"No device at {value} found")
+    except OSError as err:
+        raise vol.Invalid(f"No device at {value} found") from err
 
 
 def matches_regex(regex: str) -> Callable[[Any], str]:
@@ -183,17 +208,17 @@ def matches_regex(regex: str) -> Callable[[Any], str]:
     return validator
 
 
-def is_regex(value: Any) -> Pattern[Any]:
+def is_regex(value: Any) -> re.Pattern[Any]:
     """Validate that a string is a valid regular expression."""
     try:
         r = re.compile(value)
         return r
-    except TypeError:
+    except TypeError as err:
         raise vol.Invalid(
             f"value {value} is of the wrong type for a regular expression"
-        )
-    except re.error:
-        raise vol.Invalid(f"value {value} is not a valid regular expression")
+        ) from err
+    except re.error as err:
+        raise vol.Invalid(f"value {value} is not a valid regular expression") from err
 
 
 def isfile(value: Any) -> str:
@@ -222,11 +247,26 @@ def isdir(value: Any) -> str:
     return dir_in
 
 
-def ensure_list(value: Union[T, List[T], None]) -> List[T]:
+@overload
+def ensure_list(value: None) -> list[Any]:
+    ...
+
+
+@overload
+def ensure_list(value: list[T]) -> list[T]:
+    ...
+
+
+@overload
+def ensure_list(value: list[T] | T) -> list[T]:
+    ...
+
+
+def ensure_list(value: T | None) -> list[T] | list[Any]:
     """Wrap value in list if it is not one."""
     if value is None:
         return []
-    return value if isinstance(value, list) else [value]
+    return cast("list[T]", value) if isinstance(value, list) else [value]
 
 
 def entity_id(value: Any) -> str:
@@ -235,17 +275,37 @@ def entity_id(value: Any) -> str:
     if valid_entity_id(str_value):
         return str_value
 
-    raise vol.Invalid(f"Entity ID {value} is an invalid entity id")
+    raise vol.Invalid(f"Entity ID {value} is an invalid entity ID")
 
 
-def entity_ids(value: Union[str, List]) -> List[str]:
-    """Validate Entity IDs."""
+def entity_id_or_uuid(value: Any) -> str:
+    """Validate Entity specified by entity_id or uuid."""
+    with contextlib.suppress(vol.Invalid):
+        return entity_id(value)
+    with contextlib.suppress(vol.Invalid):
+        return fake_uuid4_hex(value)
+    raise vol.Invalid(f"Entity {value} is neither a valid entity ID nor a valid UUID")
+
+
+def _entity_ids(value: str | list, allow_uuid: bool) -> list[str]:
+    """Help validate entity IDs or UUIDs."""
     if value is None:
         raise vol.Invalid("Entity IDs can not be None")
     if isinstance(value, str):
         value = [ent_id.strip() for ent_id in value.split(",")]
 
-    return [entity_id(ent_id) for ent_id in value]
+    validator = entity_id_or_uuid if allow_uuid else entity_id
+    return [validator(ent_id) for ent_id in value]
+
+
+def entity_ids(value: str | list) -> list[str]:
+    """Validate Entity IDs."""
+    return _entity_ids(value, False)
+
+
+def entity_ids_or_uuids(value: str | list) -> list[str]:
+    """Validate entities specified by entity IDs or UUIDs."""
+    return _entity_ids(value, True)
 
 
 comp_entity_ids = vol.Any(
@@ -253,25 +313,43 @@ comp_entity_ids = vol.Any(
 )
 
 
-def entity_domain(domain: str) -> Callable[[Any], str]:
-    """Validate that entity belong to domain."""
+comp_entity_ids_or_uuids = vol.Any(
+    vol.All(vol.Lower, vol.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_NONE)),
+    entity_ids_or_uuids,
+)
 
-    def validate(value: Any) -> str:
+
+def entity_domain(domain: str | list[str]) -> Callable[[Any], str]:
+    """Validate that entity belong to domain."""
+    ent_domain = entities_domain(domain)
+
+    def validate(value: str) -> str:
         """Test if entity domain is domain."""
-        ent_domain = entities_domain(domain)
-        return ent_domain(value)[0]
+        validated = ent_domain(value)
+        if len(validated) != 1:
+            raise vol.Invalid(f"Expected exactly 1 entity, got {len(validated)}")
+        return validated[0]
 
     return validate
 
 
-def entities_domain(domain: str) -> Callable[[Union[str, List]], List[str]]:
+def entities_domain(domain: str | list[str]) -> Callable[[str | list], list[str]]:
     """Validate that entities belong to domain."""
+    if isinstance(domain, str):
 
-    def validate(values: Union[str, List]) -> List[str]:
+        def check_invalid(val: str) -> bool:
+            return val != domain
+
+    else:
+
+        def check_invalid(val: str) -> bool:
+            return val not in domain
+
+    def validate(values: str | list) -> list[str]:
         """Test if entity domain is domain."""
         values = entity_ids(values)
         for ent_id in values:
-            if split_entity_id(ent_id)[0] != domain:
+            if check_invalid(split_entity_id(ent_id)[0]):
                 raise vol.Invalid(
                     f"Entity ID '{ent_id}' does not belong to domain '{domain}'"
                 )
@@ -280,7 +358,7 @@ def entities_domain(domain: str) -> Callable[[Union[str, List]], List[str]]:
     return validate
 
 
-def enum(enumClass: Type[Enum]) -> vol.All:
+def enum(enumClass: type[Enum]) -> vol.All:
     """Create validator for specified enum."""
     return vol.All(vol.In(enumClass.__members__), enumClass.__getitem__)
 
@@ -318,8 +396,8 @@ def time(value: Any) -> time_sys:
 
     try:
         time_val = dt_util.parse_time(value)
-    except TypeError:
-        raise vol.Invalid("Not a parseable type")
+    except TypeError as err:
+        raise vol.Invalid("Not a parseable type") from err
 
     if time_val is None:
         raise vol.Invalid(f"Invalid time specified: {value}")
@@ -334,8 +412,8 @@ def date(value: Any) -> date_sys:
 
     try:
         date_val = dt_util.parse_date(value)
-    except TypeError:
-        raise vol.Invalid("Not a parseable type")
+    except TypeError as err:
+        raise vol.Invalid("Not a parseable type") from err
 
     if date_val is None:
         raise vol.Invalid("Could not parse date")
@@ -345,7 +423,7 @@ def date(value: Any) -> date_sys:
 
 def time_period_str(value: str) -> timedelta:
     """Validate and transform time offset."""
-    if isinstance(value, int):  # type: ignore
+    if isinstance(value, int):  # type: ignore[unreachable]
         raise vol.Invalid("Make sure you wrap time values in quotes")
     if not isinstance(value, str):
         raise vol.Invalid(TIME_PERIOD_ERROR.format(value))
@@ -367,8 +445,8 @@ def time_period_str(value: str) -> timedelta:
             second = float(parsed[2])
         except IndexError:
             second = 0
-    except ValueError:
-        raise vol.Invalid(TIME_PERIOD_ERROR.format(value))
+    except ValueError as err:
+        raise vol.Invalid(TIME_PERIOD_ERROR.format(value)) from err
 
     offset = timedelta(hours=hour, minutes=minute, seconds=second)
 
@@ -378,12 +456,12 @@ def time_period_str(value: str) -> timedelta:
     return offset
 
 
-def time_period_seconds(value: Union[float, str]) -> timedelta:
+def time_period_seconds(value: float | str) -> timedelta:
     """Validate and transform seconds to a time offset."""
     try:
         return timedelta(seconds=float(value))
-    except (ValueError, TypeError):
-        raise vol.Invalid(f"Expected seconds, got {value}")
+    except (ValueError, TypeError) as err:
+        raise vol.Invalid(f"Expected seconds, got {value}") from err
 
 
 time_period = vol.Any(time_period_str, time_period_seconds, timedelta, time_period_dict)
@@ -402,9 +480,10 @@ def positive_timedelta(value: timedelta) -> timedelta:
 
 
 positive_time_period_dict = vol.All(time_period_dict, positive_timedelta)
+positive_time_period = vol.All(time_period, positive_timedelta)
 
 
-def remove_falsy(value: List[T]) -> List[T]:
+def remove_falsy(value: list[T]) -> list[T]:
     """Remove falsy values from a list."""
     return [v for v in value if v]
 
@@ -415,6 +494,7 @@ def service(value: Any) -> str:
     str_value = string(value).lower()
     if valid_entity_id(str_value):
         return str_value
+
     raise vol.Invalid(f"Service {value} does not match format <domain>.<name>")
 
 
@@ -430,7 +510,7 @@ def slug(value: Any) -> str:
 
 
 def schema_with_slug_keys(
-    value_schema: Union[T, Callable], *, slug_validator: Callable[[Any], str] = slug
+    value_schema: T | Callable, *, slug_validator: Callable[[Any], str] = slug
 ) -> Callable:
     """Ensure dicts have slugs as keys.
 
@@ -439,7 +519,7 @@ def schema_with_slug_keys(
     """
     schema = vol.Schema({str: value_schema})
 
-    def verify(value: Dict) -> Dict:
+    def verify(value: dict) -> dict:
         """Validate all keys are slugs and then the value_schema."""
         if not isinstance(value, dict):
             raise vol.Invalid("expected dictionary")
@@ -447,7 +527,7 @@ def schema_with_slug_keys(
         for key in value.keys():
             slug_validator(key)
 
-        return cast(Dict, schema(value))
+        return cast(dict, schema(value))
 
     return verify
 
@@ -466,7 +546,11 @@ def string(value: Any) -> str:
     """Coerce value to string, except for None."""
     if value is None:
         raise vol.Invalid("string value is None")
-    if isinstance(value, (list, dict)):
+
+    if isinstance(value, template_helper.ResultWrapper):
+        value = value.render_result
+
+    elif isinstance(value, (list, dict)):
         raise vol.Invalid("value should be a string")
 
     return str(value)
@@ -496,21 +580,37 @@ unit_system = vol.All(
 )
 
 
-def template(value: Optional[Any]) -> template_helper.Template:
+def template(value: Any | None) -> template_helper.Template:
     """Validate a jinja2 template."""
-
     if value is None:
         raise vol.Invalid("template value is None")
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
 
-    template_value = template_helper.Template(str(value))  # type: ignore
+    template_value = template_helper.Template(str(value))  # type: ignore[no-untyped-call]
 
     try:
         template_value.ensure_valid()
-        return cast(template_helper.Template, template_value)
+        return template_value
     except TemplateError as ex:
-        raise vol.Invalid(f"invalid template ({ex})")
+        raise vol.Invalid(f"invalid template ({ex})") from ex
+
+
+def dynamic_template(value: Any | None) -> template_helper.Template:
+    """Validate a dynamic (non static) jinja2 template."""
+    if value is None:
+        raise vol.Invalid("template value is None")
+    if isinstance(value, (list, dict, template_helper.Template)):
+        raise vol.Invalid("template value should be a string")
+    if not template_helper.is_template_string(str(value)):
+        raise vol.Invalid("template value does not contain a dynamic template")
+
+    template_value = template_helper.Template(str(value))  # type: ignore[no-untyped-call]
+    try:
+        template_value.ensure_valid()
+        return template_value
+    except TemplateError as ex:
+        raise vol.Invalid(f"invalid template ({ex})") from ex
 
 
 def template_complex(value: Any) -> Any:
@@ -521,13 +621,19 @@ def template_complex(value: Any) -> Any:
             return_list[idx] = template_complex(element)
         return return_list
     if isinstance(value, dict):
-        return_dict = value.copy()
-        for key, element in return_dict.items():
-            return_dict[key] = template_complex(element)
-        return return_dict
-    if isinstance(value, str):
+        return {
+            template_complex(key): template_complex(element)
+            for key, element in value.items()
+        }
+    if isinstance(value, str) and template_helper.is_template_string(value):
         return template(value)
+
     return value
+
+
+positive_time_period_template = vol.Any(
+    positive_time_period, template, template_complex
+)
 
 
 def datetime(value: Any) -> datetime_sys:
@@ -559,7 +665,7 @@ def time_zone(value: str) -> str:
 weekdays = vol.All(ensure_list, [vol.In(WEEKDAYS)])
 
 
-def socket_timeout(value: Optional[Any]) -> object:
+def socket_timeout(value: Any | None) -> object:
     """Validate timeout float > 0.0.
 
     None coerced to socket._GLOBAL_DEFAULT_TIMEOUT bare object.
@@ -586,6 +692,16 @@ def url(value: Any) -> str:
     raise vol.Invalid("invalid url")
 
 
+def url_no_path(value: Any) -> str:
+    """Validate a url without a path."""
+    url_in = url(value)
+
+    if urlparse(url_in).path not in ("", "/"):
+        raise vol.Invalid("url it not allowed to have a path component")
+
+    return url_in
+
+
 def x10_address(value: str) -> str:
     """Validate an x10 address."""
     regex = re.compile(r"([A-Pa-p]{1})(?:[2-9]|1[0-6]?)$")
@@ -608,7 +724,17 @@ def uuid4_hex(value: Any) -> str:
     return result.hex
 
 
-def ensure_list_csv(value: Any) -> List:
+_FAKE_UUID_4_HEX = re.compile(r"^[0-9a-f]{32}$")
+
+
+def fake_uuid4_hex(value: Any) -> str:
+    """Validate a fake v4 UUID generated by random_uuid_hex."""
+    if not _FAKE_UUID_4_HEX.match(value):
+        raise vol.Invalid("Invalid UUID")
+    return cast(str, value)  # Pattern.match throws if input is not a string
+
+
+def ensure_list_csv(value: Any) -> list:
     """Ensure that input is a list or make one from comma-separated string."""
     if isinstance(value, str):
         return [member.strip() for member in value.split(",")]
@@ -634,86 +760,61 @@ class multi_select:
         return selected
 
 
-def deprecated(
+def _deprecated_or_removed(
     key: str,
-    replacement_key: Optional[str] = None,
-    invalidation_version: Optional[str] = None,
-    default: Optional[Any] = None,
-) -> Callable[[Dict], Dict]:
+    replacement_key: str | None,
+    default: Any | None,
+    raise_if_present: bool,
+    option_removed: bool,
+) -> Callable[[dict], dict]:
     """
-    Log key as deprecated and provide a replacement (if exists).
+    Log key as deprecated and provide a replacement (if exists) or fail.
 
     Expected behavior:
-        - Outputs the appropriate deprecation warning if key is detected
+        - Outputs or throws the appropriate deprecation warning if key is detected
+        - Outputs or throws the appropriate error if key is detected and removed from support
         - Processes schema moving the value from key to replacement_key
         - Processes schema changing nothing if only replacement_key provided
         - No warning if only replacement_key provided
         - No warning if neither key nor replacement_key are provided
             - Adds replacement_key with default value in this case
-        - Once the invalidation_version is crossed, raises vol.Invalid if key
-        is detected
     """
-    module = inspect.getmodule(inspect.stack()[1][0])
+    module = inspect.getmodule(inspect.stack(context=0)[2].frame)
     if module is not None:
         module_name = module.__name__
     else:
         # If Python is unable to access the sources files, the call stack frame
         # will be missing information, so let's guard.
-        # https://github.com/home-assistant/home-assistant/issues/24982
+        # https://github.com/home-assistant/core/issues/24982
         module_name = __name__
-
-    if replacement_key and invalidation_version:
-        warning = (
-            "The '{key}' option is deprecated,"
-            " please replace it with '{replacement_key}'."
-            " This option {invalidation_status} invalid in version"
-            " {invalidation_version}"
-        )
-    elif replacement_key:
-        warning = (
-            "The '{key}' option is deprecated,"
-            " please replace it with '{replacement_key}'"
-        )
-    elif invalidation_version:
-        warning = (
-            "The '{key}' option is deprecated,"
-            " please remove it from your configuration."
-            " This option {invalidation_status} invalid in version"
-            " {invalidation_version}"
-        )
+    if option_removed:
+        logger_func = logging.getLogger(module_name).error
+        option_status = "has been removed"
     else:
-        warning = (
-            "The '{key}' option is deprecated,"
-            " please remove it from your configuration"
-        )
+        logger_func = logging.getLogger(module_name).warning
+        option_status = "is deprecated"
 
-    def check_for_invalid_version() -> None:
-        """Raise error if current version has reached invalidation."""
-        if not invalidation_version:
-            return
-
-        if parse_version(__version__) >= parse_version(invalidation_version):
-            raise vol.Invalid(
-                warning.format(
-                    key=key,
-                    replacement_key=replacement_key,
-                    invalidation_status="became",
-                    invalidation_version=invalidation_version,
-                )
-            )
-
-    def validator(config: Dict) -> Dict:
-        """Check if key is in config and log warning."""
+    def validator(config: dict) -> dict:
+        """Check if key is in config and log warning or error."""
         if key in config:
-            check_for_invalid_version()
-            KeywordStyleAdapter(logging.getLogger(module_name)).warning(
-                warning,
-                key=key,
-                replacement_key=replacement_key,
-                invalidation_status="will become",
-                invalidation_version=invalidation_version,
-            )
+            try:
+                near = f"near {config.__config_file__}:{config.__line__} "  # type: ignore[attr-defined]
+            except AttributeError:
+                near = ""
+            arguments: tuple[str, ...]
+            if replacement_key:
+                warning = "The '%s' option %s%s, please replace it with '%s'"
+                arguments = (key, near, option_status, replacement_key)
+            else:
+                warning = (
+                    "The '%s' option %s%s, please remove it from your configuration"
+                )
+                arguments = (key, near, option_status)
 
+            if raise_if_present:
+                raise vol.Invalid(warning % arguments)
+
+            logger_func(warning, *arguments)
             value = config[key]
             if replacement_key:
                 config.pop(key)
@@ -733,26 +834,82 @@ def deprecated(
     return validator
 
 
+def deprecated(
+    key: str,
+    replacement_key: str | None = None,
+    default: Any | None = None,
+    raise_if_present: bool | None = False,
+) -> Callable[[dict], dict]:
+    """
+    Log key as deprecated and provide a replacement (if exists).
+
+    Expected behavior:
+        - Outputs the appropriate deprecation warning if key is detected or raises an exception
+        - Processes schema moving the value from key to replacement_key
+        - Processes schema changing nothing if only replacement_key provided
+        - No warning if only replacement_key provided
+        - No warning if neither key nor replacement_key are provided
+            - Adds replacement_key with default value in this case
+    """
+    return _deprecated_or_removed(
+        key,
+        replacement_key=replacement_key,
+        default=default,
+        raise_if_present=raise_if_present or False,
+        option_removed=False,
+    )
+
+
+def removed(
+    key: str,
+    default: Any | None = None,
+    raise_if_present: bool | None = True,
+) -> Callable[[dict], dict]:
+    """
+    Log key as deprecated and fail the config validation.
+
+    Expected behavior:
+        - Outputs the appropriate error if key is detected and removed from support or raises an exception
+    """
+    return _deprecated_or_removed(
+        key,
+        replacement_key=None,
+        default=default,
+        raise_if_present=raise_if_present or False,
+        option_removed=True,
+    )
+
+
 def key_value_schemas(
-    key: str, value_schemas: Dict[str, vol.Schema]
-) -> Callable[[Any], Dict[str, Any]]:
+    key: str,
+    value_schemas: dict[Hashable, vol.Schema],
+    default_schema: vol.Schema | None = None,
+    default_description: str | None = None,
+) -> Callable[[Any], dict[Hashable, Any]]:
     """Create a validator that validates based on a value for specific key.
 
     This gives better error messages.
     """
 
-    def key_value_validator(value: Any) -> Dict[str, Any]:
+    def key_value_validator(value: Any) -> dict[Hashable, Any]:
         if not isinstance(value, dict):
             raise vol.Invalid("Expected a dictionary")
 
         key_value = value.get(key)
 
-        if key_value not in value_schemas:
-            raise vol.Invalid(
-                f"Unexpected value for {key}: '{key_value}'. Expected {', '.join(value_schemas)}"
-            )
+        if isinstance(key_value, Hashable) and key_value in value_schemas:
+            return cast(dict[Hashable, Any], value_schemas[key_value](value))
 
-        return cast(Dict[str, Any], value_schemas[key_value](value))
+        if default_schema:
+            with contextlib.suppress(vol.Invalid):
+                return cast(dict[Hashable, Any], default_schema(value))
+
+        alternatives = ", ".join(str(key) for key in value_schemas)
+        if default_description:
+            alternatives += ", " + default_description
+        raise vol.Invalid(
+            f"Unexpected value for {key}: '{key_value}'. Expected {alternatives}"
+        )
 
     return key_value_validator
 
@@ -762,10 +919,10 @@ def key_value_schemas(
 
 def key_dependency(
     key: Hashable, dependency: Hashable
-) -> Callable[[Dict[Hashable, Any]], Dict[Hashable, Any]]:
+) -> Callable[[dict[Hashable, Any]], dict[Hashable, Any]]:
     """Validate that all dependencies exist for key."""
 
-    def validator(value: Dict[Hashable, Any]) -> Dict[Hashable, Any]:
+    def validator(value: dict[Hashable, Any]) -> dict[Hashable, Any]:
         """Test dependencies."""
         if not isinstance(value, dict):
             raise vol.Invalid("key dependencies require a dict")
@@ -782,11 +939,22 @@ def key_dependency(
 
 def custom_serializer(schema: Any) -> Any:
     """Serialize additional types for voluptuous_serialize."""
+    from . import selector  # pylint: disable=import-outside-toplevel
+
     if schema is positive_time_period_dict:
         return {"type": "positive_time_period_dict"}
 
+    if schema is string:
+        return {"type": "string"}
+
+    if schema is boolean:
+        return {"type": "boolean"}
+
     if isinstance(schema, multi_select):
         return {"type": "multi_select", "options": schema.options}
+
+    if isinstance(schema, selector.Selector):
+        return schema.serialize()
 
     return voluptuous_serialize.UNSUPPORTED
 
@@ -802,26 +970,62 @@ PLATFORM_SCHEMA = vol.Schema(
 
 PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-ENTITY_SERVICE_FIELDS = (ATTR_ENTITY_ID, ATTR_AREA_ID)
+ENTITY_SERVICE_FIELDS = {
+    # Either accept static entity IDs, a single dynamic template or a mixed list
+    # of static and dynamic templates. While this could be solved with a single
+    # complex template, handling it like this, keeps config validation useful.
+    vol.Optional(ATTR_ENTITY_ID): vol.Any(
+        comp_entity_ids, dynamic_template, vol.All(list, template_complex)
+    ),
+    vol.Optional(ATTR_DEVICE_ID): vol.Any(
+        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+    ),
+    vol.Optional(ATTR_AREA_ID): vol.Any(
+        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+    ),
+}
+
+TARGET_SERVICE_FIELDS = {
+    # Same as ENTITY_SERVICE_FIELDS but supports specifying entity by entity registry
+    # ID.
+    # Either accept static entity IDs, a single dynamic template or a mixed list
+    # of static and dynamic templates. While this could be solved with a single
+    # complex template, handling it like this, keeps config validation useful.
+    vol.Optional(ATTR_ENTITY_ID): vol.Any(
+        comp_entity_ids_or_uuids, dynamic_template, vol.All(list, template_complex)
+    ),
+    vol.Optional(ATTR_DEVICE_ID): vol.Any(
+        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+    ),
+    vol.Optional(ATTR_AREA_ID): vol.Any(
+        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+    ),
+}
 
 
 def make_entity_service_schema(
     schema: dict, *, extra: int = vol.PREVENT_EXTRA
-) -> vol.All:
+) -> vol.Schema:
     """Create an entity service schema."""
-    return vol.All(
-        vol.Schema(
-            {
-                **schema,
-                vol.Optional(ATTR_ENTITY_ID): comp_entity_ids,
-                vol.Optional(ATTR_AREA_ID): vol.Any(
-                    ENTITY_MATCH_NONE, vol.All(ensure_list, [str])
-                ),
-            },
-            extra=extra,
-        ),
-        has_at_least_one_key(*ENTITY_SERVICE_FIELDS),
+    return vol.Schema(
+        vol.All(
+            vol.Schema(
+                {
+                    **schema,
+                    **ENTITY_SERVICE_FIELDS,
+                },
+                extra=extra,
+            ),
+            has_at_least_one_key(*ENTITY_SERVICE_FIELDS),
+        )
     )
+
+
+SCRIPT_VARIABLES_SCHEMA = vol.All(
+    vol.Schema({str: template_complex}),
+    # pylint: disable=unnecessary-lambda
+    lambda val: script_variables_helper.ScriptVariables(val),
+)
 
 
 def script_action(value: Any) -> dict:
@@ -834,60 +1038,104 @@ def script_action(value: Any) -> dict:
 
 SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])
 
+SCRIPT_ACTION_BASE_SCHEMA = {vol.Optional(CONF_ALIAS): string}
+
 EVENT_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_ALIAS): string,
+        **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_EVENT): string,
-        vol.Optional(CONF_EVENT_DATA): dict,
-        vol.Optional(CONF_EVENT_DATA_TEMPLATE): {match_all: template_complex},
+        vol.Optional(CONF_EVENT_DATA): vol.All(dict, template_complex),
+        vol.Optional(CONF_EVENT_DATA_TEMPLATE): vol.All(dict, template_complex),
     }
 )
 
 SERVICE_SCHEMA = vol.All(
     vol.Schema(
         {
-            vol.Optional(CONF_ALIAS): string,
-            vol.Exclusive(CONF_SERVICE, "service name"): service,
-            vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): template,
-            vol.Optional("data"): dict,
-            vol.Optional("data_template"): {match_all: template_complex},
+            **SCRIPT_ACTION_BASE_SCHEMA,
+            vol.Exclusive(CONF_SERVICE, "service name"): vol.Any(
+                service, dynamic_template
+            ),
+            vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): vol.Any(
+                service, dynamic_template
+            ),
+            vol.Optional("data"): vol.Any(template, vol.All(dict, template_complex)),
+            vol.Optional("data_template"): vol.Any(
+                template, vol.All(dict, template_complex)
+            ),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
+            vol.Optional(CONF_TARGET): vol.Any(TARGET_SERVICE_FIELDS, dynamic_template),
+            # The frontend stores data here. Don't use in core.
+            vol.Remove("metadata"): dict,
         }
     ),
     has_at_least_one_key(CONF_SERVICE, CONF_SERVICE_TEMPLATE),
 )
 
+NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
+    vol.Coerce(float), vol.All(str, entity_domain(["input_number", "number", "sensor"]))
+)
+
+CONDITION_BASE_SCHEMA = {vol.Optional(CONF_ALIAS): string}
+
 NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
     vol.Schema(
         {
+            **CONDITION_BASE_SCHEMA,
             vol.Required(CONF_CONDITION): "numeric_state",
-            vol.Required(CONF_ENTITY_ID): entity_ids,
-            CONF_BELOW: vol.Coerce(float),
-            CONF_ABOVE: vol.Coerce(float),
+            vol.Required(CONF_ENTITY_ID): entity_ids_or_uuids,
+            vol.Optional(CONF_ATTRIBUTE): str,
+            CONF_BELOW: NUMERIC_STATE_THRESHOLD_SCHEMA,
+            CONF_ABOVE: NUMERIC_STATE_THRESHOLD_SCHEMA,
             vol.Optional(CONF_VALUE_TEMPLATE): template,
         }
     ),
     has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
 )
 
-STATE_CONDITION_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(CONF_CONDITION): "state",
-            vol.Required(CONF_ENTITY_ID): entity_ids,
-            vol.Required(CONF_STATE): vol.Any(str, [str]),
-            vol.Optional(CONF_FOR): vol.All(time_period, positive_timedelta),
-            # To support use_trigger_value in automation
-            # Deprecated 2016/04/25
-            vol.Optional("from"): str,
-        }
-    ),
-    key_dependency("for", "state"),
+STATE_CONDITION_BASE_SCHEMA = {
+    **CONDITION_BASE_SCHEMA,
+    vol.Required(CONF_CONDITION): "state",
+    vol.Required(CONF_ENTITY_ID): entity_ids_or_uuids,
+    vol.Optional(CONF_ATTRIBUTE): str,
+    vol.Optional(CONF_FOR): positive_time_period,
+    # To support use_trigger_value in automation
+    # Deprecated 2016/04/25
+    vol.Optional("from"): str,
+}
+
+STATE_CONDITION_STATE_SCHEMA = vol.Schema(
+    {
+        **STATE_CONDITION_BASE_SCHEMA,
+        vol.Required(CONF_STATE): vol.Any(str, [str]),
+    }
 )
+
+STATE_CONDITION_ATTRIBUTE_SCHEMA = vol.Schema(
+    {
+        **STATE_CONDITION_BASE_SCHEMA,
+        vol.Required(CONF_STATE): match_all,
+    }
+)
+
+
+def STATE_CONDITION_SCHEMA(value: Any) -> dict:  # pylint: disable=invalid-name
+    """Validate a state condition."""
+    if not isinstance(value, dict):
+        raise vol.Invalid("Expected a dictionary")
+
+    if CONF_ATTRIBUTE in value:
+        validated: dict = STATE_CONDITION_ATTRIBUTE_SCHEMA(value)
+    else:
+        validated = STATE_CONDITION_STATE_SCHEMA(value)
+
+    return key_dependency("for", "state")(validated)
+
 
 SUN_CONDITION_SCHEMA = vol.All(
     vol.Schema(
         {
+            **CONDITION_BASE_SCHEMA,
             vol.Required(CONF_CONDITION): "sun",
             vol.Optional("before"): sun_event,
             vol.Optional("before_offset"): time_period,
@@ -902,6 +1150,7 @@ SUN_CONDITION_SCHEMA = vol.All(
 
 TEMPLATE_CONDITION_SCHEMA = vol.Schema(
     {
+        **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): "template",
         vol.Required(CONF_VALUE_TEMPLATE): template,
     }
@@ -910,20 +1159,34 @@ TEMPLATE_CONDITION_SCHEMA = vol.Schema(
 TIME_CONDITION_SCHEMA = vol.All(
     vol.Schema(
         {
+            **CONDITION_BASE_SCHEMA,
             vol.Required(CONF_CONDITION): "time",
-            "before": time,
-            "after": time,
-            "weekday": weekdays,
+            vol.Optional("before"): vol.Any(
+                time, vol.All(str, entity_domain(["input_datetime", "sensor"]))
+            ),
+            vol.Optional("after"): vol.Any(
+                time, vol.All(str, entity_domain(["input_datetime", "sensor"]))
+            ),
+            vol.Optional("weekday"): weekdays,
         }
     ),
     has_at_least_one_key("before", "after", "weekday"),
 )
 
+TRIGGER_CONDITION_SCHEMA = vol.Schema(
+    {
+        **CONDITION_BASE_SCHEMA,
+        vol.Required(CONF_CONDITION): "trigger",
+        vol.Required(CONF_ID): vol.All(ensure_list, [string]),
+    }
+)
+
 ZONE_CONDITION_SCHEMA = vol.Schema(
     {
+        **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): "zone",
         vol.Required(CONF_ENTITY_ID): entity_ids,
-        "zone": entity_ids,
+        vol.Required("zone"): entity_ids,
         # To support use_trigger_value in automation
         # Deprecated 2016/04/25
         vol.Optional("event"): vol.Any("enter", "leave"),
@@ -932,6 +1195,7 @@ ZONE_CONDITION_SCHEMA = vol.Schema(
 
 AND_CONDITION_SCHEMA = vol.Schema(
     {
+        **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): "and",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
@@ -943,6 +1207,7 @@ AND_CONDITION_SCHEMA = vol.Schema(
 
 OR_CONDITION_SCHEMA = vol.Schema(
     {
+        **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): "or",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
@@ -954,6 +1219,7 @@ OR_CONDITION_SCHEMA = vol.Schema(
 
 NOT_CONDITION_SCHEMA = vol.Schema(
     {
+        **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): "not",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
@@ -965,6 +1231,7 @@ NOT_CONDITION_SCHEMA = vol.Schema(
 
 DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
     {
+        **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): "device",
         vol.Required(CONF_DEVICE_ID): str,
         vol.Required(CONF_DOMAIN): str,
@@ -973,51 +1240,114 @@ DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
 
 DEVICE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-CONDITION_SCHEMA: vol.Schema = key_value_schemas(
-    CONF_CONDITION,
-    {
-        "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
-        "state": STATE_CONDITION_SCHEMA,
-        "sun": SUN_CONDITION_SCHEMA,
-        "template": TEMPLATE_CONDITION_SCHEMA,
-        "time": TIME_CONDITION_SCHEMA,
-        "zone": ZONE_CONDITION_SCHEMA,
-        "and": AND_CONDITION_SCHEMA,
-        "or": OR_CONDITION_SCHEMA,
-        "not": NOT_CONDITION_SCHEMA,
-        "device": DEVICE_CONDITION_SCHEMA,
+dynamic_template_condition_action = vol.All(
+    # Wrap a shorthand template condition in a template condition
+    dynamic_template,
+    lambda config: {
+        CONF_VALUE_TEMPLATE: config,
+        CONF_CONDITION: "template",
     },
+)
+
+
+CONDITION_SCHEMA: vol.Schema = vol.Schema(
+    vol.Any(
+        key_value_schemas(
+            CONF_CONDITION,
+            {
+                "and": AND_CONDITION_SCHEMA,
+                "device": DEVICE_CONDITION_SCHEMA,
+                "not": NOT_CONDITION_SCHEMA,
+                "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+                "or": OR_CONDITION_SCHEMA,
+                "state": STATE_CONDITION_SCHEMA,
+                "sun": SUN_CONDITION_SCHEMA,
+                "template": TEMPLATE_CONDITION_SCHEMA,
+                "time": TIME_CONDITION_SCHEMA,
+                "trigger": TRIGGER_CONDITION_SCHEMA,
+                "zone": ZONE_CONDITION_SCHEMA,
+            },
+        ),
+        dynamic_template_condition_action,
+    )
+)
+
+
+dynamic_template_condition_action = vol.All(
+    # Wrap a shorthand template condition action in a template condition
+    vol.Schema(
+        {**CONDITION_BASE_SCHEMA, vol.Required(CONF_CONDITION): dynamic_template}
+    ),
+    lambda config: {
+        **config,
+        CONF_VALUE_TEMPLATE: config[CONF_CONDITION],
+        CONF_CONDITION: "template",
+    },
+)
+
+
+CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
+    key_value_schemas(
+        CONF_CONDITION,
+        {
+            "and": AND_CONDITION_SCHEMA,
+            "device": DEVICE_CONDITION_SCHEMA,
+            "not": NOT_CONDITION_SCHEMA,
+            "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+            "or": OR_CONDITION_SCHEMA,
+            "state": STATE_CONDITION_SCHEMA,
+            "sun": SUN_CONDITION_SCHEMA,
+            "template": TEMPLATE_CONDITION_SCHEMA,
+            "time": TIME_CONDITION_SCHEMA,
+            "trigger": TRIGGER_CONDITION_SCHEMA,
+            "zone": ZONE_CONDITION_SCHEMA,
+        },
+        dynamic_template_condition_action,
+        "a valid template",
+    )
+)
+
+TRIGGER_BASE_SCHEMA = vol.Schema(
+    {vol.Required(CONF_PLATFORM): str, vol.Optional(CONF_ID): str}
+)
+
+TRIGGER_SCHEMA = vol.All(
+    ensure_list, [TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)]
 )
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_ALIAS): string,
-        vol.Required(CONF_DELAY): vol.Any(
-            vol.All(time_period, positive_timedelta), template, template_complex
-        ),
+        **SCRIPT_ACTION_BASE_SCHEMA,
+        vol.Required(CONF_DELAY): positive_time_period_template,
     }
 )
 
 _SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_ALIAS): string,
+        **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_WAIT_TEMPLATE): template,
-        vol.Optional(CONF_TIMEOUT): vol.All(time_period, positive_timedelta),
+        vol.Optional(CONF_TIMEOUT): positive_time_period_template,
         vol.Optional(CONF_CONTINUE_ON_TIMEOUT): boolean,
     }
 )
 
 DEVICE_ACTION_BASE_SCHEMA = vol.Schema(
-    {vol.Required(CONF_DEVICE_ID): string, vol.Required(CONF_DOMAIN): str}
+    {
+        **SCRIPT_ACTION_BASE_SCHEMA,
+        vol.Required(CONF_DEVICE_ID): string,
+        vol.Required(CONF_DOMAIN): str,
+    }
 )
 
 DEVICE_ACTION_SCHEMA = DEVICE_ACTION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-_SCRIPT_SCENE_SCHEMA = vol.Schema({vol.Required(CONF_SCENE): entity_domain("scene")})
+_SCRIPT_SCENE_SCHEMA = vol.Schema(
+    {**SCRIPT_ACTION_BASE_SCHEMA, vol.Required(CONF_SCENE): entity_domain("scene")}
+)
 
 _SCRIPT_REPEAT_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_ALIAS): string,
+        **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_REPEAT): vol.All(
             {
                 vol.Exclusive(CONF_COUNT, "repeat"): vol.Any(vol.Coerce(int), template),
@@ -1036,11 +1366,12 @@ _SCRIPT_REPEAT_SCHEMA = vol.Schema(
 
 _SCRIPT_CHOOSE_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_ALIAS): string,
+        **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_CHOOSE): vol.All(
             ensure_list,
             [
                 {
+                    vol.Optional(CONF_ALIAS): string,
                     vol.Required(CONF_CONDITIONS): vol.All(
                         ensure_list, [CONDITION_SCHEMA]
                     ),
@@ -1049,6 +1380,22 @@ _SCRIPT_CHOOSE_SCHEMA = vol.Schema(
             ],
         ),
         vol.Optional(CONF_DEFAULT): SCRIPT_SCHEMA,
+    }
+)
+
+_SCRIPT_WAIT_FOR_TRIGGER_SCHEMA = vol.Schema(
+    {
+        **SCRIPT_ACTION_BASE_SCHEMA,
+        vol.Required(CONF_WAIT_FOR_TRIGGER): TRIGGER_SCHEMA,
+        vol.Optional(CONF_TIMEOUT): positive_time_period_template,
+        vol.Optional(CONF_CONTINUE_ON_TIMEOUT): boolean,
+    }
+)
+
+_SCRIPT_SET_SCHEMA = vol.Schema(
+    {
+        **SCRIPT_ACTION_BASE_SCHEMA,
+        vol.Required(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
     }
 )
 
@@ -1061,9 +1408,11 @@ SCRIPT_ACTION_DEVICE_AUTOMATION = "device"
 SCRIPT_ACTION_ACTIVATE_SCENE = "scene"
 SCRIPT_ACTION_REPEAT = "repeat"
 SCRIPT_ACTION_CHOOSE = "choose"
+SCRIPT_ACTION_WAIT_FOR_TRIGGER = "wait_for_trigger"
+SCRIPT_ACTION_VARIABLES = "variables"
 
 
-def determine_script_action(action: dict) -> str:
+def determine_script_action(action: dict[str, Any]) -> str:
     """Determine action type."""
     if CONF_DELAY in action:
         return SCRIPT_ACTION_DELAY
@@ -1089,17 +1438,191 @@ def determine_script_action(action: dict) -> str:
     if CONF_CHOOSE in action:
         return SCRIPT_ACTION_CHOOSE
 
+    if CONF_WAIT_FOR_TRIGGER in action:
+        return SCRIPT_ACTION_WAIT_FOR_TRIGGER
+
+    if CONF_VARIABLES in action:
+        return SCRIPT_ACTION_VARIABLES
+
     return SCRIPT_ACTION_CALL_SERVICE
 
 
-ACTION_TYPE_SCHEMAS: Dict[str, Callable[[Any], dict]] = {
+ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_CALL_SERVICE: SERVICE_SCHEMA,
     SCRIPT_ACTION_DELAY: _SCRIPT_DELAY_SCHEMA,
     SCRIPT_ACTION_WAIT_TEMPLATE: _SCRIPT_WAIT_TEMPLATE_SCHEMA,
     SCRIPT_ACTION_FIRE_EVENT: EVENT_SCHEMA,
-    SCRIPT_ACTION_CHECK_CONDITION: CONDITION_SCHEMA,
+    SCRIPT_ACTION_CHECK_CONDITION: CONDITION_ACTION_SCHEMA,
     SCRIPT_ACTION_DEVICE_AUTOMATION: DEVICE_ACTION_SCHEMA,
     SCRIPT_ACTION_ACTIVATE_SCENE: _SCRIPT_SCENE_SCHEMA,
     SCRIPT_ACTION_REPEAT: _SCRIPT_REPEAT_SCHEMA,
     SCRIPT_ACTION_CHOOSE: _SCRIPT_CHOOSE_SCHEMA,
+    SCRIPT_ACTION_WAIT_FOR_TRIGGER: _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA,
+    SCRIPT_ACTION_VARIABLES: _SCRIPT_SET_SCHEMA,
 }
+
+
+# Validate currencies adopted by countries
+currency = vol.In(
+    {
+        "AED",
+        "AFN",
+        "ALL",
+        "AMD",
+        "ANG",
+        "AOA",
+        "ARS",
+        "AUD",
+        "AWG",
+        "AZN",
+        "BAM",
+        "BBD",
+        "BDT",
+        "BGN",
+        "BHD",
+        "BIF",
+        "BMD",
+        "BND",
+        "BOB",
+        "BRL",
+        "BSD",
+        "BTN",
+        "BWP",
+        "BYN",
+        "BYR",
+        "BZD",
+        "CAD",
+        "CDF",
+        "CHF",
+        "CLP",
+        "CNY",
+        "COP",
+        "CRC",
+        "CUP",
+        "CVE",
+        "CZK",
+        "DJF",
+        "DKK",
+        "DOP",
+        "DZD",
+        "EGP",
+        "ERN",
+        "ETB",
+        "EUR",
+        "FJD",
+        "FKP",
+        "GBP",
+        "GEL",
+        "GHS",
+        "GIP",
+        "GMD",
+        "GNF",
+        "GTQ",
+        "GYD",
+        "HKD",
+        "HNL",
+        "HRK",
+        "HTG",
+        "HUF",
+        "IDR",
+        "ILS",
+        "INR",
+        "IQD",
+        "IRR",
+        "ISK",
+        "JMD",
+        "JOD",
+        "JPY",
+        "KES",
+        "KGS",
+        "KHR",
+        "KMF",
+        "KPW",
+        "KRW",
+        "KWD",
+        "KYD",
+        "KZT",
+        "LAK",
+        "LBP",
+        "LKR",
+        "LRD",
+        "LSL",
+        "LTL",
+        "LYD",
+        "MAD",
+        "MDL",
+        "MGA",
+        "MKD",
+        "MMK",
+        "MNT",
+        "MOP",
+        "MRO",
+        "MUR",
+        "MVR",
+        "MWK",
+        "MXN",
+        "MYR",
+        "MZN",
+        "NAD",
+        "NGN",
+        "NIO",
+        "NOK",
+        "NPR",
+        "NZD",
+        "OMR",
+        "PAB",
+        "PEN",
+        "PGK",
+        "PHP",
+        "PKR",
+        "PLN",
+        "PYG",
+        "QAR",
+        "RON",
+        "RSD",
+        "RUB",
+        "RWF",
+        "SAR",
+        "SBD",
+        "SCR",
+        "SDG",
+        "SEK",
+        "SGD",
+        "SHP",
+        "SLL",
+        "SOS",
+        "SRD",
+        "SSP",
+        "STD",
+        "SYP",
+        "SZL",
+        "THB",
+        "TJS",
+        "TMT",
+        "TND",
+        "TOP",
+        "TRY",
+        "TTD",
+        "TWD",
+        "TZS",
+        "UAH",
+        "UGX",
+        "USD",
+        "UYU",
+        "UZS",
+        "VEF",
+        "VND",
+        "VUV",
+        "WST",
+        "XAF",
+        "XCD",
+        "XOF",
+        "XPF",
+        "YER",
+        "ZAR",
+        "ZMK",
+        "ZMW",
+        "ZWL",
+    },
+    msg="invalid ISO 4217 formatted currency",
+)

@@ -1,7 +1,7 @@
 """The test for the Melissa Climate component."""
-from homeassistant.components import melissa
+from unittest.mock import AsyncMock, patch
 
-from tests.async_mock import AsyncMock, patch
+from homeassistant.components import melissa
 
 VALID_CONFIG = {"melissa": {"username": "********", "password": "********"}}
 
@@ -18,5 +18,6 @@ async def test_setup(hass):
 
         assert melissa.DATA_MELISSA in hass.data
         assert isinstance(
-            hass.data[melissa.DATA_MELISSA], type(mocked_melissa.return_value),
+            hass.data[melissa.DATA_MELISSA],
+            type(mocked_melissa.return_value),
         )

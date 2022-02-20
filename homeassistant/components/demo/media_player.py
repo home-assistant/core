@@ -1,30 +1,48 @@
 """Demo implementation of the media player."""
-from homeassistant.components.media_player import MediaPlayerEntity
+from __future__ import annotations
+
+from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
+    REPEAT_MODE_OFF,
     SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_GROUPING,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_REPEAT_SET,
     SUPPORT_SEEK,
     SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_SHUFFLE_SET,
+    SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the media player demo platform."""
     async_add_entities(
         [
@@ -38,18 +56,23 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "Bedroom", "kxopViU98Xo", "Epic sax guy 10 hours", 360000
             ),
             DemoMusicPlayer(),
+            DemoMusicPlayer("Kitchen"),
             DemoTVShowPlayer(),
         ]
     )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Demo config entry."""
     await async_setup_platform(hass, {}, async_add_entities)
 
 
-SOUND_MODE_LIST = ["Dummy Music", "Dummy Movie"]
-DEFAULT_SOUND_MODE = "Dummy Music"
+SOUND_MODE_LIST = ["Music", "Movie"]
+DEFAULT_SOUND_MODE = "Music"
 
 YOUTUBE_PLAYER_SUPPORT = (
     SUPPORT_PAUSE
@@ -62,6 +85,7 @@ YOUTUBE_PLAYER_SUPPORT = (
     | SUPPORT_SHUFFLE_SET
     | SUPPORT_SELECT_SOUND_MODE
     | SUPPORT_SEEK
+    | SUPPORT_STOP
 )
 
 MUSIC_PLAYER_SUPPORT = (
@@ -71,12 +95,15 @@ MUSIC_PLAYER_SUPPORT = (
     | SUPPORT_TURN_ON
     | SUPPORT_TURN_OFF
     | SUPPORT_CLEAR_PLAYLIST
+    | SUPPORT_GROUPING
     | SUPPORT_PLAY
     | SUPPORT_SHUFFLE_SET
+    | SUPPORT_REPEAT_SET
     | SUPPORT_VOLUME_STEP
     | SUPPORT_PREVIOUS_TRACK
     | SUPPORT_NEXT_TRACK
     | SUPPORT_SELECT_SOUND_MODE
+    | SUPPORT_STOP
 )
 
 NETFLIX_PLAYER_SUPPORT = (
@@ -89,6 +116,7 @@ NETFLIX_PLAYER_SUPPORT = (
     | SUPPORT_PREVIOUS_TRACK
     | SUPPORT_NEXT_TRACK
     | SUPPORT_SELECT_SOUND_MODE
+    | SUPPORT_STOP
 )
 
 
@@ -193,6 +221,11 @@ class AbstractDemoPlayer(MediaPlayerEntity):
         self._player_state = STATE_PAUSED
         self.schedule_update_ha_state()
 
+    def media_stop(self):
+        """Send stop command."""
+        self._player_state = STATE_OFF
+        self.schedule_update_ha_state()
+
     def set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
         self._shuffle = shuffle
@@ -288,7 +321,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
 
 
 class DemoMusicPlayer(AbstractDemoPlayer):
-    """A Demo media player that only supports YouTube."""
+    """A Demo media player."""
 
     # We only implement the methods that we support
 
@@ -315,10 +348,17 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         ),
     ]
 
-    def __init__(self):
+    def __init__(self, name="Walkman"):
         """Initialize the demo device."""
-        super().__init__("Walkman")
+        super().__init__(name)
         self._cur_track = 0
+        self._group_members = []
+        self._repeat = REPEAT_MODE_OFF
+
+    @property
+    def group_members(self):
+        """List of players which are currently grouped together."""
+        return self._group_members
 
     @property
     def media_content_id(self):
@@ -361,6 +401,11 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         return self._cur_track + 1
 
     @property
+    def repeat(self):
+        """Return current repeat mode."""
+        return self._repeat
+
+    @property
     def supported_features(self):
         """Flag media player features that are supported."""
         return MUSIC_PLAYER_SUPPORT
@@ -384,11 +429,30 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         self._player_state = STATE_OFF
         self.schedule_update_ha_state()
 
+    def set_repeat(self, repeat):
+        """Enable/disable repeat mode."""
+        self._repeat = repeat
+        self.schedule_update_ha_state()
+
+    def join_players(self, group_members):
+        """Join `group_members` as a player group with the current player."""
+        self._group_members = [
+            self.entity_id,
+        ] + group_members
+        self.schedule_update_ha_state()
+
+    def unjoin_player(self):
+        """Remove this player from any group."""
+        self._group_members = []
+        self.schedule_update_ha_state()
+
 
 class DemoTVShowPlayer(AbstractDemoPlayer):
     """A Demo media player that only supports YouTube."""
 
     # We only implement the methods that we support
+
+    _attr_device_class = MediaPlayerDeviceClass.TV
 
     def __init__(self):
         """Initialize the demo device."""

@@ -129,7 +129,7 @@ async def test_hmip_heating_group_heat(hass, default_mock_hap_factory):
     ha_state = hass.states.get(entity_id)
     assert ha_state.attributes[ATTR_PRESET_MODE] == "STD"
 
-    # Not required for hmip, but a posiblity to send no temperature.
+    # Not required for hmip, but a possibility to send no temperature.
     await hass.services.async_call(
         "climate",
         "set_temperature",
@@ -382,7 +382,8 @@ async def test_hmip_heating_group_heat_with_radiator(hass, default_mock_hap_fact
     entity_name = "Vorzimmer"
     device_model = None
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=["Heizkörperthermostat2"], test_groups=[entity_name],
+        test_devices=["Heizkörperthermostat2"],
+        test_groups=[entity_name],
     )
     ha_state, hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model

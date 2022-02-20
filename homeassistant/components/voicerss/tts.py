@@ -1,5 +1,6 @@
 """Support for the voicerss speech service."""
 import asyncio
+from http import HTTPStatus
 import logging
 
 import aiohttp
@@ -7,7 +8,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
-from homeassistant.const import CONF_API_KEY, HTTP_OK
+from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -28,32 +29,55 @@ ERROR_MSG = [
 ]
 
 SUPPORT_LANGUAGES = [
+    "ar-eg",
+    "ar-sa",
+    "bg-bg",
     "ca-es",
     "zh-cn",
     "zh-hk",
     "zh-tw",
+    "hr-hr",
+    "cs-cz",
     "da-dk",
+    "nl-be",
     "nl-nl",
     "en-au",
     "en-ca",
     "en-gb",
     "en-in",
+    "en-ie",
     "en-us",
     "fi-fi",
     "fr-ca",
     "fr-fr",
+    "fr-ch",
+    "de-at",
     "de-de",
+    "de-ch",
+    "el-gr",
+    "he-il",
+    "hi-in",
+    "hu-hu",
+    "id-id",
     "it-it",
     "ja-jp",
     "ko-kr",
+    "ms-my",
     "nb-no",
     "pl-pl",
     "pt-br",
     "pt-pt",
+    "ro-ro",
     "ru-ru",
+    "sk-sk",
+    "sl-si",
     "es-mx",
     "es-es",
     "sv-se",
+    "ta-in",
+    "th-th",
+    "tr-tr",
+    "vi-vn",
 ]
 
 SUPPORT_CODECS = ["mp3", "wav", "aac", "ogg", "caf"]
@@ -172,10 +196,10 @@ class VoiceRSSProvider(Provider):
         form_data["hl"] = language
 
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 request = await websession.post(VOICERSS_API_URL, data=form_data)
 
-                if request.status != HTTP_OK:
+                if request.status != HTTPStatus.OK:
                     _LOGGER.error(
                         "Error %d on load url %s", request.status, request.url
                     )

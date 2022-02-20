@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "name_exists": "Numm g\u00ebtt et schonn"
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
         },
         "step": {
             "user": {
                 "data": {
-                    "advertise_ip": "IP annonc\u00e9ieren",
+                    "advertise_ip": "IP Adresse annonc\u00e9ieren",
                     "advertise_port": "Port annonc\u00e9ieren",
                     "host_ip": "IP vum Apparat",
                     "listen_port": "Port lauschteren",

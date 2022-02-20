@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "credential_error": "Fel n\u00e4r f\u00f6rs\u00f6ker h\u00e4mta autentiseringsuppgifter.",
-            "devices_configured": "Alla enheter som hittats \u00e4r redan konfigurerade.",
             "no_devices_found": "Inga PlayStation 4 enheter hittades p\u00e5 n\u00e4tverket.",
             "port_987_bind_error": "Kunde inte binda till port 987.",
             "port_997_bind_error": "Kunde inte binda till port 997."
@@ -10,8 +9,7 @@
         "error": {
             "credential_timeout": "Autentiseringstj\u00e4nsten orsakade timeout. Tryck p\u00e5 Skicka f\u00f6r att starta om.",
             "login_failed": "Misslyckades med att para till PlayStation 4. Verifiera PIN-koden \u00e4r korrekt.",
-            "no_ipaddress": "Ange IP-adressen f\u00f6r PlayStation 4 du vill konfigurera.",
-            "not_ready": "PlayStation 4 \u00e4r inte p\u00e5slagen eller ansluten till n\u00e4tverket."
+            "no_ipaddress": "Ange IP-adressen f\u00f6r PlayStation 4 du vill konfigurera."
         },
         "step": {
             "creds": {

@@ -1,17 +1,18 @@
 """Support for HERE travel time sensors."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
-from typing import Callable, Dict, Optional, Union
 
 import herepy
+from herepy.here_enum import RouteMode
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     ATTR_MODE,
+    CONF_API_KEY,
     CONF_MODE,
     CONF_NAME,
     CONF_UNIT_SYSTEM,
@@ -20,12 +21,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     TIME_MINUTES,
 )
-from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.helpers import location
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import DiscoveryInfoType
-import homeassistant.util.dt as dt
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.location import find_coordinates
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +36,6 @@ CONF_DESTINATION_ENTITY_ID = "destination_entity_id"
 CONF_ORIGIN_LATITUDE = "origin_latitude"
 CONF_ORIGIN_LONGITUDE = "origin_longitude"
 CONF_ORIGIN_ENTITY_ID = "origin_entity_id"
-CONF_API_KEY = "api_key"
 CONF_TRAFFIC_MODE = "traffic_mode"
 CONF_ROUTE_MODE = "route_mode"
 CONF_ARRIVAL = "arrival"
@@ -143,12 +143,11 @@ PLATFORM_SCHEMA = vol.All(
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: Dict[str, Union[str, bool]],
-    async_add_entities: Callable,
-    discovery_info: Optional[DiscoveryInfoType] = None,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the HERE travel time platform."""
-
     api_key = config[CONF_API_KEY]
     here_client = herepy.RoutingApi(api_key)
 
@@ -200,21 +199,24 @@ def _are_valid_client_credentials(here_client: herepy.RoutingApi) -> bool:
     known_working_origin = [38.9, -77.04833]
     known_working_destination = [39.0, -77.1]
     try:
-        here_client.car_route(
+        here_client.public_transport_timetable(
             known_working_origin,
             known_working_destination,
+            True,
             [
-                herepy.RouteMode[ROUTE_MODE_FASTEST],
-                herepy.RouteMode[TRAVEL_MODE_CAR],
-                herepy.RouteMode[TRAFFIC_MODE_DISABLED],
+                RouteMode[ROUTE_MODE_FASTEST],
+                RouteMode[TRAVEL_MODE_CAR],
+                RouteMode[TRAFFIC_MODE_ENABLED],
             ],
+            arrival=None,
+            departure="now",
         )
     except herepy.InvalidCredentialsError:
         return False
     return True
 
 
-class HERETravelTimeSensor(Entity):
+class HERETravelTimeSensor(SensorEntity):
     """Representation of a HERE travel time sensor."""
 
     def __init__(
@@ -224,7 +226,7 @@ class HERETravelTimeSensor(Entity):
         destination: str,
         origin_entity_id: str,
         destination_entity_id: str,
-        here_data: "HERETravelTimeData",
+        here_data: HERETravelTimeData,
     ) -> None:
         """Initialize the sensor."""
         self._name = name
@@ -256,11 +258,10 @@ class HERETravelTimeSensor(Entity):
         )
 
     @property
-    def state(self) -> Optional[str]:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
-        if self._here_data.traffic_mode:
-            if self._here_data.traffic_time is not None:
-                return str(round(self._here_data.traffic_time / 60))
+        if self._here_data.traffic_mode and self._here_data.traffic_time is not None:
+            return str(round(self._here_data.traffic_time / 60))
         if self._here_data.base_time is not None:
             return str(round(self._here_data.base_time / 60))
 
@@ -272,9 +273,9 @@ class HERETravelTimeSensor(Entity):
         return self._name
 
     @property
-    def device_state_attributes(
+    def extra_state_attributes(
         self,
-    ) -> Optional[Dict[str, Union[None, float, str, bool]]]:
+    ) -> dict[str, None | float | str | bool] | None:
         """Return the state attributes."""
         if self._here_data.base_time is None:
             return None
@@ -293,7 +294,7 @@ class HERETravelTimeSensor(Entity):
         return res
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
@@ -314,64 +315,14 @@ class HERETravelTimeSensor(Entity):
         """Update Sensor Information."""
         # Convert device_trackers to HERE friendly location
         if self._origin_entity_id is not None:
-            self._here_data.origin = await self._get_location_from_entity(
-                self._origin_entity_id
-            )
+            self._here_data.origin = find_coordinates(self.hass, self._origin_entity_id)
 
         if self._destination_entity_id is not None:
-            self._here_data.destination = await self._get_location_from_entity(
-                self._destination_entity_id
+            self._here_data.destination = find_coordinates(
+                self.hass, self._destination_entity_id
             )
 
         await self.hass.async_add_executor_job(self._here_data.update)
-
-    async def _get_location_from_entity(self, entity_id: str) -> Optional[str]:
-        """Get the location from the entity state or attributes."""
-        entity = self.hass.states.get(entity_id)
-
-        if entity is None:
-            _LOGGER.error("Unable to find entity %s", entity_id)
-            return None
-
-        # Check if the entity has location attributes
-        if location.has_location(entity):
-            return self._get_location_from_attributes(entity)
-
-        # Check if device is in a zone
-        zone_entity = self.hass.states.get(f"zone.{entity.state}")
-        if location.has_location(zone_entity):
-            _LOGGER.debug(
-                "%s is in %s, getting zone location", entity_id, zone_entity.entity_id
-            )
-            return self._get_location_from_attributes(zone_entity)
-
-        # Check if state is valid coordinate set
-        if self._entity_state_is_valid_coordinate_set(entity.state):
-            return entity.state
-
-        _LOGGER.error(
-            "The state of %s is not a valid set of coordinates: %s",
-            entity_id,
-            entity.state,
-        )
-        return None
-
-    @staticmethod
-    def _entity_state_is_valid_coordinate_set(state: str) -> bool:
-        """Check that the given string is a valid set of coordinates."""
-        schema = vol.Schema(cv.gps)
-        try:
-            coordinates = state.split(",")
-            schema(coordinates)
-            return True
-        except (vol.MultipleInvalid):
-            return False
-
-    @staticmethod
-    def _get_location_from_attributes(entity: State) -> str:
-        """Get the lat/long string from an entities attributes."""
-        attr = entity.attributes
-        return f"{attr.get(ATTR_LATITUDE)},{attr.get(ATTR_LONGITUDE)}"
 
 
 class HERETravelTimeData:
@@ -417,11 +368,9 @@ class HERETravelTimeData:
             # Convert location to HERE friendly location
             destination = self.destination.split(",")
             origin = self.origin.split(",")
-            arrival = self.arrival
-            if arrival is not None:
+            if (arrival := self.arrival) is not None:
                 arrival = convert_time_to_isodate(arrival)
-            departure = self.departure
-            if departure is not None:
+            if (departure := self.departure) is not None:
                 departure = convert_time_to_isodate(departure)
 
             if departure is None and arrival is None:
@@ -458,11 +407,9 @@ class HERETravelTimeData:
 
             _LOGGER.debug("Raw response is: %s", response.response)
 
-            # pylint: disable=no-member
             source_attribution = response.response.get("sourceAttribution")
             if source_attribution is not None:
                 self.attribution = self._build_hass_attribution(source_attribution)
-            # pylint: disable=no-member
             route = response.response["route"]
             summary = route[0]["summary"]
             waypoint = route[0]["waypoint"]
@@ -478,20 +425,18 @@ class HERETravelTimeData:
             else:
                 # Convert to kilometers
                 self.distance = distance / 1000
-            # pylint: disable=no-member
             self.route = response.route_short
             self.origin_name = waypoint[0]["mappedRoadName"]
             self.destination_name = waypoint[1]["mappedRoadName"]
 
     @staticmethod
-    def _build_hass_attribution(source_attribution: Dict) -> Optional[str]:
+    def _build_hass_attribution(source_attribution: dict) -> str | None:
         """Build a hass frontend ready string out of the sourceAttribution."""
         suppliers = source_attribution.get("supplier")
         if suppliers is not None:
             supplier_titles = []
             for supplier in suppliers:
-                title = supplier.get("title")
-                if title is not None:
+                if (title := supplier.get("title")) is not None:
                     supplier_titles.append(title)
             joined_supplier_titles = ",".join(supplier_titles)
             attribution = f"With the support of {joined_supplier_titles}. All information is provided without warranty of any kind."

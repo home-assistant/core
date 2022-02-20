@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "no_devices_found": "V\u00f5rgust ei leitud seadmeid",
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "flow_title": "{name} {model} ( {host} )",
+        "step": {
+            "confirm": {
+                "description": "Kas soovid seadistada TP-Linki nutiseadmeid?"
+            },
+            "discovery_confirm": {
+                "description": "Kas seadistada {name}{model} ({host})?"
+            },
+            "pick_device": {
+                "data": {
+                    "device": "Seade"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Kui j\u00e4tad hosti t\u00fchjaks kasutatakse seadmete leidmiseks avastamist."
+            }
+        }
+    }
+}

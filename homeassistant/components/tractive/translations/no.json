@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "reauth_failed_existing": "Kunne ikke oppdatere konfigurasjonsoppf\u00f8ringen. Fjern integrasjonen og sett den opp igjen.",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+        },
+        "error": {
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-post",
+                    "password": "Passord"
+                }
+            }
+        }
+    }
+}

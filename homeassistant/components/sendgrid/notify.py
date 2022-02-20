@@ -1,4 +1,5 @@
 """SendGrid notification service."""
+from http import HTTPStatus
 import logging
 
 from sendgrid import SendGridAPIClient
@@ -65,5 +66,5 @@ class SendgridNotificationService(BaseNotificationService):
         }
 
         response = self._sg.client.mail.send.post(request_body=data)
-        if response.status_code != 202:
+        if response.status_code != HTTPStatus.ACCEPTED:
             _LOGGER.error("Unable to send notification")

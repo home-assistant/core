@@ -80,7 +80,4 @@ async def test_lock(hass, lock_data, sent_messages, lock_msg, caplog):
         blocking=True,
     )
     assert len(sent_messages) == 5
-    assert (
-        "Invalid code provided: (123) user code must be at least 4 digits"
-        in caplog.text
-    )
+    assert "User code must be at least 4 digits" in caplog.text

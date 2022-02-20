@@ -1,19 +1,23 @@
 """Support for the Dynalite devices as entities."""
-from typing import Any, Callable, Dict
+from __future__ import annotations
 
-from homeassistant.components.dynalite.bridge import DynaliteBridge
+from collections.abc import Callable
+from typing import Any
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .bridge import DynaliteBridge
 from .const import DOMAIN, LOGGER
 
 
 def async_setup_entry_base(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable,
+    async_add_entities: AddEntitiesCallback,
     platform: str,
     entity_from_device: Callable,
 ) -> None:
@@ -40,7 +44,7 @@ class DynaliteBase(Entity):
         """Initialize the base class."""
         self._device = device
         self._bridge = bridge
-        self._unsub_dispatchers = []
+        self._unsub_dispatchers: list[Callable[[], None]] = []
 
     @property
     def name(self) -> str:
@@ -58,13 +62,13 @@ class DynaliteBase(Entity):
         return self._device.available
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Device info for this entity."""
-        return {
-            "identifiers": {(DOMAIN, self._device.unique_id)},
-            "name": self.name,
-            "manufacturer": "Dynalite",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device.unique_id)},
+            manufacturer="Dynalite",
+            name=self.name,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Added to hass so need to register to dispatch."""

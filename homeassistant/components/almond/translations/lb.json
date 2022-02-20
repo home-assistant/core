@@ -1,17 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Dir k\u00ebnnt n\u00ebmmen een eenzegen Almond Kont konfigur\u00e9ieren.",
-            "cannot_connect": "Kann sech net mam Almond Server verbannen.",
-            "missing_configuration": "Kuckt w.e.g. Dokumentatioun iwwert d'ariichten vun Almond."
+            "cannot_connect": "Feeler beim verbannen",
+            "missing_configuration": "Komponent net konfigur\u00e9iert. Folleg w.e.g der Dokumentatioun.",
+            "no_url_available": "Keng URL disponibel. Fir Informatiounen iwwert d\u00ebse Feeler, [kuck H\u00ebllef Sektioun]({docs_url})",
+            "single_instance_allowed": "Scho konfigur\u00e9iert. N\u00ebmmen eng eenzeg Konfiguratioun m\u00e9iglech."
         },
         "step": {
             "hassio_confirm": {
-                "description": "W\u00ebllt dir Home Assistant konfigur\u00e9iere fir sech mam Almond ze verbannen dee vun der hass.io Erweiderung {addon} bereet gestallt g\u00ebtt?",
-                "title": "Almond via Hass.io Erweiderung"
+                "description": "W\u00ebllt dir Home Assistant konfigur\u00e9iere fir sech mam Almond ze verbannen dee vun der Supervisor Erweiderung {addon} bereet gestallt g\u00ebtt?",
+                "title": "Almond via Supervisor Erweiderung"
             },
             "pick_implementation": {
-                "title": "Wielt Authentifikatiouns Method aus"
+                "title": "Wiel Authentifikatiouns Method aus"
             }
         }
     }

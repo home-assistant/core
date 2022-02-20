@@ -1,11 +1,5 @@
 {
     "config": {
-        "abort": {
-            "already_setup": "Du kan bara konfigurera en enda iAqualink-anslutning."
-        },
-        "error": {
-            "connection_failure": "Det g\u00e5r inte att ansluta till iAqualink. Kontrollera ditt anv\u00e4ndarnamn och l\u00f6senord."
-        },
         "step": {
             "user": {
                 "data": {

@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Op\u011btovn\u00e9 ov\u011b\u0159en\u00ed bylo \u00fasp\u011b\u0161n\u00e9",
+            "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace.",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
+            "invalid_zone": "Neplatn\u00e1 z\u00f3na"
+        },
+        "flow_title": "Cloudflare: {name}",
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "API token",
+                    "description": "Op\u011bt ov\u011b\u0159te sv\u016fj Cloudflare \u00fa\u010det."
+                }
+            },
+            "records": {
+                "data": {
+                    "records": "Z\u00e1znamy"
+                },
+                "title": "Vyberte z\u00e1znamy, kter\u00e9 chcete aktualizovat"
+            },
+            "user": {
+                "data": {
+                    "api_token": "API token"
+                },
+                "description": "Tato integrace vy\u017eaduje API token vytvo\u0159en\u00fd s opravn\u011bn\u00edmi Zone:Zone:Read a Zone:DNS:Edit pro v\u0161echny z\u00f3ny ve va\u0161em \u00fa\u010dtu.",
+                "title": "P\u0159ipojen\u00ed ke Cloudflare"
+            },
+            "zone": {
+                "data": {
+                    "zone": "Z\u00f3na"
+                },
+                "title": "Vyberte z\u00f3nu, kter\u00e1 m\u00e1 b\u00fdt aktualizov\u00e1na"
+            }
+        }
+    }
+}

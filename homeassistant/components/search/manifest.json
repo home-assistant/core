@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/search",
   "dependencies": ["websocket_api"],
   "after_dependencies": ["scene", "group", "automation", "script"],
-  "codeowners": ["@home-assistant/core"]
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal"
 }

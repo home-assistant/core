@@ -1,5 +1,4 @@
 """Component for wiffi support."""
-import asyncio
 from datetime import timedelta
 import errno
 import logging
@@ -7,7 +6,7 @@ import logging
 from wiffi import WiffiTcpServer
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PORT, CONF_TIMEOUT
+from homeassistant.const import CONF_PORT, CONF_TIMEOUT, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry
@@ -15,7 +14,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.dt import utcnow
 
@@ -30,25 +29,20 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORMS = ["sensor", "binary_sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the wiffi component. config contains data from configuration.yaml."""
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up wiffi from a config entry, config_entry contains data from config entry database."""
-    if not config_entry.update_listeners:
-        config_entry.add_update_listener(async_update_options)
+    if not entry.update_listeners:
+        entry.add_update_listener(async_update_options)
 
     # create api object
     api = WiffiIntegrationApi(hass)
-    api.async_setup(config_entry)
+    api.async_setup(entry)
 
     # store api object
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = api
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = api
 
     try:
         await api.server.start_server()
@@ -56,37 +50,27 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         if exc.errno != errno.EADDRINUSE:
             _LOGGER.error("Start_server failed, errno: %d", exc.errno)
             return False
-        _LOGGER.error("Port %s already in use", config_entry.data[CONF_PORT])
+        _LOGGER.error("Port %s already in use", entry.data[CONF_PORT])
         raise ConfigEntryNotReady from exc
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update options."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    api: "WiffiIntegrationApi" = hass.data[DOMAIN][config_entry.entry_id]
+    api: WiffiIntegrationApi = hass.data[DOMAIN][entry.entry_id]
     await api.server.close_server()
 
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        api = hass.data[DOMAIN].pop(config_entry.entry_id)
+        api = hass.data[DOMAIN].pop(entry.entry_id)
         api.shutdown()
 
     return unload_ok
@@ -119,8 +103,7 @@ class WiffiIntegrationApi:
 
         Remove listener for periodic callbacks.
         """
-        remove_listener = self._periodic_callback
-        if remove_listener is not None:
+        if (remove_listener := self._periodic_callback) is not None:
             remove_listener()
 
     async def __call__(self, device, metrics):
@@ -158,16 +141,15 @@ class WiffiEntity(Entity):
     def __init__(self, device, metric, options):
         """Initialize the base elements of a wiffi entity."""
         self._id = generate_unique_id(device, metric)
-        self._device_info = {
-            "connections": {
-                (device_registry.CONNECTION_NETWORK_MAC, device.mac_address)
-            },
-            "identifiers": {(DOMAIN, device.mac_address)},
-            "manufacturer": "stall.biz",
-            "name": f"{device.moduletype} {device.mac_address}",
-            "model": device.moduletype,
-            "sw_version": device.sw_version,
-        }
+        self._device_info = DeviceInfo(
+            connections={(device_registry.CONNECTION_NETWORK_MAC, device.mac_address)},
+            identifiers={(DOMAIN, device.mac_address)},
+            manufacturer="stall.biz",
+            model=device.moduletype,
+            name=f"{device.moduletype} {device.mac_address}",
+            sw_version=device.sw_version,
+            configuration_url=device.configuration_url,
+        )
         self._name = metric.description
         self._expiration_date = None
         self._value = None
@@ -238,3 +220,11 @@ class WiffiEntity(Entity):
         ):
             self._value = None
             self.async_write_ha_state()
+
+    def _is_measurement_entity(self):
+        """Measurement entities have a value in present time."""
+        return not self._name.endswith("_gestern") and not self._is_metered_entity()
+
+    def _is_metered_entity(self):
+        """Metered entities have a value that keeps increasing until reset."""
+        return self._name.endswith("_pro_h") or self._name.endswith("_heute")

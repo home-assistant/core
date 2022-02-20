@@ -2,6 +2,16 @@
   "domain": "insteon",
   "name": "Insteon",
   "documentation": "https://www.home-assistant.io/integrations/insteon",
-  "requirements": ["pyinsteon==1.0.7"],
-  "codeowners": ["@teharris1"]
+  "requirements": [
+    "pyinsteon==1.0.16"
+  ],
+  "codeowners": [
+    "@teharris1"
+  ],
+  "config_flow": true,
+  "iot_class": "local_push",
+  "loggers": [
+    "pyinsteon",
+    "pypubsub"
+  ]
 }

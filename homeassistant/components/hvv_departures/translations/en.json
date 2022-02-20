@@ -4,7 +4,7 @@
             "already_configured": "Device is already configured"
         },
         "error": {
-            "cannot_connect": "Failed to connect, please try again",
+            "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "no_results": "No results. Try with a different station/address"
         },
@@ -43,6 +43,5 @@
                 "title": "Options"
             }
         }
-    },
-    "title": "HVV Departures"
+    }
 }

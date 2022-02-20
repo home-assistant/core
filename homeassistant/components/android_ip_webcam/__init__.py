@@ -1,12 +1,11 @@
 """Support for Android IP Webcam."""
 import asyncio
 from datetime import timedelta
-import logging
 
 from pydroid_ipcam import PyDroidIPCam
 import voluptuous as vol
 
-from homeassistant.components.mjpeg.camera import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL
+from homeassistant.components.mjpeg import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -18,8 +17,9 @@ from homeassistant.const import (
     CONF_SWITCHES,
     CONF_TIMEOUT,
     CONF_USERNAME,
+    Platform,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -29,9 +29,8 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import utcnow
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_AUD_CONNS = "Audio Connections"
 ATTR_HOST = "host"
@@ -186,7 +185,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the IP Webcam component."""
 
     webcams = hass.data[DATA_IP_WEBCAM] = {}
@@ -248,14 +247,16 @@ async def async_setup(hass, config):
             mjpeg_camera.update({CONF_USERNAME: username, CONF_PASSWORD: password})
 
         hass.async_create_task(
-            discovery.async_load_platform(hass, "camera", "mjpeg", mjpeg_camera, config)
+            discovery.async_load_platform(
+                hass, Platform.CAMERA, "mjpeg", mjpeg_camera, config
+            )
         )
 
         if sensors:
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass,
-                    "sensor",
+                    Platform.SENSOR,
                     DOMAIN,
                     {CONF_NAME: name, CONF_HOST: host, CONF_SENSORS: sensors},
                     config,
@@ -266,7 +267,7 @@ async def async_setup(hass, config):
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass,
-                    "switch",
+                    Platform.SWITCH,
                     DOMAIN,
                     {CONF_NAME: name, CONF_HOST: host, CONF_SWITCHES: switches},
                     config,
@@ -277,7 +278,7 @@ async def async_setup(hass, config):
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass,
-                    "binary_sensor",
+                    Platform.BINARY_SENSOR,
                     DOMAIN,
                     {CONF_HOST: host, CONF_NAME: name},
                     config,
@@ -324,7 +325,7 @@ class AndroidIPCamEntity(Entity):
         return self._ipcam.available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         state_attr = {ATTR_HOST: self._host}
         if self._ipcam.status_data is None:

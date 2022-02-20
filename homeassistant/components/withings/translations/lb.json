@@ -3,29 +3,30 @@
         "abort": {
             "already_configured": "Konfiguratioun aktualis\u00e9iert fir de Profil.",
             "authorize_url_timeout": "Z\u00e4it Iwwerschreidung beim gener\u00e9ieren vun der Autorisatiouns URL.",
-            "missing_configuration": "Withings Integratioun ass nach net konfigur\u00e9iert. Follegt w.e.g der Dokumentatioun."
+            "missing_configuration": "Komponent ass nach net konfigur\u00e9iert. Follegt w.e.g der Dokumentatioun.",
+            "no_url_available": "Keng URL disponibel. Fir Informatiounen iwwert d\u00ebse Feeler, [kuck H\u00ebllef Sektioun]({docs_url})"
         },
         "create_entry": {
             "default": "Erfollegr\u00e4ich mat Withings authentifiz\u00e9iert."
         },
         "error": {
-            "profile_exists": "Benotzer Profil ass scho konfigur\u00e9iert. G\u00ebff eem eenzegartege Profil Numm un"
+            "already_configured": "Kont ass scho konfigur\u00e9iert"
         },
         "flow_title": "Withing: {profile}",
         "step": {
             "pick_implementation": {
-                "title": "Wielt Authentifikatiouns Method aus"
+                "title": "Wiel Authentifikatiouns Method aus"
             },
             "profile": {
                 "data": {
-                    "profile": "Profil"
+                    "profile": "Profil Numm"
                 },
-                "description": "W\u00e9ie Profil hutt dir op der Withings Webs\u00e4it ausgewielt? Et ass wichteg dass Profiller passen, soss ginn Donn\u00e9e\u00eb falsch gekennzeechent.",
+                "description": "G\u00ebff een eenzegartegen Profil Numm un. Typescherweise ass dat den Numm vum Profil deens du am viirechte Schr\u00ebtt ausgewielt hues.",
                 "title": "Benotzer Profil."
             },
             "reauth": {
                 "description": "De Profil \"{profile}\" muss fr\u00ebsch authentifi\u00e9iert ginn fir weiderhinn Donn\u00e9e\u00eb vun Withing z'empf\u00e4nken.",
-                "title": "{profile} fr\u00ebsch authentifiz\u00e9ieren"
+                "title": "Integratioun re-authentifiz\u00e9ieren"
             }
         }
     }

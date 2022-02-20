@@ -3,9 +3,6 @@
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado"
         },
-        "error": {
-            "connection_error": "No se pudo conectar al dispositivo BSB-Lan."
-        },
         "flow_title": "BSB-Lan: {name}",
         "step": {
             "user": {
@@ -18,6 +15,5 @@
                 "title": "Con\u00e9ctese al dispositivo BSB-Lan"
             }
         }
-    },
-    "title": "BSB-Lan"
+    }
 }

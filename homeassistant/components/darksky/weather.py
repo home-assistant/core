@@ -1,4 +1,6 @@
 """Support for retrieving meteorological data from Dark Sky."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -7,6 +9,17 @@ from requests.exceptions import ConnectionError as ConnectError, HTTPError, Time
 import voluptuous as vol
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_HAIL,
+    ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SUNNY,
+    ATTR_CONDITION_WINDY,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_TEMP,
@@ -28,7 +41,10 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utc_from_timestamp
 from homeassistant.util.pressure import convert as convert_pressure
@@ -40,18 +56,18 @@ ATTRIBUTION = "Powered by Dark Sky"
 FORECAST_MODE = ["hourly", "daily"]
 
 MAP_CONDITION = {
-    "clear-day": "sunny",
-    "clear-night": "clear-night",
-    "rain": "rainy",
-    "snow": "snowy",
-    "sleet": "snowy-rainy",
-    "wind": "windy",
-    "fog": "fog",
-    "cloudy": "cloudy",
-    "partly-cloudy-day": "partlycloudy",
-    "partly-cloudy-night": "partlycloudy",
-    "hail": "hail",
-    "thunderstorm": "lightning",
+    "clear-day": ATTR_CONDITION_SUNNY,
+    "clear-night": ATTR_CONDITION_CLEAR_NIGHT,
+    "rain": ATTR_CONDITION_RAINY,
+    "snow": ATTR_CONDITION_SNOWY,
+    "sleet": ATTR_CONDITION_SNOWY_RAINY,
+    "wind": ATTR_CONDITION_WINDY,
+    "fog": ATTR_CONDITION_FOG,
+    "cloudy": ATTR_CONDITION_CLOUDY,
+    "partly-cloudy-day": ATTR_CONDITION_PARTLYCLOUDY,
+    "partly-cloudy-night": ATTR_CONDITION_PARTLYCLOUDY,
+    "hail": ATTR_CONDITION_HAIL,
+    "thunderstorm": ATTR_CONDITION_LIGHTNING,
     "tornado": None,
 }
 
@@ -73,15 +89,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=3)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Dark Sky weather."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     name = config.get(CONF_NAME)
     mode = config.get(CONF_MODE)
 
-    units = config.get(CONF_UNITS)
-    if not units:
+    if not (units := config.get(CONF_UNITS)):
         units = "ca" if hass.config.units.is_metric else "us"
 
     dark_sky = DarkSkyData(config.get(CONF_API_KEY), latitude, longitude, units)

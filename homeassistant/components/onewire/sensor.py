@@ -1,323 +1,525 @@
 """Support for 1-Wire environment sensors."""
-from glob import glob
+from __future__ import annotations
+
+import asyncio
+import copy
+from dataclasses import dataclass
 import logging
 import os
-import time
+from types import MappingProxyType
+from typing import TYPE_CHECKING, Any
 
-from pyownet import protocol
-import voluptuous as vol
+from pi1wire import InvalidCRCException, OneWireInterface, UnsupportResponseException
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    ELECTRICAL_CURRENT_AMPERE,
-    TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
-    VOLT,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_TYPE,
+    ELECTRIC_POTENTIAL_VOLT,
+    LIGHT_LUX,
+    PERCENTAGE,
+    PRESSURE_CBAR,
+    PRESSURE_MBAR,
+    TEMP_CELSIUS,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
+
+from .const import (
+    CONF_TYPE_OWSERVER,
+    CONF_TYPE_SYSBUS,
+    DEVICE_KEYS_0_3,
+    DEVICE_KEYS_A_B,
+    DOMAIN,
+    READ_MODE_FLOAT,
+    READ_MODE_INT,
+)
+from .model import OWDirectDeviceDescription, OWServerDeviceDescription
+from .onewire_entities import (
+    OneWireBaseEntity,
+    OneWireEntityDescription,
+    OneWireProxyEntity,
+)
+from .onewirehub import OneWireHub
+
+
+@dataclass
+class OneWireSensorEntityDescription(OneWireEntityDescription, SensorEntityDescription):
+    """Class describing OneWire sensor entities."""
+
+    override_key: str | None = None
+
+
+SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION = OneWireSensorEntityDescription(
+    key="temperature",
+    device_class=SensorDeviceClass.TEMPERATURE,
+    name="Temperature",
+    native_unit_of_measurement=TEMP_CELSIUS,
+    read_mode=READ_MODE_FLOAT,
+    state_class=SensorStateClass.MEASUREMENT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_MOUNT_DIR = "mount_dir"
-CONF_NAMES = "names"
 
-DEFAULT_MOUNT_DIR = "/sys/bus/w1/devices/"
-DEVICE_SENSORS = {
-    # Family : { SensorType: owfs path }
-    "10": {"temperature": "temperature"},
-    "12": {"temperature": "TAI8570/temperature", "pressure": "TAI8570/pressure"},
-    "22": {"temperature": "temperature"},
-    "26": {
-        "temperature": "temperature",
-        "humidity": "humidity",
-        "pressure": "B1-R1-A/pressure",
-        "illuminance": "S3-R1-A/illuminance",
-        "voltage_VAD": "VAD",
-        "voltage_VDD": "VDD",
-        "current": "IAD",
-    },
-    "28": {"temperature": "temperature"},
-    "3B": {"temperature": "temperature"},
-    "42": {"temperature": "temperature"},
-    "1D": {"counter_a": "counter.A", "counter_b": "counter.B"},
-    "EF": {"HobbyBoard": "special"},
+DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
+    "10": (SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,),
+    "12": (
+        OneWireSensorEntityDescription(
+            key="TAI8570/temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            entity_registry_enabled_default=False,
+            name="Temperature",
+            native_unit_of_measurement=TEMP_CELSIUS,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        OneWireSensorEntityDescription(
+            key="TAI8570/pressure",
+            device_class=SensorDeviceClass.PRESSURE,
+            entity_registry_enabled_default=False,
+            name="Pressure",
+            native_unit_of_measurement=PRESSURE_MBAR,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
+    "22": (SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,),
+    "26": (
+        SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,
+        OneWireSensorEntityDescription(
+            key="humidity",
+            device_class=SensorDeviceClass.HUMIDITY,
+            entity_registry_enabled_default=False,
+            name="Humidity",
+            native_unit_of_measurement=PERCENTAGE,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        OneWireSensorEntityDescription(
+            key="HIH3600/humidity",
+            device_class=SensorDeviceClass.HUMIDITY,
+            entity_registry_enabled_default=False,
+            name="Humidity HIH3600",
+            native_unit_of_measurement=PERCENTAGE,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        OneWireSensorEntityDescription(
+            key="HIH4000/humidity",
+            device_class=SensorDeviceClass.HUMIDITY,
+            entity_registry_enabled_default=False,
+            name="Humidity HIH4000",
+            native_unit_of_measurement=PERCENTAGE,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        OneWireSensorEntityDescription(
+            key="HIH5030/humidity",
+            device_class=SensorDeviceClass.HUMIDITY,
+            entity_registry_enabled_default=False,
+            name="Humidity HIH5030",
+            native_unit_of_measurement=PERCENTAGE,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        OneWireSensorEntityDescription(
+            key="HTM1735/humidity",
+            device_class=SensorDeviceClass.HUMIDITY,
+            entity_registry_enabled_default=False,
+            name="Humidity HTM1735",
+            native_unit_of_measurement=PERCENTAGE,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        OneWireSensorEntityDescription(
+            key="B1-R1-A/pressure",
+            device_class=SensorDeviceClass.PRESSURE,
+            entity_registry_enabled_default=False,
+            name="Pressure",
+            native_unit_of_measurement=PRESSURE_MBAR,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        OneWireSensorEntityDescription(
+            key="S3-R1-A/illuminance",
+            device_class=SensorDeviceClass.ILLUMINANCE,
+            entity_registry_enabled_default=False,
+            name="Illuminance",
+            native_unit_of_measurement=LIGHT_LUX,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        OneWireSensorEntityDescription(
+            key="VAD",
+            device_class=SensorDeviceClass.VOLTAGE,
+            entity_registry_enabled_default=False,
+            name="Voltage VAD",
+            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        OneWireSensorEntityDescription(
+            key="VDD",
+            device_class=SensorDeviceClass.VOLTAGE,
+            entity_registry_enabled_default=False,
+            name="Voltage VDD",
+            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        OneWireSensorEntityDescription(
+            key="vis",
+            device_class=SensorDeviceClass.VOLTAGE,
+            entity_registry_enabled_default=False,
+            name="vis",
+            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
+    "28": (SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,),
+    "30": (
+        SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,
+        OneWireSensorEntityDescription(
+            key="typeX/temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            entity_registry_enabled_default=False,
+            name="Thermocouple temperature",
+            native_unit_of_measurement=TEMP_CELSIUS,
+            read_mode=READ_MODE_FLOAT,
+            override_key="typeK/temperature",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        OneWireSensorEntityDescription(
+            key="volt",
+            device_class=SensorDeviceClass.VOLTAGE,
+            entity_registry_enabled_default=False,
+            name="Voltage",
+            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        OneWireSensorEntityDescription(
+            key="vis",
+            device_class=SensorDeviceClass.VOLTAGE,
+            entity_registry_enabled_default=False,
+            name="vis",
+            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
+    "3B": (SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,),
+    "42": (SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,),
+    "1D": tuple(
+        OneWireSensorEntityDescription(
+            key=f"counter.{id}",
+            name=f"Counter {id}",
+            native_unit_of_measurement="count",
+            read_mode=READ_MODE_INT,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        )
+        for id in DEVICE_KEYS_A_B
+    ),
 }
 
 # EF sensors are usually hobbyboards specialized sensors.
 # These can only be read by OWFS.  Currently this driver only supports them
 # via owserver (network protocol)
 
-HOBBYBOARD_EF = {
-    "HobbyBoards_EF": {
-        "humidity": "humidity/humidity_corrected",
-        "humidity_raw": "humidity/humidity_raw",
-        "temperature": "humidity/temperature",
-    },
-    "HB_MOISTURE_METER": {
-        "moisture_0": "moisture/sensor.0",
-        "moisture_1": "moisture/sensor.1",
-        "moisture_2": "moisture/sensor.2",
-        "moisture_3": "moisture/sensor.3",
-    },
+HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
+    "HobbyBoards_EF": (
+        OneWireSensorEntityDescription(
+            key="humidity/humidity_corrected",
+            device_class=SensorDeviceClass.HUMIDITY,
+            name="Humidity",
+            native_unit_of_measurement=PERCENTAGE,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        OneWireSensorEntityDescription(
+            key="humidity/humidity_raw",
+            device_class=SensorDeviceClass.HUMIDITY,
+            name="Humidity Raw",
+            native_unit_of_measurement=PERCENTAGE,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        OneWireSensorEntityDescription(
+            key="humidity/temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            name="Temperature",
+            native_unit_of_measurement=TEMP_CELSIUS,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
+    "HB_MOISTURE_METER": tuple(
+        OneWireSensorEntityDescription(
+            key=f"moisture/sensor.{id}",
+            device_class=SensorDeviceClass.PRESSURE,
+            name=f"Moisture {id}",
+            native_unit_of_measurement=PRESSURE_CBAR,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        )
+        for id in DEVICE_KEYS_0_3
+    ),
 }
 
-SENSOR_TYPES = {
-    # SensorType: [ Measured unit, Unit ]
-    "temperature": ["temperature", TEMP_CELSIUS],
-    "humidity": ["humidity", UNIT_PERCENTAGE],
-    "humidity_raw": ["humidity", UNIT_PERCENTAGE],
-    "pressure": ["pressure", "mb"],
-    "illuminance": ["illuminance", "lux"],
-    "wetness_0": ["wetness", UNIT_PERCENTAGE],
-    "wetness_1": ["wetness", UNIT_PERCENTAGE],
-    "wetness_2": ["wetness", UNIT_PERCENTAGE],
-    "wetness_3": ["wetness", UNIT_PERCENTAGE],
-    "moisture_0": ["moisture", "cb"],
-    "moisture_1": ["moisture", "cb"],
-    "moisture_2": ["moisture", "cb"],
-    "moisture_3": ["moisture", "cb"],
-    "counter_a": ["counter", "count"],
-    "counter_b": ["counter", "count"],
-    "HobbyBoard": ["none", "none"],
-    "voltage": ["voltage", VOLT],
-    "voltage_VAD": ["voltage", VOLT],
-    "voltage_VDD": ["voltage", VOLT],
-    "current": ["current", ELECTRICAL_CURRENT_AMPERE],
+# 7E sensors are special sensors by Embedded Data Systems
+
+EDS_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
+    "EDS0066": (
+        OneWireSensorEntityDescription(
+            key="EDS0066/temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            name="Temperature",
+            native_unit_of_measurement=TEMP_CELSIUS,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        OneWireSensorEntityDescription(
+            key="EDS0066/pressure",
+            device_class=SensorDeviceClass.PRESSURE,
+            name="Pressure",
+            native_unit_of_measurement=PRESSURE_MBAR,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
+    "EDS0068": (
+        OneWireSensorEntityDescription(
+            key="EDS0068/temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            name="Temperature",
+            native_unit_of_measurement=TEMP_CELSIUS,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        OneWireSensorEntityDescription(
+            key="EDS0068/pressure",
+            device_class=SensorDeviceClass.PRESSURE,
+            name="Pressure",
+            native_unit_of_measurement=PRESSURE_MBAR,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        OneWireSensorEntityDescription(
+            key="EDS0068/light",
+            device_class=SensorDeviceClass.ILLUMINANCE,
+            name="Illuminance",
+            native_unit_of_measurement=LIGHT_LUX,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        OneWireSensorEntityDescription(
+            key="EDS0068/humidity",
+            device_class=SensorDeviceClass.HUMIDITY,
+            name="Humidity",
+            native_unit_of_measurement=PERCENTAGE,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAMES): {cv.string: cv.string},
-        vol.Optional(CONF_MOUNT_DIR, default=DEFAULT_MOUNT_DIR): cv.string,
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=4304): cv.port,
-    }
-)
 
-
-def hb_info_from_type(dev_type="std"):
+def get_sensor_types(
+    device_sub_type: str,
+) -> dict[str, tuple[OneWireSensorEntityDescription, ...]]:
     """Return the proper info array for the device type."""
-    if "std" in dev_type:
-        return DEVICE_SENSORS
-    if "HobbyBoard" in dev_type:
+    if "HobbyBoard" in device_sub_type:
         return HOBBYBOARD_EF
+    if "EDS" in device_sub_type:
+        return EDS_SENSORS
+    return DEVICE_SENSORS
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the one wire Sensors."""
-    base_dir = config[CONF_MOUNT_DIR]
-    owport = config[CONF_PORT]
-    owhost = config.get(CONF_HOST)
-    if owhost:
-        _LOGGER.debug("Initializing using %s:%s", owhost, owport)
-    else:
-        _LOGGER.debug("Initializing using %s", base_dir)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up 1-Wire platform."""
+    onewirehub = hass.data[DOMAIN][config_entry.entry_id]
+    entities = await hass.async_add_executor_job(
+        get_entities, onewirehub, config_entry.data
+    )
+    async_add_entities(entities, True)
 
-    devs = []
-    device_names = {}
-    if CONF_NAMES in config:
-        if isinstance(config[CONF_NAMES], dict):
-            device_names = config[CONF_NAMES]
 
+def get_entities(
+    onewirehub: OneWireHub, config: MappingProxyType[str, Any]
+) -> list[SensorEntity]:
+    """Get a list of entities."""
+    if not onewirehub.devices:
+        return []
+
+    entities: list[SensorEntity] = []
+    conf_type = config[CONF_TYPE]
     # We have an owserver on a remote(or local) host/port
-    if owhost:
-        try:
-            owproxy = protocol.proxy(host=owhost, port=owport)
-            devices = owproxy.dir()
-        except protocol.Error as exc:
-            _LOGGER.error(
-                "Cannot connect to owserver on %s:%d, got: %s", owhost, owport, exc
-            )
-            devices = []
-        for device in devices:
-            _LOGGER.debug("Found device: %s", device)
-            family = owproxy.read(f"{device}family").decode()
-            dev_type = "std"
+    if conf_type == CONF_TYPE_OWSERVER:
+        assert onewirehub.owproxy
+        for device in onewirehub.devices:
+            if TYPE_CHECKING:
+                assert isinstance(device, OWServerDeviceDescription)
+            family = device.family
+            device_type = device.type
+            device_id = device.id
+            device_info = device.device_info
+            device_sub_type = "std"
+            device_path = device.path
             if "EF" in family:
-                dev_type = "HobbyBoard"
-                family = owproxy.read(f"{device}type").decode()
+                device_sub_type = "HobbyBoard"
+                family = device_type
+            elif "7E" in family:
+                device_sub_type = "EDS"
+                family = device_type
 
-            if family not in hb_info_from_type(dev_type):
-                _LOGGER.warning(
-                    "Ignoring unknown family (%s) of sensor found for device: %s",
-                    family,
-                    device,
-                )
+            if family not in get_sensor_types(device_sub_type):
                 continue
-            for sensor_key, sensor_value in hb_info_from_type(dev_type)[family].items():
-                if "moisture" in sensor_key:
-                    s_id = sensor_key.split("_")[1]
+            for description in get_sensor_types(device_sub_type)[family]:
+                if description.key.startswith("moisture/"):
+                    s_id = description.key.split(".")[1]
                     is_leaf = int(
-                        owproxy.read(f"{device}moisture/is_leaf.{s_id}").decode()
+                        onewirehub.owproxy.read(
+                            f"{device_path}moisture/is_leaf.{s_id}"
+                        ).decode()
                     )
                     if is_leaf:
-                        sensor_key = f"wetness_{id}"
-                sensor_id = os.path.split(os.path.split(device)[0])[1]
-                device_file = os.path.join(os.path.split(device)[0], sensor_value)
-                devs.append(
-                    OneWireProxy(
-                        device_names.get(sensor_id, sensor_id),
-                        device_file,
-                        sensor_key,
-                        owproxy,
+                        description = copy.deepcopy(description)
+                        description.device_class = SensorDeviceClass.HUMIDITY
+                        description.native_unit_of_measurement = PERCENTAGE
+                        description.name = f"Wetness {s_id}"
+                device_file = os.path.join(
+                    os.path.split(device.path)[0],
+                    description.override_key or description.key,
+                )
+                name = f"{device_id} {description.name}"
+                entities.append(
+                    OneWireProxySensor(
+                        description=description,
+                        device_id=device_id,
+                        device_file=device_file,
+                        device_info=device_info,
+                        name=name,
+                        owproxy=onewirehub.owproxy,
                     )
                 )
 
     # We have a raw GPIO ow sensor on a Pi
-    elif base_dir == DEFAULT_MOUNT_DIR:
-        for device_family in DEVICE_SENSORS:
-            for device_folder in glob(os.path.join(base_dir, f"{device_family}[.-]*")):
-                sensor_id = os.path.split(device_folder)[1]
-                device_file = os.path.join(device_folder, "w1_slave")
-                devs.append(
-                    OneWireDirect(
-                        device_names.get(sensor_id, sensor_id),
-                        device_file,
-                        "temperature",
-                    )
+    elif conf_type == CONF_TYPE_SYSBUS:
+        for device in onewirehub.devices:
+            if TYPE_CHECKING:
+                assert isinstance(device, OWDirectDeviceDescription)
+            p1sensor: OneWireInterface = device.interface
+            family = p1sensor.mac_address[:2]
+            device_id = f"{family}-{p1sensor.mac_address[2:]}"
+            device_info = device.device_info
+            description = SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION
+            device_file = f"/sys/bus/w1/devices/{device_id}/w1_slave"
+            name = f"{device_id} {description.name}"
+            entities.append(
+                OneWireDirectSensor(
+                    description=description,
+                    device_id=device_id,
+                    device_file=device_file,
+                    device_info=device_info,
+                    name=name,
+                    owsensor=p1sensor,
                 )
+            )
 
-    # We have an owfs mounted
-    else:
-        for family_file_path in glob(os.path.join(base_dir, "*", "family")):
-            with open(family_file_path) as family_file:
-                family = family_file.read()
-            if "EF" in family:
-                continue
-            if family in DEVICE_SENSORS:
-                for sensor_key, sensor_value in DEVICE_SENSORS[family].items():
-                    sensor_id = os.path.split(os.path.split(family_file_path)[0])[1]
-                    device_file = os.path.join(
-                        os.path.split(family_file_path)[0], sensor_value
-                    )
-                    devs.append(
-                        OneWireOWFS(
-                            device_names.get(sensor_id, sensor_id),
-                            device_file,
-                            sensor_key,
-                        )
-                    )
-
-    if devs == []:
-        _LOGGER.error(
-            "No onewire sensor found. Check if dtoverlay=w1-gpio "
-            "is in your /boot/config.txt. "
-            "Check the mount_dir parameter if it's defined"
-        )
-        return
-
-    add_entities(devs, True)
+    return entities
 
 
-class OneWire(Entity):
-    """Implementation of an One wire Sensor."""
+class OneWireSensor(OneWireBaseEntity, SensorEntity):
+    """Mixin for sensor specific attributes."""
 
-    def __init__(self, name, device_file, sensor_type):
-        """Initialize the sensor."""
-        self._name = f"{name} {sensor_type.capitalize()}"
-        self._device_file = device_file
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._state = None
-        self._value_raw = None
+    entity_description: OneWireSensorEntityDescription
 
-    def _read_value_raw(self):
-        """Read the value as it is returned by the sensor."""
-        with open(self._device_file) as ds_device_file:
-            lines = ds_device_file.readlines()
-        return lines
+
+class OneWireProxySensor(OneWireProxyEntity, OneWireSensor):
+    """Implementation of a 1-Wire sensor connected through owserver."""
+
+    entity_description: OneWireSensorEntityDescription
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        if "count" in self._unit_of_measurement:
-            return int(self._state)
+    def native_value(self) -> StateType:
+        """Return the state of the entity."""
         return self._state
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
+
+class OneWireDirectSensor(OneWireSensor):
+    """Implementation of a 1-Wire sensor directly connected to RPI GPIO."""
+
+    def __init__(
+        self,
+        description: OneWireSensorEntityDescription,
+        device_id: str,
+        device_info: DeviceInfo,
+        device_file: str,
+        name: str,
+        owsensor: OneWireInterface,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(
+            description=description,
+            device_id=device_id,
+            device_info=device_info,
+            device_file=device_file,
+            name=name,
+        )
+        self._attr_unique_id = device_file
+        self._owsensor = owsensor
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return {"device_file": self._device_file, "raw_value": self._value_raw}
+    def native_value(self) -> StateType:
+        """Return the state of the entity."""
+        return self._state
 
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._device_file
-
-
-class OneWireProxy(OneWire):
-    """Implementation of a One wire Sensor through owserver."""
-
-    def __init__(self, name, device_file, sensor_type, owproxy):
-        """Initialize the onewire sensor via owserver."""
-        super().__init__(name, device_file, sensor_type)
-        self._owproxy = owproxy
-
-    def _read_value_ownet(self):
-        """Read a value from the owserver."""
-        if self._owproxy:
-            return self._owproxy.read(self._device_file).decode().lstrip()
-        return None
-
-    def update(self):
+    async def get_temperature(self) -> float:
         """Get the latest data from the device."""
-        value = None
-        value_read = False
+        attempts = 1
+        while True:
+            try:
+                return await self.hass.async_add_executor_job(
+                    self._owsensor.get_temperature
+                )
+            except UnsupportResponseException as ex:
+                _LOGGER.debug(
+                    "Cannot read from sensor %s (retry attempt %s): %s",
+                    self._device_file,
+                    attempts,
+                    ex,
+                )
+                await asyncio.sleep(0.2)
+                attempts += 1
+                if attempts > 10:
+                    raise
+
+    async def async_update(self) -> None:
+        """Get the latest data from the device."""
         try:
-            value_read = self._read_value_ownet()
-        except protocol.Error as exc:
-            _LOGGER.error("Owserver failure in read(), got: %s", exc)
-        if value_read:
-            value = round(float(value_read), 1)
-            self._value_raw = float(value_read)
-
-        self._state = value
-
-
-class OneWireDirect(OneWire):
-    """Implementation of an One wire Sensor directly connected to RPI GPIO."""
-
-    def update(self):
-        """Get the latest data from the device."""
-        value = None
-        lines = self._read_value_raw()
-        while lines[0].strip()[-3:] != "YES":
-            time.sleep(0.2)
-            lines = self._read_value_raw()
-        equals_pos = lines[1].find("t=")
-        if equals_pos != -1:
-            value_string = lines[1][equals_pos + 2 :]
-            value = round(float(value_string) / 1000.0, 1)
-            self._value_raw = float(value_string)
-        self._state = value
-
-
-class OneWireOWFS(OneWire):
-    """Implementation of an One wire Sensor through owfs."""
-
-    def update(self):
-        """Get the latest data from the device."""
-        value = None
-        try:
-            value_read = self._read_value_raw()
-            if len(value_read) == 1:
-                value = round(float(value_read[0]), 1)
-                self._value_raw = float(value_read[0])
-        except ValueError:
-            _LOGGER.warning("Invalid value read from %s", self._device_file)
-        except FileNotFoundError:
-            _LOGGER.warning("Cannot read from sensor: %s", self._device_file)
-
-        self._state = value
+            self._value_raw = await self.get_temperature()
+            self._state = round(self._value_raw, 1)
+        except (
+            FileNotFoundError,
+            InvalidCRCException,
+            UnsupportResponseException,
+        ) as ex:
+            _LOGGER.warning(
+                "Cannot read from sensor %s: %s",
+                self._device_file,
+                ex,
+            )
+            self._state = None

@@ -1,4 +1,6 @@
 """Support for transport.opendata.ch."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -6,11 +8,13 @@ from opendata_transport import OpendataTransport
 from opendata_transport.exceptions import OpendataTransportError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,7 +50,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Swiss public transport sensor."""
 
     name = config.get(CONF_NAME)
@@ -54,7 +63,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     destination = config.get(CONF_DESTINATION)
 
     session = async_get_clientsession(hass)
-    opendata = OpendataTransport(start, destination, hass.loop, session)
+    opendata = OpendataTransport(start, destination, session)
 
     try:
         await opendata.async_get_data()
@@ -68,7 +77,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([SwissPublicTransportSensor(opendata, start, destination, name)])
 
 
-class SwissPublicTransportSensor(Entity):
+class SwissPublicTransportSensor(SensorEntity):
     """Implementation of an Swiss public transport sensor."""
 
     def __init__(self, opendata, start, destination, name):
@@ -85,7 +94,7 @@ class SwissPublicTransportSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return (
             self._opendata.connections[0]["departure"]
@@ -94,7 +103,7 @@ class SwissPublicTransportSensor(Entity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._opendata is None:
             return
@@ -103,7 +112,7 @@ class SwissPublicTransportSensor(Entity):
             self._opendata.connections[0]["departure"]
         ) - dt_util.as_local(dt_util.utcnow())
 
-        attr = {
+        return {
             ATTR_TRAIN_NUMBER: self._opendata.connections[0]["number"],
             ATTR_PLATFORM: self._opendata.connections[0]["platform"],
             ATTR_TRANSFERS: self._opendata.connections[0]["transfers"],
@@ -116,7 +125,6 @@ class SwissPublicTransportSensor(Entity):
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_DELAY: self._opendata.connections[0]["delay"],
         }
-        return attr
 
     @property
     def icon(self):

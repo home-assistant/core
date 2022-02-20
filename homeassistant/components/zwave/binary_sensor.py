@@ -3,8 +3,10 @@ import datetime
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_point_in_time
 import homeassistant.util.dt as dt_util
 
@@ -14,7 +16,11 @@ from .const import COMMAND_CLASS_SENSOR_BINARY
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Z-Wave binary sensors from Config Entry."""
 
     @callback
@@ -59,7 +65,7 @@ class ZWaveBinarySensor(BinarySensorEntity, ZWaveDeviceEntity):
 
     @property
     def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
+        """Return the class of this sensor, from BinarySensorDeviceClass."""
         return self._sensor_type
 
 

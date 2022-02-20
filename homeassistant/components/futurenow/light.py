@@ -1,6 +1,5 @@
 """Support for FutureNow Ethernet unit outputs as Lights."""
-
-import logging
+from __future__ import annotations
 
 import pyfnip
 import voluptuous as vol
@@ -12,9 +11,10 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_DRIVER = "driver"
 CONF_DRIVER_FNIP6X10AD = "FNIP6x10ad"
@@ -38,7 +38,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the light platform for each FutureNow unit."""
     lights = []
     for channel, device_config in config[CONF_DEVICES].items():
@@ -56,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 def to_futurenow_level(level):
     """Convert the given Home Assistant light level (0-255) to FutureNow (0-100)."""
-    return int((level * 100) / 255)
+    return round((level * 100) / 255)
 
 
 def to_hass_level(level):

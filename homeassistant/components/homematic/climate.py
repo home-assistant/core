@@ -1,5 +1,5 @@
 """Support for Homematic thermostats."""
-import logging
+from __future__ import annotations
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -9,15 +9,17 @@ from homeassistant.components.climate.const import (
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
+    PRESET_NONE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import ATTR_DISCOVER_DEVICES, HM_ATTRIBUTE_SUPPORT
 from .entity import HMDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 HM_TEMP_MAP = ["ACTUAL_TEMPERATURE", "TEMPERATURE"]
 
@@ -35,7 +37,12 @@ HMIP_CONTROL_MODE = "SET_POINT_MODE"
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Homematic thermostat platform."""
     if discovery_info is None:
         return
@@ -96,14 +103,14 @@ class HMThermostat(HMDevice, ClimateEntity):
             return "boost"
 
         if not self._hm_control_mode:
-            return None
+            return PRESET_NONE
 
         mode = HM_ATTRIBUTE_SUPPORT[HM_CONTROL_MODE][1][self._hm_control_mode]
         mode = mode.lower()
 
         # Filter HVAC states
         if mode not in (HVAC_MODE_AUTO, HVAC_MODE_HEAT):
-            return None
+            return PRESET_NONE
         return mode
 
     @property
@@ -136,8 +143,7 @@ class HMThermostat(HMDevice, ClimateEntity):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return None
 
         self._hmdevice.writeNodeData(self._state, float(temperature))

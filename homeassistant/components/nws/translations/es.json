@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositivo ya est\u00e1 configurado"
+            "already_configured": "El servicio ya est\u00e1 configurado"
         },
         "error": {
-            "cannot_connect": "No se pudo conectar, por favor, int\u00e9ntalo de nuevo",
+            "cannot_connect": "No se pudo conectar",
             "unknown": "Error inesperado"
         },
         "step": {

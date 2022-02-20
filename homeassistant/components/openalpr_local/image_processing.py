@@ -1,27 +1,30 @@
 """Component that will help set the OpenALPR local for ALPR processing."""
+from __future__ import annotations
+
 import asyncio
 import io
-import logging
 import re
 
 import voluptuous as vol
 
 from homeassistant.components.image_processing import (
     ATTR_CONFIDENCE,
-    ATTR_ENTITY_ID,
     CONF_CONFIDENCE,
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    CONF_SOURCE,
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
-from homeassistant.const import CONF_REGION
-from homeassistant.core import callback, split_entity_id
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_ENTITY_ID,
+    CONF_NAME,
+    CONF_REGION,
+    CONF_SOURCE,
+)
+from homeassistant.core import HomeAssistant, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.async_ import run_callback_threadsafe
-
-_LOGGER = logging.getLogger(__name__)
 
 RE_ALPR_PLATE = re.compile(r"^plate\d*:")
 RE_ALPR_RESULT = re.compile(r"- (\w*)\s*confidence: (\d*.\d*)")
@@ -59,7 +62,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the OpenALPR local platform."""
     command = [config[CONF_ALPR_BIN], "-c", config[CONF_REGION], "-"]
     confidence = config[CONF_CONFIDENCE]
@@ -102,11 +110,9 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
         return "alpr"
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
-        attr = {ATTR_PLATES: self.plates, ATTR_VEHICLES: self.vehicles}
-
-        return attr
+        return {ATTR_PLATES: self.plates, ATTR_VEHICLES: self.vehicles}
 
     def process_plates(self, plates, vehicles):
         """Send event with new plates and store data."""
@@ -188,7 +194,6 @@ class OpenAlprLocalEntity(ImageProcessingAlprEntity):
 
         alpr = await asyncio.create_subprocess_exec(
             *self._cmd,
-            loop=self.hass.loop,
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.DEVNULL,

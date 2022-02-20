@@ -1,0 +1,27 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida"
+        },
+        "flow_title": "{username}",
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Autenticazione non riuscita per OVO Energy. Digita le credenziali attuali.",
+                "title": "Nuova autenticazione"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "description": "Configura un'istanza OVO Energy per accedere al tuo consumo energetico.",
+                "title": "Aggiungi Conto Energetico OVO"
+            }
+        }
+    }
+}

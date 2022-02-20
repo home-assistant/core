@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u8bbe\u5907\u5df2\u7ecf\u914d\u7f6e\u8fc7\u4e86",
+            "already_in_progress": "\u914d\u7f6e\u6d41\u7a0b\u5df2\u5728\u8fdb\u884c\u4e2d",
+            "not_xiaomi_aqara": "\u8fd9\u4e0d\u662f\u5c0f\u7c73 Aqara \u7f51\u5173\u3002\u53d1\u73b0\u7684\u8bbe\u5907\u4e0e\u5df2\u77e5\u7f51\u5173\u4e0d\u5339\u914d"
+        },
+        "error": {
+            "discovery_error": "\u672a\u53d1\u73b0\u5c0f\u7c73 Aqara \u7f51\u5173\u3002\u8bf7\u5c1d\u8bd5\u4f7f\u7528\u8fd0\u884c Home Assistant \u7684\u8bbe\u5907 IP \u4f5c\u4e3a\u63a5\u53e3",
+            "invalid_host": "IP \u5730\u5740\u65e0\u6548\u3002\u8bf7\u53c2\u9605 https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
+            "invalid_interface": "\u7f51\u7edc\u63a5\u53e3\u65e0\u6548",
+            "invalid_key": "\u7f51\u5173 key \u65e0\u6548",
+            "invalid_mac": "MAC \u5730\u5740\u65e0\u6548"
+        },
+        "flow_title": "\u5c0f\u7c73 Aqara \u7f51\u5173\uff1a{name}",
+        "step": {
+            "select": {
+                "data": {
+                    "select_ip": "\u7f51\u5173 IP"
+                },
+                "description": "\u5982\u679c\u8981\u8fde\u63a5\u5176\u4ed6\u7f51\u5173\uff0c\u8bf7\u518d\u6b21\u8fd0\u884c\u914d\u7f6e\u7a0b\u5e8f",
+                "title": "\u9009\u62e9\u8981\u8fde\u63a5\u7684\u5c0f\u7c73 Aqara \u7f51\u5173"
+            },
+            "settings": {
+                "data": {
+                    "key": "\u7f51\u5173 key",
+                    "name": "\u7f51\u5173\u540d\u79f0"
+                },
+                "description": "\u6240\u9700\u7684 key \u53ef\u4ee5\u53c2\u8003\u4ee5\u4e0b\u6559\u7a0b\u83b7\u53d6: https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz \u3002\u5982\u679c\u672a\u63d0\u4f9b key\uff0c\u5219\u53ea\u80fd\u8bbf\u95ee\u4f20\u611f\u5668",
+                "title": "\u5c0f\u7c73 Aqara \u7f51\u5173\u7684\u53ef\u9009\u8bbe\u7f6e"
+            },
+            "user": {
+                "data": {
+                    "host": "IP \u5730\u5740 (\u53ef\u9009)",
+                    "interface": "\u8981\u4f7f\u7528\u7684\u7f51\u7edc\u63a5\u53e3",
+                    "mac": "MAC \u5730\u5740 (\u53ef\u9009)"
+                },
+                "description": "\u8fde\u63a5\u5230\u60a8\u7684\u5c0f\u7c73 Aqara \u7f51\u5173\uff0c\u5982\u679c IP \u548c MAC \u5730\u5740\u7559\u7a7a\uff0c\u5219\u4f7f\u7528\u81ea\u52a8\u53d1\u73b0",
+                "title": "\u5c0f\u7c73 Aqara \u7f51\u5173"
+            }
+        }
+    }
+}

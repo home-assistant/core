@@ -1,7 +1,7 @@
 """Support for Plum Lightpad lights."""
+from __future__ import annotations
+
 import asyncio
-import logging
-from typing import Callable, List
 
 from plumlightpad import Plum
 
@@ -15,25 +15,24 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity]], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Plum Lightpad dimmer lights and glow rings."""
 
     plum: Plum = hass.data[DOMAIN][entry.entry_id]
 
     def setup_entities(device) -> None:
-        entities = []
+        entities: list[LightEntity] = []
 
         if "lpid" in device:
             lightpad = plum.get_lightpad(device["lpid"])
@@ -96,14 +95,14 @@ class PlumLight(LightEntity):
         return self._load.name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "name": self.name,
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "model": "Dimmer",
-            "manufacturer": "Plum",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Plum",
+            model="Dimmer",
+            name=self.name,
+        )
 
     @property
     def brightness(self) -> int:
@@ -187,14 +186,14 @@ class GlowRing(LightEntity):
         return self._name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "name": self.name,
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "model": "Glow Ring",
-            "manufacturer": "Plum",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Plum",
+            model="Glow Ring",
+            name=self.name,
+        )
 
     @property
     def brightness(self) -> int:

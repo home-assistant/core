@@ -1,5 +1,4 @@
 """Support for Xiomi Gateway alarm control panels."""
-
 from functools import partial
 import logging
 
@@ -9,13 +8,17 @@ from homeassistant.components.alarm_control_panel import (
     SUPPORT_ALARM_ARM_AWAY,
     AlarmControlPanelEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import CONF_GATEWAY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,10 +27,14 @@ XIAOMI_STATE_DISARMED_VALUE = "off"
 XIAOMI_STATE_ARMING_VALUE = "oning"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Xiaomi Gateway Alarm from a config entry."""
     entities = []
-    gateway = hass.data[DOMAIN][config_entry.entry_id]
+    gateway = hass.data[DOMAIN][config_entry.entry_id][CONF_GATEWAY]
     entity = XiaomiGatewayAlarm(
         gateway,
         f"{config_entry.title} Alarm",
@@ -65,11 +72,11 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
         return self._gateway_device_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info of the gateway."""
-        return {
-            "identifiers": {(DOMAIN, self._gateway_device_id)},
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._gateway_device_id)},
+        )
 
     @property
     def name(self):
@@ -123,8 +130,10 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
         try:
             state = await self.hass.async_add_executor_job(self._gateway.alarm.status)
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
+
             return
 
         _LOGGER.debug("Got new state: %s", state)

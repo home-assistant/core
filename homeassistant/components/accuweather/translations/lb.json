@@ -14,9 +14,9 @@
                     "api_key": "API Schl\u00ebssel",
                     "latitude": "Breedegrad",
                     "longitude": "L\u00e4ngegrad",
-                    "name": "Numm vun der Integratioun"
+                    "name": "Numm"
                 },
-                "description": "Falls du H\u00ebllef mat der Konfiguratioun brauch kuck h\u00e9i:\nhttps://www.home-assistant.io/integrations/accuweather/\n\nWieder Pr\u00e9visounen si standardm\u00e9isseg net aktiv. Du kanns d\u00e9i an den Optioune vun der Integratioun aschalten.",
+                "description": "Falls du H\u00ebllef mat der Konfiguratioun brauch kuck h\u00e9i:\nhttps://www.home-assistant.io/integrations/accuweather/\n\nVerschidde Sensoren si standardm\u00e9isseg net aktiv. Du kanns d\u00e9i an der Entit\u00e9ie Registry no der Konfiguratioun vun der Integratioun aschalten.\n\nWieder Pr\u00e9visounen si standardm\u00e9isseg net aktiv. Du kanns d\u00e9i an den Optioune vun der Integratioun aschalten.",
                 "title": "AccuWeather"
             }
         }
@@ -30,6 +30,12 @@
                 "description": "Duerch d'Limite vun der Gratis Versioun vun der AccuWeather API, wann d'Wieder Pr\u00e9visoune aktiv\u00e9iert sinn, ginn d'Aktualis\u00e9ierungen all 64 Minutten gemaach, am plaatz vun all 32 Minutten.",
                 "title": "AccuWeather Optiounen"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "AccuWeather Server ereechbar",
+            "remaining_requests": "Rescht vun erlaabten Ufroen"
         }
     }
 }

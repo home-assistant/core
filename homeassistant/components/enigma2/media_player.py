@@ -1,5 +1,5 @@
 """Support for Enigma2 media players."""
-import logging
+from __future__ import annotations
 
 from openwebif.api import CreateDevice
 import voluptuous as vol
@@ -29,10 +29,11 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
-
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 ATTR_MEDIA_CURRENTLY_RECORDING = "media_currently_recording"
 ATTR_MEDIA_DESCRIPTION = "media_description"
@@ -85,7 +86,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_devices: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up of an enigma2 media player."""
     if discovery_info:
         # Discovery gives us the streaming service port (8001)
@@ -131,11 +137,21 @@ class Enigma2Device(MediaPlayerEntity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return the unique ID for this entity."""
+        return self.e2_box.mac_address
+
+    @property
     def state(self):
         """Return the state of the device."""
         if self.e2_box.is_recording_playback:
             return STATE_PLAYING
         return STATE_OFF if self.e2_box.in_standby else STATE_ON
+
+    @property
+    def available(self):
+        """Return True if the device is available."""
+        return not self.e2_box.is_offline
 
     @property
     def supported_features(self):
@@ -245,7 +261,7 @@ class Enigma2Device(MediaPlayerEntity):
         self.e2_box.update()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes.
 
         isRecording:        Is the box currently recording.
@@ -253,17 +269,13 @@ class Enigma2Device(MediaPlayerEntity):
         currservice_begin:  is in the format '21:00'.
         currservice_end:    is in the format '21:00'.
         """
-        attributes = {}
-        if not self.e2_box.in_standby:
-            attributes[ATTR_MEDIA_CURRENTLY_RECORDING] = self.e2_box.status_info[
-                "isRecording"
-            ]
-            attributes[ATTR_MEDIA_DESCRIPTION] = self.e2_box.status_info[
+        if self.e2_box.in_standby:
+            return {}
+        return {
+            ATTR_MEDIA_CURRENTLY_RECORDING: self.e2_box.status_info["isRecording"],
+            ATTR_MEDIA_DESCRIPTION: self.e2_box.status_info[
                 "currservice_fulldescription"
-            ]
-            attributes[ATTR_MEDIA_START_TIME] = self.e2_box.status_info[
-                "currservice_begin"
-            ]
-            attributes[ATTR_MEDIA_END_TIME] = self.e2_box.status_info["currservice_end"]
-
-        return attributes
+            ],
+            ATTR_MEDIA_START_TIME: self.e2_box.status_info["currservice_begin"],
+            ATTR_MEDIA_END_TIME: self.e2_box.status_info["currservice_end"],
+        }

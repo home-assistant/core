@@ -2,11 +2,6 @@
     "config": {
         "abort": {
             "mqtt_required": "\u672a\u8bbe\u7f6e MQTT \u96c6\u6210"
-        },
-        "step": {
-            "user": {
-                "title": "\u786e\u8ba4\u8bbe\u7f6e"
-            }
         }
     }
 }

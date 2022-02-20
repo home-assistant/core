@@ -3,5 +3,6 @@
   "name": "Push",
   "documentation": "https://www.home-assistant.io/integrations/push",
   "dependencies": ["webhook"],
-  "codeowners": ["@dgomes"]
+  "codeowners": ["@dgomes"],
+  "iot_class": "local_push"
 }

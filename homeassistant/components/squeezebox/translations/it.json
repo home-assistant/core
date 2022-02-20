@@ -10,7 +10,7 @@
             "no_server_found": "Impossibile rilevare automaticamente il server.",
             "unknown": "Errore imprevisto"
         },
-        "flow_title": "Logitech Squeezebox: {host}",
+        "flow_title": "{host}",
         "step": {
             "edit": {
                 "data": {
@@ -19,15 +19,13 @@
                     "port": "Porta",
                     "username": "Nome utente"
                 },
-                "title": "Modificare le informazioni di connessione"
+                "title": "Modifica le informazioni di connessione"
             },
             "user": {
                 "data": {
                     "host": "Host"
-                },
-                "title": "Configurare Logitech Media Server"
+                }
             }
         }
-    },
-    "title": "Logitech Squeezebox"
+    }
 }

@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "name_exists": "Ime ve\u0107 postoji"
-        },
         "step": {
             "user": {
                 "data": {

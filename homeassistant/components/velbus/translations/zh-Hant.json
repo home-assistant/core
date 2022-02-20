@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "port_exists": "\u6b64\u901a\u8a0a\u57e0\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
-            "connection_failed": "Velbus \u9023\u7dda\u5931\u6557",
-            "port_exists": "\u6b64\u901a\u8a0a\u57e0\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
         "step": {
             "user": {

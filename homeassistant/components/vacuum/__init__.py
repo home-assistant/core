@@ -1,10 +1,13 @@
 """Support for vacuum cleaner robots (botvacs)."""
+from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
 import logging
+from typing import final
 
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
     ATTR_BATTERY_LEVEL,
     ATTR_COMMAND,
@@ -15,15 +18,22 @@ from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
     STATE_ON,
     STATE_PAUSED,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
     make_entity_service_schema,
 )
-from homeassistant.helpers.entity import Entity, ToggleEntity
+from homeassistant.helpers.entity import (
+    Entity,
+    EntityDescription,
+    ToggleEntity,
+    ToggleEntityDescription,
+)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -31,6 +41,7 @@ from homeassistant.loader import bind_hass
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "vacuum"
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = timedelta(seconds=20)
 
 ATTR_BATTERY_ICON = "battery_icon"
@@ -82,7 +93,7 @@ def is_on(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the vacuum component."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
@@ -121,14 +132,16 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN].async_setup_entry(entry)
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_setup_entry(entry)
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN].async_unload_entry(entry)
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_unload_entry(entry)
 
 
 class _BaseVacuum(Entity):
@@ -253,8 +266,15 @@ class _BaseVacuum(Entity):
         )
 
 
+@dataclass
+class VacuumEntityDescription(ToggleEntityDescription):
+    """A class that describes vacuum entities."""
+
+
 class VacuumEntity(_BaseVacuum, ToggleEntity):
     """Representation of a vacuum cleaner robot."""
+
+    entity_description: VacuumEntityDescription
 
     @property
     def status(self):
@@ -271,6 +291,7 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
             battery_level=self.battery_level, charging=charging
         )
 
+    @final
     @property
     def state_attributes(self):
         """Return the state attributes of the vacuum cleaner."""
@@ -321,19 +342,15 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
         """Not supported."""
 
 
-class VacuumDevice(VacuumEntity):
-    """Representation of a vacuum (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "VacuumDevice is deprecated, modify %s to extend VacuumEntity", cls.__name__
-        )
+@dataclass
+class StateVacuumEntityDescription(EntityDescription):
+    """A class that describes vacuum entities."""
 
 
 class StateVacuumEntity(_BaseVacuum):
     """Representation of a vacuum cleaner robot that supports states."""
+
+    entity_description: StateVacuumEntityDescription
 
     @property
     def state(self):
@@ -379,15 +396,3 @@ class StateVacuumEntity(_BaseVacuum):
 
     async def async_toggle(self, **kwargs):
         """Not supported."""
-
-
-class StateVacuumDevice(StateVacuumEntity):
-    """Representation of a vacuum (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "StateVacuumDevice is deprecated, modify %s to extend StateVacuumEntity",
-            cls.__name__,
-        )

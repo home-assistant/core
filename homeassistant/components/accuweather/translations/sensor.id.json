@@ -1,0 +1,9 @@
+{
+    "state": {
+        "accuweather__pressure_tendency": {
+            "falling": "Turun",
+            "rising": "Naik",
+            "steady": "Tetap"
+        }
+    }
+}

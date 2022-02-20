@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto on juba seadistatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                },
+                "description": "Kasutaja {username} salas\u00f5na ei kehti enam.",
+                "title": "Taastuvasta oma Flume konto"
+            },
+            "user": {
+                "data": {
+                    "client_id": "Kliendi ID",
+                    "client_secret": "Kliendi salas\u00f5na",
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Flume Personal API-le juurdep\u00e4\u00e4suks pead lehel https://portal.flumetech.com/settings#token taotlema kliendi ID ja salas\u00f5na.",
+                "title": "\u00dchendu oma Flume kontoga"
+            }
+        }
+    }
+}

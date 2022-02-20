@@ -1,55 +1,62 @@
-"""Support for Elgato Key Lights."""
-import logging
+"""Support for Elgato Lights."""
+from typing import NamedTuple
 
-from elgato import Elgato, ElgatoConnectionError
+from elgato import Elgato, Info, State
 
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DATA_ELGATO_CLIENT, DOMAIN
+from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
-_LOGGER = logging.getLogger(__name__)
+PLATFORMS = [Platform.BUTTON, Platform.LIGHT]
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Elgato Key Light components."""
-    return True
+class HomeAssistantElgatoData(NamedTuple):
+    """Elgato data stored in the Home Assistant data object."""
+
+    coordinator: DataUpdateCoordinator[State]
+    client: Elgato
+    info: Info
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Elgato Key Light from a config entry."""
+    """Set up Elgato Light from a config entry."""
     session = async_get_clientsession(hass)
-    elgato = Elgato(entry.data[CONF_HOST], port=entry.data[CONF_PORT], session=session,)
-
-    # Ensure we can connect to it
-    try:
-        await elgato.info()
-    except ElgatoConnectionError as exception:
-        raise ConfigEntryNotReady from exception
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {DATA_ELGATO_CLIENT: elgato}
-
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, LIGHT_DOMAIN)
+    elgato = Elgato(
+        entry.data[CONF_HOST],
+        port=entry.data[CONF_PORT],
+        session=session,
     )
+
+    coordinator: DataUpdateCoordinator[State] = DataUpdateCoordinator(
+        hass,
+        LOGGER,
+        name=f"{DOMAIN}_{entry.data[CONF_HOST]}",
+        update_interval=SCAN_INTERVAL,
+        update_method=elgato.state,
+    )
+    await coordinator.async_config_entry_first_refresh()
+
+    info = await elgato.info()
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantElgatoData(
+        client=elgato,
+        coordinator=coordinator,
+        info=info,
+    )
+
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload Elgato Key Light config entry."""
-    # Unload entities for this entry/device.
-    await hass.config_entries.async_forward_entry_unload(entry, LIGHT_DOMAIN)
-
-    # Cleanup
-    del hass.data[DOMAIN][entry.entry_id]
-    if not hass.data[DOMAIN]:
-        del hass.data[DOMAIN]
-
-    return True
+    """Unload Elgato Light config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        # Cleanup
+        del hass.data[DOMAIN][entry.entry_id]
+        if not hass.data[DOMAIN]:
+            del hass.data[DOMAIN]
+    return unload_ok

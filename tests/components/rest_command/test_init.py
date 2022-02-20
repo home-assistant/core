@@ -1,9 +1,11 @@
 """The tests for the rest command platform."""
 import asyncio
+from http import HTTPStatus
 
 import aiohttp
 
 import homeassistant.components.rest_command as rc
+from homeassistant.const import CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT_PLAIN
 from homeassistant.setup import setup_component
 
 from tests.common import assert_setup_component, get_test_home_assistant
@@ -103,7 +105,7 @@ class TestRestCommandComponent:
         with assert_setup_component(5):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
-        aioclient_mock.get(self.url, status=400)
+        aioclient_mock.get(self.url, status=HTTPStatus.BAD_REQUEST)
 
         self.hass.services.call(rc.DOMAIN, "get_test", {})
         self.hass.block_till_done()
@@ -218,27 +220,27 @@ class TestRestCommandComponent:
         header_config_variations = {
             rc.DOMAIN: {
                 "no_headers_test": {},
-                "content_type_test": {"content_type": "text/plain"},
+                "content_type_test": {"content_type": CONTENT_TYPE_TEXT_PLAIN},
                 "headers_test": {
                     "headers": {
-                        "Accept": "application/json",
+                        "Accept": CONTENT_TYPE_JSON,
                         "User-Agent": "Mozilla/5.0",
                     }
                 },
                 "headers_and_content_type_test": {
-                    "headers": {"Accept": "application/json"},
-                    "content_type": "text/plain",
+                    "headers": {"Accept": CONTENT_TYPE_JSON},
+                    "content_type": CONTENT_TYPE_TEXT_PLAIN,
                 },
                 "headers_and_content_type_override_test": {
                     "headers": {
-                        "Accept": "application/json",
+                        "Accept": CONTENT_TYPE_JSON,
                         aiohttp.hdrs.CONTENT_TYPE: "application/pdf",
                     },
-                    "content_type": "text/plain",
+                    "content_type": CONTENT_TYPE_TEXT_PLAIN,
                 },
                 "headers_template_test": {
                     "headers": {
-                        "Accept": "application/json",
+                        "Accept": CONTENT_TYPE_JSON,
                         "User-Agent": "Mozilla/{{ 3 + 2 }}.0",
                     }
                 },
@@ -285,33 +287,33 @@ class TestRestCommandComponent:
         assert len(aioclient_mock.mock_calls[1][3]) == 1
         assert (
             aioclient_mock.mock_calls[1][3].get(aiohttp.hdrs.CONTENT_TYPE)
-            == "text/plain"
+            == CONTENT_TYPE_TEXT_PLAIN
         )
 
         # headers_test
         assert len(aioclient_mock.mock_calls[2][3]) == 2
-        assert aioclient_mock.mock_calls[2][3].get("Accept") == "application/json"
+        assert aioclient_mock.mock_calls[2][3].get("Accept") == CONTENT_TYPE_JSON
         assert aioclient_mock.mock_calls[2][3].get("User-Agent") == "Mozilla/5.0"
 
         # headers_and_content_type_test
         assert len(aioclient_mock.mock_calls[3][3]) == 2
         assert (
             aioclient_mock.mock_calls[3][3].get(aiohttp.hdrs.CONTENT_TYPE)
-            == "text/plain"
+            == CONTENT_TYPE_TEXT_PLAIN
         )
-        assert aioclient_mock.mock_calls[3][3].get("Accept") == "application/json"
+        assert aioclient_mock.mock_calls[3][3].get("Accept") == CONTENT_TYPE_JSON
 
         # headers_and_content_type_override_test
         assert len(aioclient_mock.mock_calls[4][3]) == 2
         assert (
             aioclient_mock.mock_calls[4][3].get(aiohttp.hdrs.CONTENT_TYPE)
-            == "text/plain"
+            == CONTENT_TYPE_TEXT_PLAIN
         )
-        assert aioclient_mock.mock_calls[4][3].get("Accept") == "application/json"
+        assert aioclient_mock.mock_calls[4][3].get("Accept") == CONTENT_TYPE_JSON
 
         # headers_template_test
         assert len(aioclient_mock.mock_calls[5][3]) == 2
-        assert aioclient_mock.mock_calls[5][3].get("Accept") == "application/json"
+        assert aioclient_mock.mock_calls[5][3].get("Accept") == CONTENT_TYPE_JSON
         assert aioclient_mock.mock_calls[5][3].get("User-Agent") == "Mozilla/5.0"
 
         # headers_and_content_type_override_template_test

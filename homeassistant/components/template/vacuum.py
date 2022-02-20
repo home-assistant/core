@@ -1,11 +1,13 @@
 """Support for Template vacuums."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
-    DOMAIN,
+    DOMAIN as VACUUM_DOMAIN,
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
     SERVICE_PAUSE,
@@ -35,18 +37,23 @@ from homeassistant.const import (
     CONF_FRIENDLY_NAME,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
-    EVENT_HOMEASSISTANT_START,
-    MATCH_ALL,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import extract_entities, initialise_templates
-from .const import CONF_AVAILABILITY_TEMPLATE
+from .const import DOMAIN
+from .template_entity import (
+    TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
+    TemplateEntity,
+    rewrite_common_legacy_to_modern_conf,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,9 +61,8 @@ CONF_VACUUMS = "vacuums"
 CONF_BATTERY_LEVEL_TEMPLATE = "battery_level_template"
 CONF_FAN_SPEED_LIST = "fan_speeds"
 CONF_FAN_SPEED_TEMPLATE = "fan_speed_template"
-CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
+ENTITY_ID_FORMAT = VACUUM_DOMAIN + ".{}"
 _VALID_STATES = [
     STATE_CLEANING,
     STATE_DOCKED,
@@ -66,27 +72,28 @@ _VALID_STATES = [
     STATE_ERROR,
 ]
 
-VACUUM_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_BATTERY_LEVEL_TEMPLATE): cv.template,
-        vol.Optional(CONF_FAN_SPEED_TEMPLATE): cv.template,
-        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
-        vol.Optional(CONF_ATTRIBUTE_TEMPLATES, default={}): vol.Schema(
-            {cv.string: cv.template}
-        ),
-        vol.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_RETURN_TO_BASE): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_CLEAN_SPOT): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_LOCATE): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_SET_FAN_SPEED): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
-        vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-    }
+VACUUM_SCHEMA = vol.All(
+    cv.deprecated(CONF_ENTITY_ID),
+    vol.Schema(
+        {
+            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_BATTERY_LEVEL_TEMPLATE): cv.template,
+            vol.Optional(CONF_FAN_SPEED_TEMPLATE): cv.template,
+            vol.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
+            vol.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
+            vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
+            vol.Optional(SERVICE_RETURN_TO_BASE): cv.SCRIPT_SCHEMA,
+            vol.Optional(SERVICE_CLEAN_SPOT): cv.SCRIPT_SCHEMA,
+            vol.Optional(SERVICE_LOCATE): cv.SCRIPT_SCHEMA,
+            vol.Optional(SERVICE_SET_FAN_SPEED): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
+            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+        }
+    )
+    .extend(TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY.schema)
+    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema),
 )
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
@@ -94,164 +101,109 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Template Vacuums."""
+async def _async_create_entities(hass, config):
+    """Create the Template Vacuums."""
     vacuums = []
 
-    for device, device_config in config[CONF_VACUUMS].items():
-        friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
-
-        state_template = device_config.get(CONF_VALUE_TEMPLATE)
-        battery_level_template = device_config.get(CONF_BATTERY_LEVEL_TEMPLATE)
-        fan_speed_template = device_config.get(CONF_FAN_SPEED_TEMPLATE)
-        availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
-        attribute_templates = device_config.get(CONF_ATTRIBUTE_TEMPLATES)
-
-        start_action = device_config[SERVICE_START]
-        pause_action = device_config.get(SERVICE_PAUSE)
-        stop_action = device_config.get(SERVICE_STOP)
-        return_to_base_action = device_config.get(SERVICE_RETURN_TO_BASE)
-        clean_spot_action = device_config.get(SERVICE_CLEAN_SPOT)
-        locate_action = device_config.get(SERVICE_LOCATE)
-        set_fan_speed_action = device_config.get(SERVICE_SET_FAN_SPEED)
-
-        fan_speed_list = device_config[CONF_FAN_SPEED_LIST]
-        unique_id = device_config.get(CONF_UNIQUE_ID)
-
-        templates = {
-            CONF_VALUE_TEMPLATE: state_template,
-            CONF_BATTERY_LEVEL_TEMPLATE: battery_level_template,
-            CONF_FAN_SPEED_TEMPLATE: fan_speed_template,
-            CONF_AVAILABILITY_TEMPLATE: availability_template,
-        }
-
-        initialise_templates(hass, templates, attribute_templates)
-        entity_ids = extract_entities(
-            device, "vacuum", None, templates, attribute_templates
-        )
+    for object_id, entity_config in config[CONF_VACUUMS].items():
+        entity_config = rewrite_common_legacy_to_modern_conf(entity_config)
+        unique_id = entity_config.get(CONF_UNIQUE_ID)
 
         vacuums.append(
             TemplateVacuum(
                 hass,
-                device,
-                friendly_name,
-                state_template,
-                battery_level_template,
-                fan_speed_template,
-                availability_template,
-                start_action,
-                pause_action,
-                stop_action,
-                return_to_base_action,
-                clean_spot_action,
-                locate_action,
-                set_fan_speed_action,
-                fan_speed_list,
-                entity_ids,
-                attribute_templates,
+                object_id,
+                entity_config,
                 unique_id,
             )
         )
 
-    async_add_entities(vacuums)
+    return vacuums
 
 
-class TemplateVacuum(StateVacuumEntity):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the template vacuums."""
+    async_add_entities(await _async_create_entities(hass, config))
+
+
+class TemplateVacuum(TemplateEntity, StateVacuumEntity):
     """A template vacuum component."""
 
     def __init__(
         self,
         hass,
-        device_id,
-        friendly_name,
-        state_template,
-        battery_level_template,
-        fan_speed_template,
-        availability_template,
-        start_action,
-        pause_action,
-        stop_action,
-        return_to_base_action,
-        clean_spot_action,
-        locate_action,
-        set_fan_speed_action,
-        fan_speed_list,
-        entity_ids,
-        attribute_templates,
+        object_id,
+        config,
         unique_id,
     ):
         """Initialize the vacuum."""
-        self.hass = hass
-        self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, device_id, hass=hass
+        super().__init__(
+            hass, config=config, fallback_name=object_id, unique_id=unique_id
         )
-        self._name = friendly_name
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, object_id, hass=hass
+        )
+        friendly_name = self._attr_name
 
-        self._template = state_template
-        self._battery_level_template = battery_level_template
-        self._fan_speed_template = fan_speed_template
-        self._availability_template = availability_template
+        self._template = config.get(CONF_VALUE_TEMPLATE)
+        self._battery_level_template = config.get(CONF_BATTERY_LEVEL_TEMPLATE)
+        self._fan_speed_template = config.get(CONF_FAN_SPEED_TEMPLATE)
         self._supported_features = SUPPORT_START
-        self._attribute_templates = attribute_templates
-        self._attributes = {}
 
-        self._start_script = Script(hass, start_action)
+        self._start_script = Script(hass, config[SERVICE_START], friendly_name, DOMAIN)
 
         self._pause_script = None
-        if pause_action:
-            self._pause_script = Script(hass, pause_action)
+        if pause_action := config.get(SERVICE_PAUSE):
+            self._pause_script = Script(hass, pause_action, friendly_name, DOMAIN)
             self._supported_features |= SUPPORT_PAUSE
 
         self._stop_script = None
-        if stop_action:
-            self._stop_script = Script(hass, stop_action)
+        if stop_action := config.get(SERVICE_STOP):
+            self._stop_script = Script(hass, stop_action, friendly_name, DOMAIN)
             self._supported_features |= SUPPORT_STOP
 
         self._return_to_base_script = None
-        if return_to_base_action:
-            self._return_to_base_script = Script(hass, return_to_base_action)
+        if return_to_base_action := config.get(SERVICE_RETURN_TO_BASE):
+            self._return_to_base_script = Script(
+                hass, return_to_base_action, friendly_name, DOMAIN
+            )
             self._supported_features |= SUPPORT_RETURN_HOME
 
         self._clean_spot_script = None
-        if clean_spot_action:
-            self._clean_spot_script = Script(hass, clean_spot_action)
+        if clean_spot_action := config.get(SERVICE_CLEAN_SPOT):
+            self._clean_spot_script = Script(
+                hass, clean_spot_action, friendly_name, DOMAIN
+            )
             self._supported_features |= SUPPORT_CLEAN_SPOT
 
         self._locate_script = None
-        if locate_action:
-            self._locate_script = Script(hass, locate_action)
+        if locate_action := config.get(SERVICE_LOCATE):
+            self._locate_script = Script(hass, locate_action, friendly_name, DOMAIN)
             self._supported_features |= SUPPORT_LOCATE
 
         self._set_fan_speed_script = None
-        if set_fan_speed_action:
-            self._set_fan_speed_script = Script(hass, set_fan_speed_action)
+        if set_fan_speed_action := config.get(SERVICE_SET_FAN_SPEED):
+            self._set_fan_speed_script = Script(
+                hass, set_fan_speed_action, friendly_name, DOMAIN
+            )
             self._supported_features |= SUPPORT_FAN_SPEED
 
         self._state = None
         self._battery_level = None
         self._fan_speed = None
-        self._available = True
 
         if self._template:
             self._supported_features |= SUPPORT_STATE
         if self._battery_level_template:
             self._supported_features |= SUPPORT_BATTERY
 
-        self._entities = entity_ids
-        self._unique_id = unique_id
-
         # List of valid fan speeds
-        self._fan_speed_list = fan_speed_list
-
-    @property
-    def name(self):
-        """Return the display name of this vacuum."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of this vacuum."""
-        return self._unique_id
+        self._fan_speed_list = config[CONF_FAN_SPEED_LIST]
 
     @property
     def supported_features(self) -> int:
@@ -277,21 +229,6 @@ class TemplateVacuum(StateVacuumEntity):
     def fan_speed_list(self) -> list:
         """Get the list of available fan speeds."""
         return self._fan_speed_list
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return self._available
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
 
     async def async_start(self):
         """Start or resume the cleaning task."""
@@ -351,109 +288,81 @@ class TemplateVacuum(StateVacuumEntity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-
-        @callback
-        def template_vacuum_state_listener(event):
-            """Handle target device state changes."""
-            self.async_schedule_update_ha_state(True)
-
-        @callback
-        def template_vacuum_startup(event):
-            """Update template on startup."""
-            if self._entities != MATCH_ALL:
-                # Track state changes only for valid templates
-                self.hass.helpers.event.async_track_state_change_event(
-                    self._entities, template_vacuum_state_listener
-                )
-
-            self.async_schedule_update_ha_state(True)
-
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, template_vacuum_startup
-        )
-
-    async def async_update(self):
-        """Update the state from the template."""
-        # Update state
         if self._template is not None:
-            try:
-                state = self._template.async_render()
-            except TemplateError as ex:
-                _LOGGER.error(ex)
-                state = None
-                self._state = None
-
-            # Validate state
-            if state in _VALID_STATES:
-                self._state = state
-            elif state == STATE_UNKNOWN:
-                self._state = None
-            else:
-                _LOGGER.error(
-                    "Received invalid vacuum state: %s. Expected: %s",
-                    state,
-                    ", ".join(_VALID_STATES),
-                )
-                self._state = None
-
-        # Update battery level if 'battery_level_template' is configured
-        if self._battery_level_template is not None:
-            try:
-                battery_level = self._battery_level_template.async_render()
-            except TemplateError as ex:
-                _LOGGER.error(ex)
-                battery_level = None
-
-            # Validate battery level
-            if battery_level and 0 <= int(battery_level) <= 100:
-                self._battery_level = int(battery_level)
-            else:
-                _LOGGER.error(
-                    "Received invalid battery level: %s. Expected: 0-100", battery_level
-                )
-                self._battery_level = None
-
-        # Update fan speed if 'fan_speed_template' is configured
+            self.add_template_attribute(
+                "_state", self._template, None, self._update_state
+            )
         if self._fan_speed_template is not None:
-            try:
-                fan_speed = self._fan_speed_template.async_render()
-            except TemplateError as ex:
-                _LOGGER.error(ex)
-                fan_speed = None
-                self._state = None
+            self.add_template_attribute(
+                "_fan_speed",
+                self._fan_speed_template,
+                None,
+                self._update_fan_speed,
+            )
+        if self._battery_level_template is not None:
+            self.add_template_attribute(
+                "_battery_level",
+                self._battery_level_template,
+                None,
+                self._update_battery_level,
+                none_on_template_error=True,
+            )
+        await super().async_added_to_hass()
 
-            # Validate fan speed
-            if fan_speed in self._fan_speed_list:
-                self._fan_speed = fan_speed
-            elif fan_speed == STATE_UNKNOWN:
-                self._fan_speed = None
-            else:
-                _LOGGER.error(
-                    "Received invalid fan speed: %s. Expected: %s",
-                    fan_speed,
-                    self._fan_speed_list,
-                )
-                self._fan_speed = None
-        # Update availability if availability template is defined
-        if self._availability_template is not None:
-            try:
-                self._available = (
-                    self._availability_template.async_render().lower() == "true"
-                )
-            except (TemplateError, ValueError) as ex:
-                _LOGGER.error(
-                    "Could not render %s template %s: %s",
-                    CONF_AVAILABILITY_TEMPLATE,
-                    self._name,
-                    ex,
-                )
-        # Update attribute if attribute template is defined
-        if self._attribute_templates is not None:
-            attrs = {}
-            for key, value in self._attribute_templates.items():
-                try:
-                    attrs[key] = value.async_render()
-                except TemplateError as err:
-                    _LOGGER.error("Error rendering attribute %s: %s", key, err)
+    @callback
+    def _update_state(self, result):
+        super()._update_state(result)
+        if isinstance(result, TemplateError):
+            # This is legacy behavior
+            self._state = STATE_UNKNOWN
+            if not self._availability_template:
+                self._attr_available = True
+            return
 
-            self._attributes = attrs
+        # Validate state
+        if result in _VALID_STATES:
+            self._state = result
+        elif result == STATE_UNKNOWN:
+            self._state = None
+        else:
+            _LOGGER.error(
+                "Received invalid vacuum state: %s. Expected: %s",
+                result,
+                ", ".join(_VALID_STATES),
+            )
+            self._state = None
+
+    @callback
+    def _update_battery_level(self, battery_level):
+        try:
+            battery_level_int = int(battery_level)
+            if not 0 <= battery_level_int <= 100:
+                raise ValueError
+        except ValueError:
+            _LOGGER.error(
+                "Received invalid battery level: %s. Expected: 0-100", battery_level
+            )
+            self._battery_level = None
+            return
+
+        self._battery_level = battery_level_int
+
+    @callback
+    def _update_fan_speed(self, fan_speed):
+        if isinstance(fan_speed, TemplateError):
+            # This is legacy behavior
+            self._fan_speed = None
+            self._state = None
+            return
+
+        if fan_speed in self._fan_speed_list:
+            self._fan_speed = fan_speed
+        elif fan_speed == STATE_UNKNOWN:
+            self._fan_speed = None
+        else:
+            _LOGGER.error(
+                "Received invalid fan speed: %s. Expected: %s",
+                fan_speed,
+                self._fan_speed_list,
+            )
+            self._fan_speed = None

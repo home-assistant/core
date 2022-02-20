@@ -1,16 +1,20 @@
 """The National Weather Service integration."""
-import asyncio
+from __future__ import annotations
+
+from collections.abc import Awaitable, Callable
 import datetime
 import logging
-from typing import Awaitable, Callable, Optional
+from typing import TYPE_CHECKING
 
 from pynws import SimpleNWS
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import debounce
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import utcnow
@@ -26,7 +30,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["weather"]
+PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(minutes=10)
 FAILED_SCAN_INTERVAL = datetime.timedelta(minutes=1)
@@ -36,11 +40,6 @@ DEBOUNCE_TIME = 60  # in seconds
 def base_unique_id(latitude, longitude):
     """Return unique id for entries in configuration."""
     return f"{latitude}_{longitude}"
-
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the National Weather Service (NWS) component."""
-    return True
 
 
 class NwsDataUpdateCoordinator(DataUpdateCoordinator):
@@ -58,9 +57,9 @@ class NwsDataUpdateCoordinator(DataUpdateCoordinator):
         name: str,
         update_interval: datetime.timedelta,
         failed_update_interval: datetime.timedelta,
-        update_method: Optional[Callable[[], Awaitable]] = None,
-        request_refresh_debouncer: Optional[debounce.Debouncer] = None,
-    ):
+        update_method: Callable[[], Awaitable] | None = None,
+        request_refresh_debouncer: debounce.Debouncer | None = None,
+    ) -> None:
         """Initialize NWS coordinator."""
         super().__init__(
             hass,
@@ -71,7 +70,7 @@ class NwsDataUpdateCoordinator(DataUpdateCoordinator):
             request_refresh_debouncer=request_refresh_debouncer,
         )
         self.failed_update_interval = failed_update_interval
-        self.last_update_success_time = None
+        self.last_update_success_time: datetime.datetime | None = None
 
     @callback
     def _schedule_refresh(self) -> None:
@@ -85,6 +84,9 @@ class NwsDataUpdateCoordinator(DataUpdateCoordinator):
         # That way we obtain a constant update frequency,
         # as long as the update process takes less than a second
         if self.last_update_success:
+            if TYPE_CHECKING:
+                # the base class allows None, but this one doesn't
+                assert self.update_interval is not None
             update_interval = self.update_interval
             self.last_update_success_time = utcnow()
         else:
@@ -96,7 +98,7 @@ class NwsDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a National Weather Service entry."""
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
@@ -157,25 +159,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await coordinator_forecast.async_refresh()
     await coordinator_forecast_hourly.async_refresh()
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
         if len(hass.data[DOMAIN]) == 0:
             hass.data.pop(DOMAIN)
     return unload_ok
+
+
+def device_info(latitude, longitude) -> DeviceInfo:
+    """Return device registry information."""
+    return DeviceInfo(
+        entry_type=DeviceEntryType.SERVICE,
+        identifiers={(DOMAIN, base_unique_id(latitude, longitude))},
+        manufacturer="National Weather Service",
+        name=f"NWS: {latitude}, {longitude}",
+    )

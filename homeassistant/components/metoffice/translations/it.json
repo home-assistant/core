@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato"
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
@@ -10,11 +10,11 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Chiave API Met Office DataPoint",
+                    "api_key": "Chiave API",
                     "latitude": "Latitudine",
                     "longitude": "Logitudine"
                 },
-                "description": "La latitudine e la longitudine verranno utilizzate per trovare la stazione meteorologica pi\u00f9 vicina.",
+                "description": "La latitudine e la longitudine saranno utilizzate per trovare la stazione meteorologica pi\u00f9 vicina.",
                 "title": "Connettiti al Met Office del Regno Unito"
             }
         }

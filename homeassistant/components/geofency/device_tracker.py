@@ -1,20 +1,23 @@
 """Support for the Geofency device tracker platform."""
-import logging
-
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DOMAIN as GF_DOMAIN, TRACKER_UPDATE
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Geofency config entry."""
 
     @callback
@@ -44,8 +47,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hass.data[GF_DOMAIN]["devices"].update(dev_ids)
         async_add_entities(GeofencyEntity(dev_id) for dev_id in dev_ids)
 
-    return True
-
 
 class GeofencyEntity(TrackerEntity, RestoreEntity):
     """Represent a tracked device."""
@@ -60,7 +61,7 @@ class GeofencyEntity(TrackerEntity, RestoreEntity):
         self._unique_id = device
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific attributes."""
         return self._attributes
 
@@ -90,9 +91,9 @@ class GeofencyEntity(TrackerEntity, RestoreEntity):
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {"name": self._name, "identifiers": {(GF_DOMAIN, self._unique_id)}}
+        return DeviceInfo(identifiers={(GF_DOMAIN, self._unique_id)}, name=self._name)
 
     @property
     def source_type(self):
@@ -109,9 +110,7 @@ class GeofencyEntity(TrackerEntity, RestoreEntity):
         if self._attributes:
             return
 
-        state = await self.async_get_last_state()
-
-        if state is None:
+        if (state := await self.async_get_last_state()) is None:
             self._gps = (None, None)
             return
 

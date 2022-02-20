@@ -1,19 +1,22 @@
 """Support for French FAI Bouygues Bbox routers."""
+from __future__ import annotations
+
 from collections import namedtuple
 from datetime import timedelta
 import logging
-from typing import List
 
 import pybbox
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
@@ -23,12 +26,12 @@ DEFAULT_HOST = "192.168.1.254"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=60)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string}
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
     """Validate the configuration and return a Bbox scanner."""
     scanner = BboxDeviceScanner(config[DOMAIN])
 
@@ -47,7 +50,7 @@ class BboxDeviceScanner(DeviceScanner):
         self.host = config[CONF_HOST]
 
         """Initialize the scanner."""
-        self.last_results: List[Device] = []
+        self.last_results: list[Device] = []
 
         self.success_init = self._update_info()
         _LOGGER.info("Scanner initialized")
@@ -74,7 +77,7 @@ class BboxDeviceScanner(DeviceScanner):
 
         Returns boolean if scanning successful.
         """
-        _LOGGER.info("Scanning...")
+        _LOGGER.info("Scanning")
 
         box = pybbox.Bbox(ip=self.host)
         result = box.get_all_connected_devices()

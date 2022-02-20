@@ -1,14 +1,15 @@
 """Support for Aqualink Thermostats."""
-import logging
-from typing import List, Optional
+from __future__ import annotations
 
-from iaqualink import AqualinkHeater, AqualinkPump, AqualinkSensor, AqualinkState
+import logging
+
 from iaqualink.const import (
     AQUALINK_TEMP_CELSIUS_HIGH,
     AQUALINK_TEMP_CELSIUS_LOW,
     AQUALINK_TEMP_FAHRENHEIT_HIGH,
     AQUALINK_TEMP_FAHRENHEIT_LOW,
 )
+from iaqualink.device import AqualinkHeater, AqualinkPump, AqualinkSensor, AqualinkState
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -19,10 +20,12 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AqualinkEntity, refresh_system
 from .const import CLIMATE_SUPPORTED_MODES, DOMAIN as AQUALINK_DOMAIN
+from .utils import await_or_reraise
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +33,9 @@ PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up discovered switches."""
     devs = []
@@ -53,7 +58,7 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
         return SUPPORT_TARGET_TEMPERATURE
 
     @property
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> list[str]:
         """Return the list of supported HVAC modes."""
         return CLIMATE_SUPPORTED_MODES
 
@@ -75,9 +80,9 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Turn the underlying heater switch on or off."""
         if hvac_mode == HVAC_MODE_HEAT:
-            await self.heater.turn_on()
+            await await_or_reraise(self.heater.turn_on())
         elif hvac_mode == HVAC_MODE_OFF:
-            await self.heater.turn_off()
+            await await_or_reraise(self.heater.turn_off())
         else:
             _LOGGER.warning("Unknown operation mode: %s", hvac_mode)
 
@@ -110,7 +115,7 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
     @refresh_system
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
-        await self.dev.set_temperature(int(kwargs[ATTR_TEMPERATURE]))
+        await await_or_reraise(self.dev.set_temperature(int(kwargs[ATTR_TEMPERATURE])))
 
     @property
     def sensor(self) -> AqualinkSensor:
@@ -119,7 +124,7 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
         return self.dev.system.devices[sensor]
 
     @property
-    def current_temperature(self) -> Optional[float]:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.sensor.state != "":
             return float(self.sensor.state)

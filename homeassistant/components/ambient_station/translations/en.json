@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This app key is already in use."
+            "already_configured": "Service is already configured"
         },
         "error": {
-            "invalid_key": "Invalid API Key and/or Application Key",
+            "invalid_key": "Invalid API key",
             "no_devices": "No devices found in account"
         },
         "step": {

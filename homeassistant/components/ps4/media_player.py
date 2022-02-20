@@ -1,8 +1,10 @@
 """Support for PlayStation 4 consoles."""
 import asyncio
+from contextlib import suppress
 import logging
 
 from pyps4_2ndscreen.errors import NotReady, PSDataIncomplete
+from pyps4_2ndscreen.media_art import TYPE_APP as PS_TYPE_APP
 import pyps4_2ndscreen.ps4 as pyps4
 
 from homeassistant.components.media_player import MediaPlayerEntity
@@ -17,7 +19,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
 )
-from homeassistant.components.ps4 import format_unique_id, load_games, save_games
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LOCKED,
     CONF_HOST,
@@ -28,9 +30,12 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_STANDBY,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import format_unique_id, load_games, save_games
 from .const import (
     ATTR_MEDIA_IMAGE_URL,
     DEFAULT_ALIAS,
@@ -55,7 +60,11 @@ MEDIA_IMAGE_DEFAULT = None
 DEFAULT_RETRIES = 2
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up PS4 from a config entry."""
     config = config_entry
     creds = config.data[CONF_TOKEN]
@@ -90,7 +99,6 @@ class PS4Device(MediaPlayerEntity):
         self._source_list = []
         self._retry = 0
         self._disconnected = False
-        self._info = None
         self._unique_id = None
 
     @callback
@@ -141,16 +149,14 @@ class PS4Device(MediaPlayerEntity):
                 and not self._ps4.is_standby
                 and self._ps4.is_available
             ):
-                try:
+                with suppress(NotReady):
                     await self._ps4.async_connect()
-                except NotReady:
-                    pass
 
         # Try to ensure correct status is set on startup for device info.
         if self._ps4.ddp_protocol is None:
             # Use socket.socket.
             await self.hass.async_add_executor_job(self._ps4.get_status)
-            if self._info is None:
+            if self._attr_device_info is None:
                 # Add entity to registry.
                 await self.async_get_device_info(self._ps4.status)
             self._ps4.ddp_protocol = self.hass.data[PS4_DATA].protocol
@@ -160,9 +166,7 @@ class PS4Device(MediaPlayerEntity):
 
     def _parse_status(self):
         """Parse status."""
-        status = self._ps4.status
-
-        if status is not None:
+        if (status := self._ps4.status) is not None:
             self._games = load_games(self.hass, self._unique_id)
             if self._games:
                 self.get_source_list()
@@ -205,8 +209,7 @@ class PS4Device(MediaPlayerEntity):
             store = self._games[self._media_content_id]
 
             # If locked get attributes from file.
-            locked = store.get(ATTR_LOCKED)
-            if locked:
+            if store.get(ATTR_LOCKED):
                 self._media_title = store.get(ATTR_MEDIA_TITLE)
                 self._source = self._media_title
                 self._media_image = store.get(ATTR_MEDIA_IMAGE_URL)
@@ -262,7 +265,7 @@ class PS4Device(MediaPlayerEntity):
                 app_name = title.name
                 art = title.cover_art
                 # Assume media type is game if not app.
-                if title.game_type != "App":
+                if title.game_type != PS_TYPE_APP:
                     media_type = MEDIA_TYPE_GAME
                 else:
                     media_type = MEDIA_TYPE_APP
@@ -340,26 +343,26 @@ class PS4Device(MediaPlayerEntity):
                     break
             for device in d_registry.devices.values():
                 if self._entry_id in device.config_entries:
-                    self._info = {
-                        "name": device.name,
-                        "model": device.model,
-                        "identifiers": device.identifiers,
-                        "manufacturer": device.manufacturer,
-                        "sw_version": device.sw_version,
-                    }
+                    self._attr_device_info = DeviceInfo(
+                        identifiers=device.identifiers,
+                        manufacturer=device.manufacturer,
+                        model=device.model,
+                        name=device.name,
+                        sw_version=device.sw_version,
+                    )
                     break
 
         else:
             _sw_version = status["system-version"]
             _sw_version = _sw_version[1:4]
             sw_version = f"{_sw_version[0]}.{_sw_version[1:]}"
-            self._info = {
-                "name": status["host-name"],
-                "model": "PlayStation 4",
-                "identifiers": {(PS4_DOMAIN, status["host-id"])},
-                "manufacturer": "Sony Interactive Entertainment Inc.",
-                "sw_version": sw_version,
-            }
+            self._attr_device_info = DeviceInfo(
+                identifiers={(PS4_DOMAIN, status["host-id"])},
+                manufacturer="Sony Interactive Entertainment Inc.",
+                model="PlayStation 4",
+                name=status["host-name"],
+                sw_version=sw_version,
+            )
 
             self._unique_id = format_unique_id(self._creds, status["host-id"])
 
@@ -372,11 +375,6 @@ class PS4Device(MediaPlayerEntity):
         self.hass.data[PS4_DATA].devices.remove(self)
 
     @property
-    def device_info(self):
-        """Return information about the device."""
-        return self._info
-
-    @property
     def unique_id(self):
         """Return Unique ID for entity."""
         return self._unique_id
@@ -384,13 +382,15 @@ class PS4Device(MediaPlayerEntity):
     @property
     def entity_picture(self):
         """Return picture."""
-        if self._state == STATE_PLAYING and self._media_content_id is not None:
-            image_hash = self.media_image_hash
-            if image_hash is not None:
-                return (
-                    f"/api/media_player_proxy/{self.entity_id}?"
-                    f"token={self.access_token}&cache={image_hash}"
-                )
+        if (
+            self._state == STATE_PLAYING
+            and self._media_content_id is not None
+            and (image_hash := self.media_image_hash) is not None
+        ):
+            return (
+                f"/api/media_player_proxy/{self.entity_id}?"
+                f"token={self.access_token}&cache={image_hash}"
+            )
         return MEDIA_IMAGE_DEFAULT
 
     @property

@@ -1,19 +1,13 @@
 """Support for Firmata switch output."""
-
 import logging
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    CONF_INITIAL_STATE,
-    CONF_NEGATE_STATE,
-    CONF_PIN,
-    CONF_PIN_MODE,
-    DOMAIN,
-)
+from .const import CONF_INITIAL_STATE, CONF_NEGATE_STATE, CONF_PIN_MODE, DOMAIN
 from .entity import FirmataPinEntity
 from .pin import FirmataBinaryDigitalOutput, FirmataPinUsedException
 
@@ -21,7 +15,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Firmata switches."""
     new_entities = []
@@ -37,7 +33,7 @@ async def async_setup_entry(
             api.setup()
         except FirmataPinUsedException:
             _LOGGER.error(
-                "Could not setup switch on pin %s since pin already in use.",
+                "Could not setup switch on pin %s since pin already in use",
                 switch[CONF_PIN],
             )
             continue
@@ -55,7 +51,6 @@ class FirmataSwitch(FirmataPinEntity, SwitchEntity):
     async def async_added_to_hass(self) -> None:
         """Set up a switch."""
         await self._api.start_pin()
-        self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool:
@@ -64,12 +59,10 @@ class FirmataSwitch(FirmataPinEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on switch."""
-        _LOGGER.debug("Turning switch %s on", self._name)
         await self._api.turn_on()
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off switch."""
-        _LOGGER.debug("Turning switch %s off", self._name)
         await self._api.turn_off()
         self.async_write_ha_state()

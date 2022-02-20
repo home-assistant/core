@@ -1,8 +1,9 @@
 """Support for climate devices through the SmartThings cloud API."""
+from __future__ import annotations
+
 import asyncio
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 import logging
-from typing import Optional, Sequence
 
 from pysmartthings import Attribute, Capability
 
@@ -26,7 +27,10 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
@@ -81,7 +85,11 @@ UNIT_MAP = {"C": TEMP_CELSIUS, "F": TEMP_FAHRENHEIT}
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Add climate entities for a config entry."""
     ac_capabilities = [
         Capability.air_conditioner_mode,
@@ -92,7 +100,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     ]
 
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
-    entities = []
+    entities: list[ClimateEntity] = []
     for device in broker.devices.values():
         if not broker.any_assigned(device.device_id, CLIMATE_DOMAIN):
             continue
@@ -103,7 +111,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
+def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
     """Return all capabilities supported if minimum required are present."""
     supported = [
         Capability.air_conditioner_mode,
@@ -183,8 +191,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs):
         """Set new operation mode and target temperatures."""
         # Operation state
-        operation_state = kwargs.get(ATTR_HVAC_MODE)
-        if operation_state:
+        if operation_state := kwargs.get(ATTR_HVAC_MODE):
             mode = STATE_TO_MODE[operation_state]
             await self._device.set_thermostat_mode(mode, set_status=True)
             await self.async_update()
@@ -234,8 +241,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         supported_modes = self._device.status.supported_thermostat_modes
         if isinstance(supported_modes, Iterable):
             for mode in supported_modes:
-                state = MODE_TO_STATE.get(mode)
-                if state is not None:
+                if (state := MODE_TO_STATE.get(mode)) is not None:
                     modes.add(state)
                 else:
                     _LOGGER.debug(
@@ -274,7 +280,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         return self._device.status.supported_thermostat_fan_modes
 
     @property
-    def hvac_action(self) -> Optional[str]:
+    def hvac_action(self) -> str | None:
         """Return the current running hvac operation if supported."""
         return OPERATING_STATE_TO_ACTION.get(
             self._device.status.thermostat_operating_state
@@ -362,8 +368,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         """Set new target temperature."""
         tasks = []
         # operation mode
-        operation_mode = kwargs.get(ATTR_HVAC_MODE)
-        if operation_mode:
+        if operation_mode := kwargs.get(ATTR_HVAC_MODE):
             if operation_mode == HVAC_MODE_OFF:
                 tasks.append(self._device.switch_off(set_status=True))
             else:
@@ -397,8 +402,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         """Update the calculated fields of the AC."""
         modes = {HVAC_MODE_OFF}
         for mode in self._device.status.supported_ac_modes:
-            state = AC_MODE_TO_STATE.get(mode)
-            if state is not None:
+            if (state := AC_MODE_TO_STATE.get(mode)) is not None:
                 modes.add(state)
             else:
                 _LOGGER.debug(
@@ -415,7 +419,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         return self._device.status.temperature
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """
         Return device specific state attributes.
 
