@@ -101,8 +101,7 @@ class Alpha2Climate(CoordinatorEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperatures."""
-        target_temperature = kwargs.get(ATTR_TEMPERATURE)
-        if target_temperature is None:
+        if (target_temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
         await self.coordinator.async_set_target_temperature(

@@ -1,4 +1,4 @@
-"""Offer Z-Wave JS value updated listening automation rules."""
+"""Offer Z-Wave JS value updated listening automation trigger."""
 from __future__ import annotations
 
 import functools
