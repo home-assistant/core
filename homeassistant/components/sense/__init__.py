@@ -92,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SENSE_EXCEPTIONS as err:
         raise ConfigEntryNotReady(str(err) or "Error during realtime update") from err
 
-    async def update_trend():
+    async def _async_update_trend():
         """Update the trend data."""
         try:
             await gateway.update_trend_data()
