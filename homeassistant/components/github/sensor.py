@@ -102,6 +102,7 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
         attr_fn=lambda data: {
             "sha": data["default_branch_ref"]["commit"]["sha"],
             "url": data["default_branch_ref"]["commit"]["url"],
+            "status": data["default_branch_ref"]["commit"]["status"]["state"],
         },
     ),
     GitHubSensorEntityDescription(
