@@ -31,7 +31,7 @@ from .const import (
     PYNUT_UNIQUE_ID,
 )
 
-NUT_FAKE_SERIAL = ["unknown", "blank"]
+NUT_FAKE_SERIAL = ["unknown", "blank", "000000000"]
 
 _LOGGER = logging.getLogger(__name__)
 
