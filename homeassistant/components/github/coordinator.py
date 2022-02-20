@@ -68,6 +68,18 @@ query ($owner: String!, $repository: String!) {
       url
       tag: tagName
     }
+    refs(
+      first: 1
+      refPrefix: "refs/tags/"
+      orderBy: {field: TAG_COMMIT_DATE, direction: DESC}
+    ) {
+      tags: nodes {
+        name
+        target {
+          url: commitUrl
+        }
+      }
+    }
   }
 }
 """

@@ -126,6 +126,15 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
             "number": data["pull_request"]["pull_requests"][0]["number"],
         },
     ),
+    GitHubSensorEntityDescription(
+        key="latest_tag",
+        name="Latest Tag",
+        avabl_fn=lambda data: data["refs"]["tags"],
+        value_fn=lambda data: data["refs"]["tags"][0]["name"][:255],
+        attr_fn=lambda data: {
+            "url": data["refs"]["tags"][0]["target"]["url"],
+        },
+    ),
 )
 
 
