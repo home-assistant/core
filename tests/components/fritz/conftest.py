@@ -1,11 +1,14 @@
 """Common stuff for AVM Fritz!Box tests."""
+import logging
 from unittest.mock import patch
 
 from fritzconnection.core.processor import Service
 from fritzconnection.lib.fritzhosts import FritzHosts
 import pytest
 
-from .const import MOCK_FB_SERVICES, MOCK_MESH_DATA
+from .const import MOCK_FB_SERVICES, MOCK_MESH_DATA, MOCK_MODELNAME
+
+LOGGER = logging.getLogger(__name__)
 
 
 class FritzServiceMock(Service):
@@ -21,19 +24,25 @@ class FritzServiceMock(Service):
 class FritzConnectionMock:  # pylint: disable=too-few-public-methods
     """FritzConnection mocking."""
 
-    MODELNAME = "FRITZ!Box 7490"
-
     def __init__(self, services):
         """Inint Mocking class."""
-        self.modelname = self.MODELNAME
+        self.modelname = MOCK_MODELNAME
         self.call_action = self._call_action
         self._services = services
         self.services = {
             srv: FritzServiceMock(serviceId=srv, actions=actions)
             for srv, actions in services.items()
         }
+        LOGGER.debug("-" * 80)
+        LOGGER.debug("FritzConnectionMock - services: %s", self.services)
 
     def _call_action(self, service: str, action: str, **kwargs):
+        LOGGER.debug(
+            "_call_action service: %s, action: %s, **kwargs: %s",
+            service,
+            action,
+            {**kwargs},
+        )
         if ":" in service:
             service, number = service.split(":", 1)
             service = service + number
@@ -60,7 +69,9 @@ class FritzHostMock(FritzHosts):
 @pytest.fixture()
 def fc_class_mock():
     """Fixture that sets up a mocked FritzConnection class."""
-    with patch("fritzconnection.FritzConnection", autospec=True) as result:
+    with patch(
+        "homeassistant.components.fritz.common.FritzConnection", autospec=True
+    ) as result:
         result.return_value = FritzConnectionMock(MOCK_FB_SERVICES)
         yield result
 
@@ -68,6 +79,8 @@ def fc_class_mock():
 @pytest.fixture()
 def fh_class_mock():
     """Fixture that sets up a mocked FritzHosts class."""
-    with patch("fritzconnection.lib.fritzhosts.FritzHosts", autospec=True) as result:
-        result.return_value = FritzHostMock
+    with patch(
+        "homeassistant.components.fritz.common.FritzHosts",
+        new=FritzHostMock,
+    ) as result:
         yield result

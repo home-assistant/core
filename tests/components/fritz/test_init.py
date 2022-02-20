@@ -24,16 +24,12 @@ async def test_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock):
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.fritz.common.FritzConnection",
-        side_effect=fc_class_mock,
-    ):
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        assert entry.state == ConfigEntryState.LOADED
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    assert entry.state == ConfigEntryState.LOADED
 
-        await hass.config_entries.async_unload(entry.entry_id)
-        assert entry.state == ConfigEntryState.NOT_LOADED
+    await hass.config_entries.async_unload(entry.entry_id)
+    assert entry.state == ConfigEntryState.NOT_LOADED
 
 
 async def test_options_reload(hass: HomeAssistant, fc_class_mock, fh_class_mock):
@@ -47,9 +43,6 @@ async def test_options_reload(hass: HomeAssistant, fc_class_mock, fh_class_mock)
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fritz.common.FritzConnection",
-        side_effect=fc_class_mock,
-    ), patch(
         "homeassistant.config_entries.ConfigEntries.async_reload",
         return_value=None,
     ) as mock_reload:
@@ -67,7 +60,7 @@ async def test_options_reload(hass: HomeAssistant, fc_class_mock, fh_class_mock)
         mock_reload.assert_called_once()
 
 
-async def test_setup_auth_fail(hass: HomeAssistant, fc_class_mock, fh_class_mock):
+async def test_setup_auth_fail(hass: HomeAssistant):
     """Test starting a flow by user with an already configured device."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -87,7 +80,7 @@ async def test_setup_auth_fail(hass: HomeAssistant, fc_class_mock, fh_class_mock
     "error",
     FRITZ_EXCEPTIONS,
 )
-async def test_setup_fail(hass: HomeAssistant, error, fc_class_mock, fh_class_mock):
+async def test_setup_fail(hass: HomeAssistant, error):
     """Test starting a flow by user with an already configured device."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)

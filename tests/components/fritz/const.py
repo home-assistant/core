@@ -26,7 +26,9 @@ MOCK_CONFIG = {
     }
 }
 MOCK_HOST = "fake_host"
-MOCK_IP = "192.168.178.1"
+MOCK_IPS = {"fritz.box": "192.168.178.1", "printer": "192.168.178.2"}
+MOCK_MODELNAME = "FRITZ!Box 7530 AX"
+MOCK_FIRMWARE = "256.07.29"
 MOCK_SERIAL_NUMBER = "fake_serial_number"
 MOCK_FIRMWARE_INFO = [True, "1.1.1"]
 MOCK_MESH_SSID = "TestSSID"
@@ -36,15 +38,51 @@ MOCK_MESH_SLAVE_MAC = "1C:ED:6F:12:34:21"
 MOCK_MESH_SLAVE_WIFI1_MAC = "1C:ED:6F:12:34:22"
 
 MOCK_FB_SERVICES: dict[str, dict] = {
-    "WANIPConn1": {
-        "GetStatusInfo": {
-            "NewConnectionStatus": "Connected",
-            "NewUptime": 35307,
+    "DeviceInfo1": {
+        "GetInfo": {
+            "NewSerialNumber": MOCK_MESH_MASTER_MAC,
+            "NewName": "TheName",
+            "NewModelName": MOCK_MODELNAME,
+            "NewSoftwareVersion": MOCK_FIRMWARE,
+            "NewUpTime": 2518179,
         },
-        "GetExternalIPAddress": {"NewExternalIPAddress": "1.2.3.4"},
     },
-    "WANIPConnection1": {
-        "GetStatusInfo": {},
+    "Hosts1": {
+        "GetGenericHostEntry": [
+            {
+                "NewIPAddress": MOCK_IPS["fritz.box"],
+                "NewAddressSource": "Static",
+                "NewLeaseTimeRemaining": 0,
+                "NewMACAddress": MOCK_MESH_MASTER_MAC,
+                "NewInterfaceType": "",
+                "NewActive": True,
+                "NewHostName": "fritz.box",
+            },
+            {
+                "NewIPAddress": MOCK_IPS["printer"],
+                "NewAddressSource": "DHCP",
+                "NewLeaseTimeRemaining": 0,
+                "NewMACAddress": "AA:BB:CC:00:11:22",
+                "NewInterfaceType": "Ethernet",
+                "NewActive": True,
+                "NewHostName": "printer",
+            },
+        ],
+        "X_AVM-DE_GetMeshListPath": {},
+    },
+    "LANEthernetInterfaceConfig1": {
+        "GetStatistics": {
+            "NewBytesSent": 23004321,
+            "NewBytesReceived": 12045,
+        },
+    },
+    "Layer3Forwarding1": {
+        "GetDefaultConnectionService": {
+            "NewDefaultConnectionService": "1.WANPPPConnection.1"
+        }
+    },
+    "UserInterface1": {
+        "GetInfo": {},
     },
     "WANCommonIFC1": {
         "GetCommonLinkProperties": {
@@ -63,21 +101,50 @@ MOCK_FB_SERVICES: dict[str, dict] = {
         "GetTotalBytesSent": {"NewTotalBytesSent": 1712232562},
         "GetTotalBytesReceived": {"NewTotalBytesReceived": 5221019883},
     },
-    "LANEthernetInterfaceConfig1": {
-        "GetStatistics": {
-            "NewBytesSent": 23004321,
-            "NewBytesReceived": 12045,
-        },
+    "WANCommonInterfaceConfig1": {
+        "GetCommonLinkProperties": {
+            "NewWANAccessType": "DSL",
+            "NewLayer1UpstreamMaxBitRate": 51805000,
+            "NewLayer1DownstreamMaxBitRate": 318557000,
+            "NewPhysicalLinkStatus": "Up",
+        }
     },
-    "DeviceInfo1": {
+    "WANDSLInterfaceConfig1": {
         "GetInfo": {
-            "NewSerialNumber": "abcdefgh",
-            "NewName": "TheName",
-            "NewModelName": "FRITZ!Box 7490",
-        },
+            "NewEnable": True,
+            "NewStatus": "Up",
+            "NewDataPath": "Interleaved",
+            "NewUpstreamCurrRate": 46720,
+            "NewDownstreamCurrRate": 292030,
+            "NewUpstreamMaxRate": 51348,
+            "NewDownstreamMaxRate": 315978,
+            "NewUpstreamNoiseMargin": 90,
+            "NewDownstreamNoiseMargin": 80,
+            "NewUpstreamAttenuation": 70,
+            "NewDownstreamAttenuation": 120,
+            "NewATURVendor": "41564d00",
+            "NewATURCountry": "0400",
+            "NewUpstreamPower": 500,
+            "NewDownstreamPower": 500,
+        }
     },
-    "UserInterface1": {
-        "GetInfo": {},
+    "WANIPConn1": {
+        "GetStatusInfo": {
+            "NewConnectionStatus": "Connected",
+            "NewUptime": 35307,
+        },
+        "GetExternalIPAddress": {"NewExternalIPAddress": "1.2.3.4"},
+    },
+    "WANPPPConnection1": {
+        "GetInfo": {
+            "NewEnable": True,
+            "NewConnectionStatus": "Connected",
+            "NewUptime": 57199,
+            "NewUpstreamMaxBitRate": 46531924,
+            "NewDownstreamMaxBitRate": 43430530,
+            "NewExternalIPAddress": "1.2.3.4",
+        },
+        "GetPortMappingNumberOfEntries": {},
     },
     "X_AVM-DE_Homeauto1": {
         "GetGenericDeviceInfos": [
@@ -116,22 +183,10 @@ MOCK_FB_SERVICES: dict[str, dict] = {
             {},
         ],
     },
-    "Hosts1": {
-        "GetGenericHostEntry": [
-            {
-                # "NewSerialNumber": 1234,
-                # "NewName": "TheName",
-                # "NewModelName": "FRITZ!Box 7490",
-                "NewIPAddress": MOCK_IP,
-                "NewMACAddress": "",
-                "NewAddressSource": "",
-                "NewLeaseTimeRemaining": "",
-                "NewInterfaceType": "",
-                "NewActive": "",
-                "NewHostName": "fritz.box",
-            },
-            # {},
-        ],
+    "X_AVM-DE_HostFilter1": {
+        "GetWANAccessByIP": {
+            MOCK_IPS["printer"]: {"NewDisallow": False, "NewWANAccess": "granted"}
+        }
     },
 }
 
@@ -732,7 +787,7 @@ MOCK_DEVICE_INFO = {
 MOCK_SSDP_DATA = ssdp.SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
-    ssdp_location=f"https://{MOCK_IP}:12345/test",
+    ssdp_location=f"https://{MOCK_IPS['fritz.box']}:12345/test",
     upnp={
         ATTR_UPNP_FRIENDLY_NAME: "fake_name",
         ATTR_UPNP_UDN: "uuid:only-a-test",
