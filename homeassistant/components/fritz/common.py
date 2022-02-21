@@ -39,6 +39,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_OLD_DISCOVERY,
     DEFAULT_DEVICE_NAME,
     DEFAULT_HOST,
     DEFAULT_PORT,
@@ -381,8 +382,10 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
             "Hosts1" not in self.connection.services
             or "X_AVM-DE_GetMeshListPath"
             not in self.connection.services["Hosts1"].actions
-        ):
-            _LOGGER.debug("Mesh not supported, using old method")
+        ) or (self._options and self._options.get(CONF_OLD_DISCOVERY, False)):
+            _LOGGER.debug(
+                "Using old hosts discovery method. (Mesh not supported or user option)"
+            )
             self.mesh_role = MeshRoles.NONE
             for mac, info in hosts.items():
                 if self.manage_device_info(info, mac, consider_home):

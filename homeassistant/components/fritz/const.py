@@ -32,6 +32,8 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 
+CONF_OLD_DISCOVERY = "old_discovery"
+
 DATA_FRITZ = "fritz_data"
 
 DSL_CONNECTION: Literal["dsl"] = "dsl"
