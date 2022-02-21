@@ -153,7 +153,9 @@ FAKE_SOCKET = BulbType(
 FAKE_OLD_FIRMWARE_DIMMABLE_BULB = BulbType(
     bulb_type=BulbClass.DW,
     name=None,
-    features=FEATURE_MAP[BulbClass.DW],
+    features=Features(
+        color=False, color_tmp=False, effect=True, brightness=True, dual_head=False
+    ),
     kelvin_range=None,
     fw_version="1.8.0",
     white_channels=1,
