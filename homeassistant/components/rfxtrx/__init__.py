@@ -13,8 +13,6 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -28,11 +26,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceRegistry, EVENT_DEVICE_REGISTRY_UPDATED
+from homeassistant.helpers.device_registry import (
+    EVENT_DEVICE_REGISTRY_UPDATED,
+    DeviceEntry,
+    DeviceRegistry,
+)
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_EVENT,
@@ -83,13 +84,9 @@ PLATFORMS = [
 ]
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the RFXtrx component."""
-    websocket_api.async_register_command(hass, websocket_remove_device)
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEntry):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
+) -> bool:
     """Set up the RFXtrx component."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -414,38 +411,14 @@ def get_device_id(
     return DeviceTuple(f"{device.packettype:x}", f"{device.subtype:x}", id_string)
 
 
-@websocket_api.websocket_command(
-    {vol.Required("type"): "rfxtrx/device/remove", vol.Required("device_id"): str}
-)
-@websocket_api.async_response
-async def websocket_remove_device(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
-) -> None:
-    """Delete device."""
-    device_id = msg["device_id"]
-    dev_registry: DeviceRegistry = (
-        await hass.helpers.device_registry.async_get_registry()
-    )
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove config entry from a device.
 
-    device = dev_registry.async_get(device_id)
-    if not device:
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Device not found"
-        )
-        return
-
-    for entry_id in device.config_entries:
-        config_entry = hass.config_entries.async_get_entry(entry_id)
-        if not config_entry or config_entry.domain != DOMAIN:
-            continue
-
-        dev_registry.async_remove_device(device_id)
-        connection.send_message(websocket_api.result_message(msg["id"]))
-        return
-
-    connection.send_error(
-        msg["id"], websocket_api.const.ERR_NOT_FOUND, "Non rfxtrx device"
-    )
+    The actual cleanup is done in the device registry event
+    """
+    return True
 
 
 class RfxtrxEntity(RestoreEntity):
