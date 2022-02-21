@@ -18,6 +18,13 @@
                 "description": "{username} i\u00e7in \u015fifreyi g\u00fcncelleyin",
                 "title": "Entegrasyonu Yeniden Do\u011frula"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Parola"
+                },
+                "description": "{username} i\u00e7in \u015fifreyi g\u00fcncelleyin",
+                "title": "Entegrasyonu Yeniden Do\u011frula"
+            },
             "service": {
                 "data": {
                     "services": "Hizmetler"
