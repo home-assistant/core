@@ -148,4 +148,9 @@ COORDINATORS: tuple[RenaultCoordinatorDescription, ...] = (
         requires_electricity=True,
         update_method=lambda x: x.get_charge_mode,
     ),
+    RenaultCoordinatorDescription(
+        endpoint="lock-status",
+        key="lock_status",
+        update_method=lambda x: x.get_lock_status,
+    ),
 )
