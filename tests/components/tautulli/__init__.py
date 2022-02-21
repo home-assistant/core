@@ -45,12 +45,6 @@ DEFAULT_USERS = [{11111111: {"enabled": False}, 22222222: {"enabled": False}}]
 SELECTED_USERNAMES = ["user1"]
 
 
-async def create_mocked_tautulli() -> AsyncMock:
-    """Mock Tautulli."""
-    mocked_tautulli = AsyncMock()
-    return mocked_tautulli
-
-
 def patch_config_flow_tautulli(mocked_tautulli) -> AsyncMock:
     """Mock Tautulli config flow."""
     return patch(

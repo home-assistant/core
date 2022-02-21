@@ -39,7 +39,7 @@ from .const import (
 )
 from .coordinator import TautulliDataUpdateCoordinator
 
-# Deprecated in Home Assistant 2022.3
+# Deprecated in Home Assistant 2022.4
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
@@ -89,14 +89,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up Tautulli sensor."""
     async_add_entities(
-        [
-            TautulliSensor(
-                hass.data[DOMAIN][entry.entry_id],
-                description,
-            )
-            for description in SENSOR_TYPES
-        ],
-        True,
+        TautulliSensor(
+            hass.data[DOMAIN],
+            description,
+        )
+        for description in SENSOR_TYPES
     )
 
 

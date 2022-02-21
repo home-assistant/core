@@ -1,5 +1,5 @@
 """Test Tautulli config flow."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from pytautulli import exceptions
 
@@ -13,7 +13,6 @@ from . import (
     CONF_DATA,
     CONF_IMPORT_DATA,
     NAME,
-    create_mocked_tautulli,
     patch_config_flow_tautulli,
     setup_integration,
 )
@@ -31,7 +30,7 @@ async def test_flow_user_single_instance_allowed(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, data=CONF_DATA)
     entry.add_to_hass(hass)
 
-    with patch_config_flow_tautulli(await create_mocked_tautulli()):
+    with patch_config_flow_tautulli(AsyncMock()):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -50,8 +49,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    mocked_tautulli = await create_mocked_tautulli()
-    with patch_config_flow_tautulli(mocked_tautulli), _patch_setup():
+    with patch_config_flow_tautulli(AsyncMock()), _patch_setup():
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=CONF_DATA,
@@ -65,7 +63,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
 
 async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
     """Test user initialized flow with unreachable server."""
-    with patch_config_flow_tautulli(await create_mocked_tautulli()) as tautullimock:
+    with patch_config_flow_tautulli(AsyncMock()) as tautullimock:
         tautullimock.side_effect = exceptions.PyTautulliConnectionException
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=CONF_DATA
@@ -77,7 +75,7 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
 
 async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
     """Test user initialized flow with invalid authentication."""
-    with patch_config_flow_tautulli(await create_mocked_tautulli()) as tautullimock:
+    with patch_config_flow_tautulli(AsyncMock()) as tautullimock:
         tautullimock.side_effect = exceptions.PyTautulliAuthenticationException
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
@@ -89,7 +87,7 @@ async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
 
 async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
     """Test user initialized flow with unreachable server."""
-    with patch_config_flow_tautulli(await create_mocked_tautulli()) as tautullimock:
+    with patch_config_flow_tautulli(AsyncMock()) as tautullimock:
         tautullimock.side_effect = exceptions.PyTautulliException
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=CONF_DATA
@@ -101,7 +99,7 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
 
 async def test_flow_import(hass: HomeAssistant) -> None:
     """Test import step."""
-    with patch_config_flow_tautulli(await create_mocked_tautulli()), _patch_setup():
+    with patch_config_flow_tautulli(AsyncMock()), _patch_setup():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -117,7 +115,7 @@ async def test_flow_import_single_instance_allowed(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, data=CONF_DATA)
     entry.add_to_hass(hass)
 
-    with patch_config_flow_tautulli(await create_mocked_tautulli()):
+    with patch_config_flow_tautulli(AsyncMock()):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -148,8 +146,7 @@ async def test_flow_reauth(
 
     new_conf = {CONF_API_KEY: "efgh"}
     CONF_DATA[CONF_API_KEY] = "efgh"
-    mocked_tautulli = await create_mocked_tautulli()
-    with patch_config_flow_tautulli(mocked_tautulli), _patch_setup() as mock_entry:
+    with patch_config_flow_tautulli(AsyncMock()), _patch_setup() as mock_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=new_conf,
@@ -176,7 +173,7 @@ async def test_flow_reauth_error(
             "unique_id": entry.unique_id,
         },
     )
-    with patch_config_flow_tautulli(await create_mocked_tautulli()) as tautullimock:
+    with patch_config_flow_tautulli(AsyncMock()) as tautullimock:
         tautullimock.side_effect = exceptions.PyTautulliAuthenticationException
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
