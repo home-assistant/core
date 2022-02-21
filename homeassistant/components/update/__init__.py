@@ -24,11 +24,7 @@ STORAGE_VERSION = 1
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Update integration."""
     hass.data[DOMAIN] = UpdateManager(hass=hass)
-
     websocket_api.async_register_command(hass, handle_info)
-    websocket_api.async_register_command(hass, handle_update)
-    websocket_api.async_register_command(hass, handle_skip)
-
     return True
 
 
@@ -182,6 +178,11 @@ class UpdateManager:
             if from_storage is not None:
                 assert isinstance(from_storage, dict)
                 self._skip = set(from_storage["skipped"])
+
+            # Register additional WS commands
+            websocket_api.async_register_command(self._hass, handle_update)
+            websocket_api.async_register_command(self._hass, handle_skip)
+
             self._loaded = True
 
         updates: dict[str, list[UpdateDescription] | None] = {}
