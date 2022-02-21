@@ -11,13 +11,14 @@ async def test_form(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_intellifire_config_flow: MagicMock,
+    mock_fireplace_finder: AsyncMock,
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
