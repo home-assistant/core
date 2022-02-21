@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_URL
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.exceptions import IntegrationError
 
 from .const import DEFAULT_NAME, DOMAIN
@@ -50,7 +50,7 @@ class DlnaDmsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None and (host := user_input.get(CONF_HOST)):
             # User has chosen a device
             discovery = self._discoveries[host]
-            await self._async_set_info_from_discovery(discovery)
+            await self._async_parse_discovery(discovery)
             return self._create_entry()
 
         if not (discoveries := await self._async_get_discoveries()):
@@ -58,21 +58,22 @@ class DlnaDmsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
 
         self._discoveries = {
-            discovery.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
-            or cast(str, urlparse(discovery.ssdp_location).hostname): discovery
+            cast(str, urlparse(discovery.ssdp_location).hostname): discovery
             for discovery in discoveries
         }
 
-        data_schema = vol.Schema(
-            {vol.Optional(CONF_HOST): vol.In(self._discoveries.keys())}
-        )
+        discovery_choices = {
+            host: f"{discovery.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)} ({host})"
+            for host, discovery in self._discoveries.items()
+        }
+        data_schema = vol.Schema({vol.Optional(CONF_HOST): vol.In(discovery_choices)})
         return self.async_show_form(step_id="user", data_schema=data_schema)
 
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a flow initialized by SSDP discovery."""
         LOGGER.debug("async_step_ssdp: discovery_info %s", pformat(discovery_info))
 
-        await self._async_set_info_from_discovery(discovery_info)
+        await self._async_parse_discovery(discovery_info)
 
         # Abort if the device doesn't support all services required for a DmsDevice.
         # Use the discovery_info instead of DmsDevice.is_profile_device to avoid
@@ -119,19 +120,24 @@ class DlnaDmsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         data = {CONF_URL: self._location, CONF_DEVICE_ID: self._usn}
         return self.async_create_entry(title=self._name, data=data)
 
-    async def _async_set_info_from_discovery(
+    async def _async_parse_discovery(
         self, discovery_info: ssdp.SsdpServiceInfo
     ) -> None:
-        """Set information required for a config entry from the SSDP discovery."""
+        """Get required details from an SSDP discovery.
+
+        Aborts if a device matching the SSDP USN has already been configured.
+        """
         LOGGER.debug(
-            "_async_set_info_from_discovery: location: %s, USN: %s",
+            "_async_parse_discovery: location: %s, USN: %s",
             discovery_info.ssdp_location,
             discovery_info.ssdp_usn,
         )
 
+        if not discovery_info.ssdp_location or not discovery_info.ssdp_usn:
+            raise AbortFlow("bad_ssdp")
+
         if not self._location:
             self._location = discovery_info.ssdp_location
-            assert isinstance(self._location, str)
 
         self._usn = discovery_info.ssdp_usn
         await self.async_set_unique_id(self._usn)

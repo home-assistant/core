@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import dataclasses
+from typing import Final
 from unittest.mock import Mock
 
 from async_upnp_client import UpnpError
@@ -14,6 +15,7 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_URL
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
+    MOCK_DEVICE_HOST,
     MOCK_DEVICE_LOCATION,
     MOCK_DEVICE_NAME,
     MOCK_DEVICE_TYPE,
@@ -30,11 +32,11 @@ pytestmark = [
     pytest.mark.usefixtures("dms_device_mock"),
 ]
 
-WRONG_DEVICE_TYPE = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
+WRONG_DEVICE_TYPE: Final = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
 
-MOCK_ROOT_DEVICE_UDN = "ROOT_DEVICE"
+MOCK_ROOT_DEVICE_UDN: Final = "ROOT_DEVICE"
 
-MOCK_DISCOVERY = ssdp.SsdpServiceInfo(
+MOCK_DISCOVERY: Final = ssdp.SsdpServiceInfo(
     ssdp_usn=MOCK_DEVICE_USN,
     ssdp_location=MOCK_DEVICE_LOCATION,
     ssdp_udn=MOCK_DEVICE_UDN,
@@ -83,7 +85,7 @@ async def test_user_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None:
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_HOST: MOCK_DEVICE_NAME}
+        result["flow_id"], user_input={CONF_HOST: MOCK_DEVICE_HOST}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -209,6 +211,31 @@ async def test_ssdp_flow_duplicate_location(
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert config_entry_mock.data[CONF_URL] == MOCK_DEVICE_LOCATION
+
+
+async def test_ssdp_flow_bad_data(
+    hass: HomeAssistant, config_entry_mock: MockConfigEntry
+) -> None:
+    """Test bad SSDP discovery information is rejected cleanly."""
+    # Missing location
+    discovery = dataclasses.replace(MOCK_DISCOVERY, ssdp_location="")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=discovery,
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "bad_ssdp"
+
+    # Missing USN
+    discovery = dataclasses.replace(MOCK_DISCOVERY, ssdp_usn="")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=discovery,
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "bad_ssdp"
 
 
 async def test_duplicate_name(

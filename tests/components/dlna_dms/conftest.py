@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Iterable
+from typing import Final
 from unittest.mock import Mock, create_autospec, patch, seal
 
 from async_upnp_client import UpnpDevice, UpnpService
@@ -15,18 +16,19 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-MOCK_DEVICE_BASE_URL = "http://192.88.99.21"
-MOCK_DEVICE_LOCATION = MOCK_DEVICE_BASE_URL + "/dms_description.xml"
-MOCK_DEVICE_NAME = "Test Server Device"
-MOCK_DEVICE_TYPE = "urn:schemas-upnp-org:device:MediaServer:1"
-MOCK_DEVICE_UDN = "uuid:7bf34520-f034-4fa2-8d2d-2f709d4221ef"
-MOCK_DEVICE_USN = f"{MOCK_DEVICE_UDN}::{MOCK_DEVICE_TYPE}"
-MOCK_SOURCE_ID = "test_server_device"
+MOCK_DEVICE_HOST: Final = "192.88.99.21"
+MOCK_DEVICE_BASE_URL: Final = f"http://{MOCK_DEVICE_HOST}"
+MOCK_DEVICE_LOCATION: Final = MOCK_DEVICE_BASE_URL + "/dms_description.xml"
+MOCK_DEVICE_NAME: Final = "Test Server Device"
+MOCK_DEVICE_TYPE: Final = "urn:schemas-upnp-org:device:MediaServer:1"
+MOCK_DEVICE_UDN: Final = "uuid:7bf34520-f034-4fa2-8d2d-2f709d4221ef"
+MOCK_DEVICE_USN: Final = f"{MOCK_DEVICE_UDN}::{MOCK_DEVICE_TYPE}"
+MOCK_SOURCE_ID: Final = "test_server_device"
 
-LOCAL_IP = "192.88.99.1"
-EVENT_CALLBACK_URL = "http://192.88.99.1/notify"
+LOCAL_IP: Final = "192.88.99.1"
+EVENT_CALLBACK_URL: Final = "http://192.88.99.1/notify"
 
-NEW_DEVICE_LOCATION = "http://192.88.99.7" + "/dmr_description.xml"
+NEW_DEVICE_LOCATION: Final = "http://192.88.99.7" + "/dmr_description.xml"
 
 
 @pytest.fixture

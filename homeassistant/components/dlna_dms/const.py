@@ -37,7 +37,7 @@ PROTOCOL_RTSP: Final = "rtsp-rtp-udp"
 PROTOCOL_ANY: Final = "*"
 STREAMABLE_PROTOCOLS: Final = [PROTOCOL_HTTP, PROTOCOL_RTSP, PROTOCOL_ANY]
 
-# Map UPnP class to media_player class
+# Map UPnP object class to media_player media class
 MEDIA_CLASS_MAP: Mapping[str, str] = {
     "object": _mp_const.MEDIA_CLASS_URL,
     "object.item": _mp_const.MEDIA_CLASS_URL,
@@ -75,44 +75,4 @@ MEDIA_CLASS_MAP: Mapping[str, str] = {
     "object.container.storageVolume": _mp_const.MEDIA_CLASS_DIRECTORY,
     "object.container.storageFolder": _mp_const.MEDIA_CLASS_DIRECTORY,
     "object.container.bookmarkFolder": _mp_const.MEDIA_CLASS_DIRECTORY,
-}
-
-# Map UPnP class to media_player media_content_type
-MEDIA_TYPE_MAP: Mapping[str, str] = {
-    "object": _mp_const.MEDIA_TYPE_URL,
-    "object.item": _mp_const.MEDIA_TYPE_URL,
-    "object.item.imageItem": _mp_const.MEDIA_TYPE_IMAGE,
-    "object.item.imageItem.photo": _mp_const.MEDIA_TYPE_IMAGE,
-    "object.item.audioItem": _mp_const.MEDIA_TYPE_MUSIC,
-    "object.item.audioItem.musicTrack": _mp_const.MEDIA_TYPE_MUSIC,
-    "object.item.audioItem.audioBroadcast": _mp_const.MEDIA_TYPE_MUSIC,
-    "object.item.audioItem.audioBook": _mp_const.MEDIA_TYPE_PODCAST,
-    "object.item.videoItem": _mp_const.MEDIA_TYPE_VIDEO,
-    "object.item.videoItem.movie": _mp_const.MEDIA_TYPE_MOVIE,
-    "object.item.videoItem.videoBroadcast": _mp_const.MEDIA_TYPE_TVSHOW,
-    "object.item.videoItem.musicVideoClip": _mp_const.MEDIA_TYPE_VIDEO,
-    "object.item.playlistItem": _mp_const.MEDIA_TYPE_PLAYLIST,
-    "object.item.textItem": _mp_const.MEDIA_TYPE_URL,
-    "object.item.bookmarkItem": _mp_const.MEDIA_TYPE_URL,
-    "object.item.epgItem": _mp_const.MEDIA_TYPE_EPISODE,
-    "object.item.epgItem.audioProgram": _mp_const.MEDIA_TYPE_EPISODE,
-    "object.item.epgItem.videoProgram": _mp_const.MEDIA_TYPE_EPISODE,
-    "object.container": _mp_const.MEDIA_TYPE_PLAYLIST,
-    "object.container.person": _mp_const.MEDIA_TYPE_ARTIST,
-    "object.container.person.musicArtist": _mp_const.MEDIA_TYPE_ARTIST,
-    "object.container.playlistContainer": _mp_const.MEDIA_TYPE_PLAYLIST,
-    "object.container.album": _mp_const.MEDIA_TYPE_ALBUM,
-    "object.container.album.musicAlbum": _mp_const.MEDIA_TYPE_ALBUM,
-    "object.container.album.photoAlbum": _mp_const.MEDIA_TYPE_ALBUM,
-    "object.container.genre": _mp_const.MEDIA_TYPE_GENRE,
-    "object.container.genre.musicGenre": _mp_const.MEDIA_TYPE_GENRE,
-    "object.container.genre.movieGenre": _mp_const.MEDIA_TYPE_GENRE,
-    "object.container.channelGroup": _mp_const.MEDIA_TYPE_CHANNELS,
-    "object.container.channelGroup.audioChannelGroup": _mp_const.MEDIA_TYPE_CHANNELS,
-    "object.container.channelGroup.videoChannelGroup": _mp_const.MEDIA_TYPE_CHANNELS,
-    "object.container.epgContainer": _mp_const.MEDIA_TYPE_TVSHOW,
-    "object.container.storageSystem": _mp_const.MEDIA_TYPE_PLAYLIST,
-    "object.container.storageVolume": _mp_const.MEDIA_TYPE_PLAYLIST,
-    "object.container.storageFolder": _mp_const.MEDIA_TYPE_PLAYLIST,
-    "object.container.bookmarkFolder": _mp_const.MEDIA_TYPE_PLAYLIST,
 }

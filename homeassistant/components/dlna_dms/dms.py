@@ -34,7 +34,6 @@ from .const import (
     DOMAIN,
     LOGGER,
     MEDIA_CLASS_MAP,
-    MEDIA_TYPE_MAP,
     PATH_OBJECT_ID_FLAG,
     PATH_SEARCH_FLAG,
     PATH_SEP,
@@ -632,7 +631,7 @@ class DmsDeviceSource:
         title = self.name if item.id == ROOT_OBJECT_ID else item.title
 
         mime_type = _resource_mime_type(item.res[0]) if item.res else None
-        media_content_type = mime_type or MEDIA_TYPE_MAP.get(item.upnp_class, "")
+        media_content_type = mime_type or item.upnp_class
 
         media_source = BrowseMediaSource(
             domain=DOMAIN,
