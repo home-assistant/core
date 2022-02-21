@@ -165,5 +165,8 @@ DHCP: list[dict[str, str | bool]] = [
     {'domain': 'vicare', 'macaddress': 'B87424*'},
     {'domain': 'wiz', 'registered_devices': True},
     {'domain': 'wiz', 'macaddress': 'A8BB50*'},
+    {'domain': 'wiz', 'macaddress': 'D8A011*'},
+    {'domain': 'wiz', 'macaddress': '444F8E*'},
+    {'domain': 'wiz', 'macaddress': '6C2990*'},
     {'domain': 'wiz', 'hostname': 'wiz_*'},
     {'domain': 'yeelight', 'hostname': 'yeelink-*'}]
