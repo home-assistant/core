@@ -48,3 +48,18 @@ async def test_already_configured(
 
     assert result.get("type") == RESULT_TYPE_ABORT
     assert result.get("reason") == "single_instance_allowed"
+
+
+async def test_onboarding_flow(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test the onboarding configuration flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "onboarding"}
+    )
+
+    assert result.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result.get("title") == "Radio Browser"
+    assert result.get("data") == {}
+
+    assert len(mock_setup_entry.mock_calls) == 1

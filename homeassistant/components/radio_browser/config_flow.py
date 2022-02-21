@@ -25,3 +25,9 @@ class RadioBrowserConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title="Radio Browser", data={})
 
         return self.async_show_form(step_id="user")
+
+    async def async_step_onboarding(
+        self, data: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle a flow initialized by onboarding."""
+        return self.async_create_entry(title="Radio Browser", data={})
