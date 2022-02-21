@@ -26,7 +26,8 @@
             "forward": "\u0395\u03bc\u03c0\u03c1\u03cc\u03c2"
         },
         "tuya__decibel_sensitivity": {
-            "0": "\u03a7\u03b1\u03bc\u03b7\u03bb\u03ae \u03b5\u03c5\u03b1\u03b9\u03c3\u03b8\u03b7\u03c3\u03af\u03b1"
+            "0": "\u03a7\u03b1\u03bc\u03b7\u03bb\u03ae \u03b5\u03c5\u03b1\u03b9\u03c3\u03b8\u03b7\u03c3\u03af\u03b1",
+            "1": "\u03a5\u03c8\u03b7\u03bb\u03ae \u03b5\u03c5\u03b1\u03b9\u03c3\u03b8\u03b7\u03c3\u03af\u03b1"
         },
         "tuya__fan_angle": {
             "30": "30\u00b0",
