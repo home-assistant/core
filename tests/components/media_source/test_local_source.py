@@ -224,3 +224,86 @@ async def test_upload_view(hass, hass_client, temp_dir, hass_admin_user):
 
     assert res.status == 401
     assert not (Path(temp_dir) / "no-admin-test.png").is_file()
+
+
+async def test_remove_file(hass, hass_ws_client, temp_dir, hass_admin_user):
+    """Allow uploading media."""
+
+    msg_count = 0
+    file_count = 0
+
+    def msgid():
+        nonlocal msg_count
+        msg_count += 1
+        return msg_count
+
+    def create_file():
+        nonlocal file_count
+        file_count += 1
+        to_delete_path = Path(temp_dir) / f"to_delete_{file_count}.txt"
+        to_delete_path.touch()
+        return to_delete_path
+
+    client = await hass_ws_client(hass)
+    to_delete = create_file()
+
+    await client.send_json(
+        {
+            "id": msgid(),
+            "type": "media_source/local_source/remove",
+            "media_content_id": f"media-source://media_source/test_dir/{to_delete.name}",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+
+    assert not to_delete.exists()
+
+    # Test with bad media source ID
+    extra_id_file = create_file()
+    for bad_id in (
+        # Not exists
+        "media-source://media_source/test_dir/not_exist.txt",
+        # Only a dir
+        "media-source://media_source/test_dir"
+        # File with extra identifiers
+        f"media-source://media_source/test_dir/bla/../{extra_id_file.name}"
+        # Location is invalid
+        "media-source://media_source/test_dir/..",
+        # Domain != media_source
+        "media-source://nest/test_dir/.",
+        # Completely something else
+        "http://bla",
+    ):
+        await client.send_json(
+            {
+                "id": msgid(),
+                "type": "media_source/local_source/remove",
+                "media_content_id": bad_id,
+            }
+        )
+
+        msg = await client.receive_json()
+
+        assert not msg["success"]
+
+    assert extra_id_file.exists()
+
+    # Test requires admin access
+    to_delete_2 = create_file()
+    hass_admin_user.groups = []
+
+    await client.send_json(
+        {
+            "id": msgid(),
+            "type": "media_source/local_source/remove",
+            "media_content_id": f"media-source://media_source/test_dir/{to_delete_2.name}",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert to_delete_2.is_file()
