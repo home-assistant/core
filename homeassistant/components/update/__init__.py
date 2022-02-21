@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import dataclasses
 import logging
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol
 
 import async_timeout
 import voluptuous as vol
@@ -148,7 +148,7 @@ class UpdateDescription:
     changelog_content: str | None = None
     changelog_url: str | None = None
     icon_url: str | None = None
-    provides_backup: bool = False
+    supported_features: list[Literal["backup"]] = []
 
 
 class UpdateManager:
