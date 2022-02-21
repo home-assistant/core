@@ -2077,6 +2077,9 @@ quantum-gateway==0.0.6
 # homeassistant.components.rachio
 rachiopy==1.0.3
 
+# homeassistant.components.radio_browser
+radios==0.1.0
+
 # homeassistant.components.radiotherm
 radiotherm==2.1.0
 

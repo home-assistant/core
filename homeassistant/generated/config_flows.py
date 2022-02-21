@@ -261,6 +261,7 @@ FLOWS = [
     "pvoutput",
     "pvpc_hourly_pricing",
     "rachio",
+    "radio_browser",
     "rainforest_eagle",
     "rainmachine",
     "rdw",
