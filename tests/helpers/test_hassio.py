@@ -6,7 +6,7 @@ from homeassistant.helpers.hassio import is_hassio
 
 async def test_is_hassio_yes():
     """Test is_hassio when supervisor available."""
-    with patch("homeassistant.helpers.hassio.os.environ", {"HASSIO": True}):
+    with patch("homeassistant.helpers.hassio.os.environ", {"SUPERVISOR": True}):
         assert is_hassio()
 
 

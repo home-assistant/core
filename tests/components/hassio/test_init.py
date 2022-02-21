@@ -16,7 +16,11 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-MOCK_ENVIRON = {"HASSIO": "127.0.0.1", "HASSIO_TOKEN": "abcdefgh"}
+MOCK_ENVIRON = {
+    "HASSIO": "127.0.0.1",
+    "HASSIO_TOKEN": "abcdefgh",
+    "SUPERVISOR": "127.0.0.1",
+}
 
 
 @pytest.fixture(autouse=True)
