@@ -1,8 +1,9 @@
 """Support for BMW connected drive button entities."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from bimmer_connected.remote_services import RemoteServiceStatus
 from bimmer_connected.vehicle import ConnectedDriveVehicle
@@ -12,12 +13,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import (
-    DOMAIN as BMW_DOMAIN,
-    BMWConnectedDriveAccount,
-    BMWConnectedDriveBaseEntity,
-)
-from .const import CONF_ACCOUNT, DATA_ENTRIES
+from . import BMWConnectedDriveBaseEntity
+from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from .coordinator import BMWDataUpdateCoordinator
 
 
 @dataclass
@@ -28,7 +28,7 @@ class BMWButtonEntityDescription(ButtonEntityDescription):
     remote_function: Callable[
         [ConnectedDriveVehicle], RemoteServiceStatus
     ] | None = None
-    account_function: Callable[[BMWConnectedDriveAccount], None] | None = None
+    account_function: Callable[[BMWDataUpdateCoordinator], Coroutine] | None = None
 
 
 BUTTON_TYPES: tuple[BMWButtonEntityDescription, ...] = (
@@ -66,7 +66,7 @@ BUTTON_TYPES: tuple[BMWButtonEntityDescription, ...] = (
         key="refresh",
         icon="mdi:refresh",
         name="Refresh from cloud",
-        account_function=lambda account: account.update(),
+        account_function=lambda coordinator: coordinator.async_request_refresh(),
         enabled_when_read_only=True,
     ),
 )
@@ -78,18 +78,17 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the BMW ConnectedDrive buttons from config entry."""
-    account: BMWConnectedDriveAccount = hass.data[BMW_DOMAIN][DATA_ENTRIES][
-        config_entry.entry_id
-    ][CONF_ACCOUNT]
+    coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+
     entities: list[BMWButton] = []
 
-    for vehicle in account.account.vehicles:
+    for vehicle in coordinator.account.vehicles:
         entities.extend(
             [
-                BMWButton(account, vehicle, description)
+                BMWButton(coordinator, vehicle, description)
                 for description in BUTTON_TYPES
-                if not account.read_only
-                or (account.read_only and description.enabled_when_read_only)
+                if not coordinator.read_only
+                or (coordinator.read_only and description.enabled_when_read_only)
             ]
         )
 
@@ -103,20 +102,22 @@ class BMWButton(BMWConnectedDriveBaseEntity, ButtonEntity):
 
     def __init__(
         self,
-        account: BMWConnectedDriveAccount,
+        coordinator: BMWDataUpdateCoordinator,
         vehicle: ConnectedDriveVehicle,
         description: BMWButtonEntityDescription,
     ) -> None:
         """Initialize BMW vehicle sensor."""
-        super().__init__(account, vehicle)
+        super().__init__(coordinator, vehicle)
         self.entity_description = description
 
         self._attr_name = f"{vehicle.name} {description.name}"
         self._attr_unique_id = f"{vehicle.vin}-{description.key}"
 
-    def press(self) -> None:
-        """Process the button press."""
+    async def async_press(self) -> None:
+        """Press the button."""
         if self.entity_description.remote_function:
-            self.entity_description.remote_function(self._vehicle)
+            await self.hass.async_add_executor_job(
+                self.entity_description.remote_function(self.vehicle)
+            )
         elif self.entity_description.account_function:
-            self.entity_description.account_function(self._account)
+            await self.entity_description.account_function(self.coordinator)

@@ -24,12 +24,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_system import UnitSystem
 
-from . import (
-    DOMAIN as BMW_DOMAIN,
-    BMWConnectedDriveAccount,
-    BMWConnectedDriveBaseEntity,
-)
-from .const import CONF_ACCOUNT, DATA_ENTRIES, UNIT_MAP
+from . import BMWConnectedDriveBaseEntity
+from .const import DOMAIN, UNIT_MAP
+from .coordinator import BMWDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -216,17 +213,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the BMW ConnectedDrive binary sensors from config entry."""
-    account: BMWConnectedDriveAccount = hass.data[BMW_DOMAIN][DATA_ENTRIES][
-        config_entry.entry_id
-    ][CONF_ACCOUNT]
+    coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = [
-        BMWConnectedDriveSensor(account, vehicle, description, hass.config.units)
-        for vehicle in account.account.vehicles
+        BMWConnectedDriveSensor(coordinator, vehicle, description, hass.config.units)
+        for vehicle in coordinator.account.vehicles
         for description in SENSOR_TYPES
         if description.key in vehicle.available_attributes
     ]
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
@@ -236,26 +231,26 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        account: BMWConnectedDriveAccount,
+        coordinator: BMWDataUpdateCoordinator,
         vehicle: ConnectedDriveVehicle,
         description: BMWBinarySensorEntityDescription,
         unit_system: UnitSystem,
     ) -> None:
         """Initialize sensor."""
-        super().__init__(account, vehicle)
+        super().__init__(coordinator, vehicle)
         self.entity_description = description
         self._unit_system = unit_system
 
         self._attr_name = f"{vehicle.name} {description.key}"
         self._attr_unique_id = f"{vehicle.vin}-{description.key}"
 
-    def update(self) -> None:
-        """Read new state data from the library."""
-        _LOGGER.debug("Updating binary sensors of %s", self._vehicle.name)
-        vehicle_state = self._vehicle.status
+    @property
+    def is_on(self) -> bool:
+        """Return true if the binary sensor is on."""
+        _LOGGER.debug("Updating binary sensors of %s", self.vehicle.name)
+        vehicle_state = self.vehicle.status
         result = self._attrs.copy()
 
-        self._attr_is_on = self.entity_description.value_fn(
+        return self.entity_description.value_fn(
             vehicle_state, result, self._unit_system
         )
-        self._attr_extra_state_attributes = result

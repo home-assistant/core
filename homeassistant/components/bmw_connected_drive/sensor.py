@@ -27,12 +27,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.unit_system import UnitSystem
 
-from . import (
-    DOMAIN as BMW_DOMAIN,
-    BMWConnectedDriveAccount,
-    BMWConnectedDriveBaseEntity,
-)
-from .const import CONF_ACCOUNT, DATA_ENTRIES, UNIT_MAP
+from . import BMWConnectedDriveBaseEntity
+from .const import DOMAIN, UNIT_MAP
+from .coordinator import BMWDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,21 +132,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up the BMW ConnectedDrive sensors from config entry."""
     unit_system = hass.config.units
-    account: BMWConnectedDriveAccount = hass.data[BMW_DOMAIN][DATA_ENTRIES][
-        config_entry.entry_id
-    ][CONF_ACCOUNT]
+    coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+
     entities: list[BMWConnectedDriveSensor] = []
 
-    for vehicle in account.account.vehicles:
+    for vehicle in coordinator.account.vehicles:
         entities.extend(
             [
-                BMWConnectedDriveSensor(account, vehicle, description, unit_system)
+                BMWConnectedDriveSensor(coordinator, vehicle, description, unit_system)
                 for attribute_name in vehicle.available_attributes
                 if (description := SENSOR_TYPES.get(attribute_name))
             ]
         )
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
@@ -159,13 +155,13 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        account: BMWConnectedDriveAccount,
+        coordinator: BMWDataUpdateCoordinator,
         vehicle: ConnectedDriveVehicle,
         description: BMWSensorEntityDescription,
         unit_system: UnitSystem,
     ) -> None:
         """Initialize BMW vehicle sensor."""
-        super().__init__(account, vehicle)
+        super().__init__(coordinator, vehicle)
         self.entity_description = description
 
         self._attr_name = f"{vehicle.name} {description.key}"
@@ -179,5 +175,5 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state."""
-        state = getattr(self._vehicle.status, self.entity_description.key)
+        state = getattr(self.vehicle.status, self.entity_description.key)
         return cast(StateType, self.entity_description.value(state, self.hass))
