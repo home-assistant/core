@@ -1,6 +1,8 @@
 """Expose Radio Browser as a media source."""
 from __future__ import annotations
 
+import mimetypes
+
 from radios import FilterBy, Order, RadioBrowser
 
 from homeassistant.components.media_player.const import (
@@ -58,6 +60,8 @@ class RadioMediaSource(MediaSource):
 
         # Determine mime type
         mime_type = CODEC_TO_MIMETYPE.get(station.codec)
+        if not mime_type:
+            mime_type, _ = mimetypes.guess_type(station.url)
         if not mime_type:
             raise BrowseError("Could not determine stream type of radio station")
 
