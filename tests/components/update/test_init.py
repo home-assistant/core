@@ -8,6 +8,7 @@ from unittest.mock import Mock
 
 from homeassistant.components.update import DOMAIN, UpdateDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_platform
@@ -217,7 +218,7 @@ async def test_update_update_failed(hass, hass_ws_client):
         version: str,
         **kwargs,
     ) -> bool:
-        return False
+        raise HomeAssistantError("Test update failed")
 
     await setup_mock_domain(hass, async_perform_update=mock_async_perform_update)
 
@@ -240,3 +241,7 @@ async def test_update_update_failed(hass, hass_ws_client):
     resp = await client.receive_json()
     assert not resp["success"]
     assert resp["error"]["code"] == "update_failed"
+    assert (
+        resp["error"]["message"]
+        == "Update of lorem_ipsum with version 1.0.1 failed: Test update failed"
+    )
