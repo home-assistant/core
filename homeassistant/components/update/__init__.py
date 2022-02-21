@@ -177,7 +177,11 @@ class UpdateManager:
             await integration_platform.async_process_integration_platforms(
                 self._hass, DOMAIN, _register_update_platform
             )
-            self._skip = set(await self._store.async_load() or [])
+            from_storage = await self._store.async_load()
+            # F mypy
+            if from_storage is not None:
+                assert isinstance(from_storage, dict)
+                self._skip = set(from_storage["skipped"])
             self._loaded = True
 
         updates: dict[str, list[UpdateDescription] | None] = {}
