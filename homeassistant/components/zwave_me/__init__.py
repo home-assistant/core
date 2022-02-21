@@ -114,7 +114,7 @@ class ZWaveMeEntity(Entity):
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=self._attr_name,
             manufacturer=self.device.manufacturer,
-            sw_version=self.device.firmare,
+            sw_version=self.device.firmware,
             suggested_area=self.device.locationName,
         )
 
