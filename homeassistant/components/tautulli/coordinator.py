@@ -16,6 +16,7 @@ from pytautulli.exceptions import (
 )
 from pytautulli.models.host_configuration import PyTautulliHostConfiguration
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -25,6 +26,8 @@ from .const import DOMAIN, LOGGER
 
 class TautulliDataUpdateCoordinator(DataUpdateCoordinator):
     """Data update coordinator for the Tautulli integration."""
+
+    config_entry: ConfigEntry
 
     def __init__(
         self,

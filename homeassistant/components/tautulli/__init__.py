@@ -55,16 +55,16 @@ class TautulliEntity(CoordinatorEntity):
         self,
         coordinator: TautulliDataUpdateCoordinator,
         description: SensorEntityDescription,
-        entry_id: str,
     ) -> None:
         """Initialize the Tautulli entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{entry_id}/{description.name}"
+        self._attr_unique_id = (
+            f"{self.coordinator.config_entry.entry_id}/{description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             configuration_url=coordinator.host_configuration.base_url,
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, entry_id)},
+            identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
             manufacturer=DEFAULT_NAME,
-            name=DEFAULT_NAME,
         )

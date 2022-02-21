@@ -1,6 +1,7 @@
 """A platform which allows you to get information from Tautulli."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -62,6 +63,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -70,6 +73,10 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Create the Tautulli sensor."""
+    _LOGGER.warning(
+        "Tautulli yaml config with host %s has been imported. Please remove it",
+        config[CONF_HOST],
+    )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config
@@ -81,16 +88,16 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Tautulli sensor."""
-    sensors = [
-        TautulliSensor(
-            hass.data[DOMAIN][entry.entry_id],
-            description,
-            entry.entry_id,
-        )
-        for description in SENSOR_TYPES
-    ]
-
-    async_add_entities(sensors, True)
+    async_add_entities(
+        [
+            TautulliSensor(
+                hass.data[DOMAIN][entry.entry_id],
+                description,
+            )
+            for description in SENSOR_TYPES
+        ],
+        True,
+    )
 
 
 class TautulliSensor(TautulliEntity, SensorEntity):

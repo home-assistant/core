@@ -27,17 +27,5 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "monitored_users": "Monitored users"
-        }
-      }
-    },
-    "abort": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
-    }
   }
 }

@@ -103,10 +103,6 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
                 config[CONF_HOST],
             )
             return self.async_abort(reason="single_instance_allowed")
-        _LOGGER.warning(
-            "Tautulli yaml config with host %s has been imported. Please remove it",
-            config[CONF_HOST],
-        )
         host_configuration = PyTautulliHostConfiguration(
             config[CONF_API_KEY],
             ipaddress=config[CONF_HOST],
