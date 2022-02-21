@@ -345,15 +345,22 @@ async def websocket_remove_media(
 
     item_path = source.async_full_path(source_dir_id, location)
 
-    def _do_delete() -> None:
+    def _do_delete() -> tuple[str, str] | None:
+        if not item_path.exists():
+            return websocket_api.ERR_NOT_FOUND, "Path does not exist"
+
         if not item_path.is_file():
-            raise ValueError("Not a file")
+            return websocket_api.ERR_NOT_SUPPORTED, "Path is not a file"
 
         item_path.unlink()
+        return None
 
     try:
-        await hass.async_add_executor_job(_do_delete)
-    except ValueError as err:
-        connection.send_error(msg["id"], websocket_api.ERR_NOT_SUPPORTED, str(err))
+        error = await hass.async_add_executor_job(_do_delete)
+    except OSError as err:
+        error = (websocket_api.ERR_UNKNOWN_ERROR, str(err))
+
+    if error:
+        connection.send_error(msg["id"], *error)
     else:
         connection.send_result(msg["id"])
