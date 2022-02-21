@@ -26,6 +26,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 import homeassistant.core as ha
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -256,6 +257,7 @@ async def test_setup(hass):
         "sensor": {
             "platform": "filter",
             "name": "test",
+            "unique_id": "uniqueid_sensor_test",
             "entity_id": "sensor.test_monitored",
             "filters": [
                 {"filter": "outlier", "window_size": 10, "radius": 4.0},
@@ -284,6 +286,12 @@ async def test_setup(hass):
         assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
         assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
         assert state.state == "1.0"
+
+        entity_reg = er.async_get(hass)
+        entity_id = entity_reg.async_get_entity_id(
+            "sensor", DOMAIN, "uniqueid_sensor_test"
+        )
+        assert entity_id == "sensor.test"
 
 
 async def test_invalid_state(hass):
