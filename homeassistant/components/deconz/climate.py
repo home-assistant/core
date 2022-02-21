@@ -234,7 +234,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         if self._device.mode == THERMOSTAT_MODE_OFF:
             return CURRENT_HVAC_OFF
 
-        if self._device.state_on:
+        if self._device.state_on or self._device.preset == THERMOSTAT_PRESET_BOOST:
             if self._device.mode == THERMOSTAT_MODE_COOL:
                 return CURRENT_HVAC_COOL
             return CURRENT_HVAC_HEAT
