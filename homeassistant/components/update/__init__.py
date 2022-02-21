@@ -29,10 +29,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, handle_update)
     websocket_api.async_register_command(hass, handle_skip)
 
-    await integration_platform.async_process_integration_platforms(
-        hass, DOMAIN, _register_update_platform
-    )
-
     return True
 
 
@@ -178,6 +174,9 @@ class UpdateManager:
     async def gather_updates(self) -> list[dict[str, Any]]:
         """Gather updates."""
         if not self._loaded:
+            await integration_platform.async_process_integration_platforms(
+                self._hass, DOMAIN, _register_update_platform
+            )
             self._skip = set(await self._store.async_load() or [])
             self._loaded = True
 
@@ -211,7 +210,7 @@ class UpdateManager:
         return domain in self._platforms
 
     @callback
-    def _data_to_save(self) -> list[str]:
+    def _data_to_save(self) -> dict[str, Any]:
         """Schedule storing the data."""
         return {"skipped": list(self._skip)}
 
