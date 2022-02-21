@@ -10,7 +10,7 @@ from aiohttp import web
 from aiohttp.web_request import FileField
 import voluptuous as vol
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components import http, websocket_api
 from homeassistant.components.media_player.const import MEDIA_CLASS_DIRECTORY
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.core import HomeAssistant, callback
@@ -32,6 +32,7 @@ def async_setup(hass: HomeAssistant) -> None:
     hass.data[DOMAIN][DOMAIN] = source
     hass.http.register_view(LocalMediaView(hass, source))
     hass.http.register_view(UploadMediaView(hass, source))
+    websocket_api.async_register_command(hass, websocket_remove_media)
 
 
 class LocalSource(MediaSource):
@@ -190,7 +191,7 @@ class LocalSource(MediaSource):
         return media
 
 
-class LocalMediaView(HomeAssistantView):
+class LocalMediaView(http.HomeAssistantView):
     """
     Local Media Finder View.
 
@@ -231,7 +232,7 @@ class LocalMediaView(HomeAssistantView):
         return web.FileResponse(media_path)
 
 
-class UploadMediaView(HomeAssistantView):
+class UploadMediaView(http.HomeAssistantView):
     """View to upload images."""
 
     url = "/api/media_source/local_source/upload"
@@ -314,3 +315,52 @@ class UploadMediaView(HomeAssistantView):
 
         with target_path.open("wb") as target_fp:
             shutil.copyfileobj(uploaded_file.file, target_fp)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "media_source/local_source/remove",
+        vol.Required("media_content_id"): str,
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_remove_media(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Remove media."""
+    try:
+        item = MediaSourceItem.from_uri(hass, msg["media_content_id"])
+    except ValueError as err:
+        connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
+        return
+
+    source: LocalSource = hass.data[DOMAIN][DOMAIN]
+
+    try:
+        source_dir_id, location = source.async_parse_identifier(item)
+    except Unresolvable as err:
+        connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
+        return
+
+    item_path = source.async_full_path(source_dir_id, location)
+
+    def _do_delete() -> tuple[str, str] | None:
+        if not item_path.exists():
+            return websocket_api.ERR_NOT_FOUND, "Path does not exist"
+
+        if not item_path.is_file():
+            return websocket_api.ERR_NOT_SUPPORTED, "Path is not a file"
+
+        item_path.unlink()
+        return None
+
+    try:
+        error = await hass.async_add_executor_job(_do_delete)
+    except OSError as err:
+        error = (websocket_api.ERR_UNKNOWN_ERROR, str(err))
+
+    if error:
+        connection.send_error(msg["id"], *error)
+    else:
+        connection.send_result(msg["id"])
