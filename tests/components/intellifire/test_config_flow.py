@@ -36,7 +36,9 @@ async def test_form(
 
 
 async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_intellifire_config_flow: MagicMock
+    hass: HomeAssistant,
+    mock_intellifire_config_flow: MagicMock,
+    mock_fireplace_finder: AsyncMock,
 ) -> None:
     """Test we handle cannot connect error."""
     mock_intellifire_config_flow.poll.side_effect = ConnectionError
