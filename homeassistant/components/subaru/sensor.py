@@ -1,6 +1,8 @@
 """Support for Subaru sensors."""
 import logging
 
+import subarulink.const as sc
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -29,7 +31,6 @@ from homeassistant.util.unit_system import (
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, LENGTH_UNITS, PRESSURE_UNITS
-import subarulink.const as sc
 
 from . import get_device_info
 from .const import (

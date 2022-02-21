@@ -3,6 +3,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from subarulink.const import COUNTRY_USA
 
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 from homeassistant.components.subaru.const import (
@@ -21,7 +22,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_PIN, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-from subarulink.const import COUNTRY_USA
 
 from .api_responses import TEST_VIN_2_EV, VEHICLE_DATA, VEHICLE_STATUS_EV
 

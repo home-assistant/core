@@ -3,6 +3,8 @@ from datetime import timedelta
 import logging
 import time
 
+from subarulink import Controller as SubaruAPI, InvalidCredentials, SubaruException
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_PIN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -10,7 +12,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from subarulink import Controller as SubaruAPI, InvalidCredentials, SubaruException
 
 from .const import (
     CONF_COUNTRY,

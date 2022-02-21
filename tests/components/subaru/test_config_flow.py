@@ -5,13 +5,13 @@ from unittest import mock
 from unittest.mock import PropertyMock, patch
 
 import pytest
+from subarulink.exceptions import InvalidCredentials, InvalidPIN, SubaruException
 
 from homeassistant import config_entries
 from homeassistant.components.subaru import config_flow
 from homeassistant.components.subaru.const import CONF_UPDATE_ENABLED, DOMAIN
 from homeassistant.const import CONF_DEVICE_ID, CONF_PIN
 from homeassistant.setup import async_setup_component
-from subarulink.exceptions import InvalidCredentials, InvalidPIN, SubaruException
 
 from .conftest import (
     MOCK_API_2FA_CONTACTS,

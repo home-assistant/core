@@ -2,6 +2,8 @@
 
 from datetime import datetime, timezone
 
+from subarulink.const import BAD_TIRE_PRESSURE
+
 from homeassistant.components.subaru.const import (
     API_GEN_1,
     API_GEN_2,
@@ -13,7 +15,6 @@ from homeassistant.components.subaru.const import (
     VEHICLE_NAME,
     VEHICLE_VIN,
 )
-from subarulink.const import BAD_TIRE_PRESSURE
 
 TEST_VIN_1_G1 = "JF2ABCDE6L0000001"
 TEST_VIN_2_EV = "JF2ABCDE6L0000002"
