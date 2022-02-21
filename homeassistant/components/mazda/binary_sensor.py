@@ -38,9 +38,6 @@ class MazdaBinarySensorEntityDescription(
     # Function to determine whether the vehicle supports this binary sensor, given the coordinator data
     is_supported: Callable[[dict[str, Any]], bool] = lambda data: True
 
-    # Function to return extra state attributes, given the coordinator data
-    state_attributes: Callable[[dict[str, Any]], dict[str, Any]] | None = None
-
 
 def _plugged_in_supported(data):
     """Determine if 'plugged in' binary sensor is supported."""
@@ -54,37 +51,34 @@ def _charging_supported(data):
     return data["isElectric"] and data["evStatus"]["chargeInfo"]["charging"] is not None
 
 
-def _doors_open(data):
-    """Determine if at least one vehicle door is open."""
-    door_status = data["status"]["doors"]
-    return (
-        door_status["driverDoorOpen"]
-        or door_status["passengerDoorOpen"]
-        or door_status["rearLeftDoorOpen"]
-        or door_status["rearRightDoorOpen"]
-    )
-
-
-def _doors_state_attributes(data):
-    """Get state attributes for the vehicle doors."""
-    door_status = data["status"]["doors"]
-
-    return {
-        "driver_door_open": door_status["driverDoorOpen"],
-        "passenger_door_open": door_status["passengerDoorOpen"],
-        "rear_left_door_open": door_status["rearLeftDoorOpen"],
-        "rear_right_door_open": door_status["rearRightDoorOpen"],
-    }
-
-
 BINARY_SENSOR_ENTITIES = [
     MazdaBinarySensorEntityDescription(
-        key="doors",
-        name_suffix="Doors",
+        key="driver_door",
+        name_suffix="Driver Door",
         icon="mdi:car-door",
         device_class=BinarySensorDeviceClass.DOOR,
-        value=_doors_open,
-        state_attributes=_doors_state_attributes,
+        value=lambda data: data["status"]["doors"]["driverDoorOpen"],
+    ),
+    MazdaBinarySensorEntityDescription(
+        key="passenger_door",
+        name_suffix="Passenger Door",
+        icon="mdi:car-door",
+        device_class=BinarySensorDeviceClass.DOOR,
+        value=lambda data: data["status"]["doors"]["passengerDoorOpen"],
+    ),
+    MazdaBinarySensorEntityDescription(
+        key="rear_left_door",
+        name_suffix="Rear Left Door",
+        icon="mdi:car-door",
+        device_class=BinarySensorDeviceClass.DOOR,
+        value=lambda data: data["status"]["doors"]["rearLeftDoorOpen"],
+    ),
+    MazdaBinarySensorEntityDescription(
+        key="rear_right_door",
+        name_suffix="Rear Right Door",
+        icon="mdi:car-door",
+        device_class=BinarySensorDeviceClass.DOOR,
+        value=lambda data: data["status"]["doors"]["rearRightDoorOpen"],
     ),
     MazdaBinarySensorEntityDescription(
         key="trunk",
@@ -155,11 +149,3 @@ class MazdaBinarySensorEntity(MazdaEntity, BinarySensorEntity):
     def is_on(self):
         """Return the state of the binary sensor."""
         return self.entity_description.value(self.data)
-
-    @property
-    def extra_state_attributes(self):
-        """Return the extra state attributes of the binary sensor."""
-        if self.entity_description.state_attributes is not None:
-            return self.entity_description.state_attributes(self.data)
-
-        return None

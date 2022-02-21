@@ -13,20 +13,49 @@ async def test_binary_sensors(hass):
 
     entity_registry = er.async_get(hass)
 
-    # Doors
-    state = hass.states.get("binary_sensor.my_mazda3_doors")
+    # Driver Door
+    state = hass.states.get("binary_sensor.my_mazda3_driver_door")
     assert state
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Doors"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Driver Door"
     assert state.attributes.get(ATTR_ICON) == "mdi:car-door"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.DOOR
-    assert not state.attributes.get("driver_door_open")
-    assert state.attributes.get("passenger_door_open")
-    assert not state.attributes.get("rear_left_door_open")
-    assert not state.attributes.get("rear_right_door_open")
-    assert state.state == "on"
-    entry = entity_registry.async_get("binary_sensor.my_mazda3_doors")
+    assert state.state == "off"
+    entry = entity_registry.async_get("binary_sensor.my_mazda3_driver_door")
     assert entry
-    assert entry.unique_id == "JM000000000000000_doors"
+    assert entry.unique_id == "JM000000000000000_driver_door"
+
+    # Passenger Door
+    state = hass.states.get("binary_sensor.my_mazda3_passenger_door")
+    assert state
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Passenger Door"
+    assert state.attributes.get(ATTR_ICON) == "mdi:car-door"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.DOOR
+    assert state.state == "on"
+    entry = entity_registry.async_get("binary_sensor.my_mazda3_passenger_door")
+    assert entry
+    assert entry.unique_id == "JM000000000000000_passenger_door"
+
+    # Rear Left Door
+    state = hass.states.get("binary_sensor.my_mazda3_rear_left_door")
+    assert state
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Rear Left Door"
+    assert state.attributes.get(ATTR_ICON) == "mdi:car-door"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.DOOR
+    assert state.state == "off"
+    entry = entity_registry.async_get("binary_sensor.my_mazda3_rear_left_door")
+    assert entry
+    assert entry.unique_id == "JM000000000000000_rear_left_door"
+
+    # Rear Right Door
+    state = hass.states.get("binary_sensor.my_mazda3_rear_right_door")
+    assert state
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Rear Right Door"
+    assert state.attributes.get(ATTR_ICON) == "mdi:car-door"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.DOOR
+    assert state.state == "off"
+    entry = entity_registry.async_get("binary_sensor.my_mazda3_rear_right_door")
+    assert entry
+    assert entry.unique_id == "JM000000000000000_rear_right_door"
 
     # Trunk
     state = hass.states.get("binary_sensor.my_mazda3_trunk")
