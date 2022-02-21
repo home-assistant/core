@@ -1,0 +1,93 @@
+"""Support for Subaru door locks."""
+import logging
+
+import voluptuous as vol
+
+from homeassistant.components.lock import LockEntity
+from homeassistant.const import SERVICE_LOCK, SERVICE_UNLOCK
+from homeassistant.helpers import config_validation as cv, entity_platform
+
+from . import DOMAIN, get_device_info
+from .const import (
+    ATTR_DOOR,
+    ENTRY_CONTROLLER,
+    ENTRY_VEHICLES,
+    SERVICE_UNLOCK_SPECIFIC_DOOR,
+    UNLOCK_DOOR_ALL,
+    UNLOCK_VALID_DOORS,
+    VEHICLE_HAS_REMOTE_SERVICE,
+    VEHICLE_NAME,
+    VEHICLE_VIN,
+)
+from .remote_service import async_call_remote_service
+
+_LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Subaru locks by config_entry."""
+    entry = hass.data[DOMAIN][config_entry.entry_id]
+    controller = entry[ENTRY_CONTROLLER]
+    vehicle_info = entry[ENTRY_VEHICLES]
+    entities = [
+        SubaruLock(vehicle, controller)
+        for vehicle in vehicle_info.values()
+        if vehicle[VEHICLE_HAS_REMOTE_SERVICE]
+    ]
+    async_add_entities(entities)
+
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_UNLOCK_SPECIFIC_DOOR,
+        {vol.Required(ATTR_DOOR): cv.string},
+        "async_unlock_specific_door",
+    )
+
+
+class SubaruLock(LockEntity):
+    """
+    Representation of a Subaru door lock.
+
+    Note that the Subaru API currently does not support returning the status of the locks. Lock status is always unknown.
+    """
+
+    def __init__(self, vehicle_info, controller):
+        """Initialize the locks for the vehicle."""
+        self.controller = controller
+        self.vehicle_info = vehicle_info
+        self.vin = vehicle_info[VEHICLE_VIN]
+        self.car_name = vehicle_info[VEHICLE_NAME]
+        self._attr_name = f"{self.car_name} Door Locks"
+        self._attr_unique_id = f"{self.vin}_door_locks"
+        self._attr_device_info = get_device_info(vehicle_info)
+
+    async def async_lock(self, **kwargs):
+        """Send the lock command."""
+        _LOGGER.debug("Locking doors for: %s", self.car_name)
+        await async_call_remote_service(
+            self.controller,
+            SERVICE_LOCK,
+            self.vehicle_info,
+        )
+
+    async def async_unlock(self, **kwargs):
+        """Send the unlock command."""
+        _LOGGER.debug("Unlocking doors for: %s", self.car_name)
+        await async_call_remote_service(
+            self.controller,
+            SERVICE_UNLOCK,
+            self.vehicle_info,
+            UNLOCK_VALID_DOORS[UNLOCK_DOOR_ALL],
+        )
+
+    async def async_unlock_specific_door(self, door):
+        """Send the unlock command for a specified door."""
+        _LOGGER.debug("Unlocking %s door for: %s", door, self.car_name)
+        if door in UNLOCK_VALID_DOORS:
+            await async_call_remote_service(
+                self.controller,
+                SERVICE_UNLOCK,
+                self.vehicle_info,
+                UNLOCK_VALID_DOORS[door],
+            )
