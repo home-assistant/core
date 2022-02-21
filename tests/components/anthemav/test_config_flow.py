@@ -194,8 +194,6 @@ async def test_import_configuration(
         DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
     )
 
-    await hass.async_block_till_done()
-
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
         "host": "1.1.1.1",

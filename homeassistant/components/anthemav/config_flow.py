@@ -19,6 +19,7 @@ from .const import (
     CONF_MODEL,
     DEFAULT_NAME,
     DEFAULT_PORT,
+    DEVICE_TIMEOUT_SECONDS,
     DOMAIN,
     EMPTY_MAC,
     UNKNOWN_MODEL,
@@ -41,7 +42,7 @@ async def connect_device(user_input: dict[str, Any]) -> Connection:
         host=user_input[CONF_HOST], port=user_input[CONF_PORT], auto_reconnect=False
     )
     await avr.reconnect()
-    await avr.protocol.wait_for_device_initialised(4)
+    await avr.protocol.wait_for_device_initialised(DEVICE_TIMEOUT_SECONDS)
     return avr
 
 
