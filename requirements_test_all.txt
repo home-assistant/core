@@ -1296,6 +1296,9 @@ pyzerproc==0.4.8
 # homeassistant.components.rachio
 rachiopy==1.0.3
 
+# homeassistant.components.radio_browser
+radios==0.1.0
+
 # homeassistant.components.rainmachine
 regenmaschine==2022.01.0
 
