@@ -58,6 +58,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 serial = await validate_host_input(user_input[CONF_HOST])
 
                 await self.async_set_unique_id(serial)
+                # check if found before
+                self._abort_if_unique_id_configured(
+                    updates={
+                        CONF_HOST: self._discovered_host,
+                    }
+                )
 
                 self._config_context[CONF_HOST] = user_input[CONF_HOST]
 
