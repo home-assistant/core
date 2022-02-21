@@ -137,7 +137,7 @@ class HpIloSensor(SensorEntity):
         """Initialize the HP iLO sensor."""
         self._hass = hass
         self._attr_name = sensor_name
-        self._attr_unit_of_measurement = unit_of_measurement
+        self._attr_native_unit_of_measurement = unit_of_measurement
         self._attr_device_class = device_class
         self._attr_state_class = state_class
         self._ilo_function = SENSOR_TYPES[sensor_type][1]
