@@ -100,7 +100,7 @@ async def async_setup_entry(
 class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
     """An aircon or heat pump."""
 
-    _attr_current_humidity: float | None = None  # type: ignore
+    _attr_current_humidity: float | None = None  # type: ignore[assignment]
     _attr_temperature_unit = TEMP_CELSIUS
     _attr_supported_features: int = SUPPORT_FLAGS
     _attr_fan_modes: list[str] = LOOKIN_FAN_MODE_IDX_TO_HASS
@@ -152,8 +152,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
             # an educated guess.
             #
             meteo_data: MeteoSensor = self._meteo_coordinator.data
-            current_temp = meteo_data.temperature
-            if not current_temp:
+            if not (current_temp := meteo_data.temperature):
                 self._climate.hvac_mode = lookin_index.index(HVAC_MODE_AUTO)
             elif current_temp >= self._climate.temp_celsius:
                 self._climate.hvac_mode = lookin_index.index(HVAC_MODE_COOL)

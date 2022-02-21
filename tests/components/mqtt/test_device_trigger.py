@@ -646,9 +646,12 @@ async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(
 
 
 async def test_not_fires_on_mqtt_message_after_remove_from_registry(
-    hass, device_reg, calls, mqtt_mock
+    hass, hass_ws_client, device_reg, calls, mqtt_mock
 ):
     """Test triggers not firing after removal."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
     data1 = (
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
@@ -688,8 +691,16 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     await hass.async_block_till_done()
     assert len(calls) == 1
 
-    # Remove the device
-    device_reg.async_remove_device(device_entry.id)
+    # Remove MQTT from the device
+    await ws_client.send_json(
+        {
+            "id": 6,
+            "type": "mqtt/device/remove",
+            "device_id": device_entry.id,
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
@@ -967,8 +978,11 @@ async def test_entity_device_info_update(hass, mqtt_mock):
     assert device.name == "Milk"
 
 
-async def test_cleanup_trigger(hass, device_reg, entity_reg, mqtt_mock):
+async def test_cleanup_trigger(hass, hass_ws_client, device_reg, entity_reg, mqtt_mock):
     """Test trigger discovery topic is cleaned when device is removed from registry."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
     config = {
         "automation_type": "trigger",
         "topic": "test-topic",
@@ -990,7 +1004,16 @@ async def test_cleanup_trigger(hass, device_reg, entity_reg, mqtt_mock):
     )
     assert triggers[0]["type"] == "foo"
 
-    device_reg.async_remove_device(device_entry.id)
+    # Remove MQTT from the device
+    await ws_client.send_json(
+        {
+            "id": 6,
+            "type": "mqtt/device/remove",
+            "device_id": device_entry.id,
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 

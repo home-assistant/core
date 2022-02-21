@@ -30,7 +30,11 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from . import config_flow
 from .browse_media import async_browse_media
 from .const import DOMAIN, LOGGER, SPOTIFY_SCOPES
-from .util import is_spotify_media_type, resolve_spotify_media_type
+from .util import (
+    is_spotify_media_type,
+    resolve_spotify_media_type,
+    spotify_uri_from_media_browser_url,
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -50,6 +54,7 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 __all__ = [
     "async_browse_media",
     "DOMAIN",
+    "spotify_uri_from_media_browser_url",
     "is_spotify_media_type",
     "resolve_spotify_media_type",
 ]
@@ -107,6 +112,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady
 
     async def _update_devices() -> list[dict[str, Any]]:
+        if not session.valid_token:
+            await session.async_ensure_token_valid()
+            await hass.async_add_executor_job(
+                spotify.set_auth, session.token["access_token"]
+            )
+
         try:
             devices: dict[str, Any] | None = await hass.async_add_executor_job(
                 spotify.devices

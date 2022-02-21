@@ -11,7 +11,7 @@ from homeassistant.const import CONF_NAME, Platform
 
 DOMAIN: Final = "version"
 LOGGER: Final[Logger] = getLogger(__package__)
-PLATFORMS: Final[list[Platform]] = [Platform.SENSOR]
+PLATFORMS: Final[list[Platform]] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 UPDATE_COORDINATOR_UPDATE_INTERVAL: Final[timedelta] = timedelta(minutes=5)
 
 ENTRY_TYPE_SERVICE: Final = "service"
@@ -30,7 +30,7 @@ ATTR_CHANNEL: Final = CONF_CHANNEL
 ATTR_VERSION_SOURCE: Final = CONF_VERSION_SOURCE
 ATTR_SOURCE: Final = CONF_SOURCE
 
-SOURCE_DOKCER: Final = "docker"  # Kept to not break existing configurations
+SOURCE_DOCKER: Final = "docker"  # Kept to not break existing configurations
 SOURCE_HASSIO: Final = "hassio"  # Kept to not break existing configurations
 
 VERSION_SOURCE_DOCKER_HUB: Final = "Docker Hub"

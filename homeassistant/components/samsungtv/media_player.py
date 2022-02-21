@@ -13,6 +13,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
 )
 from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -89,6 +90,8 @@ async def async_setup_entry(
 class SamsungTVDevice(MediaPlayerEntity):
     """Representation of a Samsung TV."""
 
+    _attr_source_list: list[str]
+
     def __init__(
         self,
         bridge: SamsungTVLegacyBridge | SamsungTVWSBridge,
@@ -109,6 +112,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._attr_is_volume_muted: bool = False
         self._attr_device_class = MediaPlayerDeviceClass.TV
         self._attr_source_list = list(SOURCES)
+        self._app_list: dict[str, str] | None = None
 
         if self._on_script or self._mac:
             self._attr_supported_features = SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON
@@ -158,12 +162,21 @@ class SamsungTVDevice(MediaPlayerEntity):
         else:
             self._attr_state = STATE_ON if self._bridge.is_on() else STATE_OFF
 
-    def send_key(self, key: str) -> None:
+        if self._attr_state == STATE_ON and self._app_list is None:
+            self._app_list = {}  # Ensure that we don't update it twice in parallel
+            self._update_app_list()
+
+    def _update_app_list(self) -> None:
+        self._app_list = self._bridge.get_app_list()
+        if self._app_list is not None:
+            self._attr_source_list.extend(self._app_list)
+
+    def send_key(self, key: str, key_type: str | None = None) -> None:
         """Send a key to the tv and handles exceptions."""
         if self._power_off_in_progress() and key != "KEY_POWEROFF":
             LOGGER.info("TV is powering off, not sending command: %s", key)
             return
-        self._bridge.send_key(key)
+        self._bridge.send_key(key, key_type)
 
     def _power_off_in_progress(self) -> bool:
         return (
@@ -232,6 +245,10 @@ class SamsungTVDevice(MediaPlayerEntity):
         self, media_type: str, media_id: str, **kwargs: Any
     ) -> None:
         """Support changing a channel."""
+        if media_type == MEDIA_TYPE_APP:
+            await self.hass.async_add_executor_job(self.send_key, media_id, "run_app")
+            return
+
         if media_type != MEDIA_TYPE_CHANNEL:
             LOGGER.error("Unsupported media type")
             return
@@ -264,8 +281,12 @@ class SamsungTVDevice(MediaPlayerEntity):
 
     def select_source(self, source: str) -> None:
         """Select input source."""
-        if source not in SOURCES:
-            LOGGER.error("Unsupported source")
+        if self._app_list and source in self._app_list:
+            self.send_key(self._app_list[source], "run_app")
             return
 
-        self.send_key(SOURCES[source])
+        if source in SOURCES:
+            self.send_key(SOURCES[source])
+            return
+
+        LOGGER.error("Unsupported source")

@@ -126,6 +126,8 @@ def cmd(
 class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
     """Representation of a LG webOS Smart TV."""
 
+    _attr_device_class = MediaPlayerDeviceClass.TV
+
     def __init__(
         self,
         wrapper: WebOsClientWrapper,
@@ -136,8 +138,9 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         """Initialize the webos device."""
         self._wrapper = wrapper
         self._client: WebOsClient = wrapper.client
-        self._name = name
-        self._unique_id = unique_id
+        self._attr_assumed_state = True
+        self._attr_name = name
+        self._attr_unique_id = unique_id
         self._sources = sources
 
         # Assume that the TV is not paused
@@ -146,7 +149,8 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         self._current_source = None
         self._source_list: dict = {}
 
-        self._supported_features: int | None = None
+        self._supported_features: int = 0
+        self._update_states()
 
     async def async_added_to_hass(self) -> None:
         """Connect and subscribe to dispatcher signals and state updates."""
@@ -160,11 +164,13 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             self.async_handle_state_update
         )
 
-        if self._supported_features is not None:
-            return
-
-        if (state := await self.async_get_last_state()) is not None:
-            self._supported_features = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        if (
+            self.state == STATE_OFF
+            and (state := await self.async_get_last_state()) is not None
+        ):
+            self._supported_features = (
+                state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & ~SUPPORT_TURN_ON
+            )
 
     async def async_will_remove_from_hass(self) -> None:
         """Call disconnect on removal."""
@@ -185,10 +191,73 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
 
     async def async_handle_state_update(self, _client: WebOsClient) -> None:
         """Update state from WebOsClient."""
-        self.update_sources()
+        self._update_states()
         self.async_write_ha_state()
 
-    def update_sources(self) -> None:
+    def _update_states(self) -> None:
+        """Update entity state attributes."""
+        self._update_sources()
+
+        self._attr_state = STATE_ON if self._client.is_on else STATE_OFF
+        self._attr_is_volume_muted = cast(bool, self._client.muted)
+
+        self._attr_volume_level = None
+        if self._client.volume is not None:
+            self._attr_volume_level = cast(float, self._client.volume / 100.0)
+
+        self._attr_source = self._current_source
+        self._attr_source_list = sorted(self._source_list)
+
+        self._attr_media_content_type = None
+        if self._client.current_app_id == LIVE_TV_APP_ID:
+            self._attr_media_content_type = MEDIA_TYPE_CHANNEL
+
+        self._attr_media_title = None
+        if (self._client.current_app_id == LIVE_TV_APP_ID) and (
+            self._client.current_channel is not None
+        ):
+            self._attr_media_title = cast(
+                str, self._client.current_channel.get("channelName")
+            )
+
+        self._attr_media_image_url = None
+        if self._client.current_app_id in self._client.apps:
+            icon: str = self._client.apps[self._client.current_app_id]["largeIcon"]
+            if not icon.startswith("http"):
+                icon = self._client.apps[self._client.current_app_id]["icon"]
+            self._attr_media_image_url = icon
+
+        if self.state != STATE_OFF or not self._supported_features:
+            supported = SUPPORT_WEBOSTV
+            if self._client.sound_output in ("external_arc", "external_speaker"):
+                supported = supported | SUPPORT_WEBOSTV_VOLUME
+            elif self._client.sound_output != "lineout":
+                supported = supported | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
+
+            self._supported_features = supported
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, cast(str, self.unique_id))},
+            manufacturer="LG",
+            name=self.name,
+        )
+
+        if self._client.system_info is not None or self.state != STATE_OFF:
+            maj_v = self._client.software_info.get("major_ver")
+            min_v = self._client.software_info.get("minor_ver")
+            if maj_v and min_v:
+                self._attr_device_info["sw_version"] = f"{maj_v}.{min_v}"
+
+            if model := self._client.system_info.get("modelName"):
+                self._attr_device_info["model"] = model
+
+        self._attr_extra_state_attributes = {}
+        if self._client.sound_output is not None or self.state != STATE_OFF:
+            self._attr_extra_state_attributes = {
+                ATTR_SOUND_OUTPUT: self._client.sound_output
+            }
+
+    def _update_sources(self) -> None:
         """Update list of sources from current source, apps, inputs and configured list."""
         source_list = self._source_list
         self._source_list = {}
@@ -250,131 +319,12 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             await self._client.connect()
 
     @property
-    def unique_id(self) -> str:
-        """Return the unique id of the device."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def device_class(self) -> MediaPlayerDeviceClass:
-        """Return the device class of the device."""
-        return MediaPlayerDeviceClass.TV
-
-    @property
-    def state(self) -> str:
-        """Return the state of the device."""
-        if self._client.is_on:
-            return STATE_ON
-
-        return STATE_OFF
-
-    @property
-    def is_volume_muted(self) -> bool:
-        """Boolean if volume is currently muted."""
-        return cast(bool, self._client.muted)
-
-    @property
-    def volume_level(self) -> float | None:
-        """Volume level of the media player (0..1)."""
-        if self._client.volume is not None:
-            return cast(float, self._client.volume / 100.0)
-
-        return None
-
-    @property
-    def source(self) -> str | None:
-        """Return the current input source."""
-        return self._current_source
-
-    @property
-    def source_list(self) -> list[str]:
-        """List of available input sources."""
-        return sorted(self._source_list)
-
-    @property
-    def media_content_type(self) -> str | None:
-        """Content type of current playing media."""
-        if self._client.current_app_id == LIVE_TV_APP_ID:
-            return MEDIA_TYPE_CHANNEL
-
-        return None
-
-    @property
-    def media_title(self) -> str | None:
-        """Title of current playing media."""
-        if (self._client.current_app_id == LIVE_TV_APP_ID) and (
-            self._client.current_channel is not None
-        ):
-            return cast(str, self._client.current_channel.get("channelName"))
-        return None
-
-    @property
-    def media_image_url(self) -> str | None:
-        """Image url of current playing media."""
-        if self._client.current_app_id in self._client.apps:
-            icon: str = self._client.apps[self._client.current_app_id]["largeIcon"]
-            if not icon.startswith("http"):
-                icon = self._client.apps[self._client.current_app_id]["icon"]
-            return icon
-        return None
-
-    @property
     def supported_features(self) -> int:
         """Flag media player features that are supported."""
-        if self.state == STATE_OFF and self._supported_features is not None:
-            if self._wrapper.turn_on:
-                return self._supported_features | SUPPORT_TURN_ON
-
-            return self._supported_features & ~SUPPORT_TURN_ON
-
-        supported = SUPPORT_WEBOSTV
-
-        if self._client.sound_output in ("external_arc", "external_speaker"):
-            supported = supported | SUPPORT_WEBOSTV_VOLUME
-        elif self._client.sound_output != "lineout":
-            supported = supported | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
-
         if self._wrapper.turn_on:
-            supported |= SUPPORT_TURN_ON
+            return self._supported_features | SUPPORT_TURN_ON
 
-        if self.state != STATE_OFF:
-            self._supported_features = supported
-
-        return supported
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._unique_id)},
-            manufacturer="LG",
-            name=self._name,
-        )
-
-        if self._client.system_info is None and self.state == STATE_OFF:
-            return device_info
-
-        maj_v = self._client.software_info.get("major_ver")
-        min_v = self._client.software_info.get("minor_ver")
-        if maj_v and min_v:
-            device_info["sw_version"] = f"{maj_v}.{min_v}"
-
-        model = self._client.system_info.get("modelName")
-        if model:
-            device_info["model"] = model
-
-        return device_info
-
-    @property
-    def extra_state_attributes(self) -> dict[str, str] | None:
-        """Return device specific state attributes."""
-        if self._client.sound_output is None and self.state == STATE_OFF:
-            return None
-        return {ATTR_SOUND_OUTPUT: self._client.sound_output}
+        return self._supported_features
 
     @cmd
     async def async_turn_off(self) -> None:

@@ -652,3 +652,37 @@ async def test_cached_supported_features(hass, client, monkeypatch):
     attrs = hass.states.get(ENTITY_ID).attributes
 
     assert attrs[ATTR_SUPPORTED_FEATURES] == supported | SUPPORT_TURN_ON
+
+
+async def test_supported_features_no_cache(hass, client, monkeypatch):
+    """Test supported features if device is off and no cache."""
+    monkeypatch.setattr(client, "is_on", False)
+    monkeypatch.setattr(client, "sound_output", None)
+    await setup_webostv(hass)
+
+    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
+    attrs = hass.states.get(ENTITY_ID).attributes
+
+    assert attrs[ATTR_SUPPORTED_FEATURES] == supported
+
+
+async def test_supported_features_ignore_cache(hass, client):
+    """Test ignore cached supported features if device is on at startup."""
+    mock_restore_cache(
+        hass,
+        [
+            State(
+                ENTITY_ID,
+                STATE_OFF,
+                attributes={
+                    ATTR_SUPPORTED_FEATURES: SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME,
+                },
+            )
+        ],
+    )
+    await setup_webostv(hass)
+
+    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
+    attrs = hass.states.get(ENTITY_ID).attributes
+
+    assert attrs[ATTR_SUPPORTED_FEATURES] == supported

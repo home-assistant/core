@@ -48,6 +48,7 @@ from .errors import ShouldUpdateConfigEntry
 from .media_browser import browse_media
 from .server import PlexServer
 from .services import async_setup_services
+from .view import PlexImageView
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -83,6 +84,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     await async_setup_services(hass)
+
+    hass.http.register_view(PlexImageView())
 
     gdm = hass.data[PLEX_DOMAIN][GDM_SCANNER] = GDM()
 

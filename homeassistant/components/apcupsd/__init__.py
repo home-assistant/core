@@ -1,4 +1,5 @@
 """Support for APCUPSd via its Network Information Server (NIS)."""
+# pylint: disable=import-error
 from datetime import timedelta
 import logging
 

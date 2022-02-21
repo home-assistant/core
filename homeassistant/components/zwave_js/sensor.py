@@ -61,7 +61,7 @@ from .discovery_data_template import (
     NumericSensorDataTemplateData,
 )
 from .entity import ZWaveBaseEntity
-from .helpers import get_device_id
+from .helpers import get_device_id, get_valueless_base_unique_id
 
 LOGGER = logging.getLogger(__name__)
 
@@ -477,9 +477,8 @@ class ZWaveNodeStatusSensor(SensorEntity):
         )
         # Entity class attributes
         self._attr_name = f"{name}: Node Status"
-        self._attr_unique_id = (
-            f"{self.client.driver.controller.home_id}.{node.node_id}.node_status"
-        )
+        self._base_unique_id = get_valueless_base_unique_id(client, node)
+        self._attr_unique_id = f"{self._base_unique_id}.node_status"
         # device is precreated in main handler
         self._attr_device_info = DeviceInfo(
             identifiers={get_device_id(self.client, self.node)},
@@ -517,7 +516,7 @@ class ZWaveNodeStatusSensor(SensorEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{DOMAIN}_{self.unique_id}_remove_entity",
+                f"{DOMAIN}_{self._base_unique_id}_remove_entity",
                 self.async_remove,
             )
         )

@@ -37,7 +37,7 @@ async def async_setup_entry(
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
     lights = []
 
-    if device.api.type == "LB1":
+    if device.api.type in {"LB1", "LB2"}:
         lights.append(BroadlinkLight(device))
 
     async_add_entities(lights)

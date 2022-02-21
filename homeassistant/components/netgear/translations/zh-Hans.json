@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8bbe\u5907\u5df2\u88ab\u914d\u7f6e"
+            "already_configured": "\u8bbe\u5907\u5df2\u7ecf\u914d\u7f6e\u8fc7\u4e86"
         },
         "error": {
             "config": "\u8fde\u63a5\u9519\u8bef\uff1a\u8bf7\u68c0\u67e5\u60a8\u7684\u914d\u7f6e\u662f\u5426\u6b63\u786e"
@@ -15,7 +15,7 @@
                     "ssl": "\u4f7f\u7528 SSL \u51ed\u8bc1\u767b\u5f55",
                     "username": "\u7528\u6237\u540d (\u53ef\u9009)"
                 },
-                "description": "\u9ed8\u8ba4\u914d\u7f6e\uff1a\n\u9ed8\u8ba4\u4e3b\u673a\u5730\u5740: {host}\n\u9ed8\u8ba4\u7528\u6237\u540d: {username}",
+                "description": "\u9ed8\u8ba4\u4e3b\u673a\u5730\u5740: {host}\n\u9ed8\u8ba4\u7528\u6237\u540d: {username}",
                 "title": "\u7f51\u4ef6\u8def\u7531\u5668"
             }
         }

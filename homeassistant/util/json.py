@@ -30,7 +30,7 @@ def load_json(filename: str, default: list | dict | None = None) -> list | dict:
     """
     try:
         with open(filename, encoding="utf-8") as fdesc:
-            return json.loads(fdesc.read())  # type: ignore
+            return json.loads(fdesc.read())  # type: ignore[no-any-return]
     except FileNotFoundError:
         # This is not a fatal error
         _LOGGER.debug("JSON file not found: %s", filename)

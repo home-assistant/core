@@ -7,12 +7,13 @@ from typing import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pywizlight import SCENES, BulbType, PilotParser, wizlight
-from pywizlight.bulblibrary import FEATURE_MAP, BulbClass, KelvinRange
+from pywizlight.bulblibrary import BulbClass, Features, KelvinRange
 from pywizlight.discovery import DiscoveredBulb
 
 from homeassistant.components.wiz.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -83,10 +84,23 @@ REAL_BULB_CONFIG = json.loads(
     "ewfHex":"ff00ffff000000",\
     "ping":0}}'
 )
+FAKE_DUAL_HEAD_RGBWW_BULB = BulbType(
+    bulb_type=BulbClass.RGB,
+    name="ESP01_DHRGB_03",
+    features=Features(
+        color=True, color_tmp=True, effect=True, brightness=True, dual_head=True
+    ),
+    kelvin_range=KelvinRange(2700, 6500),
+    fw_version="1.0.0",
+    white_channels=2,
+    white_to_color_ratio=80,
+)
 FAKE_RGBWW_BULB = BulbType(
     bulb_type=BulbClass.RGB,
     name="ESP01_SHRGB_03",
-    features=FEATURE_MAP[BulbClass.RGB],
+    features=Features(
+        color=True, color_tmp=True, effect=True, brightness=True, dual_head=False
+    ),
     kelvin_range=KelvinRange(2700, 6500),
     fw_version="1.0.0",
     white_channels=2,
@@ -95,7 +109,9 @@ FAKE_RGBWW_BULB = BulbType(
 FAKE_RGBW_BULB = BulbType(
     bulb_type=BulbClass.RGB,
     name="ESP01_SHRGB_03",
-    features=FEATURE_MAP[BulbClass.RGB],
+    features=Features(
+        color=True, color_tmp=True, effect=True, brightness=True, dual_head=False
+    ),
     kelvin_range=KelvinRange(2700, 6500),
     fw_version="1.0.0",
     white_channels=1,
@@ -104,7 +120,20 @@ FAKE_RGBW_BULB = BulbType(
 FAKE_DIMMABLE_BULB = BulbType(
     bulb_type=BulbClass.DW,
     name="ESP01_DW_03",
-    features=FEATURE_MAP[BulbClass.DW],
+    features=Features(
+        color=False, color_tmp=False, effect=True, brightness=True, dual_head=False
+    ),
+    kelvin_range=KelvinRange(2700, 6500),
+    fw_version="1.0.0",
+    white_channels=1,
+    white_to_color_ratio=80,
+)
+FAKE_TURNABLE_BULB = BulbType(
+    bulb_type=BulbClass.TW,
+    name="ESP01_TW_03",
+    features=Features(
+        color=False, color_tmp=True, effect=True, brightness=True, dual_head=False
+    ),
     kelvin_range=KelvinRange(2700, 6500),
     fw_version="1.0.0",
     white_channels=1,
@@ -113,10 +142,23 @@ FAKE_DIMMABLE_BULB = BulbType(
 FAKE_SOCKET = BulbType(
     bulb_type=BulbClass.SOCKET,
     name="ESP01_SOCKET_03",
-    features=FEATURE_MAP[BulbClass.SOCKET],
+    features=Features(
+        color=False, color_tmp=False, effect=False, brightness=False, dual_head=False
+    ),
     kelvin_range=KelvinRange(2700, 6500),
     fw_version="1.0.0",
     white_channels=2,
+    white_to_color_ratio=80,
+)
+FAKE_OLD_FIRMWARE_DIMMABLE_BULB = BulbType(
+    bulb_type=BulbClass.DW,
+    name=None,
+    features=Features(
+        color=False, color_tmp=False, effect=True, brightness=True, dual_head=False
+    ),
+    kelvin_range=None,
+    fw_version="1.8.0",
+    white_channels=1,
     white_to_color_ratio=80,
 )
 
@@ -144,20 +186,29 @@ async def setup_integration(
 
 
 def _mocked_wizlight(device, extended_white_range, bulb_type) -> wizlight:
-    bulb = MagicMock(auto_spec=wizlight)
+    bulb = MagicMock(auto_spec=wizlight, name="Mocked wizlight")
 
     async def _save_setup_callback(callback: Callable) -> None:
-        bulb.data_receive_callback = callback
+        bulb.push_callback = callback
 
     bulb.getBulbConfig = AsyncMock(return_value=device or FAKE_BULB_CONFIG)
     bulb.getExtendedWhiteRange = AsyncMock(
         return_value=extended_white_range or FAKE_EXTENDED_WHITE_RANGE
     )
     bulb.getMac = AsyncMock(return_value=FAKE_MAC)
+    bulb.turn_on = AsyncMock()
+    bulb.turn_off = AsyncMock()
     bulb.updateState = AsyncMock(return_value=FAKE_STATE)
     bulb.getSupportedScenes = AsyncMock(return_value=list(SCENES))
     bulb.start_push = AsyncMock(side_effect=_save_setup_callback)
     bulb.async_close = AsyncMock()
+    bulb.set_speed = AsyncMock()
+    bulb.set_ratio = AsyncMock()
+    bulb.diagnostics = {
+        "mocked": "mocked",
+        "roomId": 123,
+        "homeId": 34,
+    }
     bulb.state = FAKE_STATE
     bulb.mac = FAKE_MAC
     bulb.bulbtype = bulb_type or FAKE_DIMMABLE_BULB
@@ -169,8 +220,8 @@ def _mocked_wizlight(device, extended_white_range, bulb_type) -> wizlight:
 def _patch_wizlight(device=None, extended_white_range=None, bulb_type=None):
     @contextmanager
     def _patcher():
-        bulb = _mocked_wizlight(device, extended_white_range, bulb_type)
-        with patch("homeassistant.components.wiz.wizlight", return_value=bulb,), patch(
+        bulb = device or _mocked_wizlight(device, extended_white_range, bulb_type)
+        with patch("homeassistant.components.wiz.wizlight", return_value=bulb), patch(
             "homeassistant.components.wiz.config_flow.wizlight",
             return_value=bulb,
         ):
@@ -189,3 +240,28 @@ def _patch_discovery():
             yield
 
     return _patcher()
+
+
+async def async_setup_integration(
+    hass, wizlight=None, device=None, extended_white_range=None, bulb_type=None
+):
+    """Set up the integration with a mock device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FAKE_MAC,
+        data={CONF_HOST: FAKE_IP},
+    )
+    entry.add_to_hass(hass)
+    bulb = wizlight or _mocked_wizlight(device, extended_white_range, bulb_type)
+    with _patch_discovery(), _patch_wizlight(device=bulb):
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        await hass.async_block_till_done()
+    return bulb, entry
+
+
+async def async_push_update(hass, device, params):
+    """Push an update to the device."""
+    device.state = PilotParser(params)
+    device.status = params.get("state")
+    device.push_callback(device.state)
+    await hass.async_block_till_done()

@@ -19,5 +19,14 @@
                 "title": "M\u00e9t\u00e9o-France"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "mode": "\u039b\u03b5\u03b9\u03c4\u03bf\u03c5\u03c1\u03b3\u03af\u03b1 \u03c0\u03c1\u03cc\u03b2\u03bb\u03b5\u03c8\u03b7\u03c2"
+                }
+            }
+        }
     }
 }

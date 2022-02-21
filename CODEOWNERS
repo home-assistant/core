@@ -738,6 +738,8 @@ tests/components/prosegur/* @dgomes
 homeassistant/components/proxmoxve/* @jhollowe @Corbeno
 homeassistant/components/ps4/* @ktnrg45
 tests/components/ps4/* @ktnrg45
+homeassistant/components/pure_energie/* @klaasnicolaas
+tests/components/pure_energie/* @klaasnicolaas
 homeassistant/components/push/* @dgomes
 tests/components/push/* @dgomes
 homeassistant/components/pvoutput/* @fabaff @frenck
@@ -753,6 +755,8 @@ homeassistant/components/qwikswitch/* @kellerza
 tests/components/qwikswitch/* @kellerza
 homeassistant/components/rachio/* @bdraco
 tests/components/rachio/* @bdraco
+homeassistant/components/radio_browser/* @frenck
+tests/components/radio_browser/* @frenck
 homeassistant/components/radiotherm/* @vinnyfuria
 homeassistant/components/rainbird/* @konikvranik
 homeassistant/components/raincloud/* @vanstinator
@@ -802,12 +806,13 @@ tests/components/ruckus_unleashed/* @gabe565
 homeassistant/components/safe_mode/* @home-assistant/core
 tests/components/safe_mode/* @home-assistant/core
 homeassistant/components/saj/* @fredericvl
-homeassistant/components/samsungtv/* @escoand @chemelli74
-tests/components/samsungtv/* @escoand @chemelli74
+homeassistant/components/samsungtv/* @escoand @chemelli74 @epenet
+tests/components/samsungtv/* @escoand @chemelli74 @epenet
 homeassistant/components/scene/* @home-assistant/core
 tests/components/scene/* @home-assistant/core
 homeassistant/components/schluter/* @prairieapps
 homeassistant/components/scrape/* @fabaff
+tests/components/scrape/* @fabaff
 homeassistant/components/screenlogic/* @dieselrabbit @bdraco
 tests/components/screenlogic/* @dieselrabbit @bdraco
 homeassistant/components/script/* @home-assistant/core
@@ -849,6 +854,8 @@ homeassistant/components/sisyphus/* @jkeljo
 homeassistant/components/sky_hub/* @rogerselwyn
 homeassistant/components/slack/* @bachya
 tests/components/slack/* @bachya
+homeassistant/components/sleepiq/* @mfugate1 @kbickar
+tests/components/sleepiq/* @mfugate1 @kbickar
 homeassistant/components/slide/* @ualex73
 homeassistant/components/sma/* @kellerza @rklomp
 tests/components/sma/* @kellerza @rklomp
