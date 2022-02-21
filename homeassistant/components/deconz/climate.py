@@ -28,6 +28,10 @@ from pydeconz.sensor import (
 
 from homeassistant.components.climate import DOMAIN, ClimateEntity
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -38,10 +42,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    CURRENT_HVAC_OFF,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_IDLE,
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
