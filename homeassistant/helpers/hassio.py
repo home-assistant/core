@@ -8,4 +8,4 @@ from homeassistant.core import callback
 @callback
 def is_hassio() -> bool:
     """Return true if on Hass.io."""
-    return "HASSIO" in os.environ
+    return "SUPERVISOR" in os.environ
