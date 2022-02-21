@@ -1,6 +1,6 @@
 {
   "domain": "manual",
-  "name": "Manual Alarm",
+  "name": "Manual Alarm Control Panel",
   "documentation": "https://www.home-assistant.io/integrations/alarm_control_panel.manual",
   "codeowners": [],
   "quality_scale": "internal",
