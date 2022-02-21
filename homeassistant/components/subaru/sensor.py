@@ -208,7 +208,6 @@ class SubaruSensor(CoordinatorEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         suffix = SENSOR_KEY_TO_SUFFIX[description.key]
-        self.current_value = None
         self.vin = vehicle_info[VEHICLE_VIN]
         self.entity_description = description
         self._attr_device_info = get_device_info(vehicle_info)
@@ -220,26 +219,26 @@ class SubaruSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        self.current_value = self.get_current_value()
+        current_value = self.get_current_value()
         unit = self.entity_description.native_unit_of_measurement
         unit_system = self.hass.config.units
 
-        if self.current_value is None:
+        if current_value is None:
             return None
 
         if unit in LENGTH_UNITS:
-            return round(unit_system.length(self.current_value, unit), 1)
+            return round(unit_system.length(current_value, unit), 1)
 
         if unit in PRESSURE_UNITS and unit_system == IMPERIAL_SYSTEM:
             return round(
-                unit_system.pressure(self.current_value, unit),
+                unit_system.pressure(current_value, unit),
                 1,
             )
 
         if unit in FUEL_CONSUMPTION_UNITS and unit_system == IMPERIAL_SYSTEM:
-            return round((100.0 * L_PER_GAL) / (KM_PER_MI * self.current_value), 1)
+            return round((100.0 * L_PER_GAL) / (KM_PER_MI * current_value), 1)
 
-        return self.current_value
+        return current_value
 
     @property
     def native_unit_of_measurement(self):
