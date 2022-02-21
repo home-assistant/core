@@ -30,16 +30,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _register_update_platform(
-    hass: HomeAssistant,
-    integration_domain: str,
-    platform: UpdatePlatformProtocol,
-) -> None:
-    """Register an update platform."""
-    manager: UpdateManager = hass.data[DOMAIN]
-    manager.add_platform(integration_domain, platform)
-
-
 @websocket_api.websocket_command({vol.Required("type"): "update/info"})
 @websocket_api.async_response
 async def handle_info(
@@ -170,8 +160,9 @@ class UpdateManager:
         self._platforms: dict[str, UpdatePlatformProtocol] = {}
         self._loaded = False
 
-    def add_platform(
+    async def add_platform(
         self,
+        hass: HomeAssistant,
         integration_domain: str,
         platform: UpdatePlatformProtocol,
     ) -> None:
@@ -181,7 +172,7 @@ class UpdateManager:
     async def _load(self) -> None:
         """Load platforms and data from storage."""
         await integration_platform.async_process_integration_platforms(
-            self._hass, DOMAIN, _register_update_platform
+            self._hass, DOMAIN, self.add_platform
         )
         from_storage = await self._store.async_load()
         if isinstance(from_storage, dict):
