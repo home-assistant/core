@@ -29,29 +29,14 @@ from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
-from .const import (
-    ATTRIBUTION,
-    CONF_ACCOUNT,
-    CONF_ALLOWED_REGIONS,
-    CONF_READ_ONLY,
-    DATA_ENTRIES,
-)
+from .const import ATTRIBUTION, CONF_ACCOUNT, CONF_READ_ONLY, DATA_ENTRIES
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "bmw_connected_drive"
 ATTR_VIN = "vin"
 
-ACCOUNT_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_REGION): vol.In(CONF_ALLOWED_REGIONS),
-        vol.Optional(CONF_READ_ONLY): cv.boolean,
-    }
-)
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: ACCOUNT_SCHEMA}}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN, raise_if_present=False)
 
 SERVICE_SCHEMA = vol.Schema(
     vol.Any(
