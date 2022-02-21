@@ -41,7 +41,7 @@ async def _register_update_platform(
     integration_domain: str,
     platform: UpdatePlatformProtocol,
 ) -> None:
-    """Register a update platform."""
+    """Register an update platform."""
     manager: UpdateManager = hass.data[DOMAIN]
     manager.add_platform(integration_domain, platform)
 
