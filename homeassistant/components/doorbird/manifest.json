@@ -10,7 +10,8 @@
       "properties": {"macaddress": "1ccae3*"}
     }
   ],
-  "codeowners": ["@oblogic7", "@bdraco"],
+  "codeowners": ["@oblogic7", "@bdraco", "@flacjacket"],
   "config_flow": true,
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "loggers": ["doorbirdpy"]
 }

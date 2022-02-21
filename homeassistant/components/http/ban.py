@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable
 from contextlib import suppress
 from datetime import datetime
 from http import HTTPStatus
-from ipaddress import ip_address
+from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
 from socket import gethostbyaddr, herror
 from typing import Any, Final
@@ -15,6 +15,7 @@ from aiohttp.web import Application, Request, StreamResponse, middleware
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.config import load_yaml_config_file
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -123,8 +124,8 @@ async def process_wrong_login(request: Request) -> None:
 
     _LOGGER.warning(log_msg)
 
-    hass.components.persistent_notification.async_create(
-        notification_msg, "Login attempt failed", NOTIFICATION_ID_LOGIN
+    persistent_notification.async_create(
+        hass, notification_msg, "Login attempt failed", NOTIFICATION_ID_LOGIN
     )
 
     # Check if ban middleware is loaded
@@ -134,11 +135,12 @@ async def process_wrong_login(request: Request) -> None:
     request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] += 1
 
     # Supervisor IP should never be banned
-    if (
-        "hassio" in hass.config.components
-        and hass.components.hassio.get_supervisor_ip() == str(remote_addr)
-    ):
-        return
+    if "hassio" in hass.config.components:
+        # pylint: disable=import-outside-toplevel
+        from homeassistant.components import hassio
+
+        if hassio.get_supervisor_ip() == str(remote_addr):
+            return
 
     if (
         request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr]
@@ -153,7 +155,8 @@ async def process_wrong_login(request: Request) -> None:
 
         _LOGGER.warning("Banned IP %s for too many login attempts", remote_addr)
 
-        hass.components.persistent_notification.async_create(
+        persistent_notification.async_create(
+            hass,
             f"Too many login attempts from {remote_addr}",
             "Banning IP address",
             NOTIFICATION_ID_BAN,
@@ -186,7 +189,11 @@ async def process_success_login(request: Request) -> None:
 class IpBan:
     """Represents banned IP address."""
 
-    def __init__(self, ip_ban: str, banned_at: datetime | None = None) -> None:
+    def __init__(
+        self,
+        ip_ban: str | IPv4Address | IPv6Address,
+        banned_at: datetime | None = None,
+    ) -> None:
         """Initialize IP Ban object."""
         self.ip_address = ip_address(ip_ban)
         self.banned_at = banned_at or dt_util.utcnow()

@@ -48,7 +48,37 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         max_value=4,
         entity_category=EntityCategory.CONFIG,
     ),
+    # SomfyHeatingTemperatureInterface
+    OverkizNumberDescription(
+        key=OverkizState.CORE_ECO_ROOM_TEMPERATURE,
+        name="Eco Room Temperature",
+        icon="mdi:thermometer",
+        command=OverkizCommand.SET_ECO_TEMPERATURE,
+        min_value=6,
+        max_value=29,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    OverkizNumberDescription(
+        key=OverkizState.CORE_COMFORT_ROOM_TEMPERATURE,
+        name="Comfort Room Temperature",
+        icon="mdi:home-thermometer-outline",
+        command=OverkizCommand.SET_COMFORT_TEMPERATURE,
+        min_value=7,
+        max_value=30,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    OverkizNumberDescription(
+        key=OverkizState.CORE_SECURED_POSITION_TEMPERATURE,
+        name="Freeze Protection Temperature",
+        icon="mdi:sun-thermometer-outline",
+        command=OverkizCommand.SET_SECURED_POSITION_TEMPERATURE,
+        min_value=5,
+        max_value=15,
+        entity_category=EntityCategory.CONFIG,
+    ),
 ]
+
+SUPPORTED_STATES = {description.key: description for description in NUMBER_DESCRIPTIONS}
 
 
 async def async_setup_entry(
@@ -60,10 +90,6 @@ async def async_setup_entry(
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
     entities: list[OverkizNumber] = []
 
-    key_supported_states = {
-        description.key: description for description in NUMBER_DESCRIPTIONS
-    }
-
     for device in data.coordinator.data.values():
         if (
             device.widget in IGNORED_OVERKIZ_DEVICES
@@ -72,7 +98,7 @@ async def async_setup_entry(
             continue
 
         for state in device.definition.states:
-            if description := key_supported_states.get(state.qualified_name):
+            if description := SUPPORTED_STATES.get(state.qualified_name):
                 entities.append(
                     OverkizNumber(
                         device.device_url,

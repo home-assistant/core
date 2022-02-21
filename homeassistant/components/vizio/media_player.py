@@ -10,9 +10,8 @@ from pyvizio.api.apps import find_app_name
 from pyvizio.const import APP_HOME, INPUT_APPS, NO_APP_RUNNING, UNKNOWN_APP
 
 from homeassistant.components.media_player import (
-    DEVICE_CLASS_SPEAKER,
-    DEVICE_CLASS_TV,
     SUPPORT_SELECT_SOUND_MODE,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -145,6 +144,7 @@ class VizioDevice(MediaPlayerEntity):
         self._volume_step = config_entry.options[CONF_VOLUME_STEP]
         self._current_input = None
         self._current_app_config = None
+        self._attr_app_name = None
         self._available_inputs = []
         self._available_apps = []
         self._all_apps = apps_coordinator.data if apps_coordinator else None
@@ -178,9 +178,9 @@ class VizioDevice(MediaPlayerEntity):
 
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
-        is_on = await self._device.get_power_state(log_api_exception=False)
-
-        if is_on is None:
+        if (
+            is_on := await self._device.get_power_state(log_api_exception=False)
+        ) is None:
             if self._attr_available:
                 _LOGGER.warning(
                     "Lost connection to %s", self._config_entry.data[CONF_HOST]
@@ -215,11 +215,9 @@ class VizioDevice(MediaPlayerEntity):
 
         self._attr_state = STATE_ON
 
-        audio_settings = await self._device.get_all_settings(
+        if audio_settings := await self._device.get_all_settings(
             VIZIO_AUDIO_SETTINGS, log_api_exception=False
-        )
-
-        if audio_settings:
+        ):
             self._attr_volume_level = (
                 float(audio_settings[VIZIO_VOLUME]) / self._max_volume
             )
@@ -243,20 +241,17 @@ class VizioDevice(MediaPlayerEntity):
                 # Explicitly remove SUPPORT_SELECT_SOUND_MODE from supported features
                 self._attr_supported_features &= ~SUPPORT_SELECT_SOUND_MODE
 
-        input_ = await self._device.get_current_input(log_api_exception=False)
-        if input_:
+        if input_ := await self._device.get_current_input(log_api_exception=False):
             self._current_input = input_
 
-        inputs = await self._device.get_inputs_list(log_api_exception=False)
-
         # If no inputs returned, end update
-        if not inputs:
+        if not (inputs := await self._device.get_inputs_list(log_api_exception=False)):
             return
 
         self._available_inputs = [input_.name for input_ in inputs]
 
         # Return before setting app variables if INPUT_APPS isn't in available inputs
-        if self._attr_device_class == DEVICE_CLASS_SPEAKER or not any(
+        if self._attr_device_class == MediaPlayerDeviceClass.SPEAKER or not any(
             app for app in INPUT_APPS if app in self._available_inputs
         ):
             return
@@ -288,7 +283,8 @@ class VizioDevice(MediaPlayerEntity):
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> None:
         """Send update event when Vizio config entry is updated."""
-        # Move this method to component level if another entity ever gets added for a single config entry.
+        # Move this method to component level if another entity ever gets added for a
+        # single config entry.
         # See here: https://github.com/home-assistant/core/pull/30653#discussion_r366426121
         async_dispatcher_send(hass, config_entry.entry_id, config_entry)
 
@@ -332,7 +328,7 @@ class VizioDevice(MediaPlayerEntity):
             self._all_apps = self._apps_coordinator.data
             self.async_write_ha_state()
 
-        if self._attr_device_class == DEVICE_CLASS_TV:
+        if self._attr_device_class == MediaPlayerDeviceClass.TV:
             self.async_on_remove(
                 self._apps_coordinator.async_add_listener(apps_list_update)
             )
@@ -370,7 +366,7 @@ class VizioDevice(MediaPlayerEntity):
     @property
     def app_id(self) -> str | None:
         """Return the ID of the current app if it is unknown by pyvizio."""
-        if self._current_app_config and self.app_name == UNKNOWN_APP:
+        if self._current_app_config and self.source == UNKNOWN_APP:
             return {
                 "APP_ID": self._current_app_config.APP_ID,
                 "NAME_SPACE": self._current_app_config.NAME_SPACE,

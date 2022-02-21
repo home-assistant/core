@@ -13,6 +13,7 @@
             "is_on": "{entity_name}\u70ba\u958b\u555f"
         },
         "trigger_type": {
+            "changed_states": "{entity_name}\u5df2\u958b\u555f\u6216\u95dc\u9589",
             "target_humidity_changed": "{entity_name}\u8a2d\u5b9a\u6fd5\u5ea6\u5df2\u8b8a\u66f4",
             "toggled": "{entity_name}\u5df2\u958b\u555f\u6216\u95dc\u9589",
             "turned_off": "{entity_name}\u5df2\u95dc\u9589",

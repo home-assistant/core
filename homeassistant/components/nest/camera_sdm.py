@@ -4,24 +4,21 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 import datetime
+import functools
 import logging
 from pathlib import Path
 
 from google_nest_sdm.camera_traits import (
-    CameraEventImageTrait,
     CameraImageTrait,
     CameraLiveStreamTrait,
     RtspStream,
     StreamingProtocol,
 )
 from google_nest_sdm.device import Device
-from google_nest_sdm.event_media import EventMedia
 from google_nest_sdm.exceptions import ApiException
-from haffmpeg.tools import IMAGE_JPEG
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
-from homeassistant.components.camera.const import STREAM_TYPE_HLS, STREAM_TYPE_WEB_RTC
-from homeassistant.components.ffmpeg import async_get_image
+from homeassistant.components.camera.const import STREAM_TYPE_WEB_RTC
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
@@ -76,7 +73,6 @@ class NestCamera(Camera):
         self._create_stream_url_lock = asyncio.Lock()
         self._stream_refresh_unsub: Callable[[], None] | None = None
         self._attr_is_streaming = CameraLiveStreamTrait.NAME in self._device.traits
-        self._placeholder_image: bytes | None = None
 
     @property
     def should_poll(self) -> bool:
@@ -125,7 +121,16 @@ class NestCamera(Camera):
         trait = self._device.traits[CameraLiveStreamTrait.NAME]
         if StreamingProtocol.WEB_RTC in trait.supported_protocols:
             return STREAM_TYPE_WEB_RTC
-        return STREAM_TYPE_HLS
+        return super().frontend_stream_type
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        # Cameras are marked unavailable on stream errors in #54659 however nest streams have
+        # a high error rate (#60353). Given nest streams are so flaky, marking the stream
+        # unavailable has other side effects like not showing the camera image which sometimes
+        # are still able to work. Until the streams are fixed, just leave the streams as available.
+        return True
 
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
@@ -207,34 +212,24 @@ class NestCamera(Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
-        if CameraEventImageTrait.NAME in self._device.traits:
-            # Returns the snapshot of the last event for ~30 seconds after the event
-            event_media: EventMedia | None = None
-            try:
-                event_media = (
-                    await self._device.event_media_manager.get_active_event_media()
-                )
-            except ApiException as err:
-                _LOGGER.debug("Failure while getting image for event: %s", err)
-            if event_media:
-                return event_media.media.contents
-        # Fetch still image from the live stream
-        stream_url = await self.stream_source()
-        if not stream_url:
-            if self.frontend_stream_type != STREAM_TYPE_WEB_RTC:
-                return None
-            # Nest Web RTC cams only have image previews for events, and not
-            # for "now" by design to save batter, and need a placeholder.
-            if not self._placeholder_image:
-                self._placeholder_image = await self.hass.async_add_executor_job(
-                    PLACEHOLDER.read_bytes
-                )
-            return self._placeholder_image
-        return await async_get_image(self.hass, stream_url, output_format=IMAGE_JPEG)
+        # Use the thumbnail from RTSP stream, or a placeholder if stream is
+        # not supported (e.g. WebRTC)
+        stream = await self.async_create_stream()
+        if stream:
+            return await stream.async_get_image(width, height)
+        return await self.hass.async_add_executor_job(self.placeholder_image)
 
-    async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str:
+    @classmethod
+    @functools.cache
+    def placeholder_image(cls) -> bytes:
+        """Return placeholder image to use when no stream is available."""
+        return PLACEHOLDER.read_bytes()
+
+    async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str | None:
         """Return the source of the stream."""
         trait: CameraLiveStreamTrait = self._device.traits[CameraLiveStreamTrait.NAME]
+        if StreamingProtocol.WEB_RTC not in trait.supported_protocols:
+            return await super().async_handle_web_rtc_offer(offer_sdp)
         try:
             stream = await trait.generate_web_rtc_stream(offer_sdp)
         except ApiException as err:

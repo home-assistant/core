@@ -12,11 +12,6 @@ CONF_DATA = {
     CONF_NAME: NAME,
 }
 
-CONF_CONFIG_FLOW = {
-    CONF_TOKEN: TOKEN,
-    CONF_NAME: NAME,
-}
-
 
 async def create_mocked_discord():
     """Create mocked discord."""

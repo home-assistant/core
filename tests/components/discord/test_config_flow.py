@@ -1,21 +1,14 @@
 """Test Discord config flow."""
 from unittest.mock import patch
 
-import discord
+import nextcord
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.discord.const import DOMAIN
 from homeassistant.const import CONF_SOURCE, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
-from . import (
-    CONF_CONFIG_FLOW,
-    CONF_DATA,
-    NAME,
-    create_mocked_discord,
-    mock_response,
-    patch_discord_info,
-)
+from . import CONF_DATA, NAME, create_mocked_discord, mock_response, patch_discord_info
 
 from tests.common import MockConfigEntry
 
@@ -39,7 +32,7 @@ async def test_flow_user(hass: HomeAssistant):
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input=CONF_CONFIG_FLOW,
+            user_input=CONF_DATA,
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == NAME
@@ -50,7 +43,7 @@ async def test_flow_user_already_configured(hass: HomeAssistant):
     """Test user initialized flow with duplicate server."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=CONF_CONFIG_FLOW,
+        data=CONF_DATA,
         unique_id="1234567890",
     )
 
@@ -66,7 +59,7 @@ async def test_flow_user_already_configured(hass: HomeAssistant):
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input=CONF_CONFIG_FLOW,
+            user_input=CONF_DATA,
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
@@ -76,11 +69,11 @@ async def test_flow_user_invalid_Auth(hass: HomeAssistant):
     """Test user initialized flow with invalid token."""
     mocked_discord = await create_mocked_discord()
     with patch("discord.Client.login") as mock, patch_discord_info(mocked_discord):
-        mock.side_effect = discord.LoginFailure
+        mock.side_effect = nextcord.LoginFailure
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data=CONF_CONFIG_FLOW,
+            data=CONF_DATA,
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "user"
@@ -91,11 +84,11 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant):
     """Test user initialized flow with unreachable server."""
     mocked_discord = await create_mocked_discord()
     with patch("discord.Client.login") as mock, patch_discord_info(mocked_discord):
-        mock.side_effect = discord.HTTPException(mock_response(), "")
+        mock.side_effect = nextcord.HTTPException(mock_response(), "")
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data=CONF_CONFIG_FLOW,
+            data=CONF_DATA,
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "user"
@@ -110,7 +103,7 @@ async def test_flow_user_unknown_error(hass: HomeAssistant):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data=CONF_CONFIG_FLOW,
+            data=CONF_DATA,
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "user"
@@ -126,7 +119,7 @@ async def test_flow_import(hass: HomeAssistant):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data=CONF_CONFIG_FLOW,
+            data=CONF_DATA,
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -138,7 +131,7 @@ async def test_flow_import_already_configured(hass: HomeAssistant):
     """Test an import flow already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=CONF_CONFIG_FLOW,
+        data=CONF_DATA,
         unique_id="1234567890",
     )
 
@@ -151,7 +144,7 @@ async def test_flow_import_already_configured(hass: HomeAssistant):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data=CONF_CONFIG_FLOW,
+            data=CONF_DATA,
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -162,7 +155,7 @@ async def test_flow_reauth(hass: HomeAssistant):
     """Test a reauth flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=CONF_CONFIG_FLOW,
+        data=CONF_DATA,
         unique_id="1234567890",
     )
 
@@ -179,7 +172,7 @@ async def test_flow_reauth(hass: HomeAssistant):
                 "entry_id": entry.entry_id,
                 "unique_id": entry.unique_id,
             },
-            data=CONF_CONFIG_FLOW,
+            data=CONF_DATA,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

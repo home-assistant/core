@@ -3,11 +3,15 @@
   "name": "GitHub",
   "documentation": "https://www.home-assistant.io/integrations/github",
   "requirements": [
-    "aiogithubapi==21.11.0"
+    "aiogithubapi==22.2.3"
   ],
   "codeowners": [
     "@timmo001",
     "@ludeeus"
   ],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "config_flow": true,
+  "loggers": [
+    "aiogithubapi"
+  ]
 }

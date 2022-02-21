@@ -2,8 +2,14 @@
   "domain": "elkm1",
   "name": "Elk-M1 Control",
   "documentation": "https://www.home-assistant.io/integrations/elkm1",
-  "requirements": ["elkm1-lib==1.0.0"],
+  "requirements": ["elkm1-lib==1.2.0"],
+  "dhcp": [
+    {"registered_devices": true},
+    {"macaddress":"00409D*"}
+  ],
   "codeowners": ["@gwww", "@bdraco"],
+  "dependencies": ["network"],
   "config_flow": true,
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "loggers": ["elkm1_lib"]
 }

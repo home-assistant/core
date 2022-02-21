@@ -1,12 +1,16 @@
 """Support for raspihats board switches."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, DEVICE_DEFAULT_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     CONF_BOARD,
@@ -15,9 +19,11 @@ from . import (
     CONF_INDEX,
     CONF_INITIAL_STATE,
     CONF_INVERT_LOGIC,
+    DOMAIN,
     I2C_HAT_NAMES,
     I2C_HATS_MANAGER,
     I2CHatsException,
+    I2CHatsManager,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,15 +54,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the raspihats switch devices."""
-    I2CHatSwitch.I2C_HATS_MANAGER = hass.data[I2C_HATS_MANAGER]
+    I2CHatSwitch.I2C_HATS_MANAGER = hass.data[DOMAIN][I2C_HATS_MANAGER]
     switches = []
-    i2c_hat_configs = config.get(CONF_I2C_HATS)
+    i2c_hat_configs = config.get(CONF_I2C_HATS, [])
     for i2c_hat_config in i2c_hat_configs:
         board = i2c_hat_config[CONF_BOARD]
         address = i2c_hat_config[CONF_ADDRESS]
         try:
+            assert I2CHatSwitch.I2C_HATS_MANAGER
             I2CHatSwitch.I2C_HATS_MANAGER.register_board(board, address)
             for channel_config in i2c_hat_config[CONF_CHANNELS]:
                 switches.append(
@@ -76,10 +88,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(switches)
 
 
-class I2CHatSwitch(ToggleEntity):
+class I2CHatSwitch(SwitchEntity):
     """Representation  a switch that uses a I2C-HAT digital output."""
 
-    I2C_HATS_MANAGER = None
+    I2C_HATS_MANAGER: I2CHatsManager | None = None
 
     def __init__(self, board, address, channel, name, invert_logic, initial_state):
         """Initialize switch."""

@@ -1,4 +1,5 @@
 """APNS Notification platform."""
+# pylint: disable=import-error
 from contextlib import suppress
 import logging
 
@@ -44,9 +45,16 @@ REGISTER_SERVICE_SCHEMA = vol.Schema(
     {vol.Required(ATTR_PUSH_ID): cv.string, vol.Optional(ATTR_NAME): cv.string}
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def get_service(hass, config, discovery_info=None):
     """Return push service."""
+    _LOGGER.warning(
+        "The Apple Push Notification Service (APNS) integration is deprecated "
+        "and will be removed in Home Assistant Core 2022.4"
+    )
+
     name = config[CONF_NAME]
     cert_file = config[CONF_CERTFILE]
     topic = config[CONF_TOPIC]

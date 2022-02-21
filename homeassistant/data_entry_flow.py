@@ -7,12 +7,12 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Any, TypedDict
-import uuid
 
 import voluptuous as vol
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
+from .util import uuid as uuid_util
 
 RESULT_TYPE_FORM = "form"
 RESULT_TYPE_CREATE_ENTRY = "create_entry"
@@ -223,7 +223,7 @@ class FlowManager(abc.ABC):
             raise UnknownFlow("Flow was not created")
         flow.hass = self.hass
         flow.handler = handler
-        flow.flow_id = uuid.uuid4().hex
+        flow.flow_id = uuid_util.random_uuid_hex()
         flow.context = context
         flow.init_data = data
         self._async_add_flow_progress(flow)
@@ -378,11 +378,11 @@ class FlowHandler:
 
     # While not purely typed, it makes typehinting more useful for us
     # and removes the need for constant None checks or asserts.
-    flow_id: str = None  # type: ignore
-    hass: HomeAssistant = None  # type: ignore
-    handler: str = None  # type: ignore
+    flow_id: str = None  # type: ignore[assignment]
+    hass: HomeAssistant = None  # type: ignore[assignment]
+    handler: str = None  # type: ignore[assignment]
     # Ensure the attribute has a subscriptable, but immutable, default value.
-    context: dict[str, Any] = MappingProxyType({})  # type: ignore
+    context: dict[str, Any] = MappingProxyType({})  # type: ignore[assignment]
 
     # Set by _async_create_flow callback
     init_step = "init"

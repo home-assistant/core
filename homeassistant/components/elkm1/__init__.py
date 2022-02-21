@@ -6,6 +6,7 @@ import logging
 import re
 from types import MappingProxyType
 from typing import Any
+from urllib.parse import urlparse
 
 import async_timeout
 import elkm1_lib as elkm1
@@ -13,6 +14,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    ATTR_CONNECTIONS,
     CONF_EXCLUDE,
     CONF_HOST,
     CONF_INCLUDE,
@@ -27,16 +29,17 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
+from homeassistant.util.network import is_ip_address
 
 from .const import (
     ATTR_KEY,
     ATTR_KEY_NAME,
     ATTR_KEYPAD_ID,
-    BARE_TEMP_CELSIUS,
-    BARE_TEMP_FAHRENHEIT,
     CONF_AREA,
     CONF_AUTO_CONFIGURE,
     CONF_COUNTER,
@@ -48,9 +51,18 @@ from .const import (
     CONF_TASK,
     CONF_THERMOSTAT,
     CONF_ZONE,
+    DISCOVER_SCAN_TIMEOUT,
+    DISCOVERY_INTERVAL,
     DOMAIN,
     ELK_ELEMENTS,
     EVENT_ELKM1_KEYPAD_KEY_PRESSED,
+    LOGIN_TIMEOUT,
+)
+from .discovery import (
+    async_discover_device,
+    async_discover_devices,
+    async_trigger_discovery,
+    async_update_entry_from_discovery,
 )
 
 SYNC_TIMEOUT = 120
@@ -127,28 +139,28 @@ DEVICE_SCHEMA_SUBDOMAIN = vol.Schema(
     }
 )
 
-DEVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PREFIX, default=""): vol.All(cv.string, vol.Lower),
-        vol.Optional(CONF_USERNAME, default=""): cv.string,
-        vol.Optional(CONF_PASSWORD, default=""): cv.string,
-        vol.Optional(CONF_AUTO_CONFIGURE, default=False): cv.boolean,
-        # cv.temperature_unit will mutate 'C' -> '°C' and 'F' -> '°F'
-        vol.Optional(
-            CONF_TEMPERATURE_UNIT, default=BARE_TEMP_FAHRENHEIT
-        ): cv.temperature_unit,
-        vol.Optional(CONF_AREA, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_COUNTER, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_KEYPAD, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_OUTPUT, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_PLC, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_SETTING, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_TASK, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_THERMOSTAT, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_ZONE, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-    },
-    _host_validator,
+DEVICE_SCHEMA = vol.All(
+    cv.deprecated(CONF_TEMPERATURE_UNIT),
+    vol.Schema(
+        {
+            vol.Required(CONF_HOST): cv.string,
+            vol.Optional(CONF_PREFIX, default=""): vol.All(cv.string, vol.Lower),
+            vol.Optional(CONF_USERNAME, default=""): cv.string,
+            vol.Optional(CONF_PASSWORD, default=""): cv.string,
+            vol.Optional(CONF_AUTO_CONFIGURE, default=False): cv.boolean,
+            vol.Optional(CONF_TEMPERATURE_UNIT, default="F"): cv.temperature_unit,
+            vol.Optional(CONF_AREA, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_COUNTER, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_KEYPAD, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_OUTPUT, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_PLC, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_SETTING, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_TASK, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_THERMOSTAT, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_ZONE, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+        },
+        _host_validator,
+    ),
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -161,6 +173,14 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the Elk M1 platform."""
     hass.data.setdefault(DOMAIN, {})
     _create_elk_services(hass)
+
+    async def _async_discovery(*_: Any) -> None:
+        async_trigger_discovery(
+            hass, await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT)
+        )
+
+    asyncio.create_task(_async_discovery())
+    async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
 
     if DOMAIN not in hass_config:
         return True
@@ -204,13 +224,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elk-M1 Control from a config entry."""
     conf: MappingProxyType[str, Any] = entry.data
 
+    host = urlparse(entry.data[CONF_HOST]).hostname
+
     _LOGGER.debug("Setting up elkm1 %s", conf["host"])
 
-    temperature_unit = TEMP_FAHRENHEIT
-    if conf[CONF_TEMPERATURE_UNIT] in (BARE_TEMP_CELSIUS, TEMP_CELSIUS):
-        temperature_unit = TEMP_CELSIUS
+    if not entry.unique_id or ":" not in entry.unique_id and is_ip_address(host):
+        if device := await async_discover_device(hass, host):
+            async_update_entry_from_discovery(hass, entry, device)
 
-    config: dict[str, Any] = {"temperature_unit": temperature_unit}
+    config: dict[str, Any] = {}
 
     if not conf[CONF_AUTO_CONFIGURE]:
         # With elkm1-lib==0.7.16 and later auto configure is available
@@ -253,14 +275,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         keypad.add_callback(_element_changed)
 
     try:
-        if not await async_wait_for_elk_to_sync(elk, SYNC_TIMEOUT, conf[CONF_HOST]):
+        if not await async_wait_for_elk_to_sync(
+            elk, LOGIN_TIMEOUT, SYNC_TIMEOUT, conf[CONF_HOST]
+        ):
             return False
     except asyncio.TimeoutError as exc:
-        raise ConfigEntryNotReady from exc
+        raise ConfigEntryNotReady(f"Timed out connecting to {conf[CONF_HOST]}") from exc
 
+    elk_temp_unit = elk.panel.temperature_units  # pylint: disable=no-member
+    temperature_unit = TEMP_CELSIUS if elk_temp_unit == "C" else TEMP_FAHRENHEIT
+    config["temperature_unit"] = temperature_unit
     hass.data[DOMAIN][entry.entry_id] = {
         "elk": elk,
         "prefix": conf[CONF_PREFIX],
+        "mac": entry.unique_id,
         "auto_configure": conf[CONF_AUTO_CONFIGURE],
         "config": config,
         "keypads": {},
@@ -298,8 +326,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_wait_for_elk_to_sync(elk, timeout, conf_host):
+async def async_wait_for_elk_to_sync(
+    elk: elkm1.Elk, login_timeout: int, sync_timeout: int, conf_host: str
+) -> bool:
     """Wait until the elk has finished sync. Can fail login or timeout."""
+
+    sync_event = asyncio.Event()
+    login_event = asyncio.Event()
 
     def login_status(succeeded):
         nonlocal success
@@ -307,29 +340,28 @@ async def async_wait_for_elk_to_sync(elk, timeout, conf_host):
         success = succeeded
         if succeeded:
             _LOGGER.debug("ElkM1 login succeeded")
+            login_event.set()
         else:
             elk.disconnect()
             _LOGGER.error("ElkM1 login failed; invalid username or password")
-            event.set()
+            login_event.set()
+            sync_event.set()
 
     def sync_complete():
-        event.set()
+        sync_event.set()
 
     success = True
-    event = asyncio.Event()
     elk.add_handler("login", login_status)
     elk.add_handler("sync_complete", sync_complete)
-    try:
-        async with async_timeout.timeout(timeout):
-            await event.wait()
-    except asyncio.TimeoutError:
-        _LOGGER.error(
-            "Timed out after %d seconds while trying to sync with ElkM1 at %s",
-            timeout,
-            conf_host,
-        )
-        elk.disconnect()
-        raise
+    events = ((login_event, login_timeout), (sync_event, sync_timeout))
+
+    for event, timeout in events:
+        try:
+            async with async_timeout.timeout(timeout):
+                await event.wait()
+        except asyncio.TimeoutError:
+            elk.disconnect()
+            raise
 
     return success
 
@@ -391,7 +423,9 @@ class ElkEntity(Entity):
         """Initialize the base of all Elk devices."""
         self._elk = elk
         self._element = element
+        self._mac = elk_data["mac"]
         self._prefix = elk_data["prefix"]
+        self._name_prefix = f"{self._prefix} " if self._prefix else ""
         self._temperature_unit = elk_data["config"]["temperature_unit"]
         # unique_id starts with elkm1_ iff there is no prefix
         # it starts with elkm1m_{prefix} iff there is a prefix
@@ -410,7 +444,7 @@ class ElkEntity(Entity):
     @property
     def name(self):
         """Name of the element."""
-        return f"{self._prefix}{self._element.name}"
+        return f"{self._name_prefix}{self._element.name}"
 
     @property
     def unique_id(self):
@@ -469,10 +503,13 @@ class ElkAttachedEntity(ElkEntity):
         device_name = "ElkM1"
         if self._prefix:
             device_name += f" {self._prefix}"
-        return DeviceInfo(
+        device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{self._prefix}_system")},
             manufacturer="ELK Products, Inc.",
             model="M1",
             name=device_name,
             sw_version=self._elk.panel.elkm1_version,
         )
+        if self._mac:
+            device_info[ATTR_CONNECTIONS] = {(CONNECTION_NETWORK_MAC, self._mac)}
+        return device_info

@@ -40,7 +40,7 @@ async def async_setup_entry(
 
 
 class EcobeeHumidifier(HumidifierEntity):
-    """A humidifier class for an ecobee thermostat with humidifer attached."""
+    """A humidifier class for an ecobee thermostat with humidifier attached."""
 
     def __init__(self, data, thermostat_index):
         """Initialize ecobee humidifier platform."""

@@ -13,7 +13,9 @@ from aiohttp import hdrs
 from aiohttp.web import Application, Request, StreamResponse, middleware
 import jwt
 
+from homeassistant.auth.const import GROUP_ID_READ_ONLY
 from homeassistant.auth.models import User
+from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.network import is_local
@@ -27,14 +29,32 @@ DATA_API_PASSWORD: Final = "api_password"
 DATA_SIGN_SECRET: Final = "http.auth.sign_secret"
 SIGN_QUERY_PARAM: Final = "authSig"
 
+STORAGE_VERSION = 1
+STORAGE_KEY = "http.auth"
+CONTENT_USER_NAME = "Home Assistant Content"
+
 
 @callback
 def async_sign_path(
-    hass: HomeAssistant, refresh_token_id: str, path: str, expiration: timedelta
+    hass: HomeAssistant,
+    path: str,
+    expiration: timedelta,
+    *,
+    refresh_token_id: str | None = None,
 ) -> str:
     """Sign a path for temporary access without auth header."""
     if (secret := hass.data.get(DATA_SIGN_SECRET)) is None:
         secret = hass.data[DATA_SIGN_SECRET] = secrets.token_hex()
+
+    if refresh_token_id is None:
+        if connection := websocket_api.current_connection.get():
+            refresh_token_id = connection.refresh_token_id
+        elif (
+            request := current_request.get()
+        ) and KEY_HASS_REFRESH_TOKEN_ID in request:
+            refresh_token_id = request[KEY_HASS_REFRESH_TOKEN_ID]
+        else:
+            refresh_token_id = hass.data[STORAGE_KEY]
 
     now = dt_util.utcnow()
     encoded = jwt.encode(
@@ -86,9 +106,27 @@ def async_user_not_allowed_do_auth(
     return "User cannot authenticate remotely"
 
 
-@callback
-def setup_auth(hass: HomeAssistant, app: Application) -> None:
+async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
     """Create auth middleware for the app."""
+    store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+    if (data := await store.async_load()) is None:
+        data = {}
+
+    refresh_token = None
+    if "content_user" in data:
+        user = await hass.auth.async_get_user(data["content_user"])
+        if user and user.refresh_tokens:
+            refresh_token = list(user.refresh_tokens.values())[0]
+
+    if refresh_token is None:
+        user = await hass.auth.async_create_system_user(
+            CONTENT_USER_NAME, group_ids=[GROUP_ID_READ_ONLY]
+        )
+        refresh_token = await hass.auth.async_create_refresh_token(user)
+        data["content_user"] = user.id
+        await store.async_save(data)
+
+    hass.data[STORAGE_KEY] = refresh_token.id
 
     async def async_validate_auth_header(request: Request) -> bool:
         """

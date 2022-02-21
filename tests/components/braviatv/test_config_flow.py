@@ -53,7 +53,9 @@ async def test_user_invalid_host(hass):
 
 async def test_authorize_cannot_connect(hass):
     """Test that errors are shown when cannot connect to host at the authorize step."""
-    with patch("bravia_tv.BraviaRC.connect", return_value=True):
+    with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
+        "bravia_tv.BraviaRC.is_connected", return_value=False
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"}
         )
@@ -199,11 +201,17 @@ async def test_options_flow(hass):
 
     with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
         "bravia_tv.BraviaRC.is_connected", return_value=True
-    ), patch("bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO):
+    ), patch("bravia_tv.BraviaRC.get_power_status"), patch(
+        "bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    with patch("bravia_tv.BraviaRC.load_source_list", return_value=BRAVIA_SOURCE_LIST):
+    with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
+        "bravia_tv.BraviaRC.is_connected", return_value=False
+    ), patch("bravia_tv.BraviaRC.get_power_status"), patch(
+        "bravia_tv.BraviaRC.load_source_list", return_value=BRAVIA_SOURCE_LIST
+    ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -212,6 +220,7 @@ async def test_options_flow(hass):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={CONF_IGNORED_SOURCES: ["HDMI 1", "HDMI 2"]}
         )
+        await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert config_entry.options == {CONF_IGNORED_SOURCES: ["HDMI 1", "HDMI 2"]}

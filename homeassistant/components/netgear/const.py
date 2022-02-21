@@ -5,9 +5,13 @@ from homeassistant.const import Platform
 
 DOMAIN = "netgear"
 
-PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR]
+PLATFORMS = [Platform.BUTTON, Platform.DEVICE_TRACKER, Platform.SENSOR, Platform.SWITCH]
 
 CONF_CONSIDER_HOME = "consider_home"
+
+KEY_ROUTER = "router"
+KEY_COORDINATOR = "coordinator"
+KEY_COORDINATOR_TRAFFIC = "coordinator_traffic"
 
 DEFAULT_CONSIDER_HOME = timedelta(seconds=180)
 DEFAULT_NAME = "Netgear router"
@@ -32,6 +36,10 @@ MODELS_PORT_80 = [
     "SXS",
 ]
 PORT_80 = 80
+MODELS_PORT_5555 = [
+    "R7000",
+]
+PORT_5555 = 5555
 # update method V2 models
 MODELS_V2 = [
     "Orbi",

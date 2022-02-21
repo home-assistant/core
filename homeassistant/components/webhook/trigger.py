@@ -8,6 +8,8 @@ from homeassistant.const import CONF_PLATFORM, CONF_WEBHOOK_ID
 from homeassistant.core import HassJob, callback
 import homeassistant.helpers.config_validation as cv
 
+from . import async_register, async_unregister
+
 # mypy: allow-untyped-defs
 
 DEPENDENCIES = ("webhook",)
@@ -40,7 +42,8 @@ async def async_attach_trigger(hass, config, action, automation_info):
     trigger_data = automation_info["trigger_data"]
     webhook_id = config.get(CONF_WEBHOOK_ID)
     job = HassJob(action)
-    hass.components.webhook.async_register(
+    async_register(
+        hass,
         automation_info["domain"],
         automation_info["name"],
         webhook_id,
@@ -50,6 +53,6 @@ async def async_attach_trigger(hass, config, action, automation_info):
     @callback
     def unregister():
         """Unregister webhook."""
-        hass.components.webhook.async_unregister(webhook_id)
+        async_unregister(hass, webhook_id)
 
     return unregister

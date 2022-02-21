@@ -9,5 +9,6 @@
     "requirements": [
         "amberelectric==1.0.3"
     ],
-    "iot_class": "cloud_polling"
+    "iot_class": "cloud_polling",
+    "loggers": ["amberelectric"]
 }

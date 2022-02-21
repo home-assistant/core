@@ -29,7 +29,6 @@ from .const import (
     METRIC_KEY_PROFILE_FAN_SPEED_BOOST,
     METRIC_KEY_PROFILE_FAN_SPEED_HOME,
     STATE_SCAN_INTERVAL,
-    STR_TO_VALLOX_PROFILE_SETTABLE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,18 +51,10 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS: list[str] = [
     Platform.SENSOR,
     Platform.FAN,
+    Platform.BINARY_SENSOR,
 ]
 
-ATTR_PROFILE = "profile"
 ATTR_PROFILE_FAN_SPEED = "fan_speed"
-
-SERVICE_SCHEMA_SET_PROFILE = vol.Schema(
-    {
-        vol.Required(ATTR_PROFILE): vol.All(
-            cv.string, vol.In(STR_TO_VALLOX_PROFILE_SETTABLE)
-        )
-    }
-)
 
 SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED = vol.Schema(
     {
@@ -81,16 +72,11 @@ class ServiceMethodDetails(NamedTuple):
     schema: vol.Schema
 
 
-SERVICE_SET_PROFILE = "set_profile"
 SERVICE_SET_PROFILE_FAN_SPEED_HOME = "set_profile_fan_speed_home"
 SERVICE_SET_PROFILE_FAN_SPEED_AWAY = "set_profile_fan_speed_away"
 SERVICE_SET_PROFILE_FAN_SPEED_BOOST = "set_profile_fan_speed_boost"
 
 SERVICE_TO_METHOD = {
-    SERVICE_SET_PROFILE: ServiceMethodDetails(
-        method="async_set_profile",
-        schema=SERVICE_SCHEMA_SET_PROFILE,
-    ),
     SERVICE_SET_PROFILE_FAN_SPEED_HOME: ServiceMethodDetails(
         method="async_set_profile_fan_speed_home",
         schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
@@ -227,24 +213,6 @@ class ValloxServiceHandler:
         """Initialize the proxy."""
         self._client = client
         self._coordinator = coordinator
-
-    async def async_set_profile(self, profile: str = "Home") -> bool:
-        """Set the ventilation profile."""
-        _LOGGER.debug("Setting ventilation profile to: %s", profile)
-
-        _LOGGER.warning(
-            "Attention: The service 'vallox.set_profile' is superseded by the "
-            "'fan.set_preset_mode' service. It will be removed in the future, please migrate to "
-            "'fan.set_preset_mode' to prevent breakage"
-        )
-
-        try:
-            await self._client.set_profile(STR_TO_VALLOX_PROFILE_SETTABLE[profile])
-            return True
-
-        except (OSError, ValloxApiException) as err:
-            _LOGGER.error("Error setting ventilation profile: %s", err)
-            return False
 
     async def async_set_profile_fan_speed_home(
         self, fan_speed: int = DEFAULT_FAN_SPEED_HOME

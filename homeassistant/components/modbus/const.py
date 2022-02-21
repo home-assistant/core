@@ -1,19 +1,13 @@
 """Constants used in modbus integration."""
 from enum import Enum
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.climate.const import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
-from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_COVERS,
     CONF_LIGHTS,
     CONF_SENSORS,
     CONF_SWITCHES,
+    Platform,
 )
 
 # configuration names
@@ -43,6 +37,7 @@ CONF_RETRY_ON_EMPTY = "retry_on_empty"
 CONF_REVERSE_ORDER = "reverse_order"
 CONF_PRECISION = "precision"
 CONF_SCALE = "scale"
+CONF_SLAVE_COUNT = "slave_count"
 CONF_STATE_CLOSED = "state_closed"
 CONF_STATE_CLOSING = "state_closing"
 CONF_STATE_OFF = "state_off"
@@ -87,9 +82,11 @@ class DataType(str, Enum):
     INT = "int"  # deprecated
     UINT = "uint"  # deprecated
     STRING = "string"
+    INT8 = "int8"
     INT16 = "int16"
     INT32 = "int32"
     INT64 = "int64"
+    UINT8 = "uint8"
     UINT16 = "uint16"
     UINT32 = "uint32"
     UINT64 = "uint64"
@@ -131,11 +128,11 @@ MODBUS_DOMAIN = "modbus"
 ACTIVE_SCAN_INTERVAL = 2  # limit to force an extra update
 
 PLATFORMS = (
-    (BINARY_SENSOR_DOMAIN, CONF_BINARY_SENSORS),
-    (CLIMATE_DOMAIN, CONF_CLIMATES),
-    (COVER_DOMAIN, CONF_COVERS),
-    (LIGHT_DOMAIN, CONF_LIGHTS),
-    (FAN_DOMAIN, CONF_FANS),
-    (SENSOR_DOMAIN, CONF_SENSORS),
-    (SWITCH_DOMAIN, CONF_SWITCHES),
+    (Platform.BINARY_SENSOR, CONF_BINARY_SENSORS),
+    (Platform.CLIMATE, CONF_CLIMATES),
+    (Platform.COVER, CONF_COVERS),
+    (Platform.LIGHT, CONF_LIGHTS),
+    (Platform.FAN, CONF_FANS),
+    (Platform.SENSOR, CONF_SENSORS),
+    (Platform.SWITCH, CONF_SWITCHES),
 )

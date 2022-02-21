@@ -5,14 +5,14 @@ import base64
 from dataclasses import dataclass
 import json
 import struct
-from typing import Any
+from typing import Any, Literal, overload
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY
+from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY, DPCode, DPType
 from .util import remap_value
 
 
@@ -20,6 +20,7 @@ from .util import remap_value
 class IntegerTypeData:
     """Integer Type Data."""
 
+    dpcode: DPCode
     min: int
     max: int
     scale: float
@@ -40,15 +41,15 @@ class IntegerTypeData:
     @property
     def step_scaled(self) -> float:
         """Return the step scaled."""
-        return self.scale_value(self.step)
+        return self.step / (10**self.scale)
 
     def scale_value(self, value: float | int) -> float:
         """Scale a value."""
-        return value * 1.0 / (10 ** self.scale)
+        return value * self.step / (10**self.scale)
 
     def scale_value_back(self, value: float | int) -> int:
         """Return raw value for scaled."""
-        return int(value * (10 ** self.scale))
+        return int((value * (10**self.scale)) / self.step)
 
     def remap_value_to(
         self,
@@ -71,21 +72,35 @@ class IntegerTypeData:
         return remap_value(value, from_min, from_max, self.min, self.max, reverse)
 
     @classmethod
-    def from_json(cls, data: str) -> IntegerTypeData:
+    def from_json(cls, dpcode: DPCode, data: str) -> IntegerTypeData | None:
         """Load JSON string and return a IntegerTypeData object."""
-        return cls(**json.loads(data))
+        if not (parsed := json.loads(data)):
+            return None
+
+        return cls(
+            dpcode,
+            min=int(parsed["min"]),
+            max=int(parsed["max"]),
+            scale=float(parsed["scale"]),
+            step=max(float(parsed["step"]), 1),
+            unit=parsed.get("unit"),
+            type=parsed.get("type"),
+        )
 
 
 @dataclass
 class EnumTypeData:
     """Enum Type Data."""
 
+    dpcode: DPCode
     range: list[str]
 
     @classmethod
-    def from_json(cls, data: str) -> EnumTypeData:
+    def from_json(cls, dpcode: DPCode, data: str) -> EnumTypeData | None:
         """Load JSON string and return a EnumTypeData object."""
-        return cls(**json.loads(data))
+        if not (parsed := json.loads(data)):
+            return None
+        return cls(dpcode, **parsed)
 
 
 @dataclass
@@ -148,6 +163,109 @@ class TuyaEntity(Entity):
     def available(self) -> bool:
         """Return if the device is available."""
         return self.device.online
+
+    @overload
+    def find_dpcode(
+        self,
+        dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+        *,
+        prefer_function: bool = False,
+        dptype: Literal[DPType.ENUM],
+    ) -> EnumTypeData | None:
+        ...
+
+    @overload
+    def find_dpcode(
+        self,
+        dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+        *,
+        prefer_function: bool = False,
+        dptype: Literal[DPType.INTEGER],
+    ) -> IntegerTypeData | None:
+        ...
+
+    @overload
+    def find_dpcode(
+        self,
+        dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+        *,
+        prefer_function: bool = False,
+    ) -> DPCode | None:
+        ...
+
+    def find_dpcode(
+        self,
+        dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+        *,
+        prefer_function: bool = False,
+        dptype: DPType = None,
+    ) -> DPCode | EnumTypeData | IntegerTypeData | None:
+        """Find a matching DP code available on for this device."""
+        if dpcodes is None:
+            return None
+
+        if isinstance(dpcodes, str):
+            dpcodes = (DPCode(dpcodes),)
+        elif not isinstance(dpcodes, tuple):
+            dpcodes = (dpcodes,)
+
+        order = ["status_range", "function"]
+        if prefer_function:
+            order = ["function", "status_range"]
+
+        # When we are not looking for a specific datatype, we can append status for
+        # searching
+        if not dptype:
+            order.append("status")
+
+        for dpcode in dpcodes:
+            for key in order:
+                if dpcode not in getattr(self.device, key):
+                    continue
+                if (
+                    dptype == DPType.ENUM
+                    and getattr(self.device, key)[dpcode].type == DPType.ENUM
+                ):
+                    if not (
+                        enum_type := EnumTypeData.from_json(
+                            dpcode, getattr(self.device, key)[dpcode].values
+                        )
+                    ):
+                        continue
+                    return enum_type
+
+                if (
+                    dptype == DPType.INTEGER
+                    and getattr(self.device, key)[dpcode].type == DPType.INTEGER
+                ):
+                    if not (
+                        integer_type := IntegerTypeData.from_json(
+                            dpcode, getattr(self.device, key)[dpcode].values
+                        )
+                    ):
+                        continue
+                    return integer_type
+
+                if dptype not in (DPType.ENUM, DPType.INTEGER):
+                    return dpcode
+
+        return None
+
+    def get_dptype(
+        self, dpcode: DPCode | None, prefer_function: bool = False
+    ) -> DPType | None:
+        """Find a matching DPCode data type available on for this device."""
+        if dpcode is None:
+            return None
+
+        order = ["status_range", "function"]
+        if prefer_function:
+            order = ["function", "status_range"]
+        for key in order:
+            if dpcode in getattr(self.device, key):
+                return DPType(getattr(self.device, key)[dpcode].type)
+
+        return None
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""

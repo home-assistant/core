@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import collections
-from collections.abc import Awaitable, Callable, Iterable, Mapping
+from collections.abc import Awaitable, Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -14,7 +14,7 @@ import inspect
 import logging
 import os
 from random import SystemRandom
-from typing import Final, cast, final
+from typing import Final, Optional, cast, final
 
 from aiohttp import web
 import async_timeout
@@ -26,7 +26,6 @@ from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_EXTRA,
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
@@ -49,7 +48,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import Entity, EntityDescription, entity_sources
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
@@ -222,7 +221,12 @@ async def async_get_mjpeg_stream(
     """Fetch an mjpeg stream from a camera entity."""
     camera = _get_camera_from_entity_id(hass, entity_id)
 
-    return await camera.handle_async_mjpeg_stream(request)
+    try:
+        stream = await camera.handle_async_mjpeg_stream(request)
+    except ConnectionResetError:
+        stream = None
+        _LOGGER.debug("Error while writing MJPEG stream to transport")
+    return stream
 
 
 async def async_get_still_stream(
@@ -287,17 +291,23 @@ def _get_camera_from_entity_id(hass: HomeAssistant, entity_id: str) -> Camera:
     return cast(Camera, camera)
 
 
+# An RtspToWebRtcProvider accepts these inputs:
+#     stream_source: The RTSP url
+#     offer_sdp: The WebRTC SDP offer
+#     stream_id: A unique id for the stream, used to update an existing source
+# The output is the SDP answer, or None if the source or offer is not eligible.
+# The Callable may throw HomeAssistantError on failure.
+RtspToWebRtcProviderType = Callable[[str, str, str], Awaitable[Optional[str]]]
+
+
 def async_register_rtsp_to_web_rtc_provider(
     hass: HomeAssistant,
     domain: str,
-    provider: Callable[[str, str], Awaitable[str | None]],
+    provider: RtspToWebRtcProviderType,
 ) -> Callable[[], None]:
     """Register an RTSP to WebRTC provider.
 
-    Integrations may register a Callable that accepts a `stream_source` and
-    SDP `offer` as an input, and the output is the SDP `answer`. An implementation
-    may return None if the source or offer is not eligible or throw HomeAssistantError
-    on failure. The first provider to satisfy the offer will be used.
+    The first provider to satisfy the offer will be used.
     """
     if DOMAIN not in hass.data:
         raise ValueError("Unexpected state, camera not loaded")
@@ -327,9 +337,9 @@ async def _async_refresh_providers(hass: HomeAssistant) -> None:
 
 def _async_get_rtsp_to_web_rtc_providers(
     hass: HomeAssistant,
-) -> Iterable[Callable[[str, str], Awaitable[str | None]]]:
+) -> Iterable[RtspToWebRtcProviderType]:
     """Return registered RTSP to WebRTC providers."""
-    providers: dict[str, Callable[[str, str], Awaitable[str | None]]] = hass.data.get(
+    providers: dict[str, RtspToWebRtcProviderType] = hass.data.get(
         DATA_RTSP_TO_WEB_RTC, {}
     )
     return providers.values()
@@ -347,13 +357,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http.register_view(CameraImageView(component))
     hass.http.register_view(CameraMjpegStream(component))
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_CAMERA_THUMBNAIL, websocket_camera_thumbnail, SCHEMA_WS_CAMERA_THUMBNAIL
+    websocket_api.async_register_command(
+        hass,
+        WS_TYPE_CAMERA_THUMBNAIL,
+        websocket_camera_thumbnail,
+        SCHEMA_WS_CAMERA_THUMBNAIL,
     )
-    hass.components.websocket_api.async_register_command(ws_camera_stream)
-    hass.components.websocket_api.async_register_command(ws_camera_web_rtc_offer)
-    hass.components.websocket_api.async_register_command(websocket_get_prefs)
-    hass.components.websocket_api.async_register_command(websocket_update_prefs)
+    websocket_api.async_register_command(hass, ws_camera_stream)
+    websocket_api.async_register_command(hass, ws_camera_web_rtc_offer)
+    websocket_api.async_register_command(hass, websocket_get_prefs)
+    websocket_api.async_register_command(hass, websocket_update_prefs)
 
     await component.async_setup(config)
 
@@ -548,7 +561,7 @@ class Camera(Entity):
         if not stream_source:
             return None
         for provider in _async_get_rtsp_to_web_rtc_providers(self.hass):
-            answer_sdp = await provider(stream_source, offer_sdp)
+            answer_sdp = await provider(stream_source, offer_sdp, self.entity_id)
             if answer_sdp:
                 return answer_sdp
         raise HomeAssistantError("WebRTC offer was not accepted by any providers")
@@ -775,7 +788,11 @@ class CameraMjpegStream(CameraView):
     async def handle(self, request: web.Request, camera: Camera) -> web.StreamResponse:
         """Serve camera stream, possibly with interval."""
         if (interval_str := request.query.get("interval")) is None:
-            stream = await camera.handle_async_mjpeg_stream(request)
+            try:
+                stream = await camera.handle_async_mjpeg_stream(request)
+            except ConnectionResetError:
+                stream = None
+                _LOGGER.debug("Error while writing MJPEG stream to transport")
             if stream is None:
                 raise web.HTTPBadGateway()
             return stream
@@ -860,7 +877,7 @@ async def ws_camera_web_rtc_offer(
     """Handle the signal path for a WebRTC stream.
 
     This signal path is used to route the offer created by the client to the
-    camera device through the integration for negitioation on initial setup,
+    camera device through the integration for negotiation on initial setup,
     which returns an answer. The actual streaming is handled entirely between
     the client and camera device.
 
@@ -942,10 +959,11 @@ async def async_handle_snapshot_service(
 
     image = await camera.async_camera_image()
 
-    def _write_image(to_file: str, image_data: bytes | None) -> None:
+    if image is None:
+        return
+
+    def _write_image(to_file: str, image_data: bytes) -> None:
         """Executor helper to write image."""
-        if image_data is None:
-            return
         os.makedirs(os.path.dirname(to_file), exist_ok=True)
         with open(to_file, "wb") as img_file:
             img_file.write(image_data)
@@ -960,56 +978,22 @@ async def async_handle_play_stream_service(
     camera: Camera, service_call: ServiceCall
 ) -> None:
     """Handle play stream services calls."""
+    hass = camera.hass
     fmt = service_call.data[ATTR_FORMAT]
     url = await _async_stream_endpoint_url(camera.hass, camera, fmt)
+    url = f"{get_url(hass)}{url}"
 
-    hass = camera.hass
-    data: Mapping[str, str] = {
-        ATTR_MEDIA_CONTENT_ID: f"{get_url(hass)}{url}",
-        ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[fmt],
-    }
-
-    # It is required to send a different payload for cast media players
-    entity_ids = service_call.data[ATTR_MEDIA_PLAYER]
-    sources = entity_sources(hass)
-    cast_entity_ids = [
-        entity
-        for entity in entity_ids
-        # All entities should be in sources. This extra guard is to
-        # avoid people writing to the state machine and breaking it.
-        if entity in sources and sources[entity]["domain"] == "cast"
-    ]
-    other_entity_ids = list(set(entity_ids) - set(cast_entity_ids))
-
-    if cast_entity_ids:
-        await hass.services.async_call(
-            DOMAIN_MP,
-            SERVICE_PLAY_MEDIA,
-            {
-                ATTR_ENTITY_ID: cast_entity_ids,
-                **data,
-                ATTR_MEDIA_EXTRA: {
-                    "stream_type": "LIVE",
-                    "media_info": {
-                        "hlsVideoSegmentFormat": "fmp4",
-                    },
-                },
-            },
-            blocking=True,
-            context=service_call.context,
-        )
-
-    if other_entity_ids:
-        await hass.services.async_call(
-            DOMAIN_MP,
-            SERVICE_PLAY_MEDIA,
-            {
-                ATTR_ENTITY_ID: other_entity_ids,
-                **data,
-            },
-            blocking=True,
-            context=service_call.context,
-        )
+    await hass.services.async_call(
+        DOMAIN_MP,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: service_call.data[ATTR_MEDIA_PLAYER],
+            ATTR_MEDIA_CONTENT_ID: url,
+            ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[fmt],
+        },
+        blocking=True,
+        context=service_call.context,
+    )
 
 
 async def _async_stream_endpoint_url(

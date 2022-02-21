@@ -210,6 +210,5 @@ async def test_hassio_discovery_server_failure(hass: HomeAssistant) -> None:
         side_effect=rtsp_to_webrtc.exceptions.ResponseError(),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result.get("type") == "form"
-        assert result.get("step_id") == "hassio_confirm"
-        assert result.get("errors") == {"base": "server_failure"}
+        assert result.get("type") == "abort"
+        assert result.get("reason") == "server_failure"

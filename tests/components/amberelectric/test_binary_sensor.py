@@ -1,7 +1,7 @@
 """Test the Amber Electric Sensors."""
 from __future__ import annotations
 
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 from unittest.mock import Mock, patch
 
 from amberelectric.model.channel import ChannelType

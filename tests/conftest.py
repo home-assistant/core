@@ -38,6 +38,7 @@ pytest.register_assert_rewrite("tests.common")
 from tests.common import (  # noqa: E402, isort:skip
     CLIENT_ID,
     INSTANCES,
+    MockConfigEntry,
     MockUser,
     async_fire_mqtt_message,
     async_test_home_assistant,
@@ -503,25 +504,18 @@ def hass_ws_client(aiohttp_client, hass_access_token, hass, socket_enabled):
     async def create_client(hass=hass, access_token=hass_access_token):
         """Create a websocket client."""
         assert await async_setup_component(hass, "websocket_api", {})
-
         client = await aiohttp_client(hass.http.app)
+        websocket = await client.ws_connect(URL)
+        auth_resp = await websocket.receive_json()
+        assert auth_resp["type"] == TYPE_AUTH_REQUIRED
 
-        with patch("homeassistant.components.http.auth.setup_auth"):
-            websocket = await client.ws_connect(URL)
-            auth_resp = await websocket.receive_json()
-            assert auth_resp["type"] == TYPE_AUTH_REQUIRED
+        if access_token is None:
+            await websocket.send_json({"type": TYPE_AUTH, "access_token": "incorrect"})
+        else:
+            await websocket.send_json({"type": TYPE_AUTH, "access_token": access_token})
 
-            if access_token is None:
-                await websocket.send_json(
-                    {"type": TYPE_AUTH, "access_token": "incorrect"}
-                )
-            else:
-                await websocket.send_json(
-                    {"type": TYPE_AUTH, "access_token": access_token}
-                )
-
-            auth_ok = await websocket.receive_json()
-            assert auth_ok["type"] == TYPE_AUTH_OK
+        auth_ok = await websocket.receive_json()
+        assert auth_ok["type"] == TYPE_AUTH_OK
 
         # wrap in client
         websocket.client = client
@@ -597,19 +591,25 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     if mqtt_config is None:
         mqtt_config = {mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}
 
-    result = await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: mqtt_config})
-    assert result
     await hass.async_block_till_done()
 
-    # Workaround: asynctest==0.13 fails on @functools.lru_cache
-    spec = dir(hass.data["mqtt"])
-    spec.remove("_matching_subscriptions")
+    entry = MockConfigEntry(
+        data=mqtt_config,
+        domain=mqtt.DOMAIN,
+        title="Tasmota",
+    )
+
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     mqtt_component_mock = MagicMock(
         return_value=hass.data["mqtt"],
-        spec_set=spec,
+        spec_set=hass.data["mqtt"],
         wraps=hass.data["mqtt"],
     )
+    mqtt_component_mock.conf = hass.data["mqtt"].conf  # For diagnostics
     mqtt_component_mock._mqttc = mqtt_client_mock
 
     hass.data["mqtt"] = mqtt_component_mock

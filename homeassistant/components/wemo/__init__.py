@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import datetime
 import logging
-from typing import Optional, Tuple
+from typing import Optional
 
 import pywemo
 import voluptuous as vol
@@ -43,7 +43,7 @@ WEMO_MODEL_DISPATCH = {
 
 _LOGGER = logging.getLogger(__name__)
 
-HostPortTuple = Tuple[str, Optional[int]]
+HostPortTuple = tuple[str, Optional[int]]
 
 
 def coerce_host_port(value: str) -> HostPortTuple:
@@ -125,7 +125,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_wemo)
     )
 
-    # Need to do this at least once in case statics are defined and discovery is disabled
+    # Need to do this at least once in case statistics are defined and discovery is disabled
     await wemo_discovery.discover_statics()
 
     if config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):

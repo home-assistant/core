@@ -1,11 +1,13 @@
 """Tests for handling accessories on a Hue bridge via HomeKit."""
 
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.const import PERCENTAGE
 
-from tests.common import assert_lists_same, async_get_device_automations
 from tests.components.homekit_controller.common import (
-    Helper,
+    HUB_TEST_ACCESSORY_ID,
+    DeviceTestInfo,
+    DeviceTriggerInfo,
+    EntityTestInfo,
+    assert_devices_and_entities_created,
     setup_accessories_from_file,
     setup_test_accessories,
 )
@@ -14,57 +16,45 @@ from tests.components.homekit_controller.common import (
 async def test_hue_bridge_setup(hass):
     """Test that a Hue hub can be correctly setup in HA via HomeKit."""
     accessories = await setup_accessories_from_file(hass, "hue_bridge.json")
-    config_entry, pairing = await setup_test_accessories(hass, accessories)
+    await setup_test_accessories(hass, accessories)
 
-    entity_registry = er.async_get(hass)
-
-    # Check that the battery is correctly found and set up
-    battery_id = "sensor.hue_dimmer_switch_battery"
-    battery = entity_registry.async_get(battery_id)
-    assert battery.unique_id == "homekit-6623462389072572-644245094400"
-
-    battery_helper = Helper(
-        hass, "sensor.hue_dimmer_switch_battery", pairing, accessories[0], config_entry
+    await assert_devices_and_entities_created(
+        hass,
+        DeviceTestInfo(
+            unique_id=HUB_TEST_ACCESSORY_ID,
+            name="Philips hue - 482544",
+            model="BSB002",
+            manufacturer="Philips Lighting",
+            sw_version="1.32.1932126170",
+            hw_version="",
+            serial_number="123456",
+            devices=[
+                DeviceTestInfo(
+                    name="Hue dimmer switch",
+                    model="RWL021",
+                    manufacturer="Philips",
+                    sw_version="45.1.17846",
+                    hw_version="",
+                    serial_number="6623462389072572",
+                    unique_id="00:00:00:00:00:00:aid:6623462389072572",
+                    devices=[],
+                    entities=[
+                        EntityTestInfo(
+                            entity_id="sensor.hue_dimmer_switch_battery",
+                            friendly_name="Hue dimmer switch Battery",
+                            unique_id="homekit-6623462389072572-644245094400",
+                            unit_of_measurement=PERCENTAGE,
+                            state="100",
+                        )
+                    ],
+                    stateless_triggers=[
+                        DeviceTriggerInfo(type="button1", subtype="single_press"),
+                        DeviceTriggerInfo(type="button2", subtype="single_press"),
+                        DeviceTriggerInfo(type="button3", subtype="single_press"),
+                        DeviceTriggerInfo(type="button4", subtype="single_press"),
+                    ],
+                ),
+            ],
+            entities=[],
+        ),
     )
-    battery_state = await battery_helper.poll_and_get_state()
-    assert battery_state.attributes["friendly_name"] == "Hue dimmer switch Battery"
-    assert battery_state.attributes["icon"] == "mdi:battery"
-    assert battery_state.state == "100"
-
-    device_registry = dr.async_get(hass)
-
-    device = device_registry.async_get(battery.device_id)
-    assert device.manufacturer == "Philips"
-    assert device.name == "Hue dimmer switch"
-    assert device.model == "RWL021"
-    assert device.sw_version == "45.1.17846"
-
-    # The fixture file has 1 dimmer, which is a remote with 4 buttons
-    # It (incorrectly) claims to support single, double and long press events
-    # It also has a battery
-
-    expected = [
-        {
-            "device_id": device.id,
-            "domain": "sensor",
-            "entity_id": "sensor.hue_dimmer_switch_battery",
-            "platform": "device",
-            "type": "battery_level",
-        }
-    ]
-
-    for button in ("button1", "button2", "button3", "button4"):
-        expected.append(
-            {
-                "device_id": device.id,
-                "domain": "homekit_controller",
-                "platform": "device",
-                "type": button,
-                "subtype": "single_press",
-            }
-        )
-
-    triggers = await async_get_device_automations(
-        hass, DeviceAutomationType.TRIGGER, device.id
-    )
-    assert_lists_same(triggers, expected)

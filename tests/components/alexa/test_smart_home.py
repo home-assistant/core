@@ -31,13 +31,13 @@ from homeassistant.helpers import entityfilter
 from homeassistant.setup import async_setup_component
 
 from . import (
-    DEFAULT_CONFIG,
     MockConfig,
     ReportedProperties,
     assert_power_controller_works,
     assert_request_calls_service,
     assert_request_fails,
     assert_scene_controller_works,
+    get_default_config,
     get_new_request,
     reported_properties,
 )
@@ -68,7 +68,7 @@ async def mock_stream(hass):
 
 
 def test_create_api_message_defaults(hass):
-    """Create a API message response of a request with defaults."""
+    """Create an API message response of a request with defaults."""
     request = get_new_request("Alexa.PowerController", "TurnOn", "switch#xy")
     directive_header = request["directive"]["header"]
     directive = messages.AlexaDirective(request)
@@ -93,7 +93,7 @@ def test_create_api_message_defaults(hass):
 
 
 def test_create_api_message_special():
-    """Create a API message response of a request with non defaults."""
+    """Create an API message response of a request with non defaults."""
     request = get_new_request("Alexa.PowerController", "TurnOn")
     directive_header = request["directive"]["header"]
     directive_header.pop("correlationToken")
@@ -121,7 +121,7 @@ async def test_wrong_version(hass):
     msg["directive"]["header"]["payloadVersion"] = "2"
 
     with pytest.raises(AssertionError):
-        await smart_home.async_handle_message(hass, DEFAULT_CONFIG, msg)
+        await smart_home.async_handle_message(hass, get_default_config(), msg)
 
 
 async def discovery_test(device, hass, expected_endpoints=1):
@@ -131,7 +131,7 @@ async def discovery_test(device, hass, expected_endpoints=1):
     # setup test devices
     hass.states.async_set(*device)
 
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(), request)
 
     assert "event" in msg
     msg = msg["event"]
@@ -2308,7 +2308,7 @@ async def test_api_entity_not_exists(hass):
 
     call_switch = async_mock_service(hass, "switch", "turn_on")
 
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(), request)
     await hass.async_block_till_done()
 
     assert "event" in msg
@@ -2323,7 +2323,7 @@ async def test_api_entity_not_exists(hass):
 async def test_api_function_not_implemented(hass):
     """Test api call that is not implemented to us."""
     request = get_new_request("Alexa.HAHAAH", "Sweet")
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(), request)
 
     assert "event" in msg
     msg = msg["event"]
@@ -2347,7 +2347,7 @@ async def test_api_accept_grant(hass):
     }
 
     # setup test devices
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(), request)
     await hass.async_block_till_done()
 
     assert "event" in msg
@@ -2400,7 +2400,7 @@ async def test_logging_request(hass, events):
     """Test that we log requests."""
     context = Context()
     request = get_new_request("Alexa.Discovery", "Discover")
-    await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
+    await smart_home.async_handle_message(hass, get_default_config(), request, context)
 
     # To trigger event listener
     await hass.async_block_till_done()
@@ -2420,7 +2420,7 @@ async def test_logging_request_with_entity(hass, events):
     """Test that we log requests."""
     context = Context()
     request = get_new_request("Alexa.PowerController", "TurnOn", "switch#xy")
-    await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
+    await smart_home.async_handle_message(hass, get_default_config(), request, context)
 
     # To trigger event listener
     await hass.async_block_till_done()
@@ -2446,7 +2446,7 @@ async def test_disabled(hass):
     call_switch = async_mock_service(hass, "switch", "turn_on")
 
     msg = await smart_home.async_handle_message(
-        hass, DEFAULT_CONFIG, request, enabled=False
+        hass, get_default_config(), request, enabled=False
     )
     await hass.async_block_till_done()
 
@@ -2629,7 +2629,9 @@ async def test_range_unsupported_domain(hass):
     request["directive"]["payload"] = {"rangeValue": 1}
     request["directive"]["header"]["instance"] = "switch.speed"
 
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
+    msg = await smart_home.async_handle_message(
+        hass, get_default_config(), request, context
+    )
 
     assert "event" in msg
     msg = msg["event"]
@@ -2648,7 +2650,9 @@ async def test_mode_unsupported_domain(hass):
     request["directive"]["payload"] = {"mode": "testMode"}
     request["directive"]["header"]["instance"] = "switch.direction"
 
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
+    msg = await smart_home.async_handle_message(
+        hass, get_default_config(), request, context
+    )
 
     assert "event" in msg
     msg = msg["event"]
@@ -3388,7 +3392,9 @@ async def test_media_player_eq_bands_not_supported(hass):
         "Alexa.EqualizerController", "SetBands", "media_player#test_bands"
     )
     request["directive"]["payload"] = {"bands": [{"name": "BASS", "value": -2}]}
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
+    msg = await smart_home.async_handle_message(
+        hass, get_default_config(), request, context
+    )
 
     assert "event" in msg
     msg = msg["event"]
@@ -3403,7 +3409,9 @@ async def test_media_player_eq_bands_not_supported(hass):
     request["directive"]["payload"] = {
         "bands": [{"name": "BASS", "levelDelta": 3, "levelDirection": "UP"}]
     }
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
+    msg = await smart_home.async_handle_message(
+        hass, get_default_config(), request, context
+    )
 
     assert "event" in msg
     msg = msg["event"]
@@ -3418,7 +3426,9 @@ async def test_media_player_eq_bands_not_supported(hass):
     request["directive"]["payload"] = {
         "bands": [{"name": "BASS", "levelDelta": 3, "levelDirection": "UP"}]
     }
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
+    msg = await smart_home.async_handle_message(
+        hass, get_default_config(), request, context
+    )
 
     assert "event" in msg
     msg = msg["event"]
@@ -3918,7 +3928,7 @@ async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
         return_value="rtsp://example.local",
     ):
-        msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request)
+        msg = await smart_home.async_handle_message(hass, get_default_config(), request)
         await hass.async_block_till_done()
 
     assert "event" in msg
@@ -3965,3 +3975,14 @@ async def test_button(hass, domain):
     await assert_scene_controller_works(
         f"{domain}#ring_doorbell", f"{domain}.press", False, hass
     )
+
+
+async def test_api_message_sets_authorized(hass):
+    """Test an incoming API messages sets the authorized flag."""
+    msg = get_new_request("Alexa.PowerController", "TurnOn", "switch#xy")
+    async_mock_service(hass, "switch", "turn_on")
+
+    config = get_default_config()
+    config._store.set_authorized.assert_not_called()
+    await smart_home.async_handle_message(hass, config, msg)
+    config._store.set_authorized.assert_called_once_with(True)

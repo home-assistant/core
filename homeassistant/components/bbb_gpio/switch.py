@@ -4,11 +4,10 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.components import bbb_gpio
-from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -44,7 +43,7 @@ def setup_platform(
     add_entities(switches)
 
 
-class BBBGPIOSwitch(ToggleEntity):
+class BBBGPIOSwitch(SwitchEntity):
     """Representation of a BeagleBone Black GPIO."""
 
     _attr_should_poll = False

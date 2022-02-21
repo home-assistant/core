@@ -18,12 +18,13 @@ PREF_ALIASES = "aliases"
 PREF_SHOULD_EXPOSE = "should_expose"
 PREF_GOOGLE_LOCAL_WEBHOOK_ID = "google_local_webhook_id"
 PREF_USERNAME = "username"
+PREF_REMOTE_DOMAIN = "remote_domain"
 PREF_ALEXA_DEFAULT_EXPOSE = "alexa_default_expose"
 PREF_GOOGLE_DEFAULT_EXPOSE = "google_default_expose"
 PREF_TTS_DEFAULT_VOICE = "tts_default_voice"
 DEFAULT_TTS_DEFAULT_VOICE = ("en-US", "female")
 DEFAULT_DISABLE_2FA = False
-DEFAULT_ALEXA_REPORT_STATE = False
+DEFAULT_ALEXA_REPORT_STATE = True
 DEFAULT_GOOGLE_REPORT_STATE = True
 DEFAULT_EXPOSED_DOMAINS = [
     "climate",
@@ -61,7 +62,3 @@ MODE_DEV = "development"
 MODE_PROD = "production"
 
 DISPATCHER_REMOTE_UPDATE = "cloud_remote_update"
-
-
-class RequireRelink(Exception):
-    """The skill needs to be relinked."""

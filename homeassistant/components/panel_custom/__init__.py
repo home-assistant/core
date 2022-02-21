@@ -3,6 +3,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components import frontend
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -116,7 +117,8 @@ async def async_register_panel(
 
     config["_panel_custom"] = custom_panel_config
 
-    hass.components.frontend.async_register_built_in_panel(
+    frontend.async_register_built_in_panel(
+        hass,
         component_name="custom",
         sidebar_title=sidebar_title,
         sidebar_icon=sidebar_icon,

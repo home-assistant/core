@@ -6,5 +6,6 @@
   "requirements": ["ambiclimate==0.2.1"],
   "dependencies": ["http"],
   "codeowners": ["@danielhiversen"],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["ambiclimate"]
 }

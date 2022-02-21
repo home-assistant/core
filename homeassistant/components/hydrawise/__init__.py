@@ -6,6 +6,7 @@ from hydrawiser.core import Hydrawiser
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_ACCESS_TOKEN, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -57,7 +58,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.data[DATA_HYDRAWISE] = HydrawiseHub(hydrawise)
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Hydrawise cloud service: %s", str(ex))
-        hass.components.persistent_notification.create(
+        persistent_notification.create(
+            hass,
             f"Error: {ex}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,

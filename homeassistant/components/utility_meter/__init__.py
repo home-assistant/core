@@ -7,11 +7,13 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_TARIFF,
@@ -101,13 +103,13 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an Utility Meter."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     hass.data[DATA_UTILITY] = {}
     register_services = False
 
-    for meter, conf in config.get(DOMAIN).items():
+    for meter, conf in config[DOMAIN].items():
         _LOGGER.debug("Setup %s.%s", DOMAIN, meter)
 
         hass.data[DATA_UTILITY][meter] = conf
@@ -115,12 +117,13 @@ async def async_setup(hass, config):
 
         if not conf[CONF_TARIFFS]:
             # only one entity is required
+            name = conf.get(CONF_NAME, meter)
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass,
                     SENSOR_DOMAIN,
                     DOMAIN,
-                    [{CONF_METER: meter, CONF_NAME: conf.get(CONF_NAME, meter)}],
+                    {name: {CONF_METER: meter, CONF_NAME: name}},
                     config,
                 )
             )
@@ -134,15 +137,15 @@ async def async_setup(hass, config):
             )
 
             # add one meter for each tariff
-            tariff_confs = []
+            tariff_confs = {}
             for tariff in conf[CONF_TARIFFS]:
-                tariff_confs.append(
-                    {
-                        CONF_METER: meter,
-                        CONF_NAME: f"{meter} {tariff}",
-                        CONF_TARIFF: tariff,
-                    }
-                )
+                name = f"{meter} {tariff}"
+                tariff_confs[name] = {
+                    CONF_METER: meter,
+                    CONF_NAME: name,
+                    CONF_TARIFF: tariff,
+                }
+
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass, SENSOR_DOMAIN, DOMAIN, tariff_confs, config
@@ -179,8 +182,6 @@ class TariffSelect(RestoreEntity):
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
         await super().async_added_to_hass()
-        if self._current_tariff is not None:
-            return
 
         state = await self.async_get_last_state()
         if not state or state.state not in self._tariffs:

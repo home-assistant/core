@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
-import discord
+import nextcord
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -77,27 +77,29 @@ class DiscordFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
+        _LOGGER.warning(
+            "Discord yaml config with partial key %s has been imported. Please remove it",
+            import_config[CONF_TOKEN][0:4],
+        )
         for entry in self._async_current_entries():
             if entry.data[CONF_TOKEN] == import_config[CONF_TOKEN]:
-                _part = import_config[CONF_TOKEN][0:4]
-                _msg = f"Discord yaml config with partial key {_part} has been imported. Please remove it"
-                _LOGGER.warning(_msg)
                 return self.async_abort(reason="already_configured")
+        import_config[CONF_TOKEN] = import_config.pop(CONF_TOKEN)
         return await self.async_step_user(import_config)
 
 
-async def _async_try_connect(token: str) -> tuple[str | None, Any]:
+async def _async_try_connect(token: str) -> tuple[str | None, str | None]:
     """Try connecting to Discord."""
-    discord_bot = discord.Client()
+    discord_bot = nextcord.Client()
     try:
         await discord_bot.login(token)
         info = await discord_bot.application_info()
-    except discord.LoginFailure:
+    except nextcord.LoginFailure:
         return "invalid_auth", None
-    except (ClientConnectorError, discord.HTTPException, discord.NotFound):
+    except (ClientConnectorError, nextcord.HTTPException, nextcord.NotFound):
         return "cannot_connect", None
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Unexpected exception")
         return "unknown", None
     await discord_bot.close()
-    return None, info.id
+    return None, str(info.id)

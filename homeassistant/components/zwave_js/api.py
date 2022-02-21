@@ -4,12 +4,10 @@ from __future__ import annotations
 from collections.abc import Callable
 import dataclasses
 from functools import partial, wraps
-import json
 from typing import Any
 
-from aiohttp import hdrs, web, web_exceptions, web_request
+from aiohttp import web, web_exceptions, web_request
 import voluptuous as vol
-from zwave_js_server import dump
 from zwave_js_server.client import Client
 from zwave_js_server.const import (
     CommandClass,
@@ -135,6 +133,7 @@ APPLICATION_VERSION = "application_version"
 MAX_INCLUSION_REQUEST_INTERVAL = "max_inclusion_request_interval"
 UUID = "uuid"
 SUPPORTED_PROTOCOLS = "supported_protocols"
+ADDITIONAL_PROPERTIES = "additional_properties"
 
 FEATURE = "feature"
 UNPROVISION = "unprovision"
@@ -172,6 +171,7 @@ def convert_qr_provisioning_information(info: dict) -> QRProvisioningInformation
         max_inclusion_request_interval=info.get(MAX_INCLUSION_REQUEST_INTERVAL),
         uuid=info.get(UUID),
         supported_protocols=protocols if protocols else None,
+        additional_properties=info.get(ADDITIONAL_PROPERTIES, {}),
     )
     return info
 
@@ -214,6 +214,7 @@ QR_PROVISIONING_INFORMATION_SCHEMA = vol.All(
                 cv.ensure_list,
                 [vol.Coerce(Protocols)],
             ),
+            vol.Optional(ADDITIONAL_PROPERTIES): dict,
         }
     ),
     convert_qr_provisioning_information,
@@ -303,7 +304,6 @@ def async_register_api(hass: HomeAssistant) -> None:
     """Register all of our api endpoints."""
     websocket_api.async_register_command(hass, websocket_network_status)
     websocket_api.async_register_command(hass, websocket_node_status)
-    websocket_api.async_register_command(hass, websocket_node_state)
     websocket_api.async_register_command(hass, websocket_node_metadata)
     websocket_api.async_register_command(hass, websocket_ping_node)
     websocket_api.async_register_command(hass, websocket_add_node)
@@ -337,7 +337,6 @@ def async_register_api(hass: HomeAssistant) -> None:
         hass, websocket_update_data_collection_preference
     )
     websocket_api.async_register_command(hass, websocket_data_collection_status)
-    websocket_api.async_register_command(hass, websocket_version_info)
     websocket_api.async_register_command(hass, websocket_abort_firmware_update)
     websocket_api.async_register_command(
         hass, websocket_subscribe_firmware_update_status
@@ -350,7 +349,6 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_subscribe_node_statistics)
     websocket_api.async_register_command(hass, websocket_node_ready)
     websocket_api.async_register_command(hass, websocket_migrate_zwave)
-    hass.http.register_view(DumpView())
     hass.http.register_view(FirmwareUploadView())
 
 
@@ -369,6 +367,7 @@ async def websocket_network_status(
 ) -> None:
     """Get the status of the Z-Wave JS network."""
     controller = client.driver.controller
+    await controller.async_get_state()
     data = {
         "client": {
             "ws_server_url": client.ws_server_url,
@@ -395,6 +394,7 @@ async def websocket_network_status(
             "suc_node_id": controller.suc_node_id,
             "supports_timers": controller.supports_timers,
             "is_heal_network_active": controller.is_heal_network_active,
+            "inclusion_state": controller.inclusion_state,
             "nodes": list(client.driver.controller.nodes),
         },
     }
@@ -464,33 +464,11 @@ async def websocket_node_status(
         "ready": node.ready,
         "zwave_plus_version": node.zwave_plus_version,
         "highest_security_class": node.highest_security_class,
+        "is_controller_node": node.is_controller_node,
     }
     connection.send_result(
         msg[ID],
         data,
-    )
-
-
-@websocket_api.require_admin
-@websocket_api.websocket_command(
-    {
-        vol.Required(TYPE): "zwave_js/node_state",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(NODE_ID): int,
-    }
-)
-@websocket_api.async_response
-@async_get_node
-async def websocket_node_state(
-    hass: HomeAssistant,
-    connection: ActiveConnection,
-    msg: dict,
-    node: Node,
-) -> None:
-    """Get the state data of a Z-Wave JS node."""
-    connection.send_result(
-        msg[ID],
-        {**node.data, "values": [value.data for value in node.values.values()]},
     )
 
 
@@ -1777,64 +1755,6 @@ async def websocket_data_collection_status(
         ENABLED: await client.driver.async_is_statistics_enabled(),
     }
     connection.send_result(msg[ID], result)
-
-
-class DumpView(HomeAssistantView):
-    """View to dump the state of the Z-Wave JS server."""
-
-    url = "/api/zwave_js/dump/{config_entry_id}"
-    name = "api:zwave_js:dump"
-
-    async def get(self, request: web.Request, config_entry_id: str) -> web.Response:
-        """Dump the state of Z-Wave."""
-        # pylint: disable=no-self-use
-        if not request["hass_user"].is_admin:
-            raise Unauthorized()
-        hass = request.app["hass"]
-
-        if config_entry_id not in hass.data[DOMAIN]:
-            raise web_exceptions.HTTPBadRequest
-
-        entry = hass.config_entries.async_get_entry(config_entry_id)
-
-        msgs = await dump.dump_msgs(entry.data[CONF_URL], async_get_clientsession(hass))
-
-        return web.Response(
-            body=json.dumps(msgs, indent=2) + "\n",
-            headers={
-                hdrs.CONTENT_TYPE: "application/json",
-                hdrs.CONTENT_DISPOSITION: 'attachment; filename="zwave_js_dump.json"',
-            },
-        )
-
-
-@websocket_api.require_admin
-@websocket_api.websocket_command(
-    {
-        vol.Required(TYPE): "zwave_js/version_info",
-        vol.Required(ENTRY_ID): str,
-    },
-)
-@websocket_api.async_response
-@async_get_entry
-async def websocket_version_info(
-    hass: HomeAssistant,
-    connection: ActiveConnection,
-    msg: dict,
-    entry: ConfigEntry,
-    client: Client,
-) -> None:
-    """Get version info from the Z-Wave JS server."""
-    version_info = {
-        "driver_version": client.version.driver_version,
-        "server_version": client.version.server_version,
-        "min_schema_version": client.version.min_schema_version,
-        "max_schema_version": client.version.max_schema_version,
-    }
-    connection.send_result(
-        msg[ID],
-        version_info,
-    )
 
 
 @websocket_api.require_admin

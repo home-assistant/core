@@ -10,6 +10,7 @@ from decora_wifi.models.residence import Residence
 from decora_wifi.models.residential_account import ResidentialAccount
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
@@ -54,8 +55,8 @@ def setup_platform(
         if success is None:
             msg = "Failed to log into myLeviton Services. Check credentials."
             _LOGGER.error(msg)
-            hass.components.persistent_notification.create(
-                msg, title=NOTIFICATION_TITLE, notification_id=NOTIFICATION_ID
+            persistent_notification.create(
+                hass, msg, title=NOTIFICATION_TITLE, notification_id=NOTIFICATION_ID
             )
             return
 
@@ -95,6 +96,7 @@ class DecoraWifiLight(LightEntity):
     def __init__(self, switch):
         """Initialize the switch."""
         self._switch = switch
+        self._attr_unique_id = switch.serial
 
     @property
     def supported_features(self):

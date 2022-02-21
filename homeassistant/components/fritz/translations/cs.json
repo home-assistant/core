@@ -31,6 +31,11 @@
                     "port": "Port",
                     "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
                 }
+            },
+            "user": {
+                "data": {
+                    "port": "Port"
+                }
             }
         }
     }

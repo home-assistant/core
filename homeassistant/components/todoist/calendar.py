@@ -19,7 +19,9 @@ from homeassistant.util import dt
 from .const import (
     ALL_DAY,
     ALL_TASKS,
+    ASSIGNEE,
     CHECKED,
+    COLLABORATORS,
     COMPLETED,
     CONF_EXTRA_PROJECTS,
     CONF_PROJECT_DUE_DATE,
@@ -36,6 +38,7 @@ from .const import (
     DUE_DATE_VALID_LANGS,
     DUE_TODAY,
     END,
+    FULL_NAME,
     ID,
     LABELS,
     NAME,
@@ -60,6 +63,7 @@ NEW_TASK_SERVICE_SCHEMA = vol.Schema(
         vol.Required(CONTENT): cv.string,
         vol.Optional(PROJECT_NAME, default="inbox"): vol.All(cv.string, vol.Lower),
         vol.Optional(LABELS): cv.ensure_list_csv,
+        vol.Optional(ASSIGNEE): cv.string,
         vol.Optional(PRIORITY): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
         vol.Exclusive(DUE_DATE_STRING, "due_date"): cv.string,
         vol.Optional(DUE_DATE_LANG): vol.All(cv.string, vol.In(DUE_DATE_VALID_LANGS)),
@@ -112,6 +116,7 @@ def setup_platform(
     # Look up IDs based on (lowercase) names.
     project_id_lookup = {}
     label_id_lookup = {}
+    collaborator_id_lookup = {}
 
     api = TodoistAPI(token)
     api.sync()
@@ -120,6 +125,7 @@ def setup_platform(
     # Grab all projects.
     projects = api.state[PROJECTS]
 
+    collaborators = api.state[COLLABORATORS]
     # Grab all labels
     labels = api.state[LABELS]
 
@@ -136,6 +142,9 @@ def setup_platform(
     # Cache all label names
     for label in labels:
         label_id_lookup[label[NAME].lower()] = label[ID]
+
+    for collaborator in collaborators:
+        collaborator_id_lookup[collaborator[FULL_NAME].lower()] = collaborator[ID]
 
     # Check config for more projects.
     extra_projects = config[CONF_EXTRA_PROJECTS]
@@ -181,6 +190,15 @@ def setup_platform(
             task_labels = call.data[LABELS]
             label_ids = [label_id_lookup[label.lower()] for label in task_labels]
             item.update(labels=label_ids)
+
+        if ASSIGNEE in call.data:
+            task_assignee = call.data[ASSIGNEE].lower()
+            if task_assignee in collaborator_id_lookup:
+                item.update(responsible_uid=collaborator_id_lookup[task_assignee])
+            else:
+                raise ValueError(
+                    f"User is not part of the shared project. user: {task_assignee}"
+                )
 
         if PRIORITY in call.data:
             item.update(priority=call.data[PRIORITY])

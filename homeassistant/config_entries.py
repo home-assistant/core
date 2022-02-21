@@ -2,22 +2,25 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable, Mapping
+from collections import ChainMap
+from collections.abc import Awaitable, Callable, Iterable, Mapping
 from contextvars import ContextVar
 import dataclasses
 from enum import Enum
 import functools
 import logging
 from types import MappingProxyType, MethodType
-from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast
 import weakref
 
 from . import data_entry_flow, loader
 from .backports.enum import StrEnum
+from .components import persistent_notification
 from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
 from .core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from .exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, HomeAssistantError
 from .helpers import device_registry, entity_registry
+from .helpers.event import async_call_later
 from .helpers.frame import report
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
 from .setup import async_process_deps_reqs, async_setup_component
@@ -34,6 +37,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+SOURCE_DHCP = "dhcp"
 SOURCE_DISCOVERY = "discovery"
 SOURCE_HASSIO = "hassio"
 SOURCE_HOMEKIT = "homekit"
@@ -44,7 +48,6 @@ SOURCE_SSDP = "ssdp"
 SOURCE_USB = "usb"
 SOURCE_USER = "user"
 SOURCE_ZEROCONF = "zeroconf"
-SOURCE_DHCP = "dhcp"
 
 # If a user wants to hide a discovery from the UI they can "Ignore" it. The config_entries/ignore_flow
 # websocket command creates a config entry with this source and while it exists normal discoveries
@@ -106,16 +109,16 @@ class ConfigEntryState(Enum):
 DEFAULT_DISCOVERY_UNIQUE_ID = "default_discovery_unique_id"
 DISCOVERY_NOTIFICATION_ID = "config_entry_discovery"
 DISCOVERY_SOURCES = (
-    SOURCE_SSDP,
-    SOURCE_USB,
-    SOURCE_DHCP,
-    SOURCE_HOMEKIT,
-    SOURCE_ZEROCONF,
-    SOURCE_HOMEKIT,
     SOURCE_DHCP,
     SOURCE_DISCOVERY,
+    SOURCE_HOMEKIT,
     SOURCE_IMPORT,
+    SOURCE_INTEGRATION_DISCOVERY,
+    SOURCE_MQTT,
+    SOURCE_SSDP,
     SOURCE_UNIGNORE,
+    SOURCE_USB,
+    SOURCE_ZEROCONF,
 )
 
 RECONFIGURE_NOTIFICATION_ID = "config_entry_reconfigure"
@@ -157,7 +160,7 @@ class OperationNotAllowed(ConfigError):
     """Raised when a config entry operation is not allowed."""
 
 
-UpdateListenerType = Callable[[HomeAssistant, "ConfigEntry"], Any]
+UpdateListenerType = Callable[[HomeAssistant, "ConfigEntry"], Awaitable[None]]
 
 
 class ConfigEntry:
@@ -172,6 +175,7 @@ class ConfigEntry:
         "options",
         "unique_id",
         "supports_unload",
+        "supports_remove_device",
         "pref_disable_new_entities",
         "pref_disable_polling",
         "source",
@@ -254,6 +258,9 @@ class ConfigEntry:
         # Supports unload
         self.supports_unload = False
 
+        # Supports remove device
+        self.supports_remove_device = False
+
         # Listeners to call on update
         self.update_listeners: list[
             weakref.ReferenceType[UpdateListenerType] | weakref.WeakMethod
@@ -284,6 +291,9 @@ class ConfigEntry:
             integration = await loader.async_get_integration(hass, self.domain)
 
         self.supports_unload = await support_entry_unload(hass, self.domain)
+        self.supports_remove_device = await support_remove_from_device(
+            hass, self.domain
+        )
 
         try:
             component = integration.get_component()
@@ -374,8 +384,8 @@ class ConfigEntry:
                 await self.async_setup(hass, integration=integration, tries=tries)
 
             if hass.state == CoreState.running:
-                self._async_cancel_retry_setup = hass.helpers.event.async_call_later(
-                    wait_time, setup_again
+                self._async_cancel_retry_setup = async_call_later(
+                    hass, wait_time, setup_again
                 )
             else:
                 self._async_cancel_retry_setup = hass.bus.async_listen_once(
@@ -606,6 +616,7 @@ class ConfigEntry:
         flow_context = {
             "source": SOURCE_REAUTH,
             "entry_id": self.entry_id,
+            "title_placeholders": {"name": self.title},
             "unique_id": self.unique_id,
         }
 
@@ -657,9 +668,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
         # Remove notification if no other discovery config entries in progress
         if not self._async_has_other_discovery_flows(flow.flow_id):
-            self.hass.components.persistent_notification.async_dismiss(
-                DISCOVERY_NOTIFICATION_ID
-            )
+            persistent_notification.async_dismiss(self.hass, DISCOVERY_NOTIFICATION_ID)
 
         if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
             return result
@@ -757,7 +766,8 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         # Create notification.
         if source in DISCOVERY_SOURCES:
             self.hass.bus.async_fire(EVENT_FLOW_DISCOVERED)
-            self.hass.components.persistent_notification.async_create(
+            persistent_notification.async_create(
+                self.hass,
                 title="New devices discovered",
                 message=(
                     "We have discovered new devices on your network. "
@@ -766,7 +776,8 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
                 notification_id=DISCOVERY_NOTIFICATION_ID,
             )
         elif source == SOURCE_REAUTH:
-            self.hass.components.persistent_notification.async_create(
+            persistent_notification.async_create(
+                self.hass,
                 title="Integration requires reconfiguration",
                 message=(
                     "At least one of your integrations requires reconfiguration to "
@@ -1052,7 +1063,7 @@ class ConfigEntries:
         *,
         unique_id: str | None | UndefinedType = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
-        data: dict | UndefinedType = UNDEFINED,
+        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
         pref_disable_polling: bool | UndefinedType = UNDEFINED,
@@ -1079,7 +1090,7 @@ class ConfigEntries:
             setattr(entry, attr, value)
             changed = True
 
-        if data is not UNDEFINED and entry.data != data:  # type: ignore
+        if data is not UNDEFINED and entry.data != data:
             changed = True
             entry.data = MappingProxyType(data)
 
@@ -1208,7 +1219,10 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         if match_dict is None:
             match_dict = {}  # Match any entry
         for entry in self._async_current_entries(include_ignore=False):
-            if all(item in entry.data.items() for item in match_dict.items()):
+            if all(
+                item in ChainMap(entry.options, entry.data).items()  # type: ignore[arg-type]
+                for item in match_dict.items()
+            ):
                 raise data_entry_flow.AbortFlow("already_configured")
 
     @callback
@@ -1382,19 +1396,31 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             )
             if ent["flow_id"] != self.flow_id
         ):
-            self.hass.components.persistent_notification.async_dismiss(
-                RECONFIGURE_NOTIFICATION_ID
+            persistent_notification.async_dismiss(
+                self.hass, RECONFIGURE_NOTIFICATION_ID
             )
 
         return super().async_abort(
             reason=reason, description_placeholders=description_placeholders
         )
 
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> data_entry_flow.FlowResult:
+        """Handle a flow initialized by DHCP discovery."""
+        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
+
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by HASS IO discovery."""
         return await self.async_step_discovery(discovery_info.config)
+
+    async def async_step_integration_discovery(
+        self, discovery_info: DiscoveryInfoType
+    ) -> data_entry_flow.FlowResult:
+        """Handle a flow initialized by integration specific discovery."""
+        return await self.async_step_discovery(discovery_info)
 
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
@@ -1414,22 +1440,16 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         """Handle a flow initialized by SSDP discovery."""
         return await self.async_step_discovery(dataclasses.asdict(discovery_info))
 
-    async def async_step_zeroconf(
-        self, discovery_info: ZeroconfServiceInfo
-    ) -> data_entry_flow.FlowResult:
-        """Handle a flow initialized by Zeroconf discovery."""
-        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
-
-    async def async_step_dhcp(
-        self, discovery_info: DhcpServiceInfo
-    ) -> data_entry_flow.FlowResult:
-        """Handle a flow initialized by DHCP discovery."""
-        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
-
     async def async_step_usb(
         self, discovery_info: UsbServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by USB discovery."""
+        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> data_entry_flow.FlowResult:
+        """Handle a flow initialized by Zeroconf discovery."""
         return await self.async_step_discovery(dataclasses.asdict(discovery_info))
 
     @callback
@@ -1560,8 +1580,8 @@ class EntityRegistryDisabledHandler:
         if self._remove_call_later:
             self._remove_call_later()
 
-        self._remove_call_later = self.hass.helpers.event.async_call_later(
-            RELOAD_AFTER_UPDATE_DELAY, self._handle_reload
+        self._remove_call_later = async_call_later(
+            self.hass, RELOAD_AFTER_UPDATE_DELAY, self._handle_reload
         )
 
     async def _handle_reload(self, _now: Any) -> None:
@@ -1602,3 +1622,10 @@ async def support_entry_unload(hass: HomeAssistant, domain: str) -> bool:
     integration = await loader.async_get_integration(hass, domain)
     component = integration.get_component()
     return hasattr(component, "async_unload_entry")
+
+
+async def support_remove_from_device(hass: HomeAssistant, domain: str) -> bool:
+    """Test if a domain supports being removed from a device."""
+    integration = await loader.async_get_integration(hass, domain)
+    component = integration.get_component()
+    return hasattr(component, "async_remove_config_entry_device")

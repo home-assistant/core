@@ -260,8 +260,8 @@ CORE_CONFIG_SCHEMA = vol.All(
 
 def get_default_config_dir() -> str:
     """Put together the default configuration directory based on the OS."""
-    data_dir = os.getenv("APPDATA") if os.name == "nt" else os.path.expanduser("~")
-    return os.path.join(data_dir, CONFIG_DIR_NAME)  # type: ignore
+    data_dir = os.path.expanduser("~")
+    return os.path.join(data_dir, CONFIG_DIR_NAME)
 
 
 async def async_ensure_config_exists(hass: HomeAssistant) -> bool:
@@ -816,7 +816,7 @@ async def async_process_component_config(  # noqa: C901
         config_validator, "async_validate_config"
     ):
         try:
-            return await config_validator.async_validate_config(  # type: ignore
+            return await config_validator.async_validate_config(  # type: ignore[no-any-return]
                 hass, config
             )
         except (vol.Invalid, HomeAssistantError) as ex:
@@ -829,7 +829,7 @@ async def async_process_component_config(  # noqa: C901
     # No custom config validator, proceed with schema validation
     if hasattr(component, "CONFIG_SCHEMA"):
         try:
-            return component.CONFIG_SCHEMA(config)  # type: ignore
+            return component.CONFIG_SCHEMA(config)  # type: ignore[no-any-return]
         except vol.Invalid as ex:
             async_log_exception(ex, domain, config, hass, integration.documentation)
             return None

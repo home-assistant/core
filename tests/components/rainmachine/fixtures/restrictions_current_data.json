@@ -1,0 +1,10 @@
+{
+  "hourly": false,
+  "freeze": false,
+  "month": false,
+  "weekDay": false,
+  "rainDelay": false,
+  "rainDelayCounter": -1,
+  "rainSensor": false
+}
+

@@ -14,13 +14,14 @@ TEST_MODEL = "twinkly_test_device_model"
 
 
 class ClientMock:
-    """A mock of the twinkly_client.TwinklyClient."""
+    """A mock of the ttls.client.Twinkly."""
 
     def __init__(self) -> None:
         """Create a mocked client."""
         self.is_offline = False
-        self.is_on = True
-        self.brightness = 10
+        self.state = True
+        self.brightness = {"mode": "enabled", "value": 10}
+        self.color = None
 
         self.id = str(uuid4())
         self.device_info = {
@@ -34,23 +35,29 @@ class ClientMock:
         """Get the mocked host."""
         return TEST_HOST
 
-    async def get_device_info(self):
+    async def get_details(self):
         """Get the mocked device info."""
         if self.is_offline:
             raise ClientConnectionError()
         return self.device_info
 
-    async def get_is_on(self) -> bool:
+    async def is_on(self) -> bool:
         """Get the mocked on/off state."""
         if self.is_offline:
             raise ClientConnectionError()
-        return self.is_on
+        return self.state
 
-    async def set_is_on(self, is_on: bool) -> None:
-        """Set the mocked on/off state."""
+    async def turn_on(self) -> None:
+        """Set the mocked on state."""
         if self.is_offline:
             raise ClientConnectionError()
-        self.is_on = is_on
+        self.state = True
+
+    async def turn_off(self) -> None:
+        """Set the mocked off state."""
+        if self.is_offline:
+            raise ClientConnectionError()
+        self.state = False
 
     async def get_brightness(self) -> int:
         """Get the mocked brightness."""
@@ -62,8 +69,15 @@ class ClientMock:
         """Set the mocked brightness."""
         if self.is_offline:
             raise ClientConnectionError()
-        self.brightness = brightness
+        self.brightness = {"mode": "enabled", "value": brightness}
 
     def change_name(self, new_name: str) -> None:
         """Change the name of this virtual device."""
         self.device_info[DEV_NAME] = new_name
+
+    async def set_static_colour(self, colour) -> None:
+        """Set static color."""
+        self.color = colour
+
+    async def interview(self) -> None:
+        """Interview."""

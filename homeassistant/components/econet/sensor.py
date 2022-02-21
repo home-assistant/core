@@ -13,9 +13,9 @@ from .const import DOMAIN, EQUIPMENT
 ENERGY_KILO_BRITISH_THERMAL_UNIT = "kBtu"
 
 TANK_HEALTH = "tank_health"
-AVAILIBLE_HOT_WATER = "availible_hot_water"
+AVAILABLE_HOT_WATER = "available_hot_water"
 COMPRESSOR_HEALTH = "compressor_health"
-OVERRIDE_STATUS = "oveerride_status"
+OVERRIDE_STATUS = "override_status"
 WATER_USAGE_TODAY = "water_usage_today"
 POWER_USAGE_TODAY = "power_usage_today"
 ALERT_COUNT = "alert_count"
@@ -24,7 +24,7 @@ RUNNING_STATE = "running_state"
 
 SENSOR_NAMES_TO_ATTRIBUTES = {
     TANK_HEALTH: "tank_health",
-    AVAILIBLE_HOT_WATER: "tank_hot_water_availability",
+    AVAILABLE_HOT_WATER: "tank_hot_water_availability",
     COMPRESSOR_HEALTH: "compressor_health",
     OVERRIDE_STATUS: "override_status",
     WATER_USAGE_TODAY: "todays_water_usage",
@@ -36,7 +36,7 @@ SENSOR_NAMES_TO_ATTRIBUTES = {
 
 SENSOR_NAMES_TO_UNIT_OF_MEASUREMENT = {
     TANK_HEALTH: PERCENTAGE,
-    AVAILIBLE_HOT_WATER: PERCENTAGE,
+    AVAILABLE_HOT_WATER: PERCENTAGE,
     COMPRESSOR_HEALTH: PERCENTAGE,
     OVERRIDE_STATUS: None,
     WATER_USAGE_TODAY: VOLUME_GALLONS,

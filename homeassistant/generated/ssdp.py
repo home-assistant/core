@@ -228,14 +228,30 @@ SSDP = {
     ],
     "unifi": [
         {
-            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
             "manufacturer": "Ubiquiti Networks",
             "modelDescription": "UniFi Dream Machine"
         },
         {
-            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
             "manufacturer": "Ubiquiti Networks",
             "modelDescription": "UniFi Dream Machine Pro"
+        },
+        {
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine SE"
+        }
+    ],
+    "unifiprotect": [
+        {
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine"
+        },
+        {
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine Pro"
+        },
+        {
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine SE"
         }
     ],
     "upnp": [
@@ -244,6 +260,11 @@ SSDP = {
         },
         {
             "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:2"
+        }
+    ],
+    "webostv": [
+        {
+            "st": "urn:lge-com:service:webos-second-screen:1"
         }
     ],
     "wemo": [

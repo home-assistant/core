@@ -4,7 +4,11 @@ These tests fake out the subscriber/devicemanager, and are not using a real
 pubsub subscriber.
 """
 
+from __future__ import annotations
+
+from collections.abc import Mapping
 import datetime
+from typing import Any
 from unittest.mock import patch
 
 from google_nest_sdm.device import Device
@@ -24,8 +28,15 @@ NEST_EVENT = "nest_event"
 EVENT_SESSION_ID = "CjY5Y3VKaTZwR3o4Y19YbTVfMF..."
 EVENT_ID = "FWWVQVUdGNUlTU2V4MGV2aTNXV..."
 
+EVENT_KEYS = {"device_id", "type", "timestamp", "zones"}
 
-async def async_setup_devices(hass, device_type, traits={}):
+
+def event_view(d: Mapping[str, Any]) -> Mapping[str, Any]:
+    """View of an event with relevant keys for testing."""
+    return {key: value for key, value in d.items() if key in EVENT_KEYS}
+
+
+async def async_setup_devices(hass, device_type, traits={}, auth=None):
     """Set up the platform and prerequisites."""
     devices = {
         DEVICE_ID: Device.MakeDevice(
@@ -34,7 +45,7 @@ async def async_setup_devices(hass, device_type, traits={}):
                 "type": device_type,
                 "traits": traits,
             },
-            auth=None,
+            auth=auth,
         ),
     }
     return await async_setup_sdm_platform(hass, PLATFORM, devices=devices)
@@ -87,13 +98,14 @@ def create_events(events, device_id=DEVICE_ID, timestamp=None):
     )
 
 
-async def test_doorbell_chime_event(hass):
+async def test_doorbell_chime_event(hass, auth):
     """Test a pubsub message for a doorbell event."""
     events = async_capture_events(hass, NEST_EVENT)
     subscriber = await async_setup_devices(
         hass,
         "sdm.devices.types.DOORBELL",
         create_device_traits(["sdm.devices.traits.DoorbellChime"]),
+        auth,
     )
 
     registry = er.async_get(hass)
@@ -117,11 +129,10 @@ async def test_doorbell_chime_event(hass):
 
     event_time = timestamp.replace(microsecond=0)
     assert len(events) == 1
-    assert events[0].data == {
+    assert event_view(events[0].data) == {
         "device_id": entry.device_id,
         "type": "doorbell_chime",
         "timestamp": event_time,
-        "nest_event_id": EVENT_SESSION_ID,
     }
 
 
@@ -145,11 +156,10 @@ async def test_camera_motion_event(hass):
 
     event_time = timestamp.replace(microsecond=0)
     assert len(events) == 1
-    assert events[0].data == {
+    assert event_view(events[0].data) == {
         "device_id": entry.device_id,
         "type": "camera_motion",
         "timestamp": event_time,
-        "nest_event_id": EVENT_SESSION_ID,
     }
 
 
@@ -173,11 +183,10 @@ async def test_camera_sound_event(hass):
 
     event_time = timestamp.replace(microsecond=0)
     assert len(events) == 1
-    assert events[0].data == {
+    assert event_view(events[0].data) == {
         "device_id": entry.device_id,
         "type": "camera_sound",
         "timestamp": event_time,
-        "nest_event_id": EVENT_SESSION_ID,
     }
 
 
@@ -201,11 +210,10 @@ async def test_camera_person_event(hass):
 
     event_time = timestamp.replace(microsecond=0)
     assert len(events) == 1
-    assert events[0].data == {
+    assert event_view(events[0].data) == {
         "device_id": entry.device_id,
         "type": "camera_person",
         "timestamp": event_time,
-        "nest_event_id": EVENT_SESSION_ID,
     }
 
 
@@ -240,17 +248,15 @@ async def test_camera_multiple_event(hass):
 
     event_time = timestamp.replace(microsecond=0)
     assert len(events) == 2
-    assert events[0].data == {
+    assert event_view(events[0].data) == {
         "device_id": entry.device_id,
         "type": "camera_motion",
         "timestamp": event_time,
-        "nest_event_id": EVENT_SESSION_ID,
     }
-    assert events[1].data == {
+    assert event_view(events[1].data) == {
         "device_id": entry.device_id,
         "type": "camera_person",
         "timestamp": event_time,
-        "nest_event_id": EVENT_SESSION_ID,
     }
 
 
@@ -306,7 +312,7 @@ async def test_event_message_without_device_event(hass):
     assert len(events) == 0
 
 
-async def test_doorbell_event_thread(hass):
+async def test_doorbell_event_thread(hass, auth):
     """Test a series of pubsub messages in the same thread."""
     events = async_capture_events(hass, NEST_EVENT)
     subscriber = await async_setup_devices(
@@ -318,6 +324,7 @@ async def test_doorbell_event_thread(hass):
                 "sdm.devices.traits.CameraPerson",
             ]
         ),
+        auth,
     )
     registry = er.async_get(hass)
     entry = registry.async_get("camera.front")
@@ -367,15 +374,14 @@ async def test_doorbell_event_thread(hass):
 
     # The event is only published once
     assert len(events) == 1
-    assert events[0].data == {
+    assert event_view(events[0].data) == {
         "device_id": entry.device_id,
         "type": "camera_motion",
         "timestamp": timestamp1.replace(microsecond=0),
-        "nest_event_id": EVENT_SESSION_ID,
     }
 
 
-async def test_doorbell_event_session_update(hass):
+async def test_doorbell_event_session_update(hass, auth):
     """Test a pubsub message with updates to an existing session."""
     events = async_capture_events(hass, NEST_EVENT)
     subscriber = await async_setup_devices(
@@ -388,6 +394,7 @@ async def test_doorbell_event_session_update(hass):
                 "sdm.devices.traits.CameraMotion",
             ]
         ),
+        auth,
     )
     registry = er.async_get(hass)
     entry = registry.async_get("camera.front")
@@ -435,17 +442,15 @@ async def test_doorbell_event_session_update(hass):
     await hass.async_block_till_done()
 
     assert len(events) == 2
-    assert events[0].data == {
+    assert event_view(events[0].data) == {
         "device_id": entry.device_id,
         "type": "camera_motion",
         "timestamp": timestamp1.replace(microsecond=0),
-        "nest_event_id": EVENT_SESSION_ID,
     }
-    assert events[1].data == {
+    assert event_view(events[1].data) == {
         "device_id": entry.device_id,
         "type": "camera_person",
         "timestamp": timestamp2.replace(microsecond=0),
-        "nest_event_id": EVENT_SESSION_ID,
     }
 
 
@@ -509,3 +514,37 @@ async def test_structure_update_event(hass):
     assert registry.async_get("camera.front")
     # Currently need a manual reload to detect the new entity
     assert not registry.async_get("camera.back")
+
+
+async def test_event_zones(hass):
+    """Test events published with zone information."""
+    events = async_capture_events(hass, NEST_EVENT)
+    subscriber = await async_setup_devices(
+        hass,
+        "sdm.devices.types.DOORBELL",
+        create_device_traits(["sdm.devices.traits.CameraMotion"]),
+    )
+    registry = er.async_get(hass)
+    entry = registry.async_get("camera.front")
+    assert entry is not None
+
+    event_map = {
+        "sdm.devices.events.CameraMotion.Motion": {
+            "eventSessionId": EVENT_SESSION_ID,
+            "eventId": EVENT_ID,
+            "zones": ["Zone 1"],
+        },
+    }
+
+    timestamp = utcnow()
+    await subscriber.async_receive_event(create_events(event_map, timestamp=timestamp))
+    await hass.async_block_till_done()
+
+    event_time = timestamp.replace(microsecond=0)
+    assert len(events) == 1
+    assert event_view(events[0].data) == {
+        "device_id": entry.device_id,
+        "type": "camera_motion",
+        "timestamp": event_time,
+        "zones": ["Zone 1"],
+    }

@@ -5,7 +5,7 @@ from copy import copy
 from dataclasses import dataclass
 import logging
 
-from pyunifiprotect.data import NVR, Camera, Event, Light, Sensor
+from pyunifiprotect.data import NVR, Camera, Event, Light, MountType, Sensor
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -30,6 +30,7 @@ from .models import ProtectRequiredKeysMixin
 from .utils import get_nested_attr
 
 _LOGGER = logging.getLogger(__name__)
+_KEY_DOOR = "door"
 
 
 @dataclass
@@ -39,6 +40,13 @@ class ProtectBinaryEntityDescription(
     """Describes UniFi Protect Binary Sensor entity."""
 
     ufp_last_trip_value: str | None = None
+
+
+MOUNT_DEVICE_CLASS_MAP = {
+    MountType.GARAGE: BinarySensorDeviceClass.GARAGE_DOOR,
+    MountType.WINDOW: BinarySensorDeviceClass.WINDOW,
+    MountType.DOOR: BinarySensorDeviceClass.DOOR,
+}
 
 
 CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
@@ -77,11 +85,12 @@ LIGHT_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
 
 SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
-        key="door",
-        name="Door",
+        key=_KEY_DOOR,
+        name="Contact",
         device_class=BinarySensorDeviceClass.DOOR,
         ufp_value="is_opened",
         ufp_last_trip_value="open_status_changed_at",
+        ufp_enabled="is_contact_sensor_enabled",
     ),
     ProtectBinaryEntityDescription(
         key="battery_low",
@@ -96,6 +105,14 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.MOTION,
         ufp_value="is_motion_detected",
         ufp_last_trip_value="motion_detected_at",
+        ufp_enabled="is_motion_sensor_enabled",
+    ),
+    ProtectBinaryEntityDescription(
+        key="tampering",
+        name="Tampering Detected",
+        device_class=BinarySensorDeviceClass.TAMPER,
+        ufp_value="is_tampering_detected",
+        ufp_last_trip_value="tampering_detected_at",
     ),
 )
 
@@ -106,6 +123,16 @@ MOTION_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.MOTION,
         ufp_value="is_motion_detected",
         ufp_last_trip_value="last_motion",
+    ),
+)
+
+DOORLOCK_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
+    ProtectBinaryEntityDescription(
+        key="battery_low",
+        name="Battery low",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ufp_value="battery_status.is_low",
     ),
 )
 
@@ -133,6 +160,7 @@ async def async_setup_entry(
         camera_descs=CAMERA_SENSORS,
         light_descs=LIGHT_SENSORS,
         sense_descs=SENSE_SENSORS,
+        lock_descs=DOORLOCK_SENSORS,
     )
     entities += _async_motion_entities(data)
     entities += _async_nvr_entities(data)
@@ -196,6 +224,12 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
                 **attrs,
                 ATTR_LAST_TRIP_TIME: last_trip,
             }
+
+        # UP Sense can be any of the 3 contact sensor device classes
+        if self.entity_description.key == _KEY_DOOR and isinstance(self.device, Sensor):
+            self.entity_description.device_class = MOUNT_DEVICE_CLASS_MAP.get(
+                self.device.mount_type, BinarySensorDeviceClass.DOOR
+            )
 
 
 class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):

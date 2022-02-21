@@ -16,17 +16,17 @@ from homeassistant.const import STATE_UNKNOWN
 from homeassistant.setup import async_setup_component
 
 HEMISPHERE_NORTHERN = {
-    "homeassistant": {"latitude": "48.864716", "longitude": "2.349014"},
+    "homeassistant": {"latitude": 48.864716, "longitude": 2.349014},
     "sensor": {"platform": "season", "type": "astronomical"},
 }
 
 HEMISPHERE_SOUTHERN = {
-    "homeassistant": {"latitude": "-33.918861", "longitude": "18.423300"},
+    "homeassistant": {"latitude": -33.918861, "longitude": 18.423300},
     "sensor": {"platform": "season", "type": "astronomical"},
 }
 
 HEMISPHERE_EQUATOR = {
-    "homeassistant": {"latitude": "0", "longitude": "-51.065100"},
+    "homeassistant": {"latitude": 0, "longitude": -51.065100},
     "sensor": {"platform": "season", "type": "astronomical"},
 }
 

@@ -179,8 +179,8 @@ def get_service(hass, config, discovery_info=None):
     def websocket_appkey(hass, connection, msg):
         connection.send_message(websocket_api.result_message(msg["id"], vapid_pub_key))
 
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_APPKEY, websocket_appkey, SCHEMA_WS_APPKEY
+    websocket_api.async_register_command(
+        hass, WS_TYPE_APPKEY, websocket_appkey, SCHEMA_WS_APPKEY
     )
 
     hass.http.register_view(HTML5PushRegistrationView(registrations, json_path))

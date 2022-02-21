@@ -3,7 +3,8 @@ import asyncio
 import datetime
 from random import random
 
-from homeassistant import bootstrap, config_entries
+from homeassistant import config_entries, setup
+from homeassistant.components import persistent_notification
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
@@ -82,11 +83,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if not hass.config.longitude:
         hass.config.longitude = 117.22743
 
-    tasks = [bootstrap.async_setup_component(hass, "sun", config)]
+    tasks = [setup.async_setup_component(hass, "sun", config)]
 
     # Set up input select
     tasks.append(
-        bootstrap.async_setup_component(
+        setup.async_setup_component(
             hass,
             "input_select",
             {
@@ -107,7 +108,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Set up input boolean
     tasks.append(
-        bootstrap.async_setup_component(
+        setup.async_setup_component(
             hass,
             "input_boolean",
             {
@@ -124,7 +125,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Set up input button
     tasks.append(
-        bootstrap.async_setup_component(
+        setup.async_setup_component(
             hass,
             "input_button",
             {
@@ -140,7 +141,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Set up input number
     tasks.append(
-        bootstrap.async_setup_component(
+        setup.async_setup_component(
             hass,
             "input_number",
             {
@@ -163,8 +164,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return False
 
     # Set up example persistent notification
-    hass.components.persistent_notification.async_create(
-        "This is an example of a persistent notification.", title="Example Notification"
+    persistent_notification.async_create(
+        hass,
+        "This is an example of a persistent notification.",
+        title="Example Notification",
     )
 
     async def demo_start_listener(_event):
@@ -277,7 +280,7 @@ async def finish_setup(hass, config):
         lights = sorted(hass.states.async_entity_ids("light"))
 
     # Set up scripts
-    await bootstrap.async_setup_component(
+    await setup.async_setup_component(
         hass,
         "script",
         {
@@ -306,7 +309,7 @@ async def finish_setup(hass, config):
     )
 
     # Set up scenes
-    await bootstrap.async_setup_component(
+    await setup.async_setup_component(
         hass,
         "scene",
         {

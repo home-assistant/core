@@ -22,7 +22,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     API,
-    COMPONENT,
+    COMPONENT_PLATFORM,
     CONF_INVERT_POSITION,
     DEFAULT_OFFSET,
     DEFAULT_RETRY,
@@ -167,7 +167,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await update_slides()
 
-    hass.async_create_task(async_load_platform(hass, COMPONENT, DOMAIN, {}, config))
+    hass.async_create_task(
+        async_load_platform(hass, COMPONENT_PLATFORM, DOMAIN, {}, config)
+    )
 
     async_track_time_interval(hass, update_slides, scaninterval)
 

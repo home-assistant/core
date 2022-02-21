@@ -1,6 +1,6 @@
 """The discord integration."""
 from aiohttp.client_exceptions import ClientConnectorError
-import discord
+import nextcord
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PLATFORM, CONF_TOKEN, Platform
@@ -31,13 +31,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Discord from a config entry."""
-    discord.VoiceClient.warn_nacl = False
-    discord_bot = discord.Client()
+    nextcord.VoiceClient.warn_nacl = False
+    discord_bot = nextcord.Client()
     try:
         await discord_bot.login(entry.data[CONF_TOKEN])
-    except discord.LoginFailure as ex:
+    except nextcord.LoginFailure as ex:
         raise ConfigEntryAuthFailed("Invalid token given") from ex
-    except (ClientConnectorError, discord.HTTPException, discord.NotFound) as ex:
+    except (ClientConnectorError, nextcord.HTTPException, nextcord.NotFound) as ex:
         raise ConfigEntryNotReady("Failed to connect") from ex
     await discord_bot.close()
 
@@ -58,9 +58,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
-
     return unload_ok

@@ -134,7 +134,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         except PyEzvizError as err:
             raise PyEzvizError from err
 
-        # Secondly try to wake hybernating camera.
+        # Secondly try to wake hibernating camera.
         try:
             await self.hass.async_add_executor_job(
                 ezviz_client.get_detection_sensibility, data[ATTR_SERIAL]
@@ -259,7 +259,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user_custom_url", data_schema=data_schema_custom_url, errors=errors
         )
 
-    async def async_step_discovery(self, discovery_info):
+    async def async_step_integration_discovery(self, discovery_info):
         """Handle a flow for discovered camera without rtsp config entry."""
 
         await self.async_set_unique_id(discovery_info[ATTR_SERIAL])

@@ -20,6 +20,8 @@ from homeassistant.components.light import (
 
 DOMAIN: Final = "flux_led"
 
+MIN_RGB_BRIGHTNESS: Final = 1
+MIN_CCT_BRIGHTNESS: Final = 2
 
 FLUX_COLOR_MODE_TO_HASS: Final = {
     FLUX_COLOR_MODE_RGB: COLOR_MODE_RGB,
@@ -28,6 +30,7 @@ FLUX_COLOR_MODE_TO_HASS: Final = {
     FLUX_COLOR_MODE_CCT: COLOR_MODE_COLOR_TEMP,
 }
 
+MULTI_BRIGHTNESS_COLOR_MODES: Final = {COLOR_MODE_RGBWW, COLOR_MODE_RGBW}
 
 API: Final = "flux_api"
 
@@ -48,6 +51,7 @@ FLUX_LED_EXCEPTIONS: Final = (
 
 STARTUP_SCAN_TIMEOUT: Final = 5
 DISCOVER_SCAN_TIMEOUT: Final = 10
+DIRECTED_DISCOVERY_TIMEOUT: Final = 15
 
 CONF_MODEL: Final = "model"
 CONF_MODEL_NUM: Final = "model_num"
@@ -57,6 +61,8 @@ CONF_MINOR_VERSION: Final = "minor_version"
 CONF_REMOTE_ACCESS_ENABLED: Final = "remote_access_enabled"
 CONF_REMOTE_ACCESS_HOST: Final = "remote_access_host"
 CONF_REMOTE_ACCESS_PORT: Final = "remote_access_port"
+CONF_WHITE_CHANNEL_TYPE: Final = "white_channel_type"
+
 
 TRANSITION_GRADUAL: Final = "gradual"
 TRANSITION_JUMP: Final = "jump"

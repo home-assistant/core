@@ -81,8 +81,8 @@ class Searcher:
         self._device_reg = device_reg
         self._entity_reg = entity_reg
         self._sources = entity_sources
-        self.results = defaultdict(set)
-        self._to_resolve = deque()
+        self.results: defaultdict[str, set[str]] = defaultdict(set)
+        self._to_resolve: deque[tuple[str, str]] = deque()
 
     @callback
     def async_search(self, item_type, item_id):
