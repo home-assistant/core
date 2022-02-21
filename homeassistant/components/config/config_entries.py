@@ -387,6 +387,7 @@ def entry_json(entry: config_entries.ConfigEntry) -> dict:
         "source": entry.source,
         "state": entry.state.value,
         "supports_options": supports_options,
+        "supports_remove_device": entry.supports_remove_device,
         "supports_unload": entry.supports_unload,
         "pref_disable_new_entities": entry.pref_disable_new_entities,
         "pref_disable_polling": entry.pref_disable_polling,
