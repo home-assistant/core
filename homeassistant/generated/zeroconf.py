@@ -176,6 +176,10 @@ ZEROCONF = {
             }
         },
         {
+            "domain": "pure_energie",
+            "name": "smartbridge*"
+        },
+        {
             "domain": "rachio",
             "name": "rachio*"
         },

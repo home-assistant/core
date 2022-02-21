@@ -13,5 +13,6 @@
         "action_type": {
             "notify": "Odeslat ozn\u00e1men\u00ed"
         }
-    }
+    },
+    "title": "Mobiln\u00ed aplikace"
 }

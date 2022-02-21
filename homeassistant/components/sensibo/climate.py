@@ -5,7 +5,7 @@ import asyncio
 
 from aiohttp.client_exceptions import ClientConnectionError
 import async_timeout
-from pysensibo import SensiboError
+from pysensibo.exceptions import AuthenticationError, SensiboError
 import voluptuous as vol
 
 from homeassistant.components.climate import (
@@ -318,18 +318,19 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
         except (
             ClientConnectionError,
             asyncio.TimeoutError,
+            AuthenticationError,
             SensiboError,
         ) as err:
             raise HomeAssistantError(
                 f"Failed to set AC state for device {self.name} to Sensibo servers: {err}"
             ) from err
         LOGGER.debug("Result: %s", result)
-        if result["status"] == "Success":
+        if result["result"]["status"] == "Success":
             self.coordinator.data[self.unique_id][AC_STATE_TO_DATA[name]] = value
             self.async_write_ha_state()
             return
 
-        failure = result["failureReason"]
+        failure = result["result"]["failureReason"]
         raise HomeAssistantError(
             f"Could not set state for device {self.name} due to reason {failure}"
         )

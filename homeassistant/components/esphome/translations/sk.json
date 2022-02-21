@@ -1,0 +1,46 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
+            "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9"
+        },
+        "error": {
+            "connection_error": "Ned\u00e1 sa pripoji\u0165 k ESP. Uistite sa, \u017ee v\u00e1\u0161 s\u00fabor YAML obsahuje riadok \u201eapi:\u201c.",
+            "invalid_auth": "Neplatn\u00e9 overenie",
+            "invalid_psk": "Transportn\u00fd \u0161ifrovac\u00ed k\u013e\u00fa\u010d je neplatn\u00fd. Pros\u00edm, uistite sa, \u017ee sa zhoduje s t\u00fdm, \u010do m\u00e1te vo svojej konfigur\u00e1cii",
+            "resolve_error": "Nie je mo\u017en\u00e9 zisti\u0165 adresu ESP. Ak t\u00e1to chyba pretrv\u00e1va, nastavte statick\u00fa IP adresu: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Heslo"
+                },
+                "description": "Pros\u00edm, zadajte heslo, ktor\u00e9 ste nastavili v konfigur\u00e1cii pre {name}."
+            },
+            "discovery_confirm": {
+                "description": "Chcete prida\u0165 uzol ESPHome `{name}` do Home Assistant?",
+                "title": "Objaven\u00fd uzol ESPHome"
+            },
+            "encryption_key": {
+                "data": {
+                    "noise_psk": "\u0160ifrovac\u00ed k\u013e\u00fa\u010d"
+                },
+                "description": "Pros\u00edm, zadajte \u0161ifrovac\u00ed k\u013e\u00fa\u010d, ktor\u00fd ste nastavili v konfigur\u00e1cii pre {name}."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "noise_psk": "\u0160ifrovac\u00ed k\u013e\u00fa\u010d"
+                },
+                "description": "Zariadenie ESPHome {name} povolilo transportn\u00e9 \u0161ifrovanie alebo zmenilo \u0161ifrovac\u00ed k\u013e\u00fa\u010d. Pros\u00edm, zadajte aktualizovan\u00fd k\u013e\u00fa\u010d."
+            },
+            "user": {
+                "data": {
+                    "port": "Port"
+                },
+                "description": "Pros\u00edm, zadajte nastavenia pripojenia v\u00e1\u0161ho uzla [ESPHome](https://esphomelib.com/)."
+            }
+        }
+    }
+}

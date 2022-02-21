@@ -152,8 +152,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
             # an educated guess.
             #
             meteo_data: MeteoSensor = self._meteo_coordinator.data
-            current_temp = meteo_data.temperature
-            if not current_temp:
+            if not (current_temp := meteo_data.temperature):
                 self._climate.hvac_mode = lookin_index.index(HVAC_MODE_AUTO)
             elif current_temp >= self._climate.temp_celsius:
                 self._climate.hvac_mode = lookin_index.index(HVAC_MODE_COOL)
