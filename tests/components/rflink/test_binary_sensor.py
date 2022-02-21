@@ -15,10 +15,10 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-import homeassistant.core as ha
+from homeassistant.core import CoreState, State, callback
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, mock_restore_cache
 from tests.components.rflink.test_init import mock_rflink
 
 DOMAIN = "binary_sensor"
@@ -91,12 +91,18 @@ async def test_entity_availability(hass, monkeypatch):
     config[CONF_RECONNECT_INTERVAL] = 60
 
     # Create platform and entities
-    _, _, _, disconnect_callback = await mock_rflink(
+    event_callback, _, _, disconnect_callback = await mock_rflink(
         hass, config, DOMAIN, monkeypatch, failures=failures
     )
 
-    # Entities are available by default
+    # Entities are unknown by default
     assert hass.states.get("binary_sensor.test").state == STATE_UNKNOWN
+
+    # test binary_sensor status change
+    event_callback({"id": "test", "command": "on"})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.test").state == STATE_ON
 
     # Mock a disconnect of the Rflink device
     disconnect_callback()
@@ -113,8 +119,8 @@ async def test_entity_availability(hass, monkeypatch):
     # Wait for dispatch events to propagate
     await hass.async_block_till_done()
 
-    # Entities should be available again
-    assert hass.states.get("binary_sensor.test").state == STATE_UNKNOWN
+    # Entities should restore its status
+    assert hass.states.get("binary_sensor.test").state == STATE_ON
 
 
 async def test_off_delay(hass, legacy_patchable_time, monkeypatch):
@@ -129,12 +135,12 @@ async def test_off_delay(hass, legacy_patchable_time, monkeypatch):
 
     on_event = {"id": "test2", "command": "on"}
 
-    @ha.callback
-    def callback(event):
+    @callback
+    def listener(event):
         """Verify event got called."""
         events.append(event)
 
-    hass.bus.async_listen(EVENT_STATE_CHANGED, callback)
+    hass.bus.async_listen(EVENT_STATE_CHANGED, listener)
 
     now = dt_util.utcnow()
     # fake time and turn on sensor
@@ -178,3 +184,24 @@ async def test_off_delay(hass, legacy_patchable_time, monkeypatch):
     state = hass.states.get("binary_sensor.test2")
     assert state.state == STATE_OFF
     assert len(events) == 3
+
+
+async def test_restore_state(hass, monkeypatch):
+    """Ensure states are restored on startup."""
+    mock_restore_cache(
+        hass, (State(f"{DOMAIN}.test", STATE_ON), State(f"{DOMAIN}.test2", STATE_ON))
+    )
+
+    hass.state = CoreState.starting
+
+    # setup mocking rflink module
+    _, _, _, _ = await mock_rflink(hass, CONFIG, DOMAIN, monkeypatch)
+
+    state = hass.states.get(f"{DOMAIN}.test")
+    assert state
+    assert state.state == STATE_ON
+
+    # off_delay config must restore to off
+    state = hass.states.get(f"{DOMAIN}.test2")
+    assert state
+    assert state.state == STATE_OFF
