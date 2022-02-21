@@ -104,8 +104,8 @@ class RadioMediaSource(MediaSource):
                     filter_by=FilterBy.COUNTRY_CODE_EXACT,
                     filter_term=item.identifier,
                     hide_broken=True,
-                    order=Order.CLICK_COUNT,
-                    reverse=True,
+                    order=Order.NAME,
+                    reverse=False,
                 )
 
             if stations:
