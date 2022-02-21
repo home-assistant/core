@@ -35,7 +35,7 @@ class PureEnergieFlowHandler(ConfigFlow, domain=DOMAIN):
             except GridNetConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(device.n2g_id)
+                await self.async_set_unique_id(device.n2g_id, raise_on_progress=False)
                 self._abort_if_unique_id_configured(
                     updates={CONF_HOST: user_input[CONF_HOST]}
                 )
