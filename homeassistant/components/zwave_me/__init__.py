@@ -104,7 +104,7 @@ class ZWaveMeEntity(Entity):
         self.controller = controller
         self.device = device
         self._attr_name = device.title
-        self._attr_unique_id = f"{self.controller.config.unique_id}-{self.device.id}"
+        self._attr_unique_id: str = f"{self.controller.config.unique_id}-{self.device.id}"
         self._attr_should_poll = False
 
     @property
