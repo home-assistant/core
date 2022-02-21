@@ -706,6 +706,38 @@ async def test_render_template_renders_template(hass, websocket_client):
     }
 
 
+async def test_render_template_with_timeout_and_variables(hass, websocket_client):
+    """Test a template with a timeout and variables renders without error."""
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "render_template",
+            "timeout": 10,
+            "variables": {"test": {"value": "hello"}},
+            "template": "{{ test.value }}",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == "event"
+    event = msg["event"]
+    assert event == {
+        "result": "hello",
+        "listeners": {
+            "all": False,
+            "domains": [],
+            "entities": [],
+            "time": False,
+        },
+    }
+
+
 async def test_render_template_manual_entity_ids_no_longer_needed(
     hass, websocket_client
 ):
