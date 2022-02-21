@@ -126,7 +126,7 @@ class SlaveSensor(CoordinatorEntity, RestoreEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the Modbus binary sensor."""
         idx += 1
-        self._attr_name = f"{entry[CONF_NAME]}_{idx}"
+        self._attr_name = f"{entry[CONF_NAME]} {idx}"
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
         self._attr_available = False
         self._result_inx = int(idx / 8)

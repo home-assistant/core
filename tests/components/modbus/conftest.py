@@ -16,7 +16,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import async_fire_time_changed, mock_restore_cache
 
 TEST_MODBUS_NAME = "modbusTest"
-TEST_ENTITY_NAME = "test_entity"
+TEST_ENTITY_NAME = "test entity"
 TEST_MODBUS_HOST = "modbusHost"
 TEST_PORT_TCP = 5501
 TEST_PORT_SERIAL = "usb01"
