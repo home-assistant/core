@@ -6,12 +6,17 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import FAKE_MAC, async_push_update, async_setup_integration
+from . import (
+    FAKE_DUAL_HEAD_RGBWW_BULB,
+    FAKE_MAC,
+    async_push_update,
+    async_setup_integration,
+)
 
 
 async def test_speed_operation(hass: HomeAssistant) -> None:
     """Test changing a speed."""
-    bulb, _ = await async_setup_integration(hass)
+    bulb, _ = await async_setup_integration(hass, bulb_type=FAKE_DUAL_HEAD_RGBWW_BULB)
     await async_push_update(hass, bulb, {"mac": FAKE_MAC})
     entity_id = "number.mock_title_effect_speed"
     entity_registry = er.async_get(hass)
