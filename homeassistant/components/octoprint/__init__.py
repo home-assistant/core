@@ -25,14 +25,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify as util_slugify
 import homeassistant.util.dt as dt_util
 
-from .const import DATA_UNSUBSCRIBE, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -175,7 +174,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = {
         "coordinator": coordinator,
         "client": client,
-        DATA_UNSUBSCRIBE: [],
     }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -187,12 +185,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    if not unload_ok:
-        return False
-
-    for unsubscribe_listener in hass.data[DOMAIN][entry.entry_id][DATA_UNSUBSCRIBE]:
-        unsubscribe_listener()
-
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
@@ -202,7 +194,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Octoprint data."""
 
-    _known_tools: list[str]
     config_entry: ConfigEntry
 
     def __init__(
@@ -222,7 +213,6 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
         self.config_entry = config_entry
         self._octoprint = octoprint
         self._printer_offline = False
-        self._known_tools = []
         self.data = {"printer": None, "job": None, "last_read_time": None}
 
     async def _async_update_data(self):
@@ -246,16 +236,6 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(err) from err
         else:
             self._printer_offline = False
-
-        # when the printer comes back online, check if there are any new tools that need to be configured
-        if printer and not self.data["printer"]:
-            for tool in [
-                x for x in printer.temperatures if x.name not in self._known_tools
-            ]:
-                self._known_tools.append(tool.name)
-                async_dispatcher_send(
-                    self.hass, f"{DOMAIN}_{self.config_entry.unique_id}_new_tool", tool
-                )
 
         return {"job": job, "printer": printer, "last_read_time": dt_util.utcnow()}
 

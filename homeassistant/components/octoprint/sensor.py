@@ -14,12 +14,11 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import OctoprintDataUpdateCoordinator
-from .const import DATA_UNSUBSCRIBE, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,29 +47,33 @@ async def async_setup_entry(
 
     assert device_id is not None
 
+    known_tools = []
+
     @callback
-    def async_add_tool_sensors(tool):
-        async_add_entities(
-            [
-                OctoPrintTemperatureSensor(
-                    coordinator,
-                    tool.name,
-                    x,
-                    device_id,
-                )
-                for x in ("actual", "target")
-            ]
-        )
+    def async_add_tool_sensors() -> None:
+        for tool in [
+            tool
+            for tool in coordinator.data["printer"].temperatures
+            if tool.name not in known_tools
+        ]:
+            assert device_id is not None
+            known_tools.append(tool.name)
+            async_add_entities(
+                [
+                    OctoPrintTemperatureSensor(
+                        coordinator,
+                        tool.name,
+                        temp_type,
+                        device_id,
+                    )
+                    for temp_type in ("actual", "target")
+                ]
+            )
 
-    hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
-        async_dispatcher_connect(
-            hass, f"{DOMAIN}_{device_id}_new_tool", async_add_tool_sensors
-        )
-    )
+    config_entry.async_on_unload(coordinator.async_add_listener(async_add_tool_sensors))
 
-    if printer_info := coordinator.data["printer"]:
-        for tool in printer_info.temperatures:
-            async_add_tool_sensors(tool)
+    if coordinator.data["printer"]:
+        async_add_tool_sensors()
 
     entities: list[SensorEntity] = [
         OctoPrintStatusSensor(coordinator, device_id),
