@@ -26,8 +26,7 @@ STORAGE_VERSION = 1
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Update integration."""
-    hass.data[DOMAIN] = manager = UpdateManager(hass=hass)
-    await manager.load()
+    hass.data[DOMAIN] = UpdateManager(hass=hass)
 
     websocket_api.async_register_command(hass, handle_info)
     websocket_api.async_register_command(hass, perform_update)
@@ -179,6 +178,7 @@ class UpdateManager:
         self._updating: set[str] = set()
         self._registrations: dict[str, UpdateRegistration] = {}
         self._updates: dict[str, list[UpdateDescription]] = {}
+        self._loaded = False
 
     @property
     def filtered_updates(self) -> list[dict]:
@@ -201,12 +201,12 @@ class UpdateManager:
             not in self._skip
         ]
 
-    async def load(self) -> None:
-        """Load the stored data."""
-        self._skip = set(await self._store.async_load() or [])
-
     async def gather_updates(self) -> list[dict]:
         """Gather updates."""
+        if not self._loaded:
+            self._skip = set(await self._store.async_load() or [])
+            self._loaded = True
+
         for domain, domain_data in zip(
             self._registrations,
             await asyncio.gather(
