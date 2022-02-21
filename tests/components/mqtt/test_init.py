@@ -1069,9 +1069,9 @@ async def test_restore_subscriptions_on_reconnect(hass, mqtt_client_mock, mqtt_m
     await hass.async_block_till_done()
     assert mqtt_client_mock.subscribe.call_count == 1
 
-    mqtt_mock._mqtt_on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0)
     with patch("homeassistant.components.mqtt.DISCOVERY_COOLDOWN", 0):
-        mqtt_mock._mqtt_on_connect(None, None, None, 0)
+        mqtt_client_mock.on_connect(None, None, None, 0)
         await hass.async_block_till_done()
     assert mqtt_client_mock.subscribe.call_count == 2
 
@@ -1103,9 +1103,9 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     await hass.async_block_till_done()
     assert mqtt_client_mock.unsubscribe.call_count == 0
 
-    mqtt_mock._mqtt_on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0)
     with patch("homeassistant.components.mqtt.DISCOVERY_COOLDOWN", 0):
-        mqtt_mock._mqtt_on_connect(None, None, None, 0)
+        mqtt_client_mock.on_connect(None, None, None, 0)
         await hass.async_block_till_done()
 
     expected.append(call("test/state", 1))
@@ -1172,11 +1172,11 @@ async def test_publish_error(hass, caplog):
 
 
 async def test_handle_message_callback(hass, caplog, mqtt_mock, mqtt_client_mock):
-    """Test for handling an incoming message callback via _mqtt_on_message."""
+    """Test for handling an incoming message callback."""
     msg = ReceiveMessage("some-topic", b"test-payload", 0, False)
-    mqtt_mock().connected = True
+    mqtt_client_mock.on_connect(mqtt_client_mock, None, None, 0)
     await mqtt.async_subscribe(hass, "some-topic", lambda *args: 0)
-    mqtt_mock._mqtt_on_message(mock_mqtt, None, msg)
+    mqtt_client_mock.on_message(mock_mqtt, None, msg)
 
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -1347,7 +1347,7 @@ async def test_custom_birth_message(hass, mqtt_client_mock, mqtt_mock):
 
     with patch("homeassistant.components.mqtt.DISCOVERY_COOLDOWN", 0.1):
         await mqtt.async_subscribe(hass, "birth", wait_birth)
-        mqtt_mock._mqtt_on_connect(None, None, 0, 0)
+        mqtt_client_mock.on_connect(None, None, 0, 0)
         await hass.async_block_till_done()
         await birth.wait()
         mqtt_client_mock.publish.assert_called_with("birth", "birth", 0, False)
@@ -1377,7 +1377,7 @@ async def test_default_birth_message(hass, mqtt_client_mock, mqtt_mock):
 
     with patch("homeassistant.components.mqtt.DISCOVERY_COOLDOWN", 0.1):
         await mqtt.async_subscribe(hass, "homeassistant/status", wait_birth)
-        mqtt_mock._mqtt_on_connect(None, None, 0, 0)
+        mqtt_client_mock.on_connect(None, None, 0, 0)
         await hass.async_block_till_done()
         await birth.wait()
         mqtt_client_mock.publish.assert_called_with(
@@ -1392,7 +1392,7 @@ async def test_default_birth_message(hass, mqtt_client_mock, mqtt_mock):
 async def test_no_birth_message(hass, mqtt_client_mock, mqtt_mock):
     """Test disabling birth message."""
     with patch("homeassistant.components.mqtt.DISCOVERY_COOLDOWN", 0.1):
-        mqtt_mock._mqtt_on_connect(None, None, 0, 0)
+        mqtt_client_mock.on_connect(None, None, 0, 0)
         await hass.async_block_till_done()
         await asyncio.sleep(0.2)
         mqtt_client_mock.publish.assert_not_called()
@@ -1441,7 +1441,7 @@ async def test_delayed_birth_message(hass, mqtt_client_mock, mqtt_config, mqtt_m
 
     with patch("homeassistant.components.mqtt.DISCOVERY_COOLDOWN", 0.1):
         await mqtt.async_subscribe(hass, "homeassistant/status", wait_birth)
-        mqtt_mock._mqtt_on_connect(None, None, 0, 0)
+        mqtt_client_mock.on_connect(None, None, 0, 0)
         await hass.async_block_till_done()
         with pytest.raises(asyncio.TimeoutError):
             await asyncio.wait_for(birth.wait(), 0.2)
@@ -1510,7 +1510,7 @@ async def test_mqtt_subscribes_topics_on_connect(hass, mqtt_client_mock, mqtt_mo
     await mqtt.async_subscribe(hass, "still/pending", None, 1)
 
     hass.add_job = MagicMock()
-    mqtt_mock._mqtt_on_connect(None, None, 0, 0)
+    mqtt_client_mock.on_connect(None, None, 0, 0)
 
     await hass.async_block_till_done()
 
@@ -2343,7 +2343,6 @@ async def test_subscribe_connection_status(hass, mqtt_mock, mqtt_client_mock):
     await hass.async_block_till_done()
 
     # Mock connection status
-    # mqtt_mock._mqtt_on_connect(None, None, 0, 0)
     mqtt_client_mock.on_connect(None, None, 0, 0)
     await hass.async_block_till_done()
     assert mqtt.is_connected(hass) is True
@@ -2355,7 +2354,7 @@ async def test_subscribe_connection_status(hass, mqtt_mock, mqtt_client_mock):
     # Unsubscribe
     unsub()
 
-    mqtt_mock._mqtt_on_connect(None, None, 0, 0)
+    mqtt_client_mock.on_connect(None, None, 0, 0)
     await hass.async_block_till_done()
 
     # Check calls
