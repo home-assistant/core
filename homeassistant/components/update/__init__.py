@@ -183,8 +183,7 @@ class UpdateManager:
                 self._hass, DOMAIN, _register_update_platform
             )
             from_storage = await self._store.async_load()
-            assert isinstance(from_storage, (dict, type(None)))
-            if from_storage is not None:
+            if isinstance(from_storage, dict):
                 self._skip = set(from_storage["skipped"])
 
             # Register additional WS commands
