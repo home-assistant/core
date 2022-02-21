@@ -108,24 +108,24 @@ class RadioMediaSource(MediaSource):
                     reverse=False,
                 )
 
-            if stations:
-                for station in stations:
-                    if station.codec == "UNKNOWN" or not (
-                        mime_type := _async_get_station_mime_type(station)
-                    ):
-                        continue
+            for station in stations:
+                if station.codec == "UNKNOWN" or not (
+                    mime_type := _async_get_station_mime_type(station)
+                ):
+                    continue
 
-                    play_station = BrowseMediaSource(
-                        domain=DOMAIN,
-                        identifier=station.uuid,
-                        media_class=MEDIA_CLASS_MUSIC,
-                        media_content_type=mime_type,
-                        title=station.name,
-                        can_play=True,
-                        can_expand=False,
-                        thumbnail=station.favicon,
-                    )
-                    root.children.append(play_station)
+                play_station = BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=station.uuid,
+                    media_class=MEDIA_CLASS_MUSIC,
+                    media_content_type=mime_type,
+                    title=station.name,
+                    can_play=True,
+                    can_expand=False,
+                    thumbnail=station.favicon,
+                )
+                root.children.append(play_station)
+
             return root
 
         # Add a popular directory
