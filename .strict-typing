@@ -20,6 +20,7 @@ homeassistant.helpers.entity_values
 homeassistant.helpers.reload
 homeassistant.helpers.script_variables
 homeassistant.helpers.translation
+homeassistant.util.async_
 homeassistant.util.color
 homeassistant.util.process
 homeassistant.util.unit_system
@@ -94,6 +95,7 @@ homeassistant.components.homekit_controller.const
 homeassistant.components.homekit_controller.lock
 homeassistant.components.homekit_controller.select
 homeassistant.components.homekit_controller.storage
+homeassistant.components.homekit_controller.utils
 homeassistant.components.homewizard.*
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
@@ -117,6 +119,7 @@ homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
 homeassistant.components.mailbox.*
 homeassistant.components.media_player.*
+homeassistant.components.mjpeg.*
 homeassistant.components.modbus.*
 homeassistant.components.modem_callerid.*
 homeassistant.components.media_source.*
@@ -142,6 +145,7 @@ homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
 homeassistant.components.proximity.*
 homeassistant.components.pvoutput.*
+homeassistant.components.pure_energie.*
 homeassistant.components.rainmachine.*
 homeassistant.components.rdw.*
 homeassistant.components.recollect_waste.*
@@ -163,6 +167,7 @@ homeassistant.components.senseme.*
 homeassistant.components.shelly.*
 homeassistant.components.simplisafe.*
 homeassistant.components.slack.*
+homeassistant.components.sleepiq.*
 homeassistant.components.smhi.*
 homeassistant.components.ssdp.*
 homeassistant.components.stookalert.*

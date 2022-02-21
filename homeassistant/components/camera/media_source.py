@@ -47,8 +47,16 @@ class CameraMediaSource(MediaSource):
         if not camera:
             raise Unresolvable(f"Could not resolve media item: {item.identifier}")
 
-        if camera.frontend_stream_type != STREAM_TYPE_HLS:
-            raise Unresolvable("Camera does not support HLS streaming.")
+        if (stream_type := camera.frontend_stream_type) is None:
+            return PlayMedia(
+                f"/api/camera_proxy_stream/{camera.entity_id}", camera.content_type
+            )
+
+        if stream_type != STREAM_TYPE_HLS:
+            raise Unresolvable("Camera does not support MJPEG or HLS streaming.")
+
+        if "stream" not in self.hass.config.components:
+            raise Unresolvable("Stream integration not loaded")
 
         try:
             url = await _async_stream_endpoint_url(self.hass, camera, HLS_PROVIDER)
@@ -65,16 +73,19 @@ class CameraMediaSource(MediaSource):
         if item.identifier:
             raise BrowseError("Unknown item")
 
-        if "stream" not in self.hass.config.components:
-            raise BrowseError("Stream integration is not loaded")
+        supported_stream_types: list[str | None] = [None]
+
+        if "stream" in self.hass.config.components:
+            supported_stream_types.append(STREAM_TYPE_HLS)
 
         # Root. List cameras.
         component: EntityComponent = self.hass.data[DOMAIN]
         children = []
         for camera in component.entities:
             camera = cast(Camera, camera)
+            stream_type = camera.frontend_stream_type
 
-            if camera.frontend_stream_type != STREAM_TYPE_HLS:
+            if stream_type not in supported_stream_types:
                 continue
 
             children.append(

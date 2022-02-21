@@ -317,8 +317,7 @@ async def config_entry_update(hass, connection, msg):
 @websocket_api.async_response
 async def config_entry_disable(hass, connection, msg):
     """Disable config entry."""
-    disabled_by = msg["disabled_by"]
-    if disabled_by is not None:
+    if (disabled_by := msg["disabled_by"]) is not None:
         disabled_by = config_entries.ConfigEntryDisabler(disabled_by)
 
     result = False
@@ -388,6 +387,7 @@ def entry_json(entry: config_entries.ConfigEntry) -> dict:
         "source": entry.source,
         "state": entry.state.value,
         "supports_options": supports_options,
+        "supports_remove_device": entry.supports_remove_device,
         "supports_unload": entry.supports_unload,
         "pref_disable_new_entities": entry.pref_disable_new_entities,
         "pref_disable_polling": entry.pref_disable_polling,

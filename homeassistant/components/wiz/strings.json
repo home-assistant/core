@@ -25,6 +25,8 @@
       "no_ip": "Not a valid IP address."
     },
     "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }

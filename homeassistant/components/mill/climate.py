@@ -184,7 +184,7 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
         self._attr_target_temperature = heater.set_temp
         self._attr_current_temperature = heater.current_temp
         self._attr_fan_mode = FAN_ON if heater.fan_status == 1 else HVAC_MODE_OFF
-        if heater.is_gen1 or heater.is_heating == 1:
+        if heater.is_heating == 1:
             self._attr_hvac_action = CURRENT_HVAC_HEAT
         else:
             self._attr_hvac_action = CURRENT_HVAC_IDLE

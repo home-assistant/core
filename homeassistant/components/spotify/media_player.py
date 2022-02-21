@@ -7,7 +7,7 @@ from datetime import timedelta
 import logging
 
 import requests
-from spotipy import Spotify, SpotifyException
+from spotipy import SpotifyException
 from yarl import URL
 
 from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
@@ -33,7 +33,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -147,7 +147,6 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             SPOTIFY_SCOPES
         )
         self._currently_playing: dict | None = {}
-        self._devices: list[dict] | None = []
         self._playlist: dict | None = None
 
     @property
@@ -258,9 +257,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     @property
     def source_list(self) -> list[str] | None:
         """Return a list of source devices."""
-        if not self._devices:
-            return None
-        return [device["name"] for device in self._devices]
+        return [device["name"] for device in self.data.devices.data]
 
     @property
     def shuffle(self) -> bool | None:
@@ -332,19 +329,16 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         if (
             self._currently_playing
             and not self._currently_playing.get("device")
-            and self._devices
+            and self.data.devices.data
         ):
-            kwargs["device_id"] = self._devices[0].get("id")
+            kwargs["device_id"] = self.data.devices.data[0].get("id")
 
         self.data.client.start_playback(**kwargs)
 
     @spotify_exception_handler
     def select_source(self, source: str) -> None:
         """Select playback device."""
-        if not self._devices:
-            return
-
-        for device in self._devices:
+        for device in self.data.devices.data:
             if device["name"] == source:
                 self.data.client.transfer_playback(
                     device["id"], self.state == STATE_PLAYING
@@ -373,18 +367,18 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             run_coroutine_threadsafe(
                 self.data.session.async_ensure_token_valid(), self.hass.loop
             ).result()
-            self.data.client = Spotify(auth=self.data.session.token["access_token"])
+            self.data.client.set_auth(auth=self.data.session.token["access_token"])
 
         current = self.data.client.current_playback()
         self._currently_playing = current or {}
 
-        self._playlist = None
         context = self._currently_playing.get("context")
-        if context is not None and context["type"] == MEDIA_TYPE_PLAYLIST:
-            self._playlist = self.data.client.playlist(current["context"]["uri"])
-
-        devices = self.data.client.devices() or {}
-        self._devices = devices.get("devices", [])
+        if context is not None and (
+            self._playlist is None or self._playlist["uri"] != context["uri"]
+        ):
+            self._playlist = None
+            if context["type"] == MEDIA_TYPE_PLAYLIST:
+                self._playlist = self.data.client.playlist(current["context"]["uri"])
 
     async def async_browse_media(
         self, media_content_type: str | None = None, media_content_id: str | None = None
@@ -404,4 +398,18 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             self.data.current_user,
             media_content_type,
             media_content_id,
+        )
+
+    @callback
+    def _handle_devices_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if not self.enabled:
+            return
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.data.devices.async_add_listener(self._handle_devices_update)
         )

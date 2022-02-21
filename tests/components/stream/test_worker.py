@@ -669,8 +669,8 @@ async def test_update_stream_source(hass):
 
     stream = Stream(hass, STREAM_SOURCE, {})
     stream.add_provider(HLS_PROVIDER)
-    # Note that keepalive is not set here.  The stream is "restarted" even though
-    # it is not stopping due to failure.
+    # Note that retries are disabled by default in tests, however the stream is "restarted" when
+    # the stream source is updated.
 
     py_av = MockPyAv()
     py_av.container.packets = PacketSequence(TEST_SEQUENCE_LENGTH)
