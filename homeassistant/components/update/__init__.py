@@ -115,7 +115,7 @@ async def handle_update(
         connection.send_error(
             msg["id"],
             "update_failed",
-            f"Update of {msg['identifier']} with version {msg['version']} failed: {err}",
+            f"Update of {msg['identifier']} to version {msg['version']} failed: {err}",
         )
 
     connection.send_result(msg["id"])
