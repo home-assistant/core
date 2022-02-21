@@ -1705,7 +1705,7 @@ pynetgear==0.9.1
 pynetio==0.1.9.1
 
 # homeassistant.components.nina
-pynina==0.1.4
+pynina==0.1.5
 
 # homeassistant.components.nuki
 pynuki==1.5.2
@@ -2073,6 +2073,9 @@ quantum-gateway==0.0.6
 
 # homeassistant.components.rachio
 rachiopy==1.0.3
+
+# homeassistant.components.radio_browser
+radios==0.1.0
 
 # homeassistant.components.radiotherm
 radiotherm==2.1.0
