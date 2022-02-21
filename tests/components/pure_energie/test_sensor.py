@@ -70,6 +70,5 @@ async def test_sensors(
     assert device_entry.identifiers == {(DOMAIN, "aabbccddeeff")}
     assert device_entry.name == "home"
     assert device_entry.manufacturer == "NET2GRID"
-    assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
     assert device_entry.model == "SBWF3102"
     assert device_entry.sw_version == "1.6.16"
