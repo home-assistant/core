@@ -252,6 +252,7 @@ MOCK_VEHICLES = {
             True,  # location
             True,  # battery-status
             True,  # charge-mode
+            True,  # lock-status
         ],
         "endpoints": {
             "battery_status": "battery_status_not_charging.json",
@@ -259,6 +260,7 @@ MOCK_VEHICLES = {
             "cockpit": "cockpit_ev.json",
             "hvac_status": "hvac_status.2.json",
             "location": "location.json",
+            "lock_status": "lock_status.1.json",
         },
         Platform.BINARY_SENSOR: [
             {
@@ -278,6 +280,42 @@ MOCK_VEHICLES = {
                 ATTR_ICON: "mdi:fan-off",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_hvac_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.LOCK,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_lock",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777999_lock_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_rear_left_door",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777999_rear_left_door_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_rear_right_door",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777999_rear_right_door_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_driver_door",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777999_driver_door_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_passenger_door",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777999_passenger_door_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_hatch",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777999_hatch_status",
             },
         ],
         Platform.BUTTON: [
@@ -434,12 +472,14 @@ MOCK_VEHICLES = {
             True,  # location
             True,  # battery-status
             True,  # charge-mode
+            True,  # lock-status
         ],
         "endpoints": {
             "battery_status": "battery_status_charging.json",
             "charge_mode": "charge_mode_always.json",
             "cockpit": "cockpit_fuel.json",
             "location": "location.json",
+            "lock_status": "lock_status.1.json",
         },
         Platform.BINARY_SENSOR: [
             {
@@ -453,6 +493,42 @@ MOCK_VEHICLES = {
                 ATTR_ENTITY_ID: "binary_sensor.reg_number_charging",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_charging",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.LOCK,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_lock",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_lock_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_rear_left_door",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_rear_left_door_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_rear_right_door",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_rear_right_door_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_driver_door",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_driver_door_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_passenger_door",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_passenger_door_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_hatch",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_hatch_status",
             },
         ],
         Platform.BUTTON: [
@@ -604,12 +680,51 @@ MOCK_VEHICLES = {
             True,  # location
             # Ignore,  # battery-status
             # Ignore,  # charge-mode
+            True,  # lock-status
         ],
         "endpoints": {
             "cockpit": "cockpit_fuel.json",
             "location": "location.json",
+            "lock_status": "lock_status.1.json",
         },
-        Platform.BINARY_SENSOR: [],
+        Platform.BINARY_SENSOR: [
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.LOCK,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_lock",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_lock_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_rear_left_door",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_rear_left_door_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_rear_right_door",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_rear_right_door_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_driver_door",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_driver_door_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_passenger_door",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_passenger_door_status",
+            },
+            {
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_hatch",
+                ATTR_STATE: STATE_OFF,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_hatch_status",
+            },
+        ],
         Platform.BUTTON: [
             {
                 ATTR_ENTITY_ID: "button.reg_number_start_air_conditioner",
