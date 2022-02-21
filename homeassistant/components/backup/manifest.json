@@ -9,6 +9,9 @@
   "codeowners": [
     "@home-assistant/core"
   ],
+  "requirements": [
+    "securetar==2022.2.0"
+  ],
   "iot_class": "calculated",
   "quality_scale": "internal"
 }

@@ -1,12 +1,13 @@
 """Backup manager for the Backup integration."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 import hashlib
 import json
 from pathlib import Path
-import tarfile
 from tempfile import TemporaryDirectory
+
+from securetar import SecureTarFile, atomic_contents_add
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -28,13 +29,7 @@ class Backup:
 
     def as_dict(self) -> dict:
         """Return a dict representation of this backup."""
-        return {
-            "slug": self.slug,
-            "name": self.name,
-            "date": self.date,
-            "size": self.size,
-            "path": self.path.as_posix(),
-        }
+        return {**asdict(self), "path": self.path.as_posix()}
 
 
 class BackupManager:
@@ -58,7 +53,7 @@ class BackupManager:
         backups = {}
 
         def _read_backup_info(backup_path: Path) -> None:
-            with tarfile.open(backup_path, "r:") as backup_file:
+            with SecureTarFile(backup_path, "r", gzip=False) as backup_file:
                 if data_file := backup_file.extractfile("./backup.json"):
                     data = json.loads(data_file.read())
                     backup = Backup(
@@ -112,7 +107,7 @@ class BackupManager:
                 "homeassistant": {} if VERSION.dev else {"version": VERSION},
                 "compressed": True,
             }
-            tar_file = Path(self.backup_dir, f"{slug}.tar")
+            tar_file_path = Path(self.backup_dir, f"{slug}.tar")
 
             if not self.backup_dir.exists():
                 LOGGER.debug("Creating backup directory")
@@ -120,57 +115,42 @@ class BackupManager:
 
             def _create_backup() -> None:
                 with TemporaryDirectory() as tmp_dir:
+                    tmp_dir_path = Path(tmp_dir)
                     json_util.save_json(
-                        Path(tmp_dir, "backup.json").as_posix(),
+                        tmp_dir_path.joinpath("backup.json").as_posix(),
                         backup_data,
                     )
-
-                    with tarfile.open(
-                        Path(tmp_dir, "homeassistant.tar.gz"), "w:gz"
-                    ) as tar:
-                        _add_directory_to_tarfile(
-                            tar_file=tar,
+                    with SecureTarFile(
+                        tmp_dir_path.joinpath("data.tar"), "w"
+                    ) as tar_file:
+                        atomic_contents_add(
+                            tar_file=tar_file,
                             origin_path=Path(self.hass.config.path()),
+                            excludes=EXCLUDE_FROM_BACKUP,
+                            arcname="data",
                         )
 
-                    with tarfile.open(tar_file, "w:") as tar:
-                        tar.add(tmp_dir, arcname=".")
+                    with SecureTarFile(tar_file_path, "w") as tar_file:
+                        atomic_contents_add(
+                            tar_file=tar_file,
+                            origin_path=tmp_dir_path,
+                            excludes=EXCLUDE_FROM_BACKUP,
+                            arcname="homeassistant",
+                        )
 
             await self.hass.async_add_executor_job(_create_backup)
             backup = Backup(
                 slug=slug,
                 name=backup_name,
                 date=date_str,
-                path=tar_file,
-                size=round(tar_file.stat().st_size / 1_048_576, 2),
+                path=tar_file_path,
+                size=round(tar_file_path.stat().st_size / 1_048_576, 2),
             )
             self._backups[slug] = backup
             LOGGER.debug("Generated new backup with slug %s", slug)
             return backup
         finally:
             self.backing_up = False
-
-
-def _add_directory_to_tarfile(
-    tar_file: tarfile.TarFile,
-    origin_path: Path,
-    arcname: str = ".",
-) -> None:
-    """Add a directory to a tarfile."""
-    for directory_item in origin_path.iterdir():
-        arcpath = Path(arcname, directory_item.name).as_posix()
-
-        if directory_item.is_file():
-            if any(directory_item.match(exclude) for exclude in EXCLUDE_FROM_BACKUP):
-                continue
-            tar_file.add(directory_item.as_posix(), arcname=arcpath, recursive=False)
-            continue
-
-        if directory_item.is_dir():
-            _add_directory_to_tarfile(tar_file, directory_item, arcpath)
-            continue
-
-        tar_file.add(directory_item.as_posix(), arcname=arcpath, recursive=False)
 
 
 def _generate_slug(date: str, name: str) -> str:
