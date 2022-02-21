@@ -65,6 +65,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input:
+            self._default_user = user_input[CONF_USERNAME]
+            self._default_hub = user_input[CONF_HUB]
+
             try:
                 await self.async_validate_input(user_input)
             except TooManyRequestsException:
