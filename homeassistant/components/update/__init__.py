@@ -25,6 +25,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Update integration."""
     hass.data[DOMAIN] = UpdateManager(hass=hass)
     websocket_api.async_register_command(hass, handle_info)
+    websocket_api.async_register_command(hass, handle_update)
+    websocket_api.async_register_command(hass, handle_skip)
     return True
 
 
@@ -59,8 +61,8 @@ async def handle_info(
         vol.Required("version"): str,
     }
 )
-@callback
-def handle_skip(
+@websocket_api.async_response
+async def handle_skip(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
@@ -68,7 +70,7 @@ def handle_skip(
     """Skip an update."""
     manager: UpdateManager = hass.data[DOMAIN]
 
-    if not manager.domain_is_valid(msg["domain"]):
+    if not await manager.domain_is_valid(msg["domain"]):
         connection.send_error(
             msg["id"], websocket_api.ERR_NOT_FOUND, "Domain not supported"
         )
@@ -96,7 +98,7 @@ async def handle_update(
     """Handle an update."""
     manager: UpdateManager = hass.data[DOMAIN]
 
-    if not manager.domain_is_valid(msg["domain"]):
+    if not await manager.domain_is_valid(msg["domain"]):
         connection.send_error(
             msg["id"],
             websocket_api.ERR_NOT_FOUND,
@@ -176,21 +178,21 @@ class UpdateManager:
         """Add a platform to the update manager."""
         self._platforms[integration_domain] = platform
 
+    async def _load(self) -> None:
+        """Load platforms and data from storage."""
+        await integration_platform.async_process_integration_platforms(
+            self._hass, DOMAIN, _register_update_platform
+        )
+        from_storage = await self._store.async_load()
+        if isinstance(from_storage, dict):
+            self._skip = set(from_storage["skipped"])
+
+        self._loaded = True
+
     async def gather_updates(self) -> list[dict[str, Any]]:
         """Gather updates."""
         if not self._loaded:
-            await integration_platform.async_process_integration_platforms(
-                self._hass, DOMAIN, _register_update_platform
-            )
-            from_storage = await self._store.async_load()
-            if isinstance(from_storage, dict):
-                self._skip = set(from_storage["skipped"])
-
-            # Register additional WS commands
-            websocket_api.async_register_command(self._hass, handle_update)
-            websocket_api.async_register_command(self._hass, handle_skip)
-
-            self._loaded = True
+            await self._load()
 
         updates: dict[str, list[UpdateDescription] | None] = {}
 
@@ -217,8 +219,10 @@ class UpdateManager:
             not in self._skip
         ]
 
-    def domain_is_valid(self, domain: str) -> bool:
+    async def domain_is_valid(self, domain: str) -> bool:
         """Return if the domain is valid."""
+        if not self._loaded:
+            await self._load()
         return domain in self._platforms
 
     @callback
