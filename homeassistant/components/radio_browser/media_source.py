@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import mimetypes
 
-from radios import FilterBy, Order, RadioBrowser
+from radios import FilterBy, Order, RadioBrowser, Station
 
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_CHANNEL,
@@ -19,7 +19,7 @@ from homeassistant.components.media_source.models import (
     PlayMedia,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
 
@@ -40,6 +40,15 @@ async def async_get_media_source(hass: HomeAssistant) -> RadioMediaSource:
     return RadioMediaSource(hass, radios, entry)
 
 
+@callback
+def _async_get_station_mime_type(station: Station) -> str | None:
+    """Determine mime type of a radio station."""
+    mime_type = CODEC_TO_MIMETYPE.get(station.codec)
+    if not mime_type:
+        mime_type, _ = mimetypes.guess_type(station.url)
+    return mime_type
+
+
 class RadioMediaSource(MediaSource):
     """Provide Radio stations as media sources."""
 
@@ -58,11 +67,7 @@ class RadioMediaSource(MediaSource):
         if not station:
             raise BrowseError("Radio station is no longer available")
 
-        # Determine mime type
-        mime_type = CODEC_TO_MIMETYPE.get(station.codec)
-        if not mime_type:
-            mime_type, _ = mimetypes.guess_type(station.url)
-        if not mime_type:
+        if not (mime_type := _async_get_station_mime_type(station)):
             raise BrowseError("Could not determine stream type of radio station")
 
         # Register "click" with Radio Browser
@@ -105,11 +110,16 @@ class RadioMediaSource(MediaSource):
 
             if stations:
                 for station in stations:
+                    if station.codec == "UNKNOWN" or not (
+                        mime_type := _async_get_station_mime_type(station)
+                    ):
+                        continue
+
                     play_station = BrowseMediaSource(
                         domain=DOMAIN,
                         identifier=station.uuid,
                         media_class=MEDIA_CLASS_MUSIC,
-                        media_content_type=CODEC_TO_MIMETYPE.get(station.codec, ""),
+                        media_content_type=mime_type,
                         title=station.name,
                         can_play=True,
                         can_expand=False,
