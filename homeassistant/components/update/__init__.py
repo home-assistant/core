@@ -148,7 +148,9 @@ class UpdateDescription:
     changelog_content: str | None = None
     changelog_url: str | None = None
     icon_url: str | None = None
-    supported_features: list[Literal["backup"]] = []
+    supported_features: list[Literal["backup"]] = dataclasses.field(
+        default_factory=list
+    )
 
 
 class UpdateManager:
