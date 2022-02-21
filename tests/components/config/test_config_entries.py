@@ -12,7 +12,7 @@ from homeassistant.components.config import config_entries
 from homeassistant.config_entries import HANDLERS
 from homeassistant.core import callback
 from homeassistant.generated import config_flows
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -94,6 +94,7 @@ async def test_get_entries(hass, client):
                 "source": "bla",
                 "state": core_ce.ConfigEntryState.NOT_LOADED.value,
                 "supports_options": True,
+                "supports_remove_device": False,
                 "supports_unload": True,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
@@ -106,6 +107,7 @@ async def test_get_entries(hass, client):
                 "source": "bla2",
                 "state": core_ce.ConfigEntryState.SETUP_ERROR.value,
                 "supports_options": False,
+                "supports_remove_device": False,
                 "supports_unload": False,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
@@ -118,6 +120,7 @@ async def test_get_entries(hass, client):
                 "source": "bla3",
                 "state": core_ce.ConfigEntryState.NOT_LOADED.value,
                 "supports_options": False,
+                "supports_remove_device": False,
                 "supports_unload": False,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
@@ -370,6 +373,7 @@ async def test_create_account(hass, client, enable_custom_integrations):
             "source": core_ce.SOURCE_USER,
             "state": core_ce.ConfigEntryState.LOADED.value,
             "supports_options": False,
+            "supports_remove_device": False,
             "supports_unload": False,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
@@ -443,6 +447,7 @@ async def test_two_step_flow(hass, client, enable_custom_integrations):
                 "source": core_ce.SOURCE_USER,
                 "state": core_ce.ConfigEntryState.LOADED.value,
                 "supports_options": False,
+                "supports_remove_device": False,
                 "supports_unload": False,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
