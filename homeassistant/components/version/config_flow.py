@@ -26,7 +26,7 @@ from .const import (
     DEFAULT_SOURCE,
     DOMAIN,
     POSTFIX_CONTAINER_NAME,
-    SOURCE_DOKCER,
+    SOURCE_DOCKER,
     SOURCE_HASSIO,
     STEP_USER,
     STEP_VERSION_SOURCE,
@@ -171,7 +171,7 @@ def _convert_imported_configuration(config: dict[str, Any]) -> Any:
         if source == SOURCE_HASSIO:
             data[CONF_SOURCE] = "supervisor"
             data[CONF_VERSION_SOURCE] = VERSION_SOURCE_VERSIONS
-        elif source == SOURCE_DOKCER:
+        elif source == SOURCE_DOCKER:
             data[CONF_SOURCE] = "container"
             data[CONF_VERSION_SOURCE] = VERSION_SOURCE_DOCKER_HUB
         else:
