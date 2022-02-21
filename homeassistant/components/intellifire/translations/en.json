@@ -1,18 +1,23 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Device is already configured"
+      "abort": {
+        "already_configured": "Device is already configured"
+      },
+      "error": {
+        "cannot_connect": "Could not connect to a fireplace endpoint at url: http://{host}/poll\nVerify IP address and try again"
+      },
+      "step": {
+        "local_config": {
+          "title": "IntelliFire - Local Config",
+          "description": "Enter the IP address of the IntelliFire unit on your local network.",
+          "data": {
+            "host": "Host (IP Address)"
+          }
         },
-        "error": {
-            "cannot_connect": "Failed to connect",
-            "unknown": "Unexpected error"
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "host": "Host"
-                }
-            }
+        "user": {
+          "description": "Username and password are the same information used in your IntelliFire Android/iOS application.",
+          "title": "IntelliFire Config"
         }
+      }
     }
-}
+  }

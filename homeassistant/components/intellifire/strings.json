@@ -1,7 +1,8 @@
 {
   "config": {
     "step": {
-      "user": {
+      "local_config": {
+        "description": "Local Configuration",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         }
@@ -15,3 +16,4 @@
     }
   }
 }
+
