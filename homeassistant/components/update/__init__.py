@@ -26,7 +26,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = UpdateManager(hass=hass)
 
     websocket_api.async_register_command(hass, handle_info)
-    websocket_api.async_register_command(hass, perform_update)
+    websocket_api.async_register_command(hass, handle_update)
     websocket_api.async_register_command(hass, handle_skip)
 
     await integration_platform.async_process_integration_platforms(
@@ -96,7 +96,7 @@ def handle_skip(
     }
 )
 @websocket_api.async_response
-async def perform_update(
+async def handle_update(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
