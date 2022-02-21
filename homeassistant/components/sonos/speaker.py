@@ -263,6 +263,10 @@ class SonosSpeaker:
             )
             dispatcher_send(self.hass, SONOS_CREATE_BATTERY, self)
 
+        if (mic_enabled := self.soco.mic_enabled) is not None:
+            self.mic_enabled = mic_enabled
+            dispatcher_send(self.hass, SONOS_CREATE_MIC_SENSOR, self)
+
         if new_alarms := [
             alarm.alarm_id for alarm in self.alarms if alarm.zone.uid == self.soco.uid
         ]:
