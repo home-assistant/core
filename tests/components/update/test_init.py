@@ -3,14 +3,11 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from unittest.mock import AsyncMock, Mock
+from typing import Any
+from unittest.mock import Mock
 
-from homeassistant.components.update import (
-    DOMAIN,
-    UpdateDescription,
-    UpdateRegistration,
-)
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.components.update import DOMAIN, UpdateDescription
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_platform
@@ -18,33 +15,37 @@ from tests.common import mock_platform
 
 async def setup_mock_domain(
     hass: HomeAssistant,
-    get_updates: Callable[[HomeAssistant], Awaitable[list[UpdateDescription]]]
+    async_list_updates: Callable[[HomeAssistant], Awaitable[list[UpdateDescription]]]
     | None = None,
-    update_callback: Callable[[HomeAssistant, UpdateDescription, dict], Awaitable[bool]]
+    async_perform_update: Callable[[HomeAssistant, str, str], Awaitable[bool]]
     | None = None,
 ) -> None:
     """Set up a mock domain."""
 
-    async def mock_get_updates(hass: HomeAssistant) -> list[UpdateDescription]:
+    async def _mock_async_list_updates(hass: HomeAssistant) -> list[UpdateDescription]:
         return [
             UpdateDescription(
                 identifier="lorem_ipsum",
                 name="Lorem Ipsum",
                 current_version="1.0.0",
                 available_version="1.0.1",
-                update_callback=update_callback or AsyncMock(),
             )
         ]
 
-    @callback
-    def _mock_async_register(registration: UpdateRegistration) -> None:
-        registration.async_register(get_updates or mock_get_updates)
+    async def _mock_async_perform_update(
+        hass: HomeAssistant,
+        identifier: str,
+        version: str,
+        **kwargs: Any,
+    ) -> bool:
+        return True
 
     mock_platform(
         hass,
         "some_domain.update",
         Mock(
-            async_register=_mock_async_register,
+            async_list_updates=async_list_updates or _mock_async_list_updates,
+            async_perform_update=async_perform_update or _mock_async_perform_update,
         ),
     )
 
@@ -81,10 +82,10 @@ async def test_update_updates(hass, hass_ws_client):
 async def test_update_updates_with_timeout_error(hass, hass_ws_client):
     """Test timeout while getting updates."""
 
-    async def mock_get_updates(hass: HomeAssistant) -> list[UpdateDescription]:
+    async def mock_async_list_updates(hass: HomeAssistant) -> list[UpdateDescription]:
         raise asyncio.TimeoutError()
 
-    await setup_mock_domain(hass, get_updates=mock_get_updates)
+    await setup_mock_domain(hass, async_list_updates=mock_async_list_updates)
 
     assert await async_setup_component(hass, DOMAIN, {})
     data = await gather_update_info(hass, hass_ws_client)
@@ -95,10 +96,10 @@ async def test_update_updates_with_timeout_error(hass, hass_ws_client):
 async def test_update_updates_with_exception(hass, hass_ws_client):
     """Test exception while getting updates."""
 
-    async def mock_get_updates(hass: HomeAssistant) -> list[UpdateDescription]:
+    async def mock_async_list_updates(hass: HomeAssistant) -> list[UpdateDescription]:
         raise Exception()
 
-    await setup_mock_domain(hass, get_updates=mock_get_updates)
+    await setup_mock_domain(hass, async_list_updates=mock_async_list_updates)
 
     assert await async_setup_component(hass, DOMAIN, {})
     data = await gather_update_info(hass, hass_ws_client)
@@ -123,11 +124,11 @@ async def test_update_update(hass, hass_ws_client):
             "type": "update/update",
             "domain": update["domain"],
             "identifier": update["identifier"],
+            "version": update["available_version"],
         }
     )
     resp = await client.receive_json()
     assert resp["success"]
-    assert resp["result"] == []
 
 
 async def test_skip_update(hass, hass_ws_client):
@@ -147,11 +148,11 @@ async def test_skip_update(hass, hass_ws_client):
             "type": "update/skip",
             "domain": update["domain"],
             "identifier": update["identifier"],
+            "version": update["available_version"],
         }
     )
     resp = await client.receive_json()
     assert resp["success"]
-    assert resp["result"] == []
 
     data = await gather_update_info(hass, hass_ws_client)
     assert len(data) == 0
@@ -173,10 +174,11 @@ async def test_skip_non_existing_update(hass, hass_ws_client):
             "type": "update/skip",
             "domain": "non_existing",
             "identifier": "non_existing",
+            "version": "non_existing",
         }
     )
     resp = await client.receive_json()
-    assert resp["success"]
+    assert not resp["success"]
 
     data = await gather_update_info(hass, hass_ws_client)
     assert len(data) == 1
@@ -190,15 +192,15 @@ async def test_update_update_non_existing(hass, hass_ws_client):
     data = await gather_update_info(hass, hass_ws_client)
 
     assert len(data) == 1
-    update = data[0]
 
     client = await hass_ws_client(hass)
     await client.send_json(
         {
             "id": 1,
             "type": "update/update",
-            "domain": update["domain"],
+            "domain": "does_not_exist",
             "identifier": "does_not_exist",
+            "version": "non_existing",
         }
     )
     resp = await client.receive_json()
@@ -209,12 +211,15 @@ async def test_update_update_non_existing(hass, hass_ws_client):
 async def test_update_update_failed(hass, hass_ws_client):
     """Test that we correctly handle failed updates."""
 
-    async def mock_update_callback(
-        hass: HomeAssistant, data: UpdateDescription, **kwargs
+    async def mock_async_perform_update(
+        hass: HomeAssistant,
+        identifier: str,
+        version: str,
+        **kwargs,
     ) -> bool:
         return False
 
-    await setup_mock_domain(hass, update_callback=mock_update_callback)
+    await setup_mock_domain(hass, async_perform_update=mock_async_perform_update)
 
     assert await async_setup_component(hass, DOMAIN, {})
     data = await gather_update_info(hass, hass_ws_client)
@@ -229,6 +234,7 @@ async def test_update_update_failed(hass, hass_ws_client):
             "type": "update/update",
             "domain": update["domain"],
             "identifier": update["identifier"],
+            "version": update["available_version"],
         }
     )
     resp = await client.receive_json()

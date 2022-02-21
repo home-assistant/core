@@ -2,10 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine
 import dataclasses
 import logging
-from types import ModuleType
 from typing import Any, Protocol
 
 import async_timeout
@@ -19,7 +17,6 @@ from homeassistant.helpers.typing import ConfigType
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "update"
-
 INFO_CALLBACK_TIMEOUT = 5
 STORAGE_VERSION = 1
 
@@ -42,11 +39,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def _register_update_platform(
     hass: HomeAssistant,
     integration_domain: str,
-    platform: ModuleType,
+    platform: UpdatePlatformProtocol,
 ) -> None:
-    """Register an update platform."""
-    if hasattr(platform, "async_register"):
-        platform.async_register(UpdateRegistration(hass, integration_domain))
+    """Register a update platform."""
+    manager: UpdateManager = hass.data[DOMAIN]
+    manager.add_platform(integration_domain, platform)
 
 
 @websocket_api.websocket_command({vol.Required("type"): "update/info"})
@@ -54,7 +51,7 @@ async def _register_update_platform(
 async def handle_info(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Get pending updates from all platforms."""
     manager: UpdateManager = hass.data[DOMAIN]
@@ -67,18 +64,26 @@ async def handle_info(
         vol.Required("type"): "update/skip",
         vol.Required("domain"): str,
         vol.Required("identifier"): str,
+        vol.Required("version"): str,
     }
 )
 @callback
 def handle_skip(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Skip an update."""
     manager: UpdateManager = hass.data[DOMAIN]
-    manager.skip_update(msg["domain"], msg["identifier"])
-    connection.send_result(msg["id"], manager.filtered_updates)
+
+    if not manager.domain_is_valid(msg["domain"]):
+        connection.send_error(
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Domain not supported"
+        )
+        return
+
+    manager.skip_update(msg["domain"], msg["identifier"], msg["version"])
+    connection.send_result(msg["id"])
 
 
 @websocket_api.websocket_command(
@@ -86,6 +91,7 @@ def handle_skip(
         vol.Required("type"): "update/update",
         vol.Required("domain"): str,
         vol.Required("identifier"): str,
+        vol.Required("version"): str,
         vol.Optional("backup"): bool,
     }
 )
@@ -93,37 +99,42 @@ def handle_skip(
 async def perform_update(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Handle an update."""
     manager: UpdateManager = hass.data[DOMAIN]
-    result = await manager.perform_update(
-        msg["domain"], msg["identifier"], **{"backup": msg.get("backup")}
-    )
-    if result is None:
+
+    if not manager.domain_is_valid(msg["domain"]):
         connection.send_error(
-            msg["id"],
-            "not_found",
-            f"No updates found for {msg['domain']} and {msg['identifier']}",
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Domain not supported"
         )
         return
 
-    if not result:
+    if not await manager.perform_update(
+        domain=msg["domain"],
+        identifier=msg["identifier"],
+        version=msg["version"],
+        **{"backup": msg.get("backup")},
+    ):
         connection.send_error(msg["id"], "update_failed", "Update failed")
         return
 
-    connection.send_result(msg["id"], manager.filtered_updates)
+    connection.send_result(msg["id"])
 
 
-class UpdateDescriptionUpdateCallback(Protocol):
-    """Protocol type for UpdateDescription.update_callback."""
+class UpdatePlatformProtocol(Protocol):
+    """Define the format that update platforms can have."""
 
-    def __call__(
+    async def async_list_updates(self, hass: HomeAssistant) -> list[UpdateDescription]:
+        """List all updates available in the integration."""
+
+    async def async_perform_update(
         self,
         hass: HomeAssistant,
-        description: UpdateDescription,
+        identifier: str,
+        version: str,
         **kwargs: Any,
-    ) -> Coroutine[None, None, bool]:
+    ) -> bool:
         """Perform an update."""
 
 
@@ -135,32 +146,10 @@ class UpdateDescription:
     name: str
     current_version: str
     available_version: str
-    update_callback: UpdateDescriptionUpdateCallback
     changelog_content: str | None = None
     changelog_url: str | None = None
     icon_url: str | None = None
     provides_backup: bool = False
-
-
-@dataclasses.dataclass()
-class UpdateRegistration:
-    """Helper class to track platform registration."""
-
-    hass: HomeAssistant
-    domain: str
-    updates_callback: Callable[
-        [HomeAssistant], Awaitable[list[UpdateDescription]]
-    ] | None = None
-
-    @callback
-    def async_register(
-        self,
-        updates_callback: Callable[[HomeAssistant], Awaitable[list[UpdateDescription]]],
-    ):
-        """Register the updates info callback."""
-        manager: UpdateManager = self.hass.data[DOMAIN]
-        self.updates_callback = updates_callback
-        manager.register(self)
 
 
 class UpdateManager:
@@ -176,122 +165,95 @@ class UpdateManager:
         )
         self._skip: set[str] = set()
         self._updating: set[str] = set()
-        self._registrations: dict[str, UpdateRegistration] = {}
-        self._updates: dict[str, list[UpdateDescription]] = {}
+        self._platforms: dict[str, UpdatePlatformProtocol] = {}
         self._loaded = False
 
-    @property
-    def filtered_updates(self) -> list[dict]:
-        """Return a list of updates that are not skipped."""
-        return [
-            {
-                "domain": domain,
-                "identifier": description.identifier,
-                "name": description.name,
-                "current_version": description.current_version,
-                "available_version": description.available_version,
-                "changelog_url": description.changelog_url,
-                "icon_url": description.icon_url,
-                "provides_backup": description.provides_backup,
-            }
-            for domain, domain_data in self._updates.items()
-            if domain_data is not None
-            for description in domain_data
-            if f"{domain}_{description.identifier}_{description.available_version}"
-            not in self._skip
-        ]
+    def add_platform(
+        self,
+        integration_domain: str,
+        platform: UpdatePlatformProtocol,
+    ) -> None:
+        """Add a platform to the update manager."""
+        self._platforms[integration_domain] = platform
 
-    async def gather_updates(self) -> list[dict]:
+    async def gather_updates(self) -> list[dict[str, Any]]:
         """Gather updates."""
         if not self._loaded:
             self._skip = set(await self._store.async_load() or [])
             self._loaded = True
 
-        for domain, domain_data in zip(
-            self._registrations,
+        updates: dict[str, list[UpdateDescription]] = {}
+
+        for domain, update_descriptions in zip(
+            self._platforms,
             await asyncio.gather(
                 *(
-                    self._get_integration_info(registration)
-                    for registration in self._registrations.values()
+                    self._get_integration_info(integration_domain, registration)
+                    for integration_domain, registration in self._platforms.items()
                 )
             ),
         ):
-            self._updates[domain] = domain_data
-        return self.filtered_updates
+            updates[domain] = update_descriptions
+
+        return [
+            {
+                "domain": integration_domain,
+                **dataclasses.asdict(description),
+            }
+            for integration_domain, update_descriptions in updates.items()
+            if update_descriptions is not None
+            for description in update_descriptions
+            if f"{integration_domain}_{description.identifier}_{description.available_version}"
+            not in self._skip
+        ]
+
+    def domain_is_valid(self, domain: str) -> bool:
+        """Return if the domain is valid."""
+        return domain in self._platforms
 
     @callback
-    def _data_to_save(self) -> list:
+    def _data_to_save(self) -> list[str]:
         """Schedule storing the data."""
         return list(self._skip)
-
-    def _get_update_description(
-        self, domain: str, identifier: str
-    ) -> UpdateDescription | None:
-        """Get an update."""
-        return next(
-            (
-                update
-                for update in self._updates.get(domain, [])
-                if update.identifier == identifier
-            ),
-            None,
-        )
-
-    def register(self, registration: UpdateRegistration) -> None:
-        """Register an update handler."""
-        self._registrations[registration.domain] = registration
 
     async def perform_update(
         self,
         domain: str,
         identifier: str,
+        version: str,
         **kwargs: Any,
-    ) -> bool | None:
+    ) -> bool:
         """Perform an update."""
-        update_description = self._get_update_description(domain, identifier)
-
-        if update_description is None:
-            return None
-
-        self._updating.add(f"{domain}_{identifier}")
-        if not await update_description.update_callback(
-            self._hass,
-            update_description,
-            **kwargs,
-        ):
-            return False
-
-        self._updates[domain].remove(update_description)
-        self._updating.remove(f"{domain}_{identifier}")
-        return True
+        update_key = f"{domain}_{identifier}_{version}"
+        self._updating.add(update_key)
+        try:
+            return await self._platforms[domain].async_perform_update(
+                hass=self._hass,
+                identifier=identifier,
+                version=version,
+                **kwargs,
+            )
+        finally:
+            self._updating.remove(update_key)
 
     @callback
-    def skip_update(self, domain: str, identifier: str) -> None:
+    def skip_update(self, domain: str, identifier: str, version: str) -> None:
         """Skip an update."""
-        update_description = self._get_update_description(domain, identifier)
-        if update_description is None:
-            return
-
-        self._skip.add(
-            f"{domain}_{update_description.identifier}_{update_description.available_version}"
-        )
-        self._updates[domain].remove(update_description)
+        self._skip.add(f"{domain}_{identifier}_{version}")
         self._store.async_delay_save(self._data_to_save, 60)
 
     async def _get_integration_info(
         self,
-        registration: UpdateRegistration,
+        integration_domain: str,
+        platform: UpdatePlatformProtocol,
     ) -> list[UpdateDescription] | None:
         """Get integration update details."""
-        assert registration.updates_callback
 
         try:
             async with async_timeout.timeout(INFO_CALLBACK_TIMEOUT):
-                return await registration.updates_callback(self._hass)
+                return await platform.async_list_updates(hass=self._hass)
         except asyncio.TimeoutError:
-            _LOGGER.warning(
-                "Timeout while getting updates from %s", registration.domain
-            )
+            _LOGGER.warning("Timeout while getting updates from %s", integration_domain)
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Error fetching info from %s", registration.domain)
+            _LOGGER.exception("Error fetching info from %s", integration_domain)
         return None
