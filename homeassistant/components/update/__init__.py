@@ -114,7 +114,7 @@ async def handle_update(
         domain=msg["domain"],
         identifier=msg["identifier"],
         version=msg["version"],
-        **{"backup": msg.get("backup")},
+        backup=msg.get("backup"),
     ):
         connection.send_error(msg["id"], "update_failed", "Update failed")
         return
@@ -164,7 +164,6 @@ class UpdateManager:
             key=DOMAIN,
         )
         self._skip: set[str] = set()
-        self._updating: set[str] = set()
         self._platforms: dict[str, UpdatePlatformProtocol] = {}
         self._loaded = False
 
@@ -182,7 +181,7 @@ class UpdateManager:
             self._skip = set(await self._store.async_load() or [])
             self._loaded = True
 
-        updates: dict[str, list[UpdateDescription]] = {}
+        updates: dict[str, list[UpdateDescription] | None] = {}
 
         for domain, update_descriptions in zip(
             self._platforms,
@@ -224,17 +223,12 @@ class UpdateManager:
         **kwargs: Any,
     ) -> bool:
         """Perform an update."""
-        update_key = f"{domain}_{identifier}_{version}"
-        self._updating.add(update_key)
-        try:
-            return await self._platforms[domain].async_perform_update(
-                hass=self._hass,
-                identifier=identifier,
-                version=version,
-                **kwargs,
-            )
-        finally:
-            self._updating.remove(update_key)
+        return await self._platforms[domain].async_perform_update(
+            hass=self._hass,
+            identifier=identifier,
+            version=version,
+            **kwargs,
+        )
 
     @callback
     def skip_update(self, domain: str, identifier: str, version: str) -> None:
