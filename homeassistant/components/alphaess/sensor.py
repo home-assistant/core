@@ -1,47 +1,115 @@
 """Alpha ESS Sensor definitions."""
-import datetime
-import logging
+from typing import List
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
-from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_ENERGY,
-    ENERGY_KILO_WATT_HOUR,
-    PERCENTAGE,
-)
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, PERCENTAGE
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import AlphaESSDataUpdateCoordinator
+from .entity import AlphaESSSensorDescription
+from .enums import AlphaESSNames
 
-_LOGGER: logging.Logger = logging.getLogger(__package__)
+SENSOR_DESCRIPTIONS: List[AlphaESSSensorDescription] = [
+    AlphaESSSensorDescription(
+        key=AlphaESSNames.SolarProduction,
+        name="Solar Production",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    AlphaESSSensorDescription(
+        key=AlphaESSNames.SolarToBattery,
+        name="Solar to Battery",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    AlphaESSSensorDescription(
+        key=AlphaESSNames.SolarToGrid,
+        name="Solar to Grid",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    AlphaESSSensorDescription(
+        key=AlphaESSNames.SolarToLoad,
+        name="Solar to Load",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    AlphaESSSensorDescription(
+        key=AlphaESSNames.TotalLoad,
+        name="Total Load",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    AlphaESSSensorDescription(
+        key=AlphaESSNames.GridToLoad,
+        name="Grid to Load",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    AlphaESSSensorDescription(
+        key=AlphaESSNames.GridToBattery,
+        name="Grid to Battery",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    AlphaESSSensorDescription(
+        key=AlphaESSNames.StateOfCharge,
+        name="State of Charge",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AlphaESSSensorDescription(
+        key=AlphaESSNames.Charge,
+        name="Charge",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    AlphaESSSensorDescription(
+        key=AlphaESSNames.Discharge,
+        name="Discharge",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+]
 
 
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
     """Defer sensor setup to the shared sensor module."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+
+    coordinator: AlphaESSDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+    entities: List[AlphaESSSensor] = []
+
+    key_supported_states = {
+        description.key: description for description in SENSOR_DESCRIPTIONS
+    }
 
     for invertor in coordinator.data:
-        serial = invertor["sys_sn"]
-        async_add_entities(
-            [
-                AlphaESSSensor(coordinator, entry, serial, "Solar Production"),
-                AlphaESSSensor(coordinator, entry, serial, "Solar to Battery"),
-                AlphaESSSensor(coordinator, entry, serial, "Solar to Grid"),
-                AlphaESSSensor(coordinator, entry, serial, "Solar to Load"),
-                AlphaESSSensor(coordinator, entry, serial, "Total Load"),
-                AlphaESSSensor(coordinator, entry, serial, "Grid to Load"),
-                AlphaESSSensor(coordinator, entry, serial, "Grid to Battery"),
-                AlphaESSSensor(coordinator, entry, serial, "State of Charge"),
-                AlphaESSSensor(coordinator, entry, serial, "Charge"),
-                AlphaESSSensor(coordinator, entry, serial, "Discharge"),
-            ]
-        )
+        serial = invertor
+        for description in key_supported_states:
+            entities.append(
+                AlphaESSSensor(
+                    coordinator, entry, serial, key_supported_states[description].name
+                )
+            )
+    async_add_entities(entities)
 
     return
 
@@ -57,25 +125,16 @@ class AlphaESSSensor(CoordinatorEntity, SensorEntity):
         self._serial = serial
         self._coordinator = coordinator
 
-        for invertor in self._coordinator.data:
-            serial = invertor["sys_sn"]
+        for invertor in coordinator.data:
+            serial = invertor
             if self._serial == serial:
-                model = invertor["minv"]
-
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, serial)},
-            manufacturer="AlphaESS",
-            model=model,
-            name=f"Alpha ESS Energy Statistics : {serial}",
-        )
-
-        if name == "State of Charge":
-            self._attr_state_class = STATE_CLASS_MEASUREMENT
-            self._attr_device_class = DEVICE_CLASS_BATTERY
-        else:
-            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
-            self._attr_device_class = DEVICE_CLASS_ENERGY
+                self._attr_device_info = DeviceInfo(
+                    entry_type=DeviceEntryType.SERVICE,
+                    identifiers={(DOMAIN, serial)},
+                    manufacturer="AlphaESS",
+                    model=coordinator.data[invertor]["Model"],
+                    name=f"Alpha ESS Energy Statistics : {serial}",
+                )
 
     @property
     def unique_id(self):
@@ -90,35 +149,12 @@ class AlphaESSSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        if self._name == "State of Charge":
-            return PERCENTAGE
-        else:
-            return ENERGY_KILO_WATT_HOUR
+        key_supported_states = {
+            description.key: description for description in SENSOR_DESCRIPTIONS
+        }
+        return key_supported_states[self._name].native_unit_of_measurement
 
     @property
     def native_value(self):
         """Return the state of the resources."""
-        for invertor in self._coordinator.data:
-            serial = invertor["sys_sn"]
-            if self._serial == serial:
-                index = int(datetime.date.today().strftime("%d")) - 1
-                if self._name == "Solar Production":
-                    return invertor["statistics"]["EpvT"]
-                elif self._name == "Solar to Battery":
-                    return invertor["statistics"]["Epvcharge"]
-                elif self._name == "Solar to Grid":
-                    return invertor["statistics"]["Eout"]
-                elif self._name == "Solar to Load":
-                    return invertor["statistics"]["Epv2load"]
-                elif self._name == "Total Load":
-                    return invertor["statistics"]["EHomeLoad"]
-                elif self._name == "Grid to Load":
-                    return invertor["statistics"]["EGrid2Load"]
-                elif self._name == "Grid to Battery":
-                    return invertor["statistics"]["EGridCharge"]
-                elif self._name == "State of Charge":
-                    return invertor["statistics"]["Soc"]
-                elif self._name == "Charge":
-                    return invertor["system_statistics"]["ECharge"][index]
-                elif self._name == "Discharge":
-                    return invertor["system_statistics"]["EDischarge"][index]
+        return self._coordinator.data[self._serial][self._name]

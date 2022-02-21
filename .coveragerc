@@ -47,6 +47,10 @@ omit =
     homeassistant/components/alarmdecoder/binary_sensor.py
     homeassistant/components/alarmdecoder/const.py
     homeassistant/components/alarmdecoder/sensor.py
+    homeassistant/components/alphaess/__init__.py
+    homeassistant/components/alphaess/const.py
+    homeassistant/components/alphaess/coordinator.py
+    homeassistant/components/alphaess/sensor.py
     homeassistant/components/alpha_vantage/sensor.py
     homeassistant/components/amazon_polly/*
     homeassistant/components/amberelectric/__init__.py

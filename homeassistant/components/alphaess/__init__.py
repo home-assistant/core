@@ -41,3 +41,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update options."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+# class AlphaESSInverter():
+#     """Class for Inverter data."""
+
+#     def __init__(self, SolarProduction,SolarToBattery,SolarToGrid,SolarToLoad,TotalLoad,GridToLoad,GridToBattery,StateOfCharge,Charge,Discharge):
+#         self.SolarProduction = SolarProduction
+#         self.SolartToBattery = SolarToBattery
+#         self.SolarToGrid = SolarToGrid
+#         self.SolarToLoad = SolarToLoad
+#         self.TotalLoad = TotalLoad
+#         self.GridToLoad = GridToLoad
+#         self.GridToBattery = GridToBattery
+#         self.StateOfCharge = StateOfCharge
+#         self.Charge = Charge
+#         self.Discharge = Discharge
