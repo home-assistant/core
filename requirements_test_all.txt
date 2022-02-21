@@ -507,7 +507,7 @@ googlemaps==2.5.1
 greeclimate==1.0.2
 
 # homeassistant.components.greeneye_monitor
-greeneye_monitor==3.0.1
+greeneye_monitor==3.0.3
 
 # homeassistant.components.pure_energie
 gridnet==4.0.0
