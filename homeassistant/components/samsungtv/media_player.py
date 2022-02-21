@@ -164,7 +164,7 @@ class SamsungTVDevice(MediaPlayerEntity):
 
         if self._attr_state == STATE_ON and self._app_list is None:
             self._app_list = {}  # Ensure that we don't update it twice in parallel
-            self.hass.async_add_job(self._update_app_list)
+            self.hass.add_job(self._update_app_list)
 
     def _update_app_list(self) -> None:
         self._app_list = self._bridge.get_app_list()
