@@ -150,6 +150,17 @@ FAKE_SOCKET = BulbType(
     white_channels=2,
     white_to_color_ratio=80,
 )
+FAKE_OLD_FIRMWARE_DIMMABLE_BULB = BulbType(
+    bulb_type=BulbClass.DW,
+    name=None,
+    features=Features(
+        color=False, color_tmp=False, effect=True, brightness=True, dual_head=False
+    ),
+    kelvin_range=None,
+    fw_version="1.8.0",
+    white_channels=1,
+    white_to_color_ratio=80,
+)
 
 
 async def setup_integration(
