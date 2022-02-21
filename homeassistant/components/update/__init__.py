@@ -98,18 +98,25 @@ async def handle_update(
 
     if not manager.domain_is_valid(msg["domain"]):
         connection.send_error(
-            msg["id"], websocket_api.ERR_NOT_FOUND, "Domain not supported"
+            msg["id"],
+            websocket_api.ERR_NOT_FOUND,
+            f"{msg['domain']} is not a supported domain",
         )
         return
 
-    if not await manager.perform_update(
-        domain=msg["domain"],
-        identifier=msg["identifier"],
-        version=msg["version"],
-        backup=msg.get("backup"),
-    ):
-        connection.send_error(msg["id"], "update_failed", "Update failed")
-        return
+    try:
+        await manager.perform_update(
+            domain=msg["domain"],
+            identifier=msg["identifier"],
+            version=msg["version"],
+            backup=msg.get("backup"),
+        )
+    except Exception as err:  # pylint: disable=broad-except
+        connection.send_error(
+            msg["id"],
+            "update_failed",
+            f"Update of {msg['identifier']} with version {msg['version']} failed: {err}",
+        )
 
     connection.send_result(msg["id"])
 
@@ -126,7 +133,7 @@ class UpdatePlatformProtocol(Protocol):
         identifier: str,
         version: str,
         **kwargs: Any,
-    ) -> bool:
+    ) -> None:
         """Perform an update."""
 
 
@@ -225,9 +232,9 @@ class UpdateManager:
         identifier: str,
         version: str,
         **kwargs: Any,
-    ) -> bool:
+    ) -> None:
         """Perform an update."""
-        return await self._platforms[domain].async_perform_update(
+        await self._platforms[domain].async_perform_update(
             hass=self._hass,
             identifier=identifier,
             version=version,
