@@ -182,8 +182,6 @@ class TariffSelect(RestoreEntity):
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
         await super().async_added_to_hass()
-        if self._current_tariff is not None:
-            return
 
         state = await self.async_get_last_state()
         if not state or state.state not in self._tariffs:

@@ -25,6 +25,7 @@
                 "data": {
                     "fallback": "Ative o modo de fallback."
                 },
+                "description": "O modo Fallback mudar\u00e1 para Smart Schedule na pr\u00f3xima troca de agendamento ap\u00f3s ajustar manualmente uma zona.",
                 "title": "Ajuste as op\u00e7\u00f5es do Tado."
             }
         }

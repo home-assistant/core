@@ -33,6 +33,7 @@ MOCK_GATEWAY2_RESPONSE = [Mock(id=TEST_GATEWAY_ID2)]
 
 FAKE_ZERO_CONF_INFO = ZeroconfServiceInfo(
     host="192.168.0.51",
+    addresses=["192.168.0.51"],
     port=443,
     hostname=f"gateway-{TEST_GATEWAY_ID}.local.",
     type="_kizbox._tcp.local.",

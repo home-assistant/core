@@ -15,7 +15,14 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.const import (
+    CONF_NAME,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_WATT_HOUR,
+    POWER_WATT,
+)
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -238,6 +245,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 SENSORS = {desc.key: desc for desc in SENSOR_TYPES}
 
+SENSOR_UNIT_MAPPING = {
+    "Wh": ENERGY_WATT_HOUR,
+    "kWh": ENERGY_KILO_WATT_HOUR,
+    "W": POWER_WATT,
+    "A": ELECTRIC_CURRENT_AMPERE,
+    "V": ELECTRIC_POTENTIAL_VOLT,
+}
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -435,4 +450,7 @@ class EDL21Entity(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
-        return self._telegram.get("unit")
+        if (unit := self._telegram.get("unit")) is None:
+            return None
+
+        return SENSOR_UNIT_MAPPING[unit]

@@ -1,9 +1,9 @@
 {
     "device_automation": {
         "action_type": {
-            "toggle": "Alternar {nome_da_entidade}",
-            "turn_off": "Desligar {nome_da_entidade}",
-            "turn_on": "Ligar {nome_da_entidade}"
+            "toggle": "Alternar {entity_name}",
+            "turn_off": "Desligar {entity_name}",
+            "turn_on": "Ligar {entity_name}"
         },
         "condition_type": {
             "is_off": "{entity_name} est\u00e1 desligado",

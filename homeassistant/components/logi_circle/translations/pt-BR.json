@@ -13,7 +13,7 @@
         },
         "step": {
             "auth": {
-                "description": "Por favor, siga o link abaixo e <b> Aceite </b> o acesso \u00e0 sua conta do Logi Circle, depois volte e pressione <b> Enviar </b> abaixo. \n\n [Link] ( {authorization_url} )",
+                "description": "Por favor, siga o link abaixo e **Aceite** o acesso \u00e0 sua conta do Logi Circle, depois volte e pressione **Enviar** abaixo. \n\n [Link] ( {authorization_url} )",
                 "title": "Autenticar com o Logi Circle"
             },
             "user": {

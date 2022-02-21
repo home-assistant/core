@@ -78,9 +78,8 @@ async def async_setup_platform(
     """
     mac_addr = config[CONF_MAC]
     host = config.get(CONF_HOST)
-    switches = config.get(CONF_SWITCHES)
 
-    if switches:
+    if switches := config.get(CONF_SWITCHES):
         platform_data = hass.data[DOMAIN].platforms.setdefault(Platform.SWITCH, {})
         platform_data.setdefault(mac_addr, []).extend(switches)
 

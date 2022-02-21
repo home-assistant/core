@@ -1,4 +1,5 @@
 """APNS Notification platform."""
+# pylint: disable=import-error
 from contextlib import suppress
 import logging
 

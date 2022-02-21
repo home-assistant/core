@@ -11,9 +11,11 @@
         "step": {
             "user": {
                 "data": {
+                    "email": "Email",
                     "password": "Senha",
                     "timeout": "Tempo limite"
-                }
+                },
+                "title": "Conecte-se ao seu monitor de Energia Sense"
             }
         }
     }

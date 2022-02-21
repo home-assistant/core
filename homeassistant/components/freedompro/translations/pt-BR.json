@@ -11,7 +11,9 @@
             "user": {
                 "data": {
                     "api_key": "Chave da API"
-                }
+                },
+                "description": "Insira a chave de API obtida em https://home.freedompro.eu",
+                "title": "Chave da API Freedompro"
             }
         }
     }

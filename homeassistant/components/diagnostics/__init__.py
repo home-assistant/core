@@ -4,7 +4,7 @@ from __future__ import annotations
 from http import HTTPStatus
 import json
 import logging
-from typing import Protocol
+from typing import Any, Protocol
 
 from aiohttp import web
 import voluptuous as vol
@@ -51,12 +51,12 @@ class DiagnosticsProtocol(Protocol):
 
     async def async_get_config_entry_diagnostics(
         self, hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> dict:
+    ) -> Any:
         """Return diagnostics for a config entry."""
 
     async def async_get_device_diagnostics(
         self, hass: HomeAssistant, config_entry: ConfigEntry, device: DeviceEntry
-    ) -> dict:
+    ) -> Any:
         """Return diagnostics for a device."""
 
 
@@ -106,9 +106,8 @@ def handle_get(
 ):
     """List all possible diagnostic handlers."""
     domain = msg["domain"]
-    info = hass.data[DOMAIN].get(domain)
 
-    if info is None:
+    if (info := hass.data[DOMAIN].get(domain)) is None:
         connection.send_error(
             msg["id"], websocket_api.ERR_NOT_FOUND, "Domain not supported"
         )
@@ -125,7 +124,7 @@ def handle_get(
 
 async def _async_get_json_file_response(
     hass: HomeAssistant,
-    data: dict | list,
+    data: Any,
     filename: str,
     domain: str,
     d_type: DiagnosticsType,
@@ -170,7 +169,7 @@ async def _async_get_json_file_response(
     return web.Response(
         body=json_data,
         content_type="application/json",
-        headers={"Content-Disposition": f'attachment; filename="{filename}.json"'},
+        headers={"Content-Disposition": f'attachment; filename="{filename}.json.txt"'},
     )
 
 
@@ -197,14 +196,11 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
             return web.Response(status=HTTPStatus.BAD_REQUEST)
 
         hass = request.app["hass"]
-        config_entry = hass.config_entries.async_get_entry(d_id)
 
-        if config_entry is None:
+        if (config_entry := hass.config_entries.async_get_entry(d_id)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
-        info = hass.data[DOMAIN].get(config_entry.domain)
-
-        if info is None:
+        if (info := hass.data[DOMAIN].get(config_entry.domain)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         filename = f"{config_entry.domain}-{config_entry.entry_id}"
@@ -226,9 +222,8 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
 
         dev_reg = async_get(hass)
         assert sub_id
-        device = dev_reg.async_get(sub_id)
 
-        if device is None:
+        if (device := dev_reg.async_get(sub_id)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         filename += f"-{device.name}-{device.id}"

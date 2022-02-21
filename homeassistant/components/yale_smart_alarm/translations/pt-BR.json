@@ -11,6 +11,7 @@
         "step": {
             "reauth_confirm": {
                 "data": {
+                    "area_id": "ID da \u00e1rea",
                     "name": "Nome",
                     "password": "Senha",
                     "username": "Usu\u00e1rio"
@@ -18,6 +19,7 @@
             },
             "user": {
                 "data": {
+                    "area_id": "ID da \u00e1rea",
                     "name": "Nome",
                     "password": "Senha",
                     "username": "Usu\u00e1rio"

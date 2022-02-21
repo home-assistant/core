@@ -6,6 +6,7 @@
         "error": {
             "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida"
         },
+        "flow_title": "{ip}",
         "step": {
             "user": {
                 "data": {
@@ -14,6 +15,16 @@
                     "port": "Porta"
                 },
                 "title": "Preencha suas informa\u00e7\u00f5es"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Tempo de execu\u00e7\u00e3o da zona padr\u00e3o (em segundos)"
+                },
+                "title": "Configurar RainMachine"
             }
         }
     }

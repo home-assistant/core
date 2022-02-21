@@ -12,7 +12,7 @@ from homeassistant.components.config import config_entries
 from homeassistant.config_entries import HANDLERS
 from homeassistant.core import callback
 from homeassistant.generated import config_flows
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -94,6 +94,7 @@ async def test_get_entries(hass, client):
                 "source": "bla",
                 "state": core_ce.ConfigEntryState.NOT_LOADED.value,
                 "supports_options": True,
+                "supports_remove_device": False,
                 "supports_unload": True,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
@@ -106,6 +107,7 @@ async def test_get_entries(hass, client):
                 "source": "bla2",
                 "state": core_ce.ConfigEntryState.SETUP_ERROR.value,
                 "supports_options": False,
+                "supports_remove_device": False,
                 "supports_unload": False,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
@@ -118,6 +120,7 @@ async def test_get_entries(hass, client):
                 "source": "bla3",
                 "state": core_ce.ConfigEntryState.NOT_LOADED.value,
                 "supports_options": False,
+                "supports_remove_device": False,
                 "supports_unload": False,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
@@ -252,6 +255,35 @@ async def test_initialize_flow(hass, client):
     }
 
 
+async def test_initialize_flow_unmet_dependency(hass, client):
+    """Test unmet dependencies are listed."""
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    config_schema = vol.Schema({"comp_conf": {"hello": str}}, required=True)
+    mock_integration(
+        hass, MockModule(domain="dependency_1", config_schema=config_schema)
+    )
+    # The test2 config flow should  fail because dependency_1 can't be automatically setup
+    mock_integration(
+        hass,
+        MockModule(domain="test2", partial_manifest={"dependencies": ["dependency_1"]}),
+    )
+
+    class TestFlow(core_ce.ConfigFlow):
+        async def async_step_user(self, user_input=None):
+            pass
+
+    with patch.dict(HANDLERS, {"test2": TestFlow}):
+        resp = await client.post(
+            "/api/config/config_entries/flow",
+            json={"handler": "test2", "show_advanced_options": True},
+        )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    data = await resp.text()
+    assert data == "Failed dependencies dependency_1"
+
+
 async def test_initialize_flow_unauth(hass, client, hass_admin_user):
     """Test we can initialize a flow."""
     hass_admin_user.groups = []
@@ -341,6 +373,7 @@ async def test_create_account(hass, client, enable_custom_integrations):
             "source": core_ce.SOURCE_USER,
             "state": core_ce.ConfigEntryState.LOADED.value,
             "supports_options": False,
+            "supports_remove_device": False,
             "supports_unload": False,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
@@ -414,6 +447,7 @@ async def test_two_step_flow(hass, client, enable_custom_integrations):
                 "source": core_ce.SOURCE_USER,
                 "state": core_ce.ConfigEntryState.LOADED.value,
                 "supports_options": False,
+                "supports_remove_device": False,
                 "supports_unload": False,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,

@@ -48,6 +48,7 @@ from .errors import ShouldUpdateConfigEntry
 from .media_browser import browse_media
 from .server import PlexServer
 from .services import async_setup_services
+from .view import PlexImageView
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -83,6 +84,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     await async_setup_services(hass)
+
+    hass.http.register_view(PlexImageView())
 
     gdm = hass.data[PLEX_DOMAIN][GDM_SCANNER] = GDM()
 
@@ -265,7 +268,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_options_updated(hass, entry):
+async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Triggered by config entry options updates."""
     server_id = entry.data[CONF_SERVER_IDENTIFIER]
 

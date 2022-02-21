@@ -1328,8 +1328,8 @@ def async_track_time_interval(
     interval: timedelta,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively at every timedelta interval."""
-    remove = None
-    interval_listener_job = None
+    remove: CALLBACK_TYPE
+    interval_listener_job: HassJob[None]
 
     job = HassJob(action)
 
@@ -1344,7 +1344,7 @@ def async_track_time_interval(
         nonlocal interval_listener_job
 
         remove = async_track_point_in_utc_time(
-            hass, interval_listener_job, next_interval()  # type: ignore
+            hass, interval_listener_job, next_interval()
         )
         hass.async_run_hass_job(job, now)
 
@@ -1353,7 +1353,7 @@ def async_track_time_interval(
 
     def remove_listener() -> None:
         """Remove interval listener."""
-        remove()  # type: ignore
+        remove()
 
     return remove_listener
 

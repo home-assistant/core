@@ -1,6 +1,8 @@
 """Base class for deCONZ devices."""
 from __future__ import annotations
 
+from pydeconz.group import Scene as PydeconzScene
+
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -96,3 +98,39 @@ class DeconzDevice(DeconzBase, Entity):
     def available(self):
         """Return True if device is available."""
         return self.gateway.available and self._device.reachable
+
+
+class DeconzSceneMixin(DeconzDevice):
+    """Representation of a deCONZ scene."""
+
+    _device: PydeconzScene
+
+    def __init__(self, device, gateway) -> None:
+        """Set up a scene."""
+        super().__init__(device, gateway)
+
+        self._attr_name = device.full_name
+        self._group_identifier = self.get_parent_identifier()
+
+    def get_device_identifier(self) -> str:
+        """Describe a unique identifier for this scene."""
+        return f"{self.gateway.bridgeid}{self._device.deconz_id}"
+
+    def get_parent_identifier(self) -> str:
+        """Describe a unique identifier for group this scene belongs to."""
+        return f"{self.gateway.bridgeid}-{self._device.group_deconz_id}"
+
+    @property
+    def available(self) -> bool:
+        """Return True if scene is available."""
+        return self.gateway.available
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique identifier for this scene."""
+        return self.get_device_identifier()
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return a device description for device registry."""
+        return DeviceInfo(identifiers={(DECONZ_DOMAIN, self._group_identifier)})

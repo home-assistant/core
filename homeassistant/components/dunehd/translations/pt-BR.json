@@ -12,7 +12,9 @@
             "user": {
                 "data": {
                     "host": "Nome do host"
-                }
+                },
+                "description": "Configure a integra\u00e7\u00e3o Dune HD. Se voc\u00ea tiver problemas com a configura\u00e7\u00e3o, acesse: https://www.home-assistant.io/integrations/dunehd \n\n Certifique-se de que seu player est\u00e1 ligado.",
+                "title": "Dune HD"
             }
         }
     }

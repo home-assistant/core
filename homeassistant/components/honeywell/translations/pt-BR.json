@@ -8,7 +8,9 @@
                 "data": {
                     "password": "Senha",
                     "username": "Usu\u00e1rio"
-                }
+                },
+                "description": "Insira as credenciais usadas para fazer login em mytotalconnectcomfort.com.",
+                "title": "Honeywell Total Connect Comfort (EUA)"
             }
         }
     }

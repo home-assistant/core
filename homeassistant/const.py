@@ -11,8 +11,8 @@ PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 9, 0)
-# Truthy date string triggers showing related deprecation warning messages.
 REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 9, 0)
+# Truthy date string triggers showing related deprecation warning messages.
 REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 
 # Format for platform files

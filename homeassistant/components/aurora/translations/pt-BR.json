@@ -12,5 +12,15 @@
                 }
             }
         }
-    }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "threshold": "Limiar (%)"
+                }
+            }
+        }
+    },
+    "title": "Sensor NOAA Aurora"
 }

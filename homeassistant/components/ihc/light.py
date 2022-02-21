@@ -1,6 +1,8 @@
 """Support for IHC lights."""
 from __future__ import annotations
 
+from ihcsdk.ihccontroller import IHCController
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     SUPPORT_BRIGHTNESS,
@@ -10,8 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import IHC_CONTROLLER, IHC_INFO
-from .const import CONF_DIMMABLE, CONF_OFF_ID, CONF_ON_ID
+from .const import CONF_DIMMABLE, CONF_OFF_ID, CONF_ON_ID, DOMAIN, IHC_CONTROLLER
 from .ihcdevice import IHCDevice
 from .util import async_pulse, async_set_bool, async_set_int
 
@@ -31,15 +32,20 @@ def setup_platform(
         product_cfg = device["product_cfg"]
         product = device["product"]
         # Find controller that corresponds with device id
-        ctrl_id = device["ctrl_id"]
-        ihc_key = f"ihc{ctrl_id}"
-        info = hass.data[ihc_key][IHC_INFO]
-        ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
+        controller_id = device["ctrl_id"]
+        ihc_controller: IHCController = hass.data[DOMAIN][controller_id][IHC_CONTROLLER]
         ihc_off_id = product_cfg.get(CONF_OFF_ID)
         ihc_on_id = product_cfg.get(CONF_ON_ID)
         dimmable = product_cfg[CONF_DIMMABLE]
         light = IhcLight(
-            ihc_controller, name, ihc_id, ihc_off_id, ihc_on_id, info, dimmable, product
+            ihc_controller,
+            controller_id,
+            name,
+            ihc_id,
+            ihc_off_id,
+            ihc_on_id,
+            dimmable,
+            product,
         )
         devices.append(light)
     add_entities(devices)
@@ -55,17 +61,17 @@ class IhcLight(IHCDevice, LightEntity):
 
     def __init__(
         self,
-        ihc_controller,
-        name,
+        ihc_controller: IHCController,
+        controller_id: str,
+        name: str,
         ihc_id: int,
         ihc_off_id: int,
         ihc_on_id: int,
-        info: bool,
         dimmable=False,
         product=None,
     ) -> None:
         """Initialize the light."""
-        super().__init__(ihc_controller, name, ihc_id, info, product)
+        super().__init__(ihc_controller, controller_id, name, ihc_id, product)
         self._ihc_off_id = ihc_off_id
         self._ihc_on_id = ihc_on_id
         self._brightness = 0

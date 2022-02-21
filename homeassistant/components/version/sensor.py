@@ -15,11 +15,8 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_SOURCE,
@@ -31,12 +28,12 @@ from .const import (
     DEFAULT_NAME,
     DEFAULT_SOURCE,
     DOMAIN,
-    HOME_ASSISTANT,
     LOGGER,
     VALID_IMAGES,
     VALID_SOURCES,
 )
 from .coordinator import VersionDataUpdateCoordinator
+from .entity import VersionEntity
 
 PLATFORM_SCHEMA: Final[Schema] = SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -91,30 +88,10 @@ async def async_setup_entry(
     async_add_entities(version_sensor_entities)
 
 
-class VersionSensorEntity(CoordinatorEntity, SensorEntity):
+class VersionSensorEntity(VersionEntity, SensorEntity):
     """Version sensor entity class."""
 
     _attr_icon = "mdi:package-up"
-    _attr_device_info = DeviceInfo(
-        name=f"{HOME_ASSISTANT} {DOMAIN.title()}",
-        identifiers={(HOME_ASSISTANT, DOMAIN)},
-        manufacturer=HOME_ASSISTANT,
-        entry_type=DeviceEntryType.SERVICE,
-    )
-
-    coordinator: VersionDataUpdateCoordinator
-
-    def __init__(
-        self,
-        coordinator: VersionDataUpdateCoordinator,
-        entity_description: SensorEntityDescription,
-    ) -> None:
-        """Initialize version sensor entities."""
-        super().__init__(coordinator)
-        self.entity_description = entity_description
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.entry_id}_{entity_description.key}"
-        )
 
     @property
     def native_value(self) -> StateType:

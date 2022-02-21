@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from pyhaversion.consts import HaVersionChannel, HaVersionSource
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -27,7 +26,7 @@ from .const import (
     DEFAULT_SOURCE,
     DOMAIN,
     POSTFIX_CONTAINER_NAME,
-    SOURCE_DOKCER,
+    SOURCE_DOCKER,
     SOURCE_HASSIO,
     STEP_USER,
     STEP_VERSION_SOURCE,
@@ -75,8 +74,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._entry_data.update(user_input)
 
         if not self.show_advanced_options or user_input[CONF_SOURCE] in (
-            HaVersionSource.LOCAL,
-            HaVersionSource.HAIO,
+            "local",
+            "haio",
         ):
             return self.async_create_entry(
                 title=self._config_entry_name,
@@ -92,8 +91,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the version_source step."""
         if user_input is None:
             if self._entry_data[CONF_SOURCE] in (
-                HaVersionSource.SUPERVISOR,
-                HaVersionSource.CONTAINER,
+                "supervisor",
+                "container",
             ):
                 data_schema = vol.Schema(
                     {
@@ -102,7 +101,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         ): vol.In(VALID_CHANNELS),
                     }
                 )
-                if self._entry_data[CONF_SOURCE] == HaVersionSource.SUPERVISOR:
+                if self._entry_data[CONF_SOURCE] == "supervisor":
                     data_schema = data_schema.extend(
                         {
                             vol.Required(CONF_IMAGE, default=DEFAULT_IMAGE): vol.In(
@@ -151,7 +150,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @property
     def _config_entry_name(self) -> str:
         """Return the name of the config entry."""
-        if self._entry_data[CONF_SOURCE] == HaVersionSource.LOCAL:
+        if self._entry_data[CONF_SOURCE] == "local":
             return DEFAULT_NAME_CURRENT
 
         name = self._entry_data[CONF_VERSION_SOURCE]
@@ -166,21 +165,21 @@ def _convert_imported_configuration(config: dict[str, Any]) -> Any:
     """Convert a key from the imported configuration."""
     data = DEFAULT_CONFIGURATION.copy()
     if config.get(CONF_BETA):
-        data[CONF_CHANNEL] = HaVersionChannel.BETA
+        data[CONF_CHANNEL] = "beta"
 
     if (source := config.get(CONF_SOURCE)) and source != DEFAULT_SOURCE:
         if source == SOURCE_HASSIO:
-            data[CONF_SOURCE] = HaVersionSource.SUPERVISOR
+            data[CONF_SOURCE] = "supervisor"
             data[CONF_VERSION_SOURCE] = VERSION_SOURCE_VERSIONS
-        elif source == SOURCE_DOKCER:
-            data[CONF_SOURCE] = HaVersionSource.CONTAINER
+        elif source == SOURCE_DOCKER:
+            data[CONF_SOURCE] = "container"
             data[CONF_VERSION_SOURCE] = VERSION_SOURCE_DOCKER_HUB
         else:
             data[CONF_SOURCE] = source
             data[CONF_VERSION_SOURCE] = VERSION_SOURCE_MAP_INVERTED[source]
 
     if (image := config.get(CONF_IMAGE)) and image != DEFAULT_IMAGE:
-        if data[CONF_SOURCE] == HaVersionSource.CONTAINER:
+        if data[CONF_SOURCE] == "container":
             data[CONF_IMAGE] = f"{config[CONF_IMAGE]}{POSTFIX_CONTAINER_NAME}"
         else:
             data[CONF_IMAGE] = config[CONF_IMAGE]
@@ -188,7 +187,7 @@ def _convert_imported_configuration(config: dict[str, Any]) -> Any:
     if (name := config.get(CONF_NAME)) and name != DEFAULT_NAME:
         data[CONF_NAME] = config[CONF_NAME]
     else:
-        if data[CONF_SOURCE] == HaVersionSource.LOCAL:
+        if data[CONF_SOURCE] == "local":
             data[CONF_NAME] = DEFAULT_NAME_CURRENT
         else:
             data[CONF_NAME] = DEFAULT_NAME_LATEST

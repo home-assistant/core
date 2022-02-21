@@ -7,6 +7,7 @@
             "cannot_connect": "Falha ao conectar",
             "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida"
         },
+        "flow_title": "{device} ({ip_address})",
         "step": {
             "user": {
                 "data": {
@@ -15,7 +16,7 @@
                     "username": "Usu\u00e1rio"
                 },
                 "description": "Forne\u00e7a as informa\u00e7\u00f5es necess\u00e1rias abaixo.",
-                "title": "Configurar GogoGate2"
+                "title": "Configurar Gogogate2 ou ismartgate"
             }
         }
     }

@@ -7,10 +7,12 @@
         "error": {
             "cannot_connect": "Falha ao conectar"
         },
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
                     "host": "Nome do host",
+                    "passkey": "Chave da senha",
                     "password": "Senha",
                     "port": "Porta",
                     "username": "Usu\u00e1rio"

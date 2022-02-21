@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 import logging.handlers
 import os
@@ -59,7 +59,7 @@ COOLDOWN_TIME = 60
 MAX_LOAD_CONCURRENTLY = 6
 
 DEBUGGER_INTEGRATIONS = {"debugpy"}
-CORE_INTEGRATIONS = ("homeassistant", "persistent_notification")
+CORE_INTEGRATIONS = {"homeassistant", "persistent_notification"}
 LOGGING_INTEGRATIONS = {
     # Set log levels
     "logger",
@@ -69,7 +69,14 @@ LOGGING_INTEGRATIONS = {
     # To record data
     "recorder",
 }
+DISCOVERY_INTEGRATIONS = ("dhcp", "ssdp", "usb", "zeroconf")
 STAGE_1_INTEGRATIONS = {
+    # We need to make sure discovery integrations
+    # update their deps before stage 2 integrations
+    # load them inadvertently before their deps have
+    # been updated which leads to using an old version
+    # of the dep, or worse (import errors).
+    *DISCOVERY_INTEGRATIONS,
     # To make sure we forward data to other instances
     "mqtt_eventstream",
     # To provide account link implementations
@@ -151,8 +158,11 @@ async def async_setup_hass(
 
         safe_mode = True
         old_config = hass.config
+        old_logging = hass.data.get(DATA_LOGGING)
 
         hass = core.HomeAssistant()
+        if old_logging:
+            hass.data[DATA_LOGGING] = old_logging
         hass.config.skip_pip = old_config.skip_pip
         hass.config.internal_url = old_config.internal_url
         hass.config.external_url = old_config.external_url
@@ -314,7 +324,7 @@ def async_enable_logging(
     logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
 
     sys.excepthook = lambda *args: logging.getLogger(None).exception(
-        "Uncaught exception", exc_info=args  # type: ignore
+        "Uncaught exception", exc_info=args  # type: ignore[arg-type]
     )
     threading.excepthook = lambda args: logging.getLogger(None).exception(
         "Uncaught thread exception",
@@ -450,7 +460,7 @@ async def _async_set_up_integrations(
 ) -> None:
     """Set up all the integrations."""
     hass.data[DATA_SETUP_STARTED] = {}
-    setup_time = hass.data[DATA_SETUP_TIME] = {}
+    setup_time: dict[str, timedelta] = hass.data.setdefault(DATA_SETUP_TIME, {})
 
     watch_task = asyncio.create_task(_async_watch_pending_setups(hass))
 
@@ -459,9 +469,9 @@ async def _async_set_up_integrations(
     # Resolve all dependencies so we know all integrations
     # that will have to be loaded and start rightaway
     integration_cache: dict[str, loader.Integration] = {}
-    to_resolve = domains_to_setup
+    to_resolve: set[str] = domains_to_setup
     while to_resolve:
-        old_to_resolve = to_resolve
+        old_to_resolve: set[str] = to_resolve
         to_resolve = set()
 
         integrations_to_process = [
@@ -508,11 +518,11 @@ async def _async_set_up_integrations(
         await async_setup_multi_components(hass, debuggers, config)
 
     # calculate what components to setup in what stage
-    stage_1_domains = set()
+    stage_1_domains: set[str] = set()
 
     # Find all dependencies of any dependency of any stage 1 integration that
     # we plan on loading and promote them to stage 1
-    deps_promotion = STAGE_1_INTEGRATIONS
+    deps_promotion: set[str] = STAGE_1_INTEGRATIONS
     while deps_promotion:
         old_deps_promotion = deps_promotion
         deps_promotion = set()
@@ -577,7 +587,7 @@ async def _async_set_up_integrations(
         {
             integration: timedelta.total_seconds()
             for integration, timedelta in sorted(
-                setup_time.items(), key=lambda item: item[1].total_seconds()  # type: ignore
+                setup_time.items(), key=lambda item: item[1].total_seconds()
             )
         },
     )

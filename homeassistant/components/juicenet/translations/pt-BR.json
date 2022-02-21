@@ -12,7 +12,9 @@
             "user": {
                 "data": {
                     "api_token": "Token da API"
-                }
+                },
+                "description": "Voc\u00ea precisar\u00e1 do token de API de https://home.juice.net/Manage.",
+                "title": "Conecte-se ao JuiceNet"
             }
         }
     }

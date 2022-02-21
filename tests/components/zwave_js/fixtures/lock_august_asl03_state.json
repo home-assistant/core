@@ -10,7 +10,7 @@
         "generic": {"key": 64, "label":"Entry Control"},
         "specific": {"key": 3, "label":"Secure Keypad Door Lock"},
         "mandatorySupportedCCs": [],
-        "mandatoryControlCCs": []
+        "mandatoryControlledCCs": []
     },
     "isListening": false,
     "isFrequentListening": true,

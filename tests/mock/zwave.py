@@ -1,7 +1,9 @@
 """Mock helpers for Z-Wave component."""
 from unittest.mock import MagicMock
 
-from pydispatch import dispatcher
+# Integration & integration tests are disabled
+# from pydispatch import dispatcher
+dispatcher = MagicMock()
 
 
 def value_changed(value):
