@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import Any
 
 from rabbitair import Client, Model
 
@@ -49,7 +50,7 @@ class RabbitAirBaseEntity(CoordinatorEntity):
             return self.coordinator.data.model in model
         return self.coordinator.data.model is model
 
-    async def _set_state(self, **kwargs):
+    async def _set_state(self, **kwargs: Any) -> None:
         """Change the state of the device."""
         _LOGGER.debug("Set state %s", kwargs)
         await self._client.set_state(**kwargs)
