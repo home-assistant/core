@@ -213,7 +213,7 @@ class UpdateManager:
     @callback
     def _data_to_save(self) -> list[str]:
         """Schedule storing the data."""
-        return list(self._skip)
+        return {"skipped": list(self._skip)}
 
     async def perform_update(
         self,
