@@ -3,12 +3,11 @@ from __future__ import annotations
 
 from unittest.mock import call
 
-from homeassistant.components import websocket_api
 from homeassistant.components.rfxtrx.const import EVENT_RFXTRX_EVENT
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
 from tests.components.rfxtrx.conftest import setup_rfx_test_cfg
 
 
@@ -86,6 +85,8 @@ async def test_send(hass, rfxtrx):
 
 async def test_ws_device_remove(hass, hass_ws_client):
     """Test removing a device through device registry."""
+    assert await async_setup_component(hass, "config", {})
+
     device_id = ["11", "0", "213c7f2:16"]
     mock_entry = await setup_rfx_test_cfg(
         hass,
@@ -99,19 +100,15 @@ async def test_ws_device_remove(hass, hass_ws_client):
     device_entry = device_reg.async_get_device(identifiers={("rfxtrx", *device_id)})
     assert device_entry
 
-    # Ask to remove non existing device
-    client = await hass_ws_client(hass)
-    await client.send_json(
-        {"id": 5, "type": "rfxtrx/device/remove", "device_id": "123"}
-    )
-    response = await client.receive_json()
-    assert not response["success"]
-    assert response["error"]["code"] == websocket_api.const.ERR_NOT_FOUND
-
     # Ask to remove existing device
     client = await hass_ws_client(hass)
     await client.send_json(
-        {"id": 5, "type": "rfxtrx/device/remove", "device_id": device_entry.id}
+        {
+            "id": 5,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": mock_entry.entry_id,
+            "device_id": device_entry.id,
+        }
     )
     response = await client.receive_json()
     assert response["success"]
@@ -121,28 +118,3 @@ async def test_ws_device_remove(hass, hass_ws_client):
 
     # Verify that the config entry has removed the device
     assert mock_entry.data["devices"] == {}
-
-
-async def test_ws_device_remove_invalid(hass, hass_ws_client):
-    """Test removing a non rfxtrx device through device registry."""
-    await setup_rfx_test_cfg(hass, devices={})
-
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-    device_reg = dr.async_get(hass)
-
-    mac = "12:34:56:AB:CD:EF"
-    device_entry = device_reg.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
-    )
-    assert device_entry is not None
-
-    # Ask to remove a non rfxtrx device
-    client = await hass_ws_client(hass)
-    await client.send_json(
-        {"id": 5, "type": "rfxtrx/device/remove", "device_id": device_entry.id}
-    )
-    response = await client.receive_json()
-    assert not response["success"]
-    assert response["error"]["code"] == websocket_api.const.ERR_NOT_FOUND

@@ -34,6 +34,7 @@ async def setup_rfx_test_cfg(
         device=device, automatic_add=automatic_add, devices=devices
     )
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry.supports_remove_device = True
     mock_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
