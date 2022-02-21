@@ -25,7 +25,6 @@ PLATFORMS_GATEWAY = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
-SENSOR_PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 ZEROCONF_MAP = {
     "smile": "P1",
     "smile_thermo": "Anna",

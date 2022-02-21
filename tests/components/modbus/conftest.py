@@ -9,7 +9,7 @@ from pymodbus.exceptions import ModbusException
 import pytest
 
 from homeassistant.components.modbus.const import MODBUS_DOMAIN as DOMAIN, TCP
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SLAVE, CONF_TYPE
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -82,9 +82,12 @@ async def mock_modbus_fixture(
 ):
     """Load integration modbus using mocked pymodbus."""
     conf = copy.deepcopy(do_config)
-    if config_addon:
-        for key in conf.keys():
+    for key in conf.keys():
+        if config_addon:
             conf[key][0].update(config_addon)
+        for entity in conf[key]:
+            if CONF_SLAVE not in entity:
+                entity[CONF_SLAVE] = 0
     caplog.set_level(logging.WARNING)
     config = {
         DOMAIN: [

@@ -17,6 +17,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN,
+    MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_URL,
     SERVICE_PLAY_MEDIA,
@@ -60,6 +61,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+
+from .const import SAMPLE_APP_LIST
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -160,6 +163,7 @@ async def test_setup_websocket(hass: HomeAssistant) -> None:
         remote = Mock(SamsungTVWS)
         remote.__enter__ = Mock(return_value=remote)
         remote.__exit__ = Mock()
+        remote.app_list.return_value = SAMPLE_APP_LIST
         remote.rest_device_info.return_value = {
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
             "device": {
@@ -208,6 +212,7 @@ async def test_setup_websocket_2(hass: HomeAssistant, mock_now: datetime) -> Non
         remote = Mock(SamsungTVWS)
         remote.__enter__ = Mock(return_value=remote)
         remote.__exit__ = Mock()
+        remote.app_list.return_value = SAMPLE_APP_LIST
         remote.rest_device_info.return_value = {
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
             "device": {
@@ -860,3 +865,34 @@ async def test_select_source_invalid_source(hass: HomeAssistant) -> None:
         assert remote.control.call_count == 0
         assert remote.close.call_count == 0
         assert remote.call_count == 1
+
+
+async def test_play_media_app(hass: HomeAssistant, remotews: Mock) -> None:
+    """Test for play_media."""
+    await setup_samsungtv(hass, MOCK_CONFIGWS)
+
+    assert await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_APP,
+            ATTR_MEDIA_CONTENT_ID: "3201608010191",
+        },
+        True,
+    )
+    assert remotews.run_app.call_count == 1
+    assert remotews.run_app.call_args_list == [call("3201608010191")]
+
+
+async def test_select_source_app(hass: HomeAssistant, remotews: Mock) -> None:
+    """Test for select_source."""
+    await setup_samsungtv(hass, MOCK_CONFIGWS)
+    assert await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "Deezer"},
+        True,
+    )
+    assert remotews.run_app.call_count == 1
+    assert remotews.run_app.call_args_list == [call("3201608010191")]
