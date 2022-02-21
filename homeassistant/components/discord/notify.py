@@ -6,8 +6,6 @@ import os.path
 from typing import Any
 
 import nextcord
-from nextcord.abc import User, GuildChannel, PrivateChannel
-from nextcord.threads import Thread
 import voluptuous as vol
 
 from homeassistant.components.notify import (

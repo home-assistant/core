@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
 import nextcord
@@ -20,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 class DiscordFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Discord."""
 
-    async def async_step_reauth(self, config: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, config: dict[str, str]) -> FlowResult:
         """Handle a reauthorization flow request."""
         return await self.async_step_reauth_confirm()
 
@@ -38,7 +37,7 @@ class DiscordFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_user(user_input)
 
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
@@ -75,7 +74,7 @@ class DiscordFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
+    async def async_step_import(self, import_config: dict[str, str]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
         _LOGGER.warning(
             "Discord yaml config with partial key %s has been imported. Please remove it",
