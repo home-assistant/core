@@ -65,3 +65,24 @@ class SleepIQSensor(CoordinatorEntity):
     @abstractmethod
     def _async_update_attrs(self) -> None:
         """Update sensor attributes."""
+
+
+class SleepIQBedCoordinator(CoordinatorEntity):
+    """Implementation of a SleepIQ sensor."""
+
+    _attr_icon = ICON_OCCUPIED
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        bed: SleepIQBed,
+    ) -> None:
+        """Initialize the SleepIQ sensor entity."""
+        super().__init__(coordinator)
+        self.bed = bed
+        self._attr_device_info = DeviceInfo(
+            connections={(device_registry.CONNECTION_NETWORK_MAC, bed.mac_addr)},
+            manufacturer="SleepNumber",
+            name=bed.name,
+            model=bed.model,
+        )

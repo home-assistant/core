@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .coordinator import SleepIQDataUpdateCoordinator
+from .coordinator import SleepIQDataUpdateCoordinator, SleepIQPauseUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,11 +77,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(str(err) or "Error reading from SleepIQ API") from err
 
     coordinator = SleepIQDataUpdateCoordinator(hass, gateway, email)
+    pause_coordinator = SleepIQPauseUpdateCoordinator(hass, gateway, email)
 
     # Call the SleepIQ API to refresh data
     await coordinator.async_config_entry_first_refresh()
+    await pause_coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = (coordinator, pause_coordinator)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

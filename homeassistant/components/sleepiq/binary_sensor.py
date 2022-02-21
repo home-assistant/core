@@ -21,7 +21,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SleepIQ bed binary sensors."""
-    coordinator: SleepIQDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: SleepIQDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][0]
     async_add_entities(
         IsInBedBinarySensor(coordinator, bed, sleeper)
         for bed in coordinator.client.beds.values()

@@ -53,7 +53,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sleep number buttons."""
-    coordinator: SleepIQDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: SleepIQDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][0]
 
     async_add_entities(
         SleepNumberButton(bed, ed)
