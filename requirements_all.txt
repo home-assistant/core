@@ -1317,7 +1317,7 @@ pushover_complete==1.1.1
 pvo==0.2.2
 
 # homeassistant.components.rpi_gpio_pwm
-pwmled==1.6.9
+pwmled==1.6.10
 
 # homeassistant.components.canary
 py-canary==0.5.1
