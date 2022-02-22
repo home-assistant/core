@@ -1063,6 +1063,58 @@ async def test_setup_logs_error_if_no_connect_broker(hass, caplog):
         assert "Failed to connect to MQTT server:" in caplog.text
 
 
+@patch("homeassistant.components.mqtt.TIMEOUT_ACK", 0.2)
+async def test_handle_mqtt_timeout_on_callback(hass, caplog):
+    """Test publish without receiving an ACK callback."""
+    mid = 0
+
+    class FakeInfo:
+        """Returns a simulated client publish response."""
+
+        mid = 100
+        rc = 0
+
+    with patch("paho.mqtt.client.Client") as mock_client:
+
+        @ha.callback
+        def _async_fire_mqtt_message(topic, payload, qos, retain):
+            async_fire_mqtt_message(hass, topic, payload, qos, retain)
+            # Fire the message but do not send an ACK when we handle the publish, mid=1
+            return FakeInfo()
+
+        def _mock_ack(topic, qos=0):
+            # Handle ACK for subscribe normally
+            nonlocal mid
+            mid += 1
+            mock_client.on_subscribe(0, 0, mid)
+            return (0, mid)
+
+        # We want to simulate the publish behaviour MQTT client
+        mock_client = mock_client.return_value
+        mock_client.publish.side_effect = _async_fire_mqtt_message
+        mock_client.subscribe.side_effect = _mock_ack
+        mock_client.connect.return_value = 0
+
+        entry = MockConfigEntry(
+            domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"}
+        )
+        # Set up the integration
+        assert await mqtt.async_setup_entry(hass, entry)
+        # Make sure we are connected correctly
+        mock_client.on_connect(mock_client, None, None, 0)
+
+        # Now call we publish without simulating and ACK callback
+        await mqtt.async_publish(hass, "no_callback/test-topic", "test-payload")
+        await hass.async_block_till_done()
+        assert (
+            "Transmitting message on no_callback/test-topic: 'test-payload', mid:"
+            in caplog.text
+        )
+        # The is no ACK so we should see a timeout in the log after publishing
+        assert len(mock_client.publish.mock_calls) == 1
+        assert "No ACK from MQTT server" in caplog.text
+
+
 async def test_setup_raises_ConfigEntryNotReady_if_no_connect_broker(hass, caplog):
     """Test for setup failure if connection to broker is missing."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
