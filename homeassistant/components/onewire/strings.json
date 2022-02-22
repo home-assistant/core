@@ -41,7 +41,7 @@
         "description": "Select what configuration steps to process",
         "title": "OneWire Device Options"
       },
-      "precision_config": {
+      "configure_device": {
         "data": {
           "precision": "Sensor Precision"
         },
