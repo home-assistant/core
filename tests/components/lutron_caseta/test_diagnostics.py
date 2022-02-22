@@ -38,9 +38,6 @@ async def test_diagnostics(hass, hass_client) -> None:
         await hass.async_block_till_done()
 
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-    import pprint
-
-    pprint.pprint(diag)
     assert diag == {
         "data": {
             "areas": {},
