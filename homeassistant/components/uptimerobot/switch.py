@@ -12,6 +12,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import UptimeRobotDataUpdateCoordinator
@@ -60,10 +61,8 @@ class UptimeRobotSwitch(UptimeRobotEntity, SwitchEntity):
         try:
             response = await self.api.async_edit_monitor(**kwargs)
             self.async_write_ha_state()
-        except UptimeRobotAuthenticationException:
-            LOGGER.error(
-                "Authentication Error: Please check the provided credentials and verify that you can log into the web interface"
-            )
+        except UptimeRobotAuthenticationException as exception:
+            raise ConfigEntryAuthFailed(exception) from exception
         else:
             if response.status != API_ATTR_OK:
                 LOGGER.error("API exception: %s", response.error.message, exc_info=True)
