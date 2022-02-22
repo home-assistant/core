@@ -5,11 +5,13 @@ from WazeRouteCalculator import WRCError
 import pytest
 
 
-@pytest.fixture(autouse=True)
-def mock_wrc():
+@pytest.fixture(name="mock_wrc", autouse=True)
+def mock_wrc_fixture():
     """Mock out WazeRouteCalculator."""
-    with patch("homeassistant.components.waze_travel_time.sensor.WazeRouteCalculator"):
-        yield
+    with patch(
+        "homeassistant.components.waze_travel_time.sensor.WazeRouteCalculator"
+    ) as mock_wrc:
+        yield mock_wrc
 
 
 @pytest.fixture(name="validate_config_entry")
@@ -44,13 +46,11 @@ def bypass_platform_setup_fixture():
 
 
 @pytest.fixture(name="mock_update")
-def mock_update_fixture():
+def mock_update_fixture(mock_wrc):
     """Mock an update to the sensor."""
-    with patch(
-        "homeassistant.components.waze_travel_time.sensor.WazeRouteCalculator.calc_all_routes_info",
-        return_value={"My route": (150, 300)},
-    ):
-        yield
+    obj = mock_wrc.return_value
+    obj.calc_all_routes_info.return_value = {"My route": (150, 300)}
+    yield
 
 
 @pytest.fixture(name="invalidate_config_entry")

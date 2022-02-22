@@ -37,7 +37,7 @@ from homeassistant.core import State
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
 
-ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}"
+ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
 
 
 @pytest.mark.parametrize(
