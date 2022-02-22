@@ -29,7 +29,6 @@ async def async_setup_entry(
 class PlexScanClientsButton(ButtonEntity):
     """Representation of a scan_clients button entity."""
 
-    _attr_should_poll = False
     _attr_entity_category = EntityCategory.CONFIG
     _attr_name = "Scan Clients"
 
