@@ -32,14 +32,26 @@ async def test_presentation(hass: HomeAssistant) -> None:
 
     entity = hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)
 
-    assert entity.state == STATE_OFF
+    assert entity.state == STATE_ON
     assert entity.attributes["icon"] == "mdi:cog"
     assert entity.attributes["target"] == MOCK_UPTIMEROBOT_MONITOR["url"]
 
 
 async def test_switch_off(hass: HomeAssistant) -> None:
     """Test entity unaviable on update failure."""
-    await setup_uptimerobot_integration(hass)
+
+    mock_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
+    mock_entry.add_to_hass(hass)
+
+    with patch(
+        "pyuptimerobot.UptimeRobot.async_get_monitors",
+        return_value=mock_uptimerobot_api_response(
+            data=[MOCK_UPTIMEROBOT_MONITOR_PAUSED]
+        ),
+    ):
+
+        assert await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
 
     with patch("pyuptimerobot.UptimeRobot.async_edit_monitor"):
         await hass.services.async_call(
@@ -61,9 +73,7 @@ async def test_switch_on(hass: HomeAssistant) -> None:
 
     with patch(
         "pyuptimerobot.UptimeRobot.async_get_monitors",
-        return_value=mock_uptimerobot_api_response(
-            data=[MOCK_UPTIMEROBOT_MONITOR_PAUSED]
-        ),
+        return_value=mock_uptimerobot_api_response(data=[MOCK_UPTIMEROBOT_MONITOR]),
     ):
 
         assert await hass.config_entries.async_setup(mock_entry.entry_id)
