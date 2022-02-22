@@ -22,6 +22,7 @@ from homeassistant.data_entry_flow import FlowResult
 from .common import AvmWrapper
 from .const import (
     CONF_OLD_DISCOVERY,
+    DEFAULT_CONF_OLD_DISCOVERY,
     DEFAULT_HOST,
     DEFAULT_PORT,
     DOMAIN,
@@ -108,7 +109,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             },
             options={
                 CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds(),
-                CONF_OLD_DISCOVERY: False,
+                CONF_OLD_DISCOVERY: DEFAULT_CONF_OLD_DISCOVERY,
             },
         )
 
@@ -300,7 +301,9 @@ class FritzBoxToolsOptionsFlowHandler(OptionsFlow):
                 ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900)),
                 vol.Optional(
                     CONF_OLD_DISCOVERY,
-                    default=self.config_entry.options.get(CONF_OLD_DISCOVERY, False),
+                    default=self.config_entry.options.get(
+                        CONF_OLD_DISCOVERY, DEFAULT_CONF_OLD_DISCOVERY
+                    ),
                 ): bool,
             }
         )
