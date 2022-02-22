@@ -49,6 +49,7 @@ DHCP: list[dict[str, str | bool]] = [
     {'domain': 'hunterdouglas_powerview',
      'hostname': 'hunter*',
      'macaddress': '002674*'},
+    {'domain': 'intellifire', 'hostname': 'zentrios-*'},
     {'domain': 'isy994', 'registered_devices': True},
     {'domain': 'isy994', 'hostname': 'isy*', 'macaddress': '0021B9*'},
     {'domain': 'lyric', 'hostname': 'lyric-*', 'macaddress': '48A2E6*'},

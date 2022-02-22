@@ -8,6 +8,7 @@ from intellifire4py import AsyncUDPFireplaceFinder, IntellifireAsync
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 
@@ -32,13 +33,33 @@ async def validate_host_input(host: str) -> str:
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for IntelliFire."""
 
-    VERSION = 2
+    VERSION = 3
 
     def __init__(self):
         """Initialize the Config Flow Handler."""
         self._discovered_host: str = ""
         self.fireplace_finder = AsyncUDPFireplaceFinder()
         self._config_context = {}
+
+    async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
+        """Handle DHCP Discovery."""
+        potential_host = discovery_info.ip
+        LOGGER.debug(discovery_info)
+        try:
+            serial = await validate_host_input(potential_host)
+        except (ConnectionError, ClientConnectionError):
+            return self.async_abort(reason="not_intellifire_device")
+
+        await self.async_set_unique_id(serial)
+        # check if found before
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_HOST: potential_host,
+            }
+        )
+
+        self._discovered_host = potential_host
+        return await self.async_step_user()
 
     async def _find_fireplaces(self):
         """Perform UDP discovery."""
