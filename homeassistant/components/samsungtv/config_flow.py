@@ -128,7 +128,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Try to connect and check auth."""
         for method in SUPPORTED_METHODS:
             self._bridge = SamsungTVBridge.get_bridge(self.hass, method, self._host)
-            result = await self._bridge.try_connect()
+            result = await self._bridge.async_try_connect()
             if result == RESULT_SUCCESS:
                 return
             if result != RESULT_CANNOT_CONNECT:
@@ -345,7 +345,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._reauth_entry.data[CONF_METHOD],
                 self._reauth_entry.data[CONF_HOST],
             )
-            result = await bridge.try_connect()
+            result = await bridge.async_try_connect()
             if result == RESULT_SUCCESS:
                 new_data = dict(self._reauth_entry.data)
                 new_data[CONF_TOKEN] = bridge.token
