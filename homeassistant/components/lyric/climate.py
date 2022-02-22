@@ -281,6 +281,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                         coolSetpoint=target_temp_high,
                         heatSetpoint=target_temp_low,
                         mode=HVAC_MODES[self.device.changeableValues.heatCoolMode],
+                        autoChangeoverActive=True
                     )
                 except LYRIC_EXCEPTIONS as exception:
                     _LOGGER.error(exception)
@@ -293,12 +294,18 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                             self.location,
                             device,
                             coolSetpoint=temp,
+                            heatSetpoint=self.device.changeableValues.heatSetpoint,
+                            mode=HVAC_MODES[LYRIC_HVAC_MODE_COOL],
+                            autoChangeoverActive=False
                         )
                     else:
                         await self._update_thermostat(
                             self.location,
                             device,
+                            coolSetpoint=self.device.changeableValues.coolSetpoint,
                             heatSetpoint=temp,
+                            mode=HVAC_MODES[LYRIC_HVAC_MODE_HEAT],
+                            autoChangeoverActive=False
                         )
                 except LYRIC_EXCEPTIONS as exception:
                     _LOGGER.error(exception)
@@ -314,6 +321,8 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                     await self._update_thermostat(
                         self.location,
                         self.device,
+                        coolSetpoint=self.device.changeableValues.coolSetpoint,
+                        heatSetpoint=self.device.changeableValues.heatSetpoint,
                         mode=HVAC_MODES[LYRIC_HVAC_MODE_HEAT],
                         autoChangeoverActive=True
                     )
@@ -322,6 +331,8 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                     await self._update_thermostat(
                         self.location,
                         self.device,
+                        coolSetpoint=self.device.changeableValues.coolSetpoint,
+                        heatSetpoint=self.device.changeableValues.heatSetpoint,
                         mode=HVAC_MODES[self.device.changeableValues.heatCoolMode],
                         autoChangeoverActive=True
                     )
@@ -330,6 +341,8 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                 await self._update_thermostat(
                     self.location,
                     self.device,
+                    coolSetpoint=self.device.changeableValues.coolSetpoint,
+                    heatSetpoint=self.device.changeableValues.heatSetpoint,
                     mode=LYRIC_HVAC_MODES[hvac_mode],
                     autoChangeoverActive=False
                 )
