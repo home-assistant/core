@@ -6,6 +6,6 @@ from homeassistant.core import callback
 
 
 @callback
-def is_hassio() -> bool:
-    """Return true if on Hass.io."""
+def is_supervised() -> bool:
+    """Return true if supervisor is available."""
     return "SUPERVISOR" in os.environ

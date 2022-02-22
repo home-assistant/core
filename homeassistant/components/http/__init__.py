@@ -23,7 +23,7 @@ from homeassistant.components.network import async_get_source_ip
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, SERVER_PORT
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, hassio, storage
+from homeassistant.helpers import config_validation as cv, storage, supervisor
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -166,7 +166,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
     ssl_profile = conf[CONF_SSL_PROFILE]
 
-    if ssl_peer_certificate is not None and hassio.is_hassio():
+    if ssl_peer_certificate is not None and supervisor.is_supervised():
         _LOGGER.warning(
             "Peer certificates are not supported when running the supervisor"
         )

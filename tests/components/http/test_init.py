@@ -268,7 +268,7 @@ async def test_peer_cert_ignored_with_supervisor(hass, tmpdir):
     )
 
     with patch("ssl.SSLContext.load_cert_chain"), patch(
-        "homeassistant.components.http.hassio.is_hassio", return_value=True
+        "homeassistant.components.http.supervisor.is_supervised", return_value=True
     ), patch(
         "ssl.SSLContext.load_verify_locations"
     ) as mock_load_verify_locations, patch(
