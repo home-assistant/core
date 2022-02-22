@@ -18,7 +18,7 @@ from async_upnp_client.const import (
     SsdpSource,
 )
 from async_upnp_client.description_cache import DescriptionCache
-from async_upnp_client.ssdp import SSDP_PORT, determine_source_target
+from async_upnp_client.ssdp import SSDP_PORT, determine_source_target, is_ipv4_address
 from async_upnp_client.ssdp_listener import SsdpDevice, SsdpDeviceTracker, SsdpListener
 from async_upnp_client.utils import CaseInsensitiveDict
 
@@ -399,7 +399,7 @@ class Scanner:
         # address. This matches pysonos' behavior
         # https://github.com/amelchio/pysonos/blob/d4329b4abb657d106394ae69357805269708c996/pysonos/discovery.py#L120
         for listener in self._ssdp_listeners:
-            if len(listener.source) == 2:
+            if is_ipv4_address(listener.source):
                 await listener.async_search((str(IPV4_BROADCAST), SSDP_PORT))
 
     async def async_start(self) -> None:
