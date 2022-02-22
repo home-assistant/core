@@ -632,7 +632,7 @@ async def test_entity_availability(hass: HomeAssistant):
     assert state.state == "unavailable"
 
 
-@pytest.mark.parametrize("port,entry_type", ((8009, None),))
+@pytest.mark.parametrize("port,entry_type", ((8009, None), (12345, None)))
 async def test_device_registry(hass: HomeAssistant, port, entry_type):
     """Test device registry integration."""
     entity_id = "media_player.speaker"

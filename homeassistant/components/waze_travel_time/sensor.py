@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-import re
 
 from WazeRouteCalculator import WazeRouteCalculator, WRCError
 
@@ -41,7 +40,6 @@ from .const import (
     DEFAULT_REALTIME,
     DEFAULT_VEHICLE_TYPE,
     DOMAIN,
-    ENTITY_ID_PATTERN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -119,23 +117,10 @@ class WazeTravelTime(SensorEntity):
         self._attr_unique_id = unique_id
         self._waze_data = waze_data
         self._attr_name = name
+        self._origin = origin
+        self._destination = destination
         self._attr_icon = "mdi:car"
         self._state = None
-        self._origin_entity_id = None
-        self._destination_entity_id = None
-
-        cmpl_re = re.compile(ENTITY_ID_PATTERN)
-        if cmpl_re.fullmatch(origin):
-            _LOGGER.debug("Found origin source entity %s", origin)
-            self._origin_entity_id = origin
-        else:
-            self._waze_data.origin = origin
-
-        if cmpl_re.fullmatch(destination):
-            _LOGGER.debug("Found destination source entity %s", destination)
-            self._destination_entity_id = destination
-        else:
-            self._waze_data.destination = destination
 
     async def async_added_to_hass(self) -> None:
         """Handle when entity is added."""
@@ -177,16 +162,8 @@ class WazeTravelTime(SensorEntity):
     def update(self):
         """Fetch new state data for the sensor."""
         _LOGGER.debug("Fetching Route for %s", self._attr_name)
-        # Get origin latitude and longitude from entity_id.
-        if self._origin_entity_id is not None:
-            self._waze_data.origin = find_coordinates(self.hass, self._origin_entity_id)
-
-        # Get destination latitude and longitude from entity_id.
-        if self._destination_entity_id is not None:
-            self._waze_data.destination = find_coordinates(
-                self.hass, self._destination_entity_id
-            )
-
+        self._waze_data.origin = find_coordinates(self.hass, self._origin)
+        self._waze_data.destination = find_coordinates(self.hass, self._destination)
         self._waze_data.update()
 
 
@@ -205,6 +182,11 @@ class WazeTravelTimeData:
 
     def update(self):
         """Update WazeRouteCalculator Sensor."""
+        _LOGGER.debug(
+            "Getting update for origin: %s destination: %s",
+            self.origin,
+            self.destination,
+        )
         if self.origin is not None and self.destination is not None:
             # Grab options on every update
             incl_filter = self.config_entry.options.get(CONF_INCL_FILTER)

@@ -292,13 +292,12 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         self._cast_view_remove_handler = None
         self._attr_unique_id = str(cast_info.uuid)
         self._attr_name = cast_info.friendly_name
-        if cast_info.cast_info.model_name != "Google Cast Group":
-            self._attr_device_info = DeviceInfo(
-                identifiers={(CAST_DOMAIN, str(cast_info.uuid).replace("-", ""))},
-                manufacturer=str(cast_info.cast_info.manufacturer),
-                model=cast_info.cast_info.model_name,
-                name=str(cast_info.friendly_name),
-            )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(CAST_DOMAIN, str(cast_info.uuid).replace("-", ""))},
+            manufacturer=str(cast_info.cast_info.manufacturer),
+            model=cast_info.cast_info.model_name,
+            name=str(cast_info.friendly_name),
+        )
 
     async def async_added_to_hass(self):
         """Create chromecast object when added to hass."""

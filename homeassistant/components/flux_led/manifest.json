@@ -4,7 +4,7 @@
   "config_flow": true,
   "dependencies": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/flux_led",
-  "requirements": ["flux_led==0.28.26"],
+  "requirements": ["flux_led==0.28.27"],
   "quality_scale": "platinum",
   "codeowners": ["@icemanch", "@bdraco"],
   "iot_class": "local_push",

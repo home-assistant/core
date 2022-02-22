@@ -249,6 +249,7 @@ aprslib==0.7.0
 arcam-fmj==0.12.0
 
 # homeassistant.components.dlna_dmr
+# homeassistant.components.dlna_dms
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
@@ -433,7 +434,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.28.26
+flux_led==0.28.27
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -1303,7 +1304,7 @@ radios==0.1.0
 regenmaschine==2022.01.0
 
 # homeassistant.components.renault
-renault-api==0.1.8
+renault-api==0.1.9
 
 # homeassistant.components.python_script
 restrictedpython==5.2
@@ -1494,7 +1495,7 @@ url-normalize==1.4.1
 uvcclient==0.11.0
 
 # homeassistant.components.vallox
-vallox-websocket-api==2.9.0
+vallox-websocket-api==2.11.0
 
 # homeassistant.components.rdw
 vehicle==0.3.1
@@ -1590,7 +1591,7 @@ zigpy-znp==0.7.0
 zigpy==0.43.0
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.35.0
+zwave-js-server-python==0.35.1
 
 # homeassistant.components.zwave_me
 zwave_me_ws==0.1.23
