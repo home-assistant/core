@@ -2977,7 +2977,7 @@ async def test_platform_async_validate_condition_config(hass):
     config = {CONF_DEVICE_ID: "test", CONF_DOMAIN: "test", CONF_CONDITION: "device"}
     platform = AsyncMock()
     with patch(
-        "homeassistant.helpers.condition.async_get_device_automation_platform",
+        "homeassistant.components.device_automation.condition.async_get_device_automation_platform",
         return_value=platform,
     ):
         platform.async_validate_condition_config.return_value = config
