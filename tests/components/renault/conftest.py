@@ -63,12 +63,6 @@ def patch_get_vehicles(vehicle_type: str):
                 load_fixture(f"renault/vehicle_{vehicle_type}.json")
             )
         ),
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.supports_endpoint",
-        side_effect=MOCK_VEHICLES[vehicle_type]["endpoints_available"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.has_contract_for_endpoint",
-        return_value=True,
     ):
         yield
 

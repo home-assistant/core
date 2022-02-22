@@ -79,13 +79,6 @@ MOCK_VEHICLES = {
             ATTR_NAME: "REG-NUMBER",
             ATTR_SW_VERSION: "X101VE",
         },
-        "endpoints_available": [
-            True,  # cockpit
-            True,  # hvac-status
-            False,  # location
-            True,  # battery-status
-            True,  # charge-mode
-        ],
         "endpoints": {
             "battery_status": "battery_status_charging.json",
             "charge_mode": "charge_mode_always.json",
@@ -246,14 +239,6 @@ MOCK_VEHICLES = {
             ATTR_NAME: "REG-NUMBER",
             ATTR_SW_VERSION: "X102VE",
         },
-        "endpoints_available": [
-            True,  # cockpit
-            True,  # hvac-status
-            True,  # location
-            True,  # battery-status
-            True,  # charge-mode
-            True,  # lock-status
-        ],
         "endpoints": {
             "battery_status": "battery_status_not_charging.json",
             "charge_mode": "charge_mode_schedule.json",
@@ -466,14 +451,6 @@ MOCK_VEHICLES = {
             ATTR_NAME: "REG-NUMBER",
             ATTR_SW_VERSION: "XJB1SU",
         },
-        "endpoints_available": [
-            True,  # cockpit
-            False,  # hvac-status
-            True,  # location
-            True,  # battery-status
-            True,  # charge-mode
-            True,  # lock-status
-        ],
         "endpoints": {
             "battery_status": "battery_status_charging.json",
             "charge_mode": "charge_mode_always.json",
@@ -674,14 +651,6 @@ MOCK_VEHICLES = {
             ATTR_NAME: "REG-NUMBER",
             ATTR_SW_VERSION: "XJB1SU",
         },
-        "endpoints_available": [
-            True,  # cockpit
-            False,  # hvac-status
-            True,  # location
-            # Ignore,  # battery-status
-            # Ignore,  # charge-mode
-            True,  # lock-status
-        ],
         "endpoints": {
             "cockpit": "cockpit_fuel.json",
             "location": "location.json",
