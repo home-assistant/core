@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import cast
 
-from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState, UIWidget
+from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
 from homeassistant.components.climate import (
     HVAC_MODE_OFF,
@@ -16,7 +16,6 @@ from homeassistant.components.climate.const import (
     PRESET_ECO,
     PRESET_NONE,
 )
-from homeassistant.components.overkiz.climate import CLIMATE_IMPLEMENTATIONS
 from homeassistant.components.overkiz.entity import OverkizEntity
 from homeassistant.const import TEMP_CELSIUS
 
@@ -39,7 +38,6 @@ OVERKIZ_TO_PRESET_MODES: dict[str, str] = {
 PRESET_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_PRESET_MODES.items()}
 
 
-@CLIMATE_IMPLEMENTATIONS.register(UIWidget.ATLANTIC_ELECTRICAL_HEATER)
 class AtlanticElectricalHeater(OverkizEntity, ClimateEntity):
     """Representation of Atlantic Electrical Heater."""
 
