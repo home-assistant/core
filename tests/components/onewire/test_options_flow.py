@@ -195,7 +195,6 @@ async def test_user_owserver_options_set_multiple(
         user_input={"precision": "9 Bits"},
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    print(result["data"])
     assert result["data"]["device_options"]["28.222222222222"]["precision"] == "Default"
     assert result["data"]["device_options"]["28.111111111111"]["precision"] == "9 Bits"
 
