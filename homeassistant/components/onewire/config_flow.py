@@ -319,7 +319,7 @@ class OnewireOptionsFlowHandler(OptionsFlow):
     def _get_current_setting(self, device_id: str, setting: str, default: Any) -> Any:
         """Get current value for setting."""
         if entry_device_options := self.options.get(OPTION_ENTRY_DEVICE_OPTIONS):
-            if device_options := entry_device_options(device_id):
+            if device_options := entry_device_options.get(device_id):
                 return device_options.get(setting)
         return default
 
