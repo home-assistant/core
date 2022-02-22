@@ -332,14 +332,14 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        if is_hassio(self.hass):
+        if is_hassio():
             return await self.async_step_on_supervisor()
 
         return await self.async_step_manual()
 
     async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
         """Handle USB Discovery."""
-        if not is_hassio(self.hass):
+        if not is_hassio():
             return self.async_abort(reason="discovery_requires_supervisor")
         if self._async_current_entries():
             return self.async_abort(reason="already_configured")
@@ -641,7 +641,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the options."""
-        if is_hassio(self.hass):
+        if is_hassio():
             return await self.async_step_on_supervisor()
 
         return await self.async_step_manual()

@@ -7,8 +7,6 @@ from homeassistant.components import updater
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_component
-
 NEW_VERSION = "10000.0"
 MOCK_VERSION = "10.0"
 MOCK_DEV_VERSION = "10.0.dev0"
@@ -113,12 +111,12 @@ async def test_new_version_shows_entity_after_hour_hassio(
     hass, mock_get_newest_version
 ):
     """Test if binary sensor gets updated if new version is available / Hass.io."""
-    mock_component(hass, "hassio")
-    hass.data["hassio_core_info"] = {"version_latest": "999.0"}
+    with patch("homeassistant.components.updater.hassio.is_hassio", return_value=True):
+        hass.data["hassio_core_info"] = {"version_latest": "999.0"}
 
-    assert await async_setup_component(hass, updater.DOMAIN, {updater.DOMAIN: {}})
+        assert await async_setup_component(hass, updater.DOMAIN, {updater.DOMAIN: {}})
 
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     assert hass.states.is_state("binary_sensor.updater", "on")
     assert (

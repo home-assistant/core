@@ -36,7 +36,9 @@ def hassio_env_fixture():
     with patch.dict(os.environ, {"HASSIO": "127.0.0.1"}), patch(
         "homeassistant.components.hassio.HassIO.is_connected",
         return_value={"result": "ok", "data": {}},
-    ), patch.dict(os.environ, {"HASSIO_TOKEN": "123456"}):
+    ), patch.dict(os.environ, {"HASSIO_TOKEN": "123456"}), patch.dict(
+        os.environ, {"SUPERVISOR": "127.0.0.1"}
+    ):
         yield
 
 

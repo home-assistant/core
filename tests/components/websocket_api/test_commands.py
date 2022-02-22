@@ -1,6 +1,5 @@
 """Tests for WebSocket API commands."""
 import datetime
-import logging
 from unittest.mock import ANY, patch
 
 from async_timeout import timeout
@@ -1289,54 +1288,58 @@ async def test_integration_setup_info(hass, websocket_client, hass_admin_user):
     ]
 
 
-async def test_integration_log_info(hass, websocket_client, hass_admin_user):
-    """Test fetching integration log info."""
-    logging.getLogger("homeassistant.components.http").setLevel(logging.DEBUG)
-    logging.getLogger("homeassistant.components.websocket_api").setLevel(logging.DEBUG)
-
-    await websocket_client.send_json({"id": 7, "type": "integration/log_info"})
-
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 7
-    assert msg["type"] == const.TYPE_RESULT
-    assert msg["success"]
-    assert {"domain": "http", "level": logging.DEBUG} in msg["result"]
-    assert {"domain": "websocket_api", "level": logging.DEBUG} in msg["result"]
-
-
-async def test_integration_log_level_logger_not_loaded(
-    hass, websocket_client, hass_admin_user
-):
-    """Test setting integration log level."""
-    await websocket_client.send_json(
-        {
-            "id": 7,
-            "type": "integration/log_level",
-            "integration": "websocket_api",
-            "level": logging.DEBUG,
-        }
-    )
-
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 7
-    assert msg["type"] == const.TYPE_RESULT
-    assert not msg["success"]
-
-
-async def test_integration_log_level(hass, websocket_client, hass_admin_user):
-    """Test setting integration log level."""
-    assert await async_setup_component(hass, "logger", {})
-
-    await websocket_client.send_json(
-        {
-            "id": 7,
-            "type": "integration/log_level",
-            "integration": "websocket_api",
-            "level": "DEBUG",
-        }
-    )
+@pytest.mark.parametrize(
+    "key,config",
+    (
+        ("trigger", {"platform": "event", "event_type": "hello"}),
+        (
+            "condition",
+            {"condition": "state", "entity_id": "hello.world", "state": "paulus"},
+        ),
+        ("action", {"service": "domain_test.test_service"}),
+    ),
+)
+async def test_validate_config_works(websocket_client, key, config):
+    """Test config validation."""
+    await websocket_client.send_json({"id": 7, "type": "validate_config", key: config})
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
+    assert msg["result"] == {key: {"valid": True, "error": None}}
+
+
+@pytest.mark.parametrize(
+    "key,config,error",
+    (
+        (
+            "trigger",
+            {"platform": "non_existing", "event_type": "hello"},
+            "Invalid platform 'non_existing' specified",
+        ),
+        (
+            "condition",
+            {
+                "condition": "non_existing",
+                "entity_id": "hello.world",
+                "state": "paulus",
+            },
+            "Unexpected value for condition: 'non_existing'. Expected and, device, not, numeric_state, or, state, sun, template, time, trigger, zone",
+        ),
+        (
+            "action",
+            {"non_existing": "domain_test.test_service"},
+            "Unable to determine action @ data[0]",
+        ),
+    ),
+)
+async def test_validate_config_invalid(websocket_client, key, config, error):
+    """Test config validation."""
+    await websocket_client.send_json({"id": 7, "type": "validate_config", key: config})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {key: {"valid": False, "error": error}}
