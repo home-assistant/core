@@ -168,7 +168,7 @@ def explore_module(package, explore_children):
 
 
 def core_requirements():
-    """Gather core requirements out of setup.py."""
+    """Gather core requirements out of setup.cfg."""
     parser = configparser.ConfigParser()
     parser.read("setup.cfg")
     return parser["options"]["install_requires"].strip().split("\n")

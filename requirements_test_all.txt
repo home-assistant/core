@@ -27,7 +27,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-# PySwitchbot==0.13.2
+# PySwitchbot==0.13.3
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -178,6 +178,9 @@ aiopvapi==1.6.19
 
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==3.0.0
+
+# homeassistant.components.sonarr
+aiopyarr==22.2.1
 
 # homeassistant.components.recollect_waste
 aiorecollect==1.0.8
@@ -997,7 +1000,7 @@ pyhomematic==0.1.77
 pyialarm==1.9.0
 
 # homeassistant.components.icloud
-pyicloud==0.10.2
+pyicloud==1.0.0
 
 # homeassistant.components.insteon
 pyinsteon==1.0.16
@@ -1161,7 +1164,7 @@ pyrituals==0.0.6
 pyruckus==0.12
 
 # homeassistant.components.sensibo
-pysensibo==1.0.6
+pysensibo==1.0.7
 
 # homeassistant.components.serial
 # homeassistant.components.zha
@@ -1262,7 +1265,7 @@ pyudev==0.22.0
 pyunifiprotect==3.2.0
 
 # homeassistant.components.uptimerobot
-pyuptimerobot==21.11.0
+pyuptimerobot==22.2.0
 
 # homeassistant.components.vera
 pyvera==0.3.13
@@ -1384,9 +1387,6 @@ somecomfort==0.8.0
 
 # homeassistant.components.somfy_mylink
 somfy-mylink-synergy==1.0.6
-
-# homeassistant.components.sonarr
-sonarr==0.3.0
 
 # homeassistant.components.marytts
 speak2mary==1.4.0
