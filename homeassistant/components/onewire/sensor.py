@@ -54,6 +54,8 @@ from .onewirehub import OneWireHub
 class OneWireSensorEntityDescription(OneWireEntityDescription, SensorEntityDescription):
     """Class describing OneWire sensor entities."""
 
+    override_key: str | None = None
+
 
 SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION = OneWireSensorEntityDescription(
     key="temperature",
@@ -184,6 +186,37 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
     ),
     "28": (SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,),
+    "30": (
+        SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,
+        OneWireSensorEntityDescription(
+            key="typeX/temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            entity_registry_enabled_default=False,
+            name="Thermocouple temperature",
+            native_unit_of_measurement=TEMP_CELSIUS,
+            read_mode=READ_MODE_FLOAT,
+            override_key="typeK/temperature",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        OneWireSensorEntityDescription(
+            key="volt",
+            device_class=SensorDeviceClass.VOLTAGE,
+            entity_registry_enabled_default=False,
+            name="Voltage",
+            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        OneWireSensorEntityDescription(
+            key="vis",
+            device_class=SensorDeviceClass.VOLTAGE,
+            entity_registry_enabled_default=False,
+            name="vis",
+            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
     "3B": (SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,),
     "42": (SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,),
     "1D": tuple(
@@ -368,7 +401,8 @@ def get_entities(
                         description.native_unit_of_measurement = PERCENTAGE
                         description.name = f"Wetness {s_id}"
                 device_file = os.path.join(
-                    os.path.split(device.path)[0], description.key
+                    os.path.split(device.path)[0],
+                    description.override_key or description.key,
                 )
                 name = f"{device_id} {description.name}"
                 entities.append(

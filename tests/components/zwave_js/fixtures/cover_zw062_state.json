@@ -10,7 +10,7 @@
     "generic": {"key": 64, "label":"Entry Control"},
     "specific": {"key": 7, "label":"Secure Barrier Add-on"},
     "mandatorySupportedCCs": [],
-    "mandatoryControlCCs": []
+    "mandatoryControlledCCs": []
   },
   "isListening": true,
   "isFrequentListening": false,

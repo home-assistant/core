@@ -8,6 +8,7 @@
             "is_playing": "{entity_name} \u304c\u518d\u751f\u3055\u308c\u3066\u3044\u307e\u3059"
         },
         "trigger_type": {
+            "changed_states": "{entity_name} \u306e\u72b6\u614b\u304c\u5909\u66f4\u3055\u308c\u307e\u3057\u305f",
             "idle": "{entity_name} \u304c\u30a2\u30a4\u30c9\u30eb\u72b6\u614b\u306b\u306a\u308a\u307e\u3059",
             "paused": "{entity_name} \u306f\u3001\u4e00\u6642\u505c\u6b62\u3057\u3066\u3044\u307e\u3059",
             "playing": "{entity_name} \u304c\u518d\u751f\u3092\u958b\u59cb\u3057\u307e\u3059",

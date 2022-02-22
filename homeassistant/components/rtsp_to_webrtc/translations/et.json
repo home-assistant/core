@@ -1,6 +1,8 @@
 {
     "config": {
         "abort": {
+            "server_failure": "RTSPtoWebRTC server tagastas veateate. Lisateabe saamiseks vaata logisid.",
+            "server_unreachable": "RTSPtoWebRTC serveriga ei saa suhelda. Lisateabe saamiseks vaata logisid.",
             "single_instance_allowed": "Juba seadistatud. Lubatud on ainult \u00fcks sidumine."
         },
         "error": {

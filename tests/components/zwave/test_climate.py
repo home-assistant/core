@@ -31,6 +31,9 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 from tests.mock.zwave import MockEntityValues, MockNode, MockValue, value_changed
 
+# Integration is disabled
+pytest.skip("Integration has been disabled in the manifest", allow_module_level=True)
+
 
 @pytest.fixture
 def device(hass, mock_openzwave):

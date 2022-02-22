@@ -4,7 +4,7 @@
             "already_configured": "Enheten er allerede konfigurert",
             "api_not_enabled": "API-en er ikke aktivert. Aktiver API i HomeWizard Energy-appen under innstillinger",
             "device_not_supported": "Denne enheten st\u00f8ttes ikke",
-            "invalid_discovery_parameters": "unsupported_api_version",
+            "invalid_discovery_parameters": "Oppdaget API-versjon som ikke st\u00f8ttes",
             "unknown_error": "Uventet feil"
         },
         "step": {

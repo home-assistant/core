@@ -1,7 +1,6 @@
 """Config flow to configure the WLED integration."""
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 import voluptuous as vol
@@ -42,6 +41,8 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             except WLEDConnectionError:
                 errors["base"] = "cannot_connect"
             else:
+                if device.info.leds.cct:
+                    return self.async_abort(reason="cct_unsupported")
                 await self.async_set_unique_id(device.info.mac_address)
                 self._abort_if_unique_id_configured(
                     updates={CONF_HOST: user_input[CONF_HOST]}
@@ -75,8 +76,11 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         self.discovered_host = discovery_info.host
         try:
             self.discovered_device = await self._async_get_device(discovery_info.host)
-        except (WLEDConnectionError, asyncio.TimeoutError):
+        except WLEDConnectionError:
             return self.async_abort(reason="cannot_connect")
+
+        if self.discovered_device.info.leds.cct:
+            return self.async_abort(reason="cct_unsupported")
 
         await self.async_set_unique_id(self.discovered_device.info.mac_address)
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})

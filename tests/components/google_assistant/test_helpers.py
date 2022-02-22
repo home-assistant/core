@@ -30,7 +30,7 @@ from tests.common import (
 async def test_google_entity_sync_serialize_with_local_sdk(hass):
     """Test sync serialize attributes of a GoogleEntity."""
     hass.states.async_set("light.ceiling_lights", "off")
-    hass.config.api = Mock(port=1234, use_ssl=True)
+    hass.config.api = Mock(port=1234, use_ssl=False)
     await async_process_ha_core_config(
         hass,
         {"external_url": "https://hostname:1234"},
@@ -58,7 +58,7 @@ async def test_google_entity_sync_serialize_with_local_sdk(hass):
         assert serialized["otherDeviceIds"] == [{"deviceId": "light.ceiling_lights"}]
         assert serialized["customData"] == {
             "httpPort": 1234,
-            "httpSSL": True,
+            "httpSSL": False,
             "proxyDeviceId": "mock-user-id",
             "webhookId": "mock-webhook-id",
             "baseUrl": "https://hostname:1234",
@@ -94,7 +94,9 @@ async def test_config_local_sdk(hass, hass_client):
 
     client = await hass_client()
 
+    assert config.is_local_connected is False
     config.async_enable_local_sdk()
+    assert config.is_local_connected is False
 
     resp = await client.post(
         "/api/webhook/mock-webhook-id",
@@ -122,6 +124,14 @@ async def test_config_local_sdk(hass, hass_client):
             "requestId": "mock-req-id",
         },
     )
+
+    assert config.is_local_connected is True
+    with patch(
+        "homeassistant.components.google_assistant.helpers.utcnow",
+        return_value=dt.utcnow() + timedelta(seconds=90),
+    ):
+        assert config.is_local_connected is False
+
     assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result["requestId"] == "mock-req-id"
@@ -153,10 +163,12 @@ async def test_config_local_sdk_if_disabled(hass, hass_client):
         },
         enabled=False,
     )
+    assert not config.is_local_sdk_active
 
     client = await hass_client()
 
     config.async_enable_local_sdk()
+    assert config.is_local_sdk_active
 
     resp = await client.post(
         "/api/webhook/mock-webhook-id", json={"requestId": "mock-req-id"}
@@ -169,8 +181,36 @@ async def test_config_local_sdk_if_disabled(hass, hass_client):
     }
 
     config.async_disable_local_sdk()
+    assert not config.is_local_sdk_active
 
     # Webhook is no longer active
+    resp = await client.post("/api/webhook/mock-webhook-id")
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == b""
+
+
+async def test_config_local_sdk_if_ssl_enabled(hass, hass_client):
+    """Test the local SDK is not enabled when SSL is enabled."""
+    assert await async_setup_component(hass, "webhook", {})
+    hass.config.api.use_ssl = True
+
+    config = MockConfig(
+        hass=hass,
+        agent_user_ids={
+            "mock-user-id": {
+                STORE_GOOGLE_LOCAL_WEBHOOK_ID: "mock-webhook-id",
+            },
+        },
+        enabled=False,
+    )
+    assert not config.is_local_sdk_active
+
+    client = await hass_client()
+
+    config.async_enable_local_sdk()
+    assert not config.is_local_sdk_active
+
+    # Webhook should not be activated
     resp = await client.post("/api/webhook/mock-webhook-id")
     assert resp.status == HTTPStatus.OK
     assert await resp.read() == b""

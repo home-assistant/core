@@ -55,9 +55,6 @@ def get_aqualink_device(system, cls=None, data=None):
     if data is None:
         data = {}
 
-    num = random.randint(0, 999)
-    data["name"] = f"name_{num:03}"
-
     return cls(system=system, data=data)
 
 

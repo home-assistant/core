@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-import logging
 
 from sharkiqpy import OperatingModes, PowerModes, Properties, SharkIqVacuum
 
@@ -29,10 +28,8 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, SHARK
+from .const import DOMAIN, LOGGER, SHARK
 from .update_coordinator import SharkIqUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 # Supported features
 SUPPORT_SHARKIQ = (
@@ -79,7 +76,7 @@ async def async_setup_entry(
     coordinator: SharkIqUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     devices: Iterable[SharkIqVacuum] = coordinator.shark_vacs.values()
     device_names = [d.name for d in devices]
-    _LOGGER.debug(
+    LOGGER.debug(
         "Found %d Shark IQ device(s): %s",
         len(device_names),
         ", ".join([d.name for d in devices]),
@@ -89,6 +86,8 @@ async def async_setup_entry(
 
 class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
     """Shark IQ vacuum entity."""
+
+    coordinator: SharkIqUpdateCoordinator
 
     def __init__(
         self, sharkiq: SharkIqVacuum, coordinator: SharkIqUpdateCoordinator
@@ -222,7 +221,7 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
         await self.sharkiq.async_find_device()
 
     @property
-    def fan_speed(self) -> str:
+    def fan_speed(self) -> str | None:
         """Return the current fan speed."""
         fan_speed = None
         speed_level = self.sharkiq.get_property_value(Properties.POWER_MODE)

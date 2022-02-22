@@ -1,20 +1,25 @@
 """Constants for Sensibo."""
 
+import asyncio
+import logging
+
+from aiohttp.client_exceptions import ClientConnectionError
+from pysensibo.exceptions import AuthenticationError, SensiboError
+
 from homeassistant.const import Platform
 
+LOGGER = logging.getLogger(__package__)
+
+DEFAULT_SCAN_INTERVAL = 60
 DOMAIN = "sensibo"
-PLATFORMS = [Platform.CLIMATE]
+PLATFORMS = [Platform.CLIMATE, Platform.NUMBER]
 ALL = ["all"]
 DEFAULT_NAME = "Sensibo"
 TIMEOUT = 8
-_FETCH_FIELDS = ",".join(
-    [
-        "room{name}",
-        "measurements",
-        "remoteCapabilities",
-        "acState",
-        "connectionStatus{isAlive}",
-        "temperatureUnit",
-    ]
+
+SENSIBO_ERRORS = (
+    ClientConnectionError,
+    asyncio.TimeoutError,
+    AuthenticationError,
+    SensiboError,
 )
-_INITIAL_FETCH_FIELDS = f"id,firmwareVersion,firmwareType,productModel,{_FETCH_FIELDS}"

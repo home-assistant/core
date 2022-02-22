@@ -51,6 +51,7 @@ async def test_full_zeroconf_flow_implementation(
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.123",
+            addresses=["192.168.1.123"],
             hostname="example.local.",
             name="mock_name",
             port=None,
@@ -110,6 +111,7 @@ async def test_zeroconf_connection_error(
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.123",
+            addresses=["192.168.1.123"],
             hostname="example.local.",
             name="mock_name",
             port=None,
@@ -139,6 +141,23 @@ async def test_user_device_exists_abort(
     assert result.get("reason") == "already_configured"
 
 
+async def test_user_with_cct_channel_abort(
+    hass: HomeAssistant,
+    mock_wled_config_flow: MagicMock,
+) -> None:
+    """Test we abort user flow if WLED device uses a CCT channel."""
+    mock_wled_config_flow.update.return_value.info.leds.cct = True
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_HOST: "192.168.1.123"},
+    )
+
+    assert result.get("type") == RESULT_TYPE_ABORT
+    assert result.get("reason") == "cct_unsupported"
+
+
 async def test_zeroconf_without_mac_device_exists_abort(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -151,6 +170,7 @@ async def test_zeroconf_without_mac_device_exists_abort(
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.123",
+            addresses=["192.168.1.123"],
             hostname="example.local.",
             name="mock_name",
             port=None,
@@ -175,6 +195,7 @@ async def test_zeroconf_with_mac_device_exists_abort(
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.123",
+            addresses=["192.168.1.123"],
             hostname="example.local.",
             name="mock_name",
             port=None,
@@ -185,6 +206,31 @@ async def test_zeroconf_with_mac_device_exists_abort(
 
     assert result.get("type") == RESULT_TYPE_ABORT
     assert result.get("reason") == "already_configured"
+
+
+async def test_zeroconf_with_cct_channel_abort(
+    hass: HomeAssistant,
+    mock_wled_config_flow: MagicMock,
+) -> None:
+    """Test we abort zeroconf flow if WLED device uses a CCT channel."""
+    mock_wled_config_flow.update.return_value.info.leds.cct = True
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="192.168.1.123",
+            addresses=["192.168.1.123"],
+            hostname="example.local.",
+            name="mock_name",
+            port=None,
+            properties={CONF_MAC: "aabbccddeeff"},
+            type="mock_type",
+        ),
+    )
+
+    assert result.get("type") == RESULT_TYPE_ABORT
+    assert result.get("reason") == "cct_unsupported"
 
 
 async def test_options_flow(

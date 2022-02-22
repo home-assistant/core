@@ -281,7 +281,7 @@ async def async_devices_identify(hass, data: RequestData, payload):
 async def async_devices_reachable(hass, data: RequestData, payload):
     """Handle action.devices.REACHABLE_DEVICES request.
 
-    https://developers.google.com/actions/smarthome/create#actiondevicesdisconnect
+    https://developers.google.com/assistant/smarthome/develop/local#implement_the_reachable_devices_handler_hub_integrations_only
     """
     google_ids = {dev["id"] for dev in (data.devices or [])}
 
@@ -292,6 +292,15 @@ async def async_devices_reachable(hass, data: RequestData, payload):
             if entity.entity_id in google_ids and entity.should_expose_local()
         ]
     }
+
+
+@HANDLERS.register("action.devices.PROXY_SELECTED")
+async def async_devices_proxy_selected(hass, data: RequestData, payload):
+    """Handle action.devices.PROXY_SELECTED request.
+
+    When selected for local SDK.
+    """
+    return {}
 
 
 def turned_off_response(message):

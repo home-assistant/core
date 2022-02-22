@@ -43,7 +43,11 @@ from homeassistant.core import CoreState, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entityfilter import BASE_FILTER_SCHEMA, FILTER_SCHEMA
+from homeassistant.helpers.entityfilter import (
+    BASE_FILTER_SCHEMA,
+    FILTER_SCHEMA,
+    EntityFilter,
+)
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 from homeassistant.helpers.typing import ConfigType
@@ -309,7 +313,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     if entry.source == SOURCE_IMPORT:
         return
@@ -469,7 +473,7 @@ class HomeKit:
         self._name = name
         self._port = port
         self._ip_address = ip_address
-        self._filter = entity_filter
+        self._filter: EntityFilter = entity_filter
         self._config = entity_config
         self._exclude_accessory_mode = exclude_accessory_mode
         self._advertise_ip = advertise_ip
@@ -661,6 +665,12 @@ class HomeKit:
                 continue
 
             if ent_reg_ent := ent_reg.async_get(entity_id):
+                if (
+                    ent_reg_ent.entity_category is not None
+                    and not self._filter.explicitly_included(entity_id)
+                ):
+                    continue
+
                 await self._async_set_device_info_attributes(
                     ent_reg_ent, dev_reg, entity_id
                 )

@@ -40,6 +40,7 @@ from .conftest import (
     assert_entity_counts,
     enable_entity,
     ids_from_device_description,
+    time_changed,
 )
 
 
@@ -569,3 +570,4 @@ async def test_sensor_update_alarm(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "smoke"
+    await time_changed(hass, 10)

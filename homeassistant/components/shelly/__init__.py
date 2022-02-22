@@ -80,6 +80,7 @@ BLOCK_PLATFORMS: Final = [
 BLOCK_SLEEPING_PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.NUMBER,
     Platform.SENSOR,
 ]
 RPC_PLATFORMS: Final = [
@@ -428,17 +429,21 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Mac address of the device."""
         return cast(str, self.entry.unique_id)
 
+    @property
+    def sw_version(self) -> str:
+        """Firmware version of the device."""
+        return self.device.firmware_version if self.device.initialized else ""
+
     def async_setup(self) -> None:
         """Set up the wrapper."""
         dev_reg = device_registry.async_get(self.hass)
-        sw_version = self.device.firmware_version if self.device.initialized else ""
         entry = dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,
             name=self.name,
             connections={(device_registry.CONNECTION_NETWORK_MAC, self.mac)},
             manufacturer="Shelly",
             model=aioshelly.const.MODEL_NAMES.get(self.model, self.model),
-            sw_version=sw_version,
+            sw_version=self.sw_version,
             hw_version=f"gen{self.device.gen} ({self.model})",
             configuration_url=f"http://{self.entry.data[CONF_HOST]}",
         )
@@ -676,19 +681,17 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
                     ENTRY_RELOAD_COOLDOWN,
                 )
                 self.hass.async_create_task(self._debounced_reload.async_call())
-            elif event_type not in RPC_INPUTS_EVENTS_TYPES:
-                continue
-
-            self.hass.bus.async_fire(
-                EVENT_SHELLY_CLICK,
-                {
-                    ATTR_DEVICE_ID: self.device_id,
-                    ATTR_DEVICE: self.device.hostname,
-                    ATTR_CHANNEL: event["id"] + 1,
-                    ATTR_CLICK_TYPE: event["event"],
-                    ATTR_GENERATION: 2,
-                },
-            )
+            elif event_type in RPC_INPUTS_EVENTS_TYPES:
+                self.hass.bus.async_fire(
+                    EVENT_SHELLY_CLICK,
+                    {
+                        ATTR_DEVICE_ID: self.device_id,
+                        ATTR_DEVICE: self.device.hostname,
+                        ATTR_CHANNEL: event["id"] + 1,
+                        ATTR_CLICK_TYPE: event["event"],
+                        ATTR_GENERATION: 2,
+                    },
+                )
 
     async def _async_update_data(self) -> None:
         """Fetch data."""
@@ -713,17 +716,21 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Mac address of the device."""
         return cast(str, self.entry.unique_id)
 
+    @property
+    def sw_version(self) -> str:
+        """Firmware version of the device."""
+        return self.device.firmware_version if self.device.initialized else ""
+
     def async_setup(self) -> None:
         """Set up the wrapper."""
         dev_reg = device_registry.async_get(self.hass)
-        sw_version = self.device.firmware_version if self.device.initialized else ""
         entry = dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,
             name=self.name,
             connections={(device_registry.CONNECTION_NETWORK_MAC, self.mac)},
             manufacturer="Shelly",
             model=aioshelly.const.MODEL_NAMES.get(self.model, self.model),
-            sw_version=sw_version,
+            sw_version=self.sw_version,
             hw_version=f"gen{self.device.gen} ({self.model})",
             configuration_url=f"http://{self.entry.data[CONF_HOST]}",
         )

@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
@@ -23,21 +23,21 @@ BUTTON_DESCRIPTIONS: list[ButtonEntityDescription] = [
         key="identify",  # startIdentify and identify are reversed... Swap this when fixed in API.
         name="Start Identify",
         icon="mdi:human-greeting-variant",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     ButtonEntityDescription(
         key="stopIdentify",
         name="Stop Identify",
         icon="mdi:human-greeting-variant",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     ButtonEntityDescription(
         key="startIdentify",  # startIdentify and identify are reversed... Swap this when fixed in API.
         name="Identify",
         icon="mdi:human-greeting-variant",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # RTDIndoorSiren / RTDOutdoorSiren
     ButtonEntityDescription(key="dingDong", name="Ding Dong", icon="mdi:bell-ring"),

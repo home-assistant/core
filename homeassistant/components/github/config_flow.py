@@ -10,7 +10,6 @@ from aiogithubapi import (
     GitHubException,
     GitHubLoginDeviceModel,
     GitHubLoginOauthModel,
-    GitHubRepositoryModel,
 )
 from aiogithubapi.const import OAUTH_USER_LOGIN
 import voluptuous as vol
@@ -34,11 +33,12 @@ from .const import (
 )
 
 
-async def starred_repositories(hass: HomeAssistant, access_token: str) -> list[str]:
-    """Return a list of repositories that the user has starred."""
+async def get_repositories(hass: HomeAssistant, access_token: str) -> list[str]:
+    """Return a list of repositories that the user owns or has starred."""
     client = GitHubAPI(token=access_token, session=async_get_clientsession(hass))
+    repositories = set()
 
-    async def _get_starred() -> list[GitHubRepositoryModel] | None:
+    async def _get_starred_repositories() -> None:
         response = await client.user.starred(**{"params": {"per_page": 100}})
         if not response.is_last_page:
             results = await asyncio.gather(
@@ -54,16 +54,44 @@ async def starred_repositories(hass: HomeAssistant, access_token: str) -> list[s
             for result in results:
                 response.data.extend(result.data)
 
-        return response.data
+        repositories.update(response.data)
+
+    async def _get_personal_repositories() -> None:
+        response = await client.user.repos(**{"params": {"per_page": 100}})
+        if not response.is_last_page:
+            results = await asyncio.gather(
+                *(
+                    client.user.repos(
+                        **{"params": {"per_page": 100, "page": page_number}},
+                    )
+                    for page_number in range(
+                        response.next_page_number, response.last_page_number + 1
+                    )
+                )
+            )
+            for result in results:
+                response.data.extend(result.data)
+
+        repositories.update(response.data)
 
     try:
-        result = await _get_starred()
+        await asyncio.gather(
+            *(
+                _get_starred_repositories(),
+                _get_personal_repositories(),
+            )
+        )
+
     except GitHubException:
         return DEFAULT_REPOSITORIES
 
-    if not result or len(result) == 0:
+    if len(repositories) == 0:
         return DEFAULT_REPOSITORIES
-    return sorted((repo.full_name for repo in result), key=str.casefold)
+
+    return sorted(
+        (repo.full_name for repo in repositories),
+        key=str.casefold,
+    )
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -153,9 +181,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._login is not None
 
         if not user_input:
-            repositories = await starred_repositories(
-                self.hass, self._login.access_token
-            )
+            repositories = await get_repositories(self.hass, self._login.access_token)
             return self.async_show_form(
                 step_id="repositories",
                 data_schema=vol.Schema(
@@ -205,7 +231,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             configured_repositories: list[str] = self.config_entry.options[
                 CONF_REPOSITORIES
             ]
-            repositories = await starred_repositories(
+            repositories = await get_repositories(
                 self.hass, self.config_entry.data[CONF_ACCESS_TOKEN]
             )
 

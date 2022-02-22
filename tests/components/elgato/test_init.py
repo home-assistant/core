@@ -36,11 +36,11 @@ async def test_config_entry_not_ready(
     mock_elgato: MagicMock,
 ) -> None:
     """Test the Elgato configuration entry not ready."""
-    mock_elgato.info.side_effect = ElgatoConnectionError
+    mock_elgato.state.side_effect = ElgatoConnectionError
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert len(mock_elgato.info.mock_calls) == 1
+    assert len(mock_elgato.state.mock_calls) == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

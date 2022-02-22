@@ -17,5 +17,16 @@
                 "title": "Vypl\u0148te va\u0161e \u00fadaje"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "from_window": "Po\u010d\u00e1te\u010dn\u00ed UV index pro ochrann\u00e9 okno",
+                    "to_window": "Kone\u010dn\u00fd UV index pro ochrann\u00e9 okno"
+                },
+                "title": "Nastaven\u00ed OpenUV"
+            }
+        }
     }
 }

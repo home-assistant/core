@@ -1,7 +1,12 @@
 """Test Z-Wave workarounds."""
+import pytest
+
 from homeassistant.components.zwave import const, workaround
 
 from tests.mock.zwave import MockNode, MockValue
+
+# Integration is disabled
+pytest.skip("Integration has been disabled in the manifest", allow_module_level=True)
 
 
 def test_get_device_no_component_mapping():

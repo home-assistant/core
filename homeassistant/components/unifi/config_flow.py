@@ -238,6 +238,9 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
         if (port := MODEL_PORTS.get(model_description)) is not None:
             self.config[CONF_PORT] = port
+            self.context[
+                "configuration_url"
+            ] = f"https://{self.config[CONF_HOST]}:{port}"
 
         return await self.async_step_user()
 

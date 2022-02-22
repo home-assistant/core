@@ -11,6 +11,10 @@
       "deviceType": "urn:udi-com:device:X_Insteon_Lighting_Device:1"
     }
   ],
-  "dhcp": [{ "hostname": "isy*", "macaddress": "0021B9*" }],
-  "iot_class": "local_push"
+  "dhcp": [
+    {"registered_devices": true},
+    {"hostname": "isy*", "macaddress": "0021B9*"}
+  ],
+  "iot_class": "local_push",
+  "loggers": ["pyisy"]
 }

@@ -8,9 +8,10 @@ from zigpy.zcl.clusters.security import IasWd
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
@@ -46,7 +47,7 @@ async def async_setup_entry(
 class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
     """Representation of a ZHA select entity."""
 
-    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+    _attr_entity_category = EntityCategory.CONFIG
     _enum: Enum = None
 
     def __init__(

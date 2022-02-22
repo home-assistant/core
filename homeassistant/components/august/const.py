@@ -4,7 +4,7 @@ from datetime import timedelta
 
 from homeassistant.const import Platform
 
-DEFAULT_TIMEOUT = 10
+DEFAULT_TIMEOUT = 15
 
 CONF_ACCESS_TOKEN_CACHE_FILE = "access_token_cache_file"
 CONF_LOGIN_METHOD = "login_method"
@@ -46,6 +46,7 @@ ACTIVITY_UPDATE_INTERVAL = timedelta(seconds=10)
 LOGIN_METHODS = ["phone", "email"]
 
 PLATFORMS = [
+    Platform.BUTTON,
     Platform.CAMERA,
     Platform.BINARY_SENSOR,
     Platform.LOCK,

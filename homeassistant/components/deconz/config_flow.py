@@ -33,6 +33,7 @@ from .const import (
     CONF_BRIDGE_ID,
     DEFAULT_PORT,
     DOMAIN,
+    HASSIO_CONFIGURATION_URL,
     LOGGER,
 )
 from .gateway import DeconzGateway, get_gateway_from_config_entry
@@ -227,7 +228,12 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
             updates={CONF_HOST: hostname, CONF_PORT: port}
         )
 
-        self.context["title_placeholders"] = {"host": hostname}
+        self.context.update(
+            {
+                "title_placeholders": {"host": hostname},
+                "configuration_url": f"http://{hostname}:{port}",
+            }
+        )
 
         self.deconz_config = {CONF_HOST: hostname, CONF_PORT: port}
 
@@ -250,6 +256,8 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_API_KEY: discovery_info.config[CONF_API_KEY],
             }
         )
+
+        self.context["configuration_url"] = HASSIO_CONFIGURATION_URL
 
         self._hassio_discovery = discovery_info.config
 

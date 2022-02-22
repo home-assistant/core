@@ -22,7 +22,6 @@ from .const import (
     CONF_HEATING_TYPE,
     DOMAIN,
     VICARE_API,
-    VICARE_CIRCUITS,
     VICARE_DEVICE_CONFIG,
     VICARE_NAME,
 )
@@ -57,16 +56,13 @@ HA_TO_VICARE_HVAC_DHW = {
 }
 
 
-def _build_entity(name, vicare_api, circuit, device_config, heating_type):
-    """Create a ViCare water_heater entity."""
-    _LOGGER.debug("Found device %s", name)
-    return ViCareWater(
-        name,
-        vicare_api,
-        circuit,
-        device_config,
-        heating_type,
-    )
+def _get_circuits(vicare_api):
+    """Return the list of circuits."""
+    try:
+        return vicare_api.circuits
+    except PyViCareNotSupportedFeatureError:
+        _LOGGER.info("No circuits found")
+        return []
 
 
 async def async_setup_entry(
@@ -76,21 +72,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ViCare climate platform."""
     name = VICARE_NAME
-
     entities = []
-    for circuit in hass.data[DOMAIN][config_entry.entry_id][VICARE_CIRCUITS]:
+    api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
+    circuits = await hass.async_add_executor_job(_get_circuits, api)
+
+    for circuit in circuits:
         suffix = ""
-        if len(hass.data[DOMAIN][config_entry.entry_id][VICARE_CIRCUITS]) > 1:
+        if len(circuits) > 1:
             suffix = f" {circuit.id}"
-        entity = _build_entity(
+
+        entity = ViCareWater(
             f"{name} Water{suffix}",
-            hass.data[DOMAIN][config_entry.entry_id][VICARE_API],
+            api,
             circuit,
             hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
             config_entry.data[CONF_HEATING_TYPE],
         )
-        if entity is not None:
-            entities.append(entity)
+        entities.append(entity)
 
     async_add_entities(entities)
 
@@ -149,6 +147,7 @@ class ViCareWater(WaterHeaterEntity):
             "name": self._device_config.getModel(),
             "manufacturer": "Viessmann",
             "model": (DOMAIN, self._device_config.getModel()),
+            "configuration_url": "https://developer.viessmann.com/",
         }
 
     @property

@@ -1,5 +1,9 @@
 """Component to integrate the Home Assistant cloud."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Awaitable, Callable
+from enum import Enum
 
 from hass_nabucasa import Cloud
 import voluptuous as vol
@@ -18,6 +22,10 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entityfilter
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.aiohttp import MockRequest
@@ -51,6 +59,8 @@ DEFAULT_MODE = MODE_PROD
 
 SERVICE_REMOTE_CONNECT = "remote_connect"
 SERVICE_REMOTE_DISCONNECT = "remote_disconnect"
+
+SIGNAL_CLOUD_CONNECTION_STATE = "CLOUD_CONNECTION_STATE"
 
 
 ALEXA_ENTITY_SCHEMA = vol.Schema(
@@ -114,11 +124,41 @@ class CloudNotAvailable(HomeAssistantError):
     """Raised when an action requires the cloud but it's not available."""
 
 
+class CloudNotConnected(CloudNotAvailable):
+    """Raised when an action requires the cloud but it's not connected."""
+
+
+class CloudConnectionState(Enum):
+    """Cloud connection state."""
+
+    CLOUD_CONNECTED = "cloud_connected"
+    CLOUD_DISCONNECTED = "cloud_disconnected"
+
+
 @bind_hass
 @callback
 def async_is_logged_in(hass: HomeAssistant) -> bool:
-    """Test if user is logged in."""
+    """Test if user is logged in.
+
+    Note: This returns True even if not currently connected to the cloud.
+    """
     return DOMAIN in hass.data and hass.data[DOMAIN].is_logged_in
+
+
+@bind_hass
+@callback
+def async_is_connected(hass: HomeAssistant) -> bool:
+    """Test if connected to the cloud."""
+    return DOMAIN in hass.data and hass.data[DOMAIN].iot.connected
+
+
+@callback
+def async_listen_connection_change(
+    hass: HomeAssistant,
+    target: Callable[[CloudConnectionState], Awaitable[None] | None],
+) -> Callable[[], None]:
+    """Notify on connection state changes."""
+    return async_dispatcher_connect(hass, SIGNAL_CLOUD_CONNECTION_STATE, target)
 
 
 @bind_hass
@@ -131,6 +171,9 @@ def async_active_subscription(hass: HomeAssistant) -> bool:
 @bind_hass
 async def async_create_cloudhook(hass: HomeAssistant, webhook_id: str) -> str:
     """Create a cloudhook."""
+    if not async_is_connected(hass):
+        raise CloudNotConnected
+
     if not async_is_logged_in(hass):
         raise CloudNotAvailable
 
@@ -157,10 +200,10 @@ def async_remote_ui_url(hass: HomeAssistant) -> str:
     if not hass.data[DOMAIN].client.prefs.remote_enabled:
         raise CloudNotAvailable
 
-    if not hass.data[DOMAIN].remote.instance_domain:
+    if not (remote_domain := hass.data[DOMAIN].client.prefs.remote_domain):
         raise CloudNotAvailable
 
-    return f"https://{hass.data[DOMAIN].remote.instance_domain}"
+    return f"https://{remote_domain}"
 
 
 def is_cloudhook_request(request):
@@ -235,7 +278,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             Platform.TTS, DOMAIN, {}, config
         )
 
+        async_dispatcher_send(
+            hass, SIGNAL_CLOUD_CONNECTION_STATE, CloudConnectionState.CLOUD_CONNECTED
+        )
+
+    async def _on_disconnect():
+        """Handle cloud disconnect."""
+        async_dispatcher_send(
+            hass, SIGNAL_CLOUD_CONNECTION_STATE, CloudConnectionState.CLOUD_DISCONNECTED
+        )
+
+    async def _on_initialized():
+        """Update preferences."""
+        await prefs.async_update(remote_domain=cloud.remote.instance_domain)
+
     cloud.iot.register_on_connect(_on_connect)
+    cloud.iot.register_on_disconnect(_on_disconnect)
+    cloud.register_on_initialized(_on_initialized)
 
     await cloud.initialize()
     await http_api.async_setup(hass)

@@ -134,7 +134,7 @@ class OpenUvSensor(OpenUvEntity, SensorEntity):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        if not (data := self.openuv.data[DATA_UV].get("result")):
+        if (data := self.openuv.data[DATA_UV]) is None:
             self._attr_available = False
             return
 

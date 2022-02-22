@@ -4,6 +4,7 @@
     "step": {
       "user": {
         "title": "UniFi Protect Setup",
+        "description": "You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud Users will not work. For more information: {local_user_documentation_url}",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
@@ -22,7 +23,8 @@
         }
       },
       "discovery_confirm": {
-        "description": "Do you want to setup {name} ({ip_address})?",
+        "title": "UniFi Protect Discovered",
+        "description": "Do you want to setup {name} ({ip_address})? [%key:component::unifiprotect::config::step::user::description%]",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"        

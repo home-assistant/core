@@ -21,9 +21,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, STATE_STANDBY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, TYPE_TO_PLATFORM
+from .coordinator import LookinDataUpdateCoordinator
 from .entity import LookinPowerPushRemoteEntity
 from .models import LookinData
 
@@ -80,7 +80,7 @@ class LookinMedia(LookinPowerPushRemoteEntity, MediaPlayerEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: LookinDataUpdateCoordinator,
         uuid: str,
         device: Remote,
         lookin_data: LookinData,

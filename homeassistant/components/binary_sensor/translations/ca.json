@@ -134,6 +134,10 @@
             "off": "No carregant",
             "on": "Carregant"
         },
+        "carbon_monoxide": {
+            "off": "Lliure",
+            "on": "Detectat"
+        },
         "co": {
             "off": "Lliure",
             "on": "Detectat"
