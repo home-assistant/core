@@ -1,4 +1,5 @@
 """Coordinator for SleepIQ."""
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -55,8 +56,9 @@ class SleepIQPauseUpdateCoordinator(DataUpdateCoordinator[None]):
         self.client = client
 
     async def _async_update_data(self) -> None:
-        for bed in self.client.beds.values():
-            await bed.fetch_pause_mode()
+        await asyncio.gather(
+            *[bed.fetch_pause_mode() for bed in self.client.beds.values()]
+        )
 
 
 @dataclass
