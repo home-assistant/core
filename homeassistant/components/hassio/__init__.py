@@ -404,7 +404,11 @@ def is_hassio(
     Async friendly.
     """
     if hass is not None:
-        report("hass param deprecated for is_hassio")
+        report(
+            "hass param deprecated for is_hassio",
+            exclude_integrations={DOMAIN},
+            error_if_core=False,
+        )
 
     return has_supervisor()
 
