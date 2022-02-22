@@ -36,7 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "bmw_connected_drive"
 ATTR_VIN = "vin"
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN, raise_if_present=False)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 SERVICE_SCHEMA = vol.Schema(
     vol.Any(
