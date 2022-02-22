@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 from urllib.parse import urlparse
 
-from pyoverkiz.enums.command import OverkizCommand
+from pyoverkiz.enums import OverkizCommand, Protocol
 from pyoverkiz.models import Command, Device
 from pyoverkiz.types import StateType as OverkizStateType
 
@@ -58,6 +58,11 @@ class OverkizExecutor:
 
     async def async_execute_command(self, command_name: str, *args: Any) -> None:
         """Execute device command in async context."""
+        # Set the execution duration to 0 seconds for RTS devices without other args
+        # Default execution duration is 30 seconds and will block consecutive commands
+        if self.device.protocol == Protocol.RTS and not args:
+            args = (0,)
+
         exec_id = await self.coordinator.client.execute_command(
             self.device.device_url,
             Command(command_name, list(args)),
