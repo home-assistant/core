@@ -202,7 +202,7 @@ class SamsungTVDevice(MediaPlayerEntity):
 
         await self.send_key("KEY_POWEROFF")
         # Force closing of remote session to provide instant UI feedback
-        self._bridge.close_remote()
+        await self._bridge.close_remote()
 
     async def async_volume_up(self) -> None:
         """Volume up the media player."""

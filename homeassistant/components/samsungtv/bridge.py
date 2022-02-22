@@ -127,15 +127,12 @@ class SamsungTVBridge(ABC):
 
     async def is_on(self) -> bool:
         """Tells if the TV is on."""
-        return await self.hass.async_add_executor_job(self._is_on)
-
-    def _is_on(self) -> bool:
-        """Tells if the TV is on."""
         if self._remote is not None:
-            self.close_remote()
+            await self.close_remote()
 
         try:
-            return self._get_remote() is not None
+            remote = await self.hass.async_add_executor_job(self._get_remote)
+            return remote is not None
         except (
             UnhandledResponse,
             AccessDenied,
@@ -176,15 +173,15 @@ class SamsungTVBridge(ABC):
         """Send the key."""
 
     @abstractmethod
-    def _get_remote(self, avoid_open: bool = False) -> Remote:
+    def _get_remote(self, avoid_open: bool = False) -> Remote | SamsungTVWS:
         """Get Remote object."""
 
-    def close_remote(self) -> None:
+    async def close_remote(self) -> None:
         """Close remote object."""
         try:
             if self._remote is not None:
                 # Close the current remote connection
-                self._remote.close()
+                await self.hass.async_add_executor_job(self._remote.close)
             self._remote = None
         except OSError:
             LOGGER.debug("Could not establish connection")
@@ -288,10 +285,10 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         if remote := self._get_remote():
             remote.control(key)
 
-    def stop(self) -> None:
+    async def stop(self) -> None:
         """Stop Bridge."""
         LOGGER.debug("Stopping SamsungTVLegacyBridge")
-        self.close_remote()
+        await self.close_remote()
 
 
 class SamsungTVWSBridge(SamsungTVBridge):
@@ -402,7 +399,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
             else:
                 remote.send_key(key)
 
-    def _get_remote(self, avoid_open: bool = False) -> Remote:
+    def _get_remote(self, avoid_open: bool = False) -> SamsungTVWS:
         """Create or return a remote control instance."""
         if self._remote is None:
             # We need to create a new instance to reconnect.
@@ -435,7 +432,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     self._notify_new_token_callback()
         return self._remote
 
-    def stop(self) -> None:
+    async def stop(self) -> None:
         """Stop Bridge."""
         LOGGER.debug("Stopping SamsungTVWSBridge")
-        self.close_remote()
+        await self.close_remote()
