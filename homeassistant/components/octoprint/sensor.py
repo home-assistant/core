@@ -47,28 +47,32 @@ async def async_setup_entry(
 
     assert device_id is not None
 
-    known_tools = []
+    known_tools = set()
 
     @callback
     def async_add_tool_sensors() -> None:
+        if not coordinator.data["printer"]:
+            return
+
+        new_tools = []
         for tool in [
             tool
             for tool in coordinator.data["printer"].temperatures
             if tool.name not in known_tools
         ]:
             assert device_id is not None
-            known_tools.append(tool.name)
-            async_add_entities(
-                [
+            known_tools.add(tool.name)
+            for temp_type in ("actual", "target"):
+                new_tools.append(
                     OctoPrintTemperatureSensor(
                         coordinator,
                         tool.name,
                         temp_type,
                         device_id,
                     )
-                    for temp_type in ("actual", "target")
-                ]
-            )
+                )
+        if len(new_tools) > 0:
+            async_add_entities(new_tools)
 
     config_entry.async_on_unload(coordinator.async_add_listener(async_add_tool_sensors))
 
