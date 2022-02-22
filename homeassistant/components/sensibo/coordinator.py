@@ -47,6 +47,7 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
         device_data: dict[str, dict[str, Any]] = {}
         for dev in devices:
             unique_id = dev["id"]
+            mac = dev["macAddress"]
             name = dev["room"]["name"]
             temperature = dev["measurements"].get("temperature", 0.0)
             humidity = dev["measurements"].get("humidity", 0)
@@ -96,6 +97,7 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
 
             device_data[unique_id] = {
                 "id": unique_id,
+                "mac": mac,
                 "name": name,
                 "ac_states": ac_states,
                 "temp": temperature,
