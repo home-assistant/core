@@ -234,11 +234,13 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
             return
         device_entry = device_registry.deleted_devices[event.data["device_id"]]
         device_id = next(iter(device_entry.identifiers))[1:]
-        data = entry.data.copy()
-        data[CONF_DEVICES] = {
-            packet_id: entity_info
-            for packet_id, entity_info in data[CONF_DEVICES].items()
-            if tuple(entity_info.get(CONF_DEVICE_ID)) != device_id
+        data = {
+            **entry.data,
+            CONF_DEVICES: {
+                packet_id: entity_info
+                for packet_id, entity_info in entry.data[CONF_DEVICES].items()
+                if tuple(entity_info.get(CONF_DEVICE_ID)) != device_id
+            },
         }
         hass.config_entries.async_update_entry(entry=entry, data=data)
         devices.pop(device_id)
