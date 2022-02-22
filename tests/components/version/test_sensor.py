@@ -36,7 +36,6 @@ async def async_setup_sensor_wrapper(
     hass: HomeAssistant, config: dict[str, Any]
 ) -> ConfigEntry:
     """Set up the Version sensor platform."""
-    await async_setup_component(hass, "persistent_notification", {})
     with patch(
         "pyhaversion.HaVersion.get_version",
         return_value=(MOCK_VERSION, MOCK_VERSION_DATA),
@@ -47,7 +46,6 @@ async def async_setup_sensor_wrapper(
         await hass.async_block_till_done()
 
     config_entries = hass.config_entries.async_entries(DOMAIN)
-    print(config_entries)
     config_entry = config_entries[-1]
     assert config_entry.source == "import"
     return config_entry
@@ -59,8 +57,8 @@ async def test_version_sensor(hass: HomeAssistant):
 
     state = hass.states.get("sensor.local_installation")
     assert state.state == MOCK_VERSION
-    assert state.attributes["source"] == "local"
-    assert state.attributes["channel"] == "stable"
+    assert "source" not in state.attributes
+    assert "channel" not in state.attributes
 
 
 async def test_update(hass: HomeAssistant, caplog: pytest.LogCaptureFixture):

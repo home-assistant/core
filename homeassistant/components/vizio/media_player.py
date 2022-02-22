@@ -145,6 +145,7 @@ class VizioDevice(MediaPlayerEntity):
         self._volume_step = config_entry.options[CONF_VOLUME_STEP]
         self._current_input = None
         self._current_app_config = None
+        self._app_name = None
         self._available_inputs = []
         self._available_apps = []
         self._all_apps = apps_coordinator.data if apps_coordinator else None
@@ -178,9 +179,9 @@ class VizioDevice(MediaPlayerEntity):
 
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
-        is_on = await self._device.get_power_state(log_api_exception=False)
-
-        if is_on is None:
+        if (
+            is_on := await self._device.get_power_state(log_api_exception=False)
+        ) is None:
             if self._attr_available:
                 _LOGGER.warning(
                     "Lost connection to %s", self._config_entry.data[CONF_HOST]
@@ -208,18 +209,16 @@ class VizioDevice(MediaPlayerEntity):
             self._attr_volume_level = None
             self._attr_is_volume_muted = None
             self._current_input = None
-            self._attr_app_name = None
+            self._app_name = None
             self._current_app_config = None
             self._attr_sound_mode = None
             return
 
         self._attr_state = STATE_ON
 
-        audio_settings = await self._device.get_all_settings(
+        if audio_settings := await self._device.get_all_settings(
             VIZIO_AUDIO_SETTINGS, log_api_exception=False
-        )
-
-        if audio_settings:
+        ):
             self._attr_volume_level = (
                 float(audio_settings[VIZIO_VOLUME]) / self._max_volume
             )
@@ -243,14 +242,11 @@ class VizioDevice(MediaPlayerEntity):
                 # Explicitly remove SUPPORT_SELECT_SOUND_MODE from supported features
                 self._attr_supported_features &= ~SUPPORT_SELECT_SOUND_MODE
 
-        input_ = await self._device.get_current_input(log_api_exception=False)
-        if input_:
+        if input_ := await self._device.get_current_input(log_api_exception=False):
             self._current_input = input_
 
-        inputs = await self._device.get_inputs_list(log_api_exception=False)
-
         # If no inputs returned, end update
-        if not inputs:
+        if not (inputs := await self._device.get_inputs_list(log_api_exception=False)):
             return
 
         self._available_inputs = [input_.name for input_ in inputs]
@@ -269,13 +265,13 @@ class VizioDevice(MediaPlayerEntity):
             log_api_exception=False
         )
 
-        self._attr_app_name = find_app_name(
+        self._app_name = find_app_name(
             self._current_app_config,
             [APP_HOME, *self._all_apps, *self._additional_app_configs],
         )
 
-        if self._attr_app_name == NO_APP_RUNNING:
-            self._attr_app_name = None
+        if self._app_name == NO_APP_RUNNING:
+            self._app_name = None
 
     def _get_additional_app_names(self) -> list[dict[str, Any]]:
         """Return list of additional apps that were included in configuration.yaml."""
@@ -288,7 +284,8 @@ class VizioDevice(MediaPlayerEntity):
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> None:
         """Send update event when Vizio config entry is updated."""
-        # Move this method to component level if another entity ever gets added for a single config entry.
+        # Move this method to component level if another entity ever gets added for a
+        # single config entry.
         # See here: https://github.com/home-assistant/core/pull/30653#discussion_r366426121
         async_dispatcher_send(hass, config_entry.entry_id, config_entry)
 
@@ -340,8 +337,8 @@ class VizioDevice(MediaPlayerEntity):
     @property
     def source(self) -> str | None:
         """Return current input of the device."""
-        if self._attr_app_name is not None and self._current_input in INPUT_APPS:
-            return self._attr_app_name
+        if self._app_name is not None and self._current_input in INPUT_APPS:
+            return self._app_name
 
         return self._current_input
 
@@ -368,9 +365,17 @@ class VizioDevice(MediaPlayerEntity):
         return self._available_inputs
 
     @property
+    def app_name(self) -> str | None:
+        """Return the name of the current app."""
+        if self.source == self._app_name:
+            return self._app_name
+
+        return None
+
+    @property
     def app_id(self) -> str | None:
         """Return the ID of the current app if it is unknown by pyvizio."""
-        if self._current_app_config and self.app_name == UNKNOWN_APP:
+        if self._current_app_config and self.source == UNKNOWN_APP:
             return {
                 "APP_ID": self._current_app_config.APP_ID,
                 "NAME_SPACE": self._current_app_config.NAME_SPACE,

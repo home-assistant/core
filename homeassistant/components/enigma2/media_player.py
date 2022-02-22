@@ -1,4 +1,6 @@
 """Support for Enigma2 media players."""
+from __future__ import annotations
+
 from openwebif.api import CreateDevice
 import voluptuous as vol
 
@@ -27,8 +29,11 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 ATTR_MEDIA_CURRENTLY_RECORDING = "media_currently_recording"
 ATTR_MEDIA_DESCRIPTION = "media_description"
@@ -81,7 +86,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_devices: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up of an enigma2 media player."""
     if discovery_info:
         # Discovery gives us the streaming service port (8001)

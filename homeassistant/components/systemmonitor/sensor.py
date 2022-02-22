@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from functools import lru_cache
+from functools import cache
 import logging
 import os
 import socket
@@ -43,7 +43,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
@@ -305,6 +305,7 @@ CPU_SENSOR_PREFIXES = [
     "soc_thermal 1",
     "Tctl",
     "cpu0-thermal",
+    "cpu0_thermal",
 ]
 
 
@@ -323,7 +324,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: Any | None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the system monitor sensors."""
     entities = []
@@ -560,34 +561,32 @@ def _update(  # noqa: C901
     return state, value, update_time
 
 
-# When we drop python 3.8 support these can be switched to
-# @cache https://docs.python.org/3.9/library/functools.html#functools.cache
-@lru_cache(maxsize=None)
+@cache
 def _disk_usage(path: str) -> Any:
     return psutil.disk_usage(path)
 
 
-@lru_cache(maxsize=None)
+@cache
 def _swap_memory() -> Any:
     return psutil.swap_memory()
 
 
-@lru_cache(maxsize=None)
+@cache
 def _virtual_memory() -> Any:
     return psutil.virtual_memory()
 
 
-@lru_cache(maxsize=None)
+@cache
 def _net_io_counters() -> Any:
     return psutil.net_io_counters(pernic=True)
 
 
-@lru_cache(maxsize=None)
+@cache
 def _net_if_addrs() -> Any:
     return psutil.net_if_addrs()
 
 
-@lru_cache(maxsize=None)
+@cache
 def _getloadavg() -> tuple[float, float, float]:
     return os.getloadavg()
 

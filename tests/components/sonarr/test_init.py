@@ -33,6 +33,7 @@ async def test_config_entry_reauth(
             CONF_SOURCE: SOURCE_REAUTH,
             "entry_id": entry.entry_id,
             "unique_id": entry.unique_id,
+            "title_placeholders": {"name": entry.title},
         },
         data=entry.data,
     )

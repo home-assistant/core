@@ -1,4 +1,6 @@
 """Support for sensor value(s) stored in local files."""
+from __future__ import annotations
+
 import logging
 import os
 
@@ -11,7 +13,10 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,10 +34,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the file sensor."""
-    file_path = config.get(CONF_FILE_PATH)
-    name = config.get(CONF_NAME)
+    file_path = config[CONF_FILE_PATH]
+    name = config[CONF_NAME]
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
 
     if (value_template := config.get(CONF_VALUE_TEMPLATE)) is not None:

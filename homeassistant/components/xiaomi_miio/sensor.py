@@ -20,6 +20,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     ATTR_BATTERY_LEVEL,
@@ -37,8 +38,9 @@ from homeassistant.const import (
     TIME_SECONDS,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import VacuumCoordinatorDataAttributes
@@ -113,6 +115,8 @@ ATTR_DND_START = "start"
 ATTR_DND_END = "end"
 ATTR_LAST_CLEAN_TIME = "duration"
 ATTR_LAST_CLEAN_AREA = "area"
+ATTR_STATUS_CLEAN_TIME = "clean_time"
+ATTR_STATUS_CLEAN_AREA = "clean_area"
 ATTR_LAST_CLEAN_START = "start"
 ATTR_LAST_CLEAN_END = "end"
 ATTR_CLEAN_HISTORY_TOTAL_DURATION = "total_duration"
@@ -444,6 +448,22 @@ VACUUM_SENSORS = {
         name="Last Clean Area",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    f"current_{ATTR_STATUS_CLEAN_TIME}": XiaomiMiioSensorDescription(
+        native_unit_of_measurement=TIME_SECONDS,
+        icon="mdi:timer-sand",
+        key=ATTR_STATUS_CLEAN_TIME,
+        parent_key=VacuumCoordinatorDataAttributes.status,
+        name="Current Clean Duration",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    f"current_{ATTR_LAST_CLEAN_AREA}": XiaomiMiioSensorDescription(
+        native_unit_of_measurement=AREA_SQUARE_METERS,
+        icon="mdi:texture-box",
+        key=ATTR_STATUS_CLEAN_AREA,
+        parent_key=VacuumCoordinatorDataAttributes.status,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        name="Current Clean Area",
+    ),
     f"clean_history_{ATTR_CLEAN_HISTORY_TOTAL_DURATION}": XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:timer-sand",
@@ -550,7 +570,11 @@ def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Xiaomi sensor from a config entry."""
     entities = []
 

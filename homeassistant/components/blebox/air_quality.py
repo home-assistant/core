@@ -1,11 +1,17 @@
 """BleBox air quality entity."""
-
 from homeassistant.components.air_quality import AirQualityEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxEntity, create_blebox_entities
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up a BleBox air quality entity."""
     create_blebox_entities(
         hass, config_entry, async_add_entities, BleBoxAirQualityEntity, "air_qualities"

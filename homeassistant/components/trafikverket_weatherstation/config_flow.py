@@ -1,11 +1,14 @@
 """Adds config flow for Trafikverket Weather integration."""
 from __future__ import annotations
 
+from typing import Any
+
 from pytrafikverket.trafikverket_weather import TrafikverketWeather
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -36,7 +39,7 @@ class TVWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return str(err)
         return "connected"
 
-    async def async_step_import(self, config: dict):
+    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a configuration from config.yaml."""
 
         self.context.update(
@@ -46,7 +49,9 @@ class TVWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_STATION: config[CONF_STATION]})
         return await self.async_step_user(user_input=config)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
 

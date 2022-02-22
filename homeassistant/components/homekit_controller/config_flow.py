@@ -4,6 +4,7 @@ import re
 
 import aiohomekit
 from aiohomekit.exceptions import AuthenticationError
+from aiohomekit.model import Accessories, CharacteristicsTypes, ServicesTypes
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -15,7 +16,6 @@ from homeassistant.helpers.device_registry import (
     async_get_registry as async_get_device_registry,
 )
 
-from .connection import get_accessory_name, get_bridge_information
 from .const import DOMAIN, KNOWN_DEVICES
 
 HOMEKIT_DIR = ".homekit"
@@ -489,8 +489,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not (accessories := pairing_data.pop("accessories", None)):
             accessories = await pairing.list_accessories_and_characteristics()
 
-        bridge_info = get_bridge_information(accessories)
-        name = get_accessory_name(bridge_info)
+        parsed = Accessories.from_list(accessories)
+        accessory_info = parsed.aid(1).services.first(
+            service_type=ServicesTypes.ACCESSORY_INFORMATION
+        )
+        name = accessory_info.value(CharacteristicsTypes.NAME, "")
 
         return self.async_create_entry(title=name, data=pairing_data)
 

@@ -7,16 +7,10 @@ import logging
 from types import MappingProxyType
 from typing import Any
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION
 from homeassistant.core import Context, HomeAssistant, State
 
-from . import (
-    ATTR_OPTION,
-    ATTR_OPTIONS,
-    DOMAIN,
-    SERVICE_SELECT_OPTION,
-    SERVICE_SET_OPTIONS,
-)
+from . import ATTR_OPTIONS, DOMAIN, SERVICE_SELECT_OPTION, SERVICE_SET_OPTIONS
 
 ATTR_GROUP = [ATTR_OPTION, ATTR_OPTIONS]
 

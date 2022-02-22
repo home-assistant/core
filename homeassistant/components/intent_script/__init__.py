@@ -4,7 +4,9 @@ import copy
 import voluptuous as vol
 
 from homeassistant.const import CONF_TYPE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, intent, script, template
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "intent_script"
 
@@ -44,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate Alexa component."""
     intents = copy.deepcopy(config[DOMAIN])
     template.attach(hass, intents)

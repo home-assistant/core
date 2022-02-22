@@ -8,7 +8,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_ERRORS, ATTR_REMINDERS, DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubEntity, SmartTubSensorBase
@@ -37,12 +40,14 @@ SNOOZE_REMINDER_SCHEMA = {
 }
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up binary sensor entities for the binary sensors in the tub."""
 
     controller = hass.data[DOMAIN][entry.entry_id][SMARTTUB_CONTROLLER]
 
-    entities = []
+    entities: list[BinarySensorEntity] = []
     for spa in controller.spas:
         entities.append(SmartTubOnline(controller.coordinator, spa))
         entities.append(SmartTubError(controller.coordinator, spa))
@@ -53,7 +58,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async_add_entities(entities)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         "snooze_reminder",

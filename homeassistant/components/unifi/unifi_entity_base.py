@@ -6,7 +6,6 @@ from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_registry import async_entries_for_device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,35 +101,10 @@ class UniFiBase(Entity):
             entity_registry.async_remove(self.entity_id)
             return
 
-        if (
-            len(
-                entries_for_device := async_entries_for_device(
-                    entity_registry,
-                    entity_entry.device_id,
-                    include_disabled_entities=True,
-                )
-            )
-        ) == 1:
-            device_registry.async_remove_device(device_entry.id)
-            return
-
-        if (
-            len(
-                entries_for_device_from_this_config_entry := [
-                    entry_for_device
-                    for entry_for_device in entries_for_device
-                    if entry_for_device.config_entry_id
-                    == self.controller.config_entry.entry_id
-                ]
-            )
-            != len(entries_for_device)
-            and len(entries_for_device_from_this_config_entry) == 1
-        ):
-            device_registry.async_update_device(
-                entity_entry.device_id,
-                remove_config_entry_id=self.controller.config_entry.entry_id,
-            )
-
+        device_registry.async_update_device(
+            entity_entry.device_id,
+            remove_config_entry_id=self.controller.config_entry.entry_id,
+        )
         entity_registry.async_remove(self.entity_id)
 
     @property

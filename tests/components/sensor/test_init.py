@@ -81,12 +81,15 @@ async def test_deprecated_temperature_conversion(
     ) in caplog.text
 
 
-async def test_deprecated_last_reset(hass, caplog, enable_custom_integrations):
+@pytest.mark.parametrize("state_class", ("measurement", "total_increasing"))
+async def test_deprecated_last_reset(
+    hass, caplog, enable_custom_integrations, state_class
+):
     """Test warning on deprecated last reset."""
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
     platform.ENTITIES["0"] = platform.MockSensor(
-        name="Test", state_class="measurement", last_reset=dt_util.utc_from_timestamp(0)
+        name="Test", state_class=state_class, last_reset=dt_util.utc_from_timestamp(0)
     )
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
@@ -94,12 +97,14 @@ async def test_deprecated_last_reset(hass, caplog, enable_custom_integrations):
 
     assert (
         "Entity sensor.test (<class 'custom_components.test.sensor.MockSensor'>) "
-        "with state_class measurement has set last_reset. Setting last_reset for "
-        "entities with state_class other than 'total' is deprecated and will be "
-        "removed from Home Assistant Core 2021.11. Please update your configuration if "
-        "state_class is manually configured, otherwise report it to the custom "
-        "component author."
+        f"with state_class {state_class} has set last_reset. Setting last_reset for "
+        "entities with state_class other than 'total' is not supported. Please update "
+        "your configuration if state_class is manually configured, otherwise report it "
+        "to the custom component author."
     ) in caplog.text
+
+    state = hass.states.get("sensor.test")
+    assert "last_reset" not in state.attributes
 
 
 async def test_deprecated_unit_of_measurement(hass, caplog, enable_custom_integrations):

@@ -10,7 +10,7 @@ from kasa.discover import Discover
 
 from homeassistant import config_entries
 from homeassistant.components import network
-from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -18,6 +18,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -95,7 +96,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device: SmartDevice = hass_data[entry.entry_id].device
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass_data.pop(entry.entry_id)
-    await device.protocol.close()
+    await device.protocol.close()  # type: ignore
     return unload_ok
 
 

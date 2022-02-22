@@ -11,10 +11,12 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -30,7 +32,9 @@ DEVICE_CLASS_MAP = {
 SUPPORTED_SENSORS = {"windowCovering", "gate", "garageDoor", "door", "window"}
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Freedompro cover."""
     api_key = entry.data[CONF_API_KEY]
     coordinator = hass.data[DOMAIN][entry.entry_id]

@@ -1,4 +1,5 @@
 """Support for switches which integrates with other components."""
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -16,12 +17,14 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 from .template_entity import (
@@ -74,7 +77,12 @@ async def _async_create_entities(hass, config):
     return switches
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the template switches."""
     async_add_entities(await _async_create_entities(hass, config))
 
@@ -90,16 +98,17 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
         unique_id,
     ):
         """Initialize the Template switch."""
-        super().__init__(config=config)
+        super().__init__(
+            hass, config=config, fallback_name=object_id, unique_id=unique_id
+        )
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id, hass=hass
         )
-        self._name = friendly_name = config.get(ATTR_FRIENDLY_NAME, object_id)
+        friendly_name = self._attr_name
         self._template = config.get(CONF_VALUE_TEMPLATE)
         self._on_script = Script(hass, config[ON_ACTION], friendly_name, DOMAIN)
         self._off_script = Script(hass, config[OFF_ACTION], friendly_name, DOMAIN)
         self._state = False
-        self._unique_id = unique_id
 
     @callback
     def _update_state(self, result):
@@ -134,16 +143,6 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
             )
 
         await super().async_added_to_hass()
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of this switch."""
-        return self._unique_id
 
     @property
     def is_on(self):

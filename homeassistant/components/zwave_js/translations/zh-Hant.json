@@ -26,14 +26,14 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "network_key": "\u7db2\u8def\u5bc6\u9470",
-                    "s0_legacy_key": "S0 \u5bc6\u9470\uff08\u820a\u7248\uff09",
-                    "s2_access_control_key": "S2 \u5b58\u53d6\u63a7\u5236\u5bc6\u9470",
-                    "s2_authenticated_key": "S2 \u9a57\u8b49\u5bc6\u9470",
-                    "s2_unauthenticated_key": "S2 \u672a\u9a57\u8b49\u5bc6\u9470",
+                    "network_key": "\u7db2\u8def\u91d1\u9470",
+                    "s0_legacy_key": "S0 \u91d1\u9470\uff08\u820a\u7248\uff09",
+                    "s2_access_control_key": "S2 \u5b58\u53d6\u63a7\u5236\u91d1\u9470",
+                    "s2_authenticated_key": "S2 \u9a57\u8b49\u91d1\u9470",
+                    "s2_unauthenticated_key": "S2 \u672a\u9a57\u8b49\u91d1\u9470",
                     "usb_path": "USB \u88dd\u7f6e\u8def\u5f91"
                 },
-                "description": "\u5047\u5982\u6b04\u4f4d\u4fdd\u6301\u7a7a\u767d\u3001\u9644\u52a0\u5143\u4ef6\u5c07\u6703\u7522\u751f\u4e00\u7d44\u5b89\u5168\u5bc6\u9470\u3002",
+                "description": "\u5047\u5982\u6b04\u4f4d\u4fdd\u6301\u7a7a\u767d\u3001\u9644\u52a0\u5143\u4ef6\u5c07\u6703\u7522\u751f\u4e00\u7d44\u5b89\u5168\u91d1\u9470\u3002",
                 "title": "\u8f38\u5165 Z-Wave JS \u9644\u52a0\u5143\u4ef6\u8a2d\u5b9a"
             },
             "hassio_confirm": {
@@ -113,14 +113,14 @@
                 "data": {
                     "emulate_hardware": "\u6a21\u64ec\u786c\u9ad4",
                     "log_level": "\u65e5\u8a8c\u8a18\u9304\u7b49\u7d1a",
-                    "network_key": "\u7db2\u8def\u5bc6\u9470",
-                    "s0_legacy_key": "S0 \u5bc6\u9470\uff08\u820a\u7248\uff09",
-                    "s2_access_control_key": "S2 \u5b58\u53d6\u63a7\u5236\u5bc6\u9470",
-                    "s2_authenticated_key": "S2 \u9a57\u8b49\u5bc6\u9470",
-                    "s2_unauthenticated_key": "S2 \u672a\u9a57\u8b49\u5bc6\u9470",
+                    "network_key": "\u7db2\u8def\u91d1\u9470",
+                    "s0_legacy_key": "S0 \u91d1\u9470\uff08\u820a\u7248\uff09",
+                    "s2_access_control_key": "S2 \u5b58\u53d6\u63a7\u5236\u91d1\u9470",
+                    "s2_authenticated_key": "S2 \u9a57\u8b49\u91d1\u9470",
+                    "s2_unauthenticated_key": "S2 \u672a\u9a57\u8b49\u91d1\u9470",
                     "usb_path": "USB \u88dd\u7f6e\u8def\u5f91"
                 },
-                "description": "\u5047\u5982\u6b04\u4f4d\u4fdd\u6301\u7a7a\u767d\u3001\u9644\u52a0\u5143\u4ef6\u5c07\u6703\u7522\u751f\u4e00\u7d44\u5b89\u5168\u5bc6\u9470\u3002",
+                "description": "\u5047\u5982\u6b04\u4f4d\u4fdd\u6301\u7a7a\u767d\u3001\u9644\u52a0\u5143\u4ef6\u5c07\u6703\u7522\u751f\u4e00\u7d44\u5b89\u5168\u91d1\u9470\u3002",
                 "title": "\u8f38\u5165 Z-Wave JS \u9644\u52a0\u5143\u4ef6\u8a2d\u5b9a"
             },
             "install_addon": {

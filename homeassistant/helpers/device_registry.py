@@ -372,7 +372,7 @@ class DeviceRegistry:
             )
             entry_type = DeviceEntryType(entry_type)
 
-        device = self._async_update_device(
+        device = self.async_update_device(
             device.id,
             add_config_entry_id=config_entry_id,
             configuration_url=configuration_url,
@@ -396,45 +396,6 @@ class DeviceRegistry:
 
     @callback
     def async_update_device(
-        self,
-        device_id: str,
-        *,
-        add_config_entry_id: str | UndefinedType = UNDEFINED,
-        area_id: str | None | UndefinedType = UNDEFINED,
-        configuration_url: str | None | UndefinedType = UNDEFINED,
-        disabled_by: DeviceEntryDisabler | None | UndefinedType = UNDEFINED,
-        manufacturer: str | None | UndefinedType = UNDEFINED,
-        model: str | None | UndefinedType = UNDEFINED,
-        name_by_user: str | None | UndefinedType = UNDEFINED,
-        name: str | None | UndefinedType = UNDEFINED,
-        new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
-        remove_config_entry_id: str | UndefinedType = UNDEFINED,
-        suggested_area: str | None | UndefinedType = UNDEFINED,
-        sw_version: str | None | UndefinedType = UNDEFINED,
-        hw_version: str | None | UndefinedType = UNDEFINED,
-        via_device_id: str | None | UndefinedType = UNDEFINED,
-    ) -> DeviceEntry | None:
-        """Update properties of a device."""
-        return self._async_update_device(
-            device_id,
-            add_config_entry_id=add_config_entry_id,
-            area_id=area_id,
-            configuration_url=configuration_url,
-            disabled_by=disabled_by,
-            manufacturer=manufacturer,
-            model=model,
-            name_by_user=name_by_user,
-            name=name,
-            new_identifiers=new_identifiers,
-            remove_config_entry_id=remove_config_entry_id,
-            suggested_area=suggested_area,
-            sw_version=sw_version,
-            hw_version=hw_version,
-            via_device_id=via_device_id,
-        )
-
-    @callback
-    def _async_update_device(
         self,
         device_id: str,
         *,
@@ -522,6 +483,8 @@ class DeviceRegistry:
             ("manufacturer", manufacturer),
             ("model", model),
             ("name", name),
+            ("name_by_user", name_by_user),
+            ("area_id", area_id),
             ("suggested_area", suggested_area),
             ("sw_version", sw_version),
             ("hw_version", hw_version),
@@ -529,12 +492,6 @@ class DeviceRegistry:
         ):
             if value is not UNDEFINED and value != getattr(old, attr_name):
                 changes[attr_name] = value
-
-        if area_id is not UNDEFINED and area_id != old.area_id:
-            changes["area_id"] = area_id
-
-        if name_by_user is not UNDEFINED and name_by_user != old.name_by_user:
-            changes["name_by_user"] = name_by_user
 
         if old.is_new:
             changes["is_new"] = False
@@ -572,7 +529,7 @@ class DeviceRegistry:
         )
         for other_device in list(self.devices.values()):
             if other_device.via_device_id == device_id:
-                self._async_update_device(other_device.id, via_device_id=None)
+                self.async_update_device(other_device.id, via_device_id=None)
         self.hass.bus.async_fire(
             EVENT_DEVICE_REGISTRY_UPDATED, {"action": "remove", "device_id": device_id}
         )
@@ -596,7 +553,9 @@ class DeviceRegistry:
                     configuration_url=device["configuration_url"],
                     # type ignores (if tuple arg was cast): likely https://github.com/python/mypy/issues/8625
                     connections={tuple(conn) for conn in device["connections"]},  # type: ignore[misc]
-                    disabled_by=device["disabled_by"],
+                    disabled_by=DeviceEntryDisabler(device["disabled_by"])
+                    if device["disabled_by"]
+                    else None,
                     entry_type=DeviceEntryType(device["entry_type"])
                     if device["entry_type"]
                     else None,
@@ -673,7 +632,7 @@ class DeviceRegistry:
         """Clear config entry from registry entries."""
         now_time = time.time()
         for device in list(self.devices.values()):
-            self._async_update_device(device.id, remove_config_entry_id=config_entry_id)
+            self.async_update_device(device.id, remove_config_entry_id=config_entry_id)
         for deleted_device in list(self.deleted_devices.values()):
             config_entries = deleted_device.config_entries
             if config_entry_id not in config_entries:
@@ -715,7 +674,7 @@ class DeviceRegistry:
         """Clear area id from registry entries."""
         for dev_id, device in self.devices.items():
             if area_id == device.area_id:
-                self._async_update_device(dev_id, area_id=None)
+                self.async_update_device(dev_id, area_id=None)
 
 
 @callback

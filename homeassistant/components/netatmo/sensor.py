@@ -386,7 +386,6 @@ async def async_setup_entry(
         WEATHERSTATION_DATA_CLASS_NAME,
         HOMECOACH_DATA_CLASS_NAME,
     ):
-        await data_handler.register_data_class(data_class_name, data_class_name, None)
         data_class = data_handler.data.get(data_class_name)
 
         if data_class and data_class.raw_data:

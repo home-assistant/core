@@ -1,7 +1,8 @@
 """Support for deCONZ sensors."""
 from __future__ import annotations
 
-from collections.abc import ValuesView
+from collections.abc import Callable, ValuesView
+from dataclasses import dataclass
 
 from pydeconz.sensor import (
     AirQuality,
@@ -31,6 +32,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_VOLTAGE,
+    CONCENTRATION_PARTS_PER_BILLION,
     ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
@@ -68,6 +70,25 @@ ATTR_CURRENT = "current"
 ATTR_POWER = "power"
 ATTR_DAYLIGHT = "daylight"
 ATTR_EVENT_ID = "event_id"
+
+
+@dataclass
+class DeconzSensorDescriptionMixin:
+    """Required values when describing secondary sensor attributes."""
+
+    suffix: str
+    update_key: str
+    required_attr: str
+    value_fn: Callable[[PydeconzSensor], float | int | None]
+
+
+@dataclass
+class DeconzSensorDescription(
+    SensorEntityDescription,
+    DeconzSensorDescriptionMixin,
+):
+    """Class describing deCONZ binary sensor entities."""
+
 
 ENTITY_DESCRIPTIONS = {
     Battery: SensorEntityDescription(
@@ -119,6 +140,29 @@ ENTITY_DESCRIPTIONS = {
     ),
 }
 
+SENSOR_DESCRIPTIONS = [
+    DeconzSensorDescription(
+        key="temperature",
+        required_attr="secondary_temperature",
+        value_fn=lambda device: device.secondary_temperature,
+        suffix="Temperature",
+        update_key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=TEMP_CELSIUS,
+    ),
+    DeconzSensorDescription(
+        key="air_quality_ppb",
+        required_attr="air_quality_ppb",
+        value_fn=lambda device: device.air_quality_ppb,
+        suffix="PPB",
+        update_key="airqualityppb",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+    ),
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -141,7 +185,7 @@ async def async_setup_entry(
         Create DeconzBattery if sensor has a battery attribute.
         Create DeconzSensor if not a battery, switch or thermostat and not a binary sensor.
         """
-        entities: list[DeconzBattery | DeconzSensor | DeconzTemperature] = []
+        entities: list[DeconzBattery | DeconzSensor | DeconzPropertySensor] = []
 
         for sensor in sensors:
 
@@ -166,11 +210,17 @@ async def async_setup_entry(
             ):
                 entities.append(DeconzSensor(sensor, gateway))
 
-            if sensor.secondary_temperature:
-                known_temperature_sensors = set(gateway.entities[DOMAIN])
-                new_temperature_sensor = DeconzTemperature(sensor, gateway)
-                if new_temperature_sensor.unique_id not in known_temperature_sensors:
-                    entities.append(new_temperature_sensor)
+            known_sensor_entities = set(gateway.entities[DOMAIN])
+            for sensor_description in SENSOR_DESCRIPTIONS:
+
+                if not hasattr(
+                    sensor, sensor_description.required_attr
+                ) or not sensor_description.value_fn(sensor):
+                    continue
+
+                new_sensor = DeconzPropertySensor(sensor, gateway, sensor_description)
+                if new_sensor.unique_id not in known_sensor_entities:
+                    entities.append(new_sensor)
 
         if entities:
             async_add_entities(entities)
@@ -245,38 +295,41 @@ class DeconzSensor(DeconzDevice, SensorEntity):
         return attr
 
 
-class DeconzTemperature(DeconzDevice, SensorEntity):
-    """Representation of a deCONZ temperature sensor.
-
-    Extra temperature sensor on certain Xiaomi devices.
-    """
+class DeconzPropertySensor(DeconzDevice, SensorEntity):
+    """Representation of a deCONZ secondary attribute sensor."""
 
     TYPE = DOMAIN
     _device: PydeconzSensor
+    entity_description: DeconzSensorDescription
 
-    def __init__(self, device: PydeconzSensor, gateway: DeconzGateway) -> None:
-        """Initialize deCONZ temperature sensor."""
+    def __init__(
+        self,
+        device: PydeconzSensor,
+        gateway: DeconzGateway,
+        description: DeconzSensorDescription,
+    ) -> None:
+        """Initialize deCONZ sensor."""
+        self.entity_description = description
         super().__init__(device, gateway)
 
-        self.entity_description = ENTITY_DESCRIPTIONS[Temperature]
-        self._attr_name = f"{self._device.name} Temperature"
+        self._attr_name = f"{self._device.name} {description.suffix}"
+        self._update_keys = {description.update_key, "reachable"}
 
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
-        return f"{self.serial}-temperature"
+        return f"{self.serial}-{self.entity_description.suffix.lower()}"
 
     @callback
     def async_update_callback(self) -> None:
         """Update the sensor's state."""
-        keys = {"temperature", "reachable"}
-        if self._device.changed_keys.intersection(keys):
+        if self._device.changed_keys.intersection(self._update_keys):
             super().async_update_callback()
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self._device.secondary_temperature  # type: ignore[no-any-return]
+        return self.entity_description.value_fn(self._device)
 
 
 class DeconzBattery(DeconzDevice, SensorEntity):

@@ -41,7 +41,6 @@ CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
 SECRET_PATH = os.path.join(CONFIG_DIR, SECRET_YAML)
 VERSION_PATH = os.path.join(CONFIG_DIR, config_util.VERSION_FILE)
-GROUP_PATH = os.path.join(CONFIG_DIR, config_util.GROUP_CONFIG_PATH)
 AUTOMATIONS_PATH = os.path.join(CONFIG_DIR, config_util.AUTOMATION_CONFIG_PATH)
 SCRIPTS_PATH = os.path.join(CONFIG_DIR, config_util.SCRIPT_CONFIG_PATH)
 SCENES_PATH = os.path.join(CONFIG_DIR, config_util.SCENE_CONFIG_PATH)
@@ -67,9 +66,6 @@ def teardown():
     if os.path.isfile(VERSION_PATH):
         os.remove(VERSION_PATH)
 
-    if os.path.isfile(GROUP_PATH):
-        os.remove(GROUP_PATH)
-
     if os.path.isfile(AUTOMATIONS_PATH):
         os.remove(AUTOMATIONS_PATH)
 
@@ -87,7 +83,6 @@ async def test_create_default_config(hass):
     assert os.path.isfile(YAML_PATH)
     assert os.path.isfile(SECRET_PATH)
     assert os.path.isfile(VERSION_PATH)
-    assert os.path.isfile(GROUP_PATH)
     assert os.path.isfile(AUTOMATIONS_PATH)
 
 

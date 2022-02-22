@@ -7,7 +7,12 @@ import pytest
 from homeassistant.components.camera import SUPPORT_STREAM as CAMERA_SUPPORT_STREAM
 from homeassistant.components.mobile_app.const import CONF_SECRET
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
-from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.const import (
+    CONF_WEBHOOK_ID,
+    STATE_HOME,
+    STATE_NOT_HOME,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -283,7 +288,46 @@ async def test_webhook_requires_encryption(webhook_client, create_registrations)
     assert webhook_json["error"]["code"] == "encryption_required"
 
 
-async def test_webhook_update_location(hass, webhook_client, create_registrations):
+async def test_webhook_update_location_without_locations(
+    hass, webhook_client, create_registrations
+):
+    """Test that location can be updated."""
+
+    # start off with a location set by name
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+        json={
+            "type": "update_location",
+            "data": {"location_name": STATE_HOME},
+        },
+    )
+
+    assert resp.status == HTTPStatus.OK
+
+    state = hass.states.get("device_tracker.test_1_2")
+    assert state is not None
+    assert state.state == STATE_HOME
+
+    # set location to an 'unknown' state
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+        json={
+            "type": "update_location",
+            "data": {"altitude": 123},
+        },
+    )
+
+    assert resp.status == HTTPStatus.OK
+
+    state = hass.states.get("device_tracker.test_1_2")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes["altitude"] == 123
+
+
+async def test_webhook_update_location_with_gps(
+    hass, webhook_client, create_registrations
+):
     """Test that location can be updated."""
     resp = await webhook_client.post(
         "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
@@ -301,6 +345,86 @@ async def test_webhook_update_location(hass, webhook_client, create_registration
     assert state.attributes["longitude"] == 2.0
     assert state.attributes["gps_accuracy"] == 10
     assert state.attributes["altitude"] == -10
+
+
+async def test_webhook_update_location_with_gps_without_accuracy(
+    hass, webhook_client, create_registrations
+):
+    """Test that location can be updated."""
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+        json={
+            "type": "update_location",
+            "data": {"gps": [1, 2]},
+        },
+    )
+
+    assert resp.status == HTTPStatus.OK
+
+    state = hass.states.get("device_tracker.test_1_2")
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_webhook_update_location_with_location_name(
+    hass, webhook_client, create_registrations
+):
+    """Test that location can be updated."""
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={
+            ZONE_DOMAIN: [
+                {
+                    "name": "zone_name",
+                    "latitude": 1.23,
+                    "longitude": -4.56,
+                    "radius": 200,
+                    "icon": "mdi:test-tube",
+                },
+            ]
+        },
+    ):
+        await hass.services.async_call(ZONE_DOMAIN, "reload", blocking=True)
+
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+        json={
+            "type": "update_location",
+            "data": {"location_name": "zone_name"},
+        },
+    )
+
+    assert resp.status == HTTPStatus.OK
+
+    state = hass.states.get("device_tracker.test_1_2")
+    assert state.state == "zone_name"
+
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+        json={
+            "type": "update_location",
+            "data": {"location_name": STATE_HOME},
+        },
+    )
+
+    assert resp.status == HTTPStatus.OK
+
+    state = hass.states.get("device_tracker.test_1_2")
+    assert state.state == STATE_HOME
+
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+        json={
+            "type": "update_location",
+            "data": {"location_name": STATE_NOT_HOME},
+        },
+    )
+
+    assert resp.status == HTTPStatus.OK
+
+    state = hass.states.get("device_tracker.test_1_2")
+    assert state.state == STATE_NOT_HOME
 
 
 async def test_webhook_enable_encryption(hass, webhook_client, create_registrations):

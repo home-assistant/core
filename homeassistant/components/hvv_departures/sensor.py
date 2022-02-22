@@ -6,9 +6,12 @@ from aiohttp import ClientConnectorError
 from pygti.exceptions import InvalidAuth
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 from homeassistant.util.dt import get_time_zone, utcnow
 
@@ -33,7 +36,11 @@ BERLIN_TIME_ZONE = get_time_zone("Europe/Berlin")
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_devices: AddEntitiesCallback,
+) -> None:
     """Set up the sensor platform."""
     hub = hass.data[DOMAIN][config_entry.entry_id]
 

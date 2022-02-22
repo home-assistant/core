@@ -2,7 +2,10 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import COORDINATOR, DOMAIN, NAME, SENSORS
@@ -10,7 +13,11 @@ from .const import COORDINATOR, DOMAIN, NAME, SENSORS
 ICON = "mdi:flash"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up envoy sensor platform."""
     data = hass.data[DOMAIN][config_entry.entry_id]
     coordinator = data[COORDINATOR]
@@ -128,7 +135,7 @@ class Envoy(CoordinatorEntity, SensorEntity):
         return None
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> DeviceInfo | None:
         """Return the device_info of the device."""
         if not self._device_serial_number:
             return None

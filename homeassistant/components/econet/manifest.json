@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/econet",
   "requirements": ["pyeconet==0.1.14"],
   "codeowners": ["@vangorra", "@w1ll1am23"],
-  "iot_class": "cloud_push"
+  "iot_class": "cloud_push",
+  "loggers": ["paho_mqtt", "pyeconet"]
 }

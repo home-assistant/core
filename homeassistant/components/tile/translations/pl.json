@@ -1,12 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto jest ju\u017c skonfigurowane"
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
             "invalid_auth": "Niepoprawne uwierzytelnienie"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Has\u0142o"
+                },
+                "title": "Ponownie uwierzytelnij Tile"
+            },
             "user": {
                 "data": {
                     "password": "Has\u0142o",

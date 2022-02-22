@@ -12,10 +12,13 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REGION,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entityfilter
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.aiohttp import MockRequest
 
@@ -111,23 +114,40 @@ class CloudNotAvailable(HomeAssistantError):
     """Raised when an action requires the cloud but it's not available."""
 
 
+class CloudNotConnected(CloudNotAvailable):
+    """Raised when an action requires the cloud but it's not connected."""
+
+
 @bind_hass
 @callback
-def async_is_logged_in(hass) -> bool:
-    """Test if user is logged in."""
+def async_is_logged_in(hass: HomeAssistant) -> bool:
+    """Test if user is logged in.
+
+    Note: This returns True even if not currently connected to the cloud.
+    """
     return DOMAIN in hass.data and hass.data[DOMAIN].is_logged_in
 
 
 @bind_hass
 @callback
-def async_active_subscription(hass) -> bool:
+def async_is_connected(hass: HomeAssistant) -> bool:
+    """Test if connected to the cloud."""
+    return DOMAIN in hass.data and hass.data[DOMAIN].iot.connected
+
+
+@bind_hass
+@callback
+def async_active_subscription(hass: HomeAssistant) -> bool:
     """Test if user has an active subscription."""
     return async_is_logged_in(hass) and not hass.data[DOMAIN].subscription_expired
 
 
 @bind_hass
-async def async_create_cloudhook(hass, webhook_id: str) -> str:
+async def async_create_cloudhook(hass: HomeAssistant, webhook_id: str) -> str:
     """Create a cloudhook."""
+    if not async_is_connected(hass):
+        raise CloudNotConnected
+
     if not async_is_logged_in(hass):
         raise CloudNotAvailable
 
@@ -136,7 +156,7 @@ async def async_create_cloudhook(hass, webhook_id: str) -> str:
 
 
 @bind_hass
-async def async_delete_cloudhook(hass, webhook_id: str) -> None:
+async def async_delete_cloudhook(hass: HomeAssistant, webhook_id: str) -> None:
     """Delete a cloudhook."""
     if DOMAIN not in hass.data:
         raise CloudNotAvailable
@@ -146,7 +166,7 @@ async def async_delete_cloudhook(hass, webhook_id: str) -> None:
 
 @bind_hass
 @callback
-def async_remote_ui_url(hass) -> str:
+def async_remote_ui_url(hass: HomeAssistant) -> str:
     """Get the remote UI URL."""
     if not async_is_logged_in(hass):
         raise CloudNotAvailable
@@ -154,10 +174,10 @@ def async_remote_ui_url(hass) -> str:
     if not hass.data[DOMAIN].client.prefs.remote_enabled:
         raise CloudNotAvailable
 
-    if not hass.data[DOMAIN].remote.instance_domain:
+    if not (remote_domain := hass.data[DOMAIN].client.prefs.remote_domain):
         raise CloudNotAvailable
 
-    return f"https://{hass.data[DOMAIN].remote.instance_domain}"
+    return f"https://{remote_domain}"
 
 
 def is_cloudhook_request(request):
@@ -168,7 +188,7 @@ def is_cloudhook_request(request):
     return isinstance(request, MockRequest)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the Home Assistant cloud."""
     # Process configs
     if DOMAIN in config:
@@ -185,7 +205,7 @@ async def async_setup(hass, config):
     await prefs.async_initialize()
 
     # Initialize Cloud
-    websession = hass.helpers.aiohttp_client.async_get_clientsession()
+    websession = async_get_clientsession(hass)
     client = CloudClient(hass, prefs, websession, alexa_conf, google_conf)
     cloud = hass.data[DOMAIN] = Cloud(client, **kwargs)
 
@@ -197,7 +217,7 @@ async def async_setup(hass, config):
 
     _remote_handle_prefs_updated(cloud)
 
-    async def _service_handler(service):
+    async def _service_handler(service: ServiceCall) -> None:
         """Handle service for cloud."""
         if service.service == SERVICE_REMOTE_CONNECT:
             await prefs.async_update(remote_enabled=True)
@@ -223,12 +243,21 @@ async def async_setup(hass, config):
         loaded = True
 
         await hass.helpers.discovery.async_load_platform(
-            "binary_sensor", DOMAIN, {}, config
+            Platform.BINARY_SENSOR, DOMAIN, {}, config
         )
-        await hass.helpers.discovery.async_load_platform("stt", DOMAIN, {}, config)
-        await hass.helpers.discovery.async_load_platform("tts", DOMAIN, {}, config)
+        await hass.helpers.discovery.async_load_platform(
+            Platform.STT, DOMAIN, {}, config
+        )
+        await hass.helpers.discovery.async_load_platform(
+            Platform.TTS, DOMAIN, {}, config
+        )
+
+    async def _on_initialized():
+        """Update preferences."""
+        await prefs.async_update(remote_domain=cloud.remote.instance_domain)
 
     cloud.iot.register_on_connect(_on_connect)
+    cloud.register_on_initialized(_on_initialized)
 
     await cloud.initialize()
     await http_api.async_setup(hass)

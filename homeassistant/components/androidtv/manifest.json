@@ -9,5 +9,6 @@
   ],
   "codeowners": ["@JeffLIrion", "@ollo69"],
   "config_flow": true,
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["adb_shell", "androidtv", "pure_python_adb"]
 }

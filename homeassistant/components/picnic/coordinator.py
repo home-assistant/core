@@ -60,11 +60,11 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         """Fetch the data from the Picnic API and return a flat dict with only needed sensor data."""
         # Fetch from the API and pre-process the data
         cart = self.picnic_api_client.get_cart()
-        last_order = self._get_last_order()
 
-        if not cart or not last_order:
+        if not cart:
             raise UpdateFailed("API response doesn't contain expected data.")
 
+        last_order = self._get_last_order()
         slot_data = self._get_slot_data(cart)
 
         return {
@@ -102,11 +102,12 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         """Get data of the last order from the list of deliveries."""
         # Get the deliveries
         deliveries = self.picnic_api_client.get_deliveries(summary=True)
-        if not deliveries:
-            return {}
 
-        # Determine the last order
-        last_order = copy.deepcopy(deliveries[0])
+        # Determine the last order and return an empty dict if there is none
+        try:
+            last_order = copy.deepcopy(deliveries[0])
+        except KeyError:
+            return {}
 
         #  Get the position details if the order is not delivered yet
         delivery_position = {}

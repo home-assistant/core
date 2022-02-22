@@ -4,9 +4,6 @@ from aiohomekit.model.services import ServicesTypes
 
 from tests.components.homekit_controller.common import setup_test_component
 
-CURRENT_STATE = ("security-system", "security-system-state.current")
-TARGET_STATE = ("security-system", "security-system-state.target")
-
 
 def create_security_system_service(accessory):
     """Define a security-system characteristics as per page 219 of HAP spec."""
@@ -36,7 +33,12 @@ async def test_switch_change_alarm_state(hass, utcnow):
         {"entity_id": "alarm_control_panel.testdevice"},
         blocking=True,
     )
-    assert helper.characteristics[TARGET_STATE].value == 0
+    helper.async_assert_service_values(
+        ServicesTypes.SECURITY_SYSTEM,
+        {
+            CharacteristicsTypes.SECURITY_SYSTEM_STATE_TARGET: 0,
+        },
+    )
 
     await hass.services.async_call(
         "alarm_control_panel",
@@ -44,7 +46,12 @@ async def test_switch_change_alarm_state(hass, utcnow):
         {"entity_id": "alarm_control_panel.testdevice"},
         blocking=True,
     )
-    assert helper.characteristics[TARGET_STATE].value == 1
+    helper.async_assert_service_values(
+        ServicesTypes.SECURITY_SYSTEM,
+        {
+            CharacteristicsTypes.SECURITY_SYSTEM_STATE_TARGET: 1,
+        },
+    )
 
     await hass.services.async_call(
         "alarm_control_panel",
@@ -52,7 +59,12 @@ async def test_switch_change_alarm_state(hass, utcnow):
         {"entity_id": "alarm_control_panel.testdevice"},
         blocking=True,
     )
-    assert helper.characteristics[TARGET_STATE].value == 2
+    helper.async_assert_service_values(
+        ServicesTypes.SECURITY_SYSTEM,
+        {
+            CharacteristicsTypes.SECURITY_SYSTEM_STATE_TARGET: 2,
+        },
+    )
 
     await hass.services.async_call(
         "alarm_control_panel",
@@ -60,30 +72,50 @@ async def test_switch_change_alarm_state(hass, utcnow):
         {"entity_id": "alarm_control_panel.testdevice"},
         blocking=True,
     )
-    assert helper.characteristics[TARGET_STATE].value == 3
+    helper.async_assert_service_values(
+        ServicesTypes.SECURITY_SYSTEM,
+        {
+            CharacteristicsTypes.SECURITY_SYSTEM_STATE_TARGET: 3,
+        },
+    )
 
 
 async def test_switch_read_alarm_state(hass, utcnow):
     """Test that we can read the state of a HomeKit alarm accessory."""
     helper = await setup_test_component(hass, create_security_system_service)
 
-    helper.characteristics[CURRENT_STATE].value = 0
+    await helper.async_update(
+        ServicesTypes.SECURITY_SYSTEM,
+        {CharacteristicsTypes.SECURITY_SYSTEM_STATE_CURRENT: 0},
+    )
     state = await helper.poll_and_get_state()
     assert state.state == "armed_home"
     assert state.attributes["battery_level"] == 50
 
-    helper.characteristics[CURRENT_STATE].value = 1
+    await helper.async_update(
+        ServicesTypes.SECURITY_SYSTEM,
+        {CharacteristicsTypes.SECURITY_SYSTEM_STATE_CURRENT: 1},
+    )
     state = await helper.poll_and_get_state()
     assert state.state == "armed_away"
 
-    helper.characteristics[CURRENT_STATE].value = 2
+    await helper.async_update(
+        ServicesTypes.SECURITY_SYSTEM,
+        {CharacteristicsTypes.SECURITY_SYSTEM_STATE_CURRENT: 2},
+    )
     state = await helper.poll_and_get_state()
     assert state.state == "armed_night"
 
-    helper.characteristics[CURRENT_STATE].value = 3
+    await helper.async_update(
+        ServicesTypes.SECURITY_SYSTEM,
+        {CharacteristicsTypes.SECURITY_SYSTEM_STATE_CURRENT: 3},
+    )
     state = await helper.poll_and_get_state()
     assert state.state == "disarmed"
 
-    helper.characteristics[CURRENT_STATE].value = 4
+    await helper.async_update(
+        ServicesTypes.SECURITY_SYSTEM,
+        {CharacteristicsTypes.SECURITY_SYSTEM_STATE_CURRENT: 4},
+    )
     state = await helper.poll_and_get_state()
     assert state.state == "triggered"

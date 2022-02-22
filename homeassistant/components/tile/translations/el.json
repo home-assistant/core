@@ -1,0 +1,12 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_inactive": "\u0395\u03bc\u03c6\u03ac\u03bd\u03b9\u03c3\u03b7 \u03b1\u03bd\u03b5\u03bd\u03b5\u03c1\u03b3\u03ce\u03bd Tiles"
+                },
+                "title": "\u0394\u03b9\u03b1\u03bc\u03cc\u03c1\u03c6\u03c9\u03c3\u03b7 Tile"
+            }
+        }
+    }
+}

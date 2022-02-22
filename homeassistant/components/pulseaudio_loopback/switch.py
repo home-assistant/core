@@ -1,4 +1,6 @@
 """Switch logic for loading/unloading pulseaudio loopback modules."""
+from __future__ import annotations
+
 import logging
 
 from pulsectl import Pulse, PulseError
@@ -6,7 +8,10 @@ import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 DOMAIN = "pulseaudio_loopback"
 
@@ -31,7 +36,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Read in all of our configuration, and initialize the loopback switch."""
     name = config.get(CONF_NAME)
     sink_name = config.get(CONF_SINK_NAME)

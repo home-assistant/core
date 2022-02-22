@@ -44,6 +44,9 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import ATTR_NEW, CecEntity
 
@@ -52,13 +55,18 @@ _LOGGER = logging.getLogger(__name__)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Find and return HDMI devices as +switches."""
-    if ATTR_NEW in discovery_info:
+    if discovery_info and ATTR_NEW in discovery_info:
         _LOGGER.debug("Setting up HDMI devices %s", discovery_info[ATTR_NEW])
         entities = []
         for device in discovery_info[ATTR_NEW]:
-            hdmi_device = hass.data.get(device)
+            hdmi_device = hass.data[DOMAIN][device]
             entities.append(CecPlayerEntity(hdmi_device, hdmi_device.logical_address))
         add_entities(entities, True)
 

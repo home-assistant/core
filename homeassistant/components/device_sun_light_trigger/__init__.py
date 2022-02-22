@@ -19,13 +19,14 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_state_change,
 )
 from homeassistant.helpers.sun import get_astral_event_next, is_up
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 DOMAIN = "device_sun_light_trigger"
@@ -58,7 +59,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the triggers to control lights based on device presence."""
     conf = config[DOMAIN]
     disable_turn_off = conf[CONF_DISABLE_TURN_OFF]

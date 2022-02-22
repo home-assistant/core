@@ -5,9 +5,11 @@
         },
         "error": {
             "bad_auth": "Invalid authentication",
+            "invalid_auth": "Invalid authentication",
             "invalid_pin": "The provided pin is invalid",
             "network_error": "A network error occurred",
             "no_panel_online": "No online Elmax control panel was found.",
+            "unknown": "Unexpected error",
             "unknown_error": "An unexpected error occurred"
         },
         "step": {

@@ -1,6 +1,9 @@
 """Support for the AEMET OpenData service."""
 from homeassistant.components.weather import WeatherEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -21,7 +24,11 @@ from .const import (
 from .weather_update_coordinator import WeatherUpdateCoordinator
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up AEMET OpenData weather entity based on a config entry."""
     domain_data = hass.data[DOMAIN][config_entry.entry_id]
     weather_coordinator = domain_data[ENTRY_WEATHER_COORDINATOR]

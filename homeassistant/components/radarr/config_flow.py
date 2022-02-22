@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from aiopyarr import exceptions
 from aiopyarr.radarr_client import RadarrClient
@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -33,9 +34,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-if TYPE_CHECKING:
-    from homeassistant.data_entry_flow import FlowResult
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:

@@ -121,7 +121,7 @@ async def test_light_turn_on_service(hass, mock_bridge_v2, v2_resources_test_dat
     assert mock_bridge_v2.mock_requests[1]["json"]["on"]["on"] is True
     assert mock_bridge_v2.mock_requests[1]["json"]["dynamics"]["duration"] == 200
 
-    # test again with sending flash/alert
+    # test again with sending long flash
     await hass.services.async_call(
         "light",
         "turn_on",
@@ -129,8 +129,36 @@ async def test_light_turn_on_service(hass, mock_bridge_v2, v2_resources_test_dat
         blocking=True,
     )
     assert len(mock_bridge_v2.mock_requests) == 3
-    assert mock_bridge_v2.mock_requests[2]["json"]["on"]["on"] is True
     assert mock_bridge_v2.mock_requests[2]["json"]["alert"]["action"] == "breathe"
+
+    # test again with sending short flash
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": test_light_id, "flash": "short"},
+        blocking=True,
+    )
+    assert len(mock_bridge_v2.mock_requests) == 4
+    assert mock_bridge_v2.mock_requests[3]["json"]["identify"]["action"] == "identify"
+
+    # test again with sending a colortemperature which is out of range
+    # which should be normalized to the upper/lower bounds Hue can handle
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": test_light_id, "color_temp": 50},
+        blocking=True,
+    )
+    assert len(mock_bridge_v2.mock_requests) == 5
+    assert mock_bridge_v2.mock_requests[4]["json"]["color_temperature"]["mirek"] == 153
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": test_light_id, "color_temp": 550},
+        blocking=True,
+    )
+    assert len(mock_bridge_v2.mock_requests) == 6
+    assert mock_bridge_v2.mock_requests[5]["json"]["color_temperature"]["mirek"] == 500
 
 
 async def test_light_turn_off_service(hass, mock_bridge_v2, v2_resources_test_data):
@@ -176,6 +204,26 @@ async def test_light_turn_off_service(hass, mock_bridge_v2, v2_resources_test_da
     assert len(mock_bridge_v2.mock_requests) == 2
     assert mock_bridge_v2.mock_requests[1]["json"]["on"]["on"] is False
     assert mock_bridge_v2.mock_requests[1]["json"]["dynamics"]["duration"] == 200
+
+    # test again with sending long flash
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {"entity_id": test_light_id, "flash": "long"},
+        blocking=True,
+    )
+    assert len(mock_bridge_v2.mock_requests) == 3
+    assert mock_bridge_v2.mock_requests[2]["json"]["alert"]["action"] == "breathe"
+
+    # test again with sending short flash
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {"entity_id": test_light_id, "flash": "short"},
+        blocking=True,
+    )
+    assert len(mock_bridge_v2.mock_requests) == 4
+    assert mock_bridge_v2.mock_requests[3]["json"]["identify"]["action"] == "identify"
 
 
 async def test_light_added(hass, mock_bridge_v2):
@@ -385,4 +433,66 @@ async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
         assert mock_bridge_v2.mock_requests[index]["json"]["on"]["on"] is False
         assert (
             mock_bridge_v2.mock_requests[index]["json"]["dynamics"]["duration"] == 200
+        )
+
+    # Test sending short flash effect to a grouped light
+    mock_bridge_v2.mock_requests.clear()
+    test_light_id = "light.test_zone"
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": test_light_id,
+            "flash": "short",
+        },
+        blocking=True,
+    )
+
+    # PUT request should have been sent to ALL group lights with correct params
+    assert len(mock_bridge_v2.mock_requests) == 3
+    for index in range(0, 3):
+        assert (
+            mock_bridge_v2.mock_requests[index]["json"]["identify"]["action"]
+            == "identify"
+        )
+
+    # Test sending long flash effect to a grouped light
+    mock_bridge_v2.mock_requests.clear()
+    test_light_id = "light.test_zone"
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": test_light_id,
+            "flash": "long",
+        },
+        blocking=True,
+    )
+
+    # PUT request should have been sent to ALL group lights with correct params
+    assert len(mock_bridge_v2.mock_requests) == 3
+    for index in range(0, 3):
+        assert (
+            mock_bridge_v2.mock_requests[index]["json"]["alert"]["action"] == "breathe"
+        )
+
+    # Test sending flash effect in turn_off call
+    mock_bridge_v2.mock_requests.clear()
+    test_light_id = "light.test_zone"
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {
+            "entity_id": test_light_id,
+            "flash": "short",
+        },
+        blocking=True,
+    )
+
+    # PUT request should have been sent to ALL group lights with correct params
+    assert len(mock_bridge_v2.mock_requests) == 3
+    for index in range(0, 3):
+        assert (
+            mock_bridge_v2.mock_requests[index]["json"]["identify"]["action"]
+            == "identify"
         )

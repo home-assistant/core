@@ -4,23 +4,20 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta, tzinfo
 import time
-from typing import TYPE_CHECKING, cast
+from typing import cast
 
 from aiopyarr import exceptions
+from aiopyarr.models import radarr, request
+from aiopyarr.models.host_configuration import PyArrHostConfiguration
+from aiopyarr.radarr_client import RadarrClient
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_UPCOMING_DAYS, DOMAIN, LOGGER
-
-if TYPE_CHECKING:
-    from aiopyarr.models import radarr
-    from aiopyarr.models.host_configuration import PyArrHostConfiguration
-    from aiopyarr.radarr_client import RadarrClient
-
-    from homeassistant.core import HomeAssistant
 
 
 class RadarrDataUpdateCoordinator(DataUpdateCoordinator):
@@ -43,13 +40,13 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self.api_client = api_client
         self.calendar: list[radarr.RadarrCalendar] | None = None
-        self.commands: list[radarr.RadarrCommand] | None = None
-        self.disk_space: list[radarr.Diskspace] | None = None
+        self.commands: list[request.Command] | None = None
+        self.disk_space: list[request.Diskspace] | None = None
         self.host_configuration = host_configuration
         self.movies: radarr.RadarrMovie | list[radarr.RadarrMovie] | None = None
         self.movies_count_enabled: bool = False
-        self.rootfolder: list[radarr.RadarrRootFolder] | None = None
-        self.system_status: radarr.RadarrSystemStatus | None = None
+        self.rootfolder: list[request.RootFolder] | None = None
+        self.system_status: request.SystemStatus | None = None
 
     async def _async_update_data(self) -> None:
         """Get the latest data from Radarr."""
@@ -68,7 +65,7 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator):
                     self.api_client.async_get_system_status(),
                     self.api_client.async_get_root_folders(),
                     self.api_client.async_get_calendar(start, end),
-                    self.api_client.async_get_command(),
+                    self.api_client.async_get_commands(),
                 ]
             )
             # Diskspace can timeout with large systems with remote mapped storage

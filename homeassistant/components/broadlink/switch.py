@@ -1,4 +1,6 @@
 """Support for Broadlink switches."""
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 import logging
 
@@ -10,6 +12,7 @@ from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
@@ -22,8 +25,11 @@ from homeassistant.const import (
     STATE_ON,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 from .entity import BroadlinkEntity
@@ -59,7 +65,12 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Import the device and set up custom switches.
 
     This is for backward compatibility.
@@ -84,10 +95,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         import_device(hass, host)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Broadlink switch."""
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
-    switches = []
+    switches: list[BroadlinkSwitch] = []
 
     if device.api.type in {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"}:
         platform_data = hass.data[DOMAIN].platforms.get(Platform.SWITCH, {})

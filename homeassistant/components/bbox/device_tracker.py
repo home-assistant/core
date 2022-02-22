@@ -14,7 +14,9 @@ from homeassistant.components.device_tracker import (
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
@@ -29,7 +31,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
     """Validate the configuration and return a Bbox scanner."""
     scanner = BboxDeviceScanner(config[DOMAIN])
 

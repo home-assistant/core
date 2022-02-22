@@ -1,0 +1,9 @@
+{
+    "state": {
+        "wled__live_override": {
+            "0": "Apagado",
+            "1": "Encendido",
+            "2": "Hasta que el dispositivo se reinicie"
+        }
+    }
+}

@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_bat_low": "{entity_name} batterie faible",
+            "is_co": "{entity_name} d\u00e9tecte du monoxyde de carbone",
             "is_cold": "{entity_name} est froid",
             "is_connected": "{entity_name} est connect\u00e9",
             "is_gas": "{entity_name} d\u00e9tecte du gaz",
@@ -11,6 +12,7 @@
             "is_moist": "{entity_name} est humide",
             "is_motion": "{entity_name} d\u00e9tecte du mouvement",
             "is_moving": "{entity_name} se d\u00e9place",
+            "is_no_co": "{entity_name} ne d\u00e9tecte pas le monoxyde de carbone",
             "is_no_gas": "{entity_name} ne d\u00e9tecte pas de gaz",
             "is_no_light": "{entity_name} ne d\u00e9tecte pas de lumi\u00e8re",
             "is_no_motion": "{entity_name} ne d\u00e9tecte pas de mouvement",
@@ -52,6 +54,7 @@
         },
         "trigger_type": {
             "bat_low": "{entity_name} batterie faible",
+            "co": "{entity_name} commenc\u00e9 \u00e0 d\u00e9tecter du monoxyde de carbone",
             "cold": "{entity_name} est devenu froid",
             "connected": "{entity_name} connect\u00e9",
             "gas": "{entity_name} a commenc\u00e9 \u00e0 d\u00e9tecter du gaz",
@@ -63,6 +66,7 @@
             "moist": "{entity_name} est devenu humide",
             "motion": "{entity_name} a commenc\u00e9 \u00e0 d\u00e9tecter du mouvement",
             "moving": "{entity_name} a commenc\u00e9 \u00e0 se d\u00e9placer",
+            "no_co": "{entity_name} cess\u00e9 de d\u00e9tecter le monoxyde de carbone",
             "no_gas": "{entity_name} a arr\u00eat\u00e9 de d\u00e9tecter le gaz",
             "no_light": "{entity_name} a arr\u00eat\u00e9 de d\u00e9tecter la lumi\u00e8re",
             "no_motion": "{entity_name} a arr\u00eat\u00e9 de d\u00e9tecter le mouvement",
@@ -104,6 +108,7 @@
         }
     },
     "device_class": {
+        "co": "monoxyde de carbone",
         "cold": "froid",
         "gas": "gaz",
         "heat": "Chauffer",
@@ -128,6 +133,10 @@
         "battery_charging": {
             "off": "Pas en charge",
             "on": "En charge"
+        },
+        "co": {
+            "off": "Clair",
+            "on": "D\u00e9tect\u00e9e"
         },
         "cold": {
             "off": "Normale",

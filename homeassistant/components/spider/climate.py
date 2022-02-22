@@ -7,8 +7,11 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 
@@ -21,7 +24,9 @@ HA_STATE_TO_SPIDER = {
 SPIDER_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_SPIDER.items()}
 
 
-async def async_setup_entry(hass, config, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Initialize a Spider thermostat."""
     api = hass.data[DOMAIN][config.entry_id]
 

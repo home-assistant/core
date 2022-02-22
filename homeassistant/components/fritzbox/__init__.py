@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -17,17 +18,8 @@ from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    ATTR_STATE_DEVICE_LOCKED,
-    ATTR_STATE_LOCKED,
-    CONF_CONNECTIONS,
-    CONF_COORDINATOR,
-    DOMAIN,
-    LOGGER,
-    PLATFORMS,
-)
+from .const import CONF_CONNECTIONS, CONF_COORDINATOR, DOMAIN, LOGGER, PLATFORMS
 from .coordinator import FritzboxDataUpdateCoordinator
-from .model import FritzExtraAttributes
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -61,6 +53,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             and "_temperature" not in entry.unique_id
         ):
             new_unique_id = f"{entry.unique_id}_temperature"
+            LOGGER.info(
+                "Migrating unique_id [%s] to [%s]", entry.unique_id, new_unique_id
+            )
+            return {"new_unique_id": new_unique_id}
+
+        if entry.domain == BINARY_SENSOR_DOMAIN and "_" not in entry.unique_id:
+            new_unique_id = f"{entry.unique_id}_alarm"
             LOGGER.info(
                 "Migrating unique_id [%s] to [%s]", entry.unique_id, new_unique_id
             )
@@ -138,11 +137,3 @@ class FritzBoxEntity(CoordinatorEntity):
             sw_version=self.device.fw_version,
             configuration_url=self.coordinator.configuration_url,
         )
-
-    @property
-    def extra_state_attributes(self) -> FritzExtraAttributes:
-        """Return the state attributes of the device."""
-        return {
-            ATTR_STATE_DEVICE_LOCKED: self.device.device_lock,
-            ATTR_STATE_LOCKED: self.device.lock,
-        }

@@ -32,7 +32,7 @@ from homeassistant.const import (
     EVENT_TIME_CHANGED,
     MATCH_ALL,
 )
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import CoreState, HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -78,7 +78,7 @@ from .util import (
     session_scope,
     setup_connection_for_dialect,
     validate_or_move_away_sqlite_database,
-    write_lock_db,
+    write_lock_db_sqlite,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -284,7 +284,7 @@ async def _process_recorder_platform(hass, domain, platform):
 def _async_register_services(hass, instance):
     """Register recorder services."""
 
-    async def async_handle_purge_service(service):
+    async def async_handle_purge_service(service: ServiceCall) -> None:
         """Handle calls to the purge service."""
         instance.do_adhoc_purge(**service.data)
 
@@ -292,7 +292,7 @@ def _async_register_services(hass, instance):
         DOMAIN, SERVICE_PURGE, async_handle_purge_service, schema=SERVICE_PURGE_SCHEMA
     )
 
-    async def async_handle_purge_entities_service(service):
+    async def async_handle_purge_entities_service(service: ServiceCall) -> None:
         """Handle calls to the purge entities service."""
         entity_ids = await async_extract_entity_ids(hass, service)
         domains = service.data.get(ATTR_DOMAINS, [])
@@ -307,7 +307,7 @@ def _async_register_services(hass, instance):
         schema=SERVICE_PURGE_ENTITIES_SCHEMA,
     )
 
-    async def async_handle_enable_service(service):
+    async def async_handle_enable_service(service: ServiceCall) -> None:
         instance.set_enable(True)
 
     hass.services.async_register(
@@ -317,7 +317,7 @@ def _async_register_services(hass, instance):
         schema=SERVICE_ENABLE_SCHEMA,
     )
 
-    async def async_handle_disable_service(service):
+    async def async_handle_disable_service(service: ServiceCall) -> None:
         instance.set_enable(False)
 
     hass.services.async_register(
@@ -870,7 +870,7 @@ class Recorder(threading.Thread):
         def _async_set_database_locked(task: DatabaseLockTask):
             task.database_locked.set()
 
-        with write_lock_db(self):
+        with write_lock_db_sqlite(self):
             # Notify that lock is being held, wait until database can be used again.
             self.hass.add_job(_async_set_database_locked, task)
             while not task.database_unlock.wait(timeout=DB_LOCK_QUEUE_CHECK_TIMEOUT):
@@ -1057,6 +1057,12 @@ class Recorder(threading.Thread):
 
     async def lock_database(self) -> bool:
         """Lock database so it can be backed up safely."""
+        if not self.engine or self.engine.dialect.name != "sqlite":
+            _LOGGER.debug(
+                "Not a SQLite database or not connected, locking not necessary"
+            )
+            return True
+
         if self._database_lock_task:
             _LOGGER.warning("Database already locked")
             return False
@@ -1080,6 +1086,12 @@ class Recorder(threading.Thread):
 
         Returns true if database lock has been held throughout the process.
         """
+        if not self.engine or self.engine.dialect.name != "sqlite":
+            _LOGGER.debug(
+                "Not a SQLite database or not connected, unlocking not necessary"
+            )
+            return True
+
         if not self._database_lock_task:
             _LOGGER.warning("Database currently not locked")
             return False

@@ -1,8 +1,6 @@
 """The Radarr component."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.radarr_client import RadarrClient
 
@@ -15,6 +13,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -28,9 +27,6 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import RadarrDataUpdateCoordinator
-
-if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
 
 PLATFORMS = [SENSOR_DOMAIN]
 

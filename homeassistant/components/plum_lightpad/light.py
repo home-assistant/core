@@ -32,7 +32,7 @@ async def async_setup_entry(
     plum: Plum = hass.data[DOMAIN][entry.entry_id]
 
     def setup_entities(device) -> None:
-        entities = []
+        entities: list[LightEntity] = []
 
         if "lpid" in device:
             lightpad = plum.get_lightpad(device["lpid"])

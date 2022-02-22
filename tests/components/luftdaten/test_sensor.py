@@ -123,7 +123,7 @@ async def test_luftdaten_sensors(
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
     assert device_entry.identifiers == {(DOMAIN, "12345")}
-    assert device_entry.manufacturer == "Luftdaten.info"
+    assert device_entry.manufacturer == "Sensor.Community"
     assert device_entry.name == "Sensor 12345"
     assert (
         device_entry.configuration_url

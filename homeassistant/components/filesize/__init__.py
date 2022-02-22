@@ -1,4 +1,6 @@
 """The filesize component."""
 
+from homeassistant.const import Platform
+
 DOMAIN = "filesize"
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]

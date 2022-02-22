@@ -5,12 +5,19 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice
 from .const import BRIDGE_DEVICE, BRIDGE_LEAP
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Lutron Caseta binary_sensor platform.
 
     Adds occupancy groups from the Caseta bridge associated with the

@@ -4,9 +4,7 @@ from functools import partial
 from json import JSONEncoder, dumps
 import math
 import os
-import sys
 from tempfile import mkdtemp
-import unittest
 from unittest.mock import Mock
 
 import pytest
@@ -53,10 +51,6 @@ def test_save_and_load():
     assert data == TEST_JSON_A
 
 
-# Skipped on Windows
-@unittest.skipIf(
-    sys.platform.startswith("win"), "private permissions not supported on Windows"
-)
 def test_save_and_load_private():
     """Test we can load private files and that they are protected."""
     fname = _path_for("test2")

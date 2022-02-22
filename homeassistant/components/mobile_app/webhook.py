@@ -10,7 +10,7 @@ from aiohttp.web import HTTPBadRequest, Request, Response, json_response
 from nacl.secret import SecretBox
 import voluptuous as vol
 
-from homeassistant.components import notify as hass_notify, tag
+from homeassistant.components import camera, cloud, notify as hass_notify, tag
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES as BINARY_SENSOR_CLASSES,
 )
@@ -91,6 +91,7 @@ from .const import (
     ERR_ENCRYPTION_REQUIRED,
     ERR_INVALID_FORMAT,
     ERR_SENSOR_NOT_REGISTERED,
+    SCHEMA_APP_DATA,
     SIGNAL_LOCATION_UPDATE,
     SIGNAL_SENSOR_UPDATE,
 )
@@ -264,19 +265,19 @@ async def webhook_fire_event(hass, config_entry, data):
 @validate_schema({vol.Required(ATTR_CAMERA_ENTITY_ID): cv.string})
 async def webhook_stream_camera(hass, config_entry, data):
     """Handle a request to HLS-stream a camera."""
-    if (camera := hass.states.get(data[ATTR_CAMERA_ENTITY_ID])) is None:
+    if (camera_state := hass.states.get(data[ATTR_CAMERA_ENTITY_ID])) is None:
         return webhook_response(
             {"success": False},
             registration=config_entry.data,
             status=HTTPStatus.BAD_REQUEST,
         )
 
-    resp = {"mjpeg_path": f"/api/camera_proxy_stream/{camera.entity_id}"}
+    resp = {"mjpeg_path": f"/api/camera_proxy_stream/{camera_state.entity_id}"}
 
-    if camera.attributes[ATTR_SUPPORTED_FEATURES] & CAMERA_SUPPORT_STREAM:
+    if camera_state.attributes[ATTR_SUPPORTED_FEATURES] & CAMERA_SUPPORT_STREAM:
         try:
-            resp["hls_path"] = await hass.components.camera.async_request_stream(
-                camera.entity_id, "hls"
+            resp["hls_path"] = await camera.async_request_stream(
+                hass, camera_state.entity_id, "hls"
             )
         except HomeAssistantError:
             resp["hls_path"] = None
@@ -310,16 +311,19 @@ async def webhook_render_template(hass, config_entry, data):
 
 @WEBHOOK_COMMANDS.register("update_location")
 @validate_schema(
-    {
-        vol.Optional(ATTR_LOCATION_NAME): cv.string,
-        vol.Required(ATTR_GPS): cv.gps,
-        vol.Required(ATTR_GPS_ACCURACY): cv.positive_int,
-        vol.Optional(ATTR_BATTERY): cv.positive_int,
-        vol.Optional(ATTR_SPEED): cv.positive_int,
-        vol.Optional(ATTR_ALTITUDE): vol.Coerce(float),
-        vol.Optional(ATTR_COURSE): cv.positive_int,
-        vol.Optional(ATTR_VERTICAL_ACCURACY): cv.positive_int,
-    }
+    vol.Schema(
+        cv.key_dependency(ATTR_GPS, ATTR_GPS_ACCURACY),
+        {
+            vol.Optional(ATTR_LOCATION_NAME): cv.string,
+            vol.Optional(ATTR_GPS): cv.gps,
+            vol.Optional(ATTR_GPS_ACCURACY): cv.positive_int,
+            vol.Optional(ATTR_BATTERY): cv.positive_int,
+            vol.Optional(ATTR_SPEED): cv.positive_int,
+            vol.Optional(ATTR_ALTITUDE): vol.Coerce(float),
+            vol.Optional(ATTR_COURSE): cv.positive_int,
+            vol.Optional(ATTR_VERTICAL_ACCURACY): cv.positive_int,
+        },
+    )
 )
 async def webhook_update_location(hass, config_entry, data):
     """Handle an update location webhook."""
@@ -332,7 +336,7 @@ async def webhook_update_location(hass, config_entry, data):
 @WEBHOOK_COMMANDS.register("update_registration")
 @validate_schema(
     {
-        vol.Optional(ATTR_APP_DATA, default={}): dict,
+        vol.Optional(ATTR_APP_DATA): SCHEMA_APP_DATA,
         vol.Required(ATTR_APP_VERSION): cv.string,
         vol.Required(ATTR_DEVICE_NAME): cv.string,
         vol.Required(ATTR_MANUFACTURER): cv.string,
@@ -589,7 +593,7 @@ async def webhook_get_config(hass, config_entry, data):
         resp[CONF_CLOUDHOOK_URL] = config_entry.data[CONF_CLOUDHOOK_URL]
 
     with suppress(hass.components.cloud.CloudNotAvailable):
-        resp[CONF_REMOTE_UI_URL] = hass.components.cloud.async_remote_ui_url()
+        resp[CONF_REMOTE_UI_URL] = cloud.async_remote_ui_url(hass)
 
     return webhook_response(resp, registration=config_entry.data)
 

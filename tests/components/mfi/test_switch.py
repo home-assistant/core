@@ -37,7 +37,6 @@ async def test_setup_adds_proper_devices(hass):
             for i, model in enumerate(mfi.SWITCH_MODELS)
         }
         ports["bad"] = mock.MagicMock(model="notaswitch")
-        print(ports["bad"].model)
         mock_client.return_value.get_devices.return_value = [
             mock.MagicMock(ports=ports)
         ]

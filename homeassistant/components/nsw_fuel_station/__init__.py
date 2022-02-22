@@ -7,6 +7,8 @@ import logging
 
 from nsw_fuel import FuelCheckClient, FuelCheckError, Station
 
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DATA_NSW_FUEL_STATION
@@ -17,7 +19,7 @@ DOMAIN = "nsw_fuel_station"
 SCAN_INTERVAL = datetime.timedelta(hours=1)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the NSW Fuel Station platform."""
     client = FuelCheckClient()
 

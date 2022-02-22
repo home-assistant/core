@@ -10,5 +10,6 @@
   ],
   "codeowners": ["@mib1185", "@flabbamann"],
   "config_flow": true,
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["pyfritzhome"]
 }

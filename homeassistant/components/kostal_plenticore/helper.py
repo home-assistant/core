@@ -91,6 +91,7 @@ class Plenticore:
         prod2 = device_local["Branding:ProductName2"]
 
         self.device_info = DeviceInfo(
+            configuration_url=f"http://{self.host}",
             identifiers={(DOMAIN, device_local["Properties:SerialNo"])},
             manufacturer="Kostal",
             model=f"{prod1} {prod2}",

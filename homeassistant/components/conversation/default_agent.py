@@ -1,4 +1,4 @@
-"""Standard conversastion implementation for Home Assistant."""
+"""Standard conversation implementation for Home Assistant."""
 from __future__ import annotations
 
 import re

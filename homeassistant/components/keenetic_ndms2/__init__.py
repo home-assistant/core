@@ -85,10 +85,11 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
                     _LOGGER.debug("Removing entity %s", entity_entry.entity_id)
 
                     ent_reg.async_remove(entity_entry.entity_id)
-                    dev_reg.async_update_device(
-                        entity_entry.device_id,
-                        remove_config_entry_id=config_entry.entry_id,
-                    )
+                    if entity_entry.device_id:
+                        dev_reg.async_update_device(
+                            entity_entry.device_id,
+                            remove_config_entry_id=config_entry.entry_id,
+                        )
 
         _LOGGER.debug("Finished cleaning device_tracker entities")
 

@@ -1,4 +1,6 @@
 """Support for the demo image processing."""
+from __future__ import annotations
+
 from homeassistant.components.image_processing import (
     ATTR_AGE,
     ATTR_CONFIDENCE,
@@ -9,9 +11,17 @@ from homeassistant.components.image_processing import (
 from homeassistant.components.openalpr_local.image_processing import (
     ImageProcessingAlprEntity,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the demo image processing platform."""
     add_entities(
         [

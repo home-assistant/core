@@ -1,7 +1,7 @@
 """Config flow for motionEye integration."""
 from __future__ import annotations
 
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 from motioneye_client.client import (
     MotionEyeClientConnectionError,
@@ -94,7 +94,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is None:
             return _get_form(
-                cast(Dict[str, Any], reauth_entry.data) if reauth_entry else {}
+                cast(dict[str, Any], reauth_entry.data) if reauth_entry else {}
             )
 
         if self._hassio_discovery:

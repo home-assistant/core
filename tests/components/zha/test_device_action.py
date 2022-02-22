@@ -10,6 +10,7 @@ import zigpy.zcl.foundation as zcl_f
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.zha import DOMAIN
+from homeassistant.const import Platform
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
@@ -59,6 +60,30 @@ async def test_get_actions(hass, device_ias):
     expected_actions = [
         {"domain": DOMAIN, "type": "squawk", "device_id": reg_device.id},
         {"domain": DOMAIN, "type": "warn", "device_id": reg_device.id},
+        {
+            "domain": Platform.SELECT,
+            "type": "select_option",
+            "device_id": reg_device.id,
+            "entity_id": "select.fakemanufacturer_fakemodel_e769900a_ias_wd_warningmode",
+        },
+        {
+            "domain": Platform.SELECT,
+            "type": "select_option",
+            "device_id": reg_device.id,
+            "entity_id": "select.fakemanufacturer_fakemodel_e769900a_ias_wd_sirenlevel",
+        },
+        {
+            "domain": Platform.SELECT,
+            "type": "select_option",
+            "device_id": reg_device.id,
+            "entity_id": "select.fakemanufacturer_fakemodel_e769900a_ias_wd_strobelevel",
+        },
+        {
+            "domain": Platform.SELECT,
+            "type": "select_option",
+            "device_id": reg_device.id,
+            "entity_id": "select.fakemanufacturer_fakemodel_e769900a_ias_wd_strobe",
+        },
     ]
 
     assert actions == expected_actions

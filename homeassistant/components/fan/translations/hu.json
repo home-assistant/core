@@ -9,6 +9,7 @@
             "is_on": "{entity_name} be van kapcsolva"
         },
         "trigger_type": {
+            "toggled": "{entity_name} \u00e1tkapcsolt",
             "turned_off": "{entity_name} ki lett kapcsolva",
             "turned_on": "{entity_name} be lett kapcsolva"
         }

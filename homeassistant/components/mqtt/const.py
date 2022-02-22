@@ -12,6 +12,7 @@ ATTR_TOPIC = "topic"
 CONF_AVAILABILITY = "availability"
 CONF_BROKER = "broker"
 CONF_BIRTH_MESSAGE = "birth_message"
+CONF_COMMAND_TEMPLATE = "command_template"
 CONF_COMMAND_TOPIC = "command_topic"
 CONF_ENCODING = "encoding"
 CONF_QOS = ATTR_QOS
@@ -49,5 +50,8 @@ DOMAIN = "mqtt"
 
 MQTT_CONNECTED = "mqtt_connected"
 MQTT_DISCONNECTED = "mqtt_disconnected"
+
+PAYLOAD_EMPTY_JSON = "{}"
+PAYLOAD_NONE = "None"
 
 PROTOCOL_311 = "3.1.1"

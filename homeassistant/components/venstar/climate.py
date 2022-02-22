@@ -1,4 +1,6 @@
 """Support for Venstar WiFi Thermostats."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
@@ -41,6 +43,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import VenstarDataUpdateCoordinator, VenstarEntity
 from .const import (
@@ -87,7 +90,12 @@ async def async_setup_entry(
     )
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Venstar thermostat platform.
 
     Venstar uses config flow for configuration now. If an entry exists in

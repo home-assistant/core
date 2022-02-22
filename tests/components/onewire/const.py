@@ -92,7 +92,7 @@ MOCK_OWPROXY_DEVICES = {
         Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
-                ATTR_ENTITY_ID: "sensor.my_ds18b20_temperature",
+                ATTR_ENTITY_ID: "sensor.10_111111111111_temperature",
                 ATTR_INJECT_READS: b"    25.123",
                 ATTR_STATE: "25.1",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
@@ -618,6 +618,59 @@ MOCK_OWPROXY_DEVICES = {
             },
         ],
     },
+    "30.111111111111": {
+        ATTR_INJECT_READS: [
+            b"DS2760",  # read device type
+        ],
+        ATTR_DEVICE_INFO: {
+            ATTR_IDENTIFIERS: {(DOMAIN, "30.111111111111")},
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
+            ATTR_MODEL: "DS2760",
+            ATTR_NAME: "30.111111111111",
+        },
+        Platform.SENSOR: [
+            {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+                ATTR_ENTITY_ID: "sensor.30_111111111111_temperature",
+                ATTR_INJECT_READS: b"    26.984",
+                ATTR_STATE: "27.0",
+                ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                ATTR_UNIQUE_ID: "/30.111111111111/temperature",
+                ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            },
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+                ATTR_DEVICE_FILE: "/30.111111111111/typeK/temperature",
+                ATTR_ENTITY_ID: "sensor.30_111111111111_thermocouple_temperature",
+                ATTR_INJECT_READS: b"    173.7563",
+                ATTR_STATE: "173.8",
+                ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                ATTR_UNIQUE_ID: "/30.111111111111/typeX/temperature",
+                ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            },
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
+                ATTR_ENTITY_ID: "sensor.30_111111111111_voltage",
+                ATTR_INJECT_READS: b"     2.97",
+                ATTR_STATE: "3.0",
+                ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                ATTR_UNIQUE_ID: "/30.111111111111/volt",
+                ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
+            },
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
+                ATTR_ENTITY_ID: "sensor.30_111111111111_vis",
+                ATTR_INJECT_READS: b"    0.12",
+                ATTR_STATE: "0.1",
+                ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                ATTR_UNIQUE_ID: "/30.111111111111/vis",
+                ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
+            },
+        ],
+    },
     "3A.111111111111": {
         ATTR_INJECT_READS: [
             b"DS2413",  # read device type
@@ -1045,7 +1098,7 @@ MOCK_SYSBUS_DEVICES = {
         Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
-                ATTR_ENTITY_ID: "sensor.my_ds18b20_temperature",
+                ATTR_ENTITY_ID: "sensor.10_111111111111_temperature",
                 ATTR_INJECT_READS: 25.123,
                 ATTR_STATE: "25.1",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,

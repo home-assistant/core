@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_FOR,
     CONF_TYPE,
 )
-from homeassistant.core import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import get_device_class, get_unit_of_measurement
 from homeassistant.helpers.entity_registry import async_entries_for_device

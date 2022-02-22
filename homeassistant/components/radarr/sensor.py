@@ -1,8 +1,9 @@
 """Support for Radarr."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
+from aiopyarr.models.radarr import RadarrCalendar, RadarrMovie
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -10,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -27,7 +28,10 @@ from homeassistant.const import (
     DATA_YOTTABYTES,
     DATA_ZETTABYTES,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import RadarrEntity
 from .const import (
@@ -42,16 +46,7 @@ from .const import (
     DEFAULT_URLBASE,
     DOMAIN,
 )
-
-if TYPE_CHECKING:
-    from aiopyarr.models.radarr import RadarrCalendar, RadarrMovie
-
-    from homeassistant.config_entries import ConfigEntry
-    from homeassistant.core import HomeAssistant
-    from homeassistant.helpers.entity_platform import AddEntitiesCallback
-    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
-
-    from .coordinator import RadarrDataUpdateCoordinator
+from .coordinator import RadarrDataUpdateCoordinator
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -100,7 +95,7 @@ BYTE_SIZES = [
     DATA_ZETTABYTES,
     DATA_YOTTABYTES,
 ]
-# Deprecated in Home Assistant 2022.2
+# Deprecated in Home Assistant 2022.4
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,

@@ -19,7 +19,9 @@ from homeassistant.const import (
     CONF_URL,
 )
 import homeassistant.core as ha
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 ATTR_ADDRESS = "address"
@@ -232,7 +234,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the SpaceAPI with the HTTP interface."""
     hass.data[DATA_SPACEAPI] = config[DOMAIN]
     hass.http.register_view(APISpaceApiView)

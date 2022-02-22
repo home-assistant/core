@@ -16,8 +16,12 @@ import voluptuous as vol
 import yarl
 
 from . import config as conf_util, config_entries, core, loader
-from .components import http
-from .const import REQUIRED_NEXT_PYTHON_HA_RELEASE, REQUIRED_NEXT_PYTHON_VER
+from .components import http, persistent_notification
+from .const import (
+    REQUIRED_NEXT_PYTHON_HA_RELEASE,
+    REQUIRED_NEXT_PYTHON_VER,
+    SIGNAL_BOOTSTRAP_INTEGRATONS,
+)
 from .exceptions import HomeAssistantError
 from .helpers import area_registry, device_registry, entity_registry
 from .helpers.dispatcher import async_dispatcher_send
@@ -46,7 +50,6 @@ DATA_LOGGING = "logging"
 
 LOG_SLOW_STARTUP_INTERVAL = 60
 SLOW_STARTUP_CHECK_INTERVAL = 1
-SIGNAL_BOOTSTRAP_INTEGRATONS = "bootstrap_integrations"
 
 STAGE_1_TIMEOUT = 120
 STAGE_2_TIMEOUT = 300
@@ -252,8 +255,8 @@ async def async_from_config_dict(
             f"{'.'.join(str(x) for x in REQUIRED_NEXT_PYTHON_VER[:2])}."
         )
         _LOGGER.warning(msg)
-        hass.components.persistent_notification.async_create(
-            msg, "Python version", "python_version"
+        persistent_notification.async_create(
+            hass, msg, "Python version", "python_version"
         )
 
     return hass

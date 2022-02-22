@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "\u518d\u8a8d\u8a3c\u306b\u6210\u529f\u3057\u307e\u3057\u305f"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+            "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API\u30ad\u30fc"
+                },
+                "description": "PVOutput\u3067\u518d\u8a8d\u8a3c\u3059\u308b\u306b\u306f\u3001{account_url} \u3067API\u30ad\u30fc\u3092\u53d6\u5f97\u3059\u308b\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059\u3002"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API\u30ad\u30fc",
+                    "system_id": "\u30b7\u30b9\u30c6\u30e0ID"
+                },
+                "description": "PVOutput\u3067\u8a8d\u8a3c\u3092\u884c\u3046\u306b\u306f\u3001{account_url} \u3067API\u30ad\u30fc\u3092\u53d6\u5f97\u3059\u308b\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059\u3002\n\n\u767b\u9332\u3055\u308c\u3066\u3044\u308b\u30b7\u30b9\u30c6\u30e0ID\u306f\u3001\u305d\u306e\u540c\u3058\u30da\u30fc\u30b8\u306b\u8a18\u8f09\u3055\u308c\u3066\u3044\u307e\u3059\u3002"
+            }
+        }
+    }
+}

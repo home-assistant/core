@@ -345,7 +345,7 @@ async def test_camera_reconnect_webhook(hass, config_entry):
     ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
-        "homeassistant.components.webhook.async_generate_url"
+        "homeassistant.components.netatmo.webhook_generate_url"
     ) as mock_webhook:
         mock_auth.return_value.async_post_request.side_effect = fake_post
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
@@ -364,7 +364,7 @@ async def test_camera_reconnect_webhook(hass, config_entry):
         await simulate_webhook(hass, webhook_id, response)
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 5
+        assert fake_post_hits == 8
 
         calls = fake_post_hits
 
@@ -437,7 +437,7 @@ async def test_setup_component_no_devices(hass, config_entry):
     ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
-        "homeassistant.components.webhook.async_generate_url"
+        "homeassistant.components.netatmo.webhook_generate_url"
     ):
         mock_auth.return_value.async_post_request.side_effect = fake_post_no_data
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
@@ -446,7 +446,7 @@ async def test_setup_component_no_devices(hass, config_entry):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 1
+        assert fake_post_hits == 4
 
 
 async def test_camera_image_raises_exception(hass, config_entry, requests_mock):
@@ -475,7 +475,7 @@ async def test_camera_image_raises_exception(hass, config_entry, requests_mock):
     ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
-        "homeassistant.components.webhook.async_generate_url"
+        "homeassistant.components.netatmo.webhook_generate_url"
     ):
         mock_auth.return_value.async_post_request.side_effect = fake_post
         mock_auth.return_value.async_get_image.side_effect = fake_post
@@ -491,4 +491,4 @@ async def test_camera_image_raises_exception(hass, config_entry, requests_mock):
         await camera.async_get_image(hass, camera_entity_indoor)
 
     assert excinfo.value.args == ("Unable to get image",)
-    assert fake_post_hits == 6
+    assert fake_post_hits == 9

@@ -1,4 +1,6 @@
 """Sensor for the Open Sky Network."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 import requests
@@ -16,7 +18,10 @@ from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_METERS,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import distance as util_distance, location as util_location
 
 CONF_ALTITUDE = "altitude"
@@ -67,7 +72,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Open Sky platform."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)

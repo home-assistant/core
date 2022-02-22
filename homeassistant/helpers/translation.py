@@ -17,8 +17,6 @@ from homeassistant.loader import (
 from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.json import load_json
 
-# mypy: disallow-any-generics
-
 _LOGGER = logging.getLogger(__name__)
 
 TRANSLATION_LOAD_LOCK = "translation_load_lock"

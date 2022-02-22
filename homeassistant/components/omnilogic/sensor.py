@@ -1,5 +1,6 @@
 """Definition and setup of the Omnilogic Sensors for Home Assistant."""
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     ELECTRIC_POTENTIAL_MILLIVOLT,
@@ -9,12 +10,16 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     VOLUME_LITERS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import OmniLogicEntity, OmniLogicUpdateCoordinator, check_guard
 from .const import COORDINATOR, DEFAULT_PH_OFFSET, DOMAIN, PUMP_TYPES
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the sensor platform."""
 
     coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]

@@ -6,7 +6,7 @@ from urllib.error import HTTPError, URLError
 from panasonic_viera import EncryptionRequired, Keys, RemoteControl, SOAPError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -15,8 +15,10 @@ from homeassistant.const import (
     STATE_ON,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_DEVICE_INFO,
@@ -54,7 +56,7 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Panasonic Viera from configuration.yaml."""
     if DOMAIN not in config:
         return True
@@ -69,7 +71,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Panasonic Viera from a config entry."""
     panasonic_viera_data = hass.data.setdefault(DOMAIN, {})
 
@@ -112,7 +114,7 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS

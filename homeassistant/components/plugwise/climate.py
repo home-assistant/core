@@ -1,5 +1,4 @@
 """Plugwise Climate component for Home Assistant."""
-
 import logging
 
 from plugwise.exceptions import PlugwiseException
@@ -15,8 +14,10 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     COORDINATOR,
@@ -36,7 +37,11 @@ SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Smile Thermostats from a config entry."""
     api = hass.data[DOMAIN][config_entry.entry_id]["api"]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]

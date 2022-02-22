@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.rfxtrx import DOMAIN
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import State
 
 from tests.common import MockConfigEntry, mock_restore_cache
@@ -28,7 +29,7 @@ async def test_one_switch(hass, rfxtrx):
 
     state = hass.states.get("switch.ac_213c7f2_16")
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "AC 213c7f2:16"
 
     await hass.services.async_call(
@@ -90,17 +91,17 @@ async def test_several_switches(hass, rfxtrx):
 
     state = hass.states.get("switch.ac_213c7f2_48")
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "AC 213c7f2:48"
 
     state = hass.states.get("switch.ac_118cdea_2")
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "AC 118cdea:2"
 
     state = hass.states.get("switch.ac_1118cdea_2")
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "AC 1118cdea:2"
 
 
@@ -142,22 +143,22 @@ async def test_switch_events(hass, rfxtrx):
 
     state = hass.states.get("switch.ac_213c7f2_16")
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "AC 213c7f2:16"
 
     state = hass.states.get("switch.ac_213c7f2_5")
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "AC 213c7f2:5"
 
     # "16: On"
     await rfxtrx.signal("0b1100100213c7f210010f70")
-    assert hass.states.get("switch.ac_213c7f2_5").state == "off"
+    assert hass.states.get("switch.ac_213c7f2_5").state == STATE_UNKNOWN
     assert hass.states.get("switch.ac_213c7f2_16").state == "on"
 
     # "16: Off"
     await rfxtrx.signal("0b1100100213c7f210000f70")
-    assert hass.states.get("switch.ac_213c7f2_5").state == "off"
+    assert hass.states.get("switch.ac_213c7f2_5").state == STATE_UNKNOWN
     assert hass.states.get("switch.ac_213c7f2_16").state == "off"
 
     # "5: On"

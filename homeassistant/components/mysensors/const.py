@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Final, Literal, Tuple, TypedDict
+from typing import Final, Literal, TypedDict
 
 from homeassistant.const import Platform
 
@@ -65,7 +65,7 @@ GatewayId = str
 #
 # Gateway may be fetched by giving the gateway id to get_mysensors_gateway()
 
-DevId = Tuple[GatewayId, int, int, int]
+DevId = tuple[GatewayId, int, int, int]
 # describes the backend of a hass entity. Contents are: GatewayId, node_id, child_id, v_type as int
 #
 # The string version of v_type can be looked up in the enum gateway.const.SetReq of the appropriate BaseAsyncGateway
@@ -163,7 +163,7 @@ FLAT_PLATFORM_TYPES: dict[tuple[str, SensorType], set[ValueType]] = {
     for s_type_name, v_type_name in platform_types.items()
 }
 
-TYPE_TO_PLATFORMS: dict[SensorType, list[str]] = defaultdict(list)
+TYPE_TO_PLATFORMS: dict[SensorType, list[Platform]] = defaultdict(list)
 
 for platform, platform_types in PLATFORM_TYPES.items():
     for s_type_name in platform_types:

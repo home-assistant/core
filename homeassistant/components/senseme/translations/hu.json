@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_host": "\u00c9rv\u00e9nytelen hosztn\u00e9v vagy IP-c\u00edm"
+        },
+        "flow_title": "{name} - {model} ({host})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {name} - {model} ({host})?"
+            },
+            "manual": {
+                "data": {
+                    "host": "C\u00edm"
+                },
+                "description": "Adjon meg egy IP-c\u00edmet."
+            },
+            "user": {
+                "data": {
+                    "device": "Eszk\u00f6z"
+                },
+                "description": "V\u00e1lasszon ki egy eszk\u00f6zt, vagy v\u00e1lassza az \"IP-c\u00edm\" lehet\u0151s\u00e9get az IP-c\u00edm k\u00e9zi megad\u00e1s\u00e1hoz."
+            }
+        }
+    }
+}

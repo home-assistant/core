@@ -1,4 +1,6 @@
 """Support for interfacing to iTunes API."""
+from __future__ import annotations
+
 import requests
 import voluptuous as vol
 
@@ -29,7 +31,10 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 DEFAULT_NAME = "iTunes"
 DEFAULT_PORT = 8181
@@ -186,7 +191,12 @@ class Itunes:
         return self._request("PUT", path, {"level": level})
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the iTunes platform."""
     add_entities(
         [

@@ -7,7 +7,6 @@ from awesomeversion import AwesomeVersion
 
 from homeassistant.components import mysensors
 from homeassistant.components.sensor import (
-    DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -32,6 +31,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     VOLUME_CUBIC_METERS,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -197,7 +197,7 @@ async def async_setup_entry(
         """Discover and add a MySensors sensor."""
         mysensors.setup_mysensors_platform(
             hass,
-            DOMAIN,
+            Platform.SENSOR,
             discovery_info,
             MySensorsSensor,
             async_add_entities=async_add_entities,
@@ -208,7 +208,7 @@ async def async_setup_entry(
         config_entry.entry_id,
         async_dispatcher_connect(
             hass,
-            MYSENSORS_DISCOVERY.format(config_entry.entry_id, DOMAIN),
+            MYSENSORS_DISCOVERY.format(config_entry.entry_id, Platform.SENSOR),
             async_discover,
         ),
     )

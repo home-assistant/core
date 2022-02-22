@@ -7,9 +7,16 @@ import time
 import voluptuous as vol
 from waterfurnace.waterfurnace import WaterFurnace, WFCredentialError, WFException
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.components import persistent_notification
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,13 +42,13 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, base_config):
+def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     """Set up waterfurnace platform."""
 
-    config = base_config.get(DOMAIN)
+    config = base_config[DOMAIN]
 
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
 
     wfconn = WaterFurnace(username, password)
     # NOTE(sdague): login will throw an exception if this doesn't
@@ -55,7 +62,7 @@ def setup(hass, base_config):
     hass.data[DOMAIN] = WaterFurnaceData(hass, wfconn)
     hass.data[DOMAIN].start()
 
-    discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
+    discovery.load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
     return True
 
 
@@ -86,7 +93,8 @@ class WaterFurnaceData(threading.Thread):
         self._fails += 1
         if self._fails > MAX_FAILS:
             _LOGGER.error("Failed to refresh login credentials. Thread stopped")
-            self.hass.components.persistent_notification.create(
+            persistent_notification.create(
+                self.hass,
                 "Error:<br/>Connection to waterfurnace website failed "
                 "the maximum number of times. Thread has stopped",
                 title=NOTIFICATION_TITLE,

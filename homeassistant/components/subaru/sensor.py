@@ -6,6 +6,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     LENGTH_KILOMETERS,
@@ -17,6 +18,8 @@ from homeassistant.const import (
     VOLUME_GALLONS,
     VOLUME_LITERS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.distance import convert as dist_convert
 from homeassistant.util.unit_system import (
     IMPERIAL_SYSTEM,
@@ -137,7 +140,11 @@ EV_SENSORS = [
 ]
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Subaru sensors by config_entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id][ENTRY_COORDINATOR]
     vehicle_info = hass.data[DOMAIN][config_entry.entry_id][ENTRY_VEHICLES]

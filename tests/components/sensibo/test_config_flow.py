@@ -9,7 +9,7 @@ from pysensibo import SensiboError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -47,7 +47,6 @@ async def test_form(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_NAME: "Sensibo@Home",
                 CONF_API_KEY: "1234567890",
             },
         )
@@ -55,7 +54,6 @@ async def test_form(hass: HomeAssistant) -> None:
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result2["data"] == {
-        "name": "Sensibo@Home",
         "api_key": "1234567890",
     }
 
@@ -82,9 +80,8 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "Sensibo@Home"
+    assert result2["title"] == "Sensibo"
     assert result2["data"] == {
-        "name": "Sensibo@Home",
         "api_key": "1234567890",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -96,7 +93,6 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
     MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_NAME: "Sensibo@Home",
             CONF_API_KEY: "1234567890",
         },
         unique_id="1234567890",
@@ -147,7 +143,6 @@ async def test_flow_fails(hass: HomeAssistant, error_message) -> None:
         result4 = await hass.config_entries.flow.async_configure(
             result4["flow_id"],
             user_input={
-                CONF_NAME: "Sensibo@Home",
                 CONF_API_KEY: "1234567890",
             },
         )

@@ -5,16 +5,23 @@ from yalexs.activity import ActivityType
 from yalexs.util import update_doorbell_image_from_activity
 
 from homeassistant.components.camera import Camera
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import AugustData
 from .const import DATA_AUGUST, DEFAULT_NAME, DEFAULT_TIMEOUT, DOMAIN
 from .entity import AugustEntityMixin
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up August cameras."""
-    data = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
+    data: AugustData = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
     session = aiohttp_client.async_get_clientsession(hass)
     async_add_entities(
         [

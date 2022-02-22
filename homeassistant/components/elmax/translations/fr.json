@@ -5,9 +5,11 @@
         },
         "error": {
             "bad_auth": "Authentification invalide",
+            "invalid_auth": "Authentification invalide",
             "invalid_pin": "Le code PIN fourni n\u2019est pas valide",
             "network_error": "Une erreur r\u00e9seau s'est produite",
             "no_panel_online": "Aucun panneau de contr\u00f4le Elmax en ligne n'a \u00e9t\u00e9 trouv\u00e9.",
+            "unknown": "Erreur inconnue",
             "unknown_error": "une erreur inattendue est apparue"
         },
         "step": {

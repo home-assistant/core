@@ -25,10 +25,8 @@ from .helpers import convert_isy_value_to_hass, migrate_old_unique_ids
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> bool:
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the ISY994 sensor platform."""
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
     devices = []

@@ -3,13 +3,15 @@ from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.lock import STATE_JAMMED, LockEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     STATE_LOCKED,
     STATE_UNKNOWN,
     STATE_UNLOCKED,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
@@ -25,7 +27,11 @@ TARGET_STATE_MAP = {STATE_UNLOCKED: 0, STATE_LOCKED: 1}
 REVERSED_TARGET_STATE_MAP = {v: k for k, v in TARGET_STATE_MAP.items()}
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Homekit lock."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]

@@ -60,13 +60,13 @@ class KNXTestKit:
 
         def fish_xknx(*args, **kwargs):
             """Get the XKNX object from the constructor call."""
-            self.xknx = args[0]
+            self.xknx = kwargs["xknx"]
             # disable rate limiter for tests (before StateUpdater starts)
             self.xknx.rate_limit = 0
             return DEFAULT
 
         with patch(
-            "xknx.xknx.KNXIPInterface",
+            "xknx.xknx.knx_interface_factory",
             return_value=knx_ip_interface_mock(),
             side_effect=fish_xknx,
         ):
@@ -109,7 +109,7 @@ class KNXTestKit:
     # APCI Service tests
     ####################
 
-    async def _assert_telegram(
+    async def assert_telegram(
         self,
         group_address: str,
         payload: int | tuple[int, ...] | None,
@@ -141,19 +141,19 @@ class KNXTestKit:
 
     async def assert_read(self, group_address: str) -> None:
         """Assert outgoing GroupValueRead telegram. One by one in timely order."""
-        await self._assert_telegram(group_address, None, GroupValueRead)
+        await self.assert_telegram(group_address, None, GroupValueRead)
 
     async def assert_response(
         self, group_address: str, payload: int | tuple[int, ...]
     ) -> None:
         """Assert outgoing GroupValueResponse telegram. One by one in timely order."""
-        await self._assert_telegram(group_address, payload, GroupValueResponse)
+        await self.assert_telegram(group_address, payload, GroupValueResponse)
 
     async def assert_write(
         self, group_address: str, payload: int | tuple[int, ...]
     ) -> None:
         """Assert outgoing GroupValueWrite telegram. One by one in timely order."""
-        await self._assert_telegram(group_address, payload, GroupValueWrite)
+        await self.assert_telegram(group_address, payload, GroupValueWrite)
 
     ####################
     # Incoming telegrams

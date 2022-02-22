@@ -166,7 +166,10 @@ MODELS_LIGHT_BULB = [
     "philips.light.candle2",
     "philips.light.downlight",
 ]
-MODELS_LIGHT_MONO = ["philips.light.mono1"]
+MODELS_LIGHT_MONO = [
+    "philips.light.mono1",
+    "philips.light.hbulb",
+]
 
 # Model lists
 MODELS_GATEWAY = ["lumi.gateway", "lumi.acpartner"]

@@ -800,7 +800,7 @@ async def test_scene_scene(hass):
     assert helpers.get_google_type(scene.DOMAIN, None) is not None
     assert trait.SceneTrait.supported(scene.DOMAIN, 0, None, None)
 
-    trt = trait.SceneTrait(hass, State("scene.bla", scene.STATE), BASIC_CONFIG)
+    trt = trait.SceneTrait(hass, State("scene.bla", STATE_UNKNOWN), BASIC_CONFIG)
     assert trt.sync_attributes() == {}
     assert trt.query_attributes() == {}
     assert trt.can_execute(trait.COMMAND_ACTIVATE_SCENE, {})
@@ -3046,8 +3046,8 @@ async def test_sensorstate(hass):
     """Test SensorState trait support for sensor domain."""
     sensor_types = {
         sensor.SensorDeviceClass.AQI: ("AirQuality", "AQI"),
-        sensor.SensorDeviceClass.CO: ("CarbonDioxideLevel", "PARTS_PER_MILLION"),
-        sensor.SensorDeviceClass.CO2: ("CarbonMonoxideLevel", "PARTS_PER_MILLION"),
+        sensor.SensorDeviceClass.CO: ("CarbonMonoxideLevel", "PARTS_PER_MILLION"),
+        sensor.SensorDeviceClass.CO2: ("CarbonDioxideLevel", "PARTS_PER_MILLION"),
         sensor.SensorDeviceClass.PM25: ("PM2.5", "MICROGRAMS_PER_CUBIC_METER"),
         sensor.SensorDeviceClass.PM10: ("PM10", "MICROGRAMS_PER_CUBIC_METER"),
         sensor.SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: (

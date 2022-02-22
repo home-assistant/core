@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "addr_in_use": "Server Port wird bereits genutzt",
+            "already_configured": "Server-Port ist bereits konfiguriert.",
             "start_server_failed": "Server starten fehlgeschlagen"
         },
         "step": {

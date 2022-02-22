@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API Key"
+                },
+                "description": "To re-authenticate with PVOutput you'll need to get the API key at {account_url}."
+            },
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "system_id": "System ID"
+                },
+                "description": "To authenticate with PVOutput you'll need to get the API key at {account_url}.\n\nThe system IDs of registered systems are listed on that same page."
+            }
+        }
+    }
+}

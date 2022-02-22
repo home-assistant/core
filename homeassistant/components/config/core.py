@@ -7,6 +7,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.config import async_check_ha_config_file
 from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import location
 
 
@@ -67,7 +68,7 @@ async def websocket_update_config(hass, connection, msg):
 @websocket_api.websocket_command({"type": "config/core/detect"})
 async def websocket_detect_config(hass, connection, msg):
     """Detect core config."""
-    session = hass.helpers.aiohttp_client.async_get_clientsession()
+    session = async_get_clientsession(hass)
     location_info = await location.async_detect_location_info(session)
 
     info = {}

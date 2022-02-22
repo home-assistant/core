@@ -1,11 +1,12 @@
 """Plugwise Switch component for HomeAssistant."""
-
 import logging
 
 from plugwise.exceptions import PlugwiseException
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import COORDINATOR, DOMAIN, SWITCH_ICON
 from .gateway import SmileGateway
@@ -13,7 +14,11 @@ from .gateway import SmileGateway
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Smile switches from a config entry."""
     # PLACEHOLDER USB entry setup
     return await async_setup_entry_gateway(hass, config_entry, async_add_entities)

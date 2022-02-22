@@ -1,4 +1,6 @@
 """Support for Template alarm control panels."""
+from __future__ import annotations
+
 from enum import Enum
 import logging
 
@@ -30,14 +32,16 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
-from .template_entity import TemplateEntity
+from .template_entity import TemplateEntity, rewrite_common_legacy_to_modern_conf
 
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [
@@ -98,6 +102,7 @@ async def _async_create_entities(hass, config):
     alarm_control_panels = []
 
     for object_id, entity_config in config[CONF_ALARM_CONTROL_PANELS].items():
+        entity_config = rewrite_common_legacy_to_modern_conf(entity_config)
         unique_id = entity_config.get(CONF_UNIQUE_ID)
 
         alarm_control_panels.append(
@@ -112,7 +117,12 @@ async def _async_create_entities(hass, config):
     return alarm_control_panels
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Template Alarm Control Panels."""
     async_add_entities(await _async_create_entities(hass, config))
 
@@ -128,11 +138,13 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
         unique_id,
     ):
         """Initialize the panel."""
-        super().__init__(config=config)
+        super().__init__(
+            hass, config=config, fallback_name=object_id, unique_id=unique_id
+        )
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id, hass=hass
         )
-        self._name = name = config.get(CONF_NAME, object_id)
+        name = self._attr_name
         self._template = config.get(CONF_VALUE_TEMPLATE)
         self._disarm_script = None
         self._code_arm_required = config[CONF_CODE_ARM_REQUIRED]
@@ -150,17 +162,6 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
             self._arm_night_script = Script(hass, arm_night_action, name, DOMAIN)
 
         self._state = None
-        self._unique_id = unique_id
-
-    @property
-    def name(self):
-        """Return the display name of this alarm control panel."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of this alarm control panel."""
-        return self._unique_id
 
     @property
     def state(self):

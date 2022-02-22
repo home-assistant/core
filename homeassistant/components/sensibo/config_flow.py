@@ -10,8 +10,9 @@ from pysensibo import SensiboClient, SensiboError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -22,7 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -53,25 +53,22 @@ class SensiboConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_import(self, config: dict):
+    async def async_step_import(self, config: dict) -> FlowResult:
         """Import a configuration from config.yaml."""
 
         self.context.update(
             {"title_placeholders": {"Sensibo": f"YAML import {DOMAIN}"}}
         )
-        if CONF_NAME not in config:
-            config[CONF_NAME] = DEFAULT_NAME
         return await self.async_step_user(user_input=config)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the initial step."""
 
         errors: dict[str, str] = {}
 
-        if user_input is not None:
+        if user_input:
 
             api_key = user_input[CONF_API_KEY]
-            name = user_input[CONF_NAME]
 
             await self.async_set_unique_id(api_key)
             self._abort_if_unique_id_configured()
@@ -79,8 +76,8 @@ class SensiboConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             validate = await async_validate_api(self.hass, api_key)
             if validate:
                 return self.async_create_entry(
-                    title=name,
-                    data={CONF_NAME: name, CONF_API_KEY: api_key},
+                    title=DEFAULT_NAME,
+                    data={CONF_API_KEY: api_key},
                 )
             errors["base"] = "cannot_connect"
 

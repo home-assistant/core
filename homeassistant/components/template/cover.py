@@ -1,4 +1,6 @@
 """Support for covers which integrate with other components."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -32,11 +34,13 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 from .template_entity import (
@@ -123,7 +127,12 @@ async def _async_create_entities(hass, config):
     return covers
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Template cover."""
     async_add_entities(await _async_create_entities(hass, config))
 
@@ -139,11 +148,13 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         unique_id,
     ):
         """Initialize the Template cover."""
-        super().__init__(config=config)
+        super().__init__(
+            hass, config=config, fallback_name=object_id, unique_id=unique_id
+        )
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id, hass=hass
         )
-        self._name = friendly_name = config.get(CONF_FRIENDLY_NAME, object_id)
+        friendly_name = self._attr_name
         self._template = config.get(CONF_VALUE_TEMPLATE)
         self._position_template = config.get(CONF_POSITION_TEMPLATE)
         self._tilt_template = config.get(CONF_TILT_TEMPLATE)
@@ -173,7 +184,6 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         self._is_opening = False
         self._is_closing = False
         self._tilt_value = None
-        self._unique_id = unique_id
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -261,16 +271,6 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             )
         else:
             self._tilt_value = state
-
-    @property
-    def name(self):
-        """Return the name of the cover."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of this cover."""
-        return self._unique_id
 
     @property
     def is_closed(self):

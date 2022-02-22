@@ -14,6 +14,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_DEVICE,
@@ -24,7 +25,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -81,7 +82,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the RFXtrx component."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -99,7 +100,7 @@ async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass, entry: config_entries.ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload RFXtrx component."""
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
@@ -234,7 +235,7 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
 
     rfx_object.event_callback = lambda event: hass.add_job(async_handle_receive, event)
 
-    def send(call):
+    def send(call: ServiceCall) -> None:
         event = call.data[ATTR_EVENT]
         rfx_object.transport.send(event)
 

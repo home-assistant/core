@@ -1,10 +1,20 @@
 """Support for Eufy switches."""
+from __future__ import annotations
+
 import lakeside
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up Eufy switches."""
     if discovery_info is None:
         return

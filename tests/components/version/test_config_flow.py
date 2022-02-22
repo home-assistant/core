@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from pyhaversion.consts import HaVersionChannel, HaVersionSource
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.version.const import (
     CONF_BETA,
     CONF_BOARD,
@@ -34,9 +34,10 @@ from tests.components.version.common import (
 )
 
 
-async def test_reload(hass: HomeAssistant):
-    """Test the Version sensor with different sources."""
+async def test_reload_config_entry(hass: HomeAssistant):
+    """Test reloading the config entry."""
     config_entry = await setup_version_integration(hass)
+    assert config_entry.state == config_entries.ConfigEntryState.LOADED
 
     with patch(
         "pyhaversion.HaVersion.get_version",
@@ -48,12 +49,10 @@ async def test_reload(hass: HomeAssistant):
 
     entry = hass.config_entries.async_get_entry(config_entry.entry_id)
     assert entry.state == config_entries.ConfigEntryState.LOADED
-    assert hass.states.get("sensor.local_installation").state == MOCK_VERSION
 
 
 async def test_basic_form(hass: HomeAssistant) -> None:
-    """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+    """Test that we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER, "show_advanced_options": False},
@@ -82,7 +81,6 @@ async def test_basic_form(hass: HomeAssistant) -> None:
 
 async def test_advanced_form_pypi(hass: HomeAssistant) -> None:
     """Show advanced form when pypi is selected."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
@@ -124,7 +122,6 @@ async def test_advanced_form_pypi(hass: HomeAssistant) -> None:
 
 async def test_advanced_form_container(hass: HomeAssistant) -> None:
     """Show advanced form when container source is selected."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
@@ -166,7 +163,6 @@ async def test_advanced_form_container(hass: HomeAssistant) -> None:
 
 async def test_advanced_form_supervisor(hass: HomeAssistant) -> None:
     """Show advanced form when docker source is selected."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},

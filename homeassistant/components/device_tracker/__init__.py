@@ -1,4 +1,6 @@
 """Provide functionality to keep track of devices."""
+from __future__ import annotations
+
 from homeassistant.const import ATTR_GPS_ACCURACY, STATE_HOME  # noqa: F401
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType

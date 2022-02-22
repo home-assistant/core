@@ -5,6 +5,9 @@ DATA_SDM = "sdm"
 DATA_SUBSCRIBER = "subscriber"
 DATA_NEST_CONFIG = "nest_config"
 
+WEB_AUTH_DOMAIN = DOMAIN
+INSTALLED_AUTH_DOMAIN = f"{DOMAIN}.installed"
+
 CONF_PROJECT_ID = "project_id"
 CONF_SUBSCRIBER_ID = "subscriber_id"
 CONF_CLOUD_PROJECT_ID = "cloud_project_id"
