@@ -51,16 +51,27 @@ class AisEasySensor(Entity):
         self._user = easy_user
         self._pass = easy_pass
         self._state = None
-        self._status_on_start = True
         self._number = easy_number
-        self._entity_id = (
+        self._unique_id = (
             "ais_easy_" + self._host.replace(".", "") + "_" + str(self._number)
         )
 
     @property
-    def entity_id(self):
-        """Funkcja zwracająca identyfikator sensora."""
-        return f"sensor.{self._entity_id}"
+    def unique_id(self) -> str:
+        """Return a unique, friendly identifier for this entity."""
+        return f"sensor.{self._unique_id}"
+
+    @property
+    def device_info(self):
+        """Device info."""
+        return {
+            "identifiers": {("ais_easy", self._host)},
+            "name": f"AIS Easy E4",
+            "manufacturer": "Eton",
+            "model": "Easy E4",
+            "sw_version": "7.32",
+            "via_device": None,
+        }
 
     @property
     def name(self):
@@ -72,15 +83,6 @@ class AisEasySensor(Entity):
         """Funkcja zwracająca status sensora.
         Wartość sensora powinna zawsze zwracać tylko informacje z pamięci: self._state
         """
-        if self._status_on_start:
-            self._status_on_start = False
-            self.hass.async_add_job(
-                self.hass.services.async_call(
-                    "homeassistant",
-                    "update_entity",
-                    {"entity_id": "sensor." + self._entity_id},
-                )
-            )
         return self._state
 
     @property
@@ -90,7 +92,7 @@ class AisEasySensor(Entity):
 
     @property
     def icon(self):
-        return "mdi:gold"
+        return "mdi:eye"
 
     async def async_ask_easy(self):
         web_session = aiohttp_client.async_get_clientsession(self.hass)

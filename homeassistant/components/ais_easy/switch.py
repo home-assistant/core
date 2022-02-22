@@ -52,6 +52,9 @@ class AisEasySwitch(Entity):
         self._pass = easy_pass
         self._number = easy_number
         self._state = "off"
+        self._unique_id = (
+            "switch.ais_easy_" + self._host.replace(".", "") + "_" + str(self._number)
+        )
         encoded_credentials = b64encode(
             bytes(f"{self._user}:{self._pass}", encoding="ascii")
         ).decode("ascii")
@@ -61,11 +64,21 @@ class AisEasySwitch(Entity):
         }
 
     @property
-    def entity_id(self):
-        """Funkcja zwracająca identyfikator sensora."""
-        return (
-            "switch.ais_easy_" + self._host.replace(".", "") + "_" + str(self._number)
-        )
+    def unique_id(self) -> str:
+        """Return a unique, friendly identifier for this entity."""
+        return f"{self._unique_id}"
+
+    @property
+    def device_info(self):
+        """Device info."""
+        return {
+            "identifiers": {("ais_easy", self._host)},
+            "name": f"AIS Easy E4",
+            "manufacturer": "Eton",
+            "model": "Easy E4",
+            "sw_version": "7.32",
+            "via_device": None,
+        }
 
     @property
     def name(self):
