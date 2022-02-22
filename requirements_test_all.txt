@@ -1265,7 +1265,7 @@ pyudev==0.22.0
 pyunifiprotect==3.2.0
 
 # homeassistant.components.uptimerobot
-pyuptimerobot==21.11.0
+pyuptimerobot==22.2.0
 
 # homeassistant.components.vera
 pyvera==0.3.13
