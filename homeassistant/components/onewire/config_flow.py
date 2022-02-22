@@ -11,7 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntry, DeviceRegistry
+from homeassistant.helpers.device_registry import DeviceRegistry
 
 from .const import (
     CONF_MOUNT_DIR,
@@ -20,7 +20,7 @@ from .const import (
     DEFAULT_OWSERVER_HOST,
     DEFAULT_OWSERVER_PORT,
     DEFAULT_SYSBUS_MOUNT_DIR,
-    DEVICE_SUPPORT_PRECISION_MAPPING,
+    DEVICE_SUPPORT_OPTIONS,
     DOMAIN,
     INPUT_ENTRY_CLEAR_OPTIONS,
     INPUT_ENTRY_DEVICE_SELECTION,
@@ -190,36 +190,32 @@ class OnewireOptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize OneWire Network options flow."""
-        self.config_entry = config_entry
+        self.entry_id = config_entry.entry_id
         self.options = dict(config_entry.options)
-        self.controller: OneWireHub
-        self.device_registry: DeviceRegistry | None = None
-        self.configurable_devices: list[str] = []
-        self.configurable_devices_precision: list[str] = []
-        self.devices_to_configure_total: list[str] = []
-        self.devices_to_configure_precision: list[str] = []
+        self.configurable_devices: dict[str, OWServerDeviceDescription] = {}
+        self.devices_to_configure: dict[str, OWServerDeviceDescription] = {}
         self.current_device: str = ""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the options."""
-        self.controller = self.hass.data[DOMAIN][self.config_entry.entry_id]
-        if self.controller.type == CONF_TYPE_SYSBUS:
+        controller: OneWireHub = self.hass.data[DOMAIN][self.entry_id]
+        if controller.type == CONF_TYPE_SYSBUS:
             return self.async_abort(
                 reason="SysBus setup does not have any config options."
             )
 
-        self.device_registry = dr.async_get(self.hass)
-        if self.controller.devices:
-            self.configurable_devices_precision = [
-                device.id
-                for device in self.controller.devices
-                if isinstance(device, OWServerDeviceDescription)
-                and device.family in DEVICE_SUPPORT_PRECISION_MAPPING
-            ]
-            # Join all lists of devicesin the future
-            self.configurable_devices = self.configurable_devices_precision.copy()
+        all_devices: list[OWServerDeviceDescription] = controller.devices  # type: ignore[assignment]
+        if not all_devices:
+            return self.async_abort(reason="No configurable devices found.")
+
+        device_registry = dr.async_get(self.hass)
+        self.configurable_devices = {
+            self._get_device_long_name(device_registry, device.id): device
+            for device in all_devices
+            if device.family in DEVICE_SUPPORT_OPTIONS
+        }
 
         return await self.async_step_device_selection(user_input=None)
 
@@ -227,27 +223,24 @@ class OnewireOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Select what devices to configure."""
-
+        errors = {}
         if user_input is not None:
             if user_input.get(INPUT_ENTRY_CLEAR_OPTIONS):
+                # Reset all options
                 self.options = {}
-            else:
-                device_selection_list = (
-                    user_input.get(INPUT_ENTRY_DEVICE_SELECTION) or []
-                )
-                self.devices_to_configure_total = [
-                    device_id
-                    for device_id in device_selection_list
-                    if isinstance(device_id, str)
-                ]
-                self.devices_to_configure_precision = [
-                    self._get_device_id_from_long_name(device_id)
-                    for device_id in self.devices_to_configure_total
-                    if self._get_device_id_from_long_name(device_id)
-                    in self.configurable_devices_precision
-                ]
-                return await self.async_step_precision_config(user_input=None)
-            return await self._update_options()
+                return await self._update_options()
+
+            selected_devices: list[str] = (
+                user_input.get(INPUT_ENTRY_DEVICE_SELECTION) or []
+            )
+            if selected_devices:
+                self.devices_to_configure = {
+                    device_name: self.configurable_devices[device_name]
+                    for device_name in selected_devices
+                }
+
+                return await self.async_step_configure_device(user_input=None)
+            errors["base"] = "device_not_selected"
 
         return self.async_show_form(
             step_id="device_selection",
@@ -262,104 +255,85 @@ class OnewireOptionsFlowHandler(OptionsFlow):
                         default=self._get_current_configured_sensors(),
                         description="Multiselect with list of devices to choose from",
                     ): cv.multi_select(
-                        {
-                            device: False
-                            for device in self._get_configurable_list_as_long_names()
-                        }
+                        {device: False for device in self.configurable_devices.keys()}
                     ),
                 }
             ),
+            errors=errors,
         )
 
-    async def async_step_precision_config(
+    async def async_step_configure_device(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Config precision option for device."""
-        if user_input is not None or len(self.devices_to_configure_precision) <= 0:
-            self._update_precision_config_option(self.current_device, user_input)
-            if len(self.devices_to_configure_precision) > 0:
-                return await self.async_step_precision_config(user_input=None)
-            self.current_device = ""
+        if user_input is not None:
+            self._update_device_options(user_input)
+            if self.devices_to_configure:
+                return await self.async_step_configure_device(user_input=None)
             return await self._update_options()
 
-        self.current_device = self.devices_to_configure_precision.pop()
-        return self.async_show_form(
-            step_id="precision_config",
-            data_schema=vol.Schema(
+        self.current_device, description = self.devices_to_configure.popitem()
+        data_schema: vol.Schema
+        if description.family == "28":
+            data_schema = vol.Schema(
                 {
                     vol.Required(
                         OPTION_ENTRY_SENSOR_PRECISION,
-                        default=self._get_current_precision_setting(
-                            self.current_device
+                        default=self._get_current_setting(
+                            description.id, OPTION_ENTRY_SENSOR_PRECISION, "Default"
                         ),
                     ): vol.In(list(PRECISION_MAPPING_FAMILY_28.keys())),
                 }
-            ),
-            description_placeholders={
-                "sens_id": self._get_device_long_name_from_id(self.current_device)
-            },
+            )
+
+        return self.async_show_form(
+            step_id="configure_device",
+            data_schema=data_schema,
+            description_placeholders={"sensor_id": self.current_device},
         )
 
     async def _update_options(self) -> FlowResult:
         """Update config entry options."""
         return self.async_create_entry(title="", data=self.options)
 
-    def _get_device_long_name_from_id(self, current_device: str) -> str:
-        device: DeviceEntry | None
-        assert self.device_registry
-        device = self.device_registry.async_get_device({(DOMAIN, current_device)})
+    @staticmethod
+    def _get_device_long_name(
+        device_registry: DeviceRegistry, current_device: str
+    ) -> str:
+        device = device_registry.async_get_device({(DOMAIN, current_device)})
         if device and device.name_by_user:
             return f"{device.name_by_user} ({current_device})"
         return current_device
 
-    @staticmethod
-    def _get_device_id_from_long_name(device_name: str) -> str:
-        if "(" in device_name:
-            return device_name.split("(")[1].replace(")", "")
-        return device_name
-
-    def _get_configurable_list_as_long_names(self) -> list[str]:
-        return [
-            self._get_device_long_name_from_id(device_id)
-            for device_id in self.configurable_devices
-        ]
-
-    def _get_current_configured_sensors(self) -> list[str] | None:
+    def _get_current_configured_sensors(self) -> list[str]:
         """Get current list of sensors that are configured."""
         configured_sensors = self.options.get(OPTION_ENTRY_DEVICE_OPTIONS)
-        if configured_sensors is None:
+        if not configured_sensors:
             return []
         return [
-            self._get_device_long_name_from_id(device_id)
-            for device_id in self.configurable_devices
-            if device_id in configured_sensors
+            device_name
+            for device_name, description in self.configurable_devices.items()
+            if description.id in configured_sensors
         ]
 
-    def _get_current_precision_setting(self, device: str) -> str:
-        """Get current value for precision setting."""
-        return_string = "Default"
-        try:
-            precision_setting = self.options[OPTION_ENTRY_DEVICE_OPTIONS][device][
+    def _get_current_setting(self, device_id: str, setting: str, default: Any) -> Any:
+        """Get current value for setting."""
+        if entry_device_options := self.options.get(OPTION_ENTRY_DEVICE_OPTIONS):
+            if device_options := entry_device_options(device_id):
+                return device_options.get(setting)
+        return default
+
+    def _update_device_options(self, user_input: dict[str, Any]) -> None:
+        """Update the global config with the new options for the current device."""
+        options: dict[str, dict[str, Any]] = self.options.setdefault(
+            OPTION_ENTRY_DEVICE_OPTIONS, {}
+        )
+
+        description = self.configurable_devices[self.current_device]
+        device_options: dict[str, Any] = options.setdefault(description.id, {})
+        if description.family == "28":
+            device_options[OPTION_ENTRY_SENSOR_PRECISION] = user_input[
                 OPTION_ENTRY_SENSOR_PRECISION
             ]
-            if isinstance(precision_setting, str):
-                return_string = precision_setting
-        except KeyError:
-            pass
-        return return_string
 
-    def _update_precision_config_option(
-        self, device: str, user_input: dict[str, Any] | None
-    ) -> None:
-        """Update the device config with the new precision for the actual device."""
-        if not device or not user_input:
-            return
-        if OPTION_ENTRY_DEVICE_OPTIONS not in self.options:
-            self.options[OPTION_ENTRY_DEVICE_OPTIONS] = {}
-        sensor_options_entry = self.options[OPTION_ENTRY_DEVICE_OPTIONS]
-        if device not in sensor_options_entry:
-            sensor_options_entry[device] = {}
-        sensor_options_entry[device][OPTION_ENTRY_SENSOR_PRECISION] = user_input[
-            OPTION_ENTRY_SENSOR_PRECISION
-        ]
-        self.options.update({OPTION_ENTRY_DEVICE_OPTIONS: sensor_options_entry})
+        self.options.update({OPTION_ENTRY_DEVICE_OPTIONS: options})

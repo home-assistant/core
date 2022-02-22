@@ -67,7 +67,6 @@ async def test_user_owserver_options_empty_selection(
     owproxy: MagicMock,
 ):
     """Test leaving the selection of devices empty."""
-    options = config_entry.options.copy()
     setup_owproxy_mock_devices(
         owproxy, Platform.SENSOR, [x for x in MOCK_OWPROXY_DEVICES if "28." in x]
     )
@@ -87,8 +86,9 @@ async def test_user_owserver_options_empty_selection(
         result["flow_id"],
         user_input={INPUT_ENTRY_DEVICE_SELECTION: []},
     )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] == options
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "device_selection"
+    assert result["errors"] == {"base": "device_not_selected"}
 
 
 async def test_user_owserver_options_set_single(
@@ -120,7 +120,7 @@ async def test_user_owserver_options_set_single(
         user_input={INPUT_ENTRY_DEVICE_SELECTION: ["28.111111111111"]},
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["description_placeholders"]["sens_id"] == "28.111111111111"
+    assert result["description_placeholders"]["sensor_id"] == "28.111111111111"
 
     # Verify that the setting for the device comes back as default when no input is given
     result = await hass.config_entries.options.async_configure(
@@ -174,7 +174,8 @@ async def test_user_owserver_options_set_multiple(
         )
     assert result["type"] == RESULT_TYPE_FORM
     assert (
-        result["description_placeholders"]["sens_id"] == "Given Name (28.222222222222)"
+        result["description_placeholders"]["sensor_id"]
+        == "Given Name (28.222222222222)"
     )
 
     # Verify that next sensor is coming up for configuration after the first
@@ -183,7 +184,10 @@ async def test_user_owserver_options_set_multiple(
         user_input={"precision": "Default"},
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["description_placeholders"]["sens_id"] == "28.111111111111"
+    assert (
+        result["description_placeholders"]["sensor_id"]
+        == "Given Name (28.111111111111)"
+    )
 
     # Verify that the setting for the device comes back as default when no input is given
     result = await hass.config_entries.options.async_configure(
@@ -191,6 +195,7 @@ async def test_user_owserver_options_set_multiple(
         user_input={"precision": "9 Bits"},
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    print(result["data"])
     assert result["data"]["device_options"]["28.222222222222"]["precision"] == "Default"
     assert result["data"]["device_options"]["28.111111111111"]["precision"] == "9 Bits"
 
@@ -204,19 +209,12 @@ async def test_user_owserver_options_no_devices(
     # Initialize onewire hub
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    options = config_entry.options.copy()
 
     # Verify that first config step comes back with an empty list of possible devices to choose from
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["data_schema"].schema["device_selection"].options == {}
-
-    # Verify that the seconds step returns a create entry with the same options as before
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={INPUT_ENTRY_DEVICE_SELECTION: []},
-    )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] == options
+    await hass.async_block_till_done()
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "No configurable devices found."
 
 
 async def test_user_sysbus_options(
