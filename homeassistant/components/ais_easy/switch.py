@@ -22,7 +22,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Konfiguracja za pomcą przepływu konfiguracji."""
     # PLC EASY
-    for x in range(config_entry.data["inputs"]):
+    for x in range(config_entry.data["switches"]):
         async_add_entities(
             [
                 AisEasySwitch(

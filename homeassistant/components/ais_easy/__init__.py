@@ -26,11 +26,10 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Usuń integrację - skasuj wpis konfiguracyjny."""
-    _LOGGER.info("async_unload_entry remove entities")
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, ["sensor", "switch"]
     )
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_unload(config_entry, "switch")
-    )
+    if unload_ok:
+        hass.data[DOMAIN].pop(config_entry.entry_id)
+
     return True

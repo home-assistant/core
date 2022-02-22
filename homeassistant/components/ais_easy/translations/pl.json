@@ -16,7 +16,7 @@
                 "title": "AIS EASY - input settings",
                 "description": "We add the interface to PLC Eaton Easy.\n\n ###### ![logo](https://ai-speaker.com/images/brands/ais_easy/logo.png?v2)\n\nTo communicate with PLC, you need to provide the PLC settings,  [Details in the documentation ](https://www.ai-speaker.com)\n\n Fill in the form below and click **SUBMIT** button.",
                 "data": {
-                    "inputs": "Inputs"
+                    "switches": "Switches", "sensors": "Sensors"
                 }
             }
         },

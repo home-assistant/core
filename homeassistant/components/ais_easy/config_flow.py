@@ -69,7 +69,7 @@ class AisNbpConfigFlow(config_entries.ConfigFlow, domain="ais_easy"):
                     # Info o ilości io
                     return self.async_show_form(
                         step_id="inputs",
-                        data_schema=vol.Schema({"inputs": int}),
+                        data_schema=vol.Schema({"switches": int, "sensors": int}),
                     )
 
             except Exception as e:
