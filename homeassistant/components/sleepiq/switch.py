@@ -15,8 +15,6 @@ from .const import DOMAIN
 from .coordinator import SleepIQData, SleepIQPauseUpdateCoordinator
 from .entity import SleepIQBedCoordinator
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
