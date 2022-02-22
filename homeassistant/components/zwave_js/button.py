@@ -11,7 +11,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import DATA_CLIENT, DOMAIN, LOGGER
 from .helpers import get_device_id, get_valueless_base_unique_id
 
 
@@ -61,7 +61,10 @@ class ZWaveNodePingButton(ButtonEntity):
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
         # pylint: disable=no-self-use
-        raise ValueError("There is no value to poll for this entity")
+        LOGGER.error(
+            "There is no value to refresh for this entity so the zwave_js.refresh_value "
+            "service won't work for it"
+        )
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
