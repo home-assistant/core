@@ -177,7 +177,7 @@ async def _async_create_bridge_with_updated_data(
         if info:
             mac = mac_from_device_info(info)
         else:
-            mac = await hass.async_add_executor_job(bridge.mac_from_device)
+            mac = await bridge.mac_from_device()
 
     if not mac:
         mac = await hass.async_add_executor_job(

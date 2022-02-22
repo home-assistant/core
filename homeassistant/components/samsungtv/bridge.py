@@ -57,11 +57,11 @@ async def async_get_device_info(
 ) -> tuple[int | None, str | None, dict[str, Any] | None]:
     """Fetch the port, method, and device info."""
     if bridge and bridge.port:
-        return bridge.port, bridge.method, bridge.device_info()
+        return bridge.port, bridge.method, await bridge.device_info()
 
     for port in WEBSOCKET_PORTS:
         bridge = SamsungTVBridge.get_bridge(hass, METHOD_WEBSOCKET, host, port)
-        if info := bridge.device_info():
+        if info := await bridge.device_info():
             return port, METHOD_WEBSOCKET, info
 
     bridge = SamsungTVBridge.get_bridge(hass, METHOD_LEGACY, host, LEGACY_PORT)
@@ -114,11 +114,11 @@ class SamsungTVBridge(ABC):
         """Try to connect to the TV."""
 
     @abstractmethod
-    def device_info(self) -> dict[str, Any] | None:
+    async def device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""
 
     @abstractmethod
-    def mac_from_device(self) -> str | None:
+    async def mac_from_device(self) -> str | None:
         """Try to fetch the mac address of the TV."""
 
     @abstractmethod
@@ -214,7 +214,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             CONF_TIMEOUT: 1,
         }
 
-    def mac_from_device(self) -> None:
+    async def mac_from_device(self) -> None:
         """Try to fetch the mac address of the TV."""
         return None
 
@@ -253,7 +253,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             LOGGER.debug("Failing config: %s, error: %s", config, err)
             return RESULT_CANNOT_CONNECT
 
-    def device_info(self) -> None:
+    async def device_info(self) -> None:
         """Try to gather infos of this device."""
         return None
 
@@ -302,9 +302,9 @@ class SamsungTVWSBridge(SamsungTVBridge):
         self.token = token
         self._app_list: dict[str, str] | None = None
 
-    def mac_from_device(self) -> str | None:
+    async def mac_from_device(self) -> str | None:
         """Try to fetch the mac address of the TV."""
-        info = self.device_info()
+        info = await self.device_info()
         return mac_from_device_info(info) if info else None
 
     def get_app_list(self) -> dict[str, str] | None:
@@ -365,11 +365,13 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
         return RESULT_CANNOT_CONNECT
 
-    def device_info(self) -> dict[str, Any] | None:
+    async def device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""
         if remote := self._get_remote(avoid_open=True):
             with contextlib.suppress(HttpApiError, RequestsTimeout):
-                device_info: dict[str, Any] = remote.rest_device_info()
+                device_info: dict[str, Any] = await self.hass.async_add_executor_job(
+                    remote.rest_device_info
+                )
                 return device_info
 
         return None
