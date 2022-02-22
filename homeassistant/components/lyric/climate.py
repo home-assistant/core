@@ -304,24 +304,27 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set hvac mode."""
-        _LOGGER.debug("Set hvac mode: %s", hvac_mode)
+        _LOGGER.debug("Set point from frontent: %s", hvac_mode)
         try:
             if LYRIC_HVAC_MODES[hvac_mode] == LYRIC_HVAC_MODE_HEAT_COOL:
                 if HVAC_MODES[self.device.changeableValues.heatCoolMode] == HVAC_MODE_OFF:
+                    _LOGGER.debug("Set point passed to lyric: %s", LYRIC_HVAC_MODES[HVAC_MODE_HEAT])
                     await self._update_thermostat(
                         self.location,
                         self.device,
-                        mode=LYRIC_HVAC_MODES[HVAC_MODE_HEAT],
+                        mode=HVAC_MODES[LYRIC_HVAC_MODE_HEAT],
                         autoChangeoverActive=True
-                        )
+                    )
                 else:
+                    _LOGGER.debug("Set point passed to lyric: %s", HVAC_MODES[self.device.changeableValues.heatCoolMode])
                     await self._update_thermostat(
                         self.location,
                         self.device,
                         mode=HVAC_MODES[self.device.changeableValues.heatCoolMode],
                         autoChangeoverActive=True
-                        )
+                    )
             else:
+                _LOGGER.debug("Set point passed to lyric: %s", LYRIC_HVAC_MODES[hvac_mode])
                 await self._update_thermostat(
                     self.location,
                     self.device,
