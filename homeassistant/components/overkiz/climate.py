@@ -5,12 +5,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.decorator import Registry
 
 from . import HomeAssistantOverkizData
+from .climate_entities import WIDGET_TO_CLIMATE_ENTITY
 from .const import DOMAIN
-
-CLIMATE_IMPLEMENTATIONS = Registry()
 
 
 async def async_setup_entry(
@@ -22,9 +20,9 @@ async def async_setup_entry(
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
 
     entities = [
-        CLIMATE_IMPLEMENTATIONS[device.widget](device.device_url, data.coordinator)
+        WIDGET_TO_CLIMATE_ENTITY[device.widget](device.device_url, data.coordinator)
         for device in data.platforms[Platform.CLIMATE]
-        if device.widget in CLIMATE_IMPLEMENTATIONS
+        if device.widget in WIDGET_TO_CLIMATE_ENTITY
     ]
 
     async_add_entities(entities)
