@@ -59,6 +59,8 @@
             "connected": "{entity_name} connected",
             "gas": "{entity_name} started detecting gas",
             "hot": "{entity_name} became hot",
+            "is_not_tampered": "{entity_name} stopped detecting tampering",
+            "is_tampered": "{entity_name} started detecting tampering",
             "light": "{entity_name} started detecting light",
             "locked": "{entity_name} locked",
             "moist": "{entity_name} became moist",
@@ -133,6 +135,10 @@
             "on": "Charging"
         },
         "carbon_monoxide": {
+            "off": "Clear",
+            "on": "Detected"
+        },
+        "co": {
             "off": "Clear",
             "on": "Detected"
         },
