@@ -63,7 +63,7 @@ class SleepIQPauseUpdateCoordinator(DataUpdateCoordinator[None]):
 
 @dataclass
 class SleepIQData:
-    """Data for the lookin integration."""
+    """Data for the sleepiq integration."""
 
     data_coordinator: SleepIQDataUpdateCoordinator
     pause_coordinator: SleepIQPauseUpdateCoordinator
