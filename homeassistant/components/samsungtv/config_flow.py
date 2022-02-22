@@ -124,11 +124,11 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             updates[CONF_MAC] = self._mac
         self._abort_if_unique_id_configured(updates=updates)
 
-    def _try_connect(self) -> None:
+    async def _try_connect(self) -> None:
         """Try to connect and check auth."""
         for method in SUPPORTED_METHODS:
-            self._bridge = SamsungTVBridge.get_bridge(method, self._host)
-            result = self._bridge.try_connect()
+            self._bridge = SamsungTVBridge.get_bridge(self.hass, method, self._host)
+            result = await self._bridge.async_try_connect()
             if result == RESULT_SUCCESS:
                 return
             if result != RESULT_CANNOT_CONNECT:
@@ -203,7 +203,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         if user_input is not None:
             await self._async_set_name_host_from_input(user_input)
-            await self.hass.async_add_executor_job(self._try_connect)
+            await self._try_connect()
             assert self._bridge
             self._async_abort_entries_match({CONF_HOST: self._host})
             if self._bridge.method != METHOD_LEGACY:
@@ -309,7 +309,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle user-confirmation of discovered node."""
         if user_input is not None:
 
-            await self.hass.async_add_executor_job(self._try_connect)
+            await self._try_connect()
             assert self._bridge
             return self._get_entry_from_bridge()
 
@@ -341,9 +341,11 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._reauth_entry
         if user_input is not None:
             bridge = SamsungTVBridge.get_bridge(
-                self._reauth_entry.data[CONF_METHOD], self._reauth_entry.data[CONF_HOST]
+                self.hass,
+                self._reauth_entry.data[CONF_METHOD],
+                self._reauth_entry.data[CONF_HOST],
             )
-            result = await self.hass.async_add_executor_job(bridge.try_connect)
+            result = await bridge.async_try_connect()
             if result == RESULT_SUCCESS:
                 new_data = dict(self._reauth_entry.data)
                 new_data[CONF_TOKEN] = bridge.token
