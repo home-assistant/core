@@ -57,6 +57,18 @@ ADVANCE_WARNING_SENSOR = "advance_warning_level"
 
 SCAN_INTERVAL = timedelta(minutes=15)
 
+SORTING_OPTION_NONE = "none"
+SORTING_OPTION_SEVERITY = "severity"
+SORTING_OPTION_DATE = "date"
+
+CONF_SORTING_OPTION = "sorting"
+
+SORTING_OPTIONS: list[str] = [
+    SORTING_OPTION_NONE,
+    SORTING_OPTION_SEVERITY,
+    SORTING_OPTION_DATE,
+]
+
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -80,6 +92,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(
             CONF_MONITORED_CONDITIONS, default=list(MONITORED_CONDITIONS)
         ): vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
+        vol.Optional(CONF_SORTING_OPTION, default=SORTING_OPTION_NONE): vol.In(
+            SORTING_OPTIONS
+        ),
     }
 )
 
@@ -93,11 +108,12 @@ def setup_platform(
     """Set up the DWD-Weather-Warnings sensor."""
     name = config.get(CONF_NAME)
     region_name = config.get(CONF_REGION_NAME)
+    sorting = config.get(CONF_SORTING_OPTION)
 
     api = WrappedDwDWWAPI(DwdWeatherWarningsAPI(region_name))
 
     sensors = [
-        DwdWeatherWarningsSensor(api, name, description)
+        DwdWeatherWarningsSensor(api, name, sorting, description)
         for description in SENSOR_TYPES
         if description.key in config[CONF_MONITORED_CONDITIONS]
     ]
@@ -112,12 +128,14 @@ class DwdWeatherWarningsSensor(SensorEntity):
         self,
         api,
         name,
+        sorting,
         description: SensorEntityDescription,
     ):
         """Initialize a DWD-Weather-Warnings sensor."""
         self._api = api
         self.entity_description = description
         self._attr_name = f"{name} {description.name}"
+        self._sorting = sorting
 
     @property
     def native_value(self):
@@ -140,6 +158,15 @@ class DwdWeatherWarningsSensor(SensorEntity):
             searched_warnings = self._api.api.current_warnings
         else:
             searched_warnings = self._api.api.expected_warnings
+
+        if self._sorting == SORTING_OPTION_SEVERITY:
+            searched_warnings.sort(
+                key=lambda x: (-x[API_ATTR_WARNING_LEVEL], x[API_ATTR_WARNING_START])
+            )
+        elif self._sorting == SORTING_OPTION_DATE:
+            searched_warnings.sort(
+                key=lambda x: (x[API_ATTR_WARNING_START], -x[API_ATTR_WARNING_LEVEL])
+            )
 
         data[ATTR_WARNING_COUNT] = len(searched_warnings)
 
