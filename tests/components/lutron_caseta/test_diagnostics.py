@@ -1,4 +1,4 @@
-"""Test the Lutron Caseta config flow."""
+"""Test the Lutron Caseta diagnostics."""
 
 from unittest.mock import patch
 
