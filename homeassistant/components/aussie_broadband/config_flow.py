@@ -9,12 +9,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_SERVICES, DOMAIN, SERVICE_ID
+from .const import CONF_SERVICES, DOMAIN
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -39,11 +37,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         try:
             await self.client.login()
-            return None
         except AuthenticationException:
             return {"base": "invalid_auth"}
         except ClientError:
             return {"base": "cannot_connect"}
+        return None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -61,15 +59,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if not self.services:
                     return self.async_abort(reason="no_services_found")
 
-                if len(self.services) == 1:
-                    return self.async_create_entry(
-                        title=self.data[CONF_USERNAME],
-                        data=self.data,
-                        options={CONF_SERVICES: [str(self.services[0][SERVICE_ID])]},
-                    )
-
-                # Account has more than one service, select service to add
-                return await self.async_step_service()
+                return self.async_create_entry(
+                    title=self.data[CONF_USERNAME],
+                    data=self.data,
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -82,37 +75,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_service(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle the optional service selection step."""
-        if user_input is not None:
-            return self.async_create_entry(
-                title=self.data[CONF_USERNAME], data=self.data, options=user_input
-            )
+    async def async_step_reauth(self, user_input: dict[str, str]) -> FlowResult:
+        """Handle reauth on credential failure."""
+        self._reauth_username = user_input[CONF_USERNAME]
 
-        service_options = {str(s[SERVICE_ID]): s["description"] for s in self.services}
-        return self.async_show_form(
-            step_id="service",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_SERVICES, default=list(service_options.keys())
-                    ): cv.multi_select(service_options)
-                }
-            ),
-            errors=None,
-        )
+        return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
-        """Handle reauth."""
+        """Handle users reauth credentials."""
+
         errors: dict[str, str] | None = None
-        if user_input and user_input.get(CONF_USERNAME):
-            self._reauth_username = user_input[CONF_USERNAME]
 
-        elif self._reauth_username and user_input and user_input.get(CONF_PASSWORD):
+        if user_input and self._reauth_username:
             data = {
                 CONF_USERNAME: self._reauth_username,
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
@@ -130,7 +106,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=self._reauth_username, data=data)
 
         return self.async_show_form(
-            step_id="reauth",
+            step_id="reauth_confirm",
             description_placeholders={"username": self._reauth_username},
             data_schema=vol.Schema(
                 {
@@ -138,47 +114,4 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-        )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
-        """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
-
-
-class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Options flow for picking services."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None):
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        if self.config_entry.state != config_entries.ConfigEntryState.LOADED:
-            return self.async_abort(reason="unknown")
-        data = self.hass.data[DOMAIN][self.config_entry.entry_id]
-        try:
-            services = await data["client"].get_services()
-        except AuthenticationException:
-            return self.async_abort(reason="invalid_auth")
-        except ClientError:
-            return self.async_abort(reason="cannot_connect")
-        service_options = {str(s[SERVICE_ID]): s["description"] for s in services}
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_SERVICES,
-                        default=self.config_entry.options.get(CONF_SERVICES),
-                    ): cv.multi_select(service_options),
-                }
-            ),
         )

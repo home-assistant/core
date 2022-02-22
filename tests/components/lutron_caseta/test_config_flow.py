@@ -56,6 +56,10 @@ class MockBridge:
         """Return whether the mock bridge is connected."""
         return self.is_currently_connected
 
+    def get_devices(self):
+        """Return devices on the bridge."""
+        return {"1": {"serial": 1234}}
+
     async def close(self):
         """Close the mock bridge connection."""
         self.is_currently_connected = False
@@ -90,6 +94,8 @@ async def test_bridge_import_flow(hass):
     assert result["type"] == "create_entry"
     assert result["title"] == CasetaConfigFlow.ENTRY_DEFAULT_TITLE
     assert result["data"] == entry_mock_data
+    assert result["result"].unique_id == "000004d2"
+
     await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1
 

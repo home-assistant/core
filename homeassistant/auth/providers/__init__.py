@@ -62,7 +62,7 @@ class AuthProvider:
     @property
     def type(self) -> str:
         """Return type of the provider."""
-        return self.config[CONF_TYPE]  # type: ignore
+        return self.config[CONF_TYPE]  # type: ignore[no-any-return]
 
     @property
     def name(self) -> str:
@@ -149,7 +149,7 @@ async def auth_provider_from_config(
         )
         raise
 
-    return AUTH_PROVIDERS[provider_name](hass, store, config)  # type: ignore
+    return AUTH_PROVIDERS[provider_name](hass, store, config)  # type: ignore[no-any-return]
 
 
 async def load_auth_provider_module(
@@ -250,7 +250,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
             auth_module, "async_initialize_login_mfa_step"
         ):
             try:
-                await auth_module.async_initialize_login_mfa_step(  # type: ignore
+                await auth_module.async_initialize_login_mfa_step(  # type: ignore[attr-defined]
                     self.user.id
                 )
             except HomeAssistantError:

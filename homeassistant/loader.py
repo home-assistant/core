@@ -681,7 +681,7 @@ def _load_file(
     Async friendly.
     """
     with suppress(KeyError):
-        return hass.data[DATA_COMPONENTS][comp_or_platform]  # type: ignore
+        return hass.data[DATA_COMPONENTS][comp_or_platform]  # type: ignore[no-any-return]
 
     if (cache := hass.data.get(DATA_COMPONENTS)) is None:
         if not _async_mount_config_dir(hass):

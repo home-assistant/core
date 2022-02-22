@@ -56,7 +56,7 @@ class TTSMediaSource(MediaSource):
         manager: SpeechManager = self.hass.data[DOMAIN]
 
         try:
-            url = await manager.async_get_url_path(**kwargs)  # type: ignore
+            url = await manager.async_get_url_path(**kwargs)  # type: ignore[arg-type]
         except HomeAssistantError as err:
             raise Unresolvable(str(err)) from err
 
@@ -94,9 +94,7 @@ class TTSMediaSource(MediaSource):
     ) -> BrowseMediaSource:
         """Return provider item."""
         manager: SpeechManager = self.hass.data[DOMAIN]
-        provider = manager.providers.get(provider_domain)
-
-        if provider is None:
+        if (provider := manager.providers.get(provider_domain)) is None:
             raise BrowseError("Unknown provider")
 
         if params:

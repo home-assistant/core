@@ -51,8 +51,6 @@ async def async_setup_entry(
 class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     """Representation of an Plugwise thermostat."""
 
-    _attr_max_temp = DEFAULT_MAX_TEMP
-    _attr_min_temp = DEFAULT_MIN_TEMP
     _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(
@@ -79,6 +77,12 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         if self.device.get("available_schedules") != ["None"]:
             self._attr_hvac_modes.append(HVAC_MODE_AUTO)
 
+        self._attr_min_temp = self.device.get("lower_bound", DEFAULT_MIN_TEMP)
+        self._attr_max_temp = self.device.get("upper_bound", DEFAULT_MAX_TEMP)
+        if resolution := self.device.get("resolution"):
+            # Ensure we don't drop below 0.1
+            self._attr_target_temperature_step = max(resolution, 0.1)
+
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
@@ -103,15 +107,16 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         if "control_state" in self.device:
             if self.device.get("control_state") == "cooling":
                 return CURRENT_HVAC_COOL
-            if self.device.get("control_state") == "heating":
+            # Support preheating state as heating, until preheating is added as a separate state
+            if self.device.get("control_state") in ["heating", "preheating"]:
                 return CURRENT_HVAC_HEAT
         else:
             heater_central_data = self.coordinator.data.devices[
                 self.coordinator.data.gateway["heater_id"]
             ]
-            if heater_central_data.get("heating_state"):
+            if heater_central_data["binary_sensors"].get("heating_state"):
                 return CURRENT_HVAC_HEAT
-            if heater_central_data.get("cooling_state"):
+            if heater_central_data["binary_sensors"].get("cooling_state"):
                 return CURRENT_HVAC_COOL
         return CURRENT_HVAC_IDLE
 

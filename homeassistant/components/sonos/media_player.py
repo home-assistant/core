@@ -524,7 +524,10 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             media_type = spotify.resolve_spotify_media_type(media_type)
             media_id = spotify.spotify_uri_from_media_browser_url(media_id)
 
+        is_radio = False
+
         if media_source.is_media_source_id(media_id):
+            is_radio = media_id.startswith("media-source://radio_browser/")
             media_type = MEDIA_TYPE_MUSIC
             media_id = (
                 run_coroutine_threadsafe(
@@ -574,7 +577,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             if kwargs.get(ATTR_MEDIA_ENQUEUE):
                 soco.add_uri_to_queue(media_id)
             else:
-                soco.play_uri(media_id)
+                soco.play_uri(media_id, force_radio=is_radio)
         elif media_type == MEDIA_TYPE_PLAYLIST:
             if media_id.startswith("S:"):
                 item = media_browser.get_media(self.media.library, media_id, media_type)  # type: ignore[no-untyped-call]

@@ -165,13 +165,16 @@ async def test_microphone_binary_sensor(
 ):
     """Test microphone binary sensor."""
     entity_registry = ent_reg.async_get(hass)
-    assert "binary_sensor.zone_a_microphone" not in entity_registry.entities
+    assert "binary_sensor.zone_a_microphone" in entity_registry.entities
+
+    mic_binary_sensor = entity_registry.entities["binary_sensor.zone_a_microphone"]
+    mic_binary_sensor_state = hass.states.get(mic_binary_sensor.entity_id)
+    assert mic_binary_sensor_state.state == STATE_OFF
 
     # Update the speaker with a callback event
     subscription = soco.deviceProperties.subscribe.return_value
     subscription.callback(device_properties_event)
     await hass.async_block_till_done()
 
-    mic_binary_sensor = entity_registry.entities["binary_sensor.zone_a_microphone"]
     mic_binary_sensor_state = hass.states.get(mic_binary_sensor.entity_id)
     assert mic_binary_sensor_state.state == STATE_ON

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import date
 import ipaddress
 import logging
 from typing import Any, NamedTuple
@@ -9,7 +10,10 @@ from uuid import UUID
 
 from vallox_websocket_api import PROFILE as VALLOX_PROFILE, Vallox
 from vallox_websocket_api.exceptions import ValloxApiException
-from vallox_websocket_api.vallox import get_uuid as calculate_uuid
+from vallox_websocket_api.vallox import (
+    get_next_filter_change_date as calculate_next_filter_change_date,
+    get_uuid as calculate_uuid,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -29,7 +33,6 @@ from .const import (
     METRIC_KEY_PROFILE_FAN_SPEED_BOOST,
     METRIC_KEY_PROFILE_FAN_SPEED_HOME,
     STATE_SCAN_INTERVAL,
-    STR_TO_VALLOX_PROFILE_SETTABLE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,16 +58,7 @@ PLATFORMS: list[str] = [
     Platform.BINARY_SENSOR,
 ]
 
-ATTR_PROFILE = "profile"
 ATTR_PROFILE_FAN_SPEED = "fan_speed"
-
-SERVICE_SCHEMA_SET_PROFILE = vol.Schema(
-    {
-        vol.Required(ATTR_PROFILE): vol.All(
-            cv.string, vol.In(STR_TO_VALLOX_PROFILE_SETTABLE)
-        )
-    }
-)
 
 SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED = vol.Schema(
     {
@@ -82,16 +76,11 @@ class ServiceMethodDetails(NamedTuple):
     schema: vol.Schema
 
 
-SERVICE_SET_PROFILE = "set_profile"
 SERVICE_SET_PROFILE_FAN_SPEED_HOME = "set_profile_fan_speed_home"
 SERVICE_SET_PROFILE_FAN_SPEED_AWAY = "set_profile_fan_speed_away"
 SERVICE_SET_PROFILE_FAN_SPEED_BOOST = "set_profile_fan_speed_boost"
 
 SERVICE_TO_METHOD = {
-    SERVICE_SET_PROFILE: ServiceMethodDetails(
-        method="async_set_profile",
-        schema=SERVICE_SCHEMA_SET_PROFILE,
-    ),
     SERVICE_SET_PROFILE_FAN_SPEED_HOME: ServiceMethodDetails(
         method="async_set_profile_fan_speed_home",
         schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
@@ -131,6 +120,15 @@ class ValloxState:
         if not isinstance(uuid, UUID):
             raise ValueError
         return uuid
+
+    def get_next_filter_change_date(self) -> date | None:
+        """Return the next filter change date."""
+        next_filter_change_date = calculate_next_filter_change_date(self.metric_cache)
+
+        if not isinstance(next_filter_change_date, date):
+            return None
+
+        return next_filter_change_date
 
 
 class ValloxDataUpdateCoordinator(DataUpdateCoordinator):
@@ -228,24 +226,6 @@ class ValloxServiceHandler:
         """Initialize the proxy."""
         self._client = client
         self._coordinator = coordinator
-
-    async def async_set_profile(self, profile: str = "Home") -> bool:
-        """Set the ventilation profile."""
-        _LOGGER.debug("Setting ventilation profile to: %s", profile)
-
-        _LOGGER.warning(
-            "Attention: The service 'vallox.set_profile' is superseded by the "
-            "'fan.set_preset_mode' service. It will be removed in the future, please migrate to "
-            "'fan.set_preset_mode' to prevent breakage"
-        )
-
-        try:
-            await self._client.set_profile(STR_TO_VALLOX_PROFILE_SETTABLE[profile])
-            return True
-
-        except (OSError, ValloxApiException) as err:
-            _LOGGER.error("Error setting ventilation profile: %s", err)
-            return False
 
     async def async_set_profile_fan_speed_home(
         self, fan_speed: int = DEFAULT_FAN_SPEED_HOME

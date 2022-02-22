@@ -14,3 +14,6 @@ SENSOR_TYPES = {SLEEP_NUMBER: "SleepNumber", IS_IN_BED: "Is In Bed"}
 LEFT = "left"
 RIGHT = "right"
 SIDES = [LEFT, RIGHT]
+
+SLEEPIQ_DATA = "sleepiq_data"
+SLEEPIQ_STATUS_COORDINATOR = "sleepiq_status"
