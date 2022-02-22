@@ -1,4 +1,4 @@
-"""Test the Lutron Caseta config flow."""
+"""Test the Lutron Caseta diagnostics."""
 import asyncio
 import ssl
 from unittest.mock import AsyncMock, patch
