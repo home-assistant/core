@@ -479,6 +479,17 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         self._name = f"{device.hostname} Internet Access"
         self._attr_unique_id = f"{self._mac}_internet_access"
         self._attr_entity_category = EntityCategory.CONFIG
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._mac)},
+            default_manufacturer="AVM",
+            default_model="FRITZ!Box Tracked device",
+            default_name=device.hostname,
+            identifiers={(DOMAIN, self._mac)},
+            via_device=(
+                DOMAIN,
+                avm_wrapper.unique_id,
+            ),
+        )
 
     @property
     def is_on(self) -> bool | None:
@@ -491,21 +502,6 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         if self._avm_wrapper.devices[self._mac].wan_access is None:
             return False
         return super().available
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._mac)},
-            default_manufacturer="AVM",
-            default_model="FRITZ!Box Tracked device",
-            default_name=self.name,
-            identifiers={(DOMAIN, self._mac)},
-            via_device=(
-                DOMAIN,
-                self._avm_wrapper.unique_id,
-            ),
-        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
