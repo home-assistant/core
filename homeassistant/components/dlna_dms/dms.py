@@ -7,7 +7,12 @@ from dataclasses import dataclass
 import functools
 from typing import Any, TypeVar, cast
 
-from async_upnp_client import UpnpEventHandler, UpnpFactory, UpnpRequester
+from async_upnp_client import (
+    UpnpEventHandler,
+    UpnpFactory,
+    UpnpNotifyServer,
+    UpnpRequester,
+)
 from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.const import NotificationSubType
 from async_upnp_client.exceptions import UpnpActionError, UpnpConnectionError, UpnpError
@@ -68,7 +73,7 @@ class DlnaDmsData:
         self.upnp_factory = UpnpFactory(self.requester, non_strict=True)
         # NOTE: event_handler is not actually used, and is only created to
         # satisfy the DmsDevice.__init__ signature
-        self.event_handler = UpnpEventHandler("", self.requester)
+        self.event_handler = UpnpEventHandler(UpnpNotifyServer(), self.requester)
         self.devices = {}
         self.sources = {}
 
