@@ -21,24 +21,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Konfiguracja za pomcą przepływu konfiguracji."""
-    # Status PLC EASY
-    async_add_entities(
-        [
-            AisEasySensor(
-                hass,
-                config_entry.data["host"],
-                config_entry.data["user"],
-                config_entry.data["pass"],
-                "ais_easy_state",
-            )
-        ]
-    )
-
-    # currencies = config_entry.data["currency"]
-    # for currency in currencies:
-    #     async_add_entities(
-    #         [AisEasySensor(hass, currency, "nbp_currency_" + currency.lower())]
-    #     )
+    # PLC EASY
+    for x in range(config_entry.data["sensors"]):
+        async_add_entities(
+            [
+                AisEasySensor(
+                    hass,
+                    config_entry.data["host"],
+                    config_entry.data["user"],
+                    config_entry.data["pass"],
+                    str(x + 1),
+                )
+            ]
+        )
 
 
 async def async_unload_entry(hass, entry):
@@ -49,7 +44,7 @@ async def async_unload_entry(hass, entry):
 class AisEasySensor(Entity):
     """Reprezentacja sensora AisHelloSensor."""
 
-    def __init__(self, hass, easy_host, easy_user, easy_pass, easy_entity_id):
+    def __init__(self, hass, easy_host, easy_user, easy_pass, easy_number):
         """Inicjalizacja sensora."""
         self.hass = hass
         self._host = easy_host
@@ -57,7 +52,10 @@ class AisEasySensor(Entity):
         self._pass = easy_pass
         self._state = None
         self._status_on_start = True
-        self._entity_id = easy_entity_id
+        self._number = easy_number
+        self._entity_id = (
+            "ais_easy_" + self._host.replace(".", "") + "_" + str(self._number)
+        )
 
     @property
     def entity_id(self):
