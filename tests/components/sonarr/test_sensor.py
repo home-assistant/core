@@ -96,8 +96,11 @@ async def test_sensors(
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:television"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Episodes"
-    assert state.attributes.get("Bob's Burgers S04E11") == "2014-01-26"
-    assert state.attributes.get("The Andy Griffith Show S01E01") == "1960-10-03"
+    assert state.attributes.get("Bob's Burgers S04E11") == "2014-01-27T01:30:00+00:00"
+    assert (
+        state.attributes.get("The Andy Griffith Show S01E01")
+        == "1960-10-03T01:00:00+00:00"
+    )
     assert state.state == "2"
 
 
