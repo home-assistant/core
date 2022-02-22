@@ -341,8 +341,8 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         self._devices[dev_mac] = device
         return True
 
-    def signal(self, new_device: bool) -> None:
-        """Signal device."""
+    def send_signal_device_update(self, new_device: bool) -> None:
+        """Signal device data updated."""
         dispatcher_send(self.hass, self.signal_device_update)
         if new_device:
             dispatcher_send(self.hass, self.signal_device_new)
@@ -390,7 +390,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
             for mac, info in hosts.items():
                 if self.manage_device_info(info, mac, consider_home):
                     new_device = True
-            self.signal(new_device)
+            self.send_signal_device_update(new_device)
             return
 
         try:
@@ -448,7 +448,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                 if self.manage_device_info(dev_info, dev_mac, consider_home):
                     new_device = True
 
-        self.signal(new_device)
+        self.send_signal_device_update(new_device)
 
     async def async_trigger_firmware_update(self) -> bool:
         """Trigger firmware update."""
