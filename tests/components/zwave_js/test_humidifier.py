@@ -517,13 +517,87 @@ async def test_dehumidifier_missing_setpoint(
         HUMIDIFIER_DOMAIN,
         SERVICE_SET_HUMIDITY,
         {
-            ATTR_ENTITY_ID: HUMIDIFIER_ADC_T3000_ENTITY,
+            ATTR_ENTITY_ID: entity_id,
             ATTR_HUMIDITY: 41,
         },
         blocking=True,
     )
 
     assert len(client.async_send_command.call_args_list) == 0
+
+    client.async_send_command.reset_mock()
+
+
+async def test_humidifier_missing_mode(
+    hass, client, climate_adc_t3000_missing_mode, integration
+):
+    """Test a humidity control command class entity."""
+
+    node = climate_adc_t3000_missing_mode
+
+    # Test that de-humidifer entity does not exist but humidifier entity does
+    entity_id = "humidifier.adc_t3000_missing_mode_dehumidifier"
+    state = hass.states.get(entity_id)
+    assert not state
+
+    entity_id = "humidifier.adc_t3000_missing_mode_humidifier"
+    state = hass.states.get(entity_id)
+    assert state
+
+    client.async_send_command.reset_mock()
+
+    # Test turning off when device is previously auto for a device which does not have de-humidify mode
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 68,
+            "args": {
+                "commandClassName": "Humidity Control Mode",
+                "commandClass": CommandClass.HUMIDITY_CONTROL_MODE,
+                "endpoint": 0,
+                "property": "mode",
+                "propertyName": "mode",
+                "newValue": int(HumidityControlMode.AUTO),
+                "prevValue": int(HumidityControlMode.OFF),
+            },
+        },
+    )
+    node.receive_event(event)
+
+    await hass.services.async_call(
+        HUMIDIFIER_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 68
+    assert args["valueId"] == {
+        "ccVersion": 2,
+        "commandClassName": "Humidity Control Mode",
+        "commandClass": CommandClass.HUMIDITY_CONTROL_MODE,
+        "endpoint": 0,
+        "property": "mode",
+        "propertyName": "mode",
+        "metadata": {
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "min": 0,
+            "max": 255,
+            "label": "Humidity control mode",
+            "states": {"0": "Off", "1": "Humidify", "3": "Auto"},
+        },
+        "newValue": int(HumidityControlMode.AUTO),
+        "prevValue": int(HumidityControlMode.OFF),
+        "value": int(HumidityControlMode.AUTO),
+    }
+    assert args["value"] == int(HumidityControlMode.OFF)
 
     client.async_send_command.reset_mock()
 
