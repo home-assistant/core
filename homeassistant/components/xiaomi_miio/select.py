@@ -1,9 +1,13 @@
 """Support led_brightness for Mi Air Humidifier."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from miio.airfresh import LedBrightness as AirfreshLedBrightness
+from miio.airfresh_t2017 import (
+    DisplayOrientation as AirfreshT2017DisplayOrientation,
+    PtcLevel as AirfreshT2017PtcLevel,
+)
 from miio.airhumidifier import LedBrightness as AirhumidifierLedBrightness
 from miio.airhumidifier_miot import LedBrightness as AirhumidifierMiotLedBrightness
 from miio.airpurifier import LedBrightness as AirpurifierLedBrightness
@@ -21,10 +25,11 @@ from .const import (
     CONF_FLOW_TYPE,
     CONF_MODEL,
     DOMAIN,
-    FEATURE_SET_LED_BRIGHTNESS,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODEL_AIRFRESH_T2017,
     MODEL_AIRFRESH_VA2,
+    MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRPURIFIER_3C,
     MODEL_AIRPURIFIER_M1,
     MODEL_AIRPURIFIER_M2,
@@ -40,7 +45,9 @@ from .const import (
 )
 from .device import XiaomiCoordinatedMiioEntity
 
+ATTR_DISPLAY_ORIENTATION = "display_orientation"
 ATTR_LED_BRIGHTNESS = "led_brightness"
+ATTR_PTC_LEVEL = "ptc_level"
 
 
 LED_BRIGHTNESS_MAP = {"Bright": 0, "Dim": 1, "Off": 2}
@@ -49,25 +56,67 @@ LED_BRIGHTNESS_REVERSE_MAP = {val: key for key, val in LED_BRIGHTNESS_MAP.items(
 LED_BRIGHTNESS_REVERSE_MAP_HUMIDIFIER_MIOT = {
     val: key for key, val in LED_BRIGHTNESS_MAP_HUMIDIFIER_MIOT.items()
 }
+PTC_LEVEL_MAP = {"Low": "low", "Medium": "medium", "High": "high"}
+PTC_LEVEL_REVERSE_MAP = {val: key for key, val in PTC_LEVEL_MAP.items()}
+DISPLAY_ORIENTATION_MAP = {"Forward": "forward", "Left": "left", "Right": "right"}
+DISPLAY_ORIENTATION_REVERSE_MAP = {
+    val: key for key, val in DISPLAY_ORIENTATION_MAP.items()
+}
 
 
 @dataclass
 class XiaomiMiioSelectDescription(SelectEntityDescription):
     """A class that describes select entities."""
 
+    options_map: dict = field(default_factory=dict)
+    reverse_map: dict = field(default_factory=dict)
+    set_method: str = ""
     options: tuple = ()
 
 
-SELECTOR_TYPES = {
-    FEATURE_SET_LED_BRIGHTNESS: XiaomiMiioSelectDescription(
+MODEL_TO_ATTR_MAP = {
+    MODEL_AIRFRESH_T2017: [
+        (ATTR_DISPLAY_ORIENTATION, AirfreshT2017DisplayOrientation),
+        (ATTR_PTC_LEVEL, AirfreshT2017PtcLevel),
+    ],
+    MODEL_AIRHUMIDIFIER_CA1: [(ATTR_LED_BRIGHTNESS, AirhumidifierLedBrightness)],
+}
+
+SELECTOR_TYPES = (
+    XiaomiMiioSelectDescription(
+        key=ATTR_DISPLAY_ORIENTATION,
+        name="Display Orientation",
+        options_map=DISPLAY_ORIENTATION_MAP,
+        reverse_map=DISPLAY_ORIENTATION_REVERSE_MAP,
+        set_method="async_set_display_orientation",
+        icon="mdi:tablet",
+        device_class="xiaomi_miio__display_orientation",
+        options=("forward", "left", "right"),
+        entity_category=EntityCategory.CONFIG,
+    ),
+    XiaomiMiioSelectDescription(
         key=ATTR_LED_BRIGHTNESS,
         name="Led Brightness",
+        options_map=LED_BRIGHTNESS_MAP,
+        reverse_map=LED_BRIGHTNESS_REVERSE_MAP,
+        set_method="async_set_led_brightness",
         icon="mdi:brightness-6",
         device_class="xiaomi_miio__led_brightness",
         options=("bright", "dim", "off"),
         entity_category=EntityCategory.CONFIG,
     ),
-}
+    XiaomiMiioSelectDescription(
+        key=ATTR_PTC_LEVEL,
+        name="Auxiliary Heat Level",
+        options_map=PTC_LEVEL_MAP,
+        reverse_map=PTC_LEVEL_REVERSE_MAP,
+        set_method="async_set_ptc_level",
+        icon="mdi:fire-circle",
+        device_class="xiaomi_miio__ptc_level",
+        options=("low", "medium", "high"),
+        entity_category=EntityCategory.CONFIG,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -78,7 +127,41 @@ async def async_setup_entry(
     """Set up the Selectors from a config entry."""
     if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         return
+    model = config_entry.data[CONF_MODEL]
+    if model in MODEL_TO_ATTR_MAP:
+        await async_setup_generic_entry(hass, config_entry, async_add_entities)
+    else:
+        await async_setup_other_entry(hass, config_entry, async_add_entities)
 
+
+async def async_setup_generic_entry(hass, config_entry, async_add_entities):
+    """Set up the generic Selectors from a config entry."""
+    entities = []
+    model = config_entry.data[CONF_MODEL]
+    unique_id = config_entry.unique_id
+    device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
+    attributes = MODEL_TO_ATTR_MAP[model]
+    for description in SELECTOR_TYPES:
+        for attribute in attributes:
+            if description.key == attribute[0]:
+                entities.append(
+                    XiaomiGenericSelector(
+                        f"{config_entry.title} {description.name}",
+                        device,
+                        config_entry,
+                        f"{description.key}_{unique_id}",
+                        coordinator,
+                        description,
+                        attribute[1],
+                    )
+                )
+
+    async_add_entities(entities)
+
+
+async def async_setup_other_entry(hass, config_entry, async_add_entities):
+    """Set up the other type Selectors from a config entry."""
     entities = []
     model = config_entry.data[CONF_MODEL]
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
@@ -107,17 +190,18 @@ async def async_setup_entry(
     else:
         return
 
-    description = SELECTOR_TYPES[FEATURE_SET_LED_BRIGHTNESS]
-    entities.append(
-        entity_class(
-            f"{config_entry.title} {description.name}",
-            device,
-            config_entry,
-            f"{description.key}_{config_entry.unique_id}",
-            hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
-            description,
-        )
-    )
+    for description in SELECTOR_TYPES:
+        if description.key == ATTR_LED_BRIGHTNESS:
+            entities.append(
+                entity_class(
+                    f"{config_entry.title} {description.name}",
+                    device,
+                    config_entry,
+                    f"{description.key}_{config_entry.unique_id}",
+                    hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+                    description,
+                )
+            )
 
     async_add_entities(entities)
 
@@ -132,11 +216,82 @@ class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
         self.entity_description = description
 
 
+class XiaomiGenericSelector(XiaomiSelector):
+    """Representation of a Xiaomi generic selector."""
+
+    entity_description: XiaomiMiioSelectDescription
+
+    def __init__(
+        self, name, device, entry, unique_id, coordinator, description, enum_class
+    ):
+        """Initialize the generic Xiaomi attribute selector."""
+        super().__init__(name, device, entry, unique_id, coordinator, description)
+        self._current_attr = self._extract_value_from_attribute(
+            self.coordinator.data, self.entity_description.key
+        )
+        self._enum_class = enum_class
+
+    @callback
+    def _handle_coordinator_update(self):
+        """Fetch state from the device."""
+        attr = self._extract_value_from_attribute(
+            self.coordinator.data, self.entity_description.key
+        )
+        if attr is not None:
+            self._current_attr = attr
+            self.async_write_ha_state()
+
+    @property
+    def current_option(self):
+        """Return the current option."""
+        return self.attr.lower()
+
+    async def async_select_option(self, option: str) -> None:
+        """Set an option of the miio device."""
+        await self.async_set_attr(option.title())
+
+    @property
+    def attr(self):
+        """Return the current ptc level."""
+        return self.entity_description.reverse_map.get(self._current_attr)
+
+    async def async_set_attr(self, attr_value: str):
+        """Set attr."""
+        method = getattr(self, self.entity_description.set_method)
+        if await method(attr_value):
+            self._current_attr = self.entity_description.options_map[attr_value]
+            self.async_write_ha_state()
+
+    async def async_set_ptc_level(self, ptc_level: str) -> bool:
+        """Set the ptc level."""
+        return await self._try_command(
+            "Setting the ptc level of the miio device failed.",
+            self._device.set_ptc_level,
+            self._enum_class(self.entity_description.options_map[ptc_level]),
+        )
+
+    async def async_set_display_orientation(self, display_orientation: str) -> bool:
+        """Set the display orientation."""
+        return await self._try_command(
+            "Setting the ptc level of the miio device failed.",
+            self._device.set_display_orientation,
+            self._enum_class(self.entity_description.options_map[display_orientation]),
+        )
+
+    async def async_set_led_brightness(self, brightness: str):
+        """Set the led brightness."""
+        return await self._try_command(
+            "Setting the led brightness of the miio device failed.",
+            self._device.set_led_brightness,
+            self._enum_class(self.entity_description.options_map[brightness]),
+        )
+
+
 class XiaomiAirHumidifierSelector(XiaomiSelector):
     """Representation of a Xiaomi Air Humidifier selector."""
 
     def __init__(self, name, device, entry, unique_id, coordinator, description):
-        """Initialize the plug switch."""
+        """Initialize the Xiaomi Air Humidifier selector."""
         super().__init__(name, device, entry, unique_id, coordinator, description)
         self._current_led_brightness = self._extract_value_from_attribute(
             self.coordinator.data, self.entity_description.key
