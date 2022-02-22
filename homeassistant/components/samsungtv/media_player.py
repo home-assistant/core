@@ -153,7 +153,7 @@ class SamsungTVDevice(MediaPlayerEntity):
             )
         )
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update state of device."""
         if self._auth_failed or self.hass.is_stopping:
             return
@@ -164,10 +164,10 @@ class SamsungTVDevice(MediaPlayerEntity):
 
         if self._attr_state == STATE_ON and self._app_list is None:
             self._app_list = {}  # Ensure that we don't update it twice in parallel
-            self._update_app_list()
+            await self._update_app_list()
 
-    def _update_app_list(self) -> None:
-        self._app_list = self._bridge.get_app_list()
+    async def _update_app_list(self) -> None:
+        self._app_list = await self._bridge.get_app_list()
         if self._app_list is not None:
             self._attr_source_list.extend(self._app_list)
 

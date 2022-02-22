@@ -122,7 +122,7 @@ class SamsungTVBridge(ABC):
         """Try to fetch the mac address of the TV."""
 
     @abstractmethod
-    def get_app_list(self) -> dict[str, str] | None:
+    async def get_app_list(self) -> dict[str, str] | None:
         """Get installed app list."""
 
     def is_on(self) -> bool:
@@ -218,7 +218,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         """Try to fetch the mac address of the TV."""
         return None
 
-    def get_app_list(self) -> dict[str, str]:
+    async def get_app_list(self) -> dict[str, str]:
         """Get installed app list."""
         return {}
 
@@ -307,7 +307,11 @@ class SamsungTVWSBridge(SamsungTVBridge):
         info = await self.device_info()
         return mac_from_device_info(info) if info else None
 
-    def get_app_list(self) -> dict[str, str] | None:
+    async def get_app_list(self) -> dict[str, str] | None:
+        """Get installed app list."""
+        return await self.hass.async_add_executor_job(self._get_app_list)
+
+    def _get_app_list(self) -> dict[str, str] | None:
         """Get installed app list."""
         if self._app_list is None:
             if remote := self._get_remote():
