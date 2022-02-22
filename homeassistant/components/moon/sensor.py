@@ -66,21 +66,21 @@ class MoonSensor(SensorEntity):
     async def async_update(self):
         """Get the time and updates the states."""
         today = dt_util.as_local(dt_util.utcnow()).date()
-        _state = moon.phase(today)
+        state = moon.phase(today)
 
-        if _state < 0.5 or _state > 27.5:
+        if state < 0.5 or state > 27.5:
             self._attr_native_value = STATE_NEW_MOON
-        elif _state < 6.5:
+        elif state < 6.5:
             self._attr_native_value = STATE_WAXING_CRESCENT
-        elif _state < 7.5:
+        elif state < 7.5:
             self._attr_native_value = STATE_FIRST_QUARTER
-        elif _state < 13.5:
+        elif state < 13.5:
             self._attr_native_value = STATE_WAXING_GIBBOUS
-        elif _state < 14.5:
+        elif state < 14.5:
             self._attr_native_value = STATE_FULL_MOON
-        elif _state < 20.5:
+        elif state < 20.5:
             self._attr_native_value = STATE_WANING_GIBBOUS
-        elif _state < 21.5:
+        elif state < 21.5:
             self._attr_native_value = STATE_LAST_QUARTER
         else:
             self._attr_native_value = STATE_WANING_CRESCENT
