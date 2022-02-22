@@ -298,7 +298,10 @@ class FritzBoxToolsOptionsFlowHandler(OptionsFlow):
                         CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
                     ),
                 ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900)),
-                vol.Optional(CONF_OLD_DISCOVERY, default=False): bool,
+                vol.Optional(
+                    CONF_OLD_DISCOVERY,
+                    default=self.config_entry.options.get(CONF_OLD_DISCOVERY, False),
+                ): bool,
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)
