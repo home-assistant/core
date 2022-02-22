@@ -15,7 +15,8 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.components import device_automation, scene
+from homeassistant.components import scene
+from homeassistant.components.device_automation import action as device_action
 from homeassistant.components.logger import LOGSEVERITY
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -244,13 +245,7 @@ async def async_validate_action_config(
         pass
 
     elif action_type == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
-        platform = await device_automation.async_get_device_automation_platform(
-            hass, config[CONF_DOMAIN], device_automation.DeviceAutomationType.ACTION
-        )
-        if hasattr(platform, "async_validate_action_config"):
-            config = await platform.async_validate_action_config(hass, config)
-        else:
-            config = platform.ACTION_SCHEMA(config)
+        config = await device_action.async_validate_action_config(hass, config)
 
     elif action_type == cv.SCRIPT_ACTION_CHECK_CONDITION:
         config = await condition.async_validate_condition_config(hass, config)
@@ -580,12 +575,7 @@ class _ScriptRun:
     async def _async_device_step(self):
         """Perform the device automation specified in the action."""
         self._step_log("device automation")
-        platform = await device_automation.async_get_device_automation_platform(
-            self._hass,
-            self._action[CONF_DOMAIN],
-            device_automation.DeviceAutomationType.ACTION,
-        )
-        await platform.async_call_action_from_config(
+        await device_action.async_call_action_from_config(
             self._hass, self._action, self._variables, self._context
         )
 
