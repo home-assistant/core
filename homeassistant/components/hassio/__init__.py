@@ -35,14 +35,14 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, recorder
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.deprecation import deprecated_function
 from homeassistant.helpers.device_registry import (
     DeviceEntryType,
     DeviceRegistry,
     async_get_registry,
 )
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.supervisor import is_supervised
+from homeassistant.helpers.frame import report
+from homeassistant.helpers.supervisor import has_supervisor
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.loader import bind_hass
@@ -396,7 +396,6 @@ def get_core_info(hass):
 
 @callback
 @bind_hass
-@deprecated_function("homeassistant.helpers.supervisor.is_supervised")
 def is_hassio(
     hass: HomeAssistant | None = None,  # pylint: disable=unused-argument
 ) -> bool:
@@ -404,7 +403,10 @@ def is_hassio(
 
     Async friendly.
     """
-    return is_supervised()
+    if hass is not None:
+        report("hass param deprecated for is_hassio")
+
+    return has_supervisor()
 
 
 @callback
@@ -417,7 +419,7 @@ def get_supervisor_ip() -> str:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Set up the Hass.io component."""
-    if not is_supervised():
+    if not has_supervisor():
         _LOGGER.error("Supervisor not available")
         if config_entries := hass.config_entries.async_entries(DOMAIN):
             hass.async_create_task(

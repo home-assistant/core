@@ -1,16 +1,16 @@
 """Test the Hassio helper."""
 from unittest.mock import patch
 
-from homeassistant.helpers.supervisor import is_supervised
+from homeassistant.helpers.supervisor import has_supervisor
 
 
-async def test_is_supervised_yes():
-    """Test is_supervised when supervisor available."""
+async def test_has_supervisor_yes():
+    """Test has_supervisor when supervisor available."""
     with patch("homeassistant.helpers.supervisor.os.environ", {"SUPERVISOR": True}):
-        assert is_supervised()
+        assert has_supervisor()
 
 
-async def test_is_supervised_no():
-    """Test is_supervised when supervisor not available."""
+async def test_has_supervisor_no():
+    """Test has_supervisor when supervisor not available."""
     with patch("homeassistant.helpers.supervisor.os.environ"):
-        assert not is_supervised()
+        assert not has_supervisor()

@@ -166,7 +166,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
     ssl_profile = conf[CONF_SSL_PROFILE]
 
-    if ssl_peer_certificate is not None and supervisor.is_supervised():
+    if ssl_peer_certificate is not None and supervisor.has_supervisor():
         _LOGGER.warning(
             "Peer certificates are not supported when running the supervisor"
         )

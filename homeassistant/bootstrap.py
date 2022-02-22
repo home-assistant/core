@@ -398,7 +398,7 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
         domains.update(hass.config_entries.async_domains())
 
     # Make sure the Hass.io component is loaded
-    if supervisor.is_supervised():
+    if supervisor.has_supervisor():
         domains.add("hassio")
 
     return domains
