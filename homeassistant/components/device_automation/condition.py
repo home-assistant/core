@@ -42,7 +42,6 @@ async def async_validate_condition_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConfigType:
     """Validate device condition config."""
-    print("VALIDATING", config)
     try:
         config = cv.DEVICE_CONDITION_SCHEMA(config)
         platform = await async_get_device_automation_platform(
