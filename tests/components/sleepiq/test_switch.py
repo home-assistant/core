@@ -1,5 +1,5 @@
 """The tests for SleepIQ switch platform."""
-from homeassistant.components.sleepiq.switch import MIN_TIME_BETWEEN_UPDATES
+from homeassistant.components.sleepiq.coordinator import LONGER_UPDATE_INTERVAL
 from homeassistant.components.switch import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_registry as er
@@ -60,7 +60,7 @@ async def test_switch_get_states(hass, mock_asyncsleepiq):
     )
     mock_asyncsleepiq.beds[BED_ID].paused = True
 
-    async_fire_time_changed(hass, utcnow() + MIN_TIME_BETWEEN_UPDATES)
+    async_fire_time_changed(hass, utcnow() + LONGER_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     assert (
