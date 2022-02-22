@@ -18,7 +18,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .coordinator import SleepIQDataUpdateCoordinator, SleepIQPauseUpdateCoordinator
+from .coordinator import (
+    SleepIQData,
+    SleepIQDataUpdateCoordinator,
+    SleepIQPauseUpdateCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,7 +87,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
     await pause_coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = (coordinator, pause_coordinator)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = SleepIQData(
+        data_coordinator=coordinator,
+        pause_coordinator=pause_coordinator,
+        client=gateway,
+    )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

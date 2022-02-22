@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import SleepIQPauseUpdateCoordinator
+from .coordinator import SleepIQData, SleepIQPauseUpdateCoordinator
 from .entity import SleepIQBedCoordinator
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
@@ -24,10 +24,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sleep number switches."""
-    coordinator: SleepIQPauseUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][1]
+    data: SleepIQData = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        SleepNumberPrivateSwitch(coordinator, bed)
-        for bed in coordinator.client.beds.values()
+        SleepNumberPrivateSwitch(data.pause_coordinator, bed)
+        for bed in data.client.beds.values()
     )
 
 

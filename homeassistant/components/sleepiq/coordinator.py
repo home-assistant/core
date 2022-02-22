@@ -1,4 +1,5 @@
 """Coordinator for SleepIQ."""
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -13,7 +14,7 @@ UPDATE_INTERVAL = timedelta(seconds=60)
 LONGER_UPDATE_INTERVAL = timedelta(minutes=5)
 
 
-class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
+class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """SleepIQ data update coordinator."""
 
     def __init__(
@@ -27,10 +28,12 @@ class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             hass,
             _LOGGER,
             name=f"{username}@SleepIQ",
-            update_method=client.fetch_bed_statuses,
             update_interval=UPDATE_INTERVAL,
         )
         self.client = client
+
+    async def _async_update_data(self) -> None:
+        await self.client.fetch_bed_statuses()
 
 
 class SleepIQPauseUpdateCoordinator(DataUpdateCoordinator[None]):
@@ -43,7 +46,6 @@ class SleepIQPauseUpdateCoordinator(DataUpdateCoordinator[None]):
         username: str,
     ) -> None:
         """Initialize coordinator."""
-
         super().__init__(
             hass,
             _LOGGER,
@@ -55,3 +57,12 @@ class SleepIQPauseUpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         for bed in self.client.beds.values():
             await bed.fetch_pause_mode()
+
+
+@dataclass
+class SleepIQData:
+    """Data for the lookin integration."""
+
+    data_coordinator: SleepIQDataUpdateCoordinator
+    pause_coordinator: SleepIQPauseUpdateCoordinator
+    client: AsyncSleepIQ
