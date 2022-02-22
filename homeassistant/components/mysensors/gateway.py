@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable
 import logging
 import socket
 import sys
@@ -337,9 +337,7 @@ def _gw_callback_factory(
         _LOGGER.debug("Node update: node %s child %s", msg.node_id, msg.child_id)
 
         msg_type = msg.gateway.const.MessageType(msg.type)
-        msg_handler: Callable[
-            [HomeAssistant, GatewayId, Message], Coroutine[Any, Any, None]
-        ] | None = HANDLERS.get(msg_type.name)
+        msg_handler = HANDLERS.get(msg_type.name)
 
         if msg_handler is None:
             return

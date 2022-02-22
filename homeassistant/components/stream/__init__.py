@@ -245,7 +245,7 @@ class Stream:
         self, fmt: str, timeout: int = OUTPUT_IDLE_TIMEOUT
     ) -> StreamOutput:
         """Add provider output stream."""
-        if not self._outputs.get(fmt):
+        if not (provider := self._outputs.get(fmt)):
 
             @callback
             def idle_callback() -> None:
@@ -259,7 +259,7 @@ class Stream:
                 self.hass, IdleTimer(self.hass, timeout, idle_callback)
             )
             self._outputs[fmt] = provider
-        return self._outputs[fmt]
+        return provider
 
     def remove_provider(self, provider: StreamOutput) -> None:
         """Remove provider output stream."""

@@ -52,7 +52,7 @@ FILTER_NAME_OUTLIER = "outlier"
 FILTER_NAME_THROTTLE = "throttle"
 FILTER_NAME_TIME_THROTTLE = "time_throttle"
 FILTER_NAME_TIME_SMA = "time_simple_moving_average"
-FILTERS = Registry()
+FILTERS: Registry[str, type[Filter]] = Registry()
 
 CONF_FILTERS = "filters"
 CONF_FILTER_NAME = "filter"
