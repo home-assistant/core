@@ -160,7 +160,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         if self._power_off_in_progress():
             self._attr_state = STATE_OFF
         else:
-            self._attr_state = STATE_ON if self._bridge.is_on() else STATE_OFF
+            self._attr_state = STATE_ON if await self._bridge.is_on() else STATE_OFF
 
         if self._attr_state == STATE_ON and self._app_list is None:
             self._app_list = {}  # Ensure that we don't update it twice in parallel

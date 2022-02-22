@@ -125,7 +125,11 @@ class SamsungTVBridge(ABC):
     async def get_app_list(self) -> dict[str, str] | None:
         """Get installed app list."""
 
-    def is_on(self) -> bool:
+    async def is_on(self) -> bool:
+        """Tells if the TV is on."""
+        return await self.hass.async_add_executor_job(self._is_on)
+
+    def _is_on(self) -> bool:
         """Tells if the TV is on."""
         if self._remote is not None:
             self.close_remote()
