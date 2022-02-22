@@ -1,7 +1,6 @@
 """Support for SleepIQ switches."""
 from __future__ import annotations
 
-from datetime import timedelta
 from typing import Any
 
 from asyncsleepiq import SleepIQBed
