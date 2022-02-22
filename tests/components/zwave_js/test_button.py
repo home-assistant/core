@@ -42,6 +42,5 @@ async def test_ping_entity(
         },
         blocking=True,
     )
-    # await hass.async_block_till_done()
 
     assert "There is no value to refresh for this entity" in caplog.text
