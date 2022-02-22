@@ -1,4 +1,6 @@
 """Constants for the Plex component."""
+from datetime import timedelta
+
 from homeassistant.const import Platform, __version__
 
 DOMAIN = "plex"
@@ -12,6 +14,7 @@ DEFAULT_VERIFY_SSL = True
 
 PLEXTV_THROTTLE = 60
 
+CLIENT_SCAN_INTERVAL = timedelta(minutes=10)
 DEBOUNCE_TIMEOUT = 1
 DISPATCHERS = "dispatchers"
 GDM_DEBOUNCER = "gdm_debouncer"
