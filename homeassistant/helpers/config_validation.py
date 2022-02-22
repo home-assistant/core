@@ -1033,7 +1033,12 @@ def script_action(value: Any) -> dict:
     if not isinstance(value, dict):
         raise vol.Invalid("expected dictionary")
 
-    return ACTION_TYPE_SCHEMAS[determine_script_action(value)](value)
+    try:
+        action = determine_script_action(value)
+    except ValueError as err:
+        raise vol.Invalid(str(err))
+
+    return ACTION_TYPE_SCHEMAS[action](value)
 
 
 SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])
@@ -1444,7 +1449,10 @@ def determine_script_action(action: dict[str, Any]) -> str:
     if CONF_VARIABLES in action:
         return SCRIPT_ACTION_VARIABLES
 
-    return SCRIPT_ACTION_CALL_SERVICE
+    if CONF_SERVICE in action or CONF_SERVICE_TEMPLATE in action:
+        return SCRIPT_ACTION_CALL_SERVICE
+
+    raise ValueError("Unable to determine action")
 
 
 ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
