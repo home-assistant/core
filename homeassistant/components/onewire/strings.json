@@ -24,6 +24,9 @@
     }
   },
   "options": {
+    "error": {
+      "device_not_selected": "Select devices to configure"
+    },
     "step": {
       "ack_no_options": {
         "data": { },
@@ -42,7 +45,7 @@
         "data": {
           "precision": "Sensor Precision"
         },
-        "description": "Select sensor precision for {sens_id}",
+        "description": "Select sensor precision for {sensor_id}",
         "title": "OneWire Sensor Precision"
       }
     }
