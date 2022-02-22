@@ -50,10 +50,34 @@ async def async_validate_api(hass: HomeAssistant, api_key: str) -> bool:
     return False
 
 
+async def async_get_username(hass: HomeAssistant, api_key: str) -> str | None:
+    """Return username from API:"""
+    client = SensiboClient(
+        api_key,
+        session=async_get_clientsession(hass),
+        timeout=TIMEOUT,
+    )
+
+    try:
+        async with async_timeout.timeout(TIMEOUT):
+            userdetails = await client.async_get_me()
+    except (
+        aiohttp.ClientConnectionError,
+        asyncio.TimeoutError,
+        AuthenticationError,
+        SensiboError,
+    ) as err:
+        _LOGGER.error("Failed to get user details from Sensibo servers %s", err)
+        return None
+
+    if userdetails:
+        return userdetails["result"].get("username")
+
+
 class SensiboConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Sensibo integration."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_import(self, config: dict) -> FlowResult:
         """Import a configuration from config.yaml."""
@@ -72,11 +96,12 @@ class SensiboConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             api_key = user_input[CONF_API_KEY]
 
-            await self.async_set_unique_id(api_key)
-            self._abort_if_unique_id_configured()
-
             validate = await async_validate_api(self.hass, api_key)
             if validate:
+                username = await async_get_username(self.hass, api_key)
+                await self.async_set_unique_id(username)
+                self._abort_if_unique_id_configured()
+
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
                     data={CONF_API_KEY: api_key},
