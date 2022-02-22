@@ -38,7 +38,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the Config Flow Handler."""
         self._discovered_host: str = ""
-        self.fireplace_finder = AsyncUDPFireplaceFinder()
         self._config_context = {}
 
     async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
@@ -63,7 +62,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _find_fireplaces(self):
         """Perform UDP discovery."""
-        ips = await self.fireplace_finder.search_fireplace(timeout=1)
+        fireplace_finder = AsyncUDPFireplaceFinder()
+        ips = await fireplace_finder.search_fireplace(timeout=1)
         if ip := ips[0]:
             self._discovered_host = ip
 
