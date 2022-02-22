@@ -56,22 +56,24 @@ async def async_get_device_info(
     host: str,
 ) -> tuple[int | None, str | None, dict[str, Any] | None]:
     """Fetch the port, method, and device info."""
-    return await hass.async_add_executor_job(_get_device_info, bridge, host)
+    return await hass.async_add_executor_job(_get_device_info, hass, bridge, host)
 
 
 def _get_device_info(
-    bridge: SamsungTVWSBridge | SamsungTVLegacyBridge, host: str
+    hass: HomeAssistant,
+    bridge: SamsungTVWSBridge | SamsungTVLegacyBridge | None,
+    host: str,
 ) -> tuple[int | None, str | None, dict[str, Any] | None]:
     """Fetch the port, method, and device info."""
     if bridge and bridge.port:
         return bridge.port, bridge.method, bridge.device_info()
 
     for port in WEBSOCKET_PORTS:
-        bridge = SamsungTVBridge.get_bridge(METHOD_WEBSOCKET, host, port)
+        bridge = SamsungTVBridge.get_bridge(hass, METHOD_WEBSOCKET, host, port)
         if info := bridge.device_info():
             return port, METHOD_WEBSOCKET, info
 
-    bridge = SamsungTVBridge.get_bridge(METHOD_LEGACY, host, LEGACY_PORT)
+    bridge = SamsungTVBridge.get_bridge(hass, METHOD_LEGACY, host, LEGACY_PORT)
     result = bridge.try_connect()
     if result in (RESULT_SUCCESS, RESULT_AUTH_MISSING):
         return LEGACY_PORT, METHOD_LEGACY, None
@@ -84,15 +86,22 @@ class SamsungTVBridge(ABC):
 
     @staticmethod
     def get_bridge(
-        method: str, host: str, port: int | None = None, token: str | None = None
+        hass: HomeAssistant,
+        method: str,
+        host: str,
+        port: int | None = None,
+        token: str | None = None,
     ) -> SamsungTVLegacyBridge | SamsungTVWSBridge:
         """Get Bridge instance."""
         if method == METHOD_LEGACY or port == LEGACY_PORT:
-            return SamsungTVLegacyBridge(method, host, port)
-        return SamsungTVWSBridge(method, host, port, token)
+            return SamsungTVLegacyBridge(hass, method, host, port)
+        return SamsungTVWSBridge(hass, method, host, port, token)
 
-    def __init__(self, method: str, host: str, port: int | None = None) -> None:
+    def __init__(
+        self, hass: HomeAssistant, method: str, host: str, port: int | None = None
+    ) -> None:
         """Initialize Bridge."""
+        self.hass = hass
         self.port = port
         self.method = method
         self.host = host
@@ -199,9 +208,11 @@ class SamsungTVBridge(ABC):
 class SamsungTVLegacyBridge(SamsungTVBridge):
     """The Bridge for Legacy TVs."""
 
-    def __init__(self, method: str, host: str, port: int | None) -> None:
+    def __init__(
+        self, hass: HomeAssistant, method: str, host: str, port: int | None
+    ) -> None:
         """Initialize Bridge."""
-        super().__init__(method, host, LEGACY_PORT)
+        super().__init__(hass, method, host, LEGACY_PORT)
         self.config = {
             CONF_NAME: VALUE_CONF_NAME,
             CONF_DESCRIPTION: VALUE_CONF_NAME,
@@ -284,10 +295,15 @@ class SamsungTVWSBridge(SamsungTVBridge):
     """The Bridge for WebSocket TVs."""
 
     def __init__(
-        self, method: str, host: str, port: int | None = None, token: str | None = None
+        self,
+        hass: HomeAssistant,
+        method: str,
+        host: str,
+        port: int | None = None,
+        token: str | None = None,
     ) -> None:
         """Initialize Bridge."""
-        super().__init__(method, host, port)
+        super().__init__(hass, method, host, port)
         self.token = token
         self._app_list: dict[str, str] | None = None
 
