@@ -201,7 +201,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         device = self.device
-        if not device.changeableValues.autoChangeoverActive:
+        if not device.changeableValues.autoChangeoverActive and HVAC_MODES[device.changeableValues.heatCoolMode] != HVAC_MODE_OFF:
             if self.hvac_mode == HVAC_MODE_COOL:
                 return device.changeableValues.coolSetpoint
             return device.changeableValues.heatSetpoint
@@ -256,61 +256,71 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         return device.maxCoolSetpoint
 
     async def async_set_temperature(self, **kwargs) -> None:
-        """Set new target temperature."""
-        target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
-        target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-
         device = self.device
-        if device.changeableValues.autoChangeoverActive:
-            if target_temp_low is None or target_temp_high is None:
-                raise HomeAssistantError(
-                    "Could not find target_temp_low and/or target_temp_high in arguments"
-                )
-            _LOGGER.debug("Set temperature: %s - %s", target_temp_low, target_temp_high)
-            try:
-                await self._update_thermostat(
-                    self.location,
-                    device,
-                    coolSetpoint=target_temp_high,
-                    heatSetpoint=target_temp_low,
-                    mode=HVAC_MODES[self.device.changeableValues.heatCoolMode],
-                    thermostatSetpointStatus=PRESET_TEMPORARY_HOLD
-                )
-            except LYRIC_EXCEPTIONS as exception:
-                _LOGGER.error(exception)
-        else:
-            temp = kwargs.get(ATTR_TEMPERATURE)
-            _LOGGER.debug("Set temperature: %s", temp)
-            try:
-                if self.hvac_mode == HVAC_MODE_COOL:
+        
+        if HVAC_MODES[device.changeableValues.heatCoolMode] != HVAC_MODE_OFF:
+            """Set new target temperature."""
+            target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
+            target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+            
+            if device.changeableValues.autoChangeoverActive:
+                if target_temp_low is None or target_temp_high is None:
+                    raise HomeAssistantError(
+                        "Could not find target_temp_low and/or target_temp_high in arguments"
+                    )
+                _LOGGER.debug("Set temperature: %s - %s", target_temp_low, target_temp_high)
+                try:
                     await self._update_thermostat(
                         self.location,
                         device,
-                        coolSetpoint=temp,
+                        coolSetpoint=target_temp_high,
+                        heatSetpoint=target_temp_low,
+                        mode=HVAC_MODES[self.device.changeableValues.heatCoolMode],
                         thermostatSetpointStatus=PRESET_TEMPORARY_HOLD
                     )
-                else:
-                    await self._update_thermostat(
-                        self.location,
-                        device,
-                        heatSetpoint=temp,
-                        thermostatSetpointStatus=PRESET_TEMPORARY_HOLD
-                    )
-            except LYRIC_EXCEPTIONS as exception:
-                _LOGGER.error(exception)
-        await self.coordinator.async_refresh()
+                except LYRIC_EXCEPTIONS as exception:
+                    _LOGGER.error(exception)
+            else:
+                temp = kwargs.get(ATTR_TEMPERATURE)
+                _LOGGER.debug("Set temperature: %s", temp)
+                try:
+                    if self.hvac_mode == HVAC_MODE_COOL:
+                        await self._update_thermostat(
+                            self.location,
+                            device,
+                            coolSetpoint=temp,
+                            thermostatSetpointStatus=PRESET_TEMPORARY_HOLD
+                        )
+                    else:
+                        await self._update_thermostat(
+                            self.location,
+                            device,
+                            heatSetpoint=temp,
+                            thermostatSetpointStatus=PRESET_TEMPORARY_HOLD
+                        )
+                except LYRIC_EXCEPTIONS as exception:
+                    _LOGGER.error(exception)
+            await self.coordinator.async_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set hvac mode."""
         _LOGGER.debug("Set hvac mode: %s", hvac_mode)
         try:
             if LYRIC_HVAC_MODES[hvac_mode] == LYRIC_HVAC_MODE_HEAT_COOL:
-                await self._update_thermostat(
-                    self.location,
-                    self.device,
-                    mode=HVAC_MODES[self.device.changeableValues.heatCoolMode],
-                    autoChangeoverActive=True
-                )
+                if HVAC_MODES[self.device.changeableValues.heatCoolMode] == HVAC_MODE_OFF:
+                    await self._update_thermostat(
+                        self.location,
+                        self.device,
+                        mode=LYRIC_HVAC_MODES[HVAC_MODE_HEAT],
+                        autoChangeoverActive=True
+                        )
+                else:
+                    await self._update_thermostat(
+                        self.location,
+                        self.device,
+                        mode=HVAC_MODES[self.device.changeableValues.heatCoolMode],
+                        autoChangeoverActive=True
+                        )
             else:
                 await self._update_thermostat(
                     self.location,
