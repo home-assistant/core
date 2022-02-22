@@ -19,10 +19,8 @@ async def async_setup_entry(
     """Set up the Overkiz climate from a config entry."""
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
 
-    entities = [
+    async_add_entities(
         WIDGET_TO_CLIMATE_ENTITY[device.widget](device.device_url, data.coordinator)
         for device in data.platforms[Platform.CLIMATE]
         if device.widget in WIDGET_TO_CLIMATE_ENTITY
-    ]
-
-    async_add_entities(entities)
+    )
