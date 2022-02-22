@@ -46,7 +46,9 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE_RANGE
+""" Only LCC models support presets """
+SUPPORT_FLAGS_LCC = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE_RANGE
+SUPPORT_FLAGS_TCC = SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_RANGE
 
 LYRIC_HVAC_ACTION_OFF = "EquipmentOff"
 LYRIC_HVAC_ACTION_HEAT = "Heat"
@@ -167,7 +169,10 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
-        return SUPPORT_FLAGS
+        if self.device.changeableValues.thermostatSetpointStatus: 
+            return SUPPORT_FLAGS_LCC
+        else:
+            return SUPPORT_FLAGS_TCC
 
     @property
     def temperature_unit(self) -> str:
@@ -257,12 +262,12 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs) -> None:
         device = self.device
-        
+
         if HVAC_MODES[device.changeableValues.heatCoolMode] != HVAC_MODE_OFF:
             """Set new target temperature."""
             target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
             target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-            
+    
             if device.changeableValues.autoChangeoverActive:
                 if target_temp_low is None or target_temp_high is None:
                     raise HomeAssistantError(
@@ -276,7 +281,6 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                         coolSetpoint=target_temp_high,
                         heatSetpoint=target_temp_low,
                         mode=HVAC_MODES[self.device.changeableValues.heatCoolMode],
-                        thermostatSetpointStatus=PRESET_TEMPORARY_HOLD
                     )
                 except LYRIC_EXCEPTIONS as exception:
                     _LOGGER.error(exception)
@@ -289,14 +293,12 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                             self.location,
                             device,
                             coolSetpoint=temp,
-                            thermostatSetpointStatus=PRESET_TEMPORARY_HOLD
                         )
                     else:
                         await self._update_thermostat(
                             self.location,
                             device,
                             heatSetpoint=temp,
-                            thermostatSetpointStatus=PRESET_TEMPORARY_HOLD
                         )
                 except LYRIC_EXCEPTIONS as exception:
                     _LOGGER.error(exception)
