@@ -141,7 +141,7 @@ def get_domain_data(hass: HomeAssistant) -> DlnaDmsData:
 class DidlPlayMedia(PlayMedia):
     """Playable media with DIDL metadata."""
 
-    didl_metadata: didl_lite.DidlObject
+    didl_metadata: didl_lite.DidlObject | None = None
 
 
 class DlnaDmsDeviceError(BrowseError, Unresolvable):
@@ -593,7 +593,7 @@ class DmsDeviceSource:
             if mime_type := _resource_mime_type(resource):
                 url = self._device.get_absolute_url(resource.uri)
                 LOGGER.debug("Resolved to url %s MIME %s", url, mime_type)
-                return DidlPlayMedia(url, mime_type, item)
+                return DidlPlayMedia(url, mime_type, didl_metadata=item)
 
         LOGGER.debug("Object %s has no playable resources", item.id)
         raise Unresolvable("Object has no playable resources")

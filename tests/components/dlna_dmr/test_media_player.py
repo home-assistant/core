@@ -804,7 +804,7 @@ async def test_play_media_didl_metadata(
     class DidlPlayMedia(PlayMedia):
         """Playable media with DIDL metadata."""
 
-        didl_metadata: didl_lite.DidlObject
+        didl_metadata: didl_lite.DidlObject | None = None
 
     didl_metadata = didl_lite.VideoItem(
         id="120$22$33",

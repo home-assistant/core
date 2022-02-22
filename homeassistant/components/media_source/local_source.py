@@ -73,7 +73,9 @@ class LocalSource(MediaSource):
         path = self.async_full_path(source_dir_id, location)
         mime_type, _ = mimetypes.guess_type(str(path))
         assert isinstance(mime_type, str)
-        return PlayMedia(f"/media/{item.identifier}", mime_type)
+        return PlayMedia(
+            f"/media/{item.identifier}", mime_type, title=path.name[: -len(path.suffix)]
+        )
 
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return media."""

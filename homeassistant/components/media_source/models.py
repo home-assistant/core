@@ -22,6 +22,10 @@ class PlayMedia:
 
     url: str
     mime_type: str
+    # Same data as BrowseMedia, but optional
+    media_class: str | None = None
+    title: str | None = None
+    thumbnail: str | None = None
 
 
 class BrowseMediaSource(BrowseMedia):

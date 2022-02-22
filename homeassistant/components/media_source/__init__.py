@@ -172,11 +172,12 @@ async def websocket_resolve_media(
 
     data = dataclasses.asdict(media)
 
-    if data["url"][0] == "/":
-        data["url"] = async_sign_path(
-            hass,
-            quote(data["url"]),
-            timedelta(seconds=msg["expires"]),
-        )
+    for key in ("url", "thumbnail"):
+        if data[key][0] == "/":
+            data[key] = async_sign_path(
+                hass,
+                quote(data[key]),
+                timedelta(seconds=msg["expires"]),
+            )
 
     connection.send_result(msg["id"], data)
