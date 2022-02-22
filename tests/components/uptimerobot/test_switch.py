@@ -1,4 +1,4 @@
-"""Test UptimeRobot sensor."""
+"""Test UptimeRobot switch."""
 
 from unittest.mock import patch
 
@@ -25,8 +25,6 @@ from .common import (
 
 from tests.common import MockConfigEntry
 
-SWITCH_ICON = "mdi:cog"
-
 
 async def test_presentation(hass: HomeAssistant) -> None:
     """Test the presenstation of UptimeRobot sensors."""
@@ -35,7 +33,7 @@ async def test_presentation(hass: HomeAssistant) -> None:
     entity = hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)
 
     assert entity.state == STATE_OFF
-    assert entity.attributes["icon"] == SWITCH_ICON
+    assert entity.attributes["icon"] == "mdi:cog"
     assert entity.attributes["target"] == MOCK_UPTIMEROBOT_MONITOR["url"]
 
 

@@ -62,14 +62,11 @@ class UptimeRobotSwitch(UptimeRobotEntity, SwitchEntity):
             self.async_write_ha_state()
         except UptimeRobotAuthenticationException:
             LOGGER.error(
-                "Authentication Error: Please check the provided credentials and verify that you can log into the web interface",
-                exc_info=True,
+                "Authentication Error: Please check the provided credentials and verify that you can log into the web interface"
             )
         else:
             if response.status != API_ATTR_OK:
-                LOGGER.error(
-                    "Switch API exception: %s", response.error.message, exc_info=True
-                )
+                LOGGER.error("API exception: %s", response.error.message, exc_info=True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn on switch."""
