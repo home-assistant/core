@@ -338,9 +338,9 @@ class PowerViewShade(ShadeEntity, CoverEntity):
     @callback
     def _async_update_shade_from_group(self):
         """Update with new data from the coordinator."""
-        if self._scheduled_transition_update:
-            # If a transition is in progress
-            # the data will be wrong
+        if self._scheduled_transition_update or self.coordinator.data is None:
+            # If a transition is in progress the data will be wrong
+            # or empty data as result of 204/423 return
             return
         self._async_process_new_shade_data(self.coordinator.data[self._shade.id])
         self.async_write_ha_state()

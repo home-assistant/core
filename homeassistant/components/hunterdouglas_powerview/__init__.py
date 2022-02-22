@@ -97,10 +97,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data():
         """Fetch data from shade endpoint."""
-        async with async_timeout.timeout(10):
-            shade_entries = await shades.get_resources()
-        if not shade_entries:
-            raise UpdateFailed("Failed to fetch new shade data.")
+        try:
+            async with async_timeout.timeout(10):
+                shade_entries = await shades.get_resources()
+            if not shade_entries or isinstance(shade_entries, bool):
+                # hub returns boolean on a 204/423 empty response (maintenance)
+                _LOGGER.debug("Hub is online however data is temporarily unavailable")
+                return
+        except HUB_EXCEPTIONS as err:
+            raise UpdateFailed(f"Failed to fetch new shade data. {err}") from err
+
         return _async_map_data_by_id(shade_entries[SHADE_DATA])
 
     coordinator = DataUpdateCoordinator(

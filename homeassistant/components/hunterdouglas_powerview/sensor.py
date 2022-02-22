@@ -97,6 +97,9 @@ class PowerViewShadeBatterySensor(ShadeEntity, SensorEntity):
     @callback
     def _async_update_shade_from_group(self):
         """Update with new data from the coordinator."""
+        if self.coordinator.data is None:
+            # empty data as result of 204/423 return
+            return
         self._shade.raw_data = self.coordinator.data[self._shade.id]
         self.async_write_ha_state()
 
@@ -132,5 +135,8 @@ class PowerViewShadeSignalSensor(ShadeEntity, SensorEntity):
     @callback
     def _async_update_shade_from_group(self):
         """Update with new data from the coordinator."""
+        if self.coordinator.data is None:
+            # empty data as result of 204/423 return
+            return
         self._shade.raw_data = self.coordinator.data[self._shade.id]
         self.async_write_ha_state()
