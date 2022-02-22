@@ -91,6 +91,7 @@ GATEWAY_PLATFORMS = [
 SWITCH_PLATFORMS = [Platform.SWITCH]
 FAN_PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.FAN,
     Platform.NUMBER,
     Platform.SELECT,
