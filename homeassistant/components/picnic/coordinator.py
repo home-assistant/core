@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ADDRESS, CART_DATA, LAST_ORDER_DATA, SLOT_DATA
+from .const import ADDRESS, CART_DATA, LAST_ORDER_DATA, NEXT_DELIVERY_DATA, SLOT_DATA
 
 
 class PicnicUpdateCoordinator(DataUpdateCoordinator):
@@ -59,18 +59,17 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
     def fetch_data(self):
         """Fetch the data from the Picnic API and return a flat dict with only needed sensor data."""
         # Fetch from the API and pre-process the data
-        cart = self.picnic_api_client.get_cart()
-
-        if not cart:
+        if not (cart := self.picnic_api_client.get_cart()):
             raise UpdateFailed("API response doesn't contain expected data.")
 
-        last_order = self._get_last_order()
+        next_delivery, last_order = self._get_order_data()
         slot_data = self._get_slot_data(cart)
 
         return {
             ADDRESS: self._get_address(),
             CART_DATA: cart,
             SLOT_DATA: slot_data,
+            NEXT_DELIVERY_DATA: next_delivery,
             LAST_ORDER_DATA: last_order,
         }
 
@@ -98,47 +97,55 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
 
         return {}
 
-    def _get_last_order(self) -> dict:
+    def _get_order_data(self) -> tuple[dict, dict]:
         """Get data of the last order from the list of deliveries."""
         # Get the deliveries
         deliveries = self.picnic_api_client.get_deliveries(summary=True)
 
         # Determine the last order and return an empty dict if there is none
         try:
+            # Filter on status CURRENT and select the last on the list which is the first one to be delivered
+            # Make a deepcopy because some references are local
+            next_deliveries = list(
+                filter(lambda d: d["status"] == "CURRENT", deliveries)
+            )
+            next_delivery = (
+                copy.deepcopy(next_deliveries[-1]) if next_deliveries else {}
+            )
             last_order = copy.deepcopy(deliveries[0])
-        except KeyError:
-            return {}
+        except (KeyError, TypeError):
+            # A KeyError or TypeError indicate that the response contains unexpected data
+            return {}, {}
 
-        #  Get the position details if the order is not delivered yet
+        #  Get the next order's position details if there is an undelivered order
         delivery_position = {}
-        if not last_order.get("delivery_time"):
+        if next_delivery and not next_delivery.get("delivery_time"):
             try:
                 delivery_position = self.picnic_api_client.get_delivery_position(
-                    last_order["delivery_id"]
+                    next_delivery["delivery_id"]
                 )
             except ValueError:
                 # No information yet can mean an empty response
                 pass
 
         # Determine the ETA, if available, the one from the delivery position API is more precise
-        # but it's only available shortly before the actual delivery.
-        last_order["eta"] = delivery_position.get(
-            "eta_window", last_order.get("eta2", {})
+        # but, it's only available shortly before the actual delivery.
+        next_delivery["eta"] = delivery_position.get(
+            "eta_window", next_delivery.get("eta2", {})
         )
+        if "eta2" in next_delivery:
+            del next_delivery["eta2"]
 
         # Determine the total price by adding up the total price of all sub-orders
         total_price = 0
         for order in last_order.get("orders", []):
             total_price += order.get("total_price", 0)
-
-        # Sanitise the object
         last_order["total_price"] = total_price
-        last_order.setdefault("delivery_time", {})
-        if "eta2" in last_order:
-            del last_order["eta2"]
 
-        # Make a copy because some references are local
-        return last_order
+        # Make sure delivery_time is a dict
+        last_order.setdefault("delivery_time", {})
+
+        return next_delivery, last_order
 
     @callback
     def _update_auth_token(self):

@@ -131,7 +131,10 @@ class AlphaVantageSensor(SensorEntity):
         _LOGGER.debug("Requesting new data for symbol %s", self._symbol)
         all_values, _ = self._timeseries.get_intraday(self._symbol)
         values = next(iter(all_values.values()))
-        self._attr_native_value = values["1. open"]
+        if isinstance(values, dict) and "1. open" in values:
+            self._attr_native_value = values["1. open"]
+        else:
+            self._attr_native_value = None
         self._attr_extra_state_attributes = (
             {
                 ATTR_ATTRIBUTION: ATTRIBUTION,
@@ -139,7 +142,7 @@ class AlphaVantageSensor(SensorEntity):
                 ATTR_HIGH: values["2. high"],
                 ATTR_LOW: values["3. low"],
             }
-            if values is not None
+            if isinstance(values, dict)
             else None
         )
         _LOGGER.debug("Received new values for symbol %s", self._symbol)
@@ -171,7 +174,10 @@ class AlphaVantageForeignExchange(SensorEntity):
         values, _ = self._foreign_exchange.get_currency_exchange_rate(
             from_currency=self._from_currency, to_currency=self._to_currency
         )
-        self._attr_native_value = round(float(values["5. Exchange Rate"]), 4)
+        if isinstance(values, dict) and "5. Exchange Rate" in values:
+            self._attr_native_value = round(float(values["5. Exchange Rate"]), 4)
+        else:
+            self._attr_native_value = None
         self._attr_extra_state_attributes = (
             {
                 ATTR_ATTRIBUTION: ATTRIBUTION,

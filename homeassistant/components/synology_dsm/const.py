@@ -9,6 +9,7 @@ from synology_dsm.api.core.utilization import SynoCoreUtilization
 from synology_dsm.api.dsm.information import SynoDSMInformation
 from synology_dsm.api.storage.storage import SynoStorage
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
+from synology_dsm.api.surveillance_station.const import SNAPSHOT_PROFILE_BALANCED
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -31,7 +32,13 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import EntityCategory, EntityDescription
 
 DOMAIN = "synology_dsm"
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CAMERA,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 COORDINATOR_CAMERAS = "coordinator_cameras"
 COORDINATOR_CENTRAL = "coordinator_central"
 COORDINATOR_SWITCHES = "coordinator_switches"
@@ -47,6 +54,7 @@ UNDO_UPDATE_LISTENER = "undo_update_listener"
 CONF_SERIAL = "serial"
 CONF_VOLUMES = "volumes"
 CONF_DEVICE_TOKEN = "device_token"
+CONF_SNAPSHOT_QUALITY = "snap_profile_type"
 
 DEFAULT_USE_SSL = True
 DEFAULT_VERIFY_SSL = False
@@ -55,6 +63,7 @@ DEFAULT_PORT_SSL = 5001
 # Options
 DEFAULT_SCAN_INTERVAL = 15  # min
 DEFAULT_TIMEOUT = 10  # sec
+DEFAULT_SNAPSHOT_QUALITY = SNAPSHOT_PROFILE_BALANCED
 
 ENTITY_UNIT_LOAD = "load"
 
@@ -373,6 +382,5 @@ SURVEILLANCE_SWITCH: tuple[SynologyDSMSwitchEntityDescription, ...] = (
         key="home_mode",
         name="Home Mode",
         icon="mdi:home-account",
-        entity_category=EntityCategory.CONFIG,
     ),
 )

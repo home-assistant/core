@@ -163,6 +163,25 @@ async def test_midnight_turnover_before_midnight_outside_period(hass):
     assert state.state == STATE_OFF
 
 
+async def test_after_happens_tomorrow(hass):
+    """Test when both before and after are in the future, and after is later than before."""
+    test_time = datetime(2019, 1, 10, 10, 00, 0, tzinfo=dt_util.UTC)
+    config = {
+        "binary_sensor": [
+            {"platform": "tod", "name": "Night", "after": "23:00", "before": "12:00"}
+        ]
+    }
+    with patch(
+        "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
+        return_value=test_time,
+    ):
+        await async_setup_component(hass, "binary_sensor", config)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.night")
+    assert state.state == STATE_ON
+
+
 async def test_midnight_turnover_after_midnight_outside_period(hass):
     """Test midnight turnover setting before midnight inside period ."""
     test_time = datetime(2019, 1, 10, 20, 0, 0, tzinfo=dt_util.UTC)

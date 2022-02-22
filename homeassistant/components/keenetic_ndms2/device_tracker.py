@@ -31,7 +31,7 @@ async def async_setup_entry(
     """Set up device tracker for Keenetic NDMS2 component."""
     router: KeeneticRouter = hass.data[DOMAIN][config_entry.entry_id][ROUTER]
 
-    tracked = set()
+    tracked: set[str] = set()
 
     @callback
     def update_from_router():

@@ -1,4 +1,6 @@
 """Support to help onboard new users."""
+from typing import TYPE_CHECKING
+
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
@@ -53,6 +55,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     store = OnboadingStorage(hass, STORAGE_VERSION, STORAGE_KEY, private=True)
     if (data := await store.async_load()) is None:
         data = {"done": []}
+
+    if TYPE_CHECKING:
+        assert isinstance(data, dict)
 
     if STEP_USER not in data["done"]:
         # Users can already have created an owner account via the command line

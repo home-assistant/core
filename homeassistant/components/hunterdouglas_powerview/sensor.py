@@ -2,7 +2,11 @@
 
 from aiopvapi.resources.shade import factory as PvShade
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_CLASS_SIGNAL_STRENGTH, PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
@@ -71,6 +75,7 @@ class PowerViewShadeBatterySensor(ShadeEntity, SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def name(self):

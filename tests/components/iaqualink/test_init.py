@@ -67,7 +67,8 @@ async def test_setup_systems_exception(hass, config_entry):
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.iaqualink.AqualinkClient.login", return_value=None
+        "homeassistant.components.iaqualink.AqualinkClient.login",
+        return_value=None,
     ), patch(
         "homeassistant.components.iaqualink.AqualinkClient.get_systems",
         side_effect=AqualinkServiceException,
@@ -83,7 +84,8 @@ async def test_setup_no_systems_recognized(hass, config_entry):
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.iaqualink.AqualinkClient.login", return_value=None
+        "homeassistant.components.iaqualink.AqualinkClient.login",
+        return_value=None,
     ), patch(
         "homeassistant.components.iaqualink.AqualinkClient.get_systems",
         return_value={},
@@ -102,7 +104,8 @@ async def test_setup_devices_exception(hass, config_entry, client):
     systems = {system.serial: system}
 
     with patch(
-        "homeassistant.components.iaqualink.AqualinkClient.login", return_value=None
+        "homeassistant.components.iaqualink.AqualinkClient.login",
+        return_value=None,
     ), patch(
         "homeassistant.components.iaqualink.AqualinkClient.get_systems",
         return_value=systems,
@@ -123,11 +126,12 @@ async def test_setup_all_good_no_recognized_devices(hass, config_entry, client):
     system = get_aqualink_system(client)
     systems = {system.serial: system}
 
-    device = get_aqualink_device(system, AqualinkDevice)
+    device = get_aqualink_device(system, AqualinkDevice, data={"name": "dev_1"})
     devices = {device.name: device}
 
     with patch(
-        "homeassistant.components.iaqualink.AqualinkClient.login", return_value=None
+        "homeassistant.components.iaqualink.AqualinkClient.login",
+        return_value=None,
     ), patch(
         "homeassistant.components.iaqualink.AqualinkClient.get_systems",
         return_value=systems,
@@ -160,18 +164,23 @@ async def test_setup_all_good_all_device_types(hass, config_entry, client):
     systems = {system.serial: system}
 
     devices = [
-        get_aqualink_device(system, AqualinkAuxToggle),
-        get_aqualink_device(system, AqualinkBinarySensor),
-        get_aqualink_device(system, AqualinkLightToggle),
-        get_aqualink_device(system, AqualinkSensor),
-        get_aqualink_device(system, AqualinkThermostat),
+        get_aqualink_device(system, AqualinkAuxToggle, data={"name": "aux_1"}),
+        get_aqualink_device(
+            system, AqualinkBinarySensor, data={"name": "freeze_protection"}
+        ),
+        get_aqualink_device(system, AqualinkLightToggle, data={"name": "aux_2"}),
+        get_aqualink_device(system, AqualinkSensor, data={"name": "ph"}),
+        get_aqualink_device(
+            system, AqualinkThermostat, data={"name": "pool_set_point"}
+        ),
     ]
     devices = {d.name: d for d in devices}
 
     system.get_devices = AsyncMock(return_value=devices)
 
     with patch(
-        "homeassistant.components.iaqualink.AqualinkClient.login", return_value=None
+        "homeassistant.components.iaqualink.AqualinkClient.login",
+        return_value=None,
     ), patch(
         "homeassistant.components.iaqualink.AqualinkClient.get_systems",
         return_value=systems,
@@ -205,7 +214,8 @@ async def test_multiple_updates(hass, config_entry, caplog, client):
     caplog.set_level(logging.WARNING)
 
     with patch(
-        "homeassistant.components.iaqualink.AqualinkClient.login", return_value=None
+        "homeassistant.components.iaqualink.AqualinkClient.login",
+        return_value=None,
     ), patch(
         "homeassistant.components.iaqualink.AqualinkClient.get_systems",
         return_value=systems,
@@ -303,13 +313,16 @@ async def test_entity_assumed_and_available(hass, config_entry, client):
     system = get_aqualink_system(client)
     systems = {system.serial: system}
 
-    light = get_aqualink_device(system, AqualinkLightToggle, data={"state": "1"})
+    light = get_aqualink_device(
+        system, AqualinkLightToggle, data={"name": "aux_1", "state": "1"}
+    )
     devices = {d.name: d for d in [light]}
     system.get_devices = AsyncMock(return_value=devices)
     system.update = AsyncMock()
 
     with patch(
-        "homeassistant.components.iaqualink.AqualinkClient.login", return_value=None
+        "homeassistant.components.iaqualink.AqualinkClient.login",
+        return_value=None,
     ), patch(
         "homeassistant.components.iaqualink.AqualinkClient.get_systems",
         return_value=systems,

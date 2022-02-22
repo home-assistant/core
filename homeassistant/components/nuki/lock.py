@@ -31,7 +31,9 @@ async def async_setup_entry(
     data = hass.data[NUKI_DOMAIN][entry.entry_id]
     coordinator = data[DATA_COORDINATOR]
 
-    entities = [NukiLockEntity(coordinator, lock) for lock in data[DATA_LOCKS]]
+    entities: list[NukiDeviceEntity] = [
+        NukiLockEntity(coordinator, lock) for lock in data[DATA_LOCKS]
+    ]
     entities.extend(
         [NukiOpenerEntity(coordinator, opener) for opener in data[DATA_OPENERS]]
     )

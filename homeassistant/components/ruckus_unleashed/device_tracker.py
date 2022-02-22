@@ -25,7 +25,7 @@ async def async_setup_entry(
     """Set up device tracker for Ruckus Unleashed component."""
     coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
 
-    tracked = set()
+    tracked: set[str] = set()
 
     @callback
     def router_update():

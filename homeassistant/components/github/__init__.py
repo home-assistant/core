@@ -1,13 +1,11 @@
 """The GitHub integration."""
 from __future__ import annotations
 
-import asyncio
-
 from aiogithubapi import GitHubAPI
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import (
     SERVER_SOFTWARE,
@@ -15,13 +13,7 @@ from homeassistant.helpers.aiohttp_client import (
 )
 
 from .const import CONF_REPOSITORIES, DOMAIN, LOGGER
-from .coordinator import (
-    DataUpdateCoordinators,
-    RepositoryCommitDataUpdateCoordinator,
-    RepositoryInformationDataUpdateCoordinator,
-    RepositoryIssueDataUpdateCoordinator,
-    RepositoryReleaseDataUpdateCoordinator,
-)
+from .coordinator import GitHubDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -39,33 +31,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     repositories: list[str] = entry.options[CONF_REPOSITORIES]
 
     for repository in repositories:
-        coordinators: DataUpdateCoordinators = {
-            "information": RepositoryInformationDataUpdateCoordinator(
-                hass=hass, entry=entry, client=client, repository=repository
-            ),
-            "release": RepositoryReleaseDataUpdateCoordinator(
-                hass=hass, entry=entry, client=client, repository=repository
-            ),
-            "issue": RepositoryIssueDataUpdateCoordinator(
-                hass=hass, entry=entry, client=client, repository=repository
-            ),
-            "commit": RepositoryCommitDataUpdateCoordinator(
-                hass=hass, entry=entry, client=client, repository=repository
-            ),
-        }
-
-        await asyncio.gather(
-            *(
-                coordinators["information"].async_config_entry_first_refresh(),
-                coordinators["release"].async_config_entry_first_refresh(),
-                coordinators["issue"].async_config_entry_first_refresh(),
-                coordinators["commit"].async_config_entry_first_refresh(),
-            )
+        coordinator = GitHubDataUpdateCoordinator(
+            hass=hass,
+            client=client,
+            repository=repository,
         )
 
-        hass.data[DOMAIN][repository] = coordinators
+        await coordinator.async_config_entry_first_refresh()
 
-    await async_cleanup_device_registry(hass=hass, entry=entry)
+        hass.data[DOMAIN][repository] = coordinator
+
+    async_cleanup_device_registry(hass=hass, entry=entry)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
@@ -73,7 +49,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_cleanup_device_registry(
+@callback
+def async_cleanup_device_registry(
     hass: HomeAssistant,
     entry: ConfigEntry,
 ) -> None:

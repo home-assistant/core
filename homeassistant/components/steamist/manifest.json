@@ -8,9 +8,11 @@
   "codeowners": ["@bdraco"],
   "iot_class": "local_polling",
   "dhcp": [
+    {"registered_devices": true},
     {
       "macaddress": "001E0C*",
       "hostname": "my[45]50*"
     }
-  ]
+  ],
+  "loggers": ["aiosteamist", "discovery30303"]
 }

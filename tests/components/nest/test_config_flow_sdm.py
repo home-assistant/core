@@ -439,6 +439,41 @@ async def test_pubsub_subscription(hass, oauth, subscriber):
     assert entry.data["cloud_project_id"] == CLOUD_PROJECT_ID
 
 
+async def test_pubsub_subscription_strip_whitespace(hass, oauth, subscriber):
+    """Check that project id has whitespace stripped on entry."""
+    assert await async_setup_configflow(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await oauth.async_pick_flow(result, APP_AUTH_DOMAIN)
+    await oauth.async_oauth_app_flow(result)
+
+    with patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber",
+        return_value=subscriber,
+    ):
+        result = await oauth.async_configure(result, {"code": "1234"})
+        await oauth.async_pubsub_flow(result)
+        entry = await oauth.async_finish_setup(
+            result, {"cloud_project_id": " " + CLOUD_PROJECT_ID + " "}
+        )
+        await hass.async_block_till_done()
+
+    assert entry.title == "OAuth for Apps"
+    assert "token" in entry.data
+    entry.data["token"].pop("expires_at")
+    assert entry.unique_id == DOMAIN
+    assert entry.data["token"] == {
+        "refresh_token": "mock-refresh-token",
+        "access_token": "mock-access-token",
+        "type": "Bearer",
+        "expires_in": 60,
+    }
+    assert "subscriber_id" in entry.data
+    assert entry.data["cloud_project_id"] == CLOUD_PROJECT_ID
+
+
 async def test_pubsub_subscription_auth_failure(hass, oauth):
     """Check flow that creates a pub/sub subscription."""
     assert await async_setup_configflow(hass)

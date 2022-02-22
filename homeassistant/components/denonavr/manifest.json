@@ -3,7 +3,7 @@
   "name": "Denon AVR Network Receivers",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/denonavr",
-  "requirements": ["denonavr==0.10.9"],
+  "requirements": ["denonavr==0.10.10"],
   "codeowners": ["@ol-iver", "@starkillerOG"],
   "ssdp": [
     {
@@ -55,5 +55,6 @@
       "deviceType": "urn:schemas-denon-com:device:AiosDevice:1"
     }
   ],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["denonavr"]
 }

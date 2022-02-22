@@ -4,6 +4,7 @@ from homeassistant.components.fan import SUPPORT_SET_SPEED
 from homeassistant.helpers.entity import EntityCategory
 
 from tests.components.homekit_controller.common import (
+    HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
     assert_devices_and_entities_created,
@@ -22,7 +23,7 @@ async def test_haa_fan_setup(hass):
     await assert_devices_and_entities_created(
         hass,
         DeviceTestInfo(
-            unique_id="00:00:00:00:00:00",
+            unique_id=HUB_TEST_ACCESSORY_ID,
             name="HAA-C718B3",
             model="RavenSystem HAA",
             manufacturer="José A. Jiménez Campos",
@@ -37,6 +38,7 @@ async def test_haa_fan_setup(hass):
                     sw_version="5.0.18",
                     hw_version="",
                     serial_number="C718B3-2",
+                    unique_id="00:00:00:00:00:00:aid:2",
                     devices=[],
                     entities=[
                         EntityTestInfo(
@@ -62,14 +64,14 @@ async def test_haa_fan_setup(hass):
                 ),
                 EntityTestInfo(
                     entity_id="button.haa_c718b3_setup",
-                    friendly_name="HAA-C718B3 - Setup",
+                    friendly_name="HAA-C718B3 Setup",
                     unique_id="homekit-C718B3-1-aid:1-sid:1010-cid:1012",
                     entity_category=EntityCategory.CONFIG,
                     state="unknown",
                 ),
                 EntityTestInfo(
                     entity_id="button.haa_c718b3_update",
-                    friendly_name="HAA-C718B3 - Update",
+                    friendly_name="HAA-C718B3 Update",
                     unique_id="homekit-C718B3-1-aid:1-sid:1010-cid:1011",
                     entity_category=EntityCategory.CONFIG,
                     state="unknown",

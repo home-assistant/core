@@ -117,7 +117,7 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
         )
 
     @esphome_state_property
-    def is_on(self) -> bool | None:  # type: ignore[override]
+    def is_on(self) -> bool | None:
         """Return true if the entity is on."""
         return self._state.state
 

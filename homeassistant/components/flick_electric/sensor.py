@@ -15,8 +15,6 @@ from homeassistant.util.dt import utcnow
 from .const import ATTR_COMPONENTS, ATTR_END_AT, ATTR_START_AT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-_AUTH_URL = "https://api.flick.energy/identity/oauth/token"
-_RESOURCE = "https://api.flick.energy/customer/mobile_provider/price"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -70,6 +68,8 @@ class FlickPricingSensor(SensorEntity):
 
         async with async_timeout.timeout(60):
             self._price = await self._api.getPricing()
+
+        _LOGGER.debug("Pricing data: %s", self._price)
 
         self._attributes[ATTR_START_AT] = self._price.start_at
         self._attributes[ATTR_END_AT] = self._price.end_at

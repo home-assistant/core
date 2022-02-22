@@ -11,6 +11,7 @@ from homeassistant.const import (
     PRESSURE_INHG,
     PRESSURE_KPA,
     PRESSURE_MBAR,
+    PRESSURE_MMHG,
     PRESSURE_PA,
     PRESSURE_PSI,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
@@ -25,6 +26,7 @@ VALID_UNITS: tuple[str, ...] = (
     PRESSURE_MBAR,
     PRESSURE_INHG,
     PRESSURE_PSI,
+    PRESSURE_MMHG,
 )
 
 UNIT_CONVERSION: dict[str, float] = {
@@ -36,6 +38,7 @@ UNIT_CONVERSION: dict[str, float] = {
     PRESSURE_MBAR: 1 / 100,
     PRESSURE_INHG: 1 / 3386.389,
     PRESSURE_PSI: 1 / 6894.757,
+    PRESSURE_MMHG: 1 / 133.322,
 }
 
 

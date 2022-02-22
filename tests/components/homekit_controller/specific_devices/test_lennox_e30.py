@@ -10,6 +10,7 @@ from homeassistant.components.climate.const import (
 )
 
 from tests.components.homekit_controller.common import (
+    HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
     assert_devices_and_entities_created,
@@ -26,7 +27,7 @@ async def test_lennox_e30_setup(hass):
     await assert_devices_and_entities_created(
         hass,
         DeviceTestInfo(
-            unique_id="00:00:00:00:00:00",
+            unique_id=HUB_TEST_ACCESSORY_ID,
             name="Lennox",
             model="E30 2B",
             manufacturer="Lennox",

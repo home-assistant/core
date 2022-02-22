@@ -51,12 +51,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import get_androidtv_mac
 from .const import (
     ANDROID_DEV,
     ANDROID_DEV_OPT,
@@ -80,8 +81,6 @@ from .const import (
     DEVICE_ANDROIDTV,
     DEVICE_CLASSES,
     DOMAIN,
-    PROP_ETHMAC,
-    PROP_WIFIMAC,
     SIGNAL_CONFIG_ENTITY,
 )
 
@@ -343,7 +342,7 @@ class ADBDevice(MediaPlayerEntity):
             self._attr_device_info[ATTR_MANUFACTURER] = manufacturer
         if sw_version := info.get(ATTR_SW_VERSION):
             self._attr_device_info[ATTR_SW_VERSION] = sw_version
-        if mac := format_mac(info.get(PROP_ETHMAC) or info.get(PROP_WIFIMAC, "")):
+        if mac := get_androidtv_mac(info):
             self._attr_device_info[ATTR_CONNECTIONS] = {(CONNECTION_NETWORK_MAC, mac)}
 
         self._app_id_to_name = {}
@@ -609,7 +608,11 @@ class AndroidTVDevice(ADBDevice):
     @adb_decorator()
     async def async_mute_volume(self, mute):
         """Mute the volume."""
-        await self.aftv.mute_volume()
+        is_muted = await self.aftv.is_volume_muted()
+
+        # `None` indicates that the muted status could not be determined
+        if is_muted is not None and is_muted != mute:
+            await self.aftv.mute_volume()
 
     @adb_decorator()
     async def async_set_volume_level(self, volume):

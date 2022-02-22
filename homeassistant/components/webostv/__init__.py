@@ -158,13 +158,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             try:
                 await client.connect()
             except WEBOSTV_EXCEPTIONS:
+                if tries == 0:
+                    _LOGGER.warning(
+                        "Please make sure webOS TV %s is turned on to complete "
+                        "the migration of configuration.yaml to the UI",
+                        entity_id,
+                    )
                 wait_time = 2 ** min(tries, 4) * 5
                 tries += 1
                 await asyncio.sleep(wait_time)
             except WebOsTvPairError:
                 return
-            else:
-                break
 
         ent_reg = entity_registry.async_get(hass)
         if not (
@@ -215,27 +219,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def _async_migrate_options_from_data(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Migrate options from data."""
-    if entry.options:
-        return
-
-    config = entry.data
-    options = {}
-
-    # Get Preferred Sources
-    if sources := config.get(CONF_CUSTOMIZE, {}).get(CONF_SOURCES):
-        options[CONF_SOURCES] = sources
-        if not isinstance(sources, list):
-            options[CONF_SOURCES] = sources.split(",")
-
-    hass.config_entries.async_update_entry(entry, options=options)
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set the config entry up."""
-    _async_migrate_options_from_data(hass, entry)
-
     host = entry.data[CONF_HOST]
     key = entry.data[CONF_CLIENT_SECRET]
 

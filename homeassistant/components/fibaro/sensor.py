@@ -3,9 +3,15 @@ from __future__ import annotations
 
 from contextlib import suppress
 
-from homeassistant.components.sensor import DOMAIN, SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    DOMAIN,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
+    ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
     TEMP_CELSIUS,
@@ -14,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import convert
 
 from . import FIBARO_DEVICES, FibaroDevice
 
@@ -57,9 +64,15 @@ def setup_platform(
     if discovery_info is None:
         return
 
-    add_entities(
-        [FibaroSensor(device) for device in hass.data[FIBARO_DEVICES]["sensor"]], True
-    )
+    entities: list[SensorEntity] = []
+    for device in hass.data[FIBARO_DEVICES]["sensor"]:
+        entities.append(FibaroSensor(device))
+    for device_type in ("cover", "light", "switch"):
+        for device in hass.data[FIBARO_DEVICES][device_type]:
+            if "energy" in device.interfaces:
+                entities.append(FibaroEnergySensor(device))
+
+    add_entities(entities, True)
 
 
 class FibaroSensor(FibaroDevice, SensorEntity):
@@ -114,3 +127,25 @@ class FibaroSensor(FibaroDevice, SensorEntity):
         """Update the state."""
         with suppress(KeyError, ValueError):
             self.current_value = float(self.fibaro_device.properties.value)
+
+
+class FibaroEnergySensor(FibaroDevice, SensorEntity):
+    """Representation of a Fibaro Energy Sensor."""
+
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+
+    def __init__(self, fibaro_device):
+        """Initialize the sensor."""
+        super().__init__(fibaro_device)
+        self.entity_id = f"{DOMAIN}.{self.ha_id}_energy"
+        self._attr_name = f"{fibaro_device.friendly_name} Energy"
+        self._attr_unique_id = f"{fibaro_device.unique_id_str}_energy"
+
+    def update(self):
+        """Update the state."""
+        with suppress(KeyError, ValueError):
+            self._attr_native_value = convert(
+                self.fibaro_device.properties.energy, float
+            )

@@ -132,7 +132,7 @@ class PyLoadSensor(SensorEntity):
 
         if "speed" in self.type and value > 0:
             # Convert download rate from Bytes/s to MBytes/s
-            self._state = round(value / 2 ** 20, 2)
+            self._state = round(value / 2**20, 2)
         else:
             self._state = value
 

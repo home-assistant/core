@@ -6,7 +6,7 @@ from typing import Any
 
 from aiolookin import Device, LookInHttpProtocol, LookinUDPSubscriptions
 
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from .coordinator import LookinDataUpdateCoordinator
 
 
 @dataclass
@@ -15,7 +15,7 @@ class LookinData:
 
     lookin_udp_subs: LookinUDPSubscriptions
     lookin_device: Device
-    meteo_coordinator: DataUpdateCoordinator
+    meteo_coordinator: LookinDataUpdateCoordinator
     devices: list[dict[str, Any]]
     lookin_protocol: LookInHttpProtocol
-    device_coordinators: dict[str, DataUpdateCoordinator]
+    device_coordinators: dict[str, LookinDataUpdateCoordinator]

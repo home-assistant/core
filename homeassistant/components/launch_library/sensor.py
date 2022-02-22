@@ -7,6 +7,7 @@ from datetime import datetime
 import logging
 from typing import Any
 
+from pylaunches.objects.event import Event
 from pylaunches.objects.launch import Launch
 import voluptuous as vol
 
@@ -17,7 +18,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_NAME, PERCENTAGE, STATE_UNKNOWN
+from homeassistant.const import CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -28,92 +29,110 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util.dt import parse_datetime
 
-from .const import (
-    ATTR_LAUNCH_FACILITY,
-    ATTR_LAUNCH_PAD,
-    ATTR_LAUNCH_PAD_COUNTRY_CODE,
-    ATTR_LAUNCH_PROVIDER,
-    ATTR_REASON,
-    ATTR_STREAM_LIVE,
-    ATTR_WINDOW_END,
-    ATTR_WINDOW_START,
-    ATTRIBUTION,
-    DEFAULT_NAME,
-    DOMAIN,
-    LAUNCH_PROBABILITY,
-    LAUNCH_STATUS,
-    LAUNCH_TIME,
-    NEXT_LAUNCH,
-)
+from . import LaunchLibraryData
+from .const import DOMAIN
+
+DEFAULT_NEXT_LAUNCH_NAME = "Next launch"
 
 _LOGGER = logging.getLogger(__name__)
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}
+    {vol.Optional(CONF_NAME, default=DEFAULT_NEXT_LAUNCH_NAME): cv.string}
 )
 
 
 @dataclass
-class NextLaunchSensorEntityDescriptionMixin:
+class LaunchLibrarySensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[Launch], datetime | int | str | None]
-    attributes_fn: Callable[[Launch], dict[str, Any] | None]
+    value_fn: Callable[[Launch | Event], datetime | int | str | None]
+    attributes_fn: Callable[[Launch | Event], dict[str, Any] | None]
 
 
 @dataclass
-class NextLaunchSensorEntityDescription(
-    SensorEntityDescription, NextLaunchSensorEntityDescriptionMixin
+class LaunchLibrarySensorEntityDescription(
+    SensorEntityDescription, LaunchLibrarySensorEntityDescriptionMixin
 ):
     """Describes a Next Launch sensor entity."""
 
 
-SENSOR_DESCRIPTIONS: tuple[NextLaunchSensorEntityDescription, ...] = (
-    NextLaunchSensorEntityDescription(
-        key=NEXT_LAUNCH,
+SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
+    LaunchLibrarySensorEntityDescription(
+        key="next_launch",
         icon="mdi:rocket-launch",
-        name=DEFAULT_NAME,
-        value_fn=lambda next_launch: next_launch.name,
-        attributes_fn=lambda next_launch: {
-            ATTR_LAUNCH_PROVIDER: next_launch.launch_service_provider.name,
-            ATTR_LAUNCH_PAD: next_launch.pad.name,
-            ATTR_LAUNCH_FACILITY: next_launch.pad.location.name,
-            ATTR_LAUNCH_PAD_COUNTRY_CODE: next_launch.pad.location.country_code,
+        name="Next launch",
+        value_fn=lambda nl: nl.name,
+        attributes_fn=lambda nl: {
+            "provider": nl.launch_service_provider.name,
+            "pad": nl.pad.name,
+            "facility": nl.pad.location.name,
+            "provider_country_code": nl.pad.location.country_code,
         },
     ),
-    NextLaunchSensorEntityDescription(
-        key=LAUNCH_TIME,
+    LaunchLibrarySensorEntityDescription(
+        key="launch_time",
         icon="mdi:clock-outline",
         name="Launch time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda next_launch: parse_datetime(next_launch.net),
-        attributes_fn=lambda next_launch: {
-            ATTR_WINDOW_START: next_launch.window_start,
-            ATTR_WINDOW_END: next_launch.window_end,
-            ATTR_STREAM_LIVE: next_launch.webcast_live,
+        value_fn=lambda nl: parse_datetime(nl.net),
+        attributes_fn=lambda nl: {
+            "window_start": nl.window_start,
+            "window_end": nl.window_end,
+            "stream_live": nl.webcast_live,
         },
     ),
-    NextLaunchSensorEntityDescription(
-        key=LAUNCH_PROBABILITY,
+    LaunchLibrarySensorEntityDescription(
+        key="launch_probability",
         icon="mdi:dice-multiple",
-        name="Launch Probability",
+        name="Launch probability",
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda next_launch: next_launch.probability
-        if next_launch.probability != -1
-        else STATE_UNKNOWN,
-        attributes_fn=lambda next_launch: None,
+        value_fn=lambda nl: None if nl.probability == -1 else nl.probability,
+        attributes_fn=lambda nl: None,
     ),
-    NextLaunchSensorEntityDescription(
-        key=LAUNCH_STATUS,
+    LaunchLibrarySensorEntityDescription(
+        key="launch_status",
         icon="mdi:rocket-launch",
         name="Launch status",
-        value_fn=lambda next_launch: next_launch.status.name,
-        attributes_fn=lambda next_launch: {
-            ATTR_REASON: next_launch.holdreason,
-        }
-        if next_launch.inhold
-        else None,
+        value_fn=lambda nl: nl.status.name,
+        attributes_fn=lambda nl: {"reason": nl.holdreason} if nl.inhold else None,
+    ),
+    LaunchLibrarySensorEntityDescription(
+        key="launch_mission",
+        icon="mdi:orbit",
+        name="Launch mission",
+        value_fn=lambda nl: nl.mission.name,
+        attributes_fn=lambda nl: {
+            "mission_type": nl.mission.type,
+            "target_orbit": nl.mission.orbit.name,
+            "description": nl.mission.description,
+        },
+    ),
+    LaunchLibrarySensorEntityDescription(
+        key="starship_launch",
+        icon="mdi:rocket",
+        name="Next Starship launch",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda sl: parse_datetime(sl.net),
+        attributes_fn=lambda sl: {
+            "title": sl.mission.name,
+            "status": sl.status.name,
+            "target_orbit": sl.mission.orbit.name,
+            "description": sl.mission.description,
+        },
+    ),
+    LaunchLibrarySensorEntityDescription(
+        key="starship_event",
+        icon="mdi:calendar",
+        name="Next Starship event",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda se: parse_datetime(se.date),
+        attributes_fn=lambda se: {
+            "title": se.name,
+            "location": se.location,
+            "stream": se.video_url,
+            "description": se.description,
+        },
     ),
 )
 
@@ -146,32 +165,33 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    name = entry.data.get(CONF_NAME, DEFAULT_NAME)
-    coordinator = hass.data[DOMAIN]
+    name = entry.data.get(CONF_NAME, DEFAULT_NEXT_LAUNCH_NAME)
+    coordinator: DataUpdateCoordinator[LaunchLibraryData] = hass.data[DOMAIN]
 
     async_add_entities(
-        NextLaunchSensor(
+        LaunchLibrarySensor(
             coordinator=coordinator,
             entry_id=entry.entry_id,
             description=description,
-            name=name if description.key == NEXT_LAUNCH else None,
+            name=name if description.key == "next_launch" else None,
         )
         for description in SENSOR_DESCRIPTIONS
     )
 
 
-class NextLaunchSensor(CoordinatorEntity, SensorEntity):
+class LaunchLibrarySensor(CoordinatorEntity, SensorEntity):
     """Representation of the next launch sensors."""
 
-    _attr_attribution = ATTRIBUTION
-    _next_launch: Launch | None = None
-    entity_description: NextLaunchSensorEntityDescription
+    _attr_attribution = "Data provided by Launch Library."
+    _next_event: Launch | Event | None = None
+    entity_description: LaunchLibrarySensorEntityDescription
+    coordinator: DataUpdateCoordinator[LaunchLibraryData]
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[LaunchLibraryData],
         entry_id: str,
-        description: NextLaunchSensorEntityDescription,
+        description: LaunchLibrarySensorEntityDescription,
         name: str | None = None,
     ) -> None:
         """Initialize a Launch Library sensor."""
@@ -184,26 +204,33 @@ class NextLaunchSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> datetime | str | int | None:
         """Return the state of the sensor."""
-        if self._next_launch is None:
+        if self._next_event is None:
             return None
-        return self.entity_description.value_fn(self._next_launch)
+        return self.entity_description.value_fn(self._next_event)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the attributes of the sensor."""
-        if self._next_launch is None:
+        if self._next_event is None:
             return None
-        return self.entity_description.attributes_fn(self._next_launch)
+        return self.entity_description.attributes_fn(self._next_event)
 
     @property
     def available(self) -> bool:
         """Return if the sensor is available."""
-        return super().available and self._next_launch is not None
+        return super().available and self._next_event is not None
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._next_launch = next((launch for launch in self.coordinator.data), None)
+        if self.entity_description.key == "starship_launch":
+            events = self.coordinator.data["starship_events"].upcoming.launches
+        elif self.entity_description.key == "starship_event":
+            events = self.coordinator.data["starship_events"].upcoming.events
+        else:
+            events = self.coordinator.data["upcoming_launches"]
+
+        self._next_event = next((event for event in (events)), None)
         super()._handle_coordinator_update()
 
     async def async_added_to_hass(self) -> None:

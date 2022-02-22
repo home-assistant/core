@@ -32,6 +32,7 @@ class Config:
     requirements: bool = attr.ib()
     errors: list[Error] = attr.ib(factory=list)
     cache: dict[str, Any] = attr.ib(factory=dict)
+    plugins: set[str] = attr.ib(factory=set)
 
     def add_error(self, *args: Any, **kwargs: Any) -> None:
         """Add an error."""

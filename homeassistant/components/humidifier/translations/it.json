@@ -13,6 +13,7 @@
             "is_on": "{entity_name} \u00e8 acceso"
         },
         "trigger_type": {
+            "changed_states": "{entity_name} attivata o disattivata",
             "target_humidity_changed": "{entity_name} umidit\u00e0 target modificata",
             "toggled": "{entity_name} attiva o disattiva",
             "turned_off": "{entity_name} disattivato",

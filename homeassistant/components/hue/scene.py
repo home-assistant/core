@@ -5,7 +5,11 @@ from typing import Any
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
-from aiohue.v2.controllers.scenes import Scene as HueScene, ScenesController
+from aiohue.v2.controllers.scenes import (
+    Scene as HueScene,
+    ScenePut as HueScenePut,
+    ScenesController,
+)
 import voluptuous as vol
 
 from homeassistant.components.scene import ATTR_TRANSITION, Scene as SceneEntity
@@ -68,7 +72,7 @@ async def async_setup_entry(
                 vol.Coerce(int), vol.Range(min=0, max=255)
             ),
         },
-        "async_activate",
+        "_async_activate",
     )
 
 
@@ -131,7 +135,7 @@ class HueSceneEntity(HueBaseEntity, SceneEntity):
             await self.bridge.async_request_call(
                 self.controller.update,
                 self.resource.id,
-                HueScene(self.resource.id, speed=speed / 100),
+                HueScenePut(speed=speed / 100),
             )
 
         await self.bridge.async_request_call(
