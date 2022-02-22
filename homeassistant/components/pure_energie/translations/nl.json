@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "flow_title": "{model} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            },
+            "zeroconf_confirm": {
+                "description": "Wilt u Pure Energie Meter (`{model}`) toevoegen aan Home Assistant?",
+                "title": "Ontdekt Pure Energie Meter apparaat"
+            }
+        }
+    }
+}

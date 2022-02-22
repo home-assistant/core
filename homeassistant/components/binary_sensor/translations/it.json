@@ -134,6 +134,10 @@
             "off": "Non in carica",
             "on": "In carica"
         },
+        "carbon_monoxide": {
+            "off": "Assente",
+            "on": "Rilevato"
+        },
         "co": {
             "off": "Non Rilevato",
             "on": "Rilevato"
