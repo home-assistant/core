@@ -56,15 +56,6 @@ async def async_get_device_info(
     host: str,
 ) -> tuple[int | None, str | None, dict[str, Any] | None]:
     """Fetch the port, method, and device info."""
-    return await hass.async_add_executor_job(_get_device_info, hass, bridge, host)
-
-
-def _get_device_info(
-    hass: HomeAssistant,
-    bridge: SamsungTVWSBridge | SamsungTVLegacyBridge | None,
-    host: str,
-) -> tuple[int | None, str | None, dict[str, Any] | None]:
-    """Fetch the port, method, and device info."""
     if bridge and bridge.port:
         return bridge.port, bridge.method, bridge.device_info()
 
@@ -74,7 +65,7 @@ def _get_device_info(
             return port, METHOD_WEBSOCKET, info
 
     bridge = SamsungTVBridge.get_bridge(hass, METHOD_LEGACY, host, LEGACY_PORT)
-    result = bridge.try_connect()
+    result = await bridge.try_connect()
     if result in (RESULT_SUCCESS, RESULT_AUTH_MISSING):
         return LEGACY_PORT, METHOD_LEGACY, None
 
@@ -119,7 +110,7 @@ class SamsungTVBridge(ABC):
         self._new_token_callback = func
 
     @abstractmethod
-    def try_connect(self) -> str | None:
+    async def try_connect(self) -> str | None:
         """Try to connect to the TV."""
 
     @abstractmethod
@@ -231,7 +222,11 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         """Get installed app list."""
         return {}
 
-    def try_connect(self) -> str:
+    async def try_connect(self) -> str:
+        """Try to connect to the Legacy TV."""
+        return await self.hass.async_add_executor_job(self._try_connect)
+
+    def _try_connect(self) -> str:
         """Try to connect to the Legacy TV."""
         config = {
             CONF_NAME: VALUE_CONF_NAME,
@@ -324,7 +319,11 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
         return self._app_list
 
-    def try_connect(self) -> str:
+    async def try_connect(self) -> str:
+        """Try to connect to the Websocket TV."""
+        return await self.hass.async_add_executor_job(self._try_connect)
+
+    def _try_connect(self) -> str:
         """Try to connect to the Websocket TV."""
         for self.port in WEBSOCKET_PORTS:
             config = {
