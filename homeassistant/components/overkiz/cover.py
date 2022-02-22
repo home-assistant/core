@@ -10,7 +10,7 @@ from . import HomeAssistantOverkizData
 from .const import DOMAIN
 from .cover_entities.awning import Awning
 from .cover_entities.generic_cover import OverkizGenericCover
-from .cover_entities.vertical_cover import VerticalCover
+from .cover_entities.vertical_cover import LowSpeedCover, VerticalCover
 
 
 async def async_setup_entry(
@@ -32,7 +32,7 @@ async def async_setup_entry(
     ]
 
     entities += [
-        VerticalCover(device.device_url, data.coordinator, low_speed=True)
+        LowSpeedCover(device.device_url, data.coordinator)
         for device in data.platforms[Platform.COVER]
         if device.ui_class != UIClass.AWNING
         and OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED in device.definition.commands

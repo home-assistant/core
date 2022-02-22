@@ -37,19 +37,6 @@ OVERKIZ_DEVICE_TO_DEVICE_CLASS = {
 class VerticalCover(OverkizGenericCover):
     """Representation of an Overkiz vertical cover."""
 
-    def __init__(
-        self,
-        device_url: str,
-        coordinator: OverkizDataUpdateCoordinator,
-        low_speed: bool = False,
-    ) -> None:
-        """Initialize the device."""
-        super().__init__(device_url, coordinator)
-        self.low_speed = low_speed
-        if self.low_speed:
-            self._attr_name = f"{self._attr_name} Low Speed"
-            self._attr_unique_id = f"{self._attr_unique_id}_low_speed"
-
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
@@ -101,28 +88,44 @@ class VerticalCover(OverkizGenericCover):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        if self.low_speed:
-            await self.async_set_cover_position_low_speed(**kwargs)
-        else:
-            position = 100 - kwargs[ATTR_POSITION]
-            await self.executor.async_execute_command(
-                OverkizCommand.SET_CLOSURE, position
-            )
+        position = 100 - kwargs[ATTR_POSITION]
+        await self.executor.async_execute_command(OverkizCommand.SET_CLOSURE, position)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        if self.low_speed:
-            await self.async_set_cover_position_low_speed(**{ATTR_POSITION: 100})
-
-        elif command := self.executor.select_command(*COMMANDS_OPEN):
+        if command := self.executor.select_command(*COMMANDS_OPEN):
             await self.executor.async_execute_command(command)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        if self.low_speed:
-            await self.async_set_cover_position_low_speed(**{ATTR_POSITION: 0})
-        elif command := self.executor.select_command(*COMMANDS_CLOSE):
+        if command := self.executor.select_command(*COMMANDS_CLOSE):
             await self.executor.async_execute_command(command)
+
+
+class LowSpeedCover(VerticalCover):
+    """Representation of an Overkiz Low Speed cover."""
+
+    def __init__(
+        self,
+        device_url: str,
+        coordinator: OverkizDataUpdateCoordinator,
+    ) -> None:
+        """Initialize the device."""
+        super().__init__(device_url, coordinator)
+        self._attr_name = f"{self._attr_name} Low Speed"
+        self._attr_unique_id = f"{self._attr_unique_id}_low_speed"
+
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
+        """Move the cover to a specific position."""
+        await self.async_set_cover_position_low_speed(**kwargs)
+
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the cover."""
+        await self.async_set_cover_position_low_speed(**{ATTR_POSITION: 100})
+
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close the cover."""
+        await self.async_set_cover_position_low_speed(**{ATTR_POSITION: 0})
 
     async def async_set_cover_position_low_speed(self, **kwargs: Any) -> None:
         """Move the cover to a specific position with a low speed."""
