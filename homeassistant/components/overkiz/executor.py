@@ -14,10 +14,10 @@ from .coordinator import OverkizDataUpdateCoordinator
 # the delay to another value
 COMMANDS_WITHOUT_DELAY = [
     OverkizCommand.IDENTIFY,
-    "test",
+    OverkizCommand.TEST,
     OverkizCommand.ON,
     OverkizCommand.OFF,
-    "onWithTimer",
+    OverkizCommand.ON_WITH_TIMER,
 ]
 
 
@@ -68,7 +68,8 @@ class OverkizExecutor:
 
     async def async_execute_command(self, command_name: str, *args: Any) -> None:
         """Execute device command in async context."""
-        # Set the execution duration to 0 seconds for RTS devices without other args
+
+        # Set the execution duration to 0 seconds for RTS devices on supported commands
         # Default execution duration is 30 seconds and will block consecutive commands
         if (
             self.device.protocol == Protocol.RTS
