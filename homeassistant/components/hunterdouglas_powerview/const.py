@@ -55,6 +55,8 @@ SHADE_BATTERY_KIND = "batteryKind"
 # 1 Hardwired Power Supply, 2 Battery Wand, 3 Rechargeable Battery
 SHADE_BATTERY_KIND_EXCLUDE = [1]
 
+SHADE_SIGNAL_STRENGTH = "signalStrength"
+
 STATE_ATTRIBUTE_ROOM_NAME = "roomName"
 
 PV_API = "pv_api"

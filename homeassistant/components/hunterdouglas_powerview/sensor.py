@@ -22,6 +22,7 @@ from .const import (
     SHADE_BATTERY_KIND_EXCLUDE,
     SHADE_BATTERY_LEVEL,
     SHADE_BATTERY_LEVEL_MAX,
+    SHADE_SIGNAL_STRENGTH,
 )
 from .entity import ShadeEntity
 
@@ -124,7 +125,7 @@ class PowerViewShadeSignalSensor(ShadeEntity, SensorEntity):
     @property
     def native_value(self):
         """Get the current value in percentage."""
-        return round(self._shade.raw_data["signalStrength"] / 4 * 100)
+        return round(self._shade.raw_data[SHADE_SIGNAL_STRENGTH] / 4 * 100)
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""
