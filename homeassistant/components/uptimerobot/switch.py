@@ -31,7 +31,7 @@ async def async_setup_entry(
                 coordinator,
                 SwitchEntityDescription(
                     key=str(monitor.id),
-                    name=f"{monitor.friendly_name} Pause",
+                    name=f"{monitor.friendly_name} Active",
                     device_class=SwitchDeviceClass.SWITCH,
                 ),
                 monitor=monitor,
@@ -49,7 +49,7 @@ class UptimeRobotSwitch(UptimeRobotEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return True if the entity is on."""
-        return bool(self.monitor.status == 0)
+        return bool(self.monitor.status == 2)
 
     @property
     def available(self) -> bool:
