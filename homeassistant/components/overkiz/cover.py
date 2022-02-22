@@ -34,8 +34,7 @@ async def async_setup_entry(
     entities += [
         LowSpeedCover(device.device_url, data.coordinator)
         for device in data.platforms[Platform.COVER]
-        if device.ui_class != UIClass.AWNING
-        and OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED in device.definition.commands
+        if OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED in device.definition.commands
     ]
 
     async_add_entities(entities)
