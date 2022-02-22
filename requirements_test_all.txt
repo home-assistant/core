@@ -997,7 +997,7 @@ pyhomematic==0.1.77
 pyialarm==1.9.0
 
 # homeassistant.components.icloud
-pyicloud==0.10.2
+pyicloud==1.0.0
 
 # homeassistant.components.insteon
 pyinsteon==1.0.16
