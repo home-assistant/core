@@ -245,7 +245,9 @@ class SonarrSensor(SonarrEntity, SensorEntity):
                 identifier = f"S{item.seasonNumber:02d}E{item.episodeNumber:02d}"
 
                 name = f"{item.series.title} {identifier}"
-                attrs[name] = item.airDate.strftime("%Y-%m-%d")
+                attrs[name] = dt_util.as_local(
+                    item.airDateUtc.replace(tzinfo=dt_util.UTC)
+                ).isoformat()
 
         return attrs
 
