@@ -37,7 +37,9 @@ from homeassistant.util import dt as dt_util
 
 from .alarms import SonosAlarms
 from .const import (
+    ALL_SUPPORTED_FEATURES,
     AVAILABILITY_TIMEOUT,
+    BASE_SUPPORTED_FEATURES,
     BATTERY_SCAN_INTERVAL,
     DATA_SONOS,
     DOMAIN,
@@ -61,6 +63,7 @@ from .const import (
     SOURCE_LINEIN,
     SOURCE_TV,
     SUBSCRIPTION_TIMEOUT,
+    SUPPORTED_FEATURE_MAPPING,
 )
 from .favorites import SonosFavorites
 from .helpers import soco_error
@@ -162,6 +165,7 @@ class SonosSpeaker:
         self._plex_plugin: PlexPlugin | None = None
         self._share_link_plugin: ShareLinkPlugin | None = None
         self.available = True
+        self.supported_features = ALL_SUPPORTED_FEATURES
 
         # Device information
         self.hardware_version = speaker_info["hardware_version"]
@@ -511,6 +515,16 @@ class SonosSpeaker:
         """Update information about currently playing media from an event."""
         if crossfade := event.variables.get("current_crossfade_mode"):
             self.cross_fade = bool(int(crossfade))
+
+        if current_transport_actions := event.variables.get(
+            "current_transport_actions"
+        ):
+            self.supported_features = BASE_SUPPORTED_FEATURES
+            supported_actions = [
+                act.split("_")[-1] for act in current_transport_actions.split(", ")
+            ]
+            for action in supported_actions:
+                self.supported_features |= SUPPORTED_FEATURE_MAPPING.get(action, 0)
 
         self.hass.async_add_executor_job(self.update_media, event)
 

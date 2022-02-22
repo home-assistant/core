@@ -1,5 +1,7 @@
 """Const for Sonos."""
 import datetime
+from functools import reduce
+from operator import ior
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
@@ -18,6 +20,21 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_GENRE,
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_TRACK,
+    SUPPORT_BROWSE_MEDIA,
+    SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_GROUPING,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_REPEAT_SET,
+    SUPPORT_SEEK,
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_SHUFFLE_SET,
+    SUPPORT_STOP,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
 )
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -174,3 +191,26 @@ BATTERY_SCAN_INTERVAL = datetime.timedelta(minutes=15)
 SCAN_INTERVAL = datetime.timedelta(seconds=10)
 DISCOVERY_INTERVAL = datetime.timedelta(seconds=60)
 SUBSCRIPTION_TIMEOUT = 1200
+
+BASE_SUPPORTED_FEATURES = (
+    SUPPORT_BROWSE_MEDIA
+    | SUPPORT_CLEAR_PLAYLIST
+    | SUPPORT_GROUPING
+    | SUPPORT_PLAY_MEDIA
+    | SUPPORT_REPEAT_SET
+    | SUPPORT_SELECT_SOURCE
+    | SUPPORT_SHUFFLE_SET
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_VOLUME_SET
+)
+SUPPORTED_FEATURE_MAPPING = {
+    "Play": SUPPORT_PLAY,
+    "Pause": SUPPORT_PAUSE,
+    "Stop": SUPPORT_STOP,
+    "Next": SUPPORT_NEXT_TRACK,
+    "Previous": SUPPORT_PREVIOUS_TRACK,
+    "SeekTime": SUPPORT_SEEK,
+}
+ALL_SUPPORTED_FEATURES = BASE_SUPPORTED_FEATURES | reduce(
+    ior, SUPPORTED_FEATURE_MAPPING.values()
+)
