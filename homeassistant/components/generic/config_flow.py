@@ -144,7 +144,7 @@ async def async_test_connection(
             _LOGGER.error("Error getting camera image from %s: %s", url, err)
             return {"base": "unable_still_load"}, None, None
 
-        if image is None:
+        if not image:
             return {"base": "unable_still_load"}, None, None
         fmt = imghdr.what(None, h=image)
         if fmt is None:
@@ -260,7 +260,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=name, data={}, options=import_config)
         _LOGGER.error(
             "Error importing generic IP camera platform config: unexpected error '%s'",
-            errors.values,
+            list(errors.values()),
         )
         return self.async_abort(reason="unknown")
 
@@ -283,29 +283,18 @@ class GenericOptionsFlowHandler(OptionsFlow):
                 self.hass, user_input
             )
             if not errors:
-                if check_for_existing(
-                    self.hass,
-                    user_input,
-                    ignore_entry_id=self.config_entry.entry_id,
-                ):
-                    errors = {
-                        CONF_STILL_IMAGE_URL: "already_configured",
-                        CONF_STREAM_SOURCE: "already_configured",
-                    }
-
-                if not errors:
-                    return self.async_create_entry(
-                        title=user_input.get(CONF_NAME, name),
-                        data={
-                            CONF_AUTHENTICATION: user_input.get(CONF_AUTHENTICATION),
-                            CONF_STREAM_SOURCE: user_input.get(CONF_STREAM_SOURCE),
-                            CONF_PASSWORD: user_input.get(CONF_PASSWORD),
-                            CONF_STILL_IMAGE_URL: user_input.get(CONF_STILL_IMAGE_URL),
-                            CONF_CONTENT_TYPE: still_format,
-                            CONF_USERNAME: user_input.get(CONF_USERNAME),
-                            CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL),
-                        },
-                    )
+                return self.async_create_entry(
+                    title=user_input.get(CONF_NAME, name),
+                    data={
+                        CONF_AUTHENTICATION: user_input.get(CONF_AUTHENTICATION),
+                        CONF_STREAM_SOURCE: user_input.get(CONF_STREAM_SOURCE),
+                        CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+                        CONF_STILL_IMAGE_URL: user_input.get(CONF_STILL_IMAGE_URL),
+                        CONF_CONTENT_TYPE: still_format,
+                        CONF_USERNAME: user_input.get(CONF_USERNAME),
+                        CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL),
+                    },
+                )
         else:
             user_input = {}
 
