@@ -7,6 +7,7 @@ from homeassistant.components import notify
 from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
 
 from .const import DOMAIN
@@ -62,7 +63,7 @@ async def async_call_action_from_config(
 
         try:
             service_data[key] = template.render_complex(value_template, variables)
-        except template.TemplateError as err:
+        except TemplateError as err:
             raise InvalidDeviceAutomationConfig(
                 f"Error rendering {key}: {err}"
             ) from err
