@@ -51,7 +51,7 @@ async def async_validate_api(hass: HomeAssistant, api_key: str) -> bool:
 
 
 async def async_get_username(hass: HomeAssistant, api_key: str) -> str | None:
-    """Return username from API:"""
+    """Return username from API."""
     client = SensiboClient(
         api_key,
         session=async_get_clientsession(hass),
@@ -72,6 +72,7 @@ async def async_get_username(hass: HomeAssistant, api_key: str) -> str | None:
 
     if userdetails:
         return userdetails["result"].get("username")
+    return None
 
 
 class SensiboConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
