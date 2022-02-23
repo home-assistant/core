@@ -183,7 +183,14 @@ MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            cv.deprecated(CONF_TLS_VERSION),
+            cv.deprecated(CONF_BIRTH_MESSAGE),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_BROKER),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_DISCOVERY),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_PASSWORD),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_PORT),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_TLS_VERSION),  # Deprecated June 2020
+            cv.deprecated(CONF_USERNAME),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_WILL_MESSAGE),  # Deprecated in HA Core 2022.3
             vol.Schema(
                 {
                     vol.Optional(CONF_CLIENT_ID): cv.string,

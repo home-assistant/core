@@ -1,4 +1,6 @@
 """Constants for the Firmata component."""
+from typing import Final
+
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_LIGHTS,
@@ -19,8 +21,8 @@ PIN_MODE_OUTPUT = "OUTPUT"
 PIN_MODE_PWM = "PWM"
 PIN_MODE_INPUT = "INPUT"
 PIN_MODE_PULLUP = "PULLUP"
-PIN_TYPE_ANALOG = 1
-PIN_TYPE_DIGITAL = 0
+PIN_TYPE_ANALOG: Final = 1
+PIN_TYPE_DIGITAL: Final = 0
 CONF_SAMPLING_INTERVAL = "sampling_interval"
 CONF_SERIAL_BAUD_RATE = "serial_baud_rate"
 CONF_SERIAL_PORT = "serial_port"
