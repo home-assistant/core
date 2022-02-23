@@ -122,8 +122,8 @@ python-engineio>=3.13.1,<4.0
 python-socketio>=4.6.0,<5.0
 
 # Constrain multidict to avoid typing issues
-# https://github.com/home-assistant/core/pull/64792
-multidict<6.0.0
+# https://github.com/home-assistant/core/pull/67046
+multidict>=6.0.2
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
