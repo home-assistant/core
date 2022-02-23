@@ -86,8 +86,6 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
         return_value={"panels": {}},
     ), patch.dict(
         os.environ, {"HASSIO_TOKEN": "123456"}
-    ), patch.dict(
-        os.environ, {"SUPERVISOR": "127.0.0.1"}
     ):
         yield
 
