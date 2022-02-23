@@ -333,14 +333,10 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     async def async_is_on(self) -> bool:
         """Tells if the TV is on."""
-        return await self.hass.async_add_executor_job(self._is_on)
-
-    def _is_on(self) -> bool:
-        """Tells if the TV is on."""
         if self._remote is not None:
-            self._close_remote()
+            await self._async_close_remote()
 
-        return self._get_remote() is not None
+        return (await self._async_get_remote()) is not None
 
     async def async_try_connect(self) -> str:
         """Try to connect to the Websocket TV."""
@@ -416,7 +412,9 @@ class SamsungTVWSBridge(SamsungTVBridge):
                         if key_type == "run_app":
                             await remote.run_app(key)
                         else:
-                            await remote.send_key(key)
+                            await remote.send_command(
+                                ws_remote.SendRemoteKey.click(key)
+                            )
                     break
                 except (
                     BrokenPipeError,
