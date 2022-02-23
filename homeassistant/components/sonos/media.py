@@ -169,7 +169,8 @@ class SonosMedia:
             self.queue_size = int(queue_size)
 
         if audio_source == MUSIC_SRC_RADIO:
-            self.channel = et_uri_md.title
+            if et_uri_md:
+                self.channel = et_uri_md.title
 
             if ct_md and ct_md.radio_show:
                 radio_show = ct_md.radio_show.split(",")[0]
