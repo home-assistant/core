@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from pyuptimerobot import UptimeRobotMonitor
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -21,11 +22,13 @@ class UptimeRobotEntity(CoordinatorEntity):
         coordinator: UptimeRobotDataUpdateCoordinator,
         description: EntityDescription,
         monitor: UptimeRobotMonitor,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize UptimeRobot entities."""
         super().__init__(coordinator)
         self.entity_description = description
         self._monitor = monitor
+        self._config_entry = config_entry
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(self.monitor.id))},
             name=self.monitor.friendly_name,
