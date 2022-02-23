@@ -48,8 +48,15 @@ async def validate_input(
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-
-    client = AzureDataExplorerClient(**data)
+    client = AzureDataExplorerClient(
+        clusteringesturi=data["clusteringesturi"],
+        database=data["database"],
+        table=data["table"],
+        client_id=data["client_id"],
+        client_secret=data["client_secret"],
+        authority_id=data["authority_id"],
+        use_free_cluster=data["use_free_cluster"],
+    )
 
     try:
         await hass.async_add_executor_job(client.test_connection)
@@ -98,7 +105,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._data = user_input
         errors = await validate_input(self.hass, user_input)
 
-        if user_input is None or errors is not None:
+        if errors is not None:
             return self.async_show_form(
                 step_id="user",
                 data_schema=STEP_USER_DATA_SCHEMA,
@@ -117,9 +124,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def create_title(self):
         """Build the Cluster Title from the URL."""
         url_no_https = str(self._data[CONF_ADX_CLUSTER_INGEST_URI]).split("//")[1]
-        cluster_name = str(url_no_https.split(".")[0])
-
-        return cluster_name
+        return str(url_no_https.split(".")[0])
 
 
 class ADXOptionsFlowHandler(config_entries.OptionsFlow):

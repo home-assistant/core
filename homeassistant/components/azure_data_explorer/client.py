@@ -1,7 +1,6 @@
 """Setting up the ingest client."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 import io
 import logging
 
@@ -17,36 +16,54 @@ from azure.kusto.ingest import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
 class AzureDataExplorerClient:
     """Class for Azure Data Explorer Client."""
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(
+        self,
+        clusteringesturi,
+        database,
+        table,
+        client_id,
+        client_secret,
+        authority_id,
+        use_free_cluster,
+    ) -> None:
         """Create the right class."""
 
-        cluster_ingest_uri = kwargs.get("clusteringesturi")
-        cluster_query_uri = str(cluster_ingest_uri).replace("ingest-", "")
-        self.database = kwargs.get("database")
-        self.table = kwargs.get("table")
-        client_id = kwargs.get("client_id")
-        client_secret = kwargs.get("client_secret")
-        authority_id = kwargs.get("authority_id")
-        use_queued_ingestion = kwargs.get("use_free_cluster")
+        self.cluster_ingest_uri = clusteringesturi
+        self.database = database
+        self.table = table
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.authority_id = authority_id
+        self.use_queued_ingestion = use_free_cluster
+
+        self.cluster_query_uri = self.cluster_ingest_uri.replace(
+            "https://ingest-", "https://"
+        )
+
+        self.ingestion_properties = IngestionProperties(
+            database=self.database,
+            table=self.table,
+            data_format=DataFormat.MULTIJSON,
+            ingestion_mapping_reference="ha_json_mapping",
+        )
 
         # Create cLients for ingesting and querying data
         kcsb = KustoConnectionStringBuilder.with_aad_application_key_authentication(
-            cluster_ingest_uri, client_id, client_secret, authority_id
+            self.cluster_ingest_uri, client_id, client_secret, authority_id
         )
 
         if (
-            use_queued_ingestion is True
+            self.use_queued_ingestion is True
         ):  # Queded is the only option supported on free tear of ADX
             self.client = QueuedIngestClient(kcsb)
         else:
             self.client = ManagedStreamingIngestClient.from_dm_kcsb(kcsb)
 
         kcsb = KustoConnectionStringBuilder.with_aad_application_key_authentication(
-            cluster_query_uri, client_id, client_secret, authority_id
+            self.cluster_query_uri, client_id, client_secret, authority_id
         )
 
         self.query_client = KustoClient(kcsb)
@@ -62,35 +79,12 @@ class AzureDataExplorerClient:
 
         self.query_client.execute(self.database, query)
 
-    def ingest_data_inline(self, adx_events) -> None:
-        """Send data to Axure Data Explorer using the inline ingest."""
-
-        basequery = (
-            '.ingest inline into table %s with (format="json", ingestionMappingReference = "ha_json_mapping") <|'
-            % self.table
-        )
-
-        json_string = adx_events
-
-        query = f"{basequery} {json_string}"
-
-        self.query_client.execute(self.database, query)
-
-    def ingest_data(self, adx_events) -> None:
+    def ingest_data(self, adx_events: str) -> None:
         """Send data to Axure Data Explorer."""
 
-        ingestion_properties = IngestionProperties(
-            database=self.database,
-            table=self.table,
-            data_format=DataFormat.MULTIJSON,
-            ingestion_mapping_reference="ha_json_mapping",
-        )
-
-        json_str = adx_events
-
-        bytes_stream = io.StringIO(json_str)
+        bytes_stream = io.StringIO(adx_events)
         stream_descriptor = StreamDescriptor(bytes_stream)
 
         self.client.ingest_from_stream(
-            stream_descriptor, ingestion_properties=ingestion_properties
+            stream_descriptor, ingestion_properties=self.ingestion_properties
         )
