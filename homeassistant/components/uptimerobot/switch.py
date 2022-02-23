@@ -25,18 +25,16 @@ async def async_setup_entry(
     """Set up the UptimeRobot switches."""
     coordinator: UptimeRobotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            UptimeRobotSwitch(
-                coordinator,
-                SwitchEntityDescription(
-                    key=str(monitor.id),
-                    name=f"{monitor.friendly_name} Active",
-                    device_class=SwitchDeviceClass.SWITCH,
-                ),
-                monitor=monitor,
-            )
-            for monitor in coordinator.data
-        ],
+        UptimeRobotSwitch(
+            coordinator,
+            SwitchEntityDescription(
+                key=str(monitor.id),
+                name=f"{monitor.friendly_name} Active",
+                device_class=SwitchDeviceClass.SWITCH,
+            ),
+            monitor=monitor,
+        )
+        for monitor in coordinator.data
     )
 
 
