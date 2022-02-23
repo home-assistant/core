@@ -1,6 +1,8 @@
 """Sensor platform for mobile_app."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -48,7 +50,7 @@ async def async_setup_entry(
     for entry in entries:
         if entry.domain != ENTITY_TYPE or entry.disabled_by:
             continue
-        config: dict = {
+        config: dict[str, Any] = {
             ATTR_SENSOR_ATTRIBUTES: {},
             ATTR_SENSOR_DEVICE_CLASS: entry.device_class or entry.original_device_class,
             ATTR_SENSOR_ICON: entry.original_icon,

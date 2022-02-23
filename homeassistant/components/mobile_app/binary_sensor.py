@@ -1,4 +1,6 @@
 """Binary sensor platform for mobile_app."""
+from typing import Any
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID, CONF_WEBHOOK_ID, STATE_ON
@@ -38,7 +40,7 @@ async def async_setup_entry(
     for entry in entries:
         if entry.domain != ENTITY_TYPE or entry.disabled_by:
             continue
-        config: dict = {
+        config: dict[str, Any] = {
             ATTR_SENSOR_ATTRIBUTES: {},
             ATTR_SENSOR_DEVICE_CLASS: entry.device_class or entry.original_device_class,
             ATTR_SENSOR_ICON: entry.original_icon,
