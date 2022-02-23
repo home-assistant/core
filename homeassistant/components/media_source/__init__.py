@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import dataclasses
 from datetime import timedelta
 from typing import Any
 from urllib.parse import quote
@@ -110,9 +111,11 @@ async def async_browse_media(
     if content_filter is None or item.children is None:
         return item
 
+    old_count = len(item.children)
     item.children = [
         child for child in item.children if child.can_expand or content_filter(child)
     ]
+    item.not_shown = old_count - len(item.children)
     return item
 
 
@@ -165,15 +168,17 @@ async def websocket_resolve_media(
     """Resolve media."""
     try:
         media = await async_resolve_media(hass, msg["media_content_id"])
-        url = media.url
     except Unresolvable as err:
         connection.send_error(msg["id"], "resolve_media_failed", str(err))
-    else:
-        if url[0] == "/":
-            url = async_sign_path(
-                hass,
-                quote(url),
-                timedelta(seconds=msg["expires"]),
-            )
+        return
 
-        connection.send_result(msg["id"], {"url": url, "mime_type": media.mime_type})
+    data = dataclasses.asdict(media)
+
+    if data["url"][0] == "/":
+        data["url"] = async_sign_path(
+            hass,
+            quote(data["url"]),
+            timedelta(seconds=msg["expires"]),
+        )
+
+    connection.send_result(msg["id"], data)

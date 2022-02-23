@@ -394,13 +394,10 @@ omit =
     homeassistant/components/freebox/router.py
     homeassistant/components/freebox/sensor.py
     homeassistant/components/freebox/switch.py
-    homeassistant/components/fritz/__init__.py
     homeassistant/components/fritz/binary_sensor.py
-    homeassistant/components/fritz/button.py
     homeassistant/components/fritz/common.py
     homeassistant/components/fritz/const.py
     homeassistant/components/fritz/device_tracker.py
-    homeassistant/components/fritz/diagnostics.py
     homeassistant/components/fritz/sensor.py
     homeassistant/components/fritz/services.py
     homeassistant/components/fritz/switch.py
@@ -1249,6 +1246,7 @@ omit =
     homeassistant/components/tolo/climate.py
     homeassistant/components/tolo/fan.py
     homeassistant/components/tolo/light.py
+    homeassistant/components/tolo/number.py
     homeassistant/components/tolo/select.py
     homeassistant/components/tolo/sensor.py
     homeassistant/components/tomato/device_tracker.py

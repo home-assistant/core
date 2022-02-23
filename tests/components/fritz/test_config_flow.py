@@ -26,7 +26,7 @@ from homeassistant.data_entry_flow import (
 
 from .const import (
     MOCK_FIRMWARE_INFO,
-    MOCK_IP,
+    MOCK_IPS,
     MOCK_REQUEST,
     MOCK_SSDP_DATA,
     MOCK_USER_DATA,
@@ -51,7 +51,7 @@ async def test_user(hass: HomeAssistant, fc_class_mock, mock_get_source_ip):
         "requests.post"
     ) as mock_request_post, patch(
         "homeassistant.components.fritz.config_flow.socket.gethostbyname",
-        return_value=MOCK_IP,
+        return_value=MOCK_IPS["fritz.box"],
     ):
 
         mock_request_get.return_value.status_code = 200
@@ -102,7 +102,7 @@ async def test_user_already_configured(
         "requests.post"
     ) as mock_request_post, patch(
         "homeassistant.components.fritz.config_flow.socket.gethostbyname",
-        return_value=MOCK_IP,
+        return_value=MOCK_IPS["fritz.box"],
     ):
 
         mock_request_get.return_value.status_code = 200
@@ -295,7 +295,7 @@ async def test_ssdp_already_configured(
         side_effect=fc_class_mock,
     ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
         "homeassistant.components.fritz.config_flow.socket.gethostbyname",
-        return_value=MOCK_IP,
+        return_value=MOCK_IPS["fritz.box"],
     ):
 
         result = await hass.config_entries.flow.async_init(
@@ -322,7 +322,7 @@ async def test_ssdp_already_configured_host(
         side_effect=fc_class_mock,
     ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
         "homeassistant.components.fritz.config_flow.socket.gethostbyname",
-        return_value=MOCK_IP,
+        return_value=MOCK_IPS["fritz.box"],
     ):
 
         result = await hass.config_entries.flow.async_init(
@@ -349,7 +349,7 @@ async def test_ssdp_already_configured_host_uuid(
         side_effect=fc_class_mock,
     ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
         "homeassistant.components.fritz.config_flow.socket.gethostbyname",
-        return_value=MOCK_IP,
+        return_value=MOCK_IPS["fritz.box"],
     ):
 
         result = await hass.config_entries.flow.async_init(
@@ -420,7 +420,7 @@ async def test_ssdp(hass: HomeAssistant, fc_class_mock, mock_get_source_ip):
         )
 
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["data"][CONF_HOST] == MOCK_IP
+        assert result["data"][CONF_HOST] == MOCK_IPS["fritz.box"]
         assert result["data"][CONF_PASSWORD] == "fake_pass"
         assert result["data"][CONF_USERNAME] == "fake_user"
 
