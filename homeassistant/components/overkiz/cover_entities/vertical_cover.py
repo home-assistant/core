@@ -3,7 +3,13 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from pyoverkiz.enums import OverkizCommand, OverkizState, UIClass, UIWidget
+from pyoverkiz.enums import (
+    OverkizCommand,
+    OverkizCommandParam,
+    OverkizState,
+    UIClass,
+    UIWidget,
+)
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -132,5 +138,7 @@ class LowSpeedCover(VerticalCover):
         position = 100 - kwargs.get(ATTR_POSITION, 0)
 
         await self.executor.async_execute_command(
-            OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED, position, "lowspeed"
+            OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED,
+            position,
+            OverkizCommandParam.LOWSPEED,
         )
