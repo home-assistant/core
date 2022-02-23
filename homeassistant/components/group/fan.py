@@ -52,7 +52,12 @@ from .util import (
     states_equal,
 )
 
-SUPPORTED_FLAGS = {SUPPORT_SET_SPEED, SUPPORT_DIRECTION, SUPPORT_OSCILLATE, SUPPORT_PRESET_MODE}
+SUPPORTED_FLAGS = {
+    SUPPORT_SET_SPEED,
+    SUPPORT_DIRECTION,
+    SUPPORT_OSCILLATE,
+    SUPPORT_PRESET_MODE,
+}
 
 DEFAULT_NAME = "Fan Group"
 
@@ -171,7 +176,9 @@ class FanGroup(GroupEntity, FanEntity):
             if self._preset_modes is None:
                 self._preset_modes = preset_modes
             else:
-                self._preset_modes = [value for value in self._preset_modes if value in preset_modes]
+                self._preset_modes = [
+                    value for value in self._preset_modes if value in preset_modes
+                ]
 
         if update_state:
             self.async_defer_or_update_ha_state()
@@ -195,7 +202,9 @@ class FanGroup(GroupEntity, FanEntity):
     async def async_set_preset_mode(self, preset_mode: int) -> None:
         """Set the preset mode of the fan."""
         await self._async_call_supported_entities(
-            SERVICE_SET_PRESET_MODE, SUPPORT_PRESET_MODE, {ATTR_PRESET_MODE: preset_mode}
+            SERVICE_SET_PRESET_MODE,
+            SUPPORT_PRESET_MODE,
+            {ATTR_PRESET_MODE: preset_mode},
         )
 
     async def async_set_percentage(self, percentage: int) -> None:
@@ -303,7 +312,9 @@ class FanGroup(GroupEntity, FanEntity):
         )
         self._set_attr_most_frequent("_direction", SUPPORT_DIRECTION, ATTR_DIRECTION)
 
-        self._set_attr_most_frequent("_preset_mode", SUPPORT_PRESET_MODE, ATTR_PRESET_MODE)
+        self._set_attr_most_frequent(
+            "_preset_mode", SUPPORT_PRESET_MODE, ATTR_PRESET_MODE
+        )
 
         self._supported_features = reduce(
             ior, [feature for feature in SUPPORTED_FLAGS if self._fans[feature]], 0
