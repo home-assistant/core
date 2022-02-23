@@ -9,7 +9,7 @@ from homeassistant.const import CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN, PLATFORMS, ZWaveMePlatform
 
@@ -104,8 +104,21 @@ class ZWaveMeEntity(Entity):
         self.controller = controller
         self.device = device
         self._attr_name = device.title
-        self._attr_unique_id = f"{self.controller.config.unique_id}-{self.device.id}"
+        self._attr_unique_id: str = (
+            f"{self.controller.config.unique_id}-{self.device.id}"
+        )
         self._attr_should_poll = False
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device specific attributes."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            name=self._attr_name,
+            manufacturer=self.device.manufacturer,
+            sw_version=self.device.firmware,
+            suggested_area=self.device.locationName,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Connect to an updater."""

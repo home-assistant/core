@@ -104,7 +104,7 @@ class Analytics:
     @property
     def supervisor(self) -> bool:
         """Return bool if a supervisor is present."""
-        return hassio.is_hassio()
+        return hassio.is_hassio(self.hass)
 
     async def load(self) -> None:
         """Load preferences."""

@@ -8,7 +8,7 @@ async-upnp-client==0.25.0
 async_timeout==4.0.2
 atomicwrites==1.4.0
 attrs==21.2.0
-awesomeversion==22.1.0
+awesomeversion==22.2.0
 bcrypt==3.1.7
 certifi>=2021.5.30
 ciso8601==2.2.0
@@ -94,5 +94,5 @@ python-engineio>=3.13.1,<4.0
 python-socketio>=4.6.0,<5.0
 
 # Constrain multidict to avoid typing issues
-# https://github.com/home-assistant/core/pull/64792
-multidict<6.0.0
+# https://github.com/home-assistant/core/pull/67046
+multidict>=6.0.2
