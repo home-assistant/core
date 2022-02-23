@@ -1,6 +1,8 @@
 """Binary Sensor platform for FireServiceRota integration."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -34,7 +36,10 @@ class ResponseBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Representation of an FireServiceRota sensor."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, client: FireServiceRotaClient, entry: ConfigEntry
+        self,
+        coordinator: DataUpdateCoordinator,
+        client: FireServiceRotaClient,
+        entry: ConfigEntry,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -70,9 +75,9 @@ class ResponseBinarySensor(CoordinatorEntity, BinarySensorEntity):
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return available attributes for binary sensor."""
-        attr = {}
+        attr: dict[str, Any] = {}
         if not self.coordinator.data:
             return attr
 

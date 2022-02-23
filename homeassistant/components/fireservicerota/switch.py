@@ -1,5 +1,6 @@
 """Switch platform for FireServiceRota integration."""
 import logging
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry

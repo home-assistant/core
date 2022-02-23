@@ -1,5 +1,6 @@
 """Sensor platform for FireServiceRota integration."""
 import logging
+from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
