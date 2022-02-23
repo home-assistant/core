@@ -113,7 +113,7 @@ class SonosMedia:
 
     def write_media_player_states(self) -> None:
         """Send a signal to media player(s) to write new states."""
-        dispatcher_send(self.hass, f"{SONOS_MEDIA_UPDATED}", self.soco.uid)
+        dispatcher_send(self.hass, SONOS_MEDIA_UPDATED, self.soco.uid)
 
     def set_basic_track_info(self, update_position: bool = False) -> None:
         """Query the speaker to update media metadata and position info."""
