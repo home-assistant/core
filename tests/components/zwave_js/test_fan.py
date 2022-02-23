@@ -11,6 +11,7 @@ from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PERCENTAGE_STEP,
     ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
     ATTR_SPEED,
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PRESET_MODE,
@@ -539,6 +540,31 @@ async def test_thermostat_fan(hass, client, climate_adc_t3000, integration):
 
     client.async_send_command.reset_mock()
 
+    # Test fan mode update from value updated event for an unknown mode
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 68,
+            "args": {
+                "commandClassName": "Thermostat Fan Mode",
+                "commandClass": CommandClass.THERMOSTAT_FAN_MODE.value,
+                "endpoint": 0,
+                "property": "mode",
+                "newValue": 79,
+                "prevValue": 0,
+                "propertyName": "mode",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(entity_id)
+    assert not state.attributes.get(ATTR_PRESET_MODE)
+
+    client.async_send_command.reset_mock()
+
     # Test fan mode turned off update from value updated event
     event = Event(
         type="value updated",
@@ -615,3 +641,33 @@ async def test_thermostat_fan_without_off(
     assert state.state == STATE_UNKNOWN
 
     client.async_send_command.reset_mock()
+
+
+async def test_thermostat_fan_without_preset_modes(
+    hass, client, climate_adc_t3000_missing_fan_mode_states, integration
+):
+    """Test the fan entity for a z-wave fan without "states" metadata."""
+    entity_id = "fan.adc_t3000_missing_fan_mode_states"
+
+    registry = entity_registry.async_get(hass)
+    state = hass.states.get(entity_id)
+    assert state is None
+
+    entry = registry.async_get(entity_id)
+    assert entry
+    assert entry.disabled
+    assert entry.disabled_by is entity_registry.RegistryEntryDisabler.INTEGRATION
+
+    # Test enabling entity
+    updated_entry = registry.async_update_entity(entity_id, disabled_by=None)
+    assert updated_entry != entry
+    assert updated_entry.disabled is False
+
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+
+    assert not state.attributes.get(ATTR_PRESET_MODE)
+    assert not state.attributes.get(ATTR_PRESET_MODES)
