@@ -37,7 +37,6 @@ async def async_setup_entry(
     """Set up OwnTracks based off an entry."""
     entity = MobileAppEntity(entry)
     async_add_entities([entity])
-    return True
 
 
 class MobileAppEntity(TrackerEntity, RestoreEntity):

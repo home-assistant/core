@@ -60,7 +60,7 @@ def setup_encrypt() -> tuple[int, Callable]:
     return (SecretBox.KEY_SIZE, encrypt)
 
 
-def _decrypt_payload(key: str, ciphertext: str) -> dict[str, str]:
+def _decrypt_payload(key: str | None, ciphertext: str) -> dict[str, str] | None:
     """Decrypt encrypted payload."""
     try:
         keylen, decrypt = setup_decrypt()
@@ -72,13 +72,13 @@ def _decrypt_payload(key: str, ciphertext: str) -> dict[str, str]:
         _LOGGER.warning("Ignoring encrypted payload because no decryption key known")
         return None
 
-    key = key.encode("utf-8")
-    key = key[:keylen]
-    key = key.ljust(keylen, b"\0")
+    key_bytes = key.encode("utf-8")
+    key_bytes = key_bytes[:keylen]
+    key_bytes = key_bytes.ljust(keylen, b"\0")
 
     try:
-        message = decrypt(ciphertext, key)
-        message = json.loads(message.decode("utf-8"))
+        msg_bytes = decrypt(ciphertext, key_bytes)
+        message = json.loads(msg_bytes.decode("utf-8"))
         _LOGGER.debug("Successfully decrypted mobile_app payload")
         return message
     except ValueError:
