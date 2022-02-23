@@ -262,7 +262,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         """Create or return a remote control instance."""
         return await self.hass.async_add_executor_job(self._get_remote)
 
-    async def _get_remote(self) -> Remote:
+    def _get_remote(self) -> Remote:
         """Create or return a remote control instance."""
         if self._remote is None:
             # We need to create a new instance to reconnect.
