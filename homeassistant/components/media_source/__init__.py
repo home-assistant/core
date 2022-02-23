@@ -84,14 +84,16 @@ def _get_media_item(
     hass: HomeAssistant, media_content_id: str | None
 ) -> MediaSourceItem:
     """Return media item."""
-    if not media_content_id:
+    if media_content_id:
+        item = MediaSourceItem.from_uri(hass, media_content_id)
+    else:
         # We default to our own domain if its only one registered
         domain = None if len(hass.data[DOMAIN]) > 1 else DOMAIN
         return MediaSourceItem(hass, domain, "")
 
-    item = MediaSourceItem.from_uri(hass, media_content_id)
     if item.domain is not None and item.domain not in hass.data[DOMAIN]:
         raise ValueError("Unknown media source")
+
     return item
 
 
