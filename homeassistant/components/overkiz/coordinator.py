@@ -61,6 +61,12 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.areas = self._places_to_area(places)
         self.config_entry_id = config_entry_id
 
+        for device in devices:
+            print(device.protocol)
+
+        print("Is stateless?")
+        print(self.is_stateless)
+
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch Overkiz data via event listener."""
         try:

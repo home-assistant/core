@@ -400,9 +400,6 @@ elkm1-lib==1.2.0
 # homeassistant.components.elmax
 elmax_api==0.0.2
 
-# homeassistant.components.mobile_app
-emoji==1.6.3
-
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
 
@@ -1292,7 +1289,7 @@ pywemo==0.7.0
 pywilight==0.0.70
 
 # homeassistant.components.wiz
-pywizlight==0.5.12
+pywizlight==0.5.13
 
 # homeassistant.components.zerproc
 pyzerproc==0.4.8
