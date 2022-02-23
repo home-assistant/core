@@ -406,14 +406,25 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     async def _async_send_key(self, key: str, key_type: str | None = None) -> None:
         """Send the key using websocket protocol."""
-        """Send the key using websocket protocol."""
         if key == "KEY_POWEROFF":
             key = "KEY_POWER"
         if remote := await self._async_get_remote():
             if key_type == "run_app":
-                await remote.run_app(key)
+                await remote.send_command(
+                    ws_remote.ChannelEmitCommand(
+                        {
+                            "event": "ed.apps.launch",
+                            "to": "host",
+                            "data": {
+                                "action_type": "DEEP_LINK",
+                                "appId": key,
+                                "metaTag": "",
+                            },
+                        }
+                    )
+                )
             else:
-                await remote.send_key(key)
+                await remote.send_command(ws_remote.SendRemoteKey.click(key))
 
     async def _async_get_remote(
         self, avoid_open: bool = False
