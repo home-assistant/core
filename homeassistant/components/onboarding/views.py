@@ -195,7 +195,7 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
             from homeassistant.components import hassio
 
             if (
-                hassio.is_hassio()
+                hassio.is_hassio(hass)
                 and "raspberrypi" in hassio.get_core_info(hass)["machine"]
             ):
                 onboard_integrations.append("rpi_power")
