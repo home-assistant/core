@@ -280,7 +280,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                         coolSetpoint=target_temp_high,
                         heatSetpoint=target_temp_low,
                         mode=HVAC_MODES[self.device.changeableValues.heatCoolMode],
-                        autoChangeoverActive=True
+                        autoChangeoverActive=True,
                     )
                 except LYRIC_EXCEPTIONS as exception:
                     _LOGGER.error(exception)
@@ -295,7 +295,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                             coolSetpoint=temp,
                             heatSetpoint=self.device.changeableValues.heatSetpoint,
                             mode=HVAC_MODES[LYRIC_HVAC_MODE_COOL],
-                            autoChangeoverActive=False
+                            autoChangeoverActive=False,
                         )
                     else:
                         await self._update_thermostat(
@@ -304,7 +304,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                             coolSetpoint=self.device.changeableValues.coolSetpoint,
                             heatSetpoint=temp,
                             mode=HVAC_MODES[LYRIC_HVAC_MODE_HEAT],
-                            autoChangeoverActive=False
+                            autoChangeoverActive=False,
                         )
                 except LYRIC_EXCEPTIONS as exception:
                     _LOGGER.error(exception)
@@ -323,7 +323,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                         coolSetpoint=self.device.changeableValues.coolSetpoint,
                         heatSetpoint=self.device.changeableValues.heatSetpoint,
                         mode=HVAC_MODES[LYRIC_HVAC_MODE_HEAT],
-                        autoChangeoverActive=True
+                        autoChangeoverActive=True,
                     )
                 else:
                     _LOGGER.debug("Set point passed to lyric: %s", HVAC_MODES[self.device.changeableValues.heatCoolMode])
@@ -333,7 +333,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                         coolSetpoint=self.device.changeableValues.coolSetpoint,
                         heatSetpoint=self.device.changeableValues.heatSetpoint,
                         mode=HVAC_MODES[self.device.changeableValues.heatCoolMode],
-                        autoChangeoverActive=True
+                        autoChangeoverActive=True,
                     )
             else:
                 _LOGGER.debug("Set point passed to lyric: %s", LYRIC_HVAC_MODES[hvac_mode])
@@ -343,7 +343,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                     coolSetpoint=self.device.changeableValues.coolSetpoint,
                     heatSetpoint=self.device.changeableValues.heatSetpoint,
                     mode=LYRIC_HVAC_MODES[hvac_mode],
-                    autoChangeoverActive=False
+                    autoChangeoverActive=False,
                 )
         except LYRIC_EXCEPTIONS as exception:
             _LOGGER.error(exception)
@@ -359,14 +359,14 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                     self.device,
                     mode=HVAC_MODES[self.device.changeableValues.heatCoolMode],
                     autoChangeoverActive=True,
-                    thermostatSetpointStatus=preset_mode
+                    thermostatSetpointStatus=preset_mode,
                 )
             else:
                 await self._update_thermostat(
                     self.location,
                     self.device,
                     autoChangeoverActive=False,
-                    thermostatSetpointStatus=preset_mode
+                    thermostatSetpointStatus=preset_mode,
                 )
         except LYRIC_EXCEPTIONS as exception:
             _LOGGER.error(exception)
@@ -383,7 +383,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                     mode=HVAC_MODES[self.device.changeableValues.heatCoolMode],
                     autoChangeoverActive=True,
                     thermostatSetpointStatus=PRESET_HOLD_UNTIL,
-                    nextPeriodTime=time_period
+                    nextPeriodTime=time_period,
                 )
             else:
                 await self._update_thermostat(
@@ -391,7 +391,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                     self.device,
                     autoChangeoverActive=False,
                     thermostatSetpointStatus=PRESET_HOLD_UNTIL,
-                    nextPeriodTime=time_period
+                    nextPeriodTime=time_period,
                 )
         except LYRIC_EXCEPTIONS as exception:
             _LOGGER.error(exception)
