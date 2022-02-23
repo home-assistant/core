@@ -8,6 +8,8 @@ from homeassistant.components.media_player.browse_media import (
 )
 from homeassistant.config import async_process_ha_core_config
 
+from tests.common import mock_component
+
 
 @pytest.fixture
 def mock_sign_path():
@@ -58,3 +60,22 @@ async def test_process_play_media_url(hass, mock_sign_path):
         )
         == "http://192.168.123.123:8123/path?hello=world"
     )
+
+
+async def test_process_play_media_url_allow_hostname(hass, mock_sign_path):
+    """Test it picks the hostname when available."""
+    await async_process_ha_core_config(
+        hass,
+        {"internal_url": "http://example.local:8123"},
+    )
+    hass.config.api = Mock(use_ssl=False, port=8123, local_ip="192.168.123.123")
+    mock_component(hass, "hassio")
+    hass.components.hassio.get_host_info = Mock(
+        return_value={"hostname": "homeassistant"}
+    )
+
+    with patch("homeassistant.helpers.network.has_supervisor", return_value=True):
+        assert (
+            async_process_play_media_url(hass, "/path", allow_hostname=True)
+            == "http://homeassistant:8123/path?authSig=bla"
+        )
