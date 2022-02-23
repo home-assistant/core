@@ -5,6 +5,7 @@ from datetime import timedelta
 import logging
 
 import hpilo
+import ssl
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -191,11 +192,19 @@ class HpIloData:
     def update(self):
         """Get the latest data from HP iLO."""
         try:
+            ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+            # Sadly, ancient iLO's aren't dead yet, so let's enable sslv3 by default
+            ssl_context.options &= ~ssl.OP_NO_SSLv3
+            ssl_context.check_hostname = False
+            ssl_context.set_ciphers(('ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+HIGH:'
+                                     'DH+HIGH:ECDH+3DES:DH+3DES:RSA+AESGCM:RSA+AES:RSA+HIGH:RSA+3DES:!aNULL:'
+                                     '!eNULL:!MD5'))
             self.data = hpilo.Ilo(
                 hostname=self._host,
                 login=self._login,
                 password=self._password,
                 port=self._port,
+                ssl_context=ssl_context
             )
         except (
             hpilo.IloError,
