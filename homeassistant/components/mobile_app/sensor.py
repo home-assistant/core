@@ -28,7 +28,6 @@ from .const import (
     ATTR_SENSOR_TYPE_SENSOR as ENTITY_TYPE,
     ATTR_SENSOR_UNIQUE_ID,
     ATTR_SENSOR_UOM,
-    DATA_DEVICES,
     DOMAIN,
 )
 from .entity import MobileAppEntity, unique_id
@@ -60,7 +59,7 @@ async def async_setup_entry(
             ATTR_SENSOR_UOM: entry.unit_of_measurement,
             ATTR_SENSOR_ENTITY_CATEGORY: entry.entity_category,
         }
-        entities.append(MobileAppSensor(config, entry.device_id, config_entry))
+        entities.append(MobileAppSensor(config, config_entry))
 
     async_add_entities(entities)
 
@@ -76,9 +75,7 @@ async def async_setup_entry(
             CONF_NAME
         ] = f"{config_entry.data[ATTR_DEVICE_NAME]} {data[ATTR_SENSOR_NAME]}"
 
-        device = hass.data[DOMAIN][DATA_DEVICES][data[CONF_WEBHOOK_ID]]
-
-        async_add_entities([MobileAppSensor(data, device, config_entry)])
+        async_add_entities([MobileAppSensor(data, config_entry)])
 
     async_dispatcher_connect(
         hass,
