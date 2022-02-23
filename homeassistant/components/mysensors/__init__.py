@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_OPTIMISTIC, Platform
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
@@ -261,6 +262,23 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     del hass.data[DOMAIN][MYSENSORS_GATEWAYS][entry.entry_id]
 
     await gw_stop(hass, entry, gateway)
+    return True
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove a MySensors config entry from a device."""
+    gateway: BaseAsyncGateway = hass.data[DOMAIN][MYSENSORS_GATEWAYS][
+        config_entry.entry_id
+    ]
+    device_id = next(
+        device_id for domain, device_id in device_entry.identifiers if domain == DOMAIN
+    )
+    node_id = int(device_id.partition("-")[2])
+    gateway.sensors.pop(node_id, None)
+    gateway.tasks.persistence.need_save = True
+
     return True
 
 
