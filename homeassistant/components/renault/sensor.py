@@ -339,7 +339,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         coordinator="res_state",
         data_key="details",
         entity_class=RenaultSensor[KamereonVehicleResStateData],
-        name="Remote Engine Start State",
+        name="Remote Engine Start",
     ),
     RenaultSensorEntityDescription(
         key="res_state_code",
@@ -347,6 +347,6 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         data_key="code",
         entity_class=RenaultSensor[KamereonVehicleResStateData],
         entity_registry_enabled_default=False,
-        name="Remote Engine Start State Code",
+        name="Remote Engine Start Code",
     ),
 )

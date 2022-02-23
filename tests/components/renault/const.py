@@ -237,13 +237,13 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_plug_state",
             },
             {
-                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start_state",
+                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start",
                 ATTR_STATE: STATE_UNKNOWN,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_res_state",
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start_state_code",
+                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start_code",
                 ATTR_STATE: STATE_UNKNOWN,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_res_state_code",
             },
@@ -469,13 +469,13 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_location_last_activity",
             },
             {
-                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start_state",
+                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start",
                 ATTR_STATE: "Stopped, ready for RES",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_res_state",
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start_state_code",
+                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start_code",
                 ATTR_STATE: "10",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_res_state_code",
             },
@@ -689,13 +689,13 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_location_last_activity",
             },
             {
-                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start_state",
+                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start",
                 ATTR_STATE: "Stopped, ready for RES",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_res_state",
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start_state_code",
+                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start_code",
                 ATTR_STATE: "10",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_res_state_code",
             },
@@ -811,13 +811,13 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_location_last_activity",
             },
             {
-                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start_state",
+                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start",
                 ATTR_STATE: "Stopped, ready for RES",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_res_state",
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start_state_code",
+                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start_code",
                 ATTR_STATE: "10",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_res_state_code",
             },
