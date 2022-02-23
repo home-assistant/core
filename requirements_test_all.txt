@@ -1330,7 +1330,7 @@ rxv==0.7.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws==1.7.0
+samsungtvws[async]==1.7.0
 
 # homeassistant.components.dhcp
 scapy==2.4.5
