@@ -97,16 +97,6 @@ def build_schema(user_input):
     return vol.Schema(spec)
 
 
-def check_for_existing(hass, options, ignore_entry_id=None):
-    """Check whether an existing entry is using the same URLs."""
-    return any(
-        entry.entry_id != ignore_entry_id
-        and entry.options[CONF_STILL_IMAGE_URL] == options[CONF_STILL_IMAGE_URL]
-        and entry.options[CONF_STREAM_SOURCE] == options[CONF_STREAM_SOURCE]
-        for entry in hass.config_entries.async_entries(DOMAIN)
-    )
-
-
 async def async_test_connection(
     hass, info
 ) -> tuple[dict[str, str], str | None, str | None]:
@@ -214,6 +204,15 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return GenericOptionsFlowHandler(config_entry)
 
+    def check_for_existing(self, options, ignore_entry_id=None):
+        """Check whether an existing entry is using the same URLs."""
+        return any(
+            entry.entry_id != ignore_entry_id
+            and entry.options[CONF_STILL_IMAGE_URL] == options[CONF_STILL_IMAGE_URL]
+            and entry.options[CONF_STREAM_SOURCE] == options[CONF_STREAM_SOURCE]
+            for entry in self._async_current_entries()
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -247,7 +246,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config) -> FlowResult:
         """Handle config import from yaml."""
         # abort if we've already got this one.
-        if check_for_existing(self.hass, import_config):
+        if self.check_for_existing(import_config):
             return self.async_abort(reason="already_exists")
         errors, still_format, name = await async_test_connection(
             self.hass, import_config
