@@ -1,7 +1,5 @@
 """deCONZ services."""
 
-from types import MappingProxyType
-
 from pydeconz.utils import normalize_bridge_id
 import voluptuous as vol
 
@@ -16,6 +14,7 @@ from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
     async_entries_for_device,
 )
+from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .config_flow import get_master_gateway
 from .const import CONF_BRIDGE_ID, DOMAIN, LOGGER
@@ -111,9 +110,7 @@ def async_unload_services(hass: HomeAssistant) -> None:
         hass.services.async_remove(DOMAIN, service)
 
 
-async def async_configure_service(
-    gateway: DeconzGateway, data: MappingProxyType
-) -> None:
+async def async_configure_service(gateway: DeconzGateway, data: ReadOnlyDict) -> None:
     """Set attribute of device in deCONZ.
 
     Entity is used to resolve to a device path (e.g. '/lights/1').
