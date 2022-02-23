@@ -125,6 +125,7 @@ SCHEMA_BACKUP_FULL = vol.Schema(
 
 SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_FULL.extend(
     {
+        vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.string]),
     }
