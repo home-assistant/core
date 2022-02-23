@@ -282,7 +282,7 @@ class OnewireOptionsFlowHandler(OptionsFlow):
                         default=self._get_current_setting(
                             description.id, OPTION_ENTRY_SENSOR_PRECISION, "Default"
                         ),
-                    ): vol.In(list(PRECISION_MAPPING_FAMILY_28.keys())),
+                    ): vol.In(list(PRECISION_MAPPING_FAMILY_28)),
                 }
             )
 
