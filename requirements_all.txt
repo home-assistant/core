@@ -343,8 +343,10 @@ asmog==0.0.6
 # homeassistant.components.asterisk_mbox
 asterisk_mbox==0.5.0
 
-# homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
+async-upnp-client==0.23.5
+
+# homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
@@ -2058,7 +2060,7 @@ pywemo==0.7.0
 pywilight==0.0.70
 
 # homeassistant.components.wiz
-pywizlight==0.5.12
+pywizlight==0.5.13
 
 # homeassistant.components.xeoma
 pyxeoma==1.4.1
