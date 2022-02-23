@@ -5,6 +5,7 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 from homeassistant.components import media_player
+from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
 from homeassistant.setup import async_setup_component
@@ -166,7 +167,14 @@ async def test_media_browse(hass, hass_ws_client):
         media_player.SUPPORT_BROWSE_MEDIA,
     ), patch(
         "homeassistant.components.media_player.MediaPlayerEntity.async_browse_media",
-        return_value={"bla": "yo"},
+        return_value=BrowseMedia(
+            media_class=media_player.MEDIA_CLASS_DIRECTORY,
+            media_content_id="mock-id",
+            media_content_type="mock-type",
+            title="Mock Title",
+            can_play=False,
+            can_expand=True,
+        ),
     ) as mock_browse_media:
         await client.send_json(
             {
@@ -183,7 +191,18 @@ async def test_media_browse(hass, hass_ws_client):
     assert msg["id"] == 5
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
-    assert msg["result"] == {"bla": "yo"}
+    assert msg["result"] == {
+        "title": "Mock Title",
+        "media_class": "directory",
+        "media_content_type": "mock-type",
+        "media_content_id": "mock-id",
+        "can_play": False,
+        "can_expand": True,
+        "children_media_class": None,
+        "thumbnail": None,
+        "not_shown": 0,
+        "children": [],
+    }
     assert mock_browse_media.mock_calls[0][1] == ("album", "abcd")
 
     with patch(

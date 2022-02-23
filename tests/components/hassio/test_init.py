@@ -16,11 +16,7 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-MOCK_ENVIRON = {
-    "HASSIO": "127.0.0.1",
-    "HASSIO_TOKEN": "abcdefgh",
-    "SUPERVISOR": "127.0.0.1",
-}
+MOCK_ENVIRON = {"HASSIO": "127.0.0.1", "HASSIO_TOKEN": "abcdefgh"}
 
 
 @pytest.fixture(autouse=True)
@@ -155,6 +151,7 @@ async def test_setup_api_ping(hass, aioclient_mock):
 
     assert aioclient_mock.call_count == 10
     assert hass.components.hassio.get_core_info()["version_latest"] == "1.0.0"
+    assert hass.components.hassio.is_hassio()
 
 
 async def test_setup_api_panel(hass, aioclient_mock):
@@ -337,6 +334,7 @@ async def test_warn_when_cannot_connect(hass, caplog):
         result = await async_setup_component(hass, "hassio", {})
         assert result
 
+    assert hass.components.hassio.is_hassio()
     assert "Not connected with the supervisor / system too busy!" in caplog.text
 
 
@@ -399,12 +397,18 @@ async def test_service_calls(hassio_env, hass, aioclient_mock, caplog):
     await hass.services.async_call(
         "hassio",
         "backup_partial",
-        {"addons": ["test"], "folders": ["ssl"], "password": "123456"},
+        {
+            "homeassistant": True,
+            "addons": ["test"],
+            "folders": ["ssl"],
+            "password": "123456",
+        },
     )
     await hass.async_block_till_done()
 
     assert aioclient_mock.call_count == 12
     assert aioclient_mock.mock_calls[-1][2] == {
+        "homeassistant": True,
         "addons": ["test"],
         "folders": ["ssl"],
         "password": "123456",

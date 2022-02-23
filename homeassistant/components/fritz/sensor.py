@@ -170,7 +170,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_device_uptime_state,
-        is_suitable=lambda info: info.mesh_role != MeshRoles.NONE,
+        is_suitable=lambda info: True,
     ),
     FritzSensorEntityDescription(
         key="connection_uptime",

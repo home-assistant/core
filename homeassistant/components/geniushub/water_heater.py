@@ -73,7 +73,7 @@ class GeniusWaterHeater(GeniusHeatingZone, WaterHeaterEntity):
     @property
     def current_operation(self) -> str:
         """Return the current operation mode."""
-        return GH_STATE_TO_HA[self._zone.data["mode"]]
+        return GH_STATE_TO_HA[self._zone.data["mode"]]  # type: ignore[return-value]
 
     async def async_set_operation_mode(self, operation_mode) -> None:
         """Set a new operation mode for this boiler."""

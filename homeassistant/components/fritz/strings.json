@@ -45,7 +45,8 @@
       "step": {
         "init": {
           "data": {
-            "consider_home": "Seconds to consider a device at 'home'"
+            "consider_home": "Seconds to consider a device at 'home'",
+            "old_discovery": "Enable old discovery method"
           }
         }
       }

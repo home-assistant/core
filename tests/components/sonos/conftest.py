@@ -284,9 +284,11 @@ def no_media_event_fixture(soco):
         "current_crossfade_mode": "0",
         "current_play_mode": "NORMAL",
         "current_section": "0",
+        "current_track_meta_data": "",
         "current_track_uri": "",
         "enqueued_transport_uri": "",
         "enqueued_transport_uri_meta_data": "",
+        "number_of_tracks": "0",
         "transport_state": "STOPPED",
     }
     return SonosMockEvent(soco, soco.avTransport, variables)
