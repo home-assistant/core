@@ -227,6 +227,10 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         """Try to gather infos of this device."""
         return None
 
+    async def _async_get_remote(self, avoid_open: bool = False) -> Remote:
+        """Create or return a remote control instance."""
+        return await self.hass.async_add_executor_job(self._get_remote)
+
     def _get_remote(self) -> Remote:
         """Create or return a remote control instance."""
         if self._remote is None:
