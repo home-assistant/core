@@ -171,14 +171,14 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         self._calculate_color_values()
 
     @property
-    def brightness(self) -> int:
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255.
 
         Z-Wave multilevel switches use a range of [0, 99] to control brightness.
         """
-        if self.info.primary_value.value is not None:
-            return round((self.info.primary_value.value / 99) * 255)
-        return 0
+        if self.info.primary_value.value is None:
+            return None
+        return round((self.info.primary_value.value / 99) * 255)
 
     @property
     def color_mode(self) -> str | None:
@@ -186,9 +186,12 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         return self._color_mode
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if device is on (brightness above 0)."""
-        return self.brightness > 0
+        brightness = self.brightness
+        if brightness is None:
+            return None
+        return brightness > 0
 
     @property
     def hs_color(self) -> tuple[float, float] | None:
