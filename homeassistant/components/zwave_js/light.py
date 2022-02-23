@@ -6,7 +6,6 @@ from typing import Any
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import (
-    CURRENT_VALUE_PROPERTY,
     TARGET_VALUE_PROPERTY,
     TRANSITION_DURATION_OPTION,
     CommandClass,
@@ -48,7 +47,6 @@ import homeassistant.util.color as color_util
 from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
-from .helpers import get_value_of_zwave_value
 
 LOGGER = logging.getLogger(__name__)
 
@@ -451,23 +449,8 @@ class ZwaveBlackIsOffLight(ZwaveLight):
         super().__init__(config_entry, client, info)
 
         self._last_color: dict[str, int] | None = None
-
-        # get additional (optional) values and set features
-        self._current_brightness = self.get_zwave_value(
-            CURRENT_VALUE_PROPERTY,
-            CommandClass.SWITCH_MULTILEVEL,
-            value_property_key=None,
-        )
-
-    @property
-    def brightness(self) -> int:
-        """Return the brightness of this light between 0..255.
-
-        Z-Wave multilevel switches use a range of [0, 99] to control brightness.
-        """
-        if (val := get_value_of_zwave_value(self._current_brightness)) is not None:
-            return round((val / 99) * 255)
-        return 255
+        self._supported_color_modes.discard(COLOR_MODE_BRIGHTNESS)
+        self._attr_brightness = 255
 
     @property
     def is_on(self) -> bool:

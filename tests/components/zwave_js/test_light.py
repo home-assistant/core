@@ -701,3 +701,5 @@ async def test_black_is_off(hass, client, express_controls_ezmultipli, integrati
         },
     }
     assert args["value"] == {"red": 0, "green": 255, "blue": 0}
+
+    client.async_send_command.reset_mock()
