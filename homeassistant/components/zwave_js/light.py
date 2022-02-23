@@ -459,37 +459,41 @@ class ZwaveBlackIsOffLight(ZwaveLight):
     @property
     def is_on(self) -> bool:
         """Return true if device is on (brightness above 0)."""
-        return any(value != 0 for value in self.info.primary_value.value.values())
+        return self.info.primary_value.value is not None and any(
+            value != 0 for value in self.info.primary_value.value.values()
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await super().async_turn_on(**kwargs)
 
         if (
-            kwargs.get(ATTR_RGBW_COLOR) is None
-            and kwargs.get(ATTR_COLOR_TEMP) is None
-            and kwargs.get(ATTR_HS_COLOR) is None
+            kwargs.get(ATTR_RGBW_COLOR) is not None
+            and kwargs.get(ATTR_COLOR_TEMP) is not None
+            and kwargs.get(ATTR_HS_COLOR) is not None
         ):
-            transition = kwargs.get(ATTR_TRANSITION)
-            # turn on light to last color if known, otherwise set to white
-            if self._last_color is not None:
-                await self._async_set_colors(
-                    {
-                        ColorComponent.RED: self._last_color["red"],
-                        ColorComponent.GREEN: self._last_color["green"],
-                        ColorComponent.BLUE: self._last_color["blue"],
-                    },
-                    transition,
-                )
-            else:
-                await self._async_set_colors(
-                    {
-                        ColorComponent.RED: 255,
-                        ColorComponent.GREEN: 255,
-                        ColorComponent.BLUE: 255,
-                    },
-                    transition,
-                )
+            return
+
+        transition = kwargs.get(ATTR_TRANSITION)
+        # turn on light to last color if known, otherwise set to white
+        if self._last_color is not None:
+            await self._async_set_colors(
+                {
+                    ColorComponent.RED: self._last_color["red"],
+                    ColorComponent.GREEN: self._last_color["green"],
+                    ColorComponent.BLUE: self._last_color["blue"],
+                },
+                transition,
+            )
+        else:
+            await self._async_set_colors(
+                {
+                    ColorComponent.RED: 255,
+                    ColorComponent.GREEN: 255,
+                    ColorComponent.BLUE: 255,
+                },
+                transition,
+            )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
