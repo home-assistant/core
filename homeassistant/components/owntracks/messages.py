@@ -17,7 +17,7 @@ from .helper import supports_encryption
 
 _LOGGER = logging.getLogger(__name__)
 
-HANDLERS = decorator.Registry()
+HANDLERS = decorator.Registry()  # type: ignore[var-annotated]
 
 
 def get_cipher():

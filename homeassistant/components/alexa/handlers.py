@@ -73,7 +73,7 @@ from .errors import (
 from .state_report import async_enable_proactive_mode
 
 _LOGGER = logging.getLogger(__name__)
-HANDLERS = Registry()
+HANDLERS = Registry()  # type: ignore[var-annotated]
 
 
 @HANDLERS.register(("Alexa.Discovery", "Discover"))

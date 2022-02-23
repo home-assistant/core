@@ -19,7 +19,7 @@ from .helpers import GoogleEntity, RequestData, async_get_entities
 
 EXECUTE_LIMIT = 2  # Wait 2 seconds for execute to finish
 
-HANDLERS = Registry()
+HANDLERS = Registry()  # type: ignore[var-annotated]
 _LOGGER = logging.getLogger(__name__)
 
 
