@@ -1076,12 +1076,6 @@ async def test_handle_mqtt_timeout_on_callback(hass, caplog):
 
     with patch("paho.mqtt.client.Client") as mock_client:
 
-        @ha.callback
-        def _async_fire_mqtt_message(topic, payload, qos, retain):
-            async_fire_mqtt_message(hass, topic, payload, qos, retain)
-            # Fire the message but do not send an ACK when we handle the publish, mid=1
-            return FakeInfo()
-
         def _mock_ack(topic, qos=0):
             # Handle ACK for subscribe normally
             nonlocal mid
@@ -1091,7 +1085,7 @@ async def test_handle_mqtt_timeout_on_callback(hass, caplog):
 
         # We want to simulate the publish behaviour MQTT client
         mock_client = mock_client.return_value
-        mock_client.publish.side_effect = _async_fire_mqtt_message
+        mock_client.publish.return_value = FakeInfo()
         mock_client.subscribe.side_effect = _mock_ack
         mock_client.connect.return_value = 0
 
@@ -1106,10 +1100,6 @@ async def test_handle_mqtt_timeout_on_callback(hass, caplog):
         # Now call we publish without simulating and ACK callback
         await mqtt.async_publish(hass, "no_callback/test-topic", "test-payload")
         await hass.async_block_till_done()
-        assert (
-            "Transmitting message on no_callback/test-topic: 'test-payload', mid:"
-            in caplog.text
-        )
         # The is no ACK so we should see a timeout in the log after publishing
         assert len(mock_client.publish.mock_calls) == 1
         assert "No ACK from MQTT server" in caplog.text
