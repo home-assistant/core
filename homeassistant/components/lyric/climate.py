@@ -314,7 +314,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set hvac mode."""
-        _LOGGER.debug("Set point from frontent: %s", hvac_mode)
+        _LOGGER.debug("Set point from frontend: %s", hvac_mode)
         try:
             if LYRIC_HVAC_MODES[hvac_mode] == LYRIC_HVAC_MODE_HEAT_COOL:
                 if HVAC_MODES[self.device.changeableValues.heatCoolMode] == HVAC_MODE_OFF:
