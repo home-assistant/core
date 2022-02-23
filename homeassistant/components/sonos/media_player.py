@@ -263,7 +263,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SONOS_MEDIA_UPDATED}",
+                SONOS_MEDIA_UPDATED,
                 self.async_write_media_state,
             )
         )
