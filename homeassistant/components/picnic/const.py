@@ -17,6 +17,9 @@ CONF_API = "api"
 CONF_COORDINATOR = "coordinator"
 CONF_COUNTRY_CODE = "country_code"
 
+SERVICE_ADD_PRODUCT_TO_CART = "add_product"
+SERVICE_SEARCH_PRODUCT = "search"
+
 COUNTRY_CODES = ["NL", "DE", "BE"]
 ATTRIBUTION = "Data provided by Picnic"
 ADDRESS = "address"
@@ -41,6 +44,16 @@ SENSOR_NEXT_DELIVERY_ETA_START = "next_delivery_eta_start"
 SENSOR_NEXT_DELIVERY_ETA_END = "next_delivery_eta_end"
 SENSOR_NEXT_DELIVERY_SLOT_START = "next_delivery_slot_start"
 SENSOR_NEXT_DELIVERY_SLOT_END = "next_delivery_slot_end"
+
+# The product decorator types and associated attribute containing the information
+PRODUCT_DECORATOR_LABEL = 'LABEL'
+PRODUCT_DECORATOR_PRICE = 'PRICE'
+PRODUCT_DECORATOR_VALIDITY = 'VALIDITY_LABEL'
+PRODUCT_DECORATOR_MAPPING = {
+    PRODUCT_DECORATOR_LABEL: 'text',
+    PRODUCT_DECORATOR_PRICE: 'display_price',
+    PRODUCT_DECORATOR_VALIDITY: 'valid_until'
+}
 
 
 @dataclass
