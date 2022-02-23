@@ -16,7 +16,11 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-MOCK_ENVIRON = {"HASSIO": "127.0.0.1", "HASSIO_TOKEN": "abcdefgh"}
+MOCK_ENVIRON = {
+    "HASSIO": "127.0.0.1",
+    "HASSIO_TOKEN": "abcdefgh",
+    "SUPERVISOR": "127.0.0.1",
+}
 
 
 @pytest.fixture(autouse=True)
@@ -151,7 +155,6 @@ async def test_setup_api_ping(hass, aioclient_mock):
 
     assert aioclient_mock.call_count == 10
     assert hass.components.hassio.get_core_info()["version_latest"] == "1.0.0"
-    assert hass.components.hassio.is_hassio()
 
 
 async def test_setup_api_panel(hass, aioclient_mock):
@@ -334,7 +337,6 @@ async def test_warn_when_cannot_connect(hass, caplog):
         result = await async_setup_component(hass, "hassio", {})
         assert result
 
-    assert hass.components.hassio.is_hassio()
     assert "Not connected with the supervisor / system too busy!" in caplog.text
 
 
