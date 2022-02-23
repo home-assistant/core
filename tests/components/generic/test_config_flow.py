@@ -365,6 +365,9 @@ async def test_import(hass, fakeimgbytes_png, fakevidcontainer):
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Yaml Defined Name"
+    await hass.async_block_till_done()
+    # Any name defined in yaml should end up as the entity id.
+    assert hass.data["camera"].get_entity("camera.yaml_defined_name")
     assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
