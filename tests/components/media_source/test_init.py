@@ -58,6 +58,7 @@ async def test_async_browse_media(hass):
     assert media.title == "media"
     assert len(media.children) == 1, media.children
     media.children[0].title = "Epic Sax Guy 10 Hours"
+    assert media.not_shown == 1
 
     # Test invalid media content
     with pytest.raises(BrowseError):
