@@ -4,6 +4,7 @@ import errno
 from unittest.mock import patch
 
 import av
+import httpx
 import pytest
 import respx
 
@@ -218,6 +219,26 @@ async def test_form_still_and_stream_not_provided(hass):
 
 
 @respx.mock
+async def test_form_image_timeout(hass, fakevidcontainer):
+    """Test we handle invalid image timeout."""
+    respx.get("http://127.0.0.1/testurl/1").side_effect = [
+        httpx.TimeoutException,
+    ]
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch("av.open", return_value=fakevidcontainer):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            TESTDATA,
+        )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unable_still_load"}
+
+
+@respx.mock
 async def test_form_stream_invalidimage(hass, fakevidcontainer):
     """Test we handle invalid image when a stream is specified."""
     respx.get("http://127.0.0.1/testurl/1").respond(stream=b"invalid")
@@ -229,11 +250,28 @@ async def test_form_stream_invalidimage(hass, fakevidcontainer):
             result["flow_id"],
             TESTDATA,
         )
-
     await hass.async_block_till_done()
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "invalid_still_image"}
+
+
+@respx.mock
+async def test_form_stream_invalidimage2(hass, fakevidcontainer):
+    """Test we handle invalid image when a stream is specified."""
+    respx.get("http://127.0.0.1/testurl/1").respond(content=None)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch("av.open", return_value=fakevidcontainer):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            TESTDATA,
+        )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unable_still_load"}
 
 
 @respx.mock
@@ -350,6 +388,48 @@ async def test_form_oserror(hass, fakeimgbytes_png):
         )
 
 
+@respx.mock
+async def test_options_template_error(hass, fakeimgbytes_png, fakevidcontainer):
+    """Test the options flow with a template error."""
+    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
+    respx.get("http://127.0.0.1/testurl/2").respond(stream=fakeimgbytes_png)
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    mock_entry = MockConfigEntry(
+        title="Test Camera",
+        domain=DOMAIN,
+        data={},
+        options=TESTDATA,
+    )
+
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_entry.entry_id)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    # try updating the still image url
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/2"},
+    )
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    result3 = await hass.config_entries.options.async_init(mock_entry.entry_id)
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result3["step_id"] == "init"
+
+    # verify that an invalid template reports the correct UI error.
+    result4 = await hass.config_entries.options.async_configure(
+        result3["flow_id"],
+        user_input={CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/{{1/0}}"},
+    )
+    assert result4.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result4["errors"] == {"still_image_url": "template_error"}
+
+
 # These below can be deleted after deprecation period is finished.
 @respx.mock
 async def test_import(hass, fakeimgbytes_png, fakevidcontainer):
@@ -374,13 +454,13 @@ async def test_import(hass, fakeimgbytes_png, fakevidcontainer):
 @respx.mock
 async def test_import_invalid_still_image(hass, fakeimgbytes_png, fakevidcontainer):
     """Test configuration.yaml import used during migration."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
+    respx.get("http://127.0.0.1/testurl/1").respond(stream=b"invalid")
     with patch("av.open", return_value=fakevidcontainer):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TESTDATA_YAML
         )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "Yaml Defined Name"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "unknown"
 
 
 @respx.mock
