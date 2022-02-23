@@ -35,10 +35,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     # Change entry unique id from api_key to username
     if entry.version == 1:
-        new_unique_id = await async_get_username(hass, entry.unique_id)
-
-        if not new_unique_id:
-            return False
+        if entry.unique_id:
+            new_unique_id = await async_get_username(hass, entry.unique_id)
+            if not new_unique_id:
+                return False
 
         hass.config_entries.async_update_entry(
             entry,
