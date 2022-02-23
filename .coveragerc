@@ -762,6 +762,7 @@ omit =
     homeassistant/components/nad/media_player.py
     homeassistant/components/nanoleaf/__init__.py
     homeassistant/components/nanoleaf/button.py
+    homeassistant/components/nanoleaf/device_trigger.py
     homeassistant/components/nanoleaf/diagnostics.py
     homeassistant/components/nanoleaf/entity.py
     homeassistant/components/nanoleaf/light.py
@@ -869,6 +870,8 @@ omit =
     homeassistant/components/overkiz/__init__.py
     homeassistant/components/overkiz/binary_sensor.py
     homeassistant/components/overkiz/button.py
+    homeassistant/components/overkiz/climate.py
+    homeassistant/components/overkiz/climate_entities/*
     homeassistant/components/overkiz/cover.py
     homeassistant/components/overkiz/cover_entities/*
     homeassistant/components/overkiz/coordinator.py

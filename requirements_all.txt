@@ -610,9 +610,6 @@ elkm1-lib==1.2.0
 # homeassistant.components.elmax
 elmax_api==0.0.2
 
-# homeassistant.components.mobile_app
-emoji==1.6.3
-
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
 
@@ -1711,7 +1708,7 @@ pynetgear==0.9.1
 pynetio==0.1.9.1
 
 # homeassistant.components.nina
-pynina==0.1.5
+pynina==0.1.7
 
 # homeassistant.components.nuki
 pynuki==1.5.2
