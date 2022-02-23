@@ -469,8 +469,8 @@ class ZwaveBlackIsOffLight(ZwaveLight):
 
         if (
             kwargs.get(ATTR_RGBW_COLOR) is not None
-            and kwargs.get(ATTR_COLOR_TEMP) is not None
-            and kwargs.get(ATTR_HS_COLOR) is not None
+            or kwargs.get(ATTR_COLOR_TEMP) is not None
+            or kwargs.get(ATTR_HS_COLOR) is not None
         ):
             return
 
