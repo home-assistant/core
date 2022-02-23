@@ -27,7 +27,6 @@ class LitterRobotHub:
     def __init__(self, hass: HomeAssistant, data: Mapping) -> None:
         """Initialize the Litter-Robot hub."""
         self._data = data
-        self.logged_in = False
 
         async def _async_update_data() -> bool:
             """Update all device states from the Litter-Robot API."""
