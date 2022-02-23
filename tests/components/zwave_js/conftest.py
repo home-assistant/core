@@ -282,22 +282,6 @@ def climate_adc_t3000_state_fixture():
     return json.loads(load_fixture("zwave_js/climate_adc_t3000_state.json"))
 
 
-@pytest.fixture(name="climate_adc_t3000_missing_setpoint_state", scope="session")
-def climate_adc_t3000_missing_setpoint_state_fixture():
-    """Load the climate ADC-T3000 node state (missing de-humidify setpoint) fixture data."""
-    return json.loads(
-        load_fixture("zwave_js/climate_adc_t3000_missing_setpoint_state.json")
-    )
-
-
-@pytest.fixture(name="climate_adc_t3000_missing_mode_state", scope="session")
-def climate_adc_t3000_missing_mode_state_fixture():
-    """Load the climate ADC-T3000 node state (missing de-humidify mode) fixture data."""
-    return json.loads(
-        load_fixture("zwave_js/climate_adc_t3000_missing_mode_state.json")
-    )
-
-
 @pytest.fixture(name="climate_danfoss_lc_13_state", scope="session")
 def climate_danfoss_lc_13_state_fixture():
     """Load the climate Danfoss (LC-13) electronic radiator thermostat node state fixture data."""
@@ -641,21 +625,33 @@ def climate_adc_t3000_fixture(client, climate_adc_t3000_state):
 
 
 @pytest.fixture(name="climate_adc_t3000_missing_setpoint")
-def climate_adc_t3000_missing_setpoint_fixture(
-    client, climate_adc_t3000_missing_setpoint_state
-):
-    """Mock a climate ADC-T3000 node."""
-    node = Node(client, copy.deepcopy(climate_adc_t3000_missing_setpoint_state))
+def climate_adc_t3000_missing_setpoint_fixture(client, climate_adc_t3000_state):
+    """Mock a climate ADC-T3000 node with missing de-humidify setpoint."""
+    data = copy.deepcopy(climate_adc_t3000_state)
+    data["name"] = f"{data['name']} missing setpoint"
+    for value in data["values"][:]:
+        if (
+            value["commandClassName"] == "Humidity Control Setpoint"
+            and value["propertyKeyName"] == "De-humidifier"
+        ):
+            data["values"].remove(value)
+    node = Node(client, data)
     client.driver.controller.nodes[node.node_id] = node
     return node
 
 
 @pytest.fixture(name="climate_adc_t3000_missing_mode")
-def climate_adc_t3000_missing_mode_fixture(
-    client, climate_adc_t3000_missing_mode_state
-):
-    """Mock a climate ADC-T3000 node."""
-    node = Node(client, copy.deepcopy(climate_adc_t3000_missing_mode_state))
+def climate_adc_t3000_missing_mode_fixture(client, climate_adc_t3000_state):
+    """Mock a climate ADC-T3000 node with missing mode setpoint."""
+    data = copy.deepcopy(climate_adc_t3000_state)
+    data["name"] = f"{data['name']} missing mode"
+    for value in data["values"]:
+        if value["commandClassName"] == "Humidity Control Mode":
+            states = value["metadata"]["states"]
+            for key in list(states.keys()):
+                if states[key] == "De-humidify":
+                    del states[key]
+    node = Node(client, data)
     client.driver.controller.nodes[node.node_id] = node
     return node
 
