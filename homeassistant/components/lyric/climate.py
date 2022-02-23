@@ -22,7 +22,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE
@@ -170,9 +170,10 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     def supported_features(self) -> int:
         """Return the list of supported features."""
         if self.device.changeableValues.thermostatSetpointStatus:
-            return SUPPORT_FLAGS_LCC
+            support_flags = SUPPORT_FLAGS_LCC
         else:
-            return SUPPORT_FLAGS_TCC
+            support_flags = SUPPORT_FLAGS_TCC
+        return support_flags
 
     @property
     def temperature_unit(self) -> str:
@@ -261,9 +262,10 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         return device.maxCoolSetpoint
 
     async def async_set_temperature(self, **kwargs) -> None:
+        """Set new target temperature."""
         device = self.device
+        
         if HVAC_MODES[device.changeableValues.heatCoolMode] != HVAC_MODE_OFF:
-            """Set new target temperature."""
             target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
             target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
             
