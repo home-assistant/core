@@ -57,7 +57,7 @@ DEFAULT_DATA = {
 SUPPORTED_IMAGE_TYPES = ["png", "jpeg", "svg+xml"]
 
 
-def build_schema(user_input, show_name: bool = False):
+def build_schema(user_input):
     """Create schema for camera config setup."""
     spec = {
         vol.Optional(
@@ -94,12 +94,6 @@ def build_schema(user_input, show_name: bool = False):
             CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL, True)
         ): bool,
     }
-    if show_name:
-        spec = {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-            **spec,
-        }
-
     return vol.Schema(spec)
 
 
@@ -317,6 +311,6 @@ class GenericOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=build_schema(user_input or self.config_entry.options, True),
+            data_schema=build_schema(user_input or self.config_entry.options),
             errors=errors,
         )
