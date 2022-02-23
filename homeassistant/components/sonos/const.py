@@ -159,13 +159,16 @@ SONOS_CREATE_MEDIA_PLAYER = "sonos_create_media_player"
 SONOS_FALLBACK_POLL = "sonos_fallback_poll"
 SONOS_ALARMS_UPDATED = "sonos_alarms_updated"
 SONOS_FAVORITES_UPDATED = "sonos_favorites_updated"
+SONOS_MEDIA_UPDATED = "sonos_media_updated"
 SONOS_SPEAKER_ACTIVITY = "sonos_speaker_activity"
 SONOS_SPEAKER_ADDED = "sonos_speaker_added"
 SONOS_STATE_UPDATED = "sonos_state_updated"
 SONOS_REBOOTED = "sonos_rebooted"
 SONOS_VANISHED = "sonos_vanished"
 
+SOURCE_AIRPLAY = "AirPlay"
 SOURCE_LINEIN = "Line-in"
+SOURCE_SPOTIFY_CONNECT = "Spotify Connect"
 SOURCE_TV = "TV"
 
 AVAILABILITY_CHECK_INTERVAL = datetime.timedelta(minutes=1)
