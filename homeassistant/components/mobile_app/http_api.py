@@ -4,7 +4,6 @@ from __future__ import annotations
 from contextlib import suppress
 from http import HTTPStatus
 import secrets
-from typing import cast
 
 from aiohttp.web import Request, Response
 from nacl.secret import SecretBox
