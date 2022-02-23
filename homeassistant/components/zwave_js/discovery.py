@@ -460,6 +460,20 @@ DISCOVERY_SCHEMAS = [
             },
         ),
     ),
+    # HomeSeer HSM-200 v1
+    ZWaveDiscoverySchema(
+        platform="light",
+        hint="black_is_off",
+        manufacturer_id={0x001E},
+        product_id={0x0001},
+        product_type={0x0004},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_COLOR},
+            property={CURRENT_COLOR_PROPERTY},
+            property_key={None},
+        ),
+        absent_values=[SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA],
+    ),
     # ====== START OF CONFIG PARAMETER SPECIFIC MAPPING SCHEMAS =======
     # Door lock mode config parameter. Functionality equivalent to Notification CC
     # list sensors.
@@ -727,18 +741,6 @@ DISCOVERY_SCHEMAS = [
     ZWaveDiscoverySchema(
         platform="light",
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
-    ),
-    # lights without multilevel CC values with the assumption that the color black
-    # turns off the light since there is no other way to do that
-    ZWaveDiscoverySchema(
-        platform="light",
-        hint="black_is_off",
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_COLOR},
-            property={CURRENT_COLOR_PROPERTY},
-            property_key={None},
-        ),
-        absent_values=[SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA],
     ),
     # sirens
     ZWaveDiscoverySchema(
