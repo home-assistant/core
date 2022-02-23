@@ -34,7 +34,6 @@ async def async_setup_entry(
                     device_class=SwitchDeviceClass.SWITCH,
                 ),
                 monitor=monitor,
-                config_entry=entry,
             )
             for monitor in coordinator.data
         ],
@@ -62,7 +61,9 @@ class UptimeRobotSwitch(UptimeRobotEntity, SwitchEntity):
             response = await self.api.async_edit_monitor(**kwargs)
             self.async_write_ha_state()
         except UptimeRobotAuthenticationException:
-            self._config_entry.async_start_reauth(self.hass)
+            if self.coordinator.config_entry:
+                self.coordinator.config_entry.async_start_reauth(self.hass)
+            LOGGER.error("API exception: Authentiocation error with empty config entry")
         else:
             if response.status != API_ATTR_OK:
                 LOGGER.error("API exception: %s", response.error.message, exc_info=True)
