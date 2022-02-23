@@ -457,7 +457,7 @@ class ZwaveBlackIsOffLight(ZwaveLight):
         return 255
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if device is on (brightness above 0)."""
         if self.info.primary_value.value is None:
             return None
