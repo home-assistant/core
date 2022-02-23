@@ -4,10 +4,8 @@ from __future__ import annotations
 from contextlib import suppress
 from http import HTTPStatus
 import secrets
-from typing import cast
 
 from aiohttp.web import Request, Response
-import emoji
 from nacl.secret import SecretBox
 import voluptuous as vol
 
@@ -82,18 +80,8 @@ class RegistrationsView(HomeAssistantView):
 
         data[CONF_USER_ID] = request["hass_user"].id
 
-        if slugify(data[ATTR_DEVICE_NAME], separator=""):
-            # if slug is not empty and would not only be underscores
-            # use DEVICE_NAME
-            pass
-        elif emoji.emoji_count(data[ATTR_DEVICE_NAME]):
-            # If otherwise empty string contains emoji
-            # use descriptive name of the first emoji
-            data[ATTR_DEVICE_NAME] = emoji.demojize(
-                cast(str, emoji.emoji_lis(data[ATTR_DEVICE_NAME])[0]["emoji"])
-            ).replace(":", "")
-        else:
-            # Fallback to DEVICE_ID
+        # Fallback to DEVICE_ID if slug is empty.
+        if not slugify(data[ATTR_DEVICE_NAME], separator=""):
             data[ATTR_DEVICE_NAME] = data[ATTR_DEVICE_ID]
 
         await hass.async_create_task(
