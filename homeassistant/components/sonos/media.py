@@ -17,6 +17,7 @@ from soco.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
 from soco.music_library import MusicLibrary
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.config_validation import time_period_str
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.util import dt as dt_util
 
@@ -49,9 +50,7 @@ def _timespan_secs(timespan: str | None) -> None | float:
     """Parse a time-span into number of seconds."""
     if timespan in UNAVAILABLE_VALUES:
         return None
-
-    assert timespan is not None
-    return sum(60 ** x[0] * int(x[1]) for x in enumerate(reversed(timespan.split(":"))))
+    return time_period_str(timespan).total_seconds()  # type: ignore[arg-type]
 
 
 class SonosMedia:
