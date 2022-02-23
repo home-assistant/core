@@ -134,6 +134,10 @@
             "off": "N\u00e3o est\u00e1 carregando",
             "on": "Carregando"
         },
+        "carbon_monoxide": {
+            "off": "Remover",
+            "on": "Detectou"
+        },
         "co": {
             "off": "Limpo",
             "on": "Detectado"

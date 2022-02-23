@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import dataclasses
 from datetime import timedelta
 from typing import Any
 from urllib.parse import quote
@@ -12,6 +13,7 @@ from homeassistant.components import frontend, websocket_api
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
+    CONTENT_AUTH_EXPIRY_TIME,
     BrowseError,
     BrowseMedia,
 )
@@ -27,8 +29,6 @@ from . import local_source
 from .const import DOMAIN, URI_SCHEME, URI_SCHEME_REGEX
 from .error import MediaSourceError, Unresolvable
 from .models import BrowseMediaSource, MediaSourceItem, PlayMedia
-
-DEFAULT_EXPIRY_TIME = 3600 * 24
 
 __all__ = [
     "DOMAIN",
@@ -103,14 +103,19 @@ async def async_browse_media(
     if DOMAIN not in hass.data:
         raise BrowseError("Media Source not loaded")
 
-    item = await _get_media_item(hass, media_content_id).async_browse()
+    try:
+        item = await _get_media_item(hass, media_content_id).async_browse()
+    except ValueError as err:
+        raise BrowseError("Not a media source item") from err
 
     if content_filter is None or item.children is None:
         return item
 
+    old_count = len(item.children)
     item.children = [
         child for child in item.children if child.can_expand or content_filter(child)
     ]
+    item.not_shown = old_count - len(item.children)
     return item
 
 
@@ -119,7 +124,13 @@ async def async_resolve_media(hass: HomeAssistant, media_content_id: str) -> Pla
     """Get info to play media."""
     if DOMAIN not in hass.data:
         raise Unresolvable("Media Source not loaded")
-    return await _get_media_item(hass, media_content_id).async_resolve()
+
+    try:
+        item = _get_media_item(hass, media_content_id)
+    except ValueError as err:
+        raise Unresolvable("Not a media source item") from err
+
+    return await item.async_resolve()
 
 
 @websocket_api.websocket_command(
@@ -147,7 +158,7 @@ async def websocket_browse_media(
     {
         vol.Required("type"): "media_source/resolve_media",
         vol.Required(ATTR_MEDIA_CONTENT_ID): str,
-        vol.Optional("expires", default=DEFAULT_EXPIRY_TIME): int,
+        vol.Optional("expires", default=CONTENT_AUTH_EXPIRY_TIME): int,
     }
 )
 @websocket_api.async_response
@@ -157,15 +168,17 @@ async def websocket_resolve_media(
     """Resolve media."""
     try:
         media = await async_resolve_media(hass, msg["media_content_id"])
-        url = media.url
     except Unresolvable as err:
         connection.send_error(msg["id"], "resolve_media_failed", str(err))
-    else:
-        if url[0] == "/":
-            url = async_sign_path(
-                hass,
-                quote(url),
-                timedelta(seconds=msg["expires"]),
-            )
+        return
 
-        connection.send_result(msg["id"], {"url": url, "mime_type": media.mime_type})
+    data = dataclasses.asdict(media)
+
+    if data["url"][0] == "/":
+        data["url"] = async_sign_path(
+            hass,
+            quote(data["url"]),
+            timedelta(seconds=msg["expires"]),
+        )
+
+    connection.send_result(msg["id"], data)

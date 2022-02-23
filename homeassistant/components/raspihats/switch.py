@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -101,7 +100,6 @@ class I2CHatSwitch(SwitchEntity):
         self._channel = channel
         self._name = name or DEVICE_DEFAULT_NAME
         self._invert_logic = invert_logic
-        self._state = initial_state
         if initial_state is not None:
             if self._invert_logic:
                 state = not initial_state
@@ -109,26 +107,13 @@ class I2CHatSwitch(SwitchEntity):
                 state = initial_state
             self.I2C_HATS_MANAGER.write_dq(self._address, self._channel, state)
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        if TYPE_CHECKING:
-            assert self.I2C_HATS_MANAGER
+        def online_callback():
+            """Call fired when board is online."""
+            self.schedule_update_ha_state()
 
-        await self.hass.async_add_executor_job(
-            self.I2C_HATS_MANAGER.register_online_callback,
-            self._address,
-            self._channel,
-            self.online_callback,
+        self.I2C_HATS_MANAGER.register_online_callback(
+            self._address, self._channel, online_callback
         )
-
-    def online_callback(self):
-        """Call fired when board is online."""
-        try:
-            self._state = self.I2C_HATS_MANAGER.read_dq(self._address, self._channel)
-        except I2CHatsException as ex:
-            _LOGGER.error(self._log_message(f"Is ON check failed, {ex!s}"))
-            self._state = False
-        self.schedule_update_ha_state()
 
     def _log_message(self, message):
         """Create log message."""
@@ -150,7 +135,12 @@ class I2CHatSwitch(SwitchEntity):
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._state != self._invert_logic
+        try:
+            state = self.I2C_HATS_MANAGER.read_dq(self._address, self._channel)
+            return state != self._invert_logic
+        except I2CHatsException as ex:
+            _LOGGER.error(self._log_message(f"Is ON check failed, {ex!s}"))
+            return False
 
     def turn_on(self, **kwargs):
         """Turn the device on."""

@@ -18,6 +18,7 @@
         },
         "climacell__precipitation_type": {
             "freezing_rain": "Hujan Beku",
+            "ice_pellets": "Hujan Es",
             "none": "Tidak Ada",
             "rain": "Hujan",
             "snow": "Salju"

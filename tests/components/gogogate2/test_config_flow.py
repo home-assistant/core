@@ -109,6 +109,7 @@ async def test_form_homekit_unique_id_already_setup(hass):
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="1.2.3.4",
+            addresses=["1.2.3.4"],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -136,6 +137,7 @@ async def test_form_homekit_unique_id_already_setup(hass):
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="1.2.3.4",
+            addresses=["1.2.3.4"],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -160,6 +162,7 @@ async def test_form_homekit_ip_address_already_setup(hass):
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="1.2.3.4",
+            addresses=["1.2.3.4"],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -178,6 +181,7 @@ async def test_form_homekit_ip_address(hass):
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="1.2.3.4",
+            addresses=["1.2.3.4"],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -260,6 +264,7 @@ async def test_discovered_by_homekit_and_dhcp(hass):
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="1.2.3.4",
+            addresses=["1.2.3.4"],
             hostname="mock_hostname",
             name="mock_name",
             port=None,

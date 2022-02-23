@@ -135,16 +135,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Radarr sensors based on a config entry."""
-    entities = [
+    async_add_entities(
         RadarrSensor(
             hass.data[DOMAIN][entry.entry_id],
             description,
             entry.entry_id,
         )
         for description in SENSOR_TYPES
-    ]
-
-    async_add_entities(entities, True)
+    )
 
 
 class RadarrSensor(RadarrEntity, SensorEntity):

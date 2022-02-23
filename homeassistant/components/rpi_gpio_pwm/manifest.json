@@ -2,7 +2,7 @@
   "domain": "rpi_gpio_pwm",
   "name": "pigpio Daemon PWM LED",
   "documentation": "https://www.home-assistant.io/integrations/rpi_gpio_pwm",
-  "requirements": ["pwmled==1.6.7"],
+  "requirements": ["pwmled==1.6.10"],
   "codeowners": ["@soldag"],
   "iot_class": "local_push",
   "loggers": ["adafruit_blinka", "adafruit_circuitpython_pca9685", "pwmled"]

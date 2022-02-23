@@ -9,7 +9,7 @@ from typing import Any, cast
 
 from pytradfri.command import Command
 from pytradfri.device import Device
-from pytradfri.error import PytradfriError
+from pytradfri.error import RequestError
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
@@ -31,7 +31,7 @@ def handle_error(
         """Decorate api call."""
         try:
             await func(command)
-        except PytradfriError as err:
+        except RequestError as err:
             _LOGGER.error("Unable to execute command %s: %s", command, err)
 
     return wrapper
@@ -84,7 +84,7 @@ class TradfriBaseEntity(CoordinatorEntity):
             identifiers={(DOMAIN, self._device.id)},
             manufacturer=info.manufacturer,
             model=info.model_number,
-            name=self._attr_name,
+            name=self._device.name,
             sw_version=info.firmware_version,
             via_device=(DOMAIN, self._gateway_id),
         )

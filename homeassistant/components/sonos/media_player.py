@@ -6,7 +6,6 @@ import datetime
 import json
 import logging
 from typing import Any
-from urllib.parse import quote
 
 from soco import alarms
 from soco.core import (
@@ -19,9 +18,12 @@ from soco.data_structures import DidlFavorite
 import voluptuous as vol
 
 from homeassistant.components import media_source, spotify
-from homeassistant.components.http.auth import async_sign_path
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    async_process_play_media_url,
+)
 from homeassistant.components.media_player.const import (
+    ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
@@ -56,7 +58,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.network import get_url
 
 from . import media_browser
 from .const import (
@@ -65,6 +66,7 @@ from .const import (
     MEDIA_TYPES_TO_SONOS,
     PLAYABLE_MEDIA_TYPES,
     SONOS_CREATE_MEDIA_PLAYER,
+    SONOS_MEDIA_UPDATED,
     SONOS_STATE_PLAYING,
     SONOS_STATE_TRANSITIONING,
     SOURCE_LINEIN,
@@ -255,6 +257,23 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self._attr_unique_id = self.soco.uid
         self._attr_name = self.speaker.zone_name
 
+    async def async_added_to_hass(self) -> None:
+        """Handle common setup when added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SONOS_MEDIA_UPDATED,
+                self.async_write_media_state,
+            )
+        )
+
+    @callback
+    def async_write_media_state(self, uid: str) -> None:
+        """Write media state if the provided UID is coordinator of this speaker."""
+        if self.coordinator.uid == uid:
+            self.async_write_ha_state()
+
     @property
     def coordinator(self) -> SonosSpeaker:
         """Return the current coordinator SonosSpeaker."""
@@ -283,7 +302,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             return STATE_PLAYING
         return STATE_IDLE
 
-    async def _async_poll(self) -> None:
+    async def _async_fallback_poll(self) -> None:
         """Retrieve latest state by polling."""
         await self.hass.data[DATA_SONOS].favorites[
             self.speaker.household_id
@@ -295,7 +314,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self.speaker.update_groups()
         self.speaker.update_volume()
         if self.speaker.is_coordinator:
-            self.speaker.update_media()
+            self.media.poll_media()
 
     @property
     def volume_level(self) -> float | None:
@@ -522,8 +541,12 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """
         if spotify.is_spotify_media_type(media_type):
             media_type = spotify.resolve_spotify_media_type(media_type)
+            media_id = spotify.spotify_uri_from_media_browser_url(media_id)
+
+        is_radio = False
 
         if media_source.is_media_source_id(media_id):
+            is_radio = media_id.startswith("media-source://radio_browser/")
             media_type = MEDIA_TYPE_MUSIC
             media_id = (
                 run_coroutine_threadsafe(
@@ -558,7 +581,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             plex_plugin.play_now(media)
             return
 
-        share_link = self.speaker.share_link
+        share_link = self.coordinator.share_link
         if share_link.is_share_link(media_id):
             if kwargs.get(ATTR_MEDIA_ENQUEUE):
                 share_link.add_share_link_to_queue(media_id)
@@ -568,22 +591,12 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 soco.play_from_queue(0)
         elif media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK):
             # If media ID is a relative URL, we serve it from HA.
-            # Create a signed path.
-            if media_id[0] == "/":
-                media_id = async_sign_path(
-                    self.hass,
-                    quote(media_id),
-                    datetime.timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
-                )
-
-                # prepend external URL
-                hass_url = get_url(self.hass, prefer_external=True)
-                media_id = f"{hass_url}{media_id}"
+            media_id = async_process_play_media_url(self.hass, media_id)
 
             if kwargs.get(ATTR_MEDIA_ENQUEUE):
                 soco.add_uri_to_queue(media_id)
             else:
-                soco.play_uri(media_id)
+                soco.play_uri(media_id, force_radio=is_radio)
         elif media_type == MEDIA_TYPE_PLAYLIST:
             if media_id.startswith("S:"):
                 item = media_browser.get_media(self.media.library, media_id, media_type)  # type: ignore[no-untyped-call]
@@ -665,6 +678,12 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         if self.media.queue_position is not None:
             attributes[ATTR_QUEUE_POSITION] = self.media.queue_position
+
+        if self.media.queue_size:
+            attributes["queue_size"] = self.media.queue_size
+
+        if self.source:
+            attributes[ATTR_INPUT_SOURCE] = self.source
 
         return attributes
 

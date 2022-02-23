@@ -45,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryAuthFailed from err
     except asyncio.TimeoutError as err:
         raise ConfigEntryNotReady("Timed out connecting to august api") from err
-    except (ClientResponseError, CannotConnect) as err:
+    except (AugustApiAIOHTTPError, ClientResponseError, CannotConnect) as err:
         raise ConfigEntryNotReady from err
 
 
@@ -75,6 +75,7 @@ async def async_setup_august(
         hass.config_entries.async_update_entry(config_entry, data=config_data)
 
     await august_gateway.async_authenticate()
+    await august_gateway.async_refresh_access_token_if_needed()
 
     hass.data.setdefault(DOMAIN, {})
     data = hass.data[DOMAIN][config_entry.entry_id] = {
@@ -106,11 +107,10 @@ class AugustData(AugustSubscriberMixin):
     async def async_setup(self):
         """Async setup of august device data and activities."""
         token = self._august_gateway.access_token
-        user_data, locks, doorbells = await asyncio.gather(
-            self._api.async_get_user(token),
-            self._api.async_get_operable_locks(token),
-            self._api.async_get_doorbells(token),
-        )
+        # This used to be a gather but it was less reliable with august's recent api changes.
+        user_data = await self._api.async_get_user(token)
+        locks = await self._api.async_get_operable_locks(token)
+        doorbells = await self._api.async_get_doorbells(token)
         if not doorbells:
             doorbells = []
         if not locks:
@@ -206,12 +206,28 @@ class AugustData(AugustSubscriberMixin):
         await self._async_refresh_device_detail_by_ids(self._subscriptions.keys())
 
     async def _async_refresh_device_detail_by_ids(self, device_ids_list):
-        await asyncio.gather(
-            *(
-                self._async_refresh_device_detail_by_id(device_id)
-                for device_id in device_ids_list
-            )
-        )
+        """Refresh each device in sequence.
+
+        This used to be a gather but it was less reliable with august's
+        recent api changes.
+
+        The august api has been timing out for some devices so
+        we want the ones that it isn't timing out for to keep working.
+        """
+        for device_id in device_ids_list:
+            try:
+                await self._async_refresh_device_detail_by_id(device_id)
+            except asyncio.TimeoutError:
+                _LOGGER.warning(
+                    "Timed out calling august api during refresh of device: %s",
+                    device_id,
+                )
+            except (ClientResponseError, CannotConnect) as err:
+                _LOGGER.warning(
+                    "Error from august api during refresh of device: %s",
+                    device_id,
+                    exc_info=err,
+                )
 
     async def _async_refresh_device_detail_by_id(self, device_id):
         if device_id in self._locks_by_id:

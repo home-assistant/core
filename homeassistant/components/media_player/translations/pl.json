@@ -8,6 +8,7 @@
             "is_playing": "{entity_name} odtwarza media"
         },
         "trigger_type": {
+            "changed_states": "{entity_name} zmieni\u0142o stan",
             "idle": "odtwarzacz {entity_name} stanie si\u0119 bezczynny",
             "paused": "odtwarzacz {entity_name} zostanie wstrzymany",
             "playing": "odtwarzacz {entity_name} rozpocznie odtwarzanie",

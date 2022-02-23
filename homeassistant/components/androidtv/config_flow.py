@@ -11,9 +11,8 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import format_mac
 
-from . import async_connect_androidtv
+from . import async_connect_androidtv, get_androidtv_mac
 from .const import (
     CONF_ADB_SERVER_IP,
     CONF_ADB_SERVER_PORT,
@@ -124,9 +123,15 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return RESULT_CONN_ERROR, None
 
         dev_prop = aftv.device_properties
-        unique_id = format_mac(
-            dev_prop.get(PROP_ETHMAC) or dev_prop.get(PROP_WIFIMAC, "")
+        _LOGGER.info(
+            "Android TV at %s: %s = %r, %s = %r",
+            user_input[CONF_HOST],
+            PROP_ETHMAC,
+            dev_prop.get(PROP_ETHMAC),
+            PROP_WIFIMAC,
+            dev_prop.get(PROP_WIFIMAC),
         )
+        unique_id = get_androidtv_mac(dev_prop)
         await aftv.adb_close()
         return None, unique_id
 

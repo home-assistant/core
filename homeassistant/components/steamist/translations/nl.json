@@ -16,6 +16,11 @@
             "discovery_confirm": {
                 "description": "Wilt u {name} ({ipaddress}) instellen?"
             },
+            "pick_device": {
+                "data": {
+                    "device": "Apparaat"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host"

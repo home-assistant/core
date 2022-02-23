@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+import datetime as dt
 import json
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -62,6 +63,7 @@ def async_register_commands(
     async_reg(hass, handle_subscribe_trigger)
     async_reg(hass, handle_test_condition)
     async_reg(hass, handle_unsubscribe_events)
+    async_reg(hass, handle_validate_config)
 
 
 def pong_message(iden: int) -> dict[str, Any]:
@@ -115,7 +117,7 @@ def handle_subscribe_events(
         event_type, forward_events
     )
 
-    connection.send_message(messages.result_message(msg["id"]))
+    connection.send_result(msg["id"])
 
 
 @callback
@@ -138,7 +140,7 @@ def handle_subscribe_bootstrap_integrations(
         hass, SIGNAL_BOOTSTRAP_INTEGRATONS, forward_bootstrap_integrations
     )
 
-    connection.send_message(messages.result_message(msg["id"]))
+    connection.send_result(msg["id"])
 
 
 @callback
@@ -156,13 +158,9 @@ def handle_unsubscribe_events(
 
     if subscription in connection.subscriptions:
         connection.subscriptions.pop(subscription)()
-        connection.send_message(messages.result_message(msg["id"]))
+        connection.send_result(msg["id"])
     else:
-        connection.send_message(
-            messages.error_message(
-                msg["id"], const.ERR_NOT_FOUND, "Subscription not found."
-            )
-        )
+        connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Subscription not found.")
 
 
 @decorators.websocket_command(
@@ -195,36 +193,20 @@ async def handle_call_service(
             context,
             target=target,
         )
-        connection.send_message(
-            messages.result_message(msg["id"], {"context": context})
-        )
+        connection.send_result(msg["id"], {"context": context})
     except ServiceNotFound as err:
         if err.domain == msg["domain"] and err.service == msg["service"]:
-            connection.send_message(
-                messages.error_message(
-                    msg["id"], const.ERR_NOT_FOUND, "Service not found."
-                )
-            )
+            connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Service not found.")
         else:
-            connection.send_message(
-                messages.error_message(
-                    msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err)
-                )
-            )
+            connection.send_error(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err))
     except vol.Invalid as err:
-        connection.send_message(
-            messages.error_message(msg["id"], const.ERR_INVALID_FORMAT, str(err))
-        )
+        connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
     except HomeAssistantError as err:
         connection.logger.exception(err)
-        connection.send_message(
-            messages.error_message(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err))
-        )
+        connection.send_error(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err))
     except Exception as err:  # pylint: disable=broad-except
         connection.logger.exception(err)
-        connection.send_message(
-            messages.error_message(msg["id"], const.ERR_UNKNOWN_ERROR, str(err))
-        )
+        connection.send_error(msg["id"], const.ERR_UNKNOWN_ERROR, str(err))
 
 
 @callback
@@ -243,7 +225,7 @@ def handle_get_states(
             if entity_perm(state.entity_id, "read")
         ]
 
-    connection.send_message(messages.result_message(msg["id"], states))
+    connection.send_result(msg["id"], states)
 
 
 @decorators.websocket_command({vol.Required("type"): "get_services"})
@@ -253,7 +235,7 @@ async def handle_get_services(
 ) -> None:
     """Handle get services command."""
     descriptions = await async_get_all_descriptions(hass)
-    connection.send_message(messages.result_message(msg["id"], descriptions))
+    connection.send_result(msg["id"], descriptions)
 
 
 @callback
@@ -262,7 +244,7 @@ def handle_get_config(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get config command."""
-    connection.send_message(messages.result_message(msg["id"], hass.config.as_dict()))
+    connection.send_result(msg["id"], hass.config.as_dict())
 
 
 @decorators.websocket_command({vol.Required("type"): "manifest/list"})
@@ -305,7 +287,9 @@ async def handle_integration_setup_info(
         msg["id"],
         [
             {"domain": integration, "seconds": timedelta.total_seconds()}
-            for integration, timedelta in hass.data[DATA_SETUP_TIME].items()
+            for integration, timedelta in cast(
+                dict[str, dt.timedelta], hass.data[DATA_SETUP_TIME]
+            ).items()
         ],
     )
 
@@ -343,7 +327,7 @@ async def handle_render_template(
     if timeout:
         try:
             timed_out = await template_obj.async_render_will_timeout(
-                timeout, strict=msg["strict"]
+                timeout, variables, strict=msg["strict"]
             )
         except TemplateError as ex:
             connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
@@ -414,7 +398,7 @@ def handle_entity_source(
                 if entity_perm(entity_id, "read")
             }
 
-        connection.send_message(messages.result_message(msg["id"], sources))
+        connection.send_result(msg["id"], sources)
         return
 
     sources = {}
@@ -532,7 +516,7 @@ async def handle_execute_script(
     context = connection.context(msg)
     script_obj = Script(hass, msg["sequence"], f"{const.DOMAIN} script", const.DOMAIN)
     await script_obj.async_run(msg.get("variables"), context=context)
-    connection.send_message(messages.result_message(msg["id"], {"context": context}))
+    connection.send_result(msg["id"], {"context": context})
 
 
 @decorators.websocket_command(
@@ -552,3 +536,40 @@ async def handle_fire_event(
 
     hass.bus.async_fire(msg["event_type"], msg.get("event_data"), context=context)
     connection.send_result(msg["id"], {"context": context})
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "validate_config",
+        vol.Optional("trigger"): cv.match_all,
+        vol.Optional("condition"): cv.match_all,
+        vol.Optional("action"): cv.match_all,
+    }
+)
+@decorators.async_response
+async def handle_validate_config(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle validate config command."""
+    # Circular dep
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.helpers import condition, script, trigger
+
+    result = {}
+
+    for key, schema, validator in (
+        ("trigger", cv.TRIGGER_SCHEMA, trigger.async_validate_trigger_config),
+        ("condition", cv.CONDITION_SCHEMA, condition.async_validate_condition_config),
+        ("action", cv.SCRIPT_SCHEMA, script.async_validate_actions_config),
+    ):
+        if key not in msg:
+            continue
+
+        try:
+            await validator(hass, schema(msg[key]))  # type: ignore
+        except vol.Invalid as err:
+            result[key] = {"valid": False, "error": str(err)}
+        else:
+            result[key] = {"valid": True, "error": None}
+
+    connection.send_result(msg["id"], result)

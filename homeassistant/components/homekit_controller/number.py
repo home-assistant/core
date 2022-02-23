@@ -9,70 +9,77 @@ from __future__ import annotations
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number.const import (
+    DEFAULT_MAX_VALUE,
+    DEFAULT_MIN_VALUE,
+    DEFAULT_STEP,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 
 from . import KNOWN_DEVICES, CharacteristicEntity
+from .connection import HKDevice
 
 NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
-    CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: NumberEntityDescription(
-        key=CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL,
+    CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL,
         name="Spray Quantity",
         icon="mdi:water",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.Vendor.EVE_DEGREE_ELEVATION: NumberEntityDescription(
-        key=CharacteristicsTypes.Vendor.EVE_DEGREE_ELEVATION,
+    CharacteristicsTypes.VENDOR_EVE_DEGREE_ELEVATION: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_EVE_DEGREE_ELEVATION,
         name="Elevation",
         icon="mdi:elevation-rise",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.Vendor.AQARA_GATEWAY_VOLUME: NumberEntityDescription(
-        key=CharacteristicsTypes.Vendor.AQARA_GATEWAY_VOLUME,
+    CharacteristicsTypes.VENDOR_AQARA_GATEWAY_VOLUME: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_AQARA_GATEWAY_VOLUME,
         name="Volume",
         icon="mdi:volume-high",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.Vendor.AQARA_E1_GATEWAY_VOLUME: NumberEntityDescription(
-        key=CharacteristicsTypes.Vendor.AQARA_E1_GATEWAY_VOLUME,
+    CharacteristicsTypes.VENDOR_AQARA_E1_GATEWAY_VOLUME: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_AQARA_E1_GATEWAY_VOLUME,
         name="Volume",
         icon="mdi:volume-high",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.Vendor.ECOBEE_HOME_TARGET_COOL: NumberEntityDescription(
-        key=CharacteristicsTypes.Vendor.ECOBEE_HOME_TARGET_COOL,
+    CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_COOL: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_COOL,
         name="Home Cool Target",
         icon="mdi:thermometer-minus",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.Vendor.ECOBEE_HOME_TARGET_HEAT: NumberEntityDescription(
-        key=CharacteristicsTypes.Vendor.ECOBEE_HOME_TARGET_HEAT,
+    CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_HEAT: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_HEAT,
         name="Home Heat Target",
         icon="mdi:thermometer-plus",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.Vendor.ECOBEE_SLEEP_TARGET_COOL: NumberEntityDescription(
-        key=CharacteristicsTypes.Vendor.ECOBEE_SLEEP_TARGET_COOL,
+    CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_COOL: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_COOL,
         name="Sleep Cool Target",
         icon="mdi:thermometer-minus",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.Vendor.ECOBEE_SLEEP_TARGET_HEAT: NumberEntityDescription(
-        key=CharacteristicsTypes.Vendor.ECOBEE_SLEEP_TARGET_HEAT,
+    CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_HEAT: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_HEAT,
         name="Sleep Heat Target",
         icon="mdi:thermometer-plus",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.Vendor.ECOBEE_AWAY_TARGET_COOL: NumberEntityDescription(
-        key=CharacteristicsTypes.Vendor.ECOBEE_AWAY_TARGET_COOL,
+    CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_COOL: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_COOL,
         name="Away Cool Target",
         icon="mdi:thermometer-minus",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.Vendor.ECOBEE_AWAY_TARGET_HEAT: NumberEntityDescription(
-        key=CharacteristicsTypes.Vendor.ECOBEE_AWAY_TARGET_HEAT,
+    CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_HEAT: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_HEAT,
         name="Away Heat Target",
         icon="mdi:thermometer-plus",
         entity_category=EntityCategory.CONFIG,
@@ -90,7 +97,7 @@ async def async_setup_entry(
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_characteristic(char: Characteristic):
+    def async_add_characteristic(char: Characteristic) -> bool:
         entities = []
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
 
@@ -112,47 +119,47 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
 
     def __init__(
         self,
-        conn,
-        info,
-        char,
+        conn: HKDevice,
+        info: ConfigType,
+        char: Characteristic,
         description: NumberEntityDescription,
-    ):
+    ) -> None:
         """Initialise a HomeKit number control."""
         self.entity_description = description
         super().__init__(conn, info, char)
 
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         """Return the name of the device if any."""
         if prefix := super().name:
             return f"{prefix} {self.entity_description.name}"
         return self.entity_description.name
 
-    def get_characteristic_types(self):
+    def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [self._char.type]
 
     @property
     def min_value(self) -> float:
         """Return the minimum value."""
-        return self._char.minValue
+        return self._char.minValue or DEFAULT_MIN_VALUE
 
     @property
     def max_value(self) -> float:
         """Return the maximum value."""
-        return self._char.maxValue
+        return self._char.maxValue or DEFAULT_MAX_VALUE
 
     @property
     def step(self) -> float:
         """Return the increment/decrement step."""
-        return self._char.minStep
+        return self._char.minStep or DEFAULT_STEP
 
     @property
     def value(self) -> float:
         """Return the current characteristic value."""
         return self._char.value
 
-    async def async_set_value(self, value: float):
+    async def async_set_value(self, value: float) -> None:
         """Set the characteristic to this value."""
         await self.async_put_characteristics(
             {
@@ -164,7 +171,7 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
 class HomeKitEcobeeFanModeNumber(CharacteristicEntity, NumberEntity):
     """Representation of a Number control for Ecobee Fan Mode request."""
 
-    def get_characteristic_types(self):
+    def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [self._char.type]
 
@@ -179,24 +186,24 @@ class HomeKitEcobeeFanModeNumber(CharacteristicEntity, NumberEntity):
     @property
     def min_value(self) -> float:
         """Return the minimum value."""
-        return self._char.minValue
+        return self._char.minValue or DEFAULT_MIN_VALUE
 
     @property
     def max_value(self) -> float:
         """Return the maximum value."""
-        return self._char.maxValue
+        return self._char.maxValue or DEFAULT_MAX_VALUE
 
     @property
     def step(self) -> float:
         """Return the increment/decrement step."""
-        return self._char.minStep
+        return self._char.minStep or DEFAULT_STEP
 
     @property
     def value(self) -> float:
         """Return the current characteristic value."""
         return self._char.value
 
-    async def async_set_value(self, value: float):
+    async def async_set_value(self, value: float) -> None:
         """Set the characteristic to this value."""
 
         # Sending the fan mode request sometimes ends up getting ignored by ecobee
@@ -226,5 +233,5 @@ class HomeKitEcobeeFanModeNumber(CharacteristicEntity, NumberEntity):
 
 
 NUMBER_ENTITY_CLASSES: dict[str, type] = {
-    CharacteristicsTypes.Vendor.ECOBEE_FAN_WRITE_SPEED: HomeKitEcobeeFanModeNumber,
+    CharacteristicsTypes.VENDOR_ECOBEE_FAN_WRITE_SPEED: HomeKitEcobeeFanModeNumber,
 }

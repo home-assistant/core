@@ -15,7 +15,7 @@
                     "ssl": "Gebruikt een SSL certificaat",
                     "username": "Gebruikersnaam (optioneel)"
                 },
-                "description": "Standaard host: {host}\nStandaard poort: {port}\nStandaard gebruikersnaam: {username}",
+                "description": "Standaardhost: {host}\n Standaard gebruikersnaam: {username}",
                 "title": "Netgear"
             }
         }

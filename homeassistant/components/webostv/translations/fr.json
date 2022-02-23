@@ -1,6 +1,8 @@
 {
     "config": {
         "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours",
             "error_pairing": "Connect\u00e9 au t\u00e9l\u00e9viseur LG webOS mais non jumel\u00e9"
         },
         "error": {
@@ -36,7 +38,9 @@
             "init": {
                 "data": {
                     "sources": "Liste des sources"
-                }
+                },
+                "description": "S\u00e9lectionnez les sources activ\u00e9es",
+                "title": "Options pour webOS Smart TV"
             }
         }
     }

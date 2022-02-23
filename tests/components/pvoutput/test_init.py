@@ -1,7 +1,11 @@
 """Tests for the PVOutput integration."""
 from unittest.mock import MagicMock
 
-from pvo import PVOutputAuthenticationError, PVOutputConnectionError
+from pvo import (
+    PVOutputAuthenticationError,
+    PVOutputConnectionError,
+    PVOutputNoDataError,
+)
 import pytest
 
 from homeassistant.components.pvoutput.const import CONF_SYSTEM_ID, DOMAIN
@@ -35,13 +39,15 @@ async def test_load_unload_config_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.parametrize("side_effect", [PVOutputConnectionError, PVOutputNoDataError])
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_pvoutput: MagicMock,
+    side_effect: Exception,
 ) -> None:
     """Test the PVOutput configuration entry not ready."""
-    mock_pvoutput.status.side_effect = PVOutputConnectionError
+    mock_pvoutput.status.side_effect = side_effect
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

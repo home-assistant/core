@@ -233,17 +233,20 @@ class WhoisSensorEntity(CoordinatorEntity, SensorEntity):
         if self.coordinator.data is None:
             return None
 
-        attrs = {
-            ATTR_EXPIRES: self.coordinator.data.expiration_date.isoformat(),
-        }
+        attrs = {}
+        if expiration_date := self.coordinator.data.expiration_date:
+            attrs[ATTR_EXPIRES] = expiration_date.isoformat()
 
-        if self.coordinator.data.name_servers:
-            attrs[ATTR_NAME_SERVERS] = " ".join(self.coordinator.data.name_servers)
+        if name_servers := self.coordinator.data.name_servers:
+            attrs[ATTR_NAME_SERVERS] = " ".join(name_servers)
 
-        if self.coordinator.data.last_updated:
-            attrs[ATTR_UPDATED] = self.coordinator.data.last_updated.isoformat()
+        if last_updated := self.coordinator.data.last_updated:
+            attrs[ATTR_UPDATED] = last_updated.isoformat()
 
-        if self.coordinator.data.registrar:
-            attrs[ATTR_REGISTRAR] = self.coordinator.data.registrar
+        if registrar := self.coordinator.data.registrar:
+            attrs[ATTR_REGISTRAR] = registrar
+
+        if not attrs:
+            return None
 
         return attrs

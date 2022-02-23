@@ -1,10 +1,15 @@
 """Test Z-Wave locks."""
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.zwave import const, lock
 
 from tests.mock.zwave import MockEntityValues, MockNode, MockValue, value_changed
+
+# Integration is disabled
+pytest.skip("Integration has been disabled in the manifest", allow_module_level=True)
 
 
 def test_get_device_detects_lock(mock_openzwave):

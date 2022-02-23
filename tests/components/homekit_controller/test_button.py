@@ -9,7 +9,7 @@ def create_switch_with_setup_button(accessory):
     """Define setup button characteristics."""
     service = accessory.add_service(ServicesTypes.OUTLET)
 
-    setup = service.add_char(CharacteristicsTypes.Vendor.HAA_SETUP)
+    setup = service.add_char(CharacteristicsTypes.VENDOR_HAA_SETUP)
 
     setup.value = ""
     setup.format = "string"
@@ -24,7 +24,7 @@ def create_switch_with_ecobee_clear_hold_button(accessory):
     """Define setup button characteristics."""
     service = accessory.add_service(ServicesTypes.OUTLET)
 
-    setup = service.add_char(CharacteristicsTypes.Vendor.ECOBEE_CLEAR_HOLD)
+    setup = service.add_char(CharacteristicsTypes.VENDOR_ECOBEE_CLEAR_HOLD)
 
     setup.value = ""
     setup.format = "string"
@@ -57,7 +57,7 @@ async def test_press_button(hass):
     button.async_assert_service_values(
         ServicesTypes.OUTLET,
         {
-            CharacteristicsTypes.Vendor.HAA_SETUP: "#HAA@trcmd",
+            CharacteristicsTypes.VENDOR_HAA_SETUP: "#HAA@trcmd",
         },
     )
 
@@ -86,6 +86,6 @@ async def test_ecobee_clear_hold_press_button(hass):
     clear_hold.async_assert_service_values(
         ServicesTypes.OUTLET,
         {
-            CharacteristicsTypes.Vendor.ECOBEE_CLEAR_HOLD: True,
+            CharacteristicsTypes.VENDOR_ECOBEE_CLEAR_HOLD: True,
         },
     )
