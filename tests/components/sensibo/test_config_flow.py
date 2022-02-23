@@ -5,7 +5,7 @@ import asyncio
 from unittest.mock import patch
 
 import aiohttp
-from pysensibo import AuthenticationError, SensiboError
+from pysensibo.exceptions import AuthenticationError, SensiboError
 import pytest
 
 from homeassistant import config_entries
@@ -24,7 +24,7 @@ DOMAIN = "sensibo"
 
 def devices():
     """Return list of test devices."""
-    return (yield from [{"id": "xyzxyz"}, {"id": "abcabc"}])
+    return (yield from {"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]})
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -41,6 +41,9 @@ async def test_form(hass: HomeAssistant) -> None:
         "homeassistant.components.sensibo.config_flow.SensiboClient.async_get_devices",
         return_value=devices(),
     ), patch(
+        "homeassistant.components.sensibo.config_flow.SensiboClient.async_get_me",
+        return_value={"result": {"username": "username"}},
+    ), patch(
         "homeassistant.components.sensibo.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -53,6 +56,7 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["version"] == 2
     assert result2["data"] == {
         "api_key": "1234567890",
     }
@@ -66,6 +70,9 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.sensibo.config_flow.SensiboClient.async_get_devices",
         return_value=devices(),
+    ), patch(
+        "homeassistant.components.sensibo.config_flow.SensiboClient.async_get_me",
+        return_value={"result": {"username": "username"}},
     ), patch(
         "homeassistant.components.sensibo.async_setup_entry",
         return_value=True,
@@ -95,7 +102,7 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
         data={
             CONF_API_KEY: "1234567890",
         },
-        unique_id="1234567890",
+        unique_id="username",
     ).add_to_hass(hass)
 
     with patch(
@@ -104,6 +111,9 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.sensibo.config_flow.SensiboClient.async_get_devices",
         return_value=devices(),
+    ), patch(
+        "homeassistant.components.sensibo.config_flow.SensiboClient.async_get_me",
+        return_value={"result": {"username": "username"}},
     ):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
