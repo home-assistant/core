@@ -41,8 +41,6 @@ from homeassistant.helpers.device_registry import (
     async_get_registry,
 )
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.frame import report
-from homeassistant.helpers.supervisor import has_supervisor
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.loader import bind_hass
@@ -127,6 +125,7 @@ SCHEMA_BACKUP_FULL = vol.Schema(
 
 SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_FULL.extend(
     {
+        vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.string]),
     }
@@ -396,21 +395,12 @@ def get_core_info(hass):
 
 @callback
 @bind_hass
-def is_hassio(
-    hass: HomeAssistant | None = None,  # pylint: disable=unused-argument
-) -> bool:
+def is_hassio(hass: HomeAssistant) -> bool:
     """Return true if Hass.io is loaded.
 
     Async friendly.
     """
-    if hass is not None:
-        report(
-            "hass param deprecated for is_hassio",
-            exclude_integrations={DOMAIN},
-            error_if_core=False,
-        )
-
-    return has_supervisor()
+    return DOMAIN in hass.config.components
 
 
 @callback
@@ -423,8 +413,11 @@ def get_supervisor_ip() -> str:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Set up the Hass.io component."""
-    if not has_supervisor():
-        _LOGGER.error("Supervisor not available")
+    # Check local setup
+    for env in ("HASSIO", "HASSIO_TOKEN"):
+        if os.environ.get(env):
+            continue
+        _LOGGER.error("Missing %s environment variable", env)
         if config_entries := hass.config_entries.async_entries(DOMAIN):
             hass.async_create_task(
                 hass.config_entries.async_remove(config_entries[0].entry_id)

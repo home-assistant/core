@@ -21,8 +21,6 @@ def hassio_env():
     ), patch.dict(os.environ, {"HASSIO_TOKEN": HASSIO_TOKEN}), patch(
         "homeassistant.components.hassio.HassIO.get_info",
         Mock(side_effect=HassioAPIError()),
-    ), patch.dict(
-        os.environ, {"SUPERVISOR": "127.0.0.1"}
     ):
         yield
 

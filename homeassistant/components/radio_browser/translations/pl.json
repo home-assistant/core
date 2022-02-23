@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+        },
+        "step": {
+            "user": {
+                "description": "Czy chcesz doda\u0107 radia internetowe do Home Assistanta?"
+            }
+        }
+    }
+}
