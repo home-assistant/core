@@ -1,5 +1,6 @@
 """Test The generic (IP Camera) config flow."""
 
+import errno
 from unittest.mock import patch
 
 import av
@@ -307,7 +308,7 @@ async def test_form_no_route_to_host(hass, fakeimgbytes_png):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("av.open", side_effect=OSError("No route to host")):
+    with patch("av.open", side_effect=OSError(errno.EHOSTUNREACH, "No route to host")):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             TESTDATA,
@@ -324,7 +325,7 @@ async def test_form_stream_io_error(hass, fakeimgbytes_png):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("av.open", side_effect=OSError("Input/output error")):
+    with patch("av.open", side_effect=OSError(errno.EIO, "Input/output error")):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             TESTDATA,

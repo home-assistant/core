@@ -1,6 +1,7 @@
 """Config flow for generic (IP Camera)."""
 from __future__ import annotations
 
+from errno import EHOSTUNREACH, EIO
 from functools import partial
 import imghdr
 import logging
@@ -199,9 +200,9 @@ async def async_test_connection(
         except PermissionError:
             return {CONF_STREAM_SOURCE: "stream_not_permitted"}, None, None
         except OSError as err:
-            if "No route to host" in str(err):
+            if err.errno == EHOSTUNREACH:
                 return {CONF_STREAM_SOURCE: "stream_no_route_to_host"}, None, None
-            if "Input/output error" in str(err):
+            if err.errno == EIO:  # input/output error
                 return {CONF_STREAM_SOURCE: "stream_io_error"}, None, None
             raise err
     name = info.get(CONF_NAME, url or stream_source)
