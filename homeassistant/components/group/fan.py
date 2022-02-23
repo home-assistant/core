@@ -139,7 +139,7 @@ class FanGroup(GroupEntity, FanEntity):
         return self._oscillating
 
     @property
-    def preset_mode(self) -> bool | None:
+    def preset_mode(self) -> str | None:
         """Return current preset mode of the fan."""
         return self._preset_mode
 
@@ -172,7 +172,7 @@ class FanGroup(GroupEntity, FanEntity):
                     self._fans[feature].add(entity_id)
                 else:
                     self._fans[feature].discard(entity_id)
-            preset_modes = new_state.attributes.get(ATTR_PRESET_MODES, 0)
+            preset_modes = new_state.attributes.get(ATTR_PRESET_MODES)
             if self._preset_modes is None:
                 self._preset_modes = preset_modes
             else:
