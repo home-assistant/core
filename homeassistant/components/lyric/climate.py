@@ -169,7 +169,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
-        if self.device.changeableValues.thermostatSetpointStatus: 
+        if self.device.changeableValues.thermostatSetpointStatus:
             return SUPPORT_FLAGS_LCC
         else:
             return SUPPORT_FLAGS_TCC
@@ -262,12 +262,11 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs) -> None:
         device = self.device
-
         if HVAC_MODES[device.changeableValues.heatCoolMode] != HVAC_MODE_OFF:
             """Set new target temperature."""
             target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
             target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-    
+            
             if device.changeableValues.autoChangeoverActive:
                 if target_temp_low is None or target_temp_high is None:
                     raise HomeAssistantError(
