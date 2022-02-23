@@ -120,7 +120,8 @@ class MpdDevice(MediaPlayerEntity):
         self._media_position_updated_at = None
         self._media_position = None
         self._media_image_hash = None
-        self._media_image_file = None  # used to track if the song changed so image doesn't have to be loaded every update
+        # Track if the song changed so image doesn't have to be loaded every update.
+        self._media_image_file = None
         self._commands = None
 
         # set up MPD client
@@ -278,7 +279,7 @@ class MpdDevice(MediaPlayerEntity):
         if not response:
             return None, None
 
-        image = bytes(response.get("binary"))
+        image = bytes(response["binary"])
         mime = response.get(
             "type", "image/png"
         )  # readpicture has type, albumart does not
@@ -300,7 +301,7 @@ class MpdDevice(MediaPlayerEntity):
             self._media_image_hash = None
         else:
             self._media_image_hash = hashlib.sha256(
-                bytes(response.get("binary"))
+                bytes(response["binary"])
             ).hexdigest()[:16]
 
         self._media_image_file = file
