@@ -450,7 +450,11 @@ class ZwaveBlackIsOffLight(ZwaveLight):
 
         self._last_color: dict[str, int] | None = None
         self._supported_color_modes.discard(COLOR_MODE_BRIGHTNESS)
-        self._attr_brightness = 255
+
+    @property
+    def brightness(self) -> int:
+        """Return the brightness of this light between 0..255."""
+        return 255
 
     @property
     def is_on(self) -> bool:
