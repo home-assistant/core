@@ -13,11 +13,13 @@ from homeassistant.const import (
     CONF_DEVICES,
     CONF_FORCE_UPDATE,
     CONF_NAME,
+    STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.event as evt
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import CONF_ALIASES, RflinkDevice
@@ -67,7 +69,7 @@ async def async_setup_platform(
     async_add_entities(devices_from_config(config))
 
 
-class RflinkBinarySensor(RflinkDevice, BinarySensorEntity):
+class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):
     """Representation of an Rflink binary sensor."""
 
     def __init__(
@@ -80,6 +82,15 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorEntity):
         self._off_delay = off_delay
         self._delay_listener = None
         super().__init__(device_id, **kwargs)
+
+    async def async_added_to_hass(self):
+        """Restore RFLink BinarySensor state."""
+        await super().async_added_to_hass()
+        if (old_state := await self.async_get_last_state()) is not None:
+            if self._off_delay is None:
+                self._state = old_state.state == STATE_ON
+            else:
+                self._state = False
 
     def _handle_event(self, event):
         """Domain specific event handler."""

@@ -585,17 +585,3 @@ class PlexMediaPlayer(MediaPlayerEntity):
             media_content_type,
             media_content_id,
         )
-
-    async def async_get_browse_image(
-        self,
-        media_content_type: str,
-        media_content_id: str,
-        media_image_id: str | None = None,
-    ) -> tuple[bytes | None, str | None]:
-        """Get media image from Plex server."""
-        image_url = self.plex_server.thumbnail_cache.get(media_content_id)
-        if image_url:
-            result = await self._async_fetch_image(image_url)
-            return result
-
-        return (None, None)

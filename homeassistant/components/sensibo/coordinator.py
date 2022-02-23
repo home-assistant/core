@@ -4,7 +4,8 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
-import pysensibo
+from pysensibo import SensiboClient
+from pysensibo.exceptions import AuthenticationError, SensiboError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
@@ -20,7 +21,7 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the Sensibo coordinator."""
-        self.client = pysensibo.SensiboClient(
+        self.client = SensiboClient(
             entry.data[CONF_API_KEY],
             session=async_get_clientsession(hass),
             timeout=TIMEOUT,
@@ -37,14 +38,16 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
 
         devices = []
         try:
-            for dev in await self.client.async_get_devices():
+            data = await self.client.async_get_devices()
+            for dev in data["result"]:
                 devices.append(dev)
-        except (pysensibo.SensiboError) as error:
+        except (AuthenticationError, SensiboError) as error:
             raise UpdateFailed from error
 
         device_data: dict[str, dict[str, Any]] = {}
         for dev in devices:
             unique_id = dev["id"]
+            mac = dev["macAddress"]
             name = dev["room"]["name"]
             temperature = dev["measurements"].get("temperature", 0.0)
             humidity = dev["measurements"].get("humidity", 0)
@@ -94,6 +97,7 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
 
             device_data[unique_id] = {
                 "id": unique_id,
+                "mac": mac,
                 "name": name,
                 "ac_states": ac_states,
                 "temp": temperature,

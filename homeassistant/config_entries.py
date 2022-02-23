@@ -175,6 +175,7 @@ class ConfigEntry:
         "options",
         "unique_id",
         "supports_unload",
+        "supports_remove_device",
         "pref_disable_new_entities",
         "pref_disable_polling",
         "source",
@@ -257,6 +258,9 @@ class ConfigEntry:
         # Supports unload
         self.supports_unload = False
 
+        # Supports remove device
+        self.supports_remove_device = False
+
         # Listeners to call on update
         self.update_listeners: list[
             weakref.ReferenceType[UpdateListenerType] | weakref.WeakMethod
@@ -287,6 +291,9 @@ class ConfigEntry:
             integration = await loader.async_get_integration(hass, self.domain)
 
         self.supports_unload = await support_entry_unload(hass, self.domain)
+        self.supports_remove_device = await support_remove_from_device(
+            hass, self.domain
+        )
 
         try:
             component = integration.get_component()
@@ -1213,7 +1220,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             match_dict = {}  # Match any entry
         for entry in self._async_current_entries(include_ignore=False):
             if all(
-                item in ChainMap(entry.options, entry.data).items()  # type: ignore
+                item in ChainMap(entry.options, entry.data).items()  # type: ignore[arg-type]
                 for item in match_dict.items()
             ):
                 raise data_entry_flow.AbortFlow("already_configured")
@@ -1615,3 +1622,10 @@ async def support_entry_unload(hass: HomeAssistant, domain: str) -> bool:
     integration = await loader.async_get_integration(hass, domain)
     component = integration.get_component()
     return hasattr(component, "async_unload_entry")
+
+
+async def support_remove_from_device(hass: HomeAssistant, domain: str) -> bool:
+    """Test if a domain supports being removed from a device."""
+    integration = await loader.async_get_integration(hass, domain)
+    component = integration.get_component()
+    return hasattr(component, "async_remove_config_entry_device")

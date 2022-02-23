@@ -38,6 +38,9 @@ async def test_adam_climate_entity_attributes(
     assert state.attributes["preset_mode"] == "home"
     assert state.attributes["supported_features"] == 17
     assert state.attributes["temperature"] == 21.5
+    assert state.attributes["min_temp"] == 0.0
+    assert state.attributes["max_temp"] == 99.9
+    assert state.attributes["target_temp_step"] == 0.1
 
     state = hass.states.get("climate.zone_thermostat_jessie")
     assert state
@@ -55,6 +58,9 @@ async def test_adam_climate_entity_attributes(
     assert state.attributes["current_temperature"] == 17.2
     assert state.attributes["preset_mode"] == "asleep"
     assert state.attributes["temperature"] == 15.0
+    assert state.attributes["min_temp"] == 0.0
+    assert state.attributes["max_temp"] == 99.9
+    assert state.attributes["target_temp_step"] == 0.1
 
 
 async def test_adam_climate_adjust_negative_testing(
@@ -166,6 +172,9 @@ async def test_anna_climate_entity_attributes(
     assert state.attributes["preset_mode"] == "home"
     assert state.attributes["supported_features"] == 17
     assert state.attributes["temperature"] == 21.0
+    assert state.attributes["min_temp"] == 4.0
+    assert state.attributes["max_temp"] == 30.0
+    assert state.attributes["target_temp_step"] == 0.1
 
 
 async def test_anna_climate_entity_climate_changes(

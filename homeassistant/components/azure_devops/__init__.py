@@ -123,7 +123,7 @@ class AzureDevOpsDeviceEntity(AzureDevOpsEntity):
         """Return device information about this Azure DevOps instance."""
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self._organization, self._project_name)},  # type: ignore
+            identifiers={(DOMAIN, self._organization, self._project_name)},  # type: ignore[arg-type]
             manufacturer=self._organization,
             name=self._project_name,
         )

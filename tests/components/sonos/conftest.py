@@ -112,6 +112,7 @@ def soco_fixture(
         mock_soco.audio_delay = 2
         mock_soco.bass = 1
         mock_soco.treble = -1
+        mock_soco.mic_enabled = False
         mock_soco.sub_enabled = False
         mock_soco.surround_enabled = True
         mock_soco.soundbar_audio_input_format = "Dolby 5.1"

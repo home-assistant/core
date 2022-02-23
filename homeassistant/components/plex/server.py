@@ -644,7 +644,10 @@ class PlexServer:
             _LOGGER.error("Must specify 'library_name' for this search")
             return None
         except NotFound:
-            _LOGGER.error("Library '%s' not found", library_name)
+            library_sections = [section.title for section in self.library.sections()]
+            _LOGGER.error(
+                "Library '%s' not found in %s", library_name, library_sections
+            )
             return None
 
         return search_media(media_type, library_section, **kwargs)

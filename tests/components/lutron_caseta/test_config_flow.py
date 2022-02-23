@@ -20,6 +20,8 @@ from homeassistant.components.lutron_caseta.const import (
 )
 from homeassistant.const import CONF_HOST
 
+from . import MockBridge
+
 from tests.common import MockConfigEntry
 
 ATTR_HOSTNAME = "hostname"
@@ -37,28 +39,6 @@ MOCK_ASYNC_PAIR_SUCCESS = {
     PAIR_CERT: "mock_cert",
     PAIR_CA: "mock_ca",
 }
-
-
-class MockBridge:
-    """Mock Lutron bridge that emulates configured connected status."""
-
-    def __init__(self, can_connect=True):
-        """Initialize MockBridge instance with configured mock connectivity."""
-        self.can_connect = can_connect
-        self.is_currently_connected = False
-
-    async def connect(self):
-        """Connect the mock bridge."""
-        if self.can_connect:
-            self.is_currently_connected = True
-
-    def is_connected(self):
-        """Return whether the mock bridge is connected."""
-        return self.is_currently_connected
-
-    async def close(self):
-        """Close the mock bridge connection."""
-        self.is_currently_connected = False
 
 
 async def test_bridge_import_flow(hass):
@@ -90,6 +70,8 @@ async def test_bridge_import_flow(hass):
     assert result["type"] == "create_entry"
     assert result["title"] == CasetaConfigFlow.ENTRY_DEFAULT_TITLE
     assert result["data"] == entry_mock_data
+    assert result["result"].unique_id == "000004d2"
+
     await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1
 

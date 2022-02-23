@@ -22,7 +22,7 @@ from homeassistant.core import State
 
 from .conftest import TEST_ENTITY_NAME, ReadResult
 
-ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}"
+ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
 
 
 @pytest.mark.parametrize(

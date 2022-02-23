@@ -137,7 +137,7 @@ class Throttle:
 
         else:
 
-            def throttled_value() -> None:  # type: ignore
+            def throttled_value() -> None:  # type: ignore[misc]
                 """Stand-in function for when real func is being throttled."""
                 return None
 
@@ -191,7 +191,7 @@ class Throttle:
                 if force or utcnow() - throttle[1] > self.min_time:
                     result = method(*args, **kwargs)
                     throttle[1] = utcnow()
-                    return result  # type: ignore
+                    return result  # type: ignore[no-any-return]
 
                 return throttled_value()
             finally:

@@ -21,6 +21,11 @@ DEFAULT_NAME: Final = "DLNA Digital Media Renderer"
 
 CONNECT_TIMEOUT: Final = 10
 
+PROTOCOL_HTTP: Final = "http-get"
+PROTOCOL_RTSP: Final = "rtsp-rtp-udp"
+PROTOCOL_ANY: Final = "*"
+STREAMABLE_PROTOCOLS: Final = [PROTOCOL_HTTP, PROTOCOL_RTSP, PROTOCOL_ANY]
+
 # Map UPnP class to media_player media_content_type
 MEDIA_TYPE_MAP: Mapping[str, str] = {
     "object": _mp_const.MEDIA_TYPE_URL,

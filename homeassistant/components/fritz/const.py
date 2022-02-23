@@ -32,6 +32,9 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 
+CONF_OLD_DISCOVERY = "old_discovery"
+DEFAULT_CONF_OLD_DISCOVERY = False
+
 DATA_FRITZ = "fritz_data"
 
 DSL_CONNECTION: Literal["dsl"] = "dsl"
@@ -64,3 +67,5 @@ FRITZ_EXCEPTIONS = (
     FritzServiceError,
     FritzLookUpError,
 )
+
+WIFI_STANDARD = {1: "2.4Ghz", 2: "5Ghz", 3: "5Ghz", 4: "Guest"}

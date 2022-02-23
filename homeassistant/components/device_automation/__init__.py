@@ -7,7 +7,7 @@ from enum import Enum
 from functools import wraps
 import logging
 from types import ModuleType
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, Union, overload
 
 import voluptuous as vol
 import voluptuous_serialize
@@ -26,6 +26,18 @@ from homeassistant.loader import IntegrationNotFound, bind_hass
 from homeassistant.requirements import async_get_integration_with_requirements
 
 from .exceptions import DeviceNotFound, InvalidDeviceAutomationConfig
+
+if TYPE_CHECKING:
+    from .action import DeviceAutomationActionProtocol
+    from .condition import DeviceAutomationConditionProtocol
+    from .trigger import DeviceAutomationTriggerProtocol
+
+    DeviceAutomationPlatformType = Union[
+        ModuleType,
+        DeviceAutomationTriggerProtocol,
+        DeviceAutomationConditionProtocol,
+        DeviceAutomationActionProtocol,
+    ]
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -115,9 +127,43 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+@overload
+async def async_get_device_automation_platform(  # noqa: D103
+    hass: HomeAssistant,
+    domain: str,
+    automation_type: Literal[DeviceAutomationType.TRIGGER],
+) -> DeviceAutomationTriggerProtocol:
+    ...
+
+
+@overload
+async def async_get_device_automation_platform(  # noqa: D103
+    hass: HomeAssistant,
+    domain: str,
+    automation_type: Literal[DeviceAutomationType.CONDITION],
+) -> DeviceAutomationConditionProtocol:
+    ...
+
+
+@overload
+async def async_get_device_automation_platform(  # noqa: D103
+    hass: HomeAssistant,
+    domain: str,
+    automation_type: Literal[DeviceAutomationType.ACTION],
+) -> DeviceAutomationActionProtocol:
+    ...
+
+
+@overload
+async def async_get_device_automation_platform(  # noqa: D103
+    hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType | str
+) -> "DeviceAutomationPlatformType":
+    ...
+
+
 async def async_get_device_automation_platform(
     hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType | str
-) -> ModuleType:
+) -> "DeviceAutomationPlatformType":
     """Load device automation platform for integration.
 
     Throws InvalidDeviceAutomationConfig if the integration is not found or does not support device automation.
