@@ -32,14 +32,12 @@ async def async_setup_entry(
 
 class PhoneModemButton(ButtonEntity):
     """Implementation of USB modem caller ID button."""
+    
+    _attr_icon = "mdi:phone-hangup"
+    _attr_name = "Phone Modem Reject"
 
     def __init__(self, api: PhoneModem, device: str, server_unique_id: str) -> None:
         """Initialize the button."""
-        self.entity_description = ButtonEntityDescription(
-            key="phone_modem_reject",
-            name="Phone Modem Reject",
-            icon="mdi:phone-hangup",
-        )
         self.device = device
         self.api = api
         self._attr_unique_id = server_unique_id
