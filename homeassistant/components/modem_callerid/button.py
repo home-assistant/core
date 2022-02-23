@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from phone_modem import PhoneModem
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
@@ -32,7 +32,7 @@ async def async_setup_entry(
 
 class PhoneModemButton(ButtonEntity):
     """Implementation of USB modem caller ID button."""
-    
+
     _attr_icon = "mdi:phone-hangup"
     _attr_name = "Phone Modem Reject"
 
