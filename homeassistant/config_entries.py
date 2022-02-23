@@ -7,6 +7,7 @@ from collections.abc import Awaitable, Callable, Iterable, Mapping
 from contextvars import ContextVar
 import dataclasses
 from enum import Enum
+import functools
 import logging
 from types import MappingProxyType, MethodType
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast
@@ -528,6 +529,11 @@ class ConfigEntry:
                 "Flow handler not found for entry %s for %s", self.title, self.domain
             )
             return False
+        # Handler may be a partial
+        # Keep for backwards compatibility
+        # https://github.com/home-assistant/core/pull/67087#discussion_r812559950
+        while isinstance(handler, functools.partial):
+            handler = handler.func  # type: ignore[unreachable]
 
         if self.version == handler.VERSION:
             return True
