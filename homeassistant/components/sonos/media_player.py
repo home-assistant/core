@@ -23,6 +23,7 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.components.media_player.const import (
+    ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
@@ -65,6 +66,7 @@ from .const import (
     MEDIA_TYPES_TO_SONOS,
     PLAYABLE_MEDIA_TYPES,
     SONOS_CREATE_MEDIA_PLAYER,
+    SONOS_MEDIA_UPDATED,
     SONOS_STATE_PLAYING,
     SONOS_STATE_TRANSITIONING,
     SOURCE_LINEIN,
@@ -255,6 +257,23 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self._attr_unique_id = self.soco.uid
         self._attr_name = self.speaker.zone_name
 
+    async def async_added_to_hass(self) -> None:
+        """Handle common setup when added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SONOS_MEDIA_UPDATED,
+                self.async_write_media_state,
+            )
+        )
+
+    @callback
+    def async_write_media_state(self, uid: str) -> None:
+        """Write media state if the provided UID is coordinator of this speaker."""
+        if self.coordinator.uid == uid:
+            self.async_write_ha_state()
+
     @property
     def coordinator(self) -> SonosSpeaker:
         """Return the current coordinator SonosSpeaker."""
@@ -295,7 +314,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self.speaker.update_groups()
         self.speaker.update_volume()
         if self.speaker.is_coordinator:
-            self.speaker.update_media()
+            self.media.poll_media()
 
     @property
     def volume_level(self) -> float | None:
@@ -659,6 +678,12 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         if self.media.queue_position is not None:
             attributes[ATTR_QUEUE_POSITION] = self.media.queue_position
+
+        if self.media.queue_size:
+            attributes["queue_size"] = self.media.queue_size
+
+        if self.source:
+            attributes[ATTR_INPUT_SOURCE] = self.source
 
         return attributes
 
