@@ -497,6 +497,12 @@ def zp3111_state_fixture():
     return json.loads(load_fixture("zwave_js/zp3111-5_state.json"))
 
 
+@pytest.fixture(name="express_controls_ezmultipli_state", scope="session")
+def light_express_controls_ezmultipli_state_fixture():
+    """Load the Express Controls EZMultiPli node state fixture data."""
+    return json.loads(load_fixture("zwave_js/express_controls_ezmultipli_state.json"))
+
+
 @pytest.fixture(name="client")
 def mock_client_fixture(controller_state, version_state, log_config_state):
     """Mock a client."""
@@ -979,5 +985,13 @@ def zp3111_not_ready_fixture(client, zp3111_not_ready_state):
 def zp3111_fixture(client, zp3111_state):
     """Mock a zp3111 4-in-1 sensor node."""
     node = Node(client, copy.deepcopy(zp3111_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="express_controls_ezmultipli")
+def express_controls_ezmultipli_fixture(client, express_controls_ezmultipli_state):
+    """Mock a Express Controls EZMultiPli node."""
+    node = Node(client, copy.deepcopy(express_controls_ezmultipli_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
