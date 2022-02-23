@@ -26,9 +26,10 @@ from .const import API_ATTR_OK, COORDINATOR_UPDATE_INTERVAL, DOMAIN, LOGGER, PLA
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up UptimeRobot from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    uptime_robot_api = UptimeRobot(
-        entry.data[CONF_API_KEY], async_get_clientsession(hass)
-    )
+    key: str = entry.data[CONF_API_KEY]
+    if key.startswith("ur"):
+        raise ConfigEntryAuthFailed("Read-only API key")
+    uptime_robot_api = UptimeRobot(key, async_get_clientsession(hass))
     dev_reg = await async_get_registry(hass)
 
     hass.data[DOMAIN][entry.entry_id] = coordinator = UptimeRobotDataUpdateCoordinator(
