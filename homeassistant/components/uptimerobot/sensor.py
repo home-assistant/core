@@ -48,6 +48,7 @@ async def async_setup_entry(
                     device_class="uptimerobot__monitor_status",
                 ),
                 monitor=monitor,
+                config_entry=entry,
             )
             for monitor in coordinator.data
         ],
