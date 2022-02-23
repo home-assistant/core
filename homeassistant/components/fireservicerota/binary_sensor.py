@@ -34,8 +34,8 @@ class ResponseBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Representation of an FireServiceRota sensor."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, client: FireServiceRotaClient, entry
-    ):
+        self, coordinator: DataUpdateCoordinator, client: FireServiceRotaClient, entry: ConfigEntry
+    ) -> None:
         """Initialize."""
         super().__init__(coordinator)
         self._client = client
