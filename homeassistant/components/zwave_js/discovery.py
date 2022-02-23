@@ -16,6 +16,7 @@ from zwave_js_server.const import (
 from zwave_js_server.const.command_class.barrier_operator import (
     SIGNALING_STATE_PROPERTY,
 )
+from zwave_js_server.const.command_class.color_switch import CURRENT_COLOR_PROPERTY
 from zwave_js_server.const.command_class.lock import (
     CURRENT_MODE_PROPERTY,
     DOOR_STATUS_PROPERTY,
@@ -122,9 +123,9 @@ class ZWaveValueDiscoverySchema(DataclassMustHaveAtLeastOne):
     # [optional] the value's property name must match ANY of these values
     property_name: set[str] | None = None
     # [optional] the value's property key must match ANY of these values
-    property_key: set[str | int] | None = None
+    property_key: set[str | int | None] | None = None
     # [optional] the value's property key name must match ANY of these values
-    property_key_name: set[str] | None = None
+    property_key_name: set[str | None] | None = None
     # [optional] the value's metadata_type must match ANY of these values
     type: set[str] | None = None
 
@@ -177,8 +178,8 @@ class ZWaveDiscoverySchema:
 def get_config_parameter_discovery_schema(
     property_: set[str | int] | None = None,
     property_name: set[str] | None = None,
-    property_key: set[str | int] | None = None,
-    property_key_name: set[str] | None = None,
+    property_key: set[str | int | None] | None = None,
+    property_key_name: set[str | None] | None = None,
     **kwargs: Any,
 ) -> ZWaveDiscoverySchema:
     """
@@ -726,6 +727,18 @@ DISCOVERY_SCHEMAS = [
     ZWaveDiscoverySchema(
         platform="light",
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+    ),
+    # lights without multilevel CC values with the assumption that the color black
+    # turns off the light since there is no other way to do that
+    ZWaveDiscoverySchema(
+        platform="light",
+        hint="black_is_off",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_COLOR},
+            property={CURRENT_COLOR_PROPERTY},
+            property_key={None},
+        ),
+        absent_values=[SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA],
     ),
     # sirens
     ZWaveDiscoverySchema(
