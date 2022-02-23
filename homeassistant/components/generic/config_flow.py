@@ -99,14 +99,12 @@ def build_schema(user_input):
 
 def check_for_existing(hass, options, ignore_entry_id=None):
     """Check whether an existing entry is using the same URLs."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if (
-            entry.entry_id != ignore_entry_id
-            and entry.options[CONF_STILL_IMAGE_URL] == options[CONF_STILL_IMAGE_URL]
-            and entry.options[CONF_STREAM_SOURCE] == options[CONF_STREAM_SOURCE]
-        ):
-            return True
-    return False
+    return any(
+        entry.entry_id != ignore_entry_id
+        and entry.options[CONF_STILL_IMAGE_URL] == options[CONF_STILL_IMAGE_URL]
+        and entry.options[CONF_STREAM_SOURCE] == options[CONF_STREAM_SOURCE]
+        for entry in hass.config_entries.async_entries(DOMAIN)
+    )
 
 
 async def async_test_connection(
