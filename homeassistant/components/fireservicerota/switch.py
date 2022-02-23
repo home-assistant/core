@@ -1,5 +1,6 @@
 """Switch platform for FireServiceRota integration."""
 import logging
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -73,9 +74,9 @@ class ResponseSwitch(SwitchEntity):
         return self._client.on_duty
 
     @property
-    def extra_state_attributes(self) -> object:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return available attributes for switch."""
-        attr = {}
+        attr: dict[str, Any] = {}
         if not self._state_attributes:
             return attr
 
@@ -140,10 +141,11 @@ class ResponseSwitch(SwitchEntity):
         data = await self._client.async_response_update()
 
         if not data or "status" not in data:
-            return
+            return False
 
         self._state = data["status"] == "acknowledged"
         self._state_attributes = data
         self._state_icon = data["status"]
 
         _LOGGER.debug("Set state of entity 'Response Switch' to '%s'", self._state)
+        return True

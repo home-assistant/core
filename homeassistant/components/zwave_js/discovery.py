@@ -17,6 +17,9 @@ from zwave_js_server.const.command_class.barrier_operator import (
     SIGNALING_STATE_PROPERTY,
 )
 from zwave_js_server.const.command_class.color_switch import CURRENT_COLOR_PROPERTY
+from zwave_js_server.const.command_class.humidity_control import (
+    HUMIDITY_CONTROL_MODE_PROPERTY,
+)
 from zwave_js_server.const.command_class.lock import (
     CURRENT_MODE_PROPERTY,
     DOOR_STATUS_PROPERTY,
@@ -505,6 +508,16 @@ DISCOVERY_SCHEMAS = [
             },
             property={DOOR_STATUS_PROPERTY},
             type={"any"},
+        ),
+    ),
+    # humidifier
+    # hygrostats supporting mode (and optional setpoint)
+    ZWaveDiscoverySchema(
+        platform="humidifier",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.HUMIDITY_CONTROL_MODE},
+            property={HUMIDITY_CONTROL_MODE_PROPERTY},
+            type={"number"},
         ),
     ),
     # climate

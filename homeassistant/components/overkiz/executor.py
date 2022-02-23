@@ -8,7 +8,6 @@ from pyoverkiz.enums.command import OverkizCommand
 from pyoverkiz.models import Command, Device
 from pyoverkiz.types import StateType as OverkizStateType
 
-from .const import LOGGER
 from .coordinator import OverkizDataUpdateCoordinator
 
 
@@ -59,15 +58,11 @@ class OverkizExecutor:
 
     async def async_execute_command(self, command_name: str, *args: Any) -> None:
         """Execute device command in async context."""
-        try:
-            exec_id = await self.coordinator.client.execute_command(
-                self.device.device_url,
-                Command(command_name, list(args)),
-                "Home Assistant",
-            )
-        except Exception as exception:  # pylint: disable=broad-except
-            LOGGER.error(exception)
-            return
+        exec_id = await self.coordinator.client.execute_command(
+            self.device.device_url,
+            Command(command_name, list(args)),
+            "Home Assistant",
+        )
 
         # ExecutionRegisteredEvent doesn't contain the device_url, thus we need to register it here
         self.coordinator.executions[exec_id] = {

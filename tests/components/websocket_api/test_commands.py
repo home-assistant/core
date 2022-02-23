@@ -1286,3 +1286,60 @@ async def test_integration_setup_info(hass, websocket_client, hass_admin_user):
         {"domain": "august", "seconds": 12.5},
         {"domain": "isy994", "seconds": 12.8},
     ]
+
+
+@pytest.mark.parametrize(
+    "key,config",
+    (
+        ("trigger", {"platform": "event", "event_type": "hello"}),
+        (
+            "condition",
+            {"condition": "state", "entity_id": "hello.world", "state": "paulus"},
+        ),
+        ("action", {"service": "domain_test.test_service"}),
+    ),
+)
+async def test_validate_config_works(websocket_client, key, config):
+    """Test config validation."""
+    await websocket_client.send_json({"id": 7, "type": "validate_config", key: config})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {key: {"valid": True, "error": None}}
+
+
+@pytest.mark.parametrize(
+    "key,config,error",
+    (
+        (
+            "trigger",
+            {"platform": "non_existing", "event_type": "hello"},
+            "Invalid platform 'non_existing' specified",
+        ),
+        (
+            "condition",
+            {
+                "condition": "non_existing",
+                "entity_id": "hello.world",
+                "state": "paulus",
+            },
+            "Unexpected value for condition: 'non_existing'. Expected and, device, not, numeric_state, or, state, sun, template, time, trigger, zone",
+        ),
+        (
+            "action",
+            {"non_existing": "domain_test.test_service"},
+            "Unable to determine action @ data[0]",
+        ),
+    ),
+)
+async def test_validate_config_invalid(websocket_client, key, config, error):
+    """Test config validation."""
+    await websocket_client.send_json({"id": 7, "type": "validate_config", key: config})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {key: {"valid": False, "error": error}}

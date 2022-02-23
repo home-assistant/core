@@ -58,6 +58,11 @@ homeassistant.components.canary.*
 homeassistant.components.cover.*
 homeassistant.components.crownstone.*
 homeassistant.components.cpuspeed.*
+homeassistant.components.deconz
+homeassistant.components.deconz.config_flow
+homeassistant.components.deconz.diagnostics
+homeassistant.components.deconz.gateway
+homeassistant.components.deconz.services
 homeassistant.components.device_automation.*
 homeassistant.components.device_tracker.*
 homeassistant.components.devolo_home_control.*
@@ -143,6 +148,7 @@ homeassistant.components.openuv.*
 homeassistant.components.overkiz.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
+homeassistant.components.powerwall.*
 homeassistant.components.proximity.*
 homeassistant.components.pvoutput.*
 homeassistant.components.pure_energie.*

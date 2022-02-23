@@ -16,6 +16,8 @@ from homeassistant.components.waze_travel_time.const import (
 )
 from homeassistant.const import CONF_NAME, CONF_REGION, CONF_UNIT_SYSTEM_IMPERIAL
 
+from .const import MOCK_CONFIG
+
 from tests.common import MockConfigEntry
 
 
@@ -29,11 +31,7 @@ async def test_minimum_fields(hass, validate_config_entry, bypass_setup):
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_ORIGIN: "location1",
-            CONF_DESTINATION: "location2",
-            CONF_REGION: "US",
-        },
+        MOCK_CONFIG,
     )
     await hass.async_block_till_done()
 
@@ -52,11 +50,7 @@ async def test_options(hass, validate_config_entry, mock_update):
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_ORIGIN: "location1",
-            CONF_DESTINATION: "location2",
-            CONF_REGION: "US",
-        },
+        data=MOCK_CONFIG,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -178,11 +172,7 @@ async def test_dupe(hass, validate_config_entry, bypass_setup):
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_ORIGIN: "location1",
-            CONF_DESTINATION: "location2",
-            CONF_REGION: "US",
-        },
+        MOCK_CONFIG,
     )
     await hass.async_block_till_done()
 
@@ -197,11 +187,7 @@ async def test_dupe(hass, validate_config_entry, bypass_setup):
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_ORIGIN: "location1",
-            CONF_DESTINATION: "location2",
-            CONF_REGION: "US",
-        },
+        MOCK_CONFIG,
     )
     await hass.async_block_till_done()
 
@@ -217,11 +203,7 @@ async def test_invalid_config_entry(hass, invalidate_config_entry):
     assert result["errors"] == {}
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_ORIGIN: "location1",
-            CONF_DESTINATION: "location2",
-            CONF_REGION: "US",
-        },
+        MOCK_CONFIG,
     )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM

@@ -4,6 +4,7 @@ from __future__ import annotations
 from contextlib import suppress
 from http import HTTPStatus
 import secrets
+from typing import cast
 
 from aiohttp.web import Request, Response
 import emoji
@@ -89,7 +90,7 @@ class RegistrationsView(HomeAssistantView):
             # If otherwise empty string contains emoji
             # use descriptive name of the first emoji
             data[ATTR_DEVICE_NAME] = emoji.demojize(
-                emoji.emoji_lis(data[ATTR_DEVICE_NAME])[0]["emoji"]
+                cast(str, emoji.emoji_lis(data[ATTR_DEVICE_NAME])[0]["emoji"])
             ).replace(":", "")
         else:
             # Fallback to DEVICE_ID

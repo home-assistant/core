@@ -83,7 +83,7 @@ async def test_setup_from_yaml_without_port_device_offline(hass: HomeAssistant) 
         "homeassistant.components.samsungtv.bridge.SamsungTVWS.open",
         side_effect=OSError,
     ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.device_info",
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=None,
     ):
         await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
