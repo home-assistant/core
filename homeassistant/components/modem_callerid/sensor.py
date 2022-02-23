@@ -47,7 +47,9 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(SERVICE_REJECT_CALL, {}, "async_reject_call")
     _LOGGER.warning(
-        "Calling reject_call service is deprecated and will be removed after 2022.4"
+        "Calling reject_call service is deprecated and will be removed after 2022.4; "
+        "A new button entity is now available with the same function "
+        "and replaces the existing service"
     )
 
 
