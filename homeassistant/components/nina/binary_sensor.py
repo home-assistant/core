@@ -14,10 +14,13 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import NINADataUpdateCoordinator
 from .const import (
+    ATTR_DESCRIPTION,
     ATTR_EXPIRES,
     ATTR_HEADLINE,
     ATTR_ID,
+    ATTR_SENDER,
     ATTR_SENT,
+    ATTR_SEVERITY,
     ATTR_START,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
@@ -83,6 +86,9 @@ class NINAMessage(CoordinatorEntity, BinarySensorEntity):
 
         return {
             ATTR_HEADLINE: data[ATTR_HEADLINE],
+            ATTR_DESCRIPTION: data[ATTR_DESCRIPTION],
+            ATTR_SENDER: data[ATTR_SENDER],
+            ATTR_SEVERITY: data[ATTR_SEVERITY],
             ATTR_ID: data[ATTR_ID],
             ATTR_SENT: data[ATTR_SENT],
             ATTR_START: data[ATTR_START],
