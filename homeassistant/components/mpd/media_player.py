@@ -276,7 +276,7 @@ class MpdDevice(MediaPlayerEntity):
         if not (file := self._currentsong.get("file")):
             return None, None
         response = await self._async_get_file_image_response(file)
-        if not response:
+        if response is None:
             return None, None
 
         image = bytes(response["binary"])
@@ -292,17 +292,19 @@ class MpdDevice(MediaPlayerEntity):
         if file == self._media_image_file:
             return
 
-        response = await self._async_get_file_image_response(file)
-
-        if not response:
+        if (
+            file is not None
+            and (response := await self._async_get_file_image_response(file))
+            is not None
+        ):
+            self._media_image_hash = hashlib.sha256(
+                bytes(response["binary"])
+            ).hexdigest()[:16]
+        else:
             # If there is no image, this hash has to be None, else the media player component
             # assumes there is an image and returns an error trying to load it and the
             # frontend media control card breaks.
             self._media_image_hash = None
-        else:
-            self._media_image_hash = hashlib.sha256(
-                bytes(response["binary"])
-            ).hexdigest()[:16]
 
         self._media_image_file = file
 
@@ -334,6 +336,10 @@ class MpdDevice(MediaPlayerEntity):
                         "Retrieving artwork through `albumart` command failed: %s",
                         error,
                     )
+
+        # response can be an empty object if there is no image
+        if not response:
+            return None
 
         return response
 
