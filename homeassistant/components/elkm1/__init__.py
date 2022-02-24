@@ -280,7 +280,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         if not await async_wait_for_elk_to_sync(
-            elk, LOGIN_TIMEOUT, SYNC_TIMEOUT, conf[CONF_HOST], bool(conf[CONF_PASSWORD])
+            elk, LOGIN_TIMEOUT, SYNC_TIMEOUT, bool(conf[CONF_USERNAME])
         ):
             return False
     except asyncio.TimeoutError as exc:
@@ -334,7 +334,6 @@ async def async_wait_for_elk_to_sync(
     elk: elkm1.Elk,
     login_timeout: int,
     sync_timeout: int,
-    conf_host: str,
     password_auth: bool,
 ) -> bool:
     """Wait until the elk has finished sync. Can fail login or timeout."""
