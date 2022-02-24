@@ -587,13 +587,20 @@ async def test_states_filters_visible(hass, hass_admin_user, websocket_client):
 
 async def test_get_states_not_allows_nan(hass, websocket_client):
     """Test get_states command not allows NaN floats."""
-    hass.states.async_set("greeting.hello", "world", {"hello": float("NaN")})
+    hass.states.async_set("greeting.hello", "world")
+    hass.states.async_set("greeting.bad", "data", {"hello": float("NaN")})
+    hass.states.async_set("greeting.bye", "universe")
 
     await websocket_client.send_json({"id": 5, "type": "get_states"})
 
     msg = await websocket_client.receive_json()
-    assert not msg["success"]
-    assert msg["error"]["code"] == const.ERR_UNKNOWN_ERROR
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == [
+        hass.states.get("greeting.hello").as_dict(),
+        hass.states.get("greeting.bye").as_dict(),
+    ]
 
 
 async def test_subscribe_unsubscribe_events_whitelist(
