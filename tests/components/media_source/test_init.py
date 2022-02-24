@@ -98,6 +98,10 @@ async def test_async_unresolve_media(hass):
     with pytest.raises(media_source.Unresolvable):
         await media_source.async_resolve_media(hass, "invalid")
 
+    # Test invalid media source
+    with pytest.raises(media_source.Unresolvable):
+        await media_source.async_resolve_media(hass, "media-source://media_source2")
+
 
 async def test_websocket_browse_media(hass, hass_ws_client):
     """Test browse media websocket."""
