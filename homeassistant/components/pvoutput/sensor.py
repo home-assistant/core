@@ -5,10 +5,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from pvo import Status, System
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -18,8 +16,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_VOLTAGE,
-    CONF_API_KEY,
-    CONF_NAME,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
@@ -28,7 +24,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -40,18 +35,9 @@ from .const import (
     ATTR_POWER_CONSUMPTION,
     ATTR_POWER_GENERATION,
     CONF_SYSTEM_ID,
-    DEFAULT_NAME,
     DOMAIN,
 )
 from .coordinator import PVOutputDataUpdateCoordinator
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_SYSTEM_ID): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
 
 
 @dataclass
