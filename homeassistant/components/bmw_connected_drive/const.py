@@ -15,6 +15,7 @@ CONF_READ_ONLY = "read_only"
 
 CONF_ACCOUNT = "account"
 
+DATA_HASS_CONFIG = "hass_config"
 DATA_ENTRIES = "entries"
 
 UNIT_MAP = {
