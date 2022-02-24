@@ -1,12 +1,7 @@
 """Constants for the Backup integration."""
 from logging import getLogger
 
-from awesomeversion import AwesomeVersion
-
-from homeassistant.const import __version__ as HAVERSION
-
 DOMAIN = "backup"
-VERSION = AwesomeVersion(HAVERSION)
 LOGGER = getLogger(__package__)
 
 EXCLUDE_FROM_BACKUP = [
