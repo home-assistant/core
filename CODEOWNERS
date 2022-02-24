@@ -4,7 +4,7 @@
 # https://github.com/blog/2392-introducing-code-owners
 
 # Home Assistant Core
-setup.py @home-assistant/core
+setup.cfg @home-assistant/core
 homeassistant/*.py @home-assistant/core
 homeassistant/helpers/* @home-assistant/core
 homeassistant/util/* @home-assistant/core
@@ -216,6 +216,8 @@ homeassistant/components/digital_ocean/* @fabaff
 homeassistant/components/discogs/* @thibmaek
 homeassistant/components/dlna_dmr/* @StevenLooman @chishm
 tests/components/dlna_dmr/* @StevenLooman @chishm
+homeassistant/components/dlna_dms/* @chishm
+tests/components/dlna_dms/* @chishm
 homeassistant/components/dnsip/* @gjohansson-ST
 tests/components/dnsip/* @gjohansson-ST
 homeassistant/components/doorbird/* @oblogic7 @bdraco @flacjacket
@@ -757,6 +759,8 @@ homeassistant/components/qwikswitch/* @kellerza
 tests/components/qwikswitch/* @kellerza
 homeassistant/components/rachio/* @bdraco
 tests/components/rachio/* @bdraco
+homeassistant/components/radio_browser/* @frenck
+tests/components/radio_browser/* @frenck
 homeassistant/components/radiotherm/* @vinnyfuria
 homeassistant/components/rainbird/* @konikvranik
 homeassistant/components/raincloud/* @vanstinator

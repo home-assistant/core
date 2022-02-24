@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, ICON_EMPTY, ICON_OCCUPIED, IS_IN_BED
-from .coordinator import SleepIQDataUpdateCoordinator
+from .coordinator import SleepIQData
 from .entity import SleepIQSensor
 
 
@@ -21,10 +21,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SleepIQ bed binary sensors."""
-    coordinator: SleepIQDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    data: SleepIQData = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        IsInBedBinarySensor(coordinator, bed, sleeper)
-        for bed in coordinator.client.beds.values()
+        IsInBedBinarySensor(data.data_coordinator, bed, sleeper)
+        for bed in data.client.beds.values()
         for sleeper in bed.sleepers
     )
 

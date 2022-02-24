@@ -13,7 +13,7 @@ from homeassistant.util import decorator
 
 from . import config_validation as cv
 
-SELECTORS = decorator.Registry()
+SELECTORS: decorator.Registry[str, type[Selector]] = decorator.Registry()
 
 
 def _get_selector_class(config: Any) -> type[Selector]:
@@ -24,12 +24,12 @@ def _get_selector_class(config: Any) -> type[Selector]:
     if len(config) != 1:
         raise vol.Invalid(f"Only one type can be specified. Found {', '.join(config)}")
 
-    selector_type = list(config)[0]
+    selector_type: str = list(config)[0]
 
     if (selector_class := SELECTORS.get(selector_type)) is None:
         raise vol.Invalid(f"Unknown selector type {selector_type} found")
 
-    return cast(type[Selector], selector_class)
+    return selector_class
 
 
 def selector(config: Any) -> Selector:

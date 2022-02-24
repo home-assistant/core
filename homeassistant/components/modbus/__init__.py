@@ -74,6 +74,7 @@ from .const import (
     CONF_RETRY_ON_EMPTY,
     CONF_REVERSE_ORDER,
     CONF_SCALE,
+    CONF_SLAVE_COUNT,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
     CONF_STATE_OFF,
@@ -270,6 +271,7 @@ BINARY_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_COIL): vol.In(
             [CALL_TYPE_COIL, CALL_TYPE_DISCRETE]
         ),
+        vol.Optional(CONF_SLAVE_COUNT, default=0): cv.positive_int,
     }
 )
 

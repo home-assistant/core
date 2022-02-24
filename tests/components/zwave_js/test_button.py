@@ -1,5 +1,6 @@
 """Test the Z-Wave JS button entities."""
 from homeassistant.components.button.const import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.zwave_js.const import DOMAIN, SERVICE_REFRESH_VALUE
 from homeassistant.const import ATTR_ENTITY_ID
 
 
@@ -8,6 +9,7 @@ async def test_ping_entity(
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     integration,
+    caplog,
 ):
     """Test ping entity."""
     client.async_send_command.return_value = {"responded": True}
@@ -31,3 +33,14 @@ async def test_ping_entity(
     )
 
     client.async_send_command.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REFRESH_VALUE,
+        {
+            ATTR_ENTITY_ID: "button.z_wave_thermostat_ping",
+        },
+        blocking=True,
+    )
+
+    assert "There is no value to refresh for this entity" in caplog.text

@@ -28,7 +28,7 @@ def _mock_protocol() -> TPLinkSmartHomeProtocol:
 
 
 def _mocked_bulb() -> SmartBulb:
-    bulb = MagicMock(auto_spec=SmartBulb)
+    bulb = MagicMock(auto_spec=SmartBulb, name="Mocked bulb")
     bulb.update = AsyncMock()
     bulb.mac = MAC_ADDRESS
     bulb.alias = ALIAS
@@ -55,10 +55,10 @@ def _mocked_bulb() -> SmartBulb:
 
 
 def _mocked_dimmer() -> SmartDimmer:
-    dimmer = MagicMock(auto_spec=SmartDimmer)
+    dimmer = MagicMock(auto_spec=SmartDimmer, name="Mocked dimmer")
     dimmer.update = AsyncMock()
     dimmer.mac = MAC_ADDRESS
-    dimmer.alias = ALIAS
+    dimmer.alias = "My Dimmer"
     dimmer.model = MODEL
     dimmer.host = IP_ADDRESS
     dimmer.brightness = 50
@@ -77,12 +77,13 @@ def _mocked_dimmer() -> SmartDimmer:
     dimmer.set_brightness = AsyncMock()
     dimmer.set_hsv = AsyncMock()
     dimmer.set_color_temp = AsyncMock()
+    dimmer.set_led = AsyncMock()
     dimmer.protocol = _mock_protocol()
     return dimmer
 
 
 def _mocked_plug() -> SmartPlug:
-    plug = MagicMock(auto_spec=SmartPlug)
+    plug = MagicMock(auto_spec=SmartPlug, name="Mocked plug")
     plug.update = AsyncMock()
     plug.mac = MAC_ADDRESS
     plug.alias = "My Plug"
@@ -103,7 +104,7 @@ def _mocked_plug() -> SmartPlug:
 
 
 def _mocked_strip() -> SmartStrip:
-    strip = MagicMock(auto_spec=SmartStrip)
+    strip = MagicMock(auto_spec=SmartStrip, name="Mocked strip")
     strip.update = AsyncMock()
     strip.mac = MAC_ADDRESS
     strip.alias = "My Strip"

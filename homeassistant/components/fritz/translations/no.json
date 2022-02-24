@@ -56,7 +56,8 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Sekunder \u00e5 vurdere en enhet hjemme"
+                    "consider_home": "Sekunder \u00e5 vurdere en enhet hjemme",
+                    "old_discovery": "Aktiver gammel s\u00f8kemetode"
                 }
             }
         }

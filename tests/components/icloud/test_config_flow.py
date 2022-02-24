@@ -1,11 +1,4 @@
-"""Tests for the iCloud config flow.
-
-This integration is temporary disabled, as the library is incompatible
-with the Python versions we currently support.
-
-This file has been renamed (instead of skipped), simply because its easier
-to prevent library imports from happening that way.
-"""
+"""Tests for the iCloud config flow."""
 from unittest.mock import MagicMock, Mock, patch
 
 from pyicloud.exceptions import PyiCloudFailedLoginException

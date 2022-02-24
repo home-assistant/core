@@ -100,10 +100,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 @callback
 def _async_get_device_bridge(
-    data: dict[str, Any]
+    hass: HomeAssistant, data: dict[str, Any]
 ) -> SamsungTVLegacyBridge | SamsungTVWSBridge:
     """Get device bridge."""
     return SamsungTVBridge.get_bridge(
+        hass,
         data[CONF_METHOD],
         data[CONF_HOST],
         data[CONF_PORT],
@@ -131,9 +132,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     bridge.register_new_token_callback(new_token_callback)
 
-    def stop_bridge(event: Event) -> None:
+    async def stop_bridge(event: Event) -> None:
         """Stop SamsungTV bridge connection."""
-        bridge.stop()
+        await bridge.async_stop()
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
@@ -169,14 +170,14 @@ async def _async_create_bridge_with_updated_data(
         updated_data[CONF_PORT] = port
         updated_data[CONF_METHOD] = method
 
-    bridge = _async_get_device_bridge({**entry.data, **updated_data})
+    bridge = _async_get_device_bridge(hass, {**entry.data, **updated_data})
 
     mac = entry.data.get(CONF_MAC)
     if not mac and bridge.method == METHOD_WEBSOCKET:
         if info:
             mac = mac_from_device_info(info)
         else:
-            mac = await hass.async_add_executor_job(bridge.mac_from_device)
+            mac = await bridge.async_mac_from_device()
 
     if not mac:
         mac = await hass.async_add_executor_job(
@@ -196,7 +197,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN][entry.entry_id].stop()
+        await hass.data[DOMAIN][entry.entry_id].async_stop()
     return unload_ok
 
 
