@@ -28,9 +28,19 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     client = alphaess.alphaess()
 
-    if not await client.authenticate(data["username"], data["password"]):
-        raise InvalidAuth
-    return {"AlphaESS": data["username"]}
+    try:
+        await client.authenticate(data["username"], data["password"])
+
+    except aiohttp.ClientResponseError as e:
+        if e.status == 401:
+            raise InvalidAuth
+        else:
+            raise UnknownError
+    except aiohttp.client_exceptions.ClientConnectorError:
+        raise CannotConnect
+
+    else:
+        return {"AlphaESS": data["username"]}
 
 
 class AlphaESSConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -52,15 +62,12 @@ class AlphaESSConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await validate_input(self.hass, user_input)
 
-        except aiohttp.ClientResponseError as e:
-            if e.status == 401:
-                errors["base"] = "invalid_auth"
-            else:
-                errors["base"] = "unknown"
-        except aiohttp.client_exceptions.ClientConnectorError:
+        except CannotConnect:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
+        except UnknownError:
+            errors["base"] = "unknown"
         else:
             return self.async_create_entry(
                 title=user_input["username"], data=user_input
@@ -73,3 +80,11 @@ class AlphaESSConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class CannotConnect(HomeAssistantError):
+    """Error to indicate there is a problem connecting."""
+
+
+class UnknownError(HomeAssistantError):
+    """Error to indicate there is an unknown error."""

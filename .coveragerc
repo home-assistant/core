@@ -50,6 +50,8 @@ omit =
     homeassistant/components/alphaess/__init__.py
     homeassistant/components/alphaess/const.py
     homeassistant/components/alphaess/coordinator.py
+    homeassistant/components/alphaess/entity.py
+    homeassistant/components/alphaess/enums.py
     homeassistant/components/alphaess/sensor.py
     homeassistant/components/alpha_vantage/sensor.py
     homeassistant/components/amazon_polly/*
