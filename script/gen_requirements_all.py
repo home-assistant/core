@@ -19,7 +19,6 @@ COMMENT_REQUIREMENTS = (
     "beacontools",
     "beewi_smartclim",  # depends on bluepy
     "bluepy",
-    "bme280spi",
     "bme680",
     "decora",
     "decora_wifi",
