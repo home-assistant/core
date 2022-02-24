@@ -204,8 +204,8 @@ async def async_modbus_setup(
             schema=vol.Schema(
                 {
                     vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
-                    vol.Optional(ATTR_UNIT): cv.positive_int,
-                    vol.Optional(ATTR_SLAVE): cv.positive_int,
+                    vol.Exclusive(ATTR_SLAVE, "unit"): cv.positive_int,
+                    vol.Exclusive(ATTR_UNIT, "unit"): cv.positive_int,
                     vol.Required(ATTR_ADDRESS): cv.positive_int,
                     vol.Required(x_write[2]): vol.Any(
                         cv.positive_int, vol.All(cv.ensure_list, [x_write[3]])

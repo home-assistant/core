@@ -17,14 +17,6 @@ write_coil:
       example: "0 or [1,0]"
       selector:
         object:
-    unit:
-      name: Unit
-      description: Address of the modbus unit.
-      required: false
-      selector:
-        number:
-          min: 1
-          max: 255
     slave:
       name: Slave
       description: Address of the modbus unit/slave.
@@ -52,14 +44,6 @@ write_register:
         number:
           min: 0
           max: 65535
-    unit:
-      name: Unit
-      description: Address of the modbus unit.
-      required: false
-      selector:
-        number:
-          min: 1
-          max: 255
     slave:
       name: Slave
       description: Address of the modbus unit/slave.
