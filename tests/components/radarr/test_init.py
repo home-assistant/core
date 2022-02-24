@@ -1,7 +1,7 @@
 """Test Radarr integration."""
 from aiopyarr import exceptions
 
-from homeassistant.components.radarr.const import CONF_BASE_PATH, DEFAULT_NAME, DOMAIN
+from homeassistant.components.radarr.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -13,7 +13,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
     """Test unload."""
-    entry = await setup_integration(hass, aioclient_mock, no_options=True)
+    entry = await setup_integration(hass, aioclient_mock)
     assert entry.state == ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -51,10 +51,7 @@ async def test_device_info(hass: HomeAssistant, aioclient_mock: AiohttpClientMoc
     await hass.async_block_till_done()
     device = device_registry.async_get_device({(DOMAIN, entry.entry_id)})
 
-    assert (
-        device.configuration_url
-        == f"http://192.168.1.189:7878{entry.data[CONF_BASE_PATH]}"
-    )
+    assert device.configuration_url == "http://192.168.1.189:7887/test"
     assert device.identifiers == {(DOMAIN, entry.entry_id)}
     assert device.manufacturer == DEFAULT_NAME
     assert device.name == DEFAULT_NAME

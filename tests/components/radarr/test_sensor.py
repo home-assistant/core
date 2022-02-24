@@ -1,5 +1,5 @@
 """The tests for Radarr sensor platform."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from homeassistant.components.radarr.sensor import SENSOR_TYPES
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
@@ -30,7 +30,7 @@ async def test_sensors(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker)
     state = hass.states.get("sensor.radarr_upcoming")
     assert state.state == "1"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Movies"
-    assert state.attributes.get("string (2020)") == "2021-12-03T00:00:00Z"
+    assert state.attributes.get("string (2020)") == datetime(2021, 12, 3, 0, 0)
     state = hass.states.get("sensor.radarr_commands")
     assert state.state == "1"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Commands"

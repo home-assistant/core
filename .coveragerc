@@ -956,8 +956,6 @@ omit =
     homeassistant/components/rachio/entity.py
     homeassistant/components/rachio/switch.py
     homeassistant/components/rachio/webhooks.py
-    homeassistant/components/radarr/coordinator.py
-    homeassistant/components/radarr/sensor.py
     homeassistant/components/radio_browser/__init__.py
     homeassistant/components/radio_browser/media_source.py
     homeassistant/components/radiotherm/climate.py

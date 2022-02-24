@@ -1,26 +1,24 @@
 {
     "config": {
-      "flow_title": "{name}",
       "step": {
         "user": {
-          "description": "Your API key can be found in Settings > General in the Radarr Web UI.",
+          "description": "API key can be retrieved automatically if login credentials were not set in application.\nYour API key can be found in Settings > General in the Radarr Web UI.",
           "data": {
-            "host": "[%key:common::config_flow::data::host%]",
             "api_key": "[%key:common::config_flow::data::api_key%]",
-            "base_path": "Path to API",
-            "port": "[%key:common::config_flow::data::port%]",
-            "ssl": "[%key:common::config_flow::data::ssl%]",
+            "url": "[%key:common::config_flow::data::url%]",
             "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
           }
         },
         "reauth_confirm": {
           "title": "[%key:common::config_flow::title::reauth%]",
-          "description": "The Radarr integration needs to be manually re-authenticated with the Radarr API hosted at: {host}"
+          "description": "The Radarr integration needs to be manually re-authenticated with the Radarr API"
         }
       },
       "error": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "zeroconf_failed": "API key not found. Please enter it manually",
+        "wrong_app": "Incorrect application reached. Please try again",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "abort": {

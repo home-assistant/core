@@ -7,22 +7,20 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
+            "zeroconf_failed": "API key not found. Please enter it manually",
+            "wrong_app": "Incorrect application reached. Please try again",
             "unknown": "Unexpected error"
         },
-        "flow_title": "{name}",
         "step": {
             "reauth_confirm": {
-                "description": "The Radarr integration needs to be manually re-authenticated with the Radarr API hosted at: {host}",
-                "title": "Reauthenticate Integration"
+                "title": "Reauthenticate Integration",
+                "description": "The Radarr integration needs to be manually re-authenticated with the Radarr API"
             },
             "user": {
-                "description": "Your API key can be found in Settings > General in the Radarr Web UI.",
+                "description": "API key can be retrieved automatically if login credentials were not set in application.\nYour API key can be found in Settings > General in the Radarr Web UI.",
                 "data": {
                     "api_key": "API Key",
-                    "base_path": "Path to API",
-                    "host": "Host",
-                    "port": "Port",
-                    "ssl": "Uses an SSL certificate",
+                    "url": "URL",
                     "verify_ssl": "Verify SSL certificate"
                 }
             }

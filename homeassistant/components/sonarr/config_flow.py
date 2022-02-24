@@ -89,6 +89,8 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+
+            _LOGGER.warning(user_input[CONF_URL])
             if self.entry:
                 user_input = {**self.entry.data, **user_input}
 
