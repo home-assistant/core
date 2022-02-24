@@ -20,10 +20,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import Context, HomeAssistant, State, callback
-from homeassistant.helpers import start
-from homeassistant.helpers.area_registry import AreaEntry
-from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.entity_registry import RegistryEntry
+from homeassistant.helpers import area_registry, device_registry, entity_registry, start
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.storage import Store
@@ -46,53 +43,6 @@ from .error import SmartHomeError
 
 SYNC_DELAY = 15
 _LOGGER = logging.getLogger(__name__)
-
-
-async def _get_entity_and_device(
-    hass: HomeAssistant, entity_id: str
-) -> tuple[RegistryEntry, DeviceEntry] | None:
-    """Fetch the entity and device entries for a entity_id."""
-    dev_reg, ent_reg = await gather(
-        hass.helpers.device_registry.async_get_registry(),
-        hass.helpers.entity_registry.async_get_registry(),
-    )
-
-    if not (entity_entry := ent_reg.async_get(entity_id)):
-        return None, None
-    device_entry = dev_reg.devices.get(entity_entry.device_id)
-    return entity_entry, device_entry
-
-
-async def _get_area(
-    hass: HomeAssistant,
-    entity_entry: RegistryEntry | None,
-    device_entry: DeviceEntry | None,
-) -> AreaEntry | None:
-    """Calculate the area for an entity."""
-    if entity_entry and entity_entry.area_id:
-        area_id = entity_entry.area_id
-    elif device_entry and device_entry.area_id:
-        area_id = device_entry.area_id
-    else:
-        return None
-
-    area_reg = await hass.helpers.area_registry.async_get_registry()
-    return area_reg.areas.get(area_id)
-
-
-async def _get_device_info(device_entry: DeviceEntry | None) -> dict[str, str] | None:
-    """Retrieve the device info for a device."""
-    if not device_entry:
-        return None
-
-    device_info = {}
-    if device_entry.manufacturer:
-        device_info["manufacturer"] = device_entry.manufacturer
-    if device_entry.model:
-        device_info["model"] = device_entry.model
-    if device_entry.sw_version:
-        device_info["swVersion"] = device_entry.sw_version
-    return device_info
 
 
 class AbstractConfig(ABC):
@@ -559,7 +509,7 @@ class GoogleEntity:
             trait.might_2fa(domain, features, device_class) for trait in self.traits()
         )
 
-    async def sync_serialize(self, agent_user_id):
+    def sync_serialize(self, agent_user_id, instance_uuid):
         """Serialize entity for a SYNC response.
 
         https://developers.google.com/actions/smarthome/create-app#actiondevicessync
@@ -568,15 +518,22 @@ class GoogleEntity:
 
         entity_config = self.config.entity_config.get(state.entity_id, {})
         name = (entity_config.get(CONF_NAME) or state.name).strip()
-        domain = state.domain
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-        entity_entry, device_entry = await _get_entity_and_device(
-            self.hass, state.entity_id
-        )
+
+        dev_reg = device_registry.async_get(self.hass)
+        ent_reg = entity_registry.async_get(self.hass)
+
+        if (
+            entity_entry := ent_reg.async_get(self.entity_id)
+        ) and entity_entry.device_id:
+            device_entry = dev_reg.devices.get(entity_entry.device_id)
+        else:
+            device_entry = None
 
         traits = self.traits()
 
-        device_type = get_google_type(domain, device_class)
+        device_type = get_google_type(
+            state.domain, state.attributes.get(ATTR_DEVICE_CLASS)
+        )
 
         device = {
             "id": state.entity_id,
@@ -597,7 +554,7 @@ class GoogleEntity:
                 "webhookId": self.config.get_local_webhook_id(agent_user_id),
                 "httpPort": self.hass.http.server_port,
                 "httpSSL": self.hass.config.api.use_ssl,
-                "uuid": await self.hass.helpers.instance_id.async_get(),
+                "uuid": instance_uuid,
                 "baseUrl": get_url(self.hass, prefer_external=True),
                 "proxyDeviceId": agent_user_id,
             }
@@ -608,12 +565,31 @@ class GoogleEntity:
         if room := entity_config.get(CONF_ROOM_HINT):
             device["roomHint"] = room
         else:
-            area = await _get_area(self.hass, entity_entry, device_entry)
-            if area and area.name:
+            if entity_entry and entity_entry.area_id:
+                area_id = entity_entry.area_id
+            elif device_entry and device_entry.area_id:
+                area_id = device_entry.area_id
+            else:
+                area_id = None
+
+            if (
+                area_id
+                and (area := area_registry.async_get(self.hass).async_get_area(area_id))
+                and area.name
+            ):
                 device["roomHint"] = area.name
 
-        if device_info := await _get_device_info(device_entry):
-            device["deviceInfo"] = device_info
+        if device_entry:
+            device_info = {}
+            if device_entry.manufacturer:
+                device_info["manufacturer"] = device_entry.manufacturer
+            if device_entry.model:
+                device_info["model"] = device_entry.model
+            if device_entry.sw_version:
+                device_info["swVersion"] = device_entry.sw_version
+
+            if device_info:
+                device["deviceInfo"] = device_info
 
         return device
 
