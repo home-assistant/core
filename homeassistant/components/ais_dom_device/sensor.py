@@ -62,17 +62,17 @@ class MqttAisDomSensor(Entity):
             except Exception as e:
                 _LOGGER.info("Error: " + str(e))
 
-        self._sub_state = await subscription.async_subscribe_topics(
-            self.hass,
-            self._sub_state,
-            {
-                "state_topic": {
-                    "topic": self._config[CONF_STATE_TOPIC],
-                    "msg_callback": message_received,
-                    "qos": self._config[CONF_QOS],
-                }
-            },
-        )
+        # self._sub_state = await subscription.async_subscribe_topics(
+        #     self.hass,
+        #     self._sub_state,
+        #     {
+        #         "state_topic": {
+        #             "topic": self._config[CONF_STATE_TOPIC],
+        #             "msg_callback": message_received,
+        #             "qos": self._config[CONF_QOS],
+        #         }
+        #     },
+        # )
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
