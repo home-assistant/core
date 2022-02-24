@@ -77,9 +77,6 @@ TravisPy==0.3.5
 # homeassistant.components.twitter
 TwitterAPI==2.7.5
 
-# homeassistant.components.tof
-# VL53L1X2==0.1.5
-
 # homeassistant.components.onvif
 WSDiscovery==2.0.0
 

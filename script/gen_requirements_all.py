@@ -44,7 +44,6 @@ COMMENT_REQUIREMENTS = (
     "smbus-cffi",
     "tensorflow",
     "tf-models-official",
-    "VL53L1X2",
 )
 
 COMMENT_REQUIREMENTS_NORMALIZED = {
