@@ -56,7 +56,8 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Millal m\u00e4\u00e4rata seade olema kodus (sekundites)"
+                    "consider_home": "Millal m\u00e4\u00e4rata seade olema kodus (sekundites)",
+                    "old_discovery": "Luba vana avastamismeetod"
                 }
             }
         }
