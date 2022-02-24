@@ -101,7 +101,6 @@ omit =
     homeassistant/components/baidu/tts.py
     homeassistant/components/balboa/__init__.py
     homeassistant/components/beewi_smartclim/sensor.py
-    homeassistant/components/bbb_gpio/*
     homeassistant/components/bbox/device_tracker.py
     homeassistant/components/bbox/sensor.py
     homeassistant/components/bh1750/sensor.py
