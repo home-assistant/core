@@ -180,7 +180,7 @@ class MinecraftServer:
             self.players_online = status_response.players.online
             self.players_max = status_response.players.max
             self.latency_time = status_response.latency
-            self.motd = (status_response.description).get('text')
+            self.motd = (status_response.description).get("text")
             self.players_list = []
             if status_response.players.sample is not None:
                 for player in status_response.players.sample:
