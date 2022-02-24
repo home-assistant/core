@@ -4,24 +4,24 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable, Generator, Iterable
 import contextlib
+from datetime import timedelta
 import logging.handlers
 from timeit import default_timer as timer
 from types import ModuleType
+from typing import Any
 
-from homeassistant import config as conf_util, core, loader, requirements
-from homeassistant.config import async_notify_setup_error
-from homeassistant.const import (
+from . import config as conf_util, core, loader, requirements
+from .config import async_notify_setup_error
+from .const import (
     EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_START,
     PLATFORM_FORMAT,
     Platform,
 )
-from homeassistant.core import CALLBACK_TYPE
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util, ensure_unique_string
-
-# mypy: disallow-any-generics
+from .core import CALLBACK_TYPE
+from .exceptions import DependencyError, HomeAssistantError
+from .helpers.typing import ConfigType
+from .util import dt as dt_util, ensure_unique_string
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,17 +66,17 @@ async def async_setup_component(
     if domain in hass.config.components:
         return True
 
-    setup_tasks = hass.data.setdefault(DATA_SETUP, {})
+    setup_tasks: dict[str, asyncio.Task[bool]] = hass.data.setdefault(DATA_SETUP, {})
 
     if domain in setup_tasks:
-        return await setup_tasks[domain]  # type: ignore
+        return await setup_tasks[domain]
 
     task = setup_tasks[domain] = hass.async_create_task(
         _async_setup_component(hass, domain, config)
     )
 
     try:
-        return await task  # type: ignore
+        return await task
     finally:
         if domain in hass.data.get(DATA_SETUP_DONE, {}):
             hass.data[DATA_SETUP_DONE].pop(domain).set()
@@ -84,8 +84,11 @@ async def async_setup_component(
 
 async def _async_process_dependencies(
     hass: core.HomeAssistant, config: ConfigType, integration: loader.Integration
-) -> bool:
-    """Ensure all dependencies are set up."""
+) -> list[str]:
+    """Ensure all dependencies are set up.
+
+    Returns a list of dependencies which failed to set up.
+    """
     dependencies_tasks = {
         dep: hass.loop.create_task(async_setup_component(hass, dep, config))
         for dep in integration.dependencies
@@ -105,7 +108,7 @@ async def _async_process_dependencies(
             )
 
     if not dependencies_tasks and not after_dependencies_tasks:
-        return True
+        return []
 
     if dependencies_tasks:
         _LOGGER.debug(
@@ -136,8 +139,7 @@ async def _async_process_dependencies(
             ", ".join(failed),
         )
 
-        return False
-    return True
+    return failed
 
 
 async def _async_setup_component(
@@ -182,9 +184,6 @@ async def _async_setup_component(
     except ImportError as err:
         log_error(f"Unable to import component: {err}", integration.documentation)
         return False
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception("Setup failed for %s: unknown error", domain)
-        return False
 
     processed_config = await conf_util.async_process_component_config(
         hass, config, integration
@@ -210,15 +209,15 @@ async def _async_setup_component(
             )
 
         task = None
-        result = True
+        result: Any | bool = True
         try:
             if hasattr(component, "async_setup"):
-                task = component.async_setup(hass, processed_config)  # type: ignore
+                task = component.async_setup(hass, processed_config)
             elif hasattr(component, "setup"):
                 # This should not be replaced with hass.async_add_executor_job because
                 # we don't want to track this task in case it blocks startup.
                 task = hass.loop.run_in_executor(
-                    None, component.setup, hass, processed_config  # type: ignore
+                    None, component.setup, hass, processed_config
                 )
             elif not hasattr(component, "async_setup_entry"):
                 log_error("No setup or config entry setup function defined.")
@@ -345,8 +344,8 @@ async def async_process_deps_reqs(
     elif integration.domain in processed:
         return
 
-    if not await _async_process_dependencies(hass, config, integration):
-        raise HomeAssistantError("Could not set up all dependencies.")
+    if failed_deps := await _async_process_dependencies(hass, config, integration):
+        raise DependencyError(failed_deps)
 
     if not hass.config.skip_pip and integration.requirements:
         async with hass.timeout.async_freeze(integration.domain):
@@ -438,7 +437,7 @@ def async_start_setup(
     """Keep track of when setup starts and finishes."""
     setup_started = hass.data.setdefault(DATA_SETUP_STARTED, {})
     started = dt_util.utcnow()
-    unique_components = {}
+    unique_components: dict[str, str] = {}
     for domain in components:
         unique = ensure_unique_string(domain, setup_started)
         unique_components[unique] = domain
@@ -446,7 +445,7 @@ def async_start_setup(
 
     yield
 
-    setup_time = hass.data.setdefault(DATA_SETUP_TIME, {})
+    setup_time: dict[str, timedelta] = hass.data.setdefault(DATA_SETUP_TIME, {})
     time_taken = dt_util.utcnow() - started
     for unique, domain in unique_components.items():
         del setup_started[unique]

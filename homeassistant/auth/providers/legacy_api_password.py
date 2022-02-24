@@ -19,8 +19,6 @@ import homeassistant.helpers.config_validation as cv
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
 
-# mypy: disallow-any-generics
-
 AUTH_PROVIDER_TYPE = "legacy_api_password"
 CONF_API_PASSWORD = "api_password"
 

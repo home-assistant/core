@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
@@ -22,12 +21,11 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
-from .base import EnumTypeData, IntegerTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
-
-_LOGGER = logging.getLogger(__name__)
+from .base import IntegerTypeData, TuyaEntity
+from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
 
 
 @dataclass
@@ -38,6 +36,9 @@ class TuyaCoverEntityDescription(CoverEntityDescription):
     current_state_inverse: bool = False
     current_position: DPCode | tuple[DPCode, ...] | None = None
     set_position: DPCode | None = None
+    open_instruction_value: str = "open"
+    close_instruction_value: str = "close"
+    stop_instruction_value: str = "stop"
 
 
 COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
@@ -66,6 +67,16 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_position=DPCode.PERCENT_STATE_3,
             set_position=DPCode.PERCENT_CONTROL_3,
             device_class=CoverDeviceClass.CURTAIN,
+        ),
+        TuyaCoverEntityDescription(
+            key=DPCode.MACH_OPERATE,
+            name="Curtain",
+            current_position=DPCode.POSITION,
+            set_position=DPCode.POSITION,
+            device_class=CoverDeviceClass.CURTAIN,
+            open_instruction_value="FZ",
+            close_instruction_value="ZZ",
+            stop_instruction_value="STOP",
         ),
         # switch_1 is an undocumented code that behaves identically to control
         # It is used by the Kogan Smart Blinds Driver
@@ -134,7 +145,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Tuya cover dynamically through Tuya discovery."""
     hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
@@ -149,7 +160,7 @@ async def async_setup_entry(
                 for description in descriptions:
                     if (
                         description.key in device.function
-                        or description.key in device.status
+                        or description.key in device.status_range
                     ):
                         entities.append(
                             TuyaCoverEntity(
@@ -169,11 +180,9 @@ async def async_setup_entry(
 class TuyaCoverEntity(TuyaEntity, CoverEntity):
     """Tuya Cover Device."""
 
-    _current_position_type: IntegerTypeData | None = None
-    _set_position_type: IntegerTypeData | None = None
-    _tilt_dpcode: DPCode | None = None
-    _tilt_type: IntegerTypeData | None = None
-    _position_dpcode: DPCode | None = None
+    _current_position: IntegerTypeData | None = None
+    _set_position: IntegerTypeData | None = None
+    _tilt: IntegerTypeData | None = None
     entity_description: TuyaCoverEntityDescription
 
     def __init__(
@@ -189,85 +198,54 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self._attr_supported_features = 0
 
         # Check if this cover is based on a switch or has controls
-        if device.function[description.key].type == "Boolean":
-            self._attr_supported_features |= SUPPORT_OPEN | SUPPORT_CLOSE
-        elif device.function[description.key].type == "Enum":
-            data_type = EnumTypeData.from_json(device.function[description.key].values)
-            if "open" in data_type.range:
-                self._attr_supported_features |= SUPPORT_OPEN
-            if "close" in data_type.range:
-                self._attr_supported_features |= SUPPORT_CLOSE
-            if "stop" in data_type.range:
-                self._attr_supported_features |= SUPPORT_STOP
+        if self.find_dpcode(description.key, prefer_function=True):
+            if device.function[description.key].type == "Boolean":
+                self._attr_supported_features |= SUPPORT_OPEN | SUPPORT_CLOSE
+            elif enum_type := self.find_dpcode(
+                description.key, dptype=DPType.ENUM, prefer_function=True
+            ):
+                if description.open_instruction_value in enum_type.range:
+                    self._attr_supported_features |= SUPPORT_OPEN
+                if description.close_instruction_value in enum_type.range:
+                    self._attr_supported_features |= SUPPORT_CLOSE
+                if description.stop_instruction_value in enum_type.range:
+                    self._attr_supported_features |= SUPPORT_STOP
 
         # Determine type to use for setting the position
-        if (
-            description.set_position is not None
-            and description.set_position in device.status_range
+        if int_type := self.find_dpcode(
+            description.set_position, dptype=DPType.INTEGER, prefer_function=True
         ):
             self._attr_supported_features |= SUPPORT_SET_POSITION
-            self._set_position_type = IntegerTypeData.from_json(
-                device.status_range[description.set_position].values
-            )
+            self._set_position = int_type
             # Set as default, unless overwritten below
-            self._current_position_type = self._set_position_type
+            self._current_position = int_type
 
         # Determine type for getting the position
-        if (
-            description.current_position is not None
-            and description.current_position in device.status_range
+        if int_type := self.find_dpcode(
+            description.current_position, dptype=DPType.INTEGER, prefer_function=True
         ):
-            self._current_position_type = IntegerTypeData.from_json(
-                device.status_range[description.current_position].values
-            )
+            self._current_position = int_type
 
         # Determine type to use for setting the tilt
-        if tilt_dpcode := next(
-            (
-                dpcode
-                for dpcode in (DPCode.ANGLE_HORIZONTAL, DPCode.ANGLE_VERTICAL)
-                if dpcode in device.function
-            ),
-            None,
+        if int_type := self.find_dpcode(
+            (DPCode.ANGLE_HORIZONTAL, DPCode.ANGLE_VERTICAL),
+            dptype=DPType.INTEGER,
+            prefer_function=True,
         ):
             self._attr_supported_features |= SUPPORT_SET_TILT_POSITION
-            self._tilt_dpcode = tilt_dpcode
-            self._tilt_type = IntegerTypeData.from_json(
-                device.status_range[tilt_dpcode].values
-            )
-
-        # Determine current_position DPCodes
-        if (
-            self.entity_description.current_position is None
-            and self.entity_description.set_position is not None
-        ):
-            self._position_dpcode = self.entity_description.set_position
-        elif isinstance(self.entity_description.current_position, DPCode):
-            self._position_dpcode = self.entity_description.current_position
-        elif isinstance(self.entity_description.current_position, tuple):
-            self._position_dpcode = next(
-                (
-                    dpcode
-                    for dpcode in self.entity_description.current_position
-                    if self.device.status.get(dpcode) is not None
-                ),
-                None,
-            )
+            self._tilt = int_type
 
     @property
     def current_cover_position(self) -> int | None:
         """Return cover current position."""
-        if self._current_position_type is None:
+        if self._current_position is None:
             return None
 
-        if not self._position_dpcode:
-            return None
-
-        if (position := self.device.status.get(self._position_dpcode)) is None:
+        if (position := self.device.status.get(self._current_position.dpcode)) is None:
             return None
 
         return round(
-            self._current_position_type.remap_value_to(position, 0, 100, reverse=True)
+            self._current_position.remap_value_to(position, 0, 100, reverse=True)
         )
 
     @property
@@ -276,13 +254,13 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        if self._tilt_dpcode is None or self._tilt_type is None:
+        if self._tilt is None:
             return None
 
-        if (angle := self.device.status.get(self._tilt_dpcode)) is None:
+        if (angle := self.device.status.get(self._tilt.dpcode)) is None:
             return None
 
-        return round(self._tilt_type.remap_value_to(angle, 0, 100))
+        return round(self._tilt.remap_value_to(angle, 0, 100))
 
     @property
     def is_closed(self) -> bool | None:
@@ -308,24 +286,21 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         value: bool | str = True
-        if self.device.function[self.entity_description.key].type == "Enum":
-            value = "open"
+        if self.find_dpcode(
+            self.entity_description.key, dptype=DPType.ENUM, prefer_function=True
+        ):
+            value = self.entity_description.open_instruction_value
 
         commands: list[dict[str, str | int]] = [
             {"code": self.entity_description.key, "value": value}
         ]
 
-        if (
-            self.entity_description.set_position is not None
-            and self._set_position_type is not None
-        ):
+        if self._set_position is not None:
             commands.append(
                 {
-                    "code": self.entity_description.set_position,
+                    "code": self._set_position.dpcode,
                     "value": round(
-                        self._set_position_type.remap_value_from(
-                            100, 0, 100, reverse=True
-                        ),
+                        self._set_position.remap_value_from(100, 0, 100, reverse=True),
                     ),
                 }
             )
@@ -335,24 +310,21 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
     def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         value: bool | str = False
-        if self.device.function[self.entity_description.key].type == "Enum":
-            value = "close"
+        if self.find_dpcode(
+            self.entity_description.key, dptype=DPType.ENUM, prefer_function=True
+        ):
+            value = self.entity_description.close_instruction_value
 
         commands: list[dict[str, str | int]] = [
             {"code": self.entity_description.key, "value": value}
         ]
 
-        if (
-            self.entity_description.set_position is not None
-            and self._set_position_type is not None
-        ):
+        if self._set_position is not None:
             commands.append(
                 {
-                    "code": self.entity_description.set_position,
+                    "code": self._set_position.dpcode,
                     "value": round(
-                        self._set_position_type.remap_value_from(
-                            0, 0, 100, reverse=True
-                        ),
+                        self._set_position.remap_value_from(0, 0, 100, reverse=True),
                     ),
                 }
             )
@@ -361,7 +333,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        if self._set_position_type is None:
+        if self._set_position is None:
             raise RuntimeError(
                 "Cannot set position, device doesn't provide methods to set it"
             )
@@ -369,9 +341,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self._send_command(
             [
                 {
-                    "code": self.entity_description.set_position,
+                    "code": self._set_position.dpcode,
                     "value": round(
-                        self._set_position_type.remap_value_from(
+                        self._set_position.remap_value_from(
                             kwargs[ATTR_POSITION], 0, 100, reverse=True
                         )
                     ),
@@ -381,11 +353,18 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        self._send_command([{"code": self.entity_description.key, "value": "stop"}])
+        self._send_command(
+            [
+                {
+                    "code": self.entity_description.key,
+                    "value": self.entity_description.stop_instruction_value,
+                }
+            ]
+        )
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
-        if self._tilt_type is None:
+        if self._tilt is None:
             raise RuntimeError(
                 "Cannot set tilt, device doesn't provide methods to set it"
             )
@@ -393,9 +372,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self._send_command(
             [
                 {
-                    "code": self._tilt_dpcode,
+                    "code": self._tilt.dpcode,
                     "value": round(
-                        self._tilt_type.remap_value_from(
+                        self._tilt.remap_value_from(
                             kwargs[ATTR_TILT_POSITION], 0, 100, reverse=True
                         )
                     ),

@@ -1,10 +1,12 @@
 """Switch platform for FireServiceRota integration."""
 import logging
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN as FIRESERVICEROTA_DOMAIN
 
@@ -12,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up FireServiceRota switch based on a config entry."""
     client = hass.data[FIRESERVICEROTA_DOMAIN][entry.entry_id][DATA_CLIENT]
@@ -72,9 +74,9 @@ class ResponseSwitch(SwitchEntity):
         return self._client.on_duty
 
     @property
-    def extra_state_attributes(self) -> object:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return available attributes for switch."""
-        attr = {}
+        attr: dict[str, Any] = {}
         if not self._state_attributes:
             return attr
 
@@ -139,10 +141,11 @@ class ResponseSwitch(SwitchEntity):
         data = await self._client.async_response_update()
 
         if not data or "status" not in data:
-            return
+            return False
 
         self._state = data["status"] == "acknowledged"
         self._state_attributes = data
         self._state_icon = data["status"]
 
         _LOGGER.debug("Set state of entity 'Response Switch' to '%s'", self._state)
+        return True

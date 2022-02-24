@@ -16,9 +16,11 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import CONF_REFRESH_DELAY, CONF_REFRESH_VALUE, ZWaveDeviceEntity, const
 
@@ -60,7 +62,11 @@ TEMP_WARM_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 * 2 + TEMP_COLOR_MIN
 TEMP_COLD_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 + TEMP_COLOR_MIN
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Z-Wave Light from Config Entry."""
 
     @callback
@@ -117,7 +123,7 @@ class ZwaveDimmer(ZWaveDeviceEntity, LightEntity):
         self._state = None
         self._color_mode = None
         self._supported_color_modes = set()
-        self._supported_features = None
+        self._supported_features = 0
         self._delay = delay
         self._refresh_value = refresh
         self._zw098 = None

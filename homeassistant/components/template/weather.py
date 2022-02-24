@@ -1,4 +1,6 @@
 """Template platform that aggregates meteorological data."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.components.weather import (
@@ -21,11 +23,14 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .template_entity import TemplateEntity
+from .template_entity import TemplateEntity, rewrite_common_legacy_to_modern_conf
 
 CONDITION_CLASSES = {
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -75,9 +80,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Template weather."""
 
+    config = rewrite_common_legacy_to_modern_conf(config)
     unique_id = config.get(CONF_UNIQUE_ID)
 
     async_add_entities(
@@ -101,9 +112,9 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         unique_id,
     ):
         """Initialize the Template weather."""
-        super().__init__(config=config)
+        super().__init__(hass, config=config, unique_id=unique_id)
 
-        self._name = name = config[CONF_NAME]
+        name = self._attr_name
         self._condition_template = config[CONF_CONDITION_TEMPLATE]
         self._temperature_template = config[CONF_TEMPERATURE_TEMPLATE]
         self._humidity_template = config[CONF_HUMIDITY_TEMPLATE]
@@ -114,7 +125,6 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         self._ozone_template = config.get(CONF_OZONE_TEMPLATE)
         self._visibility_template = config.get(CONF_VISIBILITY_TEMPLATE)
         self._forecast_template = config.get(CONF_FORECAST_TEMPLATE)
-        self._unique_id = unique_id
 
         self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, name, hass=hass)
 
@@ -128,11 +138,6 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         self._ozone = None
         self._visibility = None
         self._forecast = []
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def condition(self):
@@ -190,11 +195,6 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         if self._attribution is None:
             return "Powered by Home Assistant"
         return self._attribution
-
-    @property
-    def unique_id(self):
-        """Return the unique id of this weather instance."""
-        return self._unique_id
 
     async def async_added_to_hass(self):
         """Register callbacks."""

@@ -50,6 +50,8 @@ from homeassistant.helpers.typing import StateType
 from .core import discovery
 from .core.const import (
     CHANNEL_ANALOG_INPUT,
+    CHANNEL_BASIC,
+    CHANNEL_DEVICE_TEMPERATURE,
     CHANNEL_ELECTRICAL_MEASUREMENT,
     CHANNEL_HUMIDITY,
     CHANNEL_ILLUMINANCE,
@@ -304,6 +306,7 @@ class ElectricalMeasurementApparentPower(
     """Apparent power measurement."""
 
     SENSOR_ATTR = "apparent_power"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.APPARENT_POWER
     _unit = POWER_VOLT_AMPERE
     _div_mul_prefix = "ac_power"
 
@@ -493,6 +496,18 @@ class Temperature(Sensor):
     _unit = TEMP_CELSIUS
 
 
+@MULTI_MATCH(channel_names=CHANNEL_DEVICE_TEMPERATURE)
+class DeviceTemperature(Sensor):
+    """Device Temperature Sensor."""
+
+    SENSOR_ATTR = "current_temperature"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.TEMPERATURE
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _divisor = 100
+    _unit = TEMP_CELSIUS
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+
 @MULTI_MATCH(channel_names="carbon_dioxide_concentration")
 class CarbonDioxideConcentration(Sensor):
     """Carbon Dioxide Concentration sensor."""
@@ -675,3 +690,45 @@ class SinopeHVACAction(ThermostatHVACAction):
         ):
             return CURRENT_HVAC_IDLE
         return CURRENT_HVAC_OFF
+
+
+@MULTI_MATCH(channel_names=CHANNEL_BASIC)
+class RSSISensor(Sensor, id_suffix="rssi"):
+    """RSSI sensor for a device."""
+
+    _state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _device_class: SensorDeviceClass = SensorDeviceClass.SIGNAL_STRENGTH
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+
+    @classmethod
+    def create_entity(
+        cls,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: list[ChannelType],
+        **kwargs,
+    ) -> ZhaEntity | None:
+        """Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+        key = f"{CHANNEL_BASIC}_{cls.unique_id_suffix}"
+        if ZHA_ENTITIES.prevent_entity_creation(Platform.SENSOR, zha_device.ieee, key):
+            return None
+        return cls(unique_id, zha_device, channels, **kwargs)
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the entity."""
+        return getattr(self._zha_device.device, self.unique_id_suffix)
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll the entity for current state."""
+        return True
+
+
+@MULTI_MATCH(channel_names=CHANNEL_BASIC)
+class LQISensor(RSSISensor, id_suffix="lqi"):
+    """LQI sensor for a device."""

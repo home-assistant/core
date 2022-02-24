@@ -4,13 +4,15 @@
   "config_flow": true,
   "dependencies": ["ffmpeg", "http", "media_source"],
   "documentation": "https://www.home-assistant.io/integrations/nest",
-  "requirements": ["python-nest==4.1.0", "google-nest-sdm==0.4.9"],
+  "requirements": ["python-nest==4.2.0", "google-nest-sdm==1.7.1"],
   "codeowners": ["@allenporter"],
   "quality_scale": "platinum",
   "dhcp": [
-    {
-      "macaddress": "18B430*"
-    }
+    { "macaddress": "18B430*" },
+    { "macaddress": "641666*" },
+    { "macaddress": "D8EB46*" },
+    { "macaddress": "1C53F9*" }
   ],
-  "iot_class": "cloud_push"
+  "iot_class": "cloud_push",
+  "loggers": ["google_nest_sdm", "nest"]
 }

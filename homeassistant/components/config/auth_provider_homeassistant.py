@@ -9,12 +9,10 @@ from homeassistant.exceptions import Unauthorized
 
 async def async_setup(hass):
     """Enable the Home Assistant views."""
-    hass.components.websocket_api.async_register_command(websocket_create)
-    hass.components.websocket_api.async_register_command(websocket_delete)
-    hass.components.websocket_api.async_register_command(websocket_change_password)
-    hass.components.websocket_api.async_register_command(
-        websocket_admin_change_password
-    )
+    websocket_api.async_register_command(hass, websocket_create)
+    websocket_api.async_register_command(hass, websocket_delete)
+    websocket_api.async_register_command(hass, websocket_change_password)
+    websocket_api.async_register_command(hass, websocket_admin_change_password)
     return True
 
 

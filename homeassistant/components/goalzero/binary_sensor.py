@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import cast
 
+from goalzero import Yeti
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -15,7 +17,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import Yeti, YetiEntity
+from . import YetiEntity
 from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN
 
 PARALLEL_UPDATES = 0

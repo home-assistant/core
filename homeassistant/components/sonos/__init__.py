@@ -25,6 +25,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval, call_later
+from homeassistant.helpers.typing import ConfigType
 
 from .alarms import SonosAlarms
 from .const import (
@@ -37,6 +38,7 @@ from .const import (
     SONOS_CHECK_ACTIVITY,
     SONOS_REBOOTED,
     SONOS_SPEAKER_ACTIVITY,
+    SONOS_VANISHED,
     UPNP_ST,
 )
 from .favorites import SonosFavorites
@@ -95,9 +97,10 @@ class SonosData:
         self.discovery_known: set[str] = set()
         self.boot_counts: dict[str, int] = {}
         self.mdns_names: dict[str, str] = {}
+        self.entity_id_mappings: dict[str, SonosSpeaker] = {}
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Sonos component."""
     conf = config.get(DOMAIN)
 
@@ -116,6 +119,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Sonos from a config entry."""
     soco_config.EVENTS_MODULE = events_asyncio
+    soco_config.REQUEST_TIMEOUT = 9.5
 
     if DATA_SONOS not in hass.data:
         hass.data[DATA_SONOS] = SonosData()
@@ -190,6 +194,9 @@ class SonosDiscoveryManager:
         return None
 
     async def _async_stop_event_listener(self, event: Event | None = None) -> None:
+        for speaker in self.data.discovered.values():
+            speaker.activity_stats.log_report()
+            speaker.event_stats.log_report()
         await asyncio.gather(
             *(speaker.async_offline() for speaker in self.data.discovered.values())
         )
@@ -269,14 +276,19 @@ class SonosDiscoveryManager:
     async def _async_ssdp_discovered_player(
         self, info: ssdp.SsdpServiceInfo, change: ssdp.SsdpChange
     ) -> None:
-        if change == ssdp.SsdpChange.BYEBYE:
-            return
-
         uid = info.upnp[ssdp.ATTR_UPNP_UDN]
         if not uid.startswith("uuid:RINCON_"):
             return
-
         uid = uid[5:]
+
+        if change == ssdp.SsdpChange.BYEBYE:
+            _LOGGER.debug(
+                "ssdp:byebye received from %s", info.upnp.get("friendlyName", uid)
+            )
+            reason = info.ssdp_headers.get("X-RINCON-REASON", "ssdp:byebye")
+            async_dispatcher_send(self.hass, f"{SONOS_VANISHED}-{uid}", reason)
+            return
+
         discovered_ip = urlparse(info.ssdp_location).hostname
         boot_seqnum = info.ssdp_headers.get("X-RINCON-BOOTSEQ")
         self.async_discovered_player(
@@ -331,7 +343,6 @@ class SonosDiscoveryManager:
                 )
             )
             await self.hass.async_add_executor_job(self._manual_hosts)
-            return
 
         self.entry.async_on_unload(
             await ssdp.async_register_callback(

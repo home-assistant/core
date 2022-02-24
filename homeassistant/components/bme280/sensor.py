@@ -1,4 +1,6 @@
 """Support for BME280 temperature, humidity and pressure sensor."""
+from __future__ import annotations
+
 from functools import partial
 import logging
 
@@ -12,6 +14,9 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_SCAN_INTERVAL
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -41,7 +46,12 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the BME280 sensor."""
     if discovery_info is None:
         return

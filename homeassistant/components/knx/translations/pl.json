@@ -12,16 +12,17 @@
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
                     "individual_address": "Indywidualny adres dla po\u0142\u0105czenia",
-                    "local_ip": "Lokalny adres IP (pozostaw pusty, je\u015bli nie masz pewno\u015bci)",
+                    "local_ip": "Lokalny adres IP Home Assistant (pozostaw puste w celu automatycznego wykrywania)",
                     "port": "Port",
-                    "route_back": "Tryb Route Back / NAT"
+                    "route_back": "Tryb Route Back / NAT",
+                    "tunneling_type": "Typ tunelowania KNX"
                 },
                 "description": "Prosz\u0119 wprowadzi\u0107 informacje o po\u0142\u0105czeniu urz\u0105dzenia tuneluj\u0105cego."
             },
             "routing": {
                 "data": {
                     "individual_address": "Indywidualny adres dla po\u0142\u0105czenia routingowego",
-                    "local_ip": "Lokalny adres IP (pozostaw pusty, je\u015bli nie masz pewno\u015bci)",
+                    "local_ip": "Lokalny adres IP Home Assistant (pozostaw puste w celu automatycznego wykrywania)",
                     "multicast_group": "Grupa multicast u\u017cyta do routingu",
                     "multicast_port": "Port multicast u\u017cyty do routingu"
                 },
@@ -47,7 +48,7 @@
                 "data": {
                     "connection_type": "Typ po\u0142\u0105czenia KNX",
                     "individual_address": "Domy\u015blny adres indywidualny",
-                    "local_ip": "Lokalny adres IP (pozostaw pusty, je\u015bli nie masz pewno\u015bci)",
+                    "local_ip": "Lokalny adres IP Home Assistant (u\u017cyj 0.0.0.0 w celu automatycznego wykrywania)",
                     "multicast_group": "Grupa multicast u\u017cywana do routingu i wykrywania",
                     "multicast_port": "Port multicast u\u017cywany do routingu i wykrywania",
                     "rate_limit": "Maksymalna liczba wychodz\u0105cych wiadomo\u015bci na sekund\u0119",
@@ -59,7 +60,8 @@
                     "host": "Nazwa hosta lub adres IP",
                     "local_ip": "Lokalny adres IP (pozostaw pusty, je\u015bli nie masz pewno\u015bci)",
                     "port": "Port",
-                    "route_back": "Tryb Route Back / NAT"
+                    "route_back": "Tryb Route Back / NAT",
+                    "tunneling_type": "Typ tunelowania KNX"
                 }
             }
         }

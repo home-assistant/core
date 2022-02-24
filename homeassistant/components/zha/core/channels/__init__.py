@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Dict
+from typing import Any
 
 import zigpy.zcl.clusters.closures
 
@@ -32,7 +32,7 @@ from .. import (
     typing as zha_typing,
 )
 
-ChannelsDict = Dict[str, zha_typing.ChannelType]
+ChannelsDict = dict[str, zha_typing.ChannelType]
 
 
 class Channels:

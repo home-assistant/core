@@ -30,7 +30,6 @@ from .const import (
     DATA_ZONES,
     DEFAULT_ZONE_RUN,
     DOMAIN,
-    LOGGER,
 )
 
 ATTR_AREA = "area"
@@ -215,22 +214,14 @@ class RainMachineBaseSwitch(RainMachineEntity, SwitchEntity):
         try:
             resp = await api_coro
         except RequestError as err:
-            LOGGER.error(
-                'Error while executing %s on "%s": %s',
-                api_coro.__name__,
-                self.name,
-                err,
-            )
-            return
+            raise HomeAssistantError(
+                f'Error while executing {api_coro.__name__} on "{self.name}": {err}',
+            ) from err
 
         if resp["statusCode"] != 0:
-            LOGGER.error(
-                'Error while executing %s on "%s": %s',
-                api_coro.__name__,
-                self.name,
-                resp["message"],
+            raise HomeAssistantError(
+                f'Error while executing {api_coro.__name__} on "{self.name}": {resp["message"]}',
             )
-            return
 
         # Because of how inextricably linked programs and zones are, anytime one is
         # toggled, we make sure to update the data of both coordinators:
@@ -378,7 +369,7 @@ class RainMachineZone(RainMachineActivitySwitch):
 
     async def async_start_zone(self, *, zone_run_time: int) -> None:
         """Start a particular zone for a certain amount of time."""
-        await self.async_turn_off(duration=zone_run_time)
+        await self.async_turn_on(duration=zone_run_time)
 
     async def async_stop_zone(self) -> None:
         """Stop a zone."""

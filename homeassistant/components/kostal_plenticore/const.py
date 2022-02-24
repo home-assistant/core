@@ -665,6 +665,129 @@ SENSOR_PROCESS_DATA = [
         },
         "format_energy",
     ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyChargeGrid:Day",
+        "Battery Charge from Grid Day",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyChargeGrid:Month",
+        "Battery Charge from Grid Month",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyChargeGrid:Year",
+        "Battery Charge from Grid Year",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyChargeGrid:Total",
+        "Battery Charge from Grid Total",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyChargePv:Day",
+        "Battery Charge from PV Day",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyChargePv:Month",
+        "Battery Charge from PV Month",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyChargePv:Year",
+        "Battery Charge from PV Year",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyChargePv:Total",
+        "Battery Charge from PV Total",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyDischargeGrid:Day",
+        "Energy Discharge to Grid Day",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyDischargeGrid:Month",
+        "Energy Discharge to Grid Month",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyDischargeGrid:Year",
+        "Energy Discharge to Grid Year",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyDischargeGrid:Total",
+        "Energy Discharge to Grid Total",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+        },
+        "format_energy",
+    ),
 ]
 
 # Defines all entities for settings.
@@ -723,7 +846,7 @@ SWITCH_SETTINGS_DATA = [
     SwitchData(
         "devices:local",
         "Battery:Strategy",
-        "Battery Strategy:",
+        "Battery Strategy",
         "1",
         "1",
         "Automatic",

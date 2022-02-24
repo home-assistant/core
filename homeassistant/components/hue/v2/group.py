@@ -1,12 +1,13 @@
 """Support for Hue groups (room/zone)."""
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.groups import GroupedLight, Room, Zone
-from aiohue.v2.models.feature import AlertEffectType
+from aiohue.v2.models.feature import DynamicStatus
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -18,6 +19,7 @@ from homeassistant.components.light import (
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_ONOFF,
     COLOR_MODE_XY,
+    FLASH_SHORT,
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
     LightEntity,
@@ -29,13 +31,17 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from ..bridge import HueBridge
 from ..const import CONF_ALLOW_HUE_GROUPS, DOMAIN
 from .entity import HueBaseEntity
+from .helpers import (
+    normalize_hue_brightness,
+    normalize_hue_colortemp,
+    normalize_hue_transition,
+)
 
 ALLOWED_ERRORS = [
     "device (groupedLight) has communication issues, command (on) may not have effect",
     'device (groupedLight) is "soft off", command (on) may not have effect',
     "device (light) has communication issues, command (on) may not have effect",
     'device (light) is "soft off", command (on) may not have effect',
-    "attribute (supportedAlertActions) cannot be written",
 ]
 
 
@@ -97,10 +103,10 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
 
         # Entities for Hue groups are disabled by default
         # unless they were enabled in old version (legacy option)
-        self._attr_entity_registry_enabled_default = bridge.config_entry.data.get(
+        self._attr_entity_registry_enabled_default = bridge.config_entry.options.get(
             CONF_ALLOW_HUE_GROUPS, False
         )
-
+        self._dynamic_mode_active = False
         self._update_values()
 
     async def async_added_to_hass(self) -> None:
@@ -143,21 +149,21 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             "hue_scenes": scenes,
             "hue_type": self.group.type.value,
             "lights": lights,
+            "dynamics": self._dynamic_mode_active,
         }
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        transition = kwargs.get(ATTR_TRANSITION)
+        transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
         xy_color = kwargs.get(ATTR_XY_COLOR)
-        color_temp = kwargs.get(ATTR_COLOR_TEMP)
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        color_temp = normalize_hue_colortemp(kwargs.get(ATTR_COLOR_TEMP))
+        brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
         flash = kwargs.get(ATTR_FLASH)
-        if brightness is not None:
-            # Hue uses a range of [0, 100] to control brightness.
-            brightness = float((brightness / 255) * 100)
-        if transition is not None:
-            # hue transition duration is in milliseconds
-            transition = int(transition * 1000)
+
+        if flash is not None:
+            await self.async_set_flash(flash)
+            # flash can not be sent with other commands at the same time
+            return
 
         # NOTE: a grouped_light can only handle turn on/off
         # To set other features, you'll have to control the attached lights
@@ -178,25 +184,31 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
 
         # redirect all other feature commands to underlying lights
         # note that this silently ignores params sent to light that are not supported
-        for light in self.controller.get_lights(self.resource.id):
-            await self.bridge.async_request_call(
-                self.api.lights.set_state,
-                light.id,
-                on=True,
-                brightness=brightness if light.supports_dimming else None,
-                color_xy=xy_color if light.supports_color else None,
-                color_temp=color_temp if light.supports_color_temperature else None,
-                transition_time=transition,
-                alert=AlertEffectType.BREATHE if flash is not None else None,
-                allowed_errors=ALLOWED_ERRORS,
-            )
+        await asyncio.gather(
+            *[
+                self.bridge.async_request_call(
+                    self.api.lights.set_state,
+                    light.id,
+                    on=True,
+                    brightness=brightness if light.supports_dimming else None,
+                    color_xy=xy_color if light.supports_color else None,
+                    color_temp=color_temp if light.supports_color_temperature else None,
+                    transition_time=transition,
+                    allowed_errors=ALLOWED_ERRORS,
+                )
+                for light in self.controller.get_lights(self.resource.id)
+            ]
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        transition = kwargs.get(ATTR_TRANSITION)
-        if transition is not None:
-            # hue transition duration is in milliseconds
-            transition = int(transition * 1000)
+        transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
+        flash = kwargs.get(ATTR_FLASH)
+
+        if flash is not None:
+            await self.async_set_flash(flash)
+            # flash can not be sent with other commands at the same time
+            return
 
         # NOTE: a grouped_light can only handle turn on/off
         # To set other features, you'll have to control the attached lights
@@ -210,14 +222,31 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             return
 
         # redirect all other feature commands to underlying lights
-        for light in self.controller.get_lights(self.resource.id):
-            await self.bridge.async_request_call(
-                self.api.lights.set_state,
-                light.id,
-                on=False,
-                transition_time=transition,
-                allowed_errors=ALLOWED_ERRORS,
-            )
+        await asyncio.gather(
+            *[
+                self.bridge.async_request_call(
+                    self.api.lights.set_state,
+                    light.id,
+                    on=False,
+                    transition_time=transition,
+                    allowed_errors=ALLOWED_ERRORS,
+                )
+                for light in self.controller.get_lights(self.resource.id)
+            ]
+        )
+
+    async def async_set_flash(self, flash: str) -> None:
+        """Send flash command to light."""
+        await asyncio.gather(
+            *[
+                self.bridge.async_request_call(
+                    self.api.lights.set_flash,
+                    id=light.id,
+                    short=flash == FLASH_SHORT,
+                )
+                for light in self.controller.get_lights(self.resource.id)
+            ]
+        )
 
     @callback
     def on_update(self) -> None:
@@ -234,6 +263,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         total_brightness = 0
         all_lights = self.controller.get_lights(self.resource.id)
         lights_in_colortemp_mode = 0
+        lights_in_dynamic_mode = 0
         # loop through all lights to find capabilities
         for light in all_lights:
             if color_temp := light.color_temperature:
@@ -251,6 +281,12 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             if dimming := light.dimming:
                 lights_with_dimming_support += 1
                 total_brightness += dimming.brightness
+            if (
+                light.dynamics
+                and light.dynamics.status == DynamicStatus.DYNAMIC_PALETTE
+            ):
+                lights_in_dynamic_mode += 1
+
         # this is a bit hacky because light groups may contain lights
         # of different capabilities. We set a colormode as supported
         # if any of the lights support it
@@ -269,9 +305,13 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             )
         else:
             supported_color_modes.add(COLOR_MODE_ONOFF)
+        self._dynamic_mode_active = lights_in_dynamic_mode > 0
         self._attr_supported_color_modes = supported_color_modes
         # pick a winner for the current colormode
-        if lights_in_colortemp_mode == lights_with_color_temp_support:
+        if (
+            lights_with_color_temp_support > 0
+            and lights_in_colortemp_mode == lights_with_color_temp_support
+        ):
             self._attr_color_mode = COLOR_MODE_COLOR_TEMP
         elif lights_with_color_support > 0:
             self._attr_color_mode = COLOR_MODE_XY

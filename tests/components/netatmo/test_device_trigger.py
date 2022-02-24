@@ -2,6 +2,7 @@
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.netatmo import DOMAIN as NETATMO_DOMAIN
 from homeassistant.components.netatmo.const import (
     CLIMATE_TRIGGERS,
@@ -98,7 +99,7 @@ async def test_get_triggers(
     triggers = [
         trigger
         for trigger in await async_get_device_automations(
-            hass, "trigger", device_entry.id
+            hass, DeviceAutomationType.TRIGGER, device_entry.id
         )
         if trigger["domain"] == NETATMO_DOMAIN
     ]

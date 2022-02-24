@@ -23,7 +23,7 @@ from unittest.mock import patch
 import av
 import pytest
 
-from homeassistant.components.stream import Stream, create_stream
+from homeassistant.components.stream import KeyFrameConverter, Stream, create_stream
 from homeassistant.components.stream.const import (
     ATTR_SETTINGS,
     CONF_LL_HLS,
@@ -45,6 +45,7 @@ from homeassistant.components.stream.worker import (
 )
 from homeassistant.setup import async_setup_component
 
+from tests.components.camera.common import EMPTY_8_6_JPEG, mock_turbo_jpeg
 from tests.components.stream.common import generate_h264_video, generate_h265_video
 from tests.components.stream.test_ll_hls import TEST_PART_DURATION
 
@@ -96,6 +97,17 @@ class FakeAvInputStream:
             name = "aac"
 
         self.codec = FakeCodec()
+
+        class FakeCodecContext:
+            name = "h264"
+            extradata = None
+
+        self.codec_context = FakeCodecContext()
+
+    @property
+    def type(self):
+        """Return packet type."""
+        return "video" if self.name == VIDEO_STREAM_FORMAT else "audio"
 
     def __str__(self) -> str:
         """Return a stream name for debugging."""
@@ -195,6 +207,7 @@ class FakePyAvBuffer:
         class FakeAvOutputStream:
             def __init__(self, capture_packets):
                 self.capture_packets = capture_packets
+                self.type = "ignored-type"
 
             def close(self):
                 return
@@ -258,7 +271,9 @@ class MockPyAv:
 def run_worker(hass, stream, stream_source):
     """Run the stream worker under test."""
     stream_state = StreamState(hass, stream.outputs)
-    stream_worker(stream_source, {}, stream_state, threading.Event())
+    stream_worker(
+        stream_source, {}, stream_state, KeyFrameConverter(hass), threading.Event()
+    )
 
 
 async def async_decode_stream(hass, packets, py_av=None):
@@ -654,8 +669,8 @@ async def test_update_stream_source(hass):
 
     stream = Stream(hass, STREAM_SOURCE, {})
     stream.add_provider(HLS_PROVIDER)
-    # Note that keepalive is not set here.  The stream is "restarted" even though
-    # it is not stopping due to failure.
+    # Note that retries are disabled by default in tests, however the stream is "restarted" when
+    # the stream source is updated.
 
     py_av = MockPyAv()
     py_av.container.packets = PacketSequence(TEST_SEQUENCE_LENGTH)
@@ -701,7 +716,10 @@ async def test_worker_log(hass, caplog):
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
         run_worker(hass, stream, "https://abcd:efgh@foo.bar")
         await hass.async_block_till_done()
-    assert str(err.value) == "Error opening stream https://****:****@foo.bar"
+    assert (
+        str(err.value)
+        == "Error opening stream (ERRORTYPE_-2, error) https://****:****@foo.bar"
+    )
     assert "https://abcd:efgh@foo.bar" not in caplog.text
 
 
@@ -724,7 +742,7 @@ async def test_durations(hass, record_worker_sync):
     )
 
     source = generate_h264_video(duration=SEGMENT_DURATION + 1)
-    stream = create_stream(hass, source, {})
+    stream = create_stream(hass, source, {}, stream_label="camera")
 
     # use record_worker_sync to grab output segments
     with patch.object(hass.config, "is_allowed_path", return_value=True):
@@ -781,7 +799,7 @@ async def test_durations(hass, record_worker_sync):
     stream.stop()
 
 
-async def test_has_keyframe(hass, record_worker_sync):
+async def test_has_keyframe(hass, record_worker_sync, h264_video):
     """Test that the has_keyframe metadata matches the media."""
     await async_setup_component(
         hass,
@@ -797,8 +815,7 @@ async def test_has_keyframe(hass, record_worker_sync):
         },
     )
 
-    source = generate_h264_video()
-    stream = create_stream(hass, source, {})
+    stream = create_stream(hass, h264_video, {}, stream_label="camera")
 
     # use record_worker_sync to grab output segments
     with patch.object(hass.config, "is_allowed_path", return_value=True):
@@ -837,7 +854,7 @@ async def test_h265_video_is_hvc1(hass, record_worker_sync):
     )
 
     source = generate_h265_video()
-    stream = create_stream(hass, source, {})
+    stream = create_stream(hass, source, {}, stream_label="camera")
 
     # use record_worker_sync to grab output segments
     with patch.object(hass.config, "is_allowed_path", return_value=True):
@@ -853,5 +870,31 @@ async def test_h265_video_is_hvc1(hass, record_worker_sync):
     av_part.close()
 
     await record_worker_sync.join()
+
+    stream.stop()
+
+
+async def test_get_image(hass, record_worker_sync):
+    """Test that the has_keyframe metadata matches the media."""
+    await async_setup_component(hass, "stream", {"stream": {}})
+
+    source = generate_h264_video()
+
+    # Since libjpeg-turbo is not installed on the CI runner, we use a mock
+    with patch(
+        "homeassistant.components.camera.img_util.TurboJPEGSingleton"
+    ) as mock_turbo_jpeg_singleton:
+        mock_turbo_jpeg_singleton.instance.return_value = mock_turbo_jpeg()
+        stream = create_stream(hass, source, {})
+
+    # use record_worker_sync to grab output segments
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        await stream.async_record("/example/path")
+
+    assert stream._keyframe_converter._image is None
+
+    await record_worker_sync.join()
+
+    assert await stream.async_get_image() == EMPTY_8_6_JPEG
 
     stream.stop()

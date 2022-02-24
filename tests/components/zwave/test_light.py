@@ -1,6 +1,8 @@
 """Test Z-Wave lights."""
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from homeassistant.components import zwave
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -17,6 +19,9 @@ from homeassistant.components.light import (
 from homeassistant.components.zwave import const, light
 
 from tests.mock.zwave import MockEntityValues, MockNode, MockValue, value_changed
+
+# Integration is disabled
+pytest.skip("Integration has been disabled in the manifest", allow_module_level=True)
 
 
 class MockLightValues(MockEntityValues):
@@ -39,7 +44,7 @@ def test_get_device_detects_dimmer(mock_openzwave):
     device = light.get_device(node=node, values=values, node_config={})
     assert isinstance(device, light.ZwaveDimmer)
     assert device.color_mode == COLOR_MODE_BRIGHTNESS
-    assert device.supported_features is None
+    assert device.supported_features == 0
     assert device.supported_color_modes == {COLOR_MODE_BRIGHTNESS}
 
 
@@ -52,7 +57,7 @@ def test_get_device_detects_colorlight(mock_openzwave):
     device = light.get_device(node=node, values=values, node_config={})
     assert isinstance(device, light.ZwaveColorLight)
     assert device.color_mode == COLOR_MODE_RGB
-    assert device.supported_features is None
+    assert device.supported_features == 0
     assert device.supported_color_modes == {COLOR_MODE_RGB}
 
 
@@ -68,7 +73,7 @@ def test_get_device_detects_zw098(mock_openzwave):
     device = light.get_device(node=node, values=values, node_config={})
     assert isinstance(device, light.ZwaveColorLight)
     assert device.color_mode == COLOR_MODE_RGB
-    assert device.supported_features is None
+    assert device.supported_features == 0
     assert device.supported_color_modes == {COLOR_MODE_COLOR_TEMP, COLOR_MODE_RGB}
 
 
@@ -84,7 +89,7 @@ def test_get_device_detects_rgbw_light(mock_openzwave):
     device.value_added()
     assert isinstance(device, light.ZwaveColorLight)
     assert device.color_mode == COLOR_MODE_RGBW
-    assert device.supported_features is None
+    assert device.supported_features == 0
     assert device.supported_color_modes == {COLOR_MODE_RGBW}
 
 

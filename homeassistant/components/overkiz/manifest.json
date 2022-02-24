@@ -1,0 +1,34 @@
+{
+  "domain": "overkiz",
+  "name": "Overkiz (by Somfy)",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/overkiz",
+  "requirements": [
+    "pyoverkiz==1.3.8"
+  ],
+  "zeroconf": [
+    {
+      "type": "_kizbox._tcp.local.",
+      "name": "gateway*"
+    }
+  ],
+  "dhcp": [
+    {
+      "hostname": "gateway*",
+      "macaddress": "F8811A*"
+    }
+  ],
+  "codeowners": [
+    "@imicknl",
+    "@vlebourl",
+    "@tetienne"
+  ],
+  "iot_class": "cloud_polling",
+  "loggers": [
+    "boto3",
+    "botocore",
+    "pyhumps",
+    "pyoverkiz",
+    "s3transfer"
+  ]
+}

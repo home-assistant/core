@@ -15,7 +15,7 @@
                     "ssl": "Kasutusel on SSL sert",
                     "username": "Kasutajanimi (valikuline)"
                 },
-                "description": "Vaikimisi host: {host}\nVaikeport: {port}\nVaikimisi kasutajanimi: {username}",
+                "description": "Vaikimisi host: {host}\nVaikimisi kasutajanimi: {username}",
                 "title": "Netgear"
             }
         }

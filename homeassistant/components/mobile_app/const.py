@@ -1,4 +1,8 @@
 """Constants for mobile_app."""
+import voluptuous as vol
+
+from homeassistant.helpers import config_validation as cv
+
 DOMAIN = "mobile_app"
 
 STORAGE_KEY = DOMAIN
@@ -26,6 +30,7 @@ ATTR_MANUFACTURER = "manufacturer"
 ATTR_MODEL = "model"
 ATTR_OS_NAME = "os_name"
 ATTR_OS_VERSION = "os_version"
+ATTR_PUSH_WEBSOCKET_CHANNEL = "push_websocket_channel"
 ATTR_PUSH_TOKEN = "push_token"
 ATTR_PUSH_URL = "push_url"
 ATTR_PUSH_RATE_LIMITS = "rateLimits"
@@ -76,3 +81,14 @@ SIGNAL_SENSOR_UPDATE = f"{DOMAIN}_sensor_update"
 SIGNAL_LOCATION_UPDATE = DOMAIN + "_location_update_{}"
 
 ATTR_CAMERA_ENTITY_ID = "camera_entity_id"
+
+SCHEMA_APP_DATA = vol.Schema(
+    {
+        vol.Inclusive(ATTR_PUSH_TOKEN, "push_cloud"): cv.string,
+        vol.Inclusive(ATTR_PUSH_URL, "push_cloud"): cv.url,
+        # Set to True to indicate that this registration will connect via websocket channel
+        # to receive push notifications.
+        vol.Optional(ATTR_PUSH_WEBSOCKET_CHANNEL): cv.boolean,
+    },
+    extra=vol.ALLOW_EXTRA,
+)

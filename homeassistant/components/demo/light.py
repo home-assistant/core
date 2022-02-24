@@ -19,7 +19,11 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
 
@@ -33,7 +37,12 @@ SUPPORT_DEMO = {COLOR_MODE_HS, COLOR_MODE_COLOR_TEMP}
 SUPPORT_DEMO_HS_WHITE = {COLOR_MODE_HS, COLOR_MODE_WHITE}
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the demo light platform."""
     async_add_entities(
         [
@@ -88,7 +97,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Demo config entry."""
     await async_setup_platform(hass, {}, async_add_entities)
 
@@ -182,17 +195,17 @@ class DemoLight(LightEntity):
         return self._color_mode
 
     @property
-    def hs_color(self) -> tuple:
+    def hs_color(self) -> tuple[float, float]:
         """Return the hs color value."""
         return self._hs_color
 
     @property
-    def rgbw_color(self) -> tuple:
+    def rgbw_color(self) -> tuple[int, int, int, int]:
         """Return the rgbw color value."""
         return self._rgbw_color
 
     @property
-    def rgbww_color(self) -> tuple:
+    def rgbww_color(self) -> tuple[int, int, int, int, int]:
         """Return the rgbww color value."""
         return self._rgbww_color
 

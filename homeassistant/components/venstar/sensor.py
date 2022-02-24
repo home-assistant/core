@@ -13,7 +13,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT, TIME_MINUTES
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VenstarDataUpdateCoordinator, VenstarEntity
 from .const import DOMAIN
@@ -64,13 +66,16 @@ class VenstarSensorEntityDescription(SensorEntityDescription, VenstarSensorTypeM
     """Base description of a Sensor entity."""
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Vensar device binary_sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[Entity] = []
 
-    sensors = coordinator.client.get_sensor_list()
-    if not sensors:
+    if not (sensors := coordinator.client.get_sensor_list()):
         return
 
     for sensor_name in sensors:

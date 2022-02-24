@@ -14,17 +14,7 @@ from homeassistant.helpers.significant_change import (
     check_percentage_change,
 )
 
-from . import (
-    DEVICE_CLASS_AQI,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_CO,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_PM10,
-    DEVICE_CLASS_PM25,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
-)
+from . import SensorDeviceClass
 
 
 def _absolute_and_relative_change(
@@ -53,22 +43,22 @@ def async_check_significant_change(
 
     absolute_change: float | None = None
     percentage_change: float | None = None
-    if device_class == DEVICE_CLASS_TEMPERATURE:
+    if device_class == SensorDeviceClass.TEMPERATURE:
         if new_attrs.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_FAHRENHEIT:
             absolute_change = 1.0
         else:
             absolute_change = 0.5
 
-    if device_class in (DEVICE_CLASS_BATTERY, DEVICE_CLASS_HUMIDITY):
+    if device_class in (SensorDeviceClass.BATTERY, SensorDeviceClass.HUMIDITY):
         absolute_change = 1.0
 
     if device_class in (
-        DEVICE_CLASS_AQI,
-        DEVICE_CLASS_CO,
-        DEVICE_CLASS_CO2,
-        DEVICE_CLASS_PM25,
-        DEVICE_CLASS_PM10,
-        DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+        SensorDeviceClass.AQI,
+        SensorDeviceClass.CO,
+        SensorDeviceClass.CO2,
+        SensorDeviceClass.PM25,
+        SensorDeviceClass.PM10,
+        SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
     ):
         absolute_change = 1.0
         percentage_change = 2.0

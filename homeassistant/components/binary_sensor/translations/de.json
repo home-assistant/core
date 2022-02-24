@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_bat_low": "{entity_name} Batterie ist schwach",
+            "is_co": "{entity_name} erkennt Kohlenmonoxid",
             "is_cold": "{entity_name} ist kalt",
             "is_connected": "{entity_name} ist verbunden",
             "is_gas": "{entity_name} erkennt Gas",
@@ -11,6 +12,7 @@
             "is_moist": "{entity_name} ist feucht",
             "is_motion": "{entity_name} erkennt Bewegung",
             "is_moving": "{entity_name} bewegt sich",
+            "is_no_co": "{entity_name} erkennt kein Kohlenmonoxid",
             "is_no_gas": "{entity_name} erkennt kein Gas",
             "is_no_light": "{entity_name} erkennt kein Licht",
             "is_no_motion": "{entity_name} erkennt keine Bewegung",
@@ -52,6 +54,7 @@
         },
         "trigger_type": {
             "bat_low": "{entity_name} Batterie schwach",
+            "co": "{entity_name} hat begonnen, Kohlenmonoxid zu erkennen",
             "cold": "{entity_name} wurde kalt",
             "connected": "{entity_name} verbunden",
             "gas": "{entity_name} hat Gas detektiert",
@@ -63,6 +66,7 @@
             "moist": "{entity_name} wurde feucht",
             "motion": "{entity_name} hat Bewegungen detektiert",
             "moving": "{entity_name} hat angefangen sich zu bewegen",
+            "no_co": "{entity_name} hat aufgeh\u00f6rt, Kohlenmonoxid zu erkennen",
             "no_gas": "{entity_name} hat kein Gas mehr erkannt",
             "no_light": "{entity_name} hat kein Licht mehr erkannt",
             "no_motion": "{entity_name} hat keine Bewegung mehr erkannt",
@@ -104,6 +108,7 @@
         }
     },
     "device_class": {
+        "co": "Kohlenmonoxid",
         "cold": "K\u00e4lte",
         "gas": "Gas",
         "heat": "W\u00e4rme",
@@ -128,6 +133,14 @@
         "battery_charging": {
             "off": "L\u00e4dt nicht",
             "on": "L\u00e4dt"
+        },
+        "carbon_monoxide": {
+            "off": "Normal",
+            "on": "Erkannt"
+        },
+        "co": {
+            "off": "Normal",
+            "on": "Erkannt"
         },
         "cold": {
             "off": "Normal",

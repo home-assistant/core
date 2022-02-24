@@ -2,9 +2,10 @@
 import json
 import logging
 
-from plexapi.exceptions import BadRequest, NotFound
+from plexapi.exceptions import NotFound
 import voluptuous as vol
 
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -26,11 +27,14 @@ _LOGGER = logging.getLogger(__package__)
 async def async_setup_services(hass):
     """Set up services for the Plex component."""
 
-    async def async_refresh_library_service(service_call):
+    async def async_refresh_library_service(service_call: ServiceCall) -> None:
         await hass.async_add_executor_job(refresh_library, hass, service_call)
 
-    async def async_scan_clients_service(_):
-        _LOGGER.debug("Scanning for new Plex clients")
+    async def async_scan_clients_service(_: ServiceCall) -> None:
+        _LOGGER.warning(
+            "This service is deprecated in favor of the scan_clients button entity. "
+            "Service calls will still work for now but the service will be removed in a future release"
+        )
         for server_id in hass.data[DOMAIN][SERVERS]:
             async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
 
@@ -47,7 +51,7 @@ async def async_setup_services(hass):
     return True
 
 
-def refresh_library(hass, service_call):
+def refresh_library(hass: HomeAssistant, service_call: ServiceCall) -> None:
     """Scan a Plex library for new and updated media."""
     plex_server_name = service_call.data.get("server_name")
     library_name = service_call.data["library_name"]
@@ -114,33 +118,14 @@ def lookup_plex_media(hass, content_type, content_id):
             raise HomeAssistantError(
                 f"PlayQueue '{playqueue_id}' could not be found"
             ) from err
-    else:
-        shuffle = content.pop("shuffle", 0)
-        media = plex_server.lookup_media(content_type, **content)
-        if media is None:
-            raise HomeAssistantError(
-                f"Plex media not found using payload: '{content_id}'"
-            )
-        playqueue = plex_server.create_playqueue(media, shuffle=shuffle)
+        return playqueue
 
-    return (playqueue, plex_server)
+    shuffle = content.pop("shuffle", 0)
+    media = plex_server.lookup_media(content_type, **content)
+    if media is None:
+        raise HomeAssistantError(f"Plex media not found using payload: '{content_id}'")
 
+    if shuffle:
+        return plex_server.create_playqueue(media, shuffle=shuffle)
 
-def play_on_sonos(hass, content_type, content_id, speaker_name):
-    """Play music on a connected Sonos speaker using Plex APIs.
-
-    Called by Sonos 'media_player.play_media' service.
-    """
-    media, plex_server = lookup_plex_media(hass, content_type, content_id)
-    try:
-        sonos_speaker = plex_server.account.sonos_speaker(speaker_name)
-    except BadRequest as exc:
-        raise HomeAssistantError(
-            "Sonos speakers not linked to Plex account, complete this step in the Plex app"
-        ) from exc
-
-    if sonos_speaker is None:
-        message = f"Sonos speaker '{speaker_name}' is not associated with '{plex_server.friendly_name}'"
-        _LOGGER.error(message)
-        raise HomeAssistantError(message)
-    sonos_speaker.playMedia(media)
+    return media

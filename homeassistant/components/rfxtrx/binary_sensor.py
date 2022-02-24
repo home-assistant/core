@@ -10,24 +10,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import (
-    CONF_COMMAND_OFF,
-    CONF_COMMAND_ON,
-    CONF_DEVICES,
-    STATE_ON,
-)
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON, STATE_ON
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import event as evt
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import (
-    DeviceTuple,
-    RfxtrxEntity,
-    connect_auto_add,
-    find_possible_pt2262_device,
-    get_device_id,
-    get_pt2262_cmd,
-    get_rfx_object,
-)
+from . import DeviceTuple, RfxtrxEntity, async_setup_platform_entry, get_pt2262_cmd
 from .const import (
     COMMAND_OFF_LIST,
     COMMAND_ON_LIST,
@@ -96,86 +85,40 @@ def supported(event: rfxtrxmod.RFXtrxEvent):
 
 
 async def async_setup_entry(
-    hass,
-    config_entry,
-    async_add_entities,
-):
-    """Set up platform."""
-    sensors = []
-
-    device_ids: set[DeviceTuple] = set()
-    pt2262_devices: list[str] = []
-
-    discovery_info = config_entry.data
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up config entry."""
 
     def get_sensor_description(type_string: str):
         if (description := SENSOR_TYPES_DICT.get(type_string)) is None:
             return BinarySensorEntityDescription(key=type_string)
         return description
 
-    for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
-        if (event := get_rfx_object(packet_id)) is None:
-            _LOGGER.error("Invalid device: %s", packet_id)
-            continue
-        if not supported(event):
-            continue
+    def _constructor(
+        event: rfxtrxmod.RFXtrxEvent,
+        auto: rfxtrxmod.RFXtrxEvent | None,
+        device_id: DeviceTuple,
+        entity_info: dict,
+    ):
 
-        device_id = get_device_id(
-            event.device, data_bits=entity_info.get(CONF_DATA_BITS)
-        )
-        if device_id in device_ids:
-            continue
-        device_ids.add(device_id)
+        return [
+            RfxtrxBinarySensor(
+                event.device,
+                device_id,
+                get_sensor_description(event.device.type_string),
+                entity_info.get(CONF_OFF_DELAY),
+                entity_info.get(CONF_DATA_BITS),
+                entity_info.get(CONF_COMMAND_ON),
+                entity_info.get(CONF_COMMAND_OFF),
+                event=event if auto else None,
+            )
+        ]
 
-        device: rfxtrxmod.RFXtrxDevice = event.device
-
-        if device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
-            find_possible_pt2262_device(pt2262_devices, device.id_string)
-            pt2262_devices.append(device.id_string)
-
-        entity = RfxtrxBinarySensor(
-            device,
-            device_id,
-            get_sensor_description(device.type_string),
-            entity_info.get(CONF_OFF_DELAY),
-            entity_info.get(CONF_DATA_BITS),
-            entity_info.get(CONF_COMMAND_ON),
-            entity_info.get(CONF_COMMAND_OFF),
-        )
-        sensors.append(entity)
-
-    async_add_entities(sensors)
-
-    @callback
-    def binary_sensor_update(
-        event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple
-    ) -> None:
-        """Call for control updates from the RFXtrx gateway."""
-        if not supported(event):
-            return
-
-        if device_id in device_ids:
-            return
-        device_ids.add(device_id)
-
-        _LOGGER.info(
-            "Added binary sensor (Device ID: %s Class: %s Sub: %s Event: %s)",
-            event.device.id_string.lower(),
-            event.device.__class__.__name__,
-            event.device.subtype,
-            "".join(f"{x:02x}" for x in event.data),
-        )
-
-        sensor = RfxtrxBinarySensor(
-            event.device,
-            device_id,
-            event=event,
-            entity_description=get_sensor_description(event.device.type_string),
-        )
-        async_add_entities([sensor])
-
-    # Subscribe to main RFXtrx events
-    connect_auto_add(hass, discovery_info, binary_sensor_update)
+    await async_setup_platform_entry(
+        hass, config_entry, async_add_entities, supported, _constructor
+    )
 
 
 class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):

@@ -1,7 +1,7 @@
 """Test Z-Wave Sensors."""
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
     DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
 )
 from homeassistant.components.ozw.const import DOMAIN
 from homeassistant.const import ATTR_DEVICE_CLASS
@@ -35,7 +35,7 @@ async def test_binary_sensor(hass, generic_data, binary_sensor_msg):
     state = hass.states.get("binary_sensor.trisensor_home_security_motion_detected")
     assert state
     assert state.state == "off"
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_MOTION
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.MOTION
 
     # Test incoming state change
     receive_msg(binary_sensor_msg)

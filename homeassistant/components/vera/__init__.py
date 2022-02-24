@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
+from collections.abc import Awaitable
 import logging
 from typing import Any, Generic, TypeVar
 
@@ -166,7 +167,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     """Unload Withings config entry."""
     controller_data: ControllerData = get_controller_data(hass, config_entry)
 
-    tasks = [
+    tasks: list[Awaitable] = [
         hass.config_entries.async_forward_entry_unload(config_entry, platform)
         for platform in get_configured_platforms(controller_data)
     ]
@@ -176,12 +177,14 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return True
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-def map_vera_device(vera_device: veraApi.VeraDevice, remap: list[int]) -> Platform:
+def map_vera_device(
+    vera_device: veraApi.VeraDevice, remap: list[int]
+) -> Platform | None:
     """Map vera classes to Home Assistant types."""
 
     type_map = {

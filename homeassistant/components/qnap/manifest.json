@@ -3,6 +3,7 @@
   "name": "QNAP",
   "documentation": "https://www.home-assistant.io/integrations/qnap",
   "requirements": ["qnapstats==0.4.0"],
-  "codeowners": ["@colinodell"],
-  "iot_class": "local_polling"
+  "codeowners": [],
+  "iot_class": "local_polling",
+  "loggers": ["qnapstats"]
 }

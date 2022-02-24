@@ -1,5 +1,4 @@
 """Support for Motion Blinds using their WLAN API."""
-
 import logging
 
 from motionblinds import BlindType
@@ -11,8 +10,11 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -49,6 +51,7 @@ TILT_DEVICE_MAP = {
     BlindType.ShangriLaBlind: CoverDeviceClass.BLIND,
     BlindType.DoubleRoller: CoverDeviceClass.SHADE,
     BlindType.VerticalBlind: CoverDeviceClass.BLIND,
+    BlindType.VerticalBlindLeft: CoverDeviceClass.BLIND,
 }
 
 TDBU_DEVICE_MAP = {
@@ -62,7 +65,11 @@ SET_ABSOLUTE_POSITION_SCHEMA = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Motion Blind from a config entry."""
     entities = []
     motion_gateway = hass.data[DOMAIN][config_entry.entry_id][KEY_GATEWAY]
@@ -139,7 +146,8 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
             manufacturer=MANUFACTURER,
             model=blind.blind_type,
             name=f"{blind.blind_type}-{blind.mac[12:]}",
-            via_device=(DOMAIN, config_entry.unique_id),
+            via_device=(DOMAIN, blind._gateway.mac),
+            hw_version=blind.wireless_name,
         )
 
     @property

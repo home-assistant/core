@@ -8,6 +8,7 @@ from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.deconz import device_trigger
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.device_trigger import CONF_SUBTYPE
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -69,7 +70,9 @@ async def test_get_triggers(hass, aioclient_mock):
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")}
     )
 
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
 
     expected_triggers = [
         {
@@ -117,7 +120,7 @@ async def test_get_triggers(hass, aioclient_mock):
         {
             CONF_DEVICE_ID: device.id,
             CONF_DOMAIN: SENSOR_DOMAIN,
-            ATTR_ENTITY_ID: "sensor.tradfri_on_off_switch_battery_level",
+            ATTR_ENTITY_ID: "sensor.tradfri_on_off_switch_battery",
             CONF_PLATFORM: "device",
             CONF_TYPE: ATTR_BATTERY_LEVEL,
         },
@@ -158,7 +161,9 @@ async def test_get_triggers_manage_unsupported_remotes(hass, aioclient_mock):
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")}
     )
 
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
 
     expected_triggers = []
 

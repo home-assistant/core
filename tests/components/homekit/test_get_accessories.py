@@ -18,6 +18,7 @@ from homeassistant.components.homekit.const import (
     TYPE_VALVE,
 )
 import homeassistant.components.media_player.const as media_player_c
+from homeassistant.components.sensor import SensorDeviceClass
 import homeassistant.components.vacuum as vacuum
 from homeassistant.const import (
     ATTR_CODE,
@@ -26,8 +27,6 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_TYPE,
-    DEVICE_CLASS_CO,
-    DEVICE_CLASS_CO2,
     LIGHT_LUX,
     PERCENTAGE,
     STATE_UNKNOWN,
@@ -219,14 +218,14 @@ def test_type_media_player(type_name, entity_id, state, attrs, config):
             "CarbonMonoxideSensor",
             "sensor.co",
             "2",
-            {ATTR_DEVICE_CLASS: DEVICE_CLASS_CO},
+            {ATTR_DEVICE_CLASS: SensorDeviceClass.CO},
         ),
         ("CarbonDioxideSensor", "sensor.airmeter_co2", "500", {}),
         (
             "CarbonDioxideSensor",
             "sensor.co2",
             "500",
-            {ATTR_DEVICE_CLASS: DEVICE_CLASS_CO2},
+            {ATTR_DEVICE_CLASS: SensorDeviceClass.CO2},
         ),
         (
             "HumiditySensor",
@@ -273,6 +272,7 @@ def test_type_sensors(type_name, entity_id, state, attrs):
         ("Switch", "automation.test", "on", {}, {}),
         ("Switch", "button.test", STATE_UNKNOWN, {}, {}),
         ("Switch", "input_boolean.test", "on", {}, {}),
+        ("Switch", "input_button.test", STATE_UNKNOWN, {}, {}),
         ("Switch", "remote.test", "on", {}, {}),
         ("Switch", "scene.test", "on", {}, {}),
         ("Switch", "script.test", "on", {}, {}),

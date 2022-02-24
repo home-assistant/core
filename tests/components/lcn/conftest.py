@@ -41,13 +41,6 @@ class MockGroupConnection(GroupConnection):
 class MockPchkConnectionManager(PchkConnectionManager):
     """Fake connection handler."""
 
-    return_value = None
-
-    def __init__(self, *args, **kwargs):
-        """Initialize MockPchkCOnnectionManager."""
-        super().__init__(*args, **kwargs)
-        self.__class__.return_value = self
-
     async def async_connect(self, timeout=30):
         """Mock establishing a connection to PCHK."""
         self.authentication_completed_future.set_result(True)
@@ -59,9 +52,9 @@ class MockPchkConnectionManager(PchkConnectionManager):
 
     @patch.object(pypck.connection, "ModuleConnection", MockModuleConnection)
     @patch.object(pypck.connection, "GroupConnection", MockGroupConnection)
-    def get_address_conn(self, addr):
+    def get_address_conn(self, addr, request_serials=False):
         """Get LCN address connection."""
-        return super().get_address_conn(addr, request_serials=False)
+        return super().get_address_conn(addr, request_serials)
 
     send_command = AsyncMock()
 
@@ -102,11 +95,24 @@ def create_config_entry_myhome():
     return create_config_entry("myhome")
 
 
+@pytest.fixture(name="lcn_connection")
 async def init_integration(hass, entry):
     """Set up the LCN integration in Home Assistant."""
+    lcn_connection = None
+
+    def lcn_connection_factory(*args, **kwargs):
+        nonlocal lcn_connection
+        lcn_connection = MockPchkConnectionManager(*args, **kwargs)
+        return lcn_connection
+
     entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "pypck.connection.PchkConnectionManager",
+        side_effect=lcn_connection_factory,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        yield lcn_connection
 
 
 async def setup_component(hass):

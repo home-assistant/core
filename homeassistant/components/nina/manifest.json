@@ -4,11 +4,12 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nina",
   "requirements": [
-    "pynina==0.1.4"
+    "pynina==0.1.7"
   ],
   "dependencies": [],
   "codeowners": [
     "@DeerMaximum"
   ],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["pynina"]
 }

@@ -4,6 +4,7 @@ from homeassistant.components import zeroconf
 
 DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     host="192.168.0.1",
+    addresses=["192.168.0.1"],
     port=14791,
     hostname="test.local.",
     type="_dvl-deviceapi._tcp.local.",
@@ -21,6 +22,7 @@ DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
 
 DISCOVERY_INFO_WRONG_DEVOLO_DEVICE = zeroconf.ZeroconfServiceInfo(
     host="mock_host",
+    addresses=["mock_host"],
     hostname="mock_hostname",
     name="mock_name",
     port=None,
@@ -30,6 +32,7 @@ DISCOVERY_INFO_WRONG_DEVOLO_DEVICE = zeroconf.ZeroconfServiceInfo(
 
 DISCOVERY_INFO_WRONG_DEVICE = zeroconf.ZeroconfServiceInfo(
     host="mock_host",
+    addresses=["mock_host"],
     hostname="mock_hostname",
     name="mock_name",
     port=None,

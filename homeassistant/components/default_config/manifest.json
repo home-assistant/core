@@ -11,6 +11,7 @@
     "frontend",
     "history",
     "input_boolean",
+    "input_button",
     "input_datetime",
     "input_number",
     "input_select",
@@ -30,7 +31,6 @@
     "tag",
     "timer",
     "usb",
-    "updater",
     "webhook",
     "zeroconf",
     "zone"

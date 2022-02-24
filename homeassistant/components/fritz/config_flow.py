@@ -19,8 +19,10 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNA
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .common import FritzBoxTools
+from .common import AvmWrapper
 from .const import (
+    CONF_OLD_DISCOVERY,
+    DEFAULT_CONF_OLD_DISCOVERY,
     DEFAULT_HOST,
     DEFAULT_PORT,
     DOMAIN,
@@ -51,7 +53,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._password: str
         self._port: int | None = None
         self._username: str
-        self.fritz_tools: FritzBoxTools
+        self.avm_wrapper: AvmWrapper
 
     async def fritz_tools_init(self) -> str | None:
         """Initialize FRITZ!Box Tools class."""
@@ -59,7 +61,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         if not self._host or not self._port:
             return None
 
-        self.fritz_tools = FritzBoxTools(
+        self.avm_wrapper = AvmWrapper(
             hass=self.hass,
             host=self._host,
             port=self._port,
@@ -68,7 +70,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            await self.fritz_tools.async_setup()
+            await self.avm_wrapper.async_setup()
         except FritzSecurityError:
             return ERROR_AUTH_INVALID
         except FritzConnectionException:
@@ -100,13 +102,14 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=self._name,
             data={
-                CONF_HOST: self.fritz_tools.host,
-                CONF_PASSWORD: self.fritz_tools.password,
-                CONF_PORT: self.fritz_tools.port,
-                CONF_USERNAME: self.fritz_tools.username,
+                CONF_HOST: self.avm_wrapper.host,
+                CONF_PASSWORD: self.avm_wrapper.password,
+                CONF_PORT: self.avm_wrapper.port,
+                CONF_USERNAME: self.avm_wrapper.username,
             },
             options={
                 CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds(),
+                CONF_OLD_DISCOVERY: DEFAULT_CONF_OLD_DISCOVERY,
             },
         )
 
@@ -117,7 +120,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._port = ssdp_location.port
         self._name = (
             discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
-            or self.fritz_tools.model
+            or discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_NAME]
         )
         self.context[CONF_HOST] = self._host
 
@@ -204,7 +207,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._password = user_input[CONF_PASSWORD]
 
         if not (error := await self.fritz_tools_init()):
-            self._name = self.fritz_tools.model
+            self._name = self.avm_wrapper.model
 
             if await self.async_check_configured_entry():
                 error = "already_configured"
@@ -272,17 +275,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.hass.config_entries.async_reload(self._entry.entry_id)
         return self.async_abort(reason="reauth_successful")
 
-    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(
-            {
-                CONF_HOST: import_config[CONF_HOST],
-                CONF_USERNAME: import_config[CONF_USERNAME],
-                CONF_PASSWORD: import_config.get(CONF_PASSWORD),
-                CONF_PORT: import_config.get(CONF_PORT, DEFAULT_PORT),
-            }
-        )
-
 
 class FritzBoxToolsOptionsFlowHandler(OptionsFlow):
     """Handle a option flow."""
@@ -307,6 +299,12 @@ class FritzBoxToolsOptionsFlowHandler(OptionsFlow):
                         CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
                     ),
                 ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900)),
+                vol.Optional(
+                    CONF_OLD_DISCOVERY,
+                    default=self.config_entry.options.get(
+                        CONF_OLD_DISCOVERY, DEFAULT_CONF_OLD_DISCOVERY
+                    ),
+                ): bool,
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

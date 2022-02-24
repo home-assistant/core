@@ -45,9 +45,10 @@ async def async_setup_platform(
 class UptimeSensor(SensorEntity):
     """Representation of an uptime sensor."""
 
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_should_poll = False
+
     def __init__(self, name: str) -> None:
         """Initialize the uptime sensor."""
-        self._attr_name: str = name
-        self._attr_device_class = SensorDeviceClass.TIMESTAMP
-        self._attr_should_poll: bool = False
+        self._attr_name = name
         self._attr_native_value = dt_util.utcnow()

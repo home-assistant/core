@@ -1,43 +1,51 @@
 """Helper methods for common tasks."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Any, Callable, TypeVar, cast
+from typing import TYPE_CHECKING, TypeVar
 
+from soco import SoCo
 from soco.exceptions import SoCoException, SoCoUPnPException
+from typing_extensions import Concatenate, ParamSpec
 
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import SONOS_SPEAKER_ACTIVITY
-from .exception import SpeakerUnavailable
+from .exception import SonosUpdateError
 
 if TYPE_CHECKING:
     from .entity import SonosEntity
+    from .household_coordinator import SonosHouseholdCoordinator
     from .speaker import SonosSpeaker
 
 UID_PREFIX = "RINCON_"
 UID_POSTFIX = "01400"
 
-WrapFuncType = TypeVar("WrapFuncType", bound=Callable[..., Any])
-
 _LOGGER = logging.getLogger(__name__)
+
+_T = TypeVar("_T", bound="SonosSpeaker | SonosEntity | SonosHouseholdCoordinator")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
 
 def soco_error(
-    errorcodes: list[str] | None = None, raise_on_err: bool = True
-) -> Callable:
+    errorcodes: list[str] | None = None,
+) -> Callable[  # type: ignore[misc]
+    [Callable[Concatenate[_T, _P], _R]], Callable[Concatenate[_T, _P], _R | None]
+]:
     """Filter out specified UPnP errors and raise exceptions for service calls."""
 
-    def decorator(funct: WrapFuncType) -> WrapFuncType:
+    def decorator(
+        funct: Callable[Concatenate[_T, _P], _R]  # type: ignore[misc]
+    ) -> Callable[Concatenate[_T, _P], _R | None]:  # type: ignore[misc]
         """Decorate functions."""
 
-        def wrapper(self: SonosSpeaker | SonosEntity, *args: Any, **kwargs: Any) -> Any:
+        def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> _R | None:
             """Wrap for all soco UPnP exception."""
+            args_soco = next((arg for arg in args if isinstance(arg, SoCo)), None)
             try:
                 result = funct(self, *args, **kwargs)
-            except SpeakerUnavailable:
-                return None
             except (OSError, SoCoException, SoCoUPnPException) as err:
                 error_code = getattr(err, "error_code", None)
                 function = funct.__qualname__
@@ -47,25 +55,27 @@ def soco_error(
                     )
                     return None
 
+                # In order of preference:
+                #  * SonosSpeaker instance
+                #  * SoCo instance passed as an arg
+                #  * SoCo instance (as self)
+                speaker_or_soco = getattr(self, "speaker", args_soco or self)
+                zone_name = speaker_or_soco.zone_name
                 # Prefer the entity_id if available, zone name as a fallback
                 # Needed as SonosSpeaker instances are not entities
-                zone_name = getattr(self, "speaker", self).zone_name
                 target = getattr(self, "entity_id", zone_name)
                 message = f"Error calling {function} on {target}: {err}"
-                if raise_on_err:
-                    raise HomeAssistantError(message) from err
+                raise SonosUpdateError(message) from err
 
-                _LOGGER.warning(message)
-                return None
-
+            dispatch_soco = args_soco or self.soco
             dispatcher_send(
                 self.hass,
-                f"{SONOS_SPEAKER_ACTIVITY}-{self.soco.uid}",
+                f"{SONOS_SPEAKER_ACTIVITY}-{dispatch_soco.uid}",
                 funct.__qualname__,
             )
             return result
 
-        return cast(WrapFuncType, wrapper)
+        return wrapper
 
     return decorator
 

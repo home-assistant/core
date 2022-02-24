@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from ast import literal_eval
 import asyncio
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import datetime as dt
 from functools import lru_cache, partial, wraps
@@ -12,16 +13,20 @@ import logging
 from operator import attrgetter
 import ssl
 import time
-from typing import Any, Awaitable, Callable, Union, cast
+from typing import Any, Union, cast
 import uuid
 
 import attr
 import certifi
+import jinja2
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import websocket_api
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_NAME,
     CONF_CLIENT_ID,
     CONF_DISCOVERY,
     CONF_PASSWORD,
@@ -32,6 +37,8 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
+    SERVICE_RELOAD,
+    Platform,
 )
 from homeassistant.core import (
     CoreState,
@@ -43,10 +50,17 @@ from homeassistant.core import (
 )
 from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.exceptions import HomeAssistantError, TemplateError, Unauthorized
-from homeassistant.helpers import config_validation as cv, event, template
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    event,
+    template,
+)
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.frame import report
-from homeassistant.helpers.typing import ConfigType, ServiceDataType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -69,6 +83,7 @@ from .const import (
     CONF_TOPIC,
     CONF_WILL_MESSAGE,
     DATA_MQTT_CONFIG,
+    DATA_MQTT_RELOAD_NEEDED,
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
@@ -93,6 +108,8 @@ from .models import (
 from .util import _VALID_QOS_SCHEMA, valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
+
+_SENTINEL = object()
 
 DATA_MQTT = "mqtt"
 
@@ -127,20 +144,23 @@ DISCOVERY_COOLDOWN = 2
 TIMEOUT_ACK = 10
 
 PLATFORMS = [
-    "alarm_control_panel",
-    "binary_sensor",
-    "camera",
-    "climate",
-    "cover",
-    "fan",
-    "humidifier",
-    "light",
-    "lock",
-    "number",
-    "scene",
-    "sensor",
-    "switch",
-    "vacuum",
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CAMERA,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.HUMIDIFIER,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SCENE,
+    Platform.SENSOR,
+    Platform.SIREN,
+    Platform.SWITCH,
+    Platform.VACUUM,
 ]
 
 
@@ -163,7 +183,14 @@ MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            cv.deprecated(CONF_TLS_VERSION),
+            cv.deprecated(CONF_BIRTH_MESSAGE),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_BROKER),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_DISCOVERY),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_PASSWORD),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_PORT),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_TLS_VERSION),  # Deprecated June 2020
+            cv.deprecated(CONF_USERNAME),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_WILL_MESSAGE),  # Deprecated in HA Core 2022.3
             vol.Schema(
                 {
                     vol.Optional(CONF_CLIENT_ID): cv.string,
@@ -257,20 +284,27 @@ class MqttCommandTemplate:
     def __init__(
         self,
         command_template: template.Template | None,
-        hass: HomeAssistant,
+        *,
+        hass: HomeAssistant | None = None,
+        entity: Entity | None = None,
     ) -> None:
         """Instantiate a command template."""
         self._attr_command_template = command_template
         if command_template is None:
             return
 
+        self._entity = entity
+
         command_template.hass = hass
+
+        if entity:
+            command_template.hass = entity.hass
 
     @callback
     def async_render(
         self,
         value: PublishPayloadType = None,
-        variables: template.TemplateVarsType = None,
+        variables: TemplateVarsType = None,
     ) -> PublishPayloadType:
         """Render or convert the command template with given value or variables."""
 
@@ -293,10 +327,69 @@ class MqttCommandTemplate:
             return value
 
         values = {"value": value}
+        if self._entity:
+            values[ATTR_ENTITY_ID] = self._entity.entity_id
+            values[ATTR_NAME] = self._entity.name
         if variables is not None:
             values.update(variables)
         return _convert_outgoing_payload(
             self._attr_command_template.async_render(values, parse_result=False)
+        )
+
+
+class MqttValueTemplate:
+    """Class for rendering MQTT value template with possible json values."""
+
+    def __init__(
+        self,
+        value_template: template.Template | None,
+        *,
+        hass: HomeAssistant | None = None,
+        entity: Entity | None = None,
+        config_attributes: TemplateVarsType = None,
+    ) -> None:
+        """Instantiate a value template."""
+        self._value_template = value_template
+        self._config_attributes = config_attributes
+        if value_template is None:
+            return
+
+        value_template.hass = hass
+        self._entity = entity
+
+        if entity:
+            value_template.hass = entity.hass
+
+    @callback
+    def async_render_with_possible_json_value(
+        self,
+        payload: ReceivePayloadType,
+        default: ReceivePayloadType | object = _SENTINEL,
+        variables: TemplateVarsType = None,
+    ) -> ReceivePayloadType:
+        """Render with possible json value or pass-though a received MQTT value."""
+        if self._value_template is None:
+            return payload
+
+        values: dict[str, Any] = {}
+
+        if variables is not None:
+            values.update(variables)
+
+        if self._config_attributes is not None:
+            values.update(self._config_attributes)
+
+        if self._entity:
+            values[ATTR_ENTITY_ID] = self._entity.entity_id
+            values[ATTR_NAME] = self._entity.name
+
+        if default == _SENTINEL:
+            return self._value_template.async_render_with_possible_json_value(
+                payload, variables=values
+            )
+
+        return self._value_template.async_render_with_possible_json_value(
+            payload, default, variables=values
         )
 
 
@@ -326,28 +419,53 @@ class MqttServiceInfo(BaseServiceInfo):
         return getattr(self, name)
 
 
-def _build_publish_data(topic: Any, qos: int, retain: bool) -> ServiceDataType:
-    """Build the arguments for the publish service without the payload."""
-    data = {ATTR_TOPIC: topic}
-    if qos is not None:
-        data[ATTR_QOS] = qos
-    if retain is not None:
-        data[ATTR_RETAIN] = retain
-    return data
-
-
-def publish(hass: HomeAssistant, topic, payload, qos=0, retain=False) -> None:
-    """Publish message to an MQTT topic."""
-    hass.add_job(async_publish, hass, topic, payload, qos, retain)
+def publish(
+    hass: HomeAssistant,
+    topic: str,
+    payload: PublishPayloadType,
+    qos: int | None = 0,
+    retain: bool | None = False,
+    encoding: str | None = DEFAULT_ENCODING,
+) -> None:
+    """Publish message to a MQTT topic."""
+    hass.add_job(async_publish, hass, topic, payload, qos, retain, encoding)
 
 
 async def async_publish(
-    hass: HomeAssistant, topic: Any, payload, qos=0, retain=False
+    hass: HomeAssistant,
+    topic: str,
+    payload: PublishPayloadType,
+    qos: int | None = 0,
+    retain: bool | None = False,
+    encoding: str | None = DEFAULT_ENCODING,
 ) -> None:
-    """Publish message to an MQTT topic."""
-    await hass.data[DATA_MQTT].async_publish(
-        topic, str(payload) if not isinstance(payload, bytes) else payload, qos, retain
-    )
+    """Publish message to a MQTT topic."""
+
+    outgoing_payload = payload
+    if not isinstance(payload, bytes):
+        if not encoding:
+            _LOGGER.error(
+                "Can't pass-through payload for publishing %s on %s with no encoding set, need 'bytes' got %s",
+                payload,
+                topic,
+                type(payload),
+            )
+            return
+        outgoing_payload = str(payload)
+        if encoding != DEFAULT_ENCODING:
+            # a string is encoded as utf-8 by default, other encoding requires bytes as payload
+            try:
+                outgoing_payload = outgoing_payload.encode(encoding)
+            except (AttributeError, LookupError, UnicodeEncodeError):
+                _LOGGER.error(
+                    "Can't encode payload for publishing %s on %s with encoding %s",
+                    payload,
+                    topic,
+                    encoding,
+                )
+                return
+
+    await hass.data[DATA_MQTT].async_publish(topic, outgoing_payload, qos, retain)
 
 
 AsyncDeprecatedMessageCallbackType = Callable[
@@ -475,24 +593,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_subscribe)
     websocket_api.async_register_command(hass, websocket_remove_device)
     websocket_api.async_register_command(hass, websocket_mqtt_info)
+    debug_info.initialize(hass)
 
-    if conf is None:
-        # If we have a config entry, setup is done by that config entry.
-        # If there is no config entry, this should fail.
-        return bool(hass.config_entries.async_entries(DOMAIN))
+    if conf:
+        conf = dict(conf)
+        hass.data[DATA_MQTT_CONFIG] = conf
 
-    conf = dict(conf)
-
-    hass.data[DATA_MQTT_CONFIG] = conf
-
-    # Only import if we haven't before.
-    if not hass.config_entries.async_entries(DOMAIN):
+    if not bool(hass.config_entries.async_entries(DOMAIN)):
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
+                DOMAIN,
+                context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+                data={},
             )
         )
-
     return True
 
 
@@ -501,18 +615,10 @@ def _merge_config(entry, conf):
     return {**conf, **entry.data}
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
-    conf = hass.data.get(DATA_MQTT_CONFIG)
-
-    # Config entry was created because user had configuration.yaml entry
-    # They removed that, so remove entry.
-    if conf is None and entry.source == config_entries.SOURCE_IMPORT:
-        hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-        return False
-
     # If user didn't have configuration.yaml config, generate defaults
-    if conf is None:
+    if (conf := hass.data.get(DATA_MQTT_CONFIG)) is None:
         conf = CONFIG_SCHEMA({DOMAIN: dict(entry.data)})[DOMAIN]
     elif any(key in conf for key in entry.data):
         shared_keys = conf.keys() & entry.data.keys()
@@ -541,7 +647,7 @@ async def async_setup_entry(hass, entry):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt)
 
-    async def async_publish_service(call: ServiceCall):
+    async def async_publish_service(call: ServiceCall) -> None:
         """Handle MQTT publish service calls."""
         msg_topic = call.data.get(ATTR_TOPIC)
         msg_topic_template = call.data.get(ATTR_TOPIC_TEMPLATE)
@@ -555,7 +661,7 @@ async def async_setup_entry(hass, entry):
                     msg_topic_template, hass
                 ).async_render(parse_result=False)
                 msg_topic = valid_publish_topic(rendered_topic)
-            except (template.jinja2.TemplateError, TemplateError) as exc:
+            except (jinja2.TemplateError, TemplateError) as exc:
                 _LOGGER.error(
                     "Unable to publish: rendering topic template of %s "
                     "failed because %s",
@@ -576,9 +682,9 @@ async def async_setup_entry(hass, entry):
         if payload_template is not None:
             try:
                 payload = MqttCommandTemplate(
-                    template.Template(payload_template), hass
+                    template.Template(payload_template), hass=hass
                 ).async_render()
-            except (template.jinja2.TemplateError, TemplateError) as exc:
+            except (jinja2.TemplateError, TemplateError) as exc:
                 _LOGGER.error(
                     "Unable to publish to %s: rendering payload template of "
                     "%s failed because %s",
@@ -594,7 +700,7 @@ async def async_setup_entry(hass, entry):
         DOMAIN, SERVICE_PUBLISH, async_publish_service, schema=MQTT_PUBLISH_SCHEMA
     )
 
-    async def async_dump_service(call: ServiceCall):
+    async def async_dump_service(call: ServiceCall) -> None:
         """Handle MQTT dump service calls."""
         messages = []
 
@@ -630,6 +736,15 @@ async def async_setup_entry(hass, entry):
 
     if conf.get(CONF_DISCOVERY):
         await _async_setup_discovery(hass, conf, entry)
+
+    if DATA_MQTT_RELOAD_NEEDED in hass.data:
+        hass.data.pop(DATA_MQTT_RELOAD_NEEDED)
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=False,
+        )
 
     return True
 
@@ -685,7 +800,9 @@ class MQTT:
         self.config_entry.add_update_listener(self.async_config_entry_updated)
 
     @staticmethod
-    async def async_config_entry_updated(hass, entry) -> None:
+    async def async_config_entry_updated(
+        hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
         """Handle signals of config entry being updated.
 
         This is a static method because a class method (bound method), can not be used with weak references.
@@ -789,7 +906,7 @@ class MQTT:
 
     async def async_connect(self) -> None:
         """Connect to the host. Does not process messages yet."""
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         import paho.mqtt.client as mqtt
 
         result: int | None = None
@@ -894,7 +1011,7 @@ class MQTT:
         Resubscribe to all topics we were subscribed to and publish birth
         message.
         """
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         import paho.mqtt.client as mqtt
 
         if result_code != mqtt.CONNACK_ACCEPTED:
@@ -1053,7 +1170,7 @@ class MQTT:
 
 def _raise_on_error(result_code: int | None) -> None:
     """Raise error if error result."""
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     import paho.mqtt.client as mqtt
 
     if result_code is not None and result_code != 0:
@@ -1063,7 +1180,7 @@ def _raise_on_error(result_code: int | None) -> None:
 
 
 def _matcher_for_topic(subscription: str) -> Any:
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from paho.mqtt.matcher import MQTTMatcher
 
     matcher = MQTTMatcher()
@@ -1075,11 +1192,11 @@ def _matcher_for_topic(subscription: str) -> Any:
 @websocket_api.websocket_command(
     {vol.Required("type"): "mqtt/device/debug_info", vol.Required("device_id"): str}
 )
-@websocket_api.async_response
-async def websocket_mqtt_info(hass, connection, msg):
+@callback
+def websocket_mqtt_info(hass, connection, msg):
     """Get MQTT debug info for device."""
     device_id = msg["device_id"]
-    mqtt_info = await debug_info.info_for_device(hass, device_id)
+    mqtt_info = debug_info.info_for_device(hass, device_id)
 
     connection.send_result(msg["id"], mqtt_info)
 
@@ -1091,9 +1208,9 @@ async def websocket_mqtt_info(hass, connection, msg):
 async def websocket_remove_device(hass, connection, msg):
     """Delete device."""
     device_id = msg["device_id"]
-    dev_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
 
-    if not (device := dev_registry.async_get(device_id)):
+    if not (device := device_registry.async_get(device_id)):
         connection.send_error(
             msg["id"], websocket_api.const.ERR_NOT_FOUND, "Device not found"
         )
@@ -1103,7 +1220,10 @@ async def websocket_remove_device(hass, connection, msg):
         config_entry = hass.config_entries.async_get_entry(config_entry)
         # Only delete the device if it belongs to an MQTT device entry
         if config_entry.domain == DOMAIN:
-            dev_registry.async_remove_device(device_id)
+            await async_remove_config_entry_device(hass, config_entry, device)
+            device_registry.async_update_device(
+                device_id, remove_config_entry_id=config_entry.entry_id
+            )
             connection.send_message(websocket_api.result_message(msg["id"]))
             return
 
@@ -1181,3 +1301,14 @@ def async_subscribe_connection_status(
 def is_connected(hass: HomeAssistant) -> bool:
     """Return if MQTT client is connected."""
     return hass.data[DATA_MQTT].connected
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove MQTT config entry from a device."""
+    # pylint: disable-next=import-outside-toplevel
+    from . import device_automation
+
+    await device_automation.async_removed_from_device(hass, device_entry.id)
+    return True

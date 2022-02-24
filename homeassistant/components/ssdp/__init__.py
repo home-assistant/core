@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import timedelta
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.const import DeviceOrServiceType, SsdpHeaders, SsdpSource
@@ -30,7 +30,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_ssdp, bind_hass
 
 DOMAIN = "ssdp"
-SCAN_INTERVAL = timedelta(seconds=60)
+SCAN_INTERVAL = timedelta(minutes=2)
 
 IPV4_BROADCAST = IPv4Address("255.255.255.255")
 
@@ -472,22 +472,24 @@ class Scanner:
         )
 
         location = ssdp_device.location
-        info_desc = await self._async_get_description_dict(location) or {}
+        info_desc = None
         combined_headers = ssdp_device.combined_headers(dst)
-        info_with_desc = CaseInsensitiveDict(combined_headers, **info_desc)
-
         callbacks = self._async_get_matching_callbacks(combined_headers)
         matching_domains: set[str] = set()
 
         # If there are no changes from a search, do not trigger a config flow
         if source != SsdpSource.SEARCH_ALIVE:
+            info_desc = await self._async_get_description_dict(location) or {}
+            assert isinstance(combined_headers, CaseInsensitiveDict)
             matching_domains = self.integration_matchers.async_matching_domains(
-                info_with_desc
+                CaseInsensitiveDict({**combined_headers.as_dict(), **info_desc})
             )
 
         if not callbacks and not matching_domains:
             return
 
+        if info_desc is None:
+            info_desc = await self._async_get_description_dict(location) or {}
         discovery_info = discovery_info_from_headers_and_description(
             combined_headers, info_desc
         )
@@ -565,7 +567,10 @@ def discovery_info_from_headers_and_description(
     """Convert headers and description to discovery_info."""
     ssdp_usn = combined_headers["usn"]
     ssdp_st = combined_headers.get("st")
-    upnp_info = {**info_desc}
+    if isinstance(info_desc, CaseInsensitiveDict):
+        upnp_info = {**info_desc.as_dict()}
+    else:
+        upnp_info = {**info_desc}
 
     # Increase compatibility: depending on the message type,
     # either the ST (Search Target, from M-SEARCH messages)

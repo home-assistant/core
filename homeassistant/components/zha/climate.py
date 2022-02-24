@@ -60,6 +60,7 @@ from .core.const import (
     DATA_ZHA,
     PRESET_COMPLEX,
     PRESET_SCHEDULE,
+    PRESET_TEMP_MANUAL,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -124,7 +125,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up the Zigbee Home Automation sensor from config entry."""
     entities_to_create = hass.data[DATA_ZHA][Platform.CLIMATE]
     unsub = async_dispatcher_connect(
@@ -430,14 +431,10 @@ class Thermostat(ZhaEntity, ClimateEntity):
             self.debug("preset mode '%s' is not supported", preset_mode)
             return
 
-        if (
-            self.preset_mode
-            not in (
-                preset_mode,
-                PRESET_NONE,
-            )
-            and not await self.async_preset_handler(self.preset_mode, enable=False)
-        ):
+        if self.preset_mode not in (
+            preset_mode,
+            PRESET_NONE,
+        ) and not await self.async_preset_handler(self.preset_mode, enable=False):
             self.debug("Couldn't turn off '%s' preset", self.preset_mode)
             return
 
@@ -601,7 +598,6 @@ class CentralitePearl(ZenWithinThermostat):
         "_TZE200_ckud7u2l",
         "_TZE200_ywdxldoj",
         "_TZE200_cwnjrr72",
-        "_TZE200_b6wax7g0",
         "_TZE200_2atgpdho",
         "_TZE200_pvvbommb",
         "_TZE200_4eeyebrt",
@@ -685,3 +681,93 @@ class MoesThermostat(Thermostat):
             )
 
         return False
+
+
+@STRICT_MATCH(
+    channel_names=CHANNEL_THERMOSTAT,
+    manufacturers={
+        "_TZE200_b6wax7g0",
+    },
+)
+class BecaThermostat(Thermostat):
+    """Beca Thermostat implementation."""
+
+    def __init__(self, unique_id, zha_device, channels, **kwargs):
+        """Initialize ZHA Thermostat instance."""
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+        self._presets = [
+            PRESET_NONE,
+            PRESET_AWAY,
+            PRESET_SCHEDULE,
+            PRESET_ECO,
+            PRESET_BOOST,
+            PRESET_TEMP_MANUAL,
+        ]
+        self._supported_flags |= SUPPORT_PRESET_MODE
+
+    @property
+    def hvac_modes(self) -> tuple[str, ...]:
+        """Return only the heat mode, because the device can't be turned off."""
+        return (HVAC_MODE_HEAT,)
+
+    async def async_attribute_updated(self, record):
+        """Handle attribute update from device."""
+        if record.attr_name == "operation_preset":
+            if record.value == 0:
+                self._preset = PRESET_AWAY
+            if record.value == 1:
+                self._preset = PRESET_SCHEDULE
+            if record.value == 2:
+                self._preset = PRESET_NONE
+            if record.value == 4:
+                self._preset = PRESET_ECO
+            if record.value == 5:
+                self._preset = PRESET_BOOST
+            if record.value == 7:
+                self._preset = PRESET_TEMP_MANUAL
+        await super().async_attribute_updated(record)
+
+    async def async_preset_handler(self, preset: str, enable: bool = False) -> bool:
+        """Set the preset mode."""
+        mfg_code = self._zha_device.manufacturer_code
+        if not enable:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 2}, manufacturer=mfg_code
+            )
+        if preset == PRESET_AWAY:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 0}, manufacturer=mfg_code
+            )
+        if preset == PRESET_SCHEDULE:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 1}, manufacturer=mfg_code
+            )
+        if preset == PRESET_ECO:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 4}, manufacturer=mfg_code
+            )
+        if preset == PRESET_BOOST:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 5}, manufacturer=mfg_code
+            )
+        if preset == PRESET_TEMP_MANUAL:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 7}, manufacturer=mfg_code
+            )
+
+        return False
+
+
+@MULTI_MATCH(
+    channel_names=CHANNEL_THERMOSTAT,
+    manufacturers="Stelpro",
+    models={"SORB"},
+    stop_on_match_group=CHANNEL_THERMOSTAT,
+)
+class StelproFanHeater(Thermostat):
+    """Stelpro Fan Heater implementation."""
+
+    @property
+    def hvac_modes(self) -> tuple[str, ...]:
+        """Return only the heat mode, because the device can't be turned off."""
+        return (HVAC_MODE_HEAT,)

@@ -45,6 +45,7 @@ from .const import (
     CONF_KNX_INDIVIDUAL_ADDRESS,
     CONF_KNX_ROUTING,
     CONF_KNX_TUNNELING,
+    CONF_KNX_TUNNELING_TCP,
     DATA_HASS_CONFIG,
     DATA_KNX_CONFIG,
     DOMAIN,
@@ -82,6 +83,7 @@ CONF_KNX_EVENT_FILTER: Final = "event_filter"
 SERVICE_KNX_SEND: Final = "send"
 SERVICE_KNX_ATTR_PAYLOAD: Final = "payload"
 SERVICE_KNX_ATTR_TYPE: Final = "type"
+SERVICE_KNX_ATTR_RESPONSE: Final = "response"
 SERVICE_KNX_ATTR_REMOVE: Final = "remove"
 SERVICE_KNX_EVENT_REGISTER: Final = "event_register"
 SERVICE_KNX_EXPOSURE_REGISTER: Final = "exposure_register"
@@ -142,6 +144,7 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
             ),
             vol.Required(SERVICE_KNX_ATTR_PAYLOAD): cv.match_all,
             vol.Required(SERVICE_KNX_ATTR_TYPE): sensor_type_validator,
+            vol.Optional(SERVICE_KNX_ATTR_RESPONSE, default=False): cv.boolean,
         }
     ),
     vol.Schema(
@@ -154,6 +157,7 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
             vol.Required(SERVICE_KNX_ATTR_PAYLOAD): vol.Any(
                 cv.positive_int, [cv.positive_int]
             ),
+            vol.Optional(SERVICE_KNX_ATTR_RESPONSE, default=False): cv.boolean,
         }
     ),
 )
@@ -206,7 +210,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return bool(hass.config_entries.async_entries(DOMAIN))
 
     conf = dict(conf)
-
     hass.data[DATA_KNX_CONFIG] = conf
 
     # Only import if we haven't before.
@@ -222,20 +225,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
-    conf = hass.data.get(DATA_KNX_CONFIG)
-
-    #  When reloading
-    if conf is None:
-        conf = await async_integration_yaml_config(hass, DOMAIN)
-        if not conf or DOMAIN not in conf:
-            return False
-
-        conf = conf[DOMAIN]
-
-    # If user didn't have configuration.yaml config, generate defaults
-    if conf is None:
-        conf = CONFIG_SCHEMA({DOMAIN: dict(entry.data)})[DOMAIN]
-
+    # `conf` is None when reloading the integration or no `knx` key in configuration.yaml
+    if (conf := hass.data.get(DATA_KNX_CONFIG)) is None:
+        _conf = await async_integration_yaml_config(hass, DOMAIN)
+        if not _conf or DOMAIN not in _conf:
+            _LOGGER.warning(
+                "No `knx:` key found in configuration.yaml. See "
+                "https://www.home-assistant.io/integrations/knx/ "
+                "for KNX entity configuration documentation"
+            )
+            # generate defaults
+            conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
+        else:
+            conf = _conf[DOMAIN]
     config = {**conf, **entry.data}
 
     try:
@@ -266,7 +268,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if NotifySchema.PLATFORM in config:
         hass.async_create_task(
             discovery.async_load_platform(
-                hass, "notify", DOMAIN, {}, hass.data[DATA_HASS_CONFIG]
+                hass, Platform.NOTIFY, DOMAIN, {}, hass.data[DATA_HASS_CONFIG]
             )
         )
 
@@ -363,7 +365,6 @@ class KNXModule:
         self.entry.async_on_unload(
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
         )
-
         self.entry.async_on_unload(self.entry.add_update_listener(async_update_entry))
 
     def init_xknx(self) -> None:
@@ -403,7 +404,13 @@ class KNXModule:
                 route_back=self.config.get(ConnectionSchema.CONF_KNX_ROUTE_BACK, False),
                 auto_reconnect=True,
             )
-
+        if _conn_type == CONF_KNX_TUNNELING_TCP:
+            return ConnectionConfig(
+                connection_type=ConnectionType.TUNNELING_TCP,
+                gateway_ip=self.config[CONF_HOST],
+                gateway_port=self.config[CONF_PORT],
+                auto_reconnect=True,
+            )
         return ConnectionConfig(auto_reconnect=True)
 
     async def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
@@ -538,7 +545,7 @@ class KNXModule:
                 replaced_exposure.device.name,
             )
             replaced_exposure.shutdown()
-        exposure = create_knx_exposure(self.hass, self.xknx, call.data)  # type: ignore[arg-type]
+        exposure = create_knx_exposure(self.hass, self.xknx, call.data)
         self.service_exposures[group_address] = exposure
         _LOGGER.debug(
             "Service exposure_register registered exposure for '%s' - %s",
@@ -551,6 +558,7 @@ class KNXModule:
         attr_address = call.data[KNX_ADDRESS]
         attr_payload = call.data[SERVICE_KNX_ATTR_PAYLOAD]
         attr_type = call.data.get(SERVICE_KNX_ATTR_TYPE)
+        attr_response = call.data[SERVICE_KNX_ATTR_RESPONSE]
 
         payload: DPTBinary | DPTArray
         if attr_type is not None:
@@ -566,7 +574,9 @@ class KNXModule:
         for address in attr_address:
             telegram = Telegram(
                 destination_address=parse_device_group_address(address),
-                payload=GroupValueWrite(payload),
+                payload=GroupValueResponse(payload)
+                if attr_response
+                else GroupValueWrite(payload),
             )
             await self.xknx.telegrams.put(telegram)
 

@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/tank_utility",
   "requirements": ["tank_utility==1.4.0"],
   "codeowners": [],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["tank_utility"]
 }

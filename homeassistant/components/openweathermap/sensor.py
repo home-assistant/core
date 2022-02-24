@@ -9,7 +9,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -71,7 +70,7 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
     """Abstract class for an OpenWeatherMap sensor."""
 
     _attr_should_poll = False
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
@@ -93,11 +92,6 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
             manufacturer=MANUFACTURER,
             name=DEFAULT_NAME,
         )
-
-    @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return ATTRIBUTION
 
     @property
     def available(self) -> bool:

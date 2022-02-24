@@ -3,23 +3,18 @@ from unittest.mock import patch
 
 from PyViCare.PyViCareUtils import PyViCareInvalidCredentialsError
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp
-from homeassistant.components.vicare.const import (
-    CONF_CIRCUIT,
-    CONF_HEATING_TYPE,
-    DOMAIN,
-)
+from homeassistant.components.vicare.const import CONF_CIRCUIT, DOMAIN, VICARE_NAME
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 
-from . import ENTRY_CONFIG, MOCK_MAC
+from . import ENTRY_CONFIG, ENTRY_CONFIG_NO_HEATING_TYPE, MOCK_MAC
 
 from tests.common import MockConfigEntry
 
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -54,7 +49,6 @@ async def test_form(hass):
 
 async def test_import(hass):
     """Test that the import works."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.vicare.config_flow.vicare_login",
@@ -71,7 +65,7 @@ async def test_import(hass):
             data=ENTRY_CONFIG,
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "Configuration.yaml"
+        assert result["title"] == VICARE_NAME
         assert result["data"] == ENTRY_CONFIG
 
         await hass.async_block_till_done()
@@ -81,7 +75,6 @@ async def test_import(hass):
 
 async def test_import_removes_circuit(hass):
     """Test that the import works."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.vicare.config_flow.vicare_login",
@@ -99,7 +92,7 @@ async def test_import_removes_circuit(hass):
             data=ENTRY_CONFIG,
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "Configuration.yaml"
+        assert result["title"] == VICARE_NAME
         assert result["data"] == ENTRY_CONFIG
 
         await hass.async_block_till_done()
@@ -109,7 +102,6 @@ async def test_import_removes_circuit(hass):
 
 async def test_import_adds_heating_type(hass):
     """Test that the import works."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.vicare.config_flow.vicare_login",
@@ -120,14 +112,13 @@ async def test_import_adds_heating_type(hass):
         "homeassistant.components.vicare.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        del ENTRY_CONFIG[CONF_HEATING_TYPE]
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data=ENTRY_CONFIG,
+            data=ENTRY_CONFIG_NO_HEATING_TYPE,
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "Configuration.yaml"
+        assert result["title"] == VICARE_NAME
         assert result["data"] == ENTRY_CONFIG
 
         await hass.async_block_till_done()
@@ -162,7 +153,6 @@ async def test_invalid_login(hass) -> None:
 
 async def test_form_dhcp(hass):
     """Test we can setup from dhcp."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -203,29 +193,10 @@ async def test_form_dhcp(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_import_already_configured(hass):
-    """Test that configuring same instance is rejectes."""
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="Configuration.yaml",
-        data=ENTRY_CONFIG,
-    )
-    mock_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=ENTRY_CONFIG,
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
-
-
 async def test_import_single_instance_allowed(hass):
     """Test that configuring more than one instance is rejected."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="Configuration.yaml",
         data=ENTRY_CONFIG,
     )
     mock_entry.add_to_hass(hass)
@@ -236,14 +207,13 @@ async def test_import_single_instance_allowed(hass):
         data=ENTRY_CONFIG,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_dhcp_single_instance_allowed(hass):
     """Test that configuring more than one instance is rejected."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="Configuration.yaml",
         data=ENTRY_CONFIG,
     )
     mock_entry.add_to_hass(hass)
@@ -263,7 +233,6 @@ async def test_dhcp_single_instance_allowed(hass):
 
 async def test_user_input_single_instance_allowed(hass):
     """Test that configuring more than one instance is rejected."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="ViCare",

@@ -4,6 +4,7 @@ import threading
 
 import pychromecast
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -39,14 +40,14 @@ def discover_chromecast(
     dispatcher_send(hass, SIGNAL_CAST_DISCOVERED, info)
 
 
-def _remove_chromecast(hass: HomeAssistant, info: ChromecastInfo):
+def _remove_chromecast(hass: HomeAssistant, info: ChromecastInfo) -> None:
     # Removed chromecast
     _LOGGER.debug("Removed chromecast %s", info)
 
     dispatcher_send(hass, SIGNAL_CAST_REMOVED, info)
 
 
-def setup_internal_discovery(hass: HomeAssistant, config_entry) -> None:
+def setup_internal_discovery(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Set up the pychromecast internal discovery."""
     if INTERNAL_DISCOVERY_RUNNING_KEY not in hass.data:
         hass.data[INTERNAL_DISCOVERY_RUNNING_KEY] = threading.Lock()
@@ -95,7 +96,7 @@ def setup_internal_discovery(hass: HomeAssistant, config_entry) -> None:
     config_entry.add_update_listener(config_entry_updated)
 
 
-async def config_entry_updated(hass, config_entry):
+async def config_entry_updated(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Handle config entry being updated."""
     browser = hass.data[CAST_BROWSER_KEY]
     browser.host_browser.update_hosts(config_entry.data.get(CONF_KNOWN_HOSTS))

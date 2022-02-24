@@ -1,4 +1,6 @@
 """Component for controlling Pandora stations through the pianobar client."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 import os
@@ -31,6 +33,9 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,10 +62,15 @@ CURRENT_SONG_PATTERN = re.compile(r'"(.*?)"\s+by\s+"(.*?)"\son\s+"(.*?)"', re.MU
 STATION_PATTERN = re.compile(r'Station\s"(.+?)"', re.MULTILINE)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Pandora media player platform."""
     if not _pianobar_exists():
-        return False
+        return
     pandora = PandoraMediaPlayer("Pandora")
 
     # Make sure we end the pandora subprocess on exit in case user doesn't
@@ -243,7 +253,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         try:
             match_idx = self._pianobar.expect(
                 [
-                    br"(\d\d):(\d\d)/(\d\d):(\d\d)",
+                    rb"(\d\d):(\d\d)/(\d\d):(\d\d)",
                     "No song playing",
                     "Select station",
                     "Receiving new playlist",

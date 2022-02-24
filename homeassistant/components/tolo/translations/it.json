@@ -16,7 +16,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Inserisci il nome host o l'indirizzo IP del tuo dispositivo TOLO Sauna."
+                "description": "Digita il nome host o l'indirizzo IP del tuo dispositivo TOLO Sauna."
             }
         }
     }

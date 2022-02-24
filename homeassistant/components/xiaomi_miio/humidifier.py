@@ -8,8 +8,10 @@ from miio.airhumidifier_mjjsq import OperationMode as AirhumidifierMjjsqOperatio
 
 from homeassistant.components.humidifier import HumidifierDeviceClass, HumidifierEntity
 from homeassistant.components.humidifier.const import SUPPORT_MODES
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODE
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import percentage_to_ranged_value
 
 from .const import (
@@ -55,7 +57,11 @@ AVAILABLE_MODES_OTHER = [
 ]
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Humidifier from a config entry."""
     if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         return

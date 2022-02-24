@@ -10,7 +10,8 @@ import voluptuous as vol
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
-import homeassistant.helpers.config_validation as cv
+
+from . import config_validation as cv
 
 
 class _BaseFlowManagerView(HomeAssistantView):
@@ -69,7 +70,7 @@ class FlowManagerIndexView(_BaseFlowManagerView):
 
         try:
             result = await self._flow_mgr.async_init(
-                handler,  # type: ignore
+                handler,  # type: ignore[arg-type]
                 context={
                     "source": config_entries.SOURCE_USER,
                     "show_advanced_options": data["show_advanced_options"],

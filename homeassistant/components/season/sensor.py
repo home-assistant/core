@@ -1,14 +1,21 @@
 """Support for tracking which astronomical or meteorological season it is."""
-from datetime import datetime
+from __future__ import annotations
+
+from datetime import date, datetime
 import logging
 
 import ephem
 import voluptuous as vol
 
-from homeassistant import util
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_NAME, CONF_TYPE
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,7 +52,7 @@ SEASON_ICONS = {
 }
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_TYPE, default=TYPE_ASTRONOMICAL): vol.In(VALID_TYPES),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -53,53 +60,53 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Display the current season."""
-    if None in (hass.config.latitude, hass.config.longitude):
-        _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return False
+    _type: str = config[CONF_TYPE]
+    name: str = config[CONF_NAME]
 
-    latitude = util.convert(hass.config.latitude, float)
-    _type = config.get(CONF_TYPE)
-    name = config.get(CONF_NAME)
-
-    if latitude < 0:
+    if hass.config.latitude < 0:
         hemisphere = SOUTHERN
-    elif latitude > 0:
+    elif hass.config.latitude > 0:
         hemisphere = NORTHERN
     else:
         hemisphere = EQUATOR
 
     _LOGGER.debug(_type)
-    add_entities([Season(hass, hemisphere, _type, name)], True)
-
-    return True
+    add_entities([Season(hemisphere, _type, name)], True)
 
 
-def get_season(date, hemisphere, season_tracking_type):
+def get_season(
+    current_date: date, hemisphere: str, season_tracking_type: str
+) -> str | None:
     """Calculate the current season."""
 
     if hemisphere == "equator":
         return None
 
     if season_tracking_type == TYPE_ASTRONOMICAL:
-        spring_start = ephem.next_equinox(str(date.year)).datetime()
-        summer_start = ephem.next_solstice(str(date.year)).datetime()
+        spring_start = ephem.next_equinox(str(current_date.year)).datetime()
+        summer_start = ephem.next_solstice(str(current_date.year)).datetime()
         autumn_start = ephem.next_equinox(spring_start).datetime()
         winter_start = ephem.next_solstice(summer_start).datetime()
     else:
-        spring_start = datetime(2017, 3, 1).replace(year=date.year)
+        spring_start = datetime(2017, 3, 1).replace(year=current_date.year)
         summer_start = spring_start.replace(month=6)
         autumn_start = spring_start.replace(month=9)
         winter_start = spring_start.replace(month=12)
 
-    if spring_start <= date < summer_start:
+    if spring_start <= current_date < summer_start:
         season = STATE_SPRING
-    elif summer_start <= date < autumn_start:
+    elif summer_start <= current_date < autumn_start:
         season = STATE_SUMMER
-    elif autumn_start <= date < winter_start:
+    elif autumn_start <= current_date < winter_start:
         season = STATE_AUTUMN
-    elif winter_start <= date or spring_start > date:
+    elif winter_start <= current_date or spring_start > current_date:
         season = STATE_WINTER
 
     # If user is located in the southern hemisphere swap the season
@@ -111,36 +118,20 @@ def get_season(date, hemisphere, season_tracking_type):
 class Season(SensorEntity):
     """Representation of the current season."""
 
-    def __init__(self, hass, hemisphere, season_tracking_type, name):
+    _attr_device_class = "season__season"
+
+    def __init__(self, hemisphere: str, season_tracking_type: str, name: str) -> None:
         """Initialize the season."""
-        self.hass = hass
-        self._name = name
+        self._attr_name = name
         self.hemisphere = hemisphere
-        self.datetime = None
         self.type = season_tracking_type
-        self.season = None
 
-    @property
-    def name(self):
-        """Return the name."""
-        return self._name
-
-    @property
-    def native_value(self):
-        """Return the current season."""
-        return self.season
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return "season__season"
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return SEASON_ICONS.get(self.season, "mdi:cloud")
-
-    def update(self):
+    def update(self) -> None:
         """Update season."""
-        self.datetime = utcnow().replace(tzinfo=None)
-        self.season = get_season(self.datetime, self.hemisphere, self.type)
+        self._attr_native_value = get_season(
+            utcnow().replace(tzinfo=None), self.hemisphere, self.type
+        )
+
+        self._attr_icon = "mdi:cloud"
+        if self._attr_native_value:
+            self._attr_icon = SEASON_ICONS[self._attr_native_value]

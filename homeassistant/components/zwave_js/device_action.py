@@ -14,7 +14,15 @@ from zwave_js_server.util.command_class.meter import get_meter_type
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_ENTITY_ID, CONF_TYPE
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_DOMAIN,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    CONF_ENTITY_ID,
+    CONF_TYPE,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
@@ -45,6 +53,7 @@ from .const import (
 from .device_automation_helpers import (
     CONF_SUBTYPE,
     VALUE_ID_REGEX,
+    generate_config_parameter_subtype,
     get_config_parameter_value_schema,
 )
 from .helpers import async_get_node_from_device_id
@@ -157,7 +166,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
                 CONF_TYPE: SERVICE_SET_CONFIG_PARAMETER,
                 ATTR_CONFIG_PARAMETER: config_value.property_,
                 ATTR_CONFIG_PARAMETER_BITMASK: config_value.property_key,
-                CONF_SUBTYPE: f"{config_value.value_id} ({config_value.property_name})",
+                CONF_SUBTYPE: generate_config_parameter_subtype(config_value),
             }
             for config_value in node.get_configuration_values().values()
         ]
@@ -165,7 +174,17 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
 
     meter_endpoints: dict[int, dict[str, Any]] = defaultdict(dict)
 
-    for entry in entity_registry.async_entries_for_device(registry, device_id):
+    for entry in entity_registry.async_entries_for_device(
+        registry, device_id, include_disabled_entities=False
+    ):
+        # If an entry is unavailable, it is possible that the underlying value
+        # is no longer valid. Additionally, if an entry is disabled, its
+        # underlying value is not being monitored by HA so we shouldn't allow
+        # actions against it.
+        if (
+            state := hass.states.get(entry.entity_id)
+        ) and state.state == STATE_UNAVAILABLE:
+            continue
         entity_action = {**base_action, CONF_ENTITY_ID: entry.entity_id}
         actions.append({**entity_action, CONF_TYPE: SERVICE_REFRESH_VALUE})
         if entry.domain == LOCK_DOMAIN:
@@ -180,10 +199,9 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
             value_id = entry.unique_id.split(".")[1]
             # If this unique ID doesn't have a value ID, we know it is the node status
             # sensor which doesn't have any relevant actions
-            if re.match(VALUE_ID_REGEX, value_id):
-                value = node.values[value_id]
-            else:
+            if not re.match(VALUE_ID_REGEX, value_id):
                 continue
+            value = node.values[value_id]
             # If the value has the meterType CC specific value, we can add a reset_meter
             # action for it
             if CC_SPECIFIC_METER_TYPE in value.metadata.cc_specific:
@@ -227,7 +245,22 @@ async def async_call_action_from_config(
     if action_type not in ACTION_TYPES:
         raise HomeAssistantError(f"Unhandled action type {action_type}")
 
-    service_data = {k: v for k, v in config.items() if v not in (None, "")}
+    # Don't include domain, subtype or any null/empty values in the service call
+    service_data = {
+        k: v
+        for k, v in config.items()
+        if k not in (ATTR_DOMAIN, CONF_SUBTYPE) and v not in (None, "")
+    }
+
+    # Entity services (including refresh value which is a fake entity service) expects
+    # just an entity ID
+    if action_type in (
+        SERVICE_REFRESH_VALUE,
+        SERVICE_SET_LOCK_USERCODE,
+        SERVICE_CLEAR_LOCK_USERCODE,
+        SERVICE_RESET_METER,
+    ):
+        service_data.pop(ATTR_DEVICE_ID)
     await hass.services.async_call(
         DOMAIN, service, service_data, blocking=True, context=context
     )
@@ -283,7 +316,10 @@ async def async_get_action_capabilities(
             "extra_fields": vol.Schema(
                 {
                     vol.Required(ATTR_COMMAND_CLASS): vol.In(
-                        {cc.value: cc.name for cc in CommandClass}
+                        {
+                            CommandClass(cc.id).value: cc.name
+                            for cc in sorted(node.command_classes, key=lambda cc: cc.name)  # type: ignore[no-any-return]
+                        }
                     ),
                     vol.Required(ATTR_PROPERTY): cv.string,
                     vol.Optional(ATTR_PROPERTY_KEY): cv.string,

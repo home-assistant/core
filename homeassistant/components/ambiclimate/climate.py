@@ -1,4 +1,6 @@
 """Support for Ambiclimate ac."""
+from __future__ import annotations
+
 import asyncio
 import logging
 from typing import Any
@@ -12,6 +14,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
     ATTR_TEMPERATURE,
@@ -19,9 +22,12 @@ from homeassistant.const import (
     CONF_CLIENT_SECRET,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     ATTR_VALUE,
@@ -48,12 +54,19 @@ SET_TEMPERATURE_MODE_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Ambicliamte device."""
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the Ambiclimate device."""
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the Ambicliamte device from config entry."""
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Ambiclimate device from config entry."""
     config = entry.data
     websession = async_get_clientsession(hass)
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
@@ -96,7 +109,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async_add_entities(devs, True)
 
-    async def send_comfort_feedback(service):
+    async def send_comfort_feedback(service: ServiceCall) -> None:
         """Send comfort feedback."""
         device_name = service.data[ATTR_NAME]
         device = data_connection.find_device_by_room_name(device_name)
@@ -110,7 +123,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         schema=SEND_COMFORT_FEEDBACK_SCHEMA,
     )
 
-    async def set_comfort_mode(service):
+    async def set_comfort_mode(service: ServiceCall) -> None:
         """Set comfort mode."""
         device_name = service.data[ATTR_NAME]
         device = data_connection.find_device_by_room_name(device_name)
@@ -121,7 +134,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         DOMAIN, SERVICE_COMFORT_MODE, set_comfort_mode, schema=SET_COMFORT_MODE_SCHEMA
     )
 
-    async def set_temperature_mode(service):
+    async def set_temperature_mode(service: ServiceCall) -> None:
         """Set temperature mode."""
         device_name = service.data[ATTR_NAME]
         device = data_connection.find_device_by_room_name(device_name)

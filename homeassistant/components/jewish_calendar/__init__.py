@@ -4,7 +4,7 @@ from __future__ import annotations
 from hdate import Location
 import voluptuous as vol
 
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -97,10 +97,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "prefix": prefix,
     }
 
-    hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
+    hass.async_create_task(
+        async_load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
+    )
 
     hass.async_create_task(
-        async_load_platform(hass, "binary_sensor", DOMAIN, {}, config)
+        async_load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
     )
 
     return True

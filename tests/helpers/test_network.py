@@ -13,6 +13,7 @@ from homeassistant.helpers.network import (
     _get_internal_url,
     _get_request_host,
     get_url,
+    is_hass_url,
     is_internal_request,
 )
 
@@ -480,6 +481,12 @@ async def test_get_url(hass: HomeAssistant):
         get_url(hass, prefer_external=True, allow_external=False)
         == "http://example.local"
     )
+    # Prefer external defaults to True if use_ssl=True
+    hass.config.api = Mock(use_ssl=True)
+    assert get_url(hass) == "https://example.com"
+    hass.config.api = Mock(use_ssl=False)
+    assert get_url(hass) == "http://example.local"
+    hass.config.api = None
 
     with pytest.raises(NoURLAvailableError):
         get_url(hass, allow_external=False, require_ssl=True)
@@ -518,6 +525,19 @@ async def test_get_url(hass: HomeAssistant):
         return_value="no_match.example.com",
     ), pytest.raises(NoURLAvailableError):
         _get_internal_url(hass, require_current_request=True)
+
+    # Test allow_ip defaults when SSL specified
+    await async_process_ha_core_config(
+        hass,
+        {"external_url": "https://1.1.1.1"},
+    )
+    assert hass.config.external_url == "https://1.1.1.1"
+    assert get_url(hass, allow_internal=False) == "https://1.1.1.1"
+    hass.config.api = Mock(use_ssl=False)
+    assert get_url(hass, allow_internal=False) == "https://1.1.1.1"
+    hass.config.api = Mock(use_ssl=True)
+    with pytest.raises(NoURLAvailableError):
+        assert get_url(hass, allow_internal=False)
 
 
 async def test_get_request_host(hass: HomeAssistant):
@@ -626,3 +646,47 @@ async def test_is_internal_request(hass: HomeAssistant):
         "homeassistant.helpers.network._get_request_host", return_value="192.168.0.1"
     ):
         assert is_internal_request(hass)
+
+
+async def test_is_hass_url(hass):
+    """Test is_hass_url."""
+    assert hass.config.api is None
+    assert hass.config.internal_url is None
+    assert hass.config.external_url is None
+
+    assert is_hass_url(hass, "http://example.com") is False
+
+    hass.config.api = Mock(use_ssl=False, port=8123, local_ip="192.168.123.123")
+    assert is_hass_url(hass, "http://192.168.123.123:8123") is True
+    assert is_hass_url(hass, "https://192.168.123.123:8123") is False
+    assert is_hass_url(hass, "http://192.168.123.123") is False
+
+    await async_process_ha_core_config(
+        hass,
+        {"internal_url": "http://example.local:8123"},
+    )
+    assert is_hass_url(hass, "http://example.local:8123") is True
+    assert is_hass_url(hass, "https://example.local:8123") is False
+    assert is_hass_url(hass, "http://example.local") is False
+
+    await async_process_ha_core_config(
+        hass,
+        {"external_url": "https://example.com:443"},
+    )
+    assert is_hass_url(hass, "https://example.com:443") is True
+    assert is_hass_url(hass, "https://example.com") is True
+    assert is_hass_url(hass, "http://example.com:443") is False
+    assert is_hass_url(hass, "http://example.com") is False
+
+    with patch.object(
+        hass.components.cloud,
+        "async_remote_ui_url",
+        return_value="https://example.nabu.casa",
+    ):
+        assert is_hass_url(hass, "https://example.nabu.casa") is False
+
+        hass.config.components.add("cloud")
+        assert is_hass_url(hass, "https://example.nabu.casa:443") is True
+        assert is_hass_url(hass, "https://example.nabu.casa") is True
+        assert is_hass_url(hass, "http://example.nabu.casa:443") is False
+        assert is_hass_url(hass, "http://example.nabu.casa") is False

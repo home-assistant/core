@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     PRESSURE_PSI,
     TEMP_FAHRENHEIT,
     VOLUME_GALLONS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as FLO_DOMAIN
 from .device import FloDeviceDataUpdateCoordinator
@@ -25,7 +28,11 @@ NAME_HUMIDITY = "Humidity"
 NAME_BATTERY = "Battery"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Flo sensors from config entry."""
     devices: list[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][
         config_entry.entry_id

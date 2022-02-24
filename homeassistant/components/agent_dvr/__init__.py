@@ -1,9 +1,10 @@
 """Support for Agent."""
-
 from agent import AgentError
 from agent.a import Agent
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -16,7 +17,7 @@ DEFAULT_BRAND = "Agent DVR by ispyconnect.com"
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.CAMERA]
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Agent component."""
     hass.data.setdefault(AGENT_DOMAIN, {})
 
@@ -52,7 +53,7 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
