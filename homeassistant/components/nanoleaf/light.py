@@ -158,9 +158,6 @@ class NanoleafLight(NanoleafEntity, LightEntity):
                 raise ValueError(
                     f"Attempting to apply effect not in the effect list: '{effect}'"
                 )
-            # reinit hue & saturation because they are unkown when using effects
-            self._nanoleaf._hue = 0
-            self._nanoleaf._saturation = 0
             await self._nanoleaf.set_effect(effect)
         elif hs_color:
             hue, saturation = hs_color
