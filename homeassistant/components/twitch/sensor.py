@@ -5,6 +5,7 @@ import logging
 
 from twitchAPI.twitch import (
     AuthScope,
+    AuthType,
     InvalidTokenException,
     MissingScopeException,
     Twitch,
@@ -85,12 +86,7 @@ def setup_platform(
     channels = client.get_users(logins=channels)
 
     add_entities(
-        [
-            TwitchSensor(
-                channel=channel, client=client, enable_user_auth=bool(oauth_token)
-            )
-            for channel in channels["data"]
-        ],
+        [TwitchSensor(channel=channel, client=client) for channel in channels["data"]],
         True,
     )
 
@@ -98,11 +94,11 @@ def setup_platform(
 class TwitchSensor(SensorEntity):
     """Representation of an Twitch channel."""
 
-    def __init__(self, channel, client: Twitch, enable_user_auth: bool):
+    def __init__(self, channel, client: Twitch):
         """Initialize the sensor."""
         self._client = client
         self._channel = channel
-        self._enable_user_auth = enable_user_auth
+        self._enable_user_auth = client.has_required_auth(AuthType.USER, OAUTH_SCOPES)
         self._state = None
         self._preview = None
         self._game = None
