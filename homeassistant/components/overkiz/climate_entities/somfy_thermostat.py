@@ -130,8 +130,8 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
     def current_temperature(self) -> float:
         """Return the current temperature."""
         return cast(
-            self.temperature_device.states.get(OverkizState.CORE_TEMPERATURE).value,
             float,
+            self.temperature_device.states.get(OverkizState.CORE_TEMPERATURE).value,
         )
 
     @property
