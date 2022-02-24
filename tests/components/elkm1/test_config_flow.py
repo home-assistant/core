@@ -652,6 +652,50 @@ async def test_form_import_device_discovered(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_import_existing(hass):
+    """Test we abort on existing import."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: f"elks://{MOCK_IP_ADDRESS}"},
+        unique_id="cc:cc:cc:cc:cc:cc",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            "host": f"elks://{MOCK_IP_ADDRESS}",
+            "username": "friend",
+            "password": "love",
+            "temperature_unit": "C",
+            "auto_configure": False,
+            "keypad": {
+                "enabled": True,
+                "exclude": [],
+                "include": [[1, 1], [2, 2], [3, 3]],
+            },
+            "output": {"enabled": False, "exclude": [], "include": []},
+            "counter": {"enabled": False, "exclude": [], "include": []},
+            "plc": {"enabled": False, "exclude": [], "include": []},
+            "prefix": "ohana",
+            "setting": {"enabled": False, "exclude": [], "include": []},
+            "area": {"enabled": False, "exclude": [], "include": []},
+            "task": {"enabled": False, "exclude": [], "include": []},
+            "thermostat": {"enabled": False, "exclude": [], "include": []},
+            "zone": {
+                "enabled": True,
+                "exclude": [[15, 15], [28, 208]],
+                "include": [],
+            },
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "address_already_configured"
+
+
 @pytest.mark.parametrize(
     "source, data",
     [
