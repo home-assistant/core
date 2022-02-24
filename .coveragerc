@@ -104,7 +104,6 @@ omit =
     homeassistant/components/bbb_gpio/*
     homeassistant/components/bbox/device_tracker.py
     homeassistant/components/bbox/sensor.py
-    homeassistant/components/bh1750/sensor.py
     homeassistant/components/bitcoin/sensor.py
     homeassistant/components/bizkaibus/sensor.py
     homeassistant/components/blink/__init__.py
