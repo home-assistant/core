@@ -310,8 +310,8 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         _LOGGER.debug("HVAC mode from frontend: %s", hvac_mode)
         try:
             if LYRIC_HVAC_MODES[hvac_mode] == LYRIC_HVAC_MODE_HEAT_COOL:
-                """ If the system is off, turn it to Heat first then to Auto, otherwise it turns to 
-                Auto briefly and then reverts to Off (perhaps related to heatCoolMode). This is the 
+                """ If the system is off, turn it to Heat first then to Auto, otherwise it turns to
+                Auto briefly and then reverts to Off (perhaps related to heatCoolMode). This is the
                 behavior that happens with the native app as well, so likely a bug in the api itself """
                 if HVAC_MODES[self.device.changeableValues.mode] == HVAC_MODE_OFF:
                     _LOGGER.debug("HVAC mode passed to lyric: %s", HVAC_MODES[LYRIC_HVAC_MODE_COOL])
