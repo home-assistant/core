@@ -859,7 +859,6 @@ omit =
     homeassistant/components/openweathermap/weather_update_coordinator.py
     homeassistant/components/opnsense/*
     homeassistant/components/opple/light.py
-    homeassistant/components/orangepi_gpio/*
     homeassistant/components/oru/*
     homeassistant/components/orvibo/switch.py
     homeassistant/components/osramlightify/light.py

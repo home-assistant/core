@@ -19,9 +19,6 @@ HAP-python==4.4.0
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
 
-# homeassistant.components.orangepi_gpio
-OPi.GPIO==0.5.2
-
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
 
