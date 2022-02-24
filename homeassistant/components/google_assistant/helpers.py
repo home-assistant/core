@@ -590,18 +590,20 @@ class GoogleEntity:
             device["roomHint"] = area_entry.name
 
         # Add deviceInfo
-        if device_entry:
-            device_info = {}
+        if not device_entry:
+            return device
 
-            if device_entry.manufacturer:
-                device_info["manufacturer"] = device_entry.manufacturer
-            if device_entry.model:
-                device_info["model"] = device_entry.model
-            if device_entry.sw_version:
-                device_info["swVersion"] = device_entry.sw_version
+        device_info = {}
 
-            if device_info:
-                device["deviceInfo"] = device_info
+        if device_entry.manufacturer:
+            device_info["manufacturer"] = device_entry.manufacturer
+        if device_entry.model:
+            device_info["model"] = device_entry.model
+        if device_entry.sw_version:
+            device_info["swVersion"] = device_entry.sw_version
+
+        if device_info:
+            device["deviceInfo"] = device_info
 
         return device
 
