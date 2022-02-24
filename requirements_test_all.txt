@@ -180,7 +180,7 @@ aiopvapi==1.6.19
 aiopvpc==3.0.0
 
 # homeassistant.components.sonarr
-aiopyarr==22.2.1
+aiopyarr==22.2.2
 
 # homeassistant.components.recollect_waste
 aiorecollect==1.0.8
