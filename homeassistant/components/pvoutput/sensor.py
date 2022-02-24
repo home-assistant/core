@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_VOLTAGE,
@@ -31,7 +31,6 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -43,7 +42,6 @@ from .const import (
     CONF_SYSTEM_ID,
     DEFAULT_NAME,
     DOMAIN,
-    LOGGER,
 )
 from .coordinator import PVOutputDataUpdateCoordinator
 
@@ -127,32 +125,6 @@ SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
         value_fn=lambda status: status.voltage,
     ),
 )
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the PVOutput sensor."""
-    LOGGER.warning(
-        "Configuration of the PVOutput platform in YAML is deprecated and will be "
-        "removed in Home Assistant 2022.4; Your existing configuration "
-        "has been imported into the UI automatically and can be safely removed "
-        "from your configuration.yaml file"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_SYSTEM_ID: config[CONF_SYSTEM_ID],
-                CONF_API_KEY: config[CONF_API_KEY],
-                CONF_NAME: config[CONF_NAME],
-            },
-        )
-    )
 
 
 async def async_setup_entry(
