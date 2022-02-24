@@ -24,6 +24,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.util import slugify
+from homeassistant.util.network import is_ip_address
 
 from . import async_wait_for_elk_to_sync
 from .const import CONF_AUTO_CONFIGURE, DISCOVER_SCAN_TIMEOUT, DOMAIN, LOGIN_TIMEOUT
@@ -304,11 +305,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Handle import."""
-        if device := await async_discover_device(
-            self.hass, urlparse(user_input[CONF_HOST]).hostname
+        url = _make_url_from_data(user_input)
+
+        if self._url_already_configured(url):
+            return self.async_abort(reason="address_already_configured")
+
+        host = urlparse(url).hostname
+        if is_ip_address(host) and (
+            device := await async_discover_device(self.hass, host)
         ):
             await self.async_set_unique_id(dr.format_mac(device.mac_address))
             self._abort_if_unique_id_configured()
+
         return (await self._async_create_or_error(user_input, True))[1]
 
     def _url_already_configured(self, url):

@@ -228,7 +228,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug("Setting up elkm1 %s", conf["host"])
 
-    if not entry.unique_id or ":" not in entry.unique_id and is_ip_address(host):
+    if (not entry.unique_id or ":" not in entry.unique_id) and is_ip_address(host):
         if device := await async_discover_device(hass, host):
             async_update_entry_from_discovery(hass, entry, device)
 
