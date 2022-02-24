@@ -29,6 +29,7 @@ def async_update_entry_from_discovery(
 ) -> bool:
     """Update a config entry from a discovery."""
     if not entry.unique_id or ":" not in entry.unique_id:
+        _LOGGER.debug("Adding unique id from discovery: %s", device)
         return hass.config_entries.async_update_entry(
             entry, unique_id=dr.format_mac(device.mac_address)
         )
