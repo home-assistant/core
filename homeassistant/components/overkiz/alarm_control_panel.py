@@ -76,9 +76,7 @@ MAP_INTERNAL_STATUS_STATE: dict[str, str] = {
 }
 
 
-def _state_tsk_alarm_controller(
-    select_state: Callable[..., Awaitable[OverkizStateType]]
-) -> str:
+def _state_tsk_alarm_controller(select_state: Callable[[str], OverkizStateType]) -> str:
     """Return the state of the device."""
     if (
         cast(str, select_state(OverkizState.INTERNAL_INTRUSION_DETECTED))
@@ -97,7 +95,7 @@ def _state_tsk_alarm_controller(
 
 
 def _state_stateful_alarm_controller(
-    select_state: Callable[..., Awaitable[OverkizStateType]]
+    select_state: Callable[[str], OverkizStateType]
 ) -> str:
     """Return the state of the device."""
     state = cast(list, select_state(OverkizState.CORE_ACTIVE_ZONES))
@@ -126,7 +124,7 @@ MAP_MYFOX_STATUS_STATE: dict[str, str] = {
 
 
 def _state_myfox_alarm_controller(
-    select_state: Callable[..., Awaitable[OverkizStateType]]
+    select_state: Callable[[str], OverkizStateType]
 ) -> str:
     """Return the state of the device."""
     if (
@@ -149,7 +147,7 @@ MAP_ARM_TYPE: dict[str, str] = {
 
 
 def _state_alarm_panel_controller(
-    select_state: Callable[..., Awaitable[OverkizStateType]]
+    select_state: Callable[[str], OverkizStateType]
 ) -> str:
     """Return the state of the device."""
 
