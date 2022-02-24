@@ -11,7 +11,6 @@ import av
 from httpx import HTTPStatusError, RequestError, TimeoutException
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.stream.const import SOURCE_TIMEOUT
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import (
@@ -195,7 +194,6 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for generic IP camera."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     def async_get_options_flow(
