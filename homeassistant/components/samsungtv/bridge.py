@@ -4,7 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from asyncio.exceptions import TimeoutError as AsyncioTimeoutError
 import contextlib
-from typing import Any
+from typing import Any, cast
 
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
@@ -323,7 +323,9 @@ class SamsungTVWSBridge(SamsungTVBridge):
                         raw_app_list = data["data"]
                         self._app_list = {
                             app["name"]: app["appId"]
-                            for app in sorted(raw_app_list, key=lambda app: app["name"])
+                            for app in sorted(
+                                raw_app_list, key=lambda app: cast(str, app["name"])
+                            )
                         }
 
         return self._app_list
