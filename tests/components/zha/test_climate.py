@@ -247,12 +247,15 @@ async def device_climate_moes(device_climate_mock):
         CLIMATE_MOES, manuf=MANUF_MOES, quirk=zhaquirks.tuya.ts0601_trv.MoesHY368_Type1
     )
 
+
 @pytest.fixture
 async def device_climate_zonnsmart(device_climate_mock):
     """ZONNSMART thermostat."""
 
     return await device_climate_mock(
-        CLIMATE_ZONNSMART, manuf=MANUF_ZONNSMART, quirk=zhaquirks.tuya.ts0601_trv.ZonnsmartTV01_ZG
+        CLIMATE_ZONNSMART,
+        manuf=MANUF_ZONNSMART,
+        quirk=zhaquirks.tuya.ts0601_trv.ZonnsmartTV01_ZG,
     )
 
 
@@ -1417,6 +1420,7 @@ async def test_set_zonnsmart_preset(hass, device_climate_zonnsmart):
     assert thrm_cluster.write_attributes.call_args_list[0][0][0] == {
         "operation_preset": 1
     }
+
 
 async def test_set_zonnsmart_operation_mode(hass, device_climate_zonnsmart):
     """Test setting preset from trv for zonnsmart trv."""
