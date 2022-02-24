@@ -4,7 +4,8 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/dlna_dms",
   "requirements": ["async-upnp-client==0.23.5"],
-  "dependencies": ["media_source", "ssdp"],
+  "dependencies": ["ssdp"],
+  "after_dependencies": ["media_source"],
   "ssdp": [
     {
       "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
