@@ -867,7 +867,6 @@ hydrawiser==0.2
 # homeassistant.components.hyperion
 hyperion-py==0.7.4
 
-# homeassistant.components.bh1750
 # homeassistant.components.bme280
 # homeassistant.components.htu21d
 # i2csense==0.0.4
@@ -2214,7 +2213,6 @@ smart-meter-texas==0.4.7
 # homeassistant.components.smarthab
 smarthab==0.21
 
-# homeassistant.components.bh1750
 # homeassistant.components.bme280
 # homeassistant.components.bme680
 # homeassistant.components.envirophat
