@@ -13,5 +13,6 @@
     { "macaddress": "D8EB46*" },
     { "macaddress": "1C53F9*" }
   ],
-  "iot_class": "cloud_push"
+  "iot_class": "cloud_push",
+  "loggers": ["google_nest_sdm", "nest"]
 }

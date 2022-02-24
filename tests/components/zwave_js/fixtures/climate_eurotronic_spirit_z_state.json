@@ -25,7 +25,7 @@
             "Thermostat Setpoint",
             "Version"
         ],
-        "mandatoryControlCCs": []
+        "mandatoryControlledCCs": []
     },
     "isListening": false,
     "isFrequentListening": true,

@@ -9,15 +9,12 @@ from functools import partial
 import logging
 import time
 from typing import Any
-import urllib.parse
 
 import async_timeout
 import defusedxml.ElementTree as ET
-from soco.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
-from soco.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
+from soco.core import SoCo
 from soco.events_base import Event as SonosEvent, SubscriptionBase
-from soco.exceptions import SoCoException, SoCoSlaveException, SoCoUPnPException
-from soco.music_library import MusicLibrary
+from soco.exceptions import SoCoException, SoCoUPnPException
 from soco.plugins.plex import PlexPlugin
 from soco.plugins.sharelink import ShareLinkPlugin
 from soco.snapshot import Snapshot
@@ -50,7 +47,7 @@ from .const import (
     SONOS_CREATE_MEDIA_PLAYER,
     SONOS_CREATE_MIC_SENSOR,
     SONOS_CREATE_SWITCHES,
-    SONOS_POLL_UPDATE,
+    SONOS_FALLBACK_POLL,
     SONOS_REBOOTED,
     SONOS_SPEAKER_ACTIVITY,
     SONOS_SPEAKER_ADDED,
@@ -58,12 +55,11 @@ from .const import (
     SONOS_STATE_TRANSITIONING,
     SONOS_STATE_UPDATED,
     SONOS_VANISHED,
-    SOURCE_LINEIN,
-    SOURCE_TV,
     SUBSCRIPTION_TIMEOUT,
 )
 from .favorites import SonosFavorites
 from .helpers import soco_error
+from .media import SonosMedia
 from .statistics import ActivityStatistics, EventStatistics
 
 NEVER_TIME = -1200.0
@@ -79,7 +75,7 @@ SUBSCRIPTION_SERVICES = [
     "renderingControl",
     "zoneGroupTopology",
 ]
-UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
+SUPPORTED_VANISH_REASONS = ("sleeping", "upgrade")
 UNUSED_DEVICE_KEYS = ["SPID", "TargetRoomName"]
 
 
@@ -96,57 +92,6 @@ def fetch_battery_info_or_none(soco: SoCo) -> dict[str, Any] | None:
         return soco.get_battery_info()
 
 
-def _timespan_secs(timespan: str | None) -> None | float:
-    """Parse a time-span into number of seconds."""
-    if timespan in UNAVAILABLE_VALUES:
-        return None
-
-    assert timespan is not None
-    return sum(60 ** x[0] * int(x[1]) for x in enumerate(reversed(timespan.split(":"))))
-
-
-class SonosMedia:
-    """Representation of the current Sonos media."""
-
-    def __init__(self, soco: SoCo) -> None:
-        """Initialize a SonosMedia."""
-        self.library = MusicLibrary(soco)
-        self.play_mode: str | None = None
-        self.playback_status: str | None = None
-
-        self.album_name: str | None = None
-        self.artist: str | None = None
-        self.channel: str | None = None
-        self.duration: float | None = None
-        self.image_url: str | None = None
-        self.queue_position: int | None = None
-        self.playlist_name: str | None = None
-        self.source_name: str | None = None
-        self.title: str | None = None
-        self.uri: str | None = None
-
-        self.position: float | None = None
-        self.position_updated_at: datetime.datetime | None = None
-
-    def clear(self) -> None:
-        """Clear basic media info."""
-        self.album_name = None
-        self.artist = None
-        self.channel = None
-        self.duration = None
-        self.image_url = None
-        self.playlist_name = None
-        self.queue_position = None
-        self.source_name = None
-        self.title = None
-        self.uri = None
-
-    def clear_position(self) -> None:
-        """Clear the position attributes."""
-        self.position = None
-        self.position_updated_at = None
-
-
 class SonosSpeaker:
     """Representation of a Sonos speaker."""
 
@@ -157,7 +102,7 @@ class SonosSpeaker:
         self.hass = hass
         self.soco = soco
         self.household_id: str = soco.household_id
-        self.media = SonosMedia(soco)
+        self.media = SonosMedia(hass, soco)
         self._plex_plugin: PlexPlugin | None = None
         self._share_link_plugin: ShareLinkPlugin | None = None
         self.available = True
@@ -175,7 +120,7 @@ class SonosSpeaker:
         # Subscriptions and events
         self.subscriptions_failed: bool = False
         self._subscriptions: list[SubscriptionBase] = []
-        self._resubscription_lock: asyncio.Lock | None = None
+        self._subscription_lock: asyncio.Lock | None = None
         self._event_dispatchers: dict[str, Callable] = {}
         self._last_activity: float = NEVER_TIME
         self._last_event_cache: dict[str, Any] = {}
@@ -262,6 +207,10 @@ class SonosSpeaker:
             )
             dispatcher_send(self.hass, SONOS_CREATE_BATTERY, self)
 
+        if (mic_enabled := self.soco.mic_enabled) is not None:
+            self.mic_enabled = mic_enabled
+            dispatcher_send(self.hass, SONOS_CREATE_MIC_SENSOR, self)
+
         if new_alarms := [
             alarm.alarm_id for alarm in self.alarms if alarm.zone.uid == self.soco.uid
         ]:
@@ -343,8 +292,41 @@ class SonosSpeaker:
     #
     # Subscription handling and event dispatchers
     #
-    async def async_subscribe(self) -> bool:
-        """Initiate event subscriptions."""
+    def log_subscription_result(
+        self, result: Any, event: str, level: str = logging.DEBUG
+    ) -> None:
+        """Log a message if a subscription action (create/renew/stop) results in an exception."""
+        if not isinstance(result, Exception):
+            return
+
+        if isinstance(result, asyncio.exceptions.TimeoutError):
+            message = "Request timed out"
+            exc_info = None
+        else:
+            message = result
+            exc_info = result if not str(result) else None
+
+        _LOGGER.log(
+            level,
+            "%s failed for %s: %s",
+            event,
+            self.zone_name,
+            message,
+            exc_info=exc_info,
+        )
+
+    async def async_subscribe(self) -> None:
+        """Initiate event subscriptions under an async lock."""
+        if not self._subscription_lock:
+            self._subscription_lock = asyncio.Lock()
+
+        async with self._subscription_lock:
+            if self._subscriptions:
+                return
+            await self._async_subscribe()
+
+    async def _async_subscribe(self) -> None:
+        """Create event subscriptions."""
         _LOGGER.debug("Creating subscriptions for %s", self.zone_name)
 
         # Create a polling task in case subscriptions fail or callback events do not arrive
@@ -354,29 +336,20 @@ class SonosSpeaker:
                 partial(
                     async_dispatcher_send,
                     self.hass,
-                    f"{SONOS_POLL_UPDATE}-{self.soco.uid}",
+                    f"{SONOS_FALLBACK_POLL}-{self.soco.uid}",
                 ),
                 SCAN_INTERVAL,
             )
 
-        try:
-            await self.hass.async_add_executor_job(self.set_basic_info)
-
-            if self._subscriptions:
-                raise RuntimeError(
-                    f"Attempted to attach subscriptions to player: {self.soco} "
-                    f"when existing subscriptions exist: {self._subscriptions}"
-                )
-
-            subscriptions = [
-                self._subscribe(getattr(self.soco, service), self.async_dispatch_event)
-                for service in SUBSCRIPTION_SERVICES
-            ]
-            await asyncio.gather(*subscriptions)
-        except SoCoException as ex:
-            _LOGGER.warning("Could not connect %s: %s", self.zone_name, ex)
-            return False
-        return True
+        subscriptions = [
+            self._subscribe(getattr(self.soco, service), self.async_dispatch_event)
+            for service in SUBSCRIPTION_SERVICES
+        ]
+        results = await asyncio.gather(*subscriptions, return_exceptions=True)
+        for result in results:
+            self.log_subscription_result(
+                result, "Creating subscription", logging.WARNING
+            )
 
     async def _subscribe(
         self, target: SubscriptionBase, sub_callback: Callable
@@ -399,49 +372,24 @@ class SonosSpeaker:
             return_exceptions=True,
         )
         for result in results:
-            if isinstance(result, asyncio.exceptions.TimeoutError):
-                message = "Request timed out"
-                exc_info = None
-            elif isinstance(result, Exception):
-                message = result
-                exc_info = result if not str(result) else None
-            else:
-                continue
-            _LOGGER.debug(
-                "Unsubscribe failed for %s: %s",
-                self.zone_name,
-                message,
-                exc_info=exc_info,
-            )
+            self.log_subscription_result(result, "Unsubscribe")
         self._subscriptions = []
 
     @callback
     def async_renew_failed(self, exception: Exception) -> None:
         """Handle a failed subscription renewal."""
-        self.hass.async_create_task(self.async_resubscribe(exception))
+        self.hass.async_create_task(self._async_renew_failed(exception))
 
-    async def async_resubscribe(self, exception: Exception) -> None:
-        """Attempt to resubscribe when a renewal failure is detected."""
-        if not self._resubscription_lock:
-            self._resubscription_lock = asyncio.Lock()
+    async def _async_renew_failed(self, exception: Exception) -> None:
+        """Mark the speaker as offline after a subscription renewal failure.
 
-        async with self._resubscription_lock:
-            if not self.available:
-                return
+        This is to reset the state to allow a future clean subscription attempt.
+        """
+        if not self.available:
+            return
 
-            if isinstance(exception, asyncio.exceptions.TimeoutError):
-                message = "Request timed out"
-                exc_info = None
-            else:
-                message = exception
-                exc_info = exception if not str(exception) else None
-            _LOGGER.warning(
-                "Subscription renewals for %s failed, marking unavailable: %s",
-                self.zone_name,
-                message,
-                exc_info=exc_info,
-            )
-            await self.async_offline()
+        self.log_subscription_result(exception, "Subscription renewal", logging.WARNING)
+        await self.async_offline()
 
     @callback
     def async_dispatch_event(self, event: SonosEvent) -> None:
@@ -508,7 +456,18 @@ class SonosSpeaker:
         if crossfade := event.variables.get("current_crossfade_mode"):
             self.cross_fade = bool(int(crossfade))
 
-        self.hass.async_add_executor_job(self.update_media, event)
+        # Missing transport_state indicates a transient error
+        if (new_status := event.variables.get("transport_state")) is None:
+            return
+
+        # Ignore transitions, we should get the target state soon
+        if new_status == SONOS_STATE_TRANSITIONING:
+            return
+
+        self.event_stats.process(event)
+        self.hass.async_add_executor_job(
+            self.media.update_media_from_event, event.variables
+        )
 
     @callback
     def async_update_volume(self, event: SonosEvent) -> None:
@@ -554,39 +513,48 @@ class SonosSpeaker:
 
     async def async_check_activity(self, now: datetime.datetime) -> None:
         """Validate availability of the speaker based on recent activity."""
+        if not self.available:
+            return
         if time.monotonic() - self._last_activity < AVAILABILITY_TIMEOUT:
             return
 
         try:
-            _ = await self.hass.async_add_executor_job(getattr, self.soco, "volume")
-        except (OSError, SoCoException):
-            pass
+            # Make a short-timeout call as a final check
+            # before marking this speaker as unavailable
+            await self.hass.async_add_executor_job(
+                partial(
+                    self.soco.renderingControl.GetVolume,
+                    [("InstanceID", 0), ("Channel", "Master")],
+                    timeout=1,
+                )
+            )
+        except OSError:
+            _LOGGER.warning(
+                "No recent activity and cannot reach %s, marking unavailable",
+                self.zone_name,
+            )
+            await self.async_offline()
         else:
             self.speaker_activity("timeout poll")
-            return
-
-        if not self.available:
-            return
-
-        _LOGGER.debug(
-            "No recent activity and cannot reach %s, marking unavailable",
-            self.zone_name,
-        )
-        await self.async_offline()
 
     async def async_offline(self) -> None:
         """Handle removal of speaker when unavailable."""
+        if not self.available:
+            return
+
         self.available = False
+        self.async_write_entity_states()
+
         self._share_link_plugin = None
 
         if self._poll_timer:
             self._poll_timer()
             self._poll_timer = None
 
-        await self.async_unsubscribe()
+        async with self._subscription_lock:
+            await self.async_unsubscribe()
 
         self.hass.data[DATA_SONOS].discovery_known.discard(self.soco.uid)
-        self.async_write_entity_states()
 
     async def async_vanished(self, reason: str) -> None:
         """Handle removal of speaker when marked as vanished."""
@@ -599,8 +567,8 @@ class SonosSpeaker:
 
     async def async_rebooted(self, soco: SoCo) -> None:
         """Handle a detected speaker reboot."""
-        _LOGGER.warning(
-            "%s rebooted or lost network connectivity, reconnecting with %s",
+        _LOGGER.debug(
+            "%s rebooted, reconnecting with %s",
             self.zone_name,
             soco,
         )
@@ -713,7 +681,9 @@ class SonosSpeaker:
         if xml := event.variables.get("zone_group_state"):
             zgs = ET.fromstring(xml)
             for vanished_device in zgs.find("VanishedDevices") or []:
-                if (reason := vanished_device.get("Reason")) != "sleeping":
+                if (
+                    reason := vanished_device.get("Reason")
+                ) not in SUPPORTED_VANISH_REASONS:
                     _LOGGER.debug(
                         "Ignoring %s marked %s as vanished with reason: %s",
                         self.zone_name,
@@ -1044,188 +1014,8 @@ class SonosSpeaker:
     #
     # Media and playback state handlers
     #
-    @soco_error(raise_on_err=False)
+    @soco_error()
     def update_volume(self) -> None:
         """Update information about current volume settings."""
         self.volume = self.soco.volume
         self.muted = self.soco.mute
-        self.night_mode = self.soco.night_mode
-        self.dialog_level = self.soco.dialog_level
-
-        try:
-            self.cross_fade = self.soco.cross_fade
-        except SoCoSlaveException:
-            pass
-
-    @soco_error()
-    def update_media(self, event: SonosEvent | None = None) -> None:
-        """Update information about currently playing media."""
-        variables = event.variables if event else {}
-
-        if "transport_state" in variables:
-            # If the transport has an error then transport_state will
-            # not be set
-            new_status = variables["transport_state"]
-        else:
-            transport_info = self.soco.get_current_transport_info()
-            new_status = transport_info["current_transport_state"]
-
-        # Ignore transitions, we should get the target state soon
-        if new_status == SONOS_STATE_TRANSITIONING:
-            return
-
-        if event:
-            self.event_stats.process(event)
-
-        self.media.clear()
-        update_position = new_status != self.media.playback_status
-        self.media.playback_status = new_status
-
-        if "transport_state" in variables:
-            self.media.play_mode = variables["current_play_mode"]
-            track_uri = (
-                variables["enqueued_transport_uri"] or variables["current_track_uri"]
-            )
-            music_source = self.soco.music_source_from_uri(track_uri)
-            if uri_meta_data := variables.get("enqueued_transport_uri_meta_data"):
-                if isinstance(uri_meta_data, DidlPlaylistContainer):
-                    self.media.playlist_name = uri_meta_data.title
-        else:
-            self.media.play_mode = self.soco.play_mode
-            music_source = self.soco.music_source
-
-        if music_source == MUSIC_SRC_TV:
-            self.update_media_linein(SOURCE_TV)
-        elif music_source == MUSIC_SRC_LINE_IN:
-            self.update_media_linein(SOURCE_LINEIN)
-        else:
-            track_info = self.soco.get_current_track_info()
-            if not track_info["uri"]:
-                self.media.clear_position()
-            else:
-                self.media.uri = track_info["uri"]
-                self.media.artist = track_info.get("artist")
-                self.media.album_name = track_info.get("album")
-                self.media.title = track_info.get("title")
-
-                if music_source == MUSIC_SRC_RADIO:
-                    self.update_media_radio(variables)
-                else:
-                    self.update_media_music(track_info)
-                self.update_media_position(update_position, track_info)
-
-        self.write_entity_states()
-
-        # Also update slaves
-        speakers = self.hass.data[DATA_SONOS].discovered.values()
-        for speaker in speakers:
-            if speaker.coordinator == self:
-                speaker.write_entity_states()
-
-    def update_media_linein(self, source: str) -> None:
-        """Update state when playing from line-in/tv."""
-        self.media.clear_position()
-
-        self.media.title = source
-        self.media.source_name = source
-
-    def update_media_radio(self, variables: dict) -> None:
-        """Update state when streaming radio."""
-        self.media.clear_position()
-        radio_title = None
-
-        if current_track_metadata := variables.get("current_track_meta_data"):
-            if album_art_uri := getattr(current_track_metadata, "album_art_uri", None):
-                self.media.image_url = self.media.library.build_album_art_full_uri(
-                    album_art_uri
-                )
-            if not self.media.artist:
-                self.media.artist = getattr(current_track_metadata, "creator", None)
-
-            # A missing artist implies metadata is incomplete, try a different method
-            if not self.media.artist:
-                radio_show = None
-                stream_content = None
-                if current_track_metadata.radio_show:
-                    radio_show = current_track_metadata.radio_show.split(",")[0]
-                if not current_track_metadata.stream_content.startswith(
-                    ("ZPSTR_", "TYPE=")
-                ):
-                    stream_content = current_track_metadata.stream_content
-                radio_title = " • ".join(filter(None, [radio_show, stream_content]))
-
-        if radio_title:
-            # Prefer the radio title created above
-            self.media.title = radio_title
-        elif uri_meta_data := variables.get("enqueued_transport_uri_meta_data"):
-            if isinstance(uri_meta_data, DidlAudioBroadcast) and (
-                self.soco.music_source_from_uri(self.media.title) == MUSIC_SRC_RADIO
-                or (
-                    isinstance(self.media.title, str)
-                    and isinstance(self.media.uri, str)
-                    and (
-                        self.media.title in self.media.uri
-                        or self.media.title in urllib.parse.unquote(self.media.uri)
-                    )
-                )
-            ):
-                # Fall back to the radio channel name as a last resort
-                self.media.title = uri_meta_data.title
-
-        media_info = self.soco.get_current_media_info()
-        self.media.channel = media_info["channel"]
-
-        # Check if currently playing radio station is in favorites
-        fav = next(
-            (
-                fav
-                for fav in self.favorites
-                if fav.reference.get_uri() == media_info["uri"]
-            ),
-            None,
-        )
-        if fav:
-            self.media.source_name = fav.title
-
-    def update_media_music(self, track_info: dict) -> None:
-        """Update state when playing music tracks."""
-        self.media.image_url = track_info.get("album_art")
-
-        playlist_position = int(track_info.get("playlist_position"))  # type: ignore
-        if playlist_position > 0:
-            self.media.queue_position = playlist_position - 1
-
-    def update_media_position(
-        self, update_media_position: bool, track_info: dict
-    ) -> None:
-        """Update state when playing music tracks."""
-        self.media.duration = _timespan_secs(track_info.get("duration"))
-        current_position = _timespan_secs(track_info.get("position"))
-
-        if self.media.duration == 0:
-            self.media.clear_position()
-            return
-
-        # player started reporting position?
-        if current_position is not None and self.media.position is None:
-            update_media_position = True
-
-        # position jumped?
-        if current_position is not None and self.media.position is not None:
-            if self.media.playback_status == SONOS_STATE_PLAYING:
-                assert self.media.position_updated_at is not None
-                time_delta = dt_util.utcnow() - self.media.position_updated_at
-                time_diff = time_delta.total_seconds()
-            else:
-                time_diff = 0
-
-            calculated_position = self.media.position + time_diff
-
-            if abs(calculated_position - current_position) > 1.5:
-                update_media_position = True
-
-        if current_position is None:
-            self.media.clear_position()
-        elif update_media_position:
-            self.media.position = current_position
-            self.media.position_updated_at = dt_util.utcnow()

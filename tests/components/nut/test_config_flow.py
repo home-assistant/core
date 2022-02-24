@@ -37,6 +37,7 @@ async def test_form_zeroconf(hass):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.5",
+            addresses=["192.168.1.5"],
             hostname="mock_hostname",
             name="mock_name",
             port=1234,

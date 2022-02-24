@@ -122,7 +122,7 @@ def async_active_zone(
             continue
 
         within_zone = zone_dist - radius < zone.attributes[ATTR_RADIUS]
-        closer_zone = closest is None or zone_dist < min_dist  # type: ignore
+        closer_zone = closest is None or zone_dist < min_dist  # type: ignore[unreachable]
         smaller_zone = (
             zone_dist == min_dist
             and zone.attributes[ATTR_RADIUS]

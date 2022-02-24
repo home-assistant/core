@@ -6,11 +6,11 @@
   "status": 4,
   "ready": true,
   "deviceClass": {
-    "basic": {"key": 2, "label":"Static Controller"},
-    "generic": {"key": 8, "label":"Thermostat"},
-    "specific": {"key": 6, "label":"Thermostat General V2"},
+    "basic": { "key": 2, "label": "Static Controller" },
+    "generic": { "key": 8, "label": "Thermostat" },
+    "specific": { "key": 6, "label": "Thermostat General V2" },
     "mandatorySupportedCCs": [],
-    "mandatoryControlCCs": []
+    "mandatoryControlledCCs": []
   },
   "isListening": true,
   "isFrequentListening": false,
@@ -47,7 +47,129 @@
       "nodeId": 13,
       "index": 0,
       "installerIcon": 4608,
-      "userIcon": 4608
+      "userIcon": 4608,
+      "commandClasses": [
+        {
+          "id": 49,
+          "name": "Multilevel Sensor",
+          "version": 5,
+          "isSecure": false
+        },
+        {
+          "id": 64,
+          "name": "Thermostat Mode",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 66,
+          "name": "Thermostat Operating State",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 67,
+          "name": "Thermostat Setpoint",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 68,
+          "name": "Thermostat Fan Mode",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 69,
+          "name": "Thermostat Fan State",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 96,
+          "name": "Multi Channel",
+          "version": 4,
+          "isSecure": false
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 115,
+          "name": "Powerlevel",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 122,
+          "name": "Firmware Update Meta Data",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 128,
+          "name": "Battery",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 129,
+          "name": "Clock",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 135,
+          "name": "Indicator",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 142,
+          "name": "Multi Channel Association",
+          "version": 3,
+          "isSecure": false
+        }
+      ]
     },
     {
       "nodeId": 13,
@@ -56,128 +178,6 @@
       "userIcon": 4608
     },
     { "nodeId": 13, "index": 2 }
-  ],
-  "commandClasses": [
-    {
-      "id": 49,
-      "name": "Multilevel Sensor",
-      "version": 5,
-      "isSecure": false
-    },
-    {
-      "id": 64,
-      "name": "Thermostat Mode",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 66,
-      "name": "Thermostat Operating State",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 67,
-      "name": "Thermostat Setpoint",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 68,
-      "name": "Thermostat Fan Mode",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 69,
-      "name": "Thermostat Fan State",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 89,
-      "name": "Association Group Information",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 90,
-      "name": "Device Reset Locally",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 94,
-      "name": "Z-Wave Plus Info",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 96,
-      "name": "Multi Channel",
-      "version": 4,
-      "isSecure": false
-    },
-    {
-      "id": 112,
-      "name": "Configuration",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 114,
-      "name": "Manufacturer Specific",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 115,
-      "name": "Powerlevel",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 122,
-      "name": "Firmware Update Meta Data",
-      "version": 3,
-      "isSecure": false
-    },
-    {
-      "id": 128,
-      "name": "Battery",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 129,
-      "name": "Clock",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 133,
-      "name": "Association",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 134,
-      "name": "Version",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 135,
-      "name": "Indicator",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 142,
-      "name": "Multi Channel Association",
-      "version": 3,
-      "isSecure": false
-    }
   ],
   "values": [
     {

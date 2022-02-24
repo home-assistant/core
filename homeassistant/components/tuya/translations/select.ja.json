@@ -10,13 +10,61 @@
             "1": "\u30aa\u30d5",
             "2": "\u30aa\u30f3"
         },
+        "tuya__countdown": {
+            "1h": "1\u6642\u9593",
+            "2h": "2\u6642\u9593",
+            "3h": "3\u6642\u9593",
+            "4h": "4\u6642\u9593",
+            "5h": "5\u6642\u9593",
+            "6h": "6\u6642\u9593",
+            "cancel": "\u30ad\u30e3\u30f3\u30bb\u30eb"
+        },
+        "tuya__curtain_mode": {
+            "morning": "\u671d",
+            "night": "\u591c"
+        },
+        "tuya__curtain_motor_mode": {
+            "back": "\u623b\u308b",
+            "forward": "\u9032\u3080"
+        },
         "tuya__decibel_sensitivity": {
             "0": "\u4f4e\u611f\u5ea6",
             "1": "\u9ad8\u611f\u5ea6"
         },
+        "tuya__fan_angle": {
+            "30": "30\u00b0",
+            "60": "60\u00b0",
+            "90": "90\u00b0"
+        },
         "tuya__fingerbot_mode": {
             "click": "\u62bc\u3059",
             "switch": "\u30b9\u30a4\u30c3\u30c1"
+        },
+        "tuya__humidifier_level": {
+            "level_1": "\u30ec\u30d9\u30eb 1",
+            "level_10": "\u30ec\u30d9\u30eb 10",
+            "level_2": "\u30ec\u30d9\u30eb 2",
+            "level_3": "\u30ec\u30d9\u30eb 3",
+            "level_4": "\u30ec\u30d9\u30eb 4",
+            "level_5": "\u30ec\u30d9\u30eb 5",
+            "level_6": "\u30ec\u30d9\u30eb 6",
+            "level_7": "\u30ec\u30d9\u30eb 7",
+            "level_8": "\u30ec\u30d9\u30eb 8",
+            "level_9": "\u30ec\u30d9\u30eb 9"
+        },
+        "tuya__humidifier_moodlighting": {
+            "1": "\u30e0\u30fc\u30c9 1",
+            "2": "\u30e0\u30fc\u30c9 2",
+            "3": "\u30e0\u30fc\u30c9 3",
+            "4": "\u30e0\u30fc\u30c9 4",
+            "5": "\u30e0\u30fc\u30c9 5"
+        },
+        "tuya__humidifier_spray_mode": {
+            "auto": "\u30aa\u30fc\u30c8",
+            "health": "\u30d8\u30eb\u30b9",
+            "humidity": "\u6e7f\u5ea6",
+            "sleep": "\u30b9\u30ea\u30fc\u30d7",
+            "work": "\u30ef\u30fc\u30af"
         },
         "tuya__ipc_work_mode": {
             "0": "\u4f4e\u96fb\u529b\u30e2\u30fc\u30c9",

@@ -184,7 +184,7 @@ async def _async_register_events(hass, doorstation):
     return True
 
 
-async def _update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     config_entry_id = entry.entry_id
     doorstation = hass.data[DOMAIN][config_entry_id][DOOR_STATION]

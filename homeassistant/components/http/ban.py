@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable
 from contextlib import suppress
 from datetime import datetime
 from http import HTTPStatus
-from ipaddress import ip_address
+from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
 from socket import gethostbyaddr, herror
 from typing import Any, Final
@@ -190,7 +190,11 @@ async def process_success_login(request: Request) -> None:
 class IpBan:
     """Represents banned IP address."""
 
-    def __init__(self, ip_ban: str, banned_at: datetime | None = None) -> None:
+    def __init__(
+        self,
+        ip_ban: str | IPv4Address | IPv6Address,
+        banned_at: datetime | None = None,
+    ) -> None:
         """Initialize IP Ban object."""
         self.ip_address = ip_address(ip_ban)
         self.banned_at = banned_at or dt_util.utcnow()

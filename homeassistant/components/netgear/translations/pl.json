@@ -15,7 +15,7 @@
                     "ssl": "Certyfikat SSL",
                     "username": "Nazwa u\u017cytkownika (opcjonalnie)"
                 },
-                "description": "Domy\u015blne IP lub nazwa hosta: {host}\nDomy\u015blny port: {port}\nDomy\u015blna nazwa u\u017cytkownika: {username}",
+                "description": "Domy\u015blne IP lub nazwa hosta: {host}\nDomy\u015blna nazwa u\u017cytkownika: {username}",
                 "title": "Netgear"
             }
         }

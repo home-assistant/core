@@ -104,7 +104,7 @@ async def async_handle_webhook(
         else:
             received_from = request.remote
 
-        _LOGGER.warning(
+        _LOGGER.info(
             "Received message for unregistered webhook %s from %s",
             webhook_id,
             received_from,

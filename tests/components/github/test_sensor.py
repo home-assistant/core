@@ -1,62 +1,37 @@
 """Test GitHub sensor."""
-from unittest.mock import MagicMock, patch
+import json
 
-from aiogithubapi import GitHubNotModifiedException
-import pytest
-
-from homeassistant.components.github.const import DEFAULT_UPDATE_INTERVAL
+from homeassistant.components.github.const import DEFAULT_UPDATE_INTERVAL, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_SENSOR_ENTITY = "sensor.octocat_hello_world_latest_release"
-
-
-async def test_sensor_updates_with_not_modified_content(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the sensor updates by default GitHub sensors."""
-    state = hass.states.get(TEST_SENSOR_ENTITY)
-    assert state.state == "v1.0.0"
-    assert (
-        "Content for octocat/Hello-World with RepositoryReleaseDataUpdateCoordinator not modified"
-        not in caplog.text
-    )
-
-    with patch(
-        "aiogithubapi.namespaces.releases.GitHubReleasesNamespace.list",
-        side_effect=GitHubNotModifiedException,
-    ):
-
-        async_fire_time_changed(hass, dt.utcnow() + DEFAULT_UPDATE_INTERVAL)
-        await hass.async_block_till_done()
-
-        assert (
-            "Content for octocat/Hello-World with RepositoryReleaseDataUpdateCoordinator not modified"
-            in caplog.text
-        )
-    new_state = hass.states.get(TEST_SENSOR_ENTITY)
-    assert state.state == new_state.state
 
 
 async def test_sensor_updates_with_empty_release_array(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test the sensor updates by default GitHub sensors."""
     state = hass.states.get(TEST_SENSOR_ENTITY)
     assert state.state == "v1.0.0"
 
-    with patch(
-        "aiogithubapi.namespaces.releases.GitHubReleasesNamespace.list",
-        return_value=MagicMock(data=[]),
-    ):
+    response_json = json.loads(load_fixture("graphql.json", DOMAIN))
+    response_json["data"]["repository"]["release"] = None
 
-        async_fire_time_changed(hass, dt.utcnow() + DEFAULT_UPDATE_INTERVAL)
-        await hass.async_block_till_done()
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        "https://api.github.com/graphql",
+        json=response_json,
+        headers=json.loads(load_fixture("base_headers.json", DOMAIN)),
+    )
+
+    async_fire_time_changed(hass, dt.utcnow() + DEFAULT_UPDATE_INTERVAL)
+    await hass.async_block_till_done()
 
     new_state = hass.states.get(TEST_SENSOR_ENTITY)
     assert new_state.state == "unavailable"

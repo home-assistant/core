@@ -6,6 +6,7 @@ import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.foundation as zcl_f
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.zha.core.group import GroupMember
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 
@@ -136,7 +137,7 @@ async def test_switch(hass, zha_device_joined_restored, zigpy_device):
     ):
         # turn on via UI
         await hass.services.async_call(
-            Platform.SWITCH, "turn_on", {"entity_id": entity_id}, blocking=True
+            SWITCH_DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
         )
         assert len(cluster.request.mock_calls) == 1
         assert cluster.request.call_args == call(
@@ -150,7 +151,7 @@ async def test_switch(hass, zha_device_joined_restored, zigpy_device):
     ):
         # turn off via UI
         await hass.services.async_call(
-            Platform.SWITCH, "turn_off", {"entity_id": entity_id}, blocking=True
+            SWITCH_DOMAIN, "turn_off", {"entity_id": entity_id}, blocking=True
         )
         assert len(cluster.request.mock_calls) == 1
         assert cluster.request.call_args == call(
@@ -219,7 +220,7 @@ async def test_zha_group_switch_entity(
     ):
         # turn on via UI
         await hass.services.async_call(
-            Platform.SWITCH, "turn_on", {"entity_id": entity_id}, blocking=True
+            SWITCH_DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
         )
         assert len(group_cluster_on_off.request.mock_calls) == 1
         assert group_cluster_on_off.request.call_args == call(
@@ -234,7 +235,7 @@ async def test_zha_group_switch_entity(
     ):
         # turn off via UI
         await hass.services.async_call(
-            Platform.SWITCH, "turn_off", {"entity_id": entity_id}, blocking=True
+            SWITCH_DOMAIN, "turn_off", {"entity_id": entity_id}, blocking=True
         )
         assert len(group_cluster_on_off.request.mock_calls) == 1
         assert group_cluster_on_off.request.call_args == call(

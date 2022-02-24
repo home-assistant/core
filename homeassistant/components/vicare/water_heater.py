@@ -56,18 +56,6 @@ HA_TO_VICARE_HVAC_DHW = {
 }
 
 
-def _build_entity(name, vicare_api, circuit, device_config, heating_type):
-    """Create a ViCare water_heater entity."""
-    _LOGGER.debug("Found device %s", name)
-    return ViCareWater(
-        name,
-        vicare_api,
-        circuit,
-        device_config,
-        heating_type,
-    )
-
-
 def _get_circuits(vicare_api):
     """Return the list of circuits."""
     try:
@@ -93,7 +81,7 @@ async def async_setup_entry(
         if len(circuits) > 1:
             suffix = f" {circuit.id}"
 
-        entity = _build_entity(
+        entity = ViCareWater(
             f"{name} Water{suffix}",
             api,
             circuit,
@@ -159,6 +147,7 @@ class ViCareWater(WaterHeaterEntity):
             "name": self._device_config.getModel(),
             "manufacturer": "Viessmann",
             "model": (DOMAIN, self._device_config.getModel()),
+            "configuration_url": "https://developer.viessmann.com/",
         }
 
     @property

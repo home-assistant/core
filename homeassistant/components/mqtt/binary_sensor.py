@@ -29,20 +29,20 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.event as evt
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from . import PLATFORMS, MqttValueTemplate, subscription
+from . import MqttValueTemplate, subscription
 from .. import mqtt
-from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC, DOMAIN
+from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC, PAYLOAD_NONE
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttAvailability,
     MqttEntity,
     async_setup_entry_helper,
+    async_setup_platform_helper,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,8 +76,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up MQTT binary sensor through configuration.yaml."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(hass, async_add_entities, config)
+    await async_setup_platform_helper(
+        hass, binary_sensor.DOMAIN, config, async_add_entities, _async_setup_entity
+    )
 
 
 async def async_setup_entry(
@@ -167,7 +168,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
             entity=self,
         ).async_render_with_possible_json_value
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
         @callback
@@ -216,6 +217,8 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                 self._state = True
             elif payload == self._config[CONF_PAYLOAD_OFF]:
                 self._state = False
+            elif payload == PAYLOAD_NONE:
+                self._state = None
             else:  # Payload is not for this entity
                 template_info = ""
                 if self._config.get(CONF_VALUE_TEMPLATE) is not None:
@@ -241,7 +244,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
 
             self.async_write_ha_state()
 
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
             self._sub_state,
             {
@@ -254,6 +257,10 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
             },
         )
 
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+
     @callback
     def _value_is_expired(self, *_):
         """Triggered when value is expired."""
@@ -263,7 +270,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self._state
 

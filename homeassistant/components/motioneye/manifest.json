@@ -14,5 +14,6 @@
   "codeowners": [
     "@dermotduffy"
   ],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["motioneye_client"]
 }

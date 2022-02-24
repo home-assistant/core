@@ -44,7 +44,10 @@
     },
     {
       "macaddress": "265A4C*"
-    }
+    },
+    {
+      "macaddress": "74ACB9*"
+    }    
   ],
   "ssdp": [
     {
@@ -59,5 +62,6 @@
       "manufacturer": "Ubiquiti Networks",
       "modelDescription": "UniFi Dream Machine SE"
     }
-  ]
+  ],
+  "loggers": ["pyunifiprotect", "unifi_discovery"]
 }

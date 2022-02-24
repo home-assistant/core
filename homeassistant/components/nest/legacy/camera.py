@@ -1,4 +1,6 @@
 """Support for Nest Cameras."""
+# mypy: ignore-errors
+
 from __future__ import annotations
 
 from datetime import timedelta

@@ -16,6 +16,8 @@ from tesla_powerwall import (
 
 from tests.common import load_fixture
 
+MOCK_GATEWAY_DIN = "111-0----2-000000000FFA"
+
 
 async def _mock_powerwall_with_fixtures(hass):
     """Mock data used to build powerwall state."""
@@ -70,6 +72,7 @@ async def _mock_powerwall_site_name(hass, site_name):
     # Sets site_info_resp.site_name to return site_name
     site_info_resp.response["site_name"] = site_name
     powerwall_mock.get_site_info = Mock(return_value=site_info_resp)
+    powerwall_mock.get_gateway_din = Mock(return_value=MOCK_GATEWAY_DIN)
 
     return powerwall_mock
 

@@ -371,7 +371,7 @@ class AuthManager:
 
         if provider is not None and hasattr(provider, "async_will_remove_credentials"):
             # https://github.com/python/mypy/issues/1424
-            await provider.async_will_remove_credentials(credentials)  # type: ignore
+            await provider.async_will_remove_credentials(credentials)  # type: ignore[attr-defined]
 
         await self._store.async_remove_credentials(credentials)
 

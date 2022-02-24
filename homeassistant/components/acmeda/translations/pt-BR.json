@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Nenhum dispositivo encontrado na rede"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "ID do host"
+                },
+                "title": "Escolha um hub para adicionar"
+            }
+        }
+    }
+}

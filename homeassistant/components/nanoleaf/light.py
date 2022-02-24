@@ -1,12 +1,11 @@
 """Support for Nanoleaf Lights."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 import math
 from typing import Any
 
-from aionanoleaf import Nanoleaf, Unavailable
+from aionanoleaf import Nanoleaf
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -25,11 +24,11 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_mired_to_kelvin as mired_to_kelvin,
@@ -51,8 +50,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(minutes=5)
 
 
 async def async_setup_platform(
@@ -82,15 +79,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Nanoleaf light."""
     entry_data: NanoleafEntryData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([NanoleafLight(entry_data.device)])
+    async_add_entities([NanoleafLight(entry_data.device, entry_data.coordinator)])
 
 
 class NanoleafLight(NanoleafEntity, LightEntity):
     """Representation of a Nanoleaf Light."""
 
-    def __init__(self, nanoleaf: Nanoleaf) -> None:
+    def __init__(self, nanoleaf: Nanoleaf, coordinator: DataUpdateCoordinator) -> None:
         """Initialize the Nanoleaf light."""
-        super().__init__(nanoleaf)
+        super().__init__(nanoleaf, coordinator)
         self._attr_unique_id = nanoleaf.serial_no
         self._attr_name = nanoleaf.name
         self._attr_min_mireds = math.ceil(1000000 / nanoleaf.color_temperature_max)
@@ -186,35 +183,3 @@ class NanoleafLight(NanoleafEntity, LightEntity):
         """Instruct the light to turn off."""
         transition: float | None = kwargs.get(ATTR_TRANSITION)
         await self._nanoleaf.turn_off(None if transition is None else int(transition))
-
-    async def async_update(self) -> None:
-        """Fetch new state data for this light."""
-        try:
-            await self._nanoleaf.get_info()
-        except Unavailable:
-            if self.available:
-                _LOGGER.warning("Could not connect to %s", self.name)
-            self._attr_available = False
-            return
-        if not self.available:
-            _LOGGER.info("Fetching %s data recovered", self.name)
-        self._attr_available = True
-
-    @callback
-    def async_handle_update(self) -> None:
-        """Handle state update."""
-        self.async_write_ha_state()
-        if not self.available:
-            _LOGGER.info("Connection to %s recovered", self.name)
-        self._attr_available = True
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity being added to Home Assistant."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{DOMAIN}_update_light_{self._nanoleaf.serial_no}",
-                self.async_handle_update,
-            )
-        )

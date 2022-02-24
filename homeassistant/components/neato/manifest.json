@@ -6,5 +6,6 @@
   "requirements": ["pybotvac==0.0.23"],
   "codeowners": ["@dshokouhi", "@Santobert"],
   "dependencies": ["http"],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["pybotvac"]
 }

@@ -123,7 +123,7 @@ class MediaGroup(MediaPlayerEntity):
         """Update supported features and state when a new state is received."""
         self.async_set_context(event.context)
         self.async_update_supported_features(
-            event.data.get("entity_id"), event.data.get("new_state")  # type: ignore
+            event.data.get("entity_id"), event.data.get("new_state")  # type: ignore[arg-type]
         )
         self.async_update_state()
 
@@ -361,14 +361,14 @@ class MediaGroup(MediaPlayerEntity):
     async def async_volume_up(self) -> None:
         """Turn volume up for media player(s)."""
         for entity in self._features[KEY_VOLUME]:
-            volume_level = self.hass.states.get(entity).attributes["volume_level"]  # type: ignore
+            volume_level = self.hass.states.get(entity).attributes["volume_level"]  # type: ignore[union-attr]
             if volume_level < 1:
                 await self.async_set_volume_level(min(1, volume_level + 0.1))
 
     async def async_volume_down(self) -> None:
         """Turn volume down for media player(s)."""
         for entity in self._features[KEY_VOLUME]:
-            volume_level = self.hass.states.get(entity).attributes["volume_level"]  # type: ignore
+            volume_level = self.hass.states.get(entity).attributes["volume_level"]  # type: ignore[union-attr]
             if volume_level > 0:
                 await self.async_set_volume_level(max(0, volume_level - 0.1))
 

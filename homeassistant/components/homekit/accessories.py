@@ -1,4 +1,6 @@
 """Extend the basic Accessory and Bridge functions."""
+from __future__ import annotations
+
 import logging
 
 from pyhap.accessory import Accessory, Bridge
@@ -90,7 +92,7 @@ SWITCH_TYPES = {
     TYPE_SWITCH: "Switch",
     TYPE_VALVE: "Valve",
 }
-TYPES = Registry()
+TYPES: Registry[str, type[HomeAccessory]] = Registry()
 
 
 def get_accessory(hass, driver, state, aid, config):  # noqa: C901
@@ -119,14 +121,10 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
     elif state.domain == "cover":
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
-        if (
-            device_class
-            in (
-                cover.CoverDeviceClass.GARAGE,
-                cover.CoverDeviceClass.GATE,
-            )
-            and features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE)
-        ):
+        if device_class in (
+            cover.CoverDeviceClass.GARAGE,
+            cover.CoverDeviceClass.GATE,
+        ) and features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE):
             a_type = "GarageDoorOpener"
         elif (
             device_class == cover.CoverDeviceClass.WINDOW

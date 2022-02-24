@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/overkiz",
   "requirements": [
-    "pyoverkiz==1.3.2"
+    "pyoverkiz==1.3.8"
   ],
   "zeroconf": [
     {
@@ -23,5 +23,12 @@
     "@vlebourl",
     "@tetienne"
   ],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": [
+    "boto3",
+    "botocore",
+    "pyhumps",
+    "pyoverkiz",
+    "s3transfer"
+  ]
 }

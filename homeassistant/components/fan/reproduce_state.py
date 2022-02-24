@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 import logging
-from types import MappingProxyType
 from typing import Any
 
 from homeassistant.const import (
@@ -112,8 +111,6 @@ async def async_reproduce_states(
     )
 
 
-def check_attr_equal(
-    attr1: MappingProxyType, attr2: MappingProxyType, attr_str: str
-) -> bool:
+def check_attr_equal(attr1: Mapping, attr2: Mapping, attr_str: str) -> bool:
     """Return true if the given attributes are equal."""
     return attr1.get(attr_str) == attr2.get(attr_str)

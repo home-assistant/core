@@ -80,9 +80,9 @@ async def test_deconz_events(hass, aioclient_mock, mock_deconz_websocket):
     assert (
         len(async_entries_for_config_entry(device_registry, config_entry.entry_id)) == 7
     )
-    assert hass.states.get("sensor.switch_2_battery_level").state == "100"
-    assert hass.states.get("sensor.switch_3_battery_level").state == "100"
-    assert hass.states.get("sensor.switch_4_battery_level").state == "100"
+    assert hass.states.get("sensor.switch_2_battery").state == "100"
+    assert hass.states.get("sensor.switch_3_battery").state == "100"
+    assert hass.states.get("sensor.switch_4_battery").state == "100"
 
     captured_events = async_capture_events(hass, CONF_DECONZ_EVENT)
 
