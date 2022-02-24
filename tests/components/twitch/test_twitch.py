@@ -46,7 +46,7 @@ FOLLOW_ACTIVE = {"followed_at": "2020-01-20T21:22:42"}
 
 
 def make_data(data):
-    return {"status": 200, "data": data, "total": len(data)}
+    return {"data": data, "total": len(data)}
 
 
 async def test_init(hass):
@@ -163,7 +163,7 @@ async def test_oauth_with_sub(hass):
     twitch_mock.has_required_auth.return_value = True
 
     # This function does not return an array so use make_data
-    twitch_mock.check_user_subscription.return_value = make_data(SUB_ACTIVE)
+    twitch_mock.check_user_subscription.return_value = make_data([SUB_ACTIVE])
 
     with patch(
         "homeassistant.components.twitch.sensor.Twitch",

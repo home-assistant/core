@@ -158,20 +158,22 @@ class TwitchSensor(SensorEntity):
         if self._enable_user_auth:
             user = self._client.get_users()["data"][0]
 
-            sub = self._client.check_user_subscription(
+            subs = self._client.check_user_subscription(
                 user_id=user["id"], broadcaster_id=self._channel["id"]
             )
-            if sub["status"] == 200:
+            if "data" in subs:
                 self._subscription = {
                     ATTR_SUBSCRIPTION: True,
-                    ATTR_SUBSCRIPTION_GIFTED: sub["data"]["is_gift"],
+                    ATTR_SUBSCRIPTION_GIFTED: subs["data"][0]["is_gift"],
                 }
-            elif sub["status"] == 404:
+            elif "status" in subs and subs["status"] == 404:
                 self._subscription = {ATTR_SUBSCRIPTION: False}
-            else:
+            elif "error" in subs:
                 raise Exception(
-                    f"Error response on check_user_subscription: {sub['error']}"
+                    f"Error response on check_user_subscription: {subs['error']}"
                 )
+            else:
+                raise Exception("Unknown error response on check_user_subscription")
 
             follows = self._client.get_users_follows(
                 from_id=user["id"], to_id=self._channel["id"]
