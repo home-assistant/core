@@ -87,9 +87,6 @@ class BackupManager:
 
     async def remove_backup(self, slug: str) -> None:
         """Remove a backup."""
-        if not self._loaded:
-            await self.load_backups()
-
         if (backup := await self.get_backup(slug)) is None:
             return
 
@@ -101,9 +98,6 @@ class BackupManager:
         """Generate a backup."""
         if self.backing_up:
             raise HomeAssistantError("Backup already in progress")
-
-        if not self._loaded:
-            await self.load_backups()
 
         try:
             self.backing_up = True
