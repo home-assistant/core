@@ -85,11 +85,16 @@ def _get_media_item(
 ) -> MediaSourceItem:
     """Return media item."""
     if media_content_id:
-        return MediaSourceItem.from_uri(hass, media_content_id)
+        item = MediaSourceItem.from_uri(hass, media_content_id)
+    else:
+        # We default to our own domain if its only one registered
+        domain = None if len(hass.data[DOMAIN]) > 1 else DOMAIN
+        return MediaSourceItem(hass, domain, "")
 
-    # We default to our own domain if its only one registered
-    domain = None if len(hass.data[DOMAIN]) > 1 else DOMAIN
-    return MediaSourceItem(hass, domain, "")
+    if item.domain is not None and item.domain not in hass.data[DOMAIN]:
+        raise ValueError("Unknown media source")
+
+    return item
 
 
 @bind_hass
@@ -106,7 +111,7 @@ async def async_browse_media(
     try:
         item = await _get_media_item(hass, media_content_id).async_browse()
     except ValueError as err:
-        raise BrowseError("Not a media source item") from err
+        raise BrowseError(str(err)) from err
 
     if content_filter is None or item.children is None:
         return item
@@ -128,7 +133,7 @@ async def async_resolve_media(hass: HomeAssistant, media_content_id: str) -> Pla
     try:
         item = _get_media_item(hass, media_content_id)
     except ValueError as err:
-        raise Unresolvable("Not a media source item") from err
+        raise Unresolvable(str(err)) from err
 
     return await item.async_resolve()
 
