@@ -202,11 +202,10 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return GenericOptionsFlowHandler(config_entry)
 
-    def check_for_existing(self, options, ignore_entry_id=None):
+    def check_for_existing(self, options):
         """Check whether an existing entry is using the same URLs."""
         return any(
-            entry.entry_id != ignore_entry_id
-            and entry.options[CONF_STILL_IMAGE_URL] == options[CONF_STILL_IMAGE_URL]
+            entry.options[CONF_STILL_IMAGE_URL] == options[CONF_STILL_IMAGE_URL]
             and entry.options[CONF_STREAM_SOURCE] == options[CONF_STREAM_SOURCE]
             for entry in self._async_current_entries()
         )
