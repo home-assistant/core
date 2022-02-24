@@ -311,6 +311,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="address_already_configured")
 
         host = urlparse(url).hostname
+        _LOGGER.debug(
+            "Importing is trying to fill unique id from discovery for %s", host
+        )
         if is_ip_address(host) and (
             device := await async_discover_device(self.hass, host)
         ):
