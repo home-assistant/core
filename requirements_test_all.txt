@@ -181,7 +181,7 @@ aiopvpc==3.0.0
 
 # homeassistant.components.radarr
 # homeassistant.components.sonarr
-aiopyarr==22.2.1
+aiopyarr==22.2.2
 
 # homeassistant.components.recollect_waste
 aiorecollect==1.0.8
@@ -260,7 +260,7 @@ arcam-fmj==0.12.0
 async-upnp-client==0.23.5
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.0.0
+asyncsleepiq==1.1.0
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
@@ -925,7 +925,7 @@ pydaikin==2.7.0
 pydeconz==87
 
 # homeassistant.components.dexcom
-pydexcom==0.2.2
+pydexcom==0.2.3
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5

@@ -77,9 +77,6 @@ TravisPy==0.3.5
 # homeassistant.components.twitter
 TwitterAPI==2.7.5
 
-# homeassistant.components.tof
-# VL53L1X2==0.1.5
-
 # homeassistant.components.onvif
 WSDiscovery==2.0.0
 
@@ -246,7 +243,7 @@ aiopvpc==3.0.0
 
 # homeassistant.components.radarr
 # homeassistant.components.sonarr
-aiopyarr==22.2.1
+aiopyarr==22.2.2
 
 # homeassistant.components.recollect_waste
 aiorecollect==1.0.8
@@ -355,7 +352,7 @@ async-upnp-client==0.23.5
 asyncpysupla==0.0.5
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.0.0
+asyncsleepiq==1.1.0
 
 # homeassistant.components.aten_pe
 atenpdu==0.3.2
@@ -1475,7 +1472,7 @@ pydeconz==87
 pydelijn==1.0.0
 
 # homeassistant.components.dexcom
-pydexcom==0.2.2
+pydexcom==0.2.3
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5

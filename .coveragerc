@@ -1245,7 +1245,6 @@ omit =
     homeassistant/components/tmb/sensor.py
     homeassistant/components/todoist/calendar.py
     homeassistant/components/todoist/const.py
-    homeassistant/components/tof/sensor.py
     homeassistant/components/tolo/__init__.py
     homeassistant/components/tolo/binary_sensor.py
     homeassistant/components/tolo/button.py
