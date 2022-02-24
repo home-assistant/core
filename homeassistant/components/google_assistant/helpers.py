@@ -45,6 +45,35 @@ SYNC_DELAY = 15
 _LOGGER = logging.getLogger(__name__)
 
 
+@callback
+def _get_registry_entries(
+    hass: HomeAssistant, entity_id: str
+) -> tuple[device_registry.DeviceEntry, area_registry.AreaEntry]:
+    """Get registry entries."""
+    ent_reg = entity_registry.async_get(hass)
+    dev_reg = device_registry.async_get(hass)
+    area_reg = area_registry.async_get(hass)
+
+    if (entity_entry := ent_reg.async_get(entity_id)) and entity_entry.device_id:
+        device_entry = dev_reg.devices.get(entity_entry.device_id)
+    else:
+        device_entry = None
+
+    if entity_entry and entity_entry.area_id:
+        area_id = entity_entry.area_id
+    elif device_entry and device_entry.area_id:
+        area_id = device_entry.area_id
+    else:
+        area_id = None
+
+    if area_id is not None:
+        area_entry = area_reg.async_get_area(area_id)
+    else:
+        area_entry = None
+
+    return device_entry, area_entry
+
+
 class AbstractConfig(ABC):
     """Hold the configuration for Google Assistant."""
 
@@ -515,39 +544,30 @@ class GoogleEntity:
         https://developers.google.com/actions/smarthome/create-app#actiondevicessync
         """
         state = self.state
-
+        traits = self.traits()
         entity_config = self.config.entity_config.get(state.entity_id, {})
         name = (entity_config.get(CONF_NAME) or state.name).strip()
 
-        dev_reg = device_registry.async_get(self.hass)
-        ent_reg = entity_registry.async_get(self.hass)
+        # Find entity/device/area registry entries
+        device_entry, area_entry = _get_registry_entries(self.hass, self.entity_id)
 
-        if (
-            entity_entry := ent_reg.async_get(self.entity_id)
-        ) and entity_entry.device_id:
-            device_entry = dev_reg.devices.get(entity_entry.device_id)
-        else:
-            device_entry = None
-
-        traits = self.traits()
-
-        device_type = get_google_type(
-            state.domain, state.attributes.get(ATTR_DEVICE_CLASS)
-        )
-
+        # Build the device info
         device = {
             "id": state.entity_id,
             "name": {"name": name},
             "attributes": {},
             "traits": [trait.name for trait in traits],
             "willReportState": self.config.should_report_state,
-            "type": device_type,
+            "type": get_google_type(
+                state.domain, state.attributes.get(ATTR_DEVICE_CLASS)
+            ),
         }
 
-        # use aliases
+        # Add aliases
         if aliases := entity_config.get(CONF_ALIASES):
             device["name"]["nicknames"] = [name] + aliases
 
+        # Add local SDK info if enabled
         if self.config.is_local_sdk_active and self.should_expose_local():
             device["otherDeviceIds"] = [{"deviceId": self.entity_id}]
             device["customData"] = {
@@ -559,28 +579,20 @@ class GoogleEntity:
                 "proxyDeviceId": agent_user_id,
             }
 
+        # Add trait sync attributes
         for trt in traits:
             device["attributes"].update(trt.sync_attributes())
 
+        # Add roomhint
         if room := entity_config.get(CONF_ROOM_HINT):
             device["roomHint"] = room
-        else:
-            if entity_entry and entity_entry.area_id:
-                area_id = entity_entry.area_id
-            elif device_entry and device_entry.area_id:
-                area_id = device_entry.area_id
-            else:
-                area_id = None
+        elif area_entry and area_entry.name:
+            device["roomHint"] = area_entry.name
 
-            if (
-                area_id
-                and (area := area_registry.async_get(self.hass).async_get_area(area_id))
-                and area.name
-            ):
-                device["roomHint"] = area.name
-
+        # Add deviceInfo
         if device_entry:
             device_info = {}
+
             if device_entry.manufacturer:
                 device_info["manufacturer"] = device_entry.manufacturer
             if device_entry.model:
