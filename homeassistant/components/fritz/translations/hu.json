@@ -56,7 +56,8 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "M\u00e1sodpercek egy eszk\u00f6z \"otthon\" tart\u00e1s\u00e1ra"
+                    "consider_home": "M\u00e1sodpercek egy eszk\u00f6z \"otthon\" tart\u00e1s\u00e1ra",
+                    "old_discovery": "R\u00e9gi felder\u00edt\u00e9si m\u00f3dszer enged\u00e9lyez\u00e9se"
                 }
             }
         }
