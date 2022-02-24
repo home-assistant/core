@@ -1,10 +1,10 @@
 """Fixtures for Samsung TV."""
 from datetime import datetime
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from samsungctl import Remote
-from samsungtvws import SamsungTVWS
+from samsungtvws.async_connection import SamsungTVWSAsyncConnection
 
 import homeassistant.util.dt as dt_util
 
@@ -56,11 +56,11 @@ def rest_api_fixture() -> Mock:
 def remotews_fixture() -> Mock:
     """Patch the samsungtvws SamsungTVWS."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncConnection"
     ) as remotews_class:
-        remotews = Mock(SamsungTVWS)
-        remotews.__enter__ = Mock(return_value=remotews)
-        remotews.__exit__ = Mock()
+        remotews = Mock(SamsungTVWSAsyncConnection)
+        remotews.__aenter__ = AsyncMock(return_value=remotews)
+        remotews.__aexit__ = AsyncMock()
         remotews.app_list.return_value = SAMPLE_APP_LIST
         remotews.token = "FAKE_TOKEN"
         remotews_class.return_value = remotews

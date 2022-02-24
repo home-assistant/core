@@ -4,9 +4,10 @@ from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 import pytest
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
-from samsungtvws import SamsungTVWS
+from samsungtvws.async_connection import SamsungTVWSAsyncConnection
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
-from websocket import WebSocketException, WebSocketProtocolException
+from samsungtvws.remote import REMOTE_ENDPOINT
+from websockets.exceptions import WebSocketException, WebSocketProtocolError
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, ssdp, zeroconf
@@ -164,6 +165,7 @@ AUTODETECT_LEGACY = {
 }
 AUTODETECT_WEBSOCKET_PLAIN = {
     "host": "fake_host",
+    "endpoint": REMOTE_ENDPOINT,
     "name": "HomeAssistant",
     "port": 8001,
     "timeout": TIMEOUT_REQUEST,
@@ -171,6 +173,7 @@ AUTODETECT_WEBSOCKET_PLAIN = {
 }
 AUTODETECT_WEBSOCKET_SSL = {
     "host": "fake_host",
+    "endpoint": REMOTE_ENDPOINT,
     "name": "HomeAssistant",
     "port": 8002,
     "timeout": TIMEOUT_REQUEST,
@@ -272,8 +275,8 @@ async def test_user_websocket_not_supported(hass: HomeAssistant) -> None:
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=OSError("Boom"),
     ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWS.open",
-        side_effect=WebSocketProtocolException("Boom"),
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncConnection.open",
+        side_effect=WebSocketProtocolError("Boom"),
     ):
         # websocket device not supported
         result = await hass.config_entries.flow.async_init(
@@ -289,7 +292,7 @@ async def test_user_not_successful(hass: HomeAssistant) -> None:
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=OSError("Boom"),
     ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWS.open",
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncConnection.open",
         side_effect=OSError("Boom"),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -305,7 +308,7 @@ async def test_user_not_successful_2(hass: HomeAssistant) -> None:
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=OSError("Boom"),
     ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWS.open",
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncConnection.open",
         side_effect=ConnectionFailure("Boom"),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -464,9 +467,9 @@ async def test_ssdp_websocket_not_supported(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=OSError("Boom"),
     ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWS",
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncConnection",
     ) as remotews, patch.object(
-        remotews, "open", side_effect=WebSocketProtocolException("Boom")
+        remotews, "open", side_effect=WebSocketProtocolError("Boom")
     ):
         # device not supported
         result = await hass.config_entries.flow.async_init(
@@ -497,7 +500,7 @@ async def test_ssdp_not_successful(hass: HomeAssistant) -> None:
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=OSError("Boom"),
     ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWS.open",
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncConnection.open",
         side_effect=OSError("Boom"),
     ), patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
@@ -526,7 +529,7 @@ async def test_ssdp_not_successful_2(hass: HomeAssistant) -> None:
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=OSError("Boom"),
     ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWS.open",
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncConnection.open",
         side_effect=ConnectionFailure("Boom"),
     ), patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
@@ -830,14 +833,15 @@ async def test_autodetect_websocket(hass: HomeAssistant) -> None:
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=OSError("Boom"),
     ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncConnection"
     ) as remotews, patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
     ) as rest_api_class:
-        remote = Mock(SamsungTVWS)
-        remote.__enter__ = Mock(return_value=remote)
-        remote.__exit__ = Mock(return_value=False)
-        remote.app_list.return_value = SAMPLE_APP_LIST
+                remote = Mock(SamsungTVWSAsyncConnection)
+        remote.__aenter__ = AsyncMock(return_value=remote)
+        remote.__aexit__ = AsyncMock(return_value=False)
+        remote.connection = AsyncMock()
+        remote.connection.recv.return_value = SAMPLE_APP_LIST
         rest_api_class.return_value.rest_device_info = AsyncMock(
             return_value={
                 "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
@@ -876,16 +880,17 @@ async def test_websocket_no_mac(hass: HomeAssistant) -> None:
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=OSError("Boom"),
     ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncConnection"
     ) as remotews, patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
     ) as rest_api_class, patch(
         "getmac.get_mac_address", return_value="gg:hh:ii:ll:mm:nn"
     ):
-        remote = Mock(SamsungTVWS)
-        remote.__enter__ = Mock(return_value=remote)
-        remote.__exit__ = Mock(return_value=False)
-        remote.app_list.return_value = SAMPLE_APP_LIST
+        remote = Mock(SamsungTVWSAsyncConnection)
+        remote.__aenter__ = AsyncMock(return_value=remote)
+        remote.__aexit__ = AsyncMock(return_value=False)
+        remote.connection = AsyncMock()
+        remote.connection.recv.return_value = SAMPLE_APP_LIST
         rest_api_class.return_value.rest_device_info = AsyncMock(
             return_value={
                 "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
@@ -898,7 +903,6 @@ async def test_websocket_no_mac(hass: HomeAssistant) -> None:
                 },
             }
         )
-
         remote.token = "123456789"
         remotews.return_value = remote
 
@@ -964,15 +968,15 @@ async def test_autodetect_legacy(hass: HomeAssistant) -> None:
 async def test_autodetect_none(hass: HomeAssistant) -> None:
     """Test for send key with autodetection of protocol."""
     mock_remotews = Mock()
-    mock_remotews.__enter__ = Mock(return_value=mock_remotews)
-    mock_remotews.__exit__ = Mock()
+    mock_remotews.__aenter__ = AsyncMock(return_value=mock_remotews)
+    mock_remotews.__aexit__ = AsyncMock()
     mock_remotews.open = Mock(side_effect=OSError("Boom"))
 
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=OSError("Boom"),
     ) as remote, patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWS",
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncConnection",
         return_value=mock_remotews,
     ) as remotews:
         result = await hass.config_entries.flow.async_init(
@@ -1314,7 +1318,7 @@ async def test_form_reauth_websocket_not_supported(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWS.open",
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncConnection.open",
         side_effect=WebSocketException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
