@@ -1,10 +1,7 @@
 """The tests for an update of the Twitch component."""
 from unittest.mock import MagicMock, patch
 
-from requests import HTTPError
-
 from homeassistant.components import sensor
-from homeassistant.components.twitch.sensor import OAUTH_SCOPES
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.setup import async_setup_component
 
