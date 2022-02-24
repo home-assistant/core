@@ -33,6 +33,7 @@ def async_update_entry_from_discovery(
         return hass.config_entries.async_update_entry(
             entry, unique_id=dr.format_mac(device.mac_address)
         )
+    _LOGGER.debug("Unique id is already present from discovery: %s", device)
     return False
 
 
