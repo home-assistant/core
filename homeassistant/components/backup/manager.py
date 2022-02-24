@@ -12,8 +12,7 @@ from securetar import SecureTarFile, atomic_contents_add
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util import json as json_util
-from homeassistant.util.dt import now
+from homeassistant.util import dt, json as json_util
 
 from .const import EXCLUDE_FROM_BACKUP, LOGGER
 
@@ -98,7 +97,7 @@ class BackupManager:
         try:
             self.backing_up = True
             backup_name = f"Core {HAVERSION}"
-            date_str = now().isoformat()
+            date_str = dt.now().isoformat()
             slug = _generate_slug(date_str, backup_name)
 
             backup_data = {
