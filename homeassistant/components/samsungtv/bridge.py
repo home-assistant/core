@@ -12,8 +12,8 @@ from samsungtvws.async_connection import SamsungTVWSAsyncConnection
 from samsungtvws.async_rest import SamsungTVAsyncRest
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from samsungtvws.helper import process_api_response
-from samsungtvws import remote as ws_remote
-from websocket import WebSocketException
+from samsungtvws.remote import REMOTE_ENDPOINT, ChannelEmitCommand, SendRemoteKey
+from websockets.exceptions import WebSocketException
 
 from homeassistant.const import (
     CONF_HOST,
@@ -317,14 +317,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
         """Get installed app list."""
         if self._app_list is None:
             if remote := await self._async_get_remote():
-                await remote.send_command(
-                    ws_remote.ChannelEmitCommand(
-                        {
-                            "event": "ed.installedApp.get",
-                            "to": "host",
-                        }
-                    )
-                )
+                await remote.send_command(ChannelEmitCommand.get_installed_app())
                 response = process_api_response(await remote.connection.recv())
                 if response.get("data"):
                     data = response["data"]
@@ -361,7 +354,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 LOGGER.debug("Try config: %s", config)
                 with SamsungTVWSAsyncConnection(
                     host=self.host,
-                    endpoint=ws_remote.REMOTE_ENDPOINT,
+                    endpoint=REMOTE_ENDPOINT,
                     port=self.port,
                     token=self.token,
                     timeout=config[CONF_TIMEOUT],
@@ -404,7 +397,9 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 try:
                     if remote := await self._async_get_remote():
                         if key_type == "run_app":
-                            await remote.run_app(key)
+                            await remote.send_command(
+                                ChannelEmitCommand.launch_app(key)
+                            )
                         else:
                             await remote.send_command(
                                 ws_remote.SendRemoteKey.click(key)
@@ -433,7 +428,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 )
                 self._remote = SamsungTVWSAsyncConnection(
                     host=self.host,
-                    endpoint=ws_remote.REMOTE_ENDPOINT,
+                    endpoint=REMOTE_ENDPOINT,
                     port=self.port,
                     token=self.token,
                     timeout=TIMEOUT_WEBSOCKET,
