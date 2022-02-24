@@ -1,7 +1,6 @@
 """Backup manager for the Backup integration."""
 from __future__ import annotations
 
-import asyncio
 from dataclasses import asdict, dataclass
 import hashlib
 import json
@@ -49,24 +48,21 @@ class BackupManager:
         """Load data of stored backup files."""
         backups = {}
 
-        def _read_backup_info(backup_path: Path) -> None:
-            with SecureTarFile(backup_path, "r", gzip=False) as backup_file:
-                if data_file := backup_file.extractfile("./backup.json"):
-                    data = json.loads(data_file.read())
-                    backup = Backup(
-                        slug=data["slug"],
-                        name=data["name"],
-                        date=data["date"],
-                        path=backup_path,
-                        size=round(backup_path.stat().st_size / 1_048_576, 2),
-                    )
-                    backups[backup.slug] = backup
+        def _read_backups() -> None:
+            for backup_path in self.backup_dir.glob("*.tar"):
+                with SecureTarFile(backup_path, "r", gzip=False) as backup_file:
+                    if data_file := backup_file.extractfile("./backup.json"):
+                        data = json.loads(data_file.read())
+                        backup = Backup(
+                            slug=data["slug"],
+                            name=data["name"],
+                            date=data["date"],
+                            path=backup_path,
+                            size=round(backup_path.stat().st_size / 1_048_576, 2),
+                        )
+                        backups[backup.slug] = backup
 
-        await asyncio.gather(
-            self.hass.async_add_executor_job(_read_backup_info, backup_path)
-            for backup_path in self.backup_dir.glob("*.tar")
-        )
-
+        await self.hass.async_add_executor_job(_read_backups)
         LOGGER.debug("Loaded %s backups", len(backups))
         self._backups = backups
         self._loaded = True
