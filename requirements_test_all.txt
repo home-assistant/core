@@ -1239,9 +1239,6 @@ python-songpal==0.14
 # homeassistant.components.tado
 python-tado==0.12.0
 
-# homeassistant.components.twitch
-python-twitch-client==0.6.0
-
 # homeassistant.components.awair
 python_awair==0.2.1
 
@@ -1470,6 +1467,9 @@ twentemilieu==0.5.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
+
+# homeassistant.components.twitch
+twitchAPI==2.5.2
 
 # homeassistant.components.rainforest_eagle
 uEagle==0.0.2
