@@ -83,13 +83,13 @@ async def test_message_to_json(caplog):
 
     json_str = message_to_json({"id": 1, "message": "xyz"})
 
-    assert json_str == '{"id": 1, "message": "xyz"}'
+    assert json_str == '{"id":1,"message":"xyz"}'
 
     json_str2 = message_to_json({"id": 1, "message": _Unserializeable()})
 
     assert (
         json_str2
-        == '{"id": 1, "type": "result", "success": false, "error": {"code": "unknown_error", "message": "Invalid JSON in response"}}'
+        == '{"id":1,"type":"result","success":false,"error":{"code":"unknown_error","message":"Invalid JSON in response"}}'
     )
     assert "Unable to serialize to JSON" in caplog.text
 
