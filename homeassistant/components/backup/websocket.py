@@ -26,14 +26,11 @@ async def handle_info(
 ):
     """List all stored backups."""
     manager: BackupManager = hass.data[DOMAIN]
-
-    if manager.backups is None:
-        await hass.async_add_executor_job(manager.load_backups)
-
+    backups = await manager.get_backups()
     connection.send_result(
         msg["id"],
         {
-            "backups": list(manager.backups or []),
+            "backups": list(backups),
             "backing_up": manager.backing_up,
         },
     )
@@ -54,9 +51,7 @@ async def handle_remove(
 ):
     """Remove a backup."""
     manager: BackupManager = hass.data[DOMAIN]
-
-    await hass.async_add_executor_job(manager.remove_backup, msg["slug"])
-
+    await manager.remove_backup(msg["slug"])
     connection.send_result(msg["id"])
 
 

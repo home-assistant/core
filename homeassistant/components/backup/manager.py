@@ -1,6 +1,7 @@
 """Backup manager for the Backup integration."""
 from __future__ import annotations
 
+import asyncio
 from dataclasses import asdict, dataclass
 import hashlib
 import json
@@ -36,21 +37,15 @@ class Backup:
 class BackupManager:
     """Backup manager for the Backup integration."""
 
-    _backups: dict[str, Backup] | None = None
-
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the backup manager."""
         self.hass = hass
         self.backup_dir = Path(hass.config.path("backups"))
         self.backing_up = False
         self._loaded = False
+        self._backups: dict[str, Backup] = {}
 
-    @property
-    def backups(self) -> dict[str, Backup] | None:
-        """Return a dict of backups."""
-        return self._backups
-
-    def load_backups(self) -> None:
+    async def load_backups(self) -> None:
         """Load data of stored backup files."""
         backups = {}
 
@@ -67,30 +62,48 @@ class BackupManager:
                     )
                     backups[backup.slug] = backup
 
-        for backup_path in self.backup_dir.glob("*.tar"):
-            _read_backup_info(backup_path)
+        await asyncio.gather(
+            self.hass.async_add_executor_job(_read_backup_info, backup_path)
+            for backup_path in self.backup_dir.glob("*.tar")
+        )
 
         LOGGER.debug("Loaded %s backups", len(backups))
         self._backups = backups
         self._loaded = True
 
-    def get_backup(self, slug: str) -> Backup | None:
-        """Return a backup."""
-        return None if self._backups is None else self._backups.get(slug)
+    async def get_backups(self) -> dict[str, Backup]:
+        """Return backups."""
+        if not self._loaded:
+            await self.load_backups()
 
-    def remove_backup(self, slug: str) -> None:
+        return self._backups
+
+    async def get_backup(self, slug: str) -> Backup | None:
+        """Return a backup."""
+        if not self._loaded:
+            await self.load_backups()
+
+        return self._backups.get(slug)
+
+    async def remove_backup(self, slug: str) -> None:
         """Remove a backup."""
-        LOGGER.error(self._backups)
-        if self._backups is None or (backup := self.get_backup(slug)) is None:
+        if not self._loaded:
+            await self.load_backups()
+
+        if (backup := await self.get_backup(slug)) is None:
             return
-        backup.path.unlink(missing_ok=True)
+
+        await self.hass.async_add_executor_job(backup.path.unlink, True)
         LOGGER.debug("Removed backup located at %s", backup.path)
         self._backups.pop(slug)
 
-    async def generate_backup(self) -> None:
+    async def generate_backup(self) -> Backup:
         """Generate a backup."""
         if self.backing_up:
             raise HomeAssistantError("Backup already in progress")
+
+        if not self._loaded:
+            await self.load_backups()
 
         try:
             self.backing_up = True
@@ -134,7 +147,16 @@ class BackupManager:
                         tar_file.add(tmp_dir_path, arcname=".")
 
             await self.hass.async_add_executor_job(_create_backup)
+            backup = Backup(
+                slug=slug,
+                name=backup_name,
+                date=date_str,
+                path=tar_file_path,
+                size=round(tar_file_path.stat().st_size / 1_048_576, 2),
+            )
+            self._backups[slug] = backup
             LOGGER.debug("Generated new backup with slug %s", slug)
+            return backup
         finally:
             self.backing_up = False
 

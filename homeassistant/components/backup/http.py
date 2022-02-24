@@ -36,8 +36,9 @@ class DownloadBackupView(HomeAssistantView):
             return Response(status=HTTPStatus.UNAUTHORIZED)
 
         manager: BackupManager = request.app["hass"].data[DOMAIN]
+        backup = await manager.get_backup(slug)
 
-        if (backup := manager.get_backup(slug)) is None or not backup.path.exists():
+        if backup is None or not backup.path.exists():
             return Response(status=HTTPStatus.NOT_FOUND)
 
         return FileResponse(
