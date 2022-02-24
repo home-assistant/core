@@ -25,6 +25,7 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.modbus.const import (
     ATTR_ADDRESS,
     ATTR_HUB,
+    ATTR_SLAVE,
     ATTR_STATE,
     ATTR_UNIT,
     ATTR_VALUE,
@@ -484,8 +485,15 @@ SERVICE = "service"
         {VALUE: ModbusException("fail write_"), DATA: "Pymodbus:"},
     ],
 )
+@pytest.mark.parametrize(
+    "do_unit",
+    [
+        ATTR_UNIT,
+        ATTR_SLAVE,
+    ],
+)
 async def test_pb_service_write(
-    hass, do_write, do_return, caplog, mock_modbus_with_pymodbus
+    hass, do_write, do_return, do_unit, caplog, mock_modbus_with_pymodbus
 ):
     """Run test for service write_register."""
 
@@ -498,7 +506,7 @@ async def test_pb_service_write(
 
     data = {
         ATTR_HUB: TEST_MODBUS_NAME,
-        ATTR_UNIT: 17,
+        do_unit: 17,
         ATTR_ADDRESS: 16,
         do_write[DATA]: do_write[VALUE],
     }

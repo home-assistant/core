@@ -18,7 +18,6 @@ COMMENT_REQUIREMENTS = (
     "avion",
     "beacontools",
     "beewi_smartclim",  # depends on bluepy
-    "blinkt",
     "bluepy",
     "bme280spi",
     "bme680",
@@ -44,7 +43,6 @@ COMMENT_REQUIREMENTS = (
     "smbus-cffi",
     "tensorflow",
     "tf-models-official",
-    "VL53L1X2",
 )
 
 COMMENT_REQUIREMENTS_NORMALIZED = {
