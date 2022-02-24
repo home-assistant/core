@@ -88,7 +88,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
     ) -> None:
         """Init method."""
         super().__init__(device_url, coordinator)
-        self.temperature_device = self.executor.linked_device(7)
+        self.temperature_device = self.executor.linked_device(2)
         if self.hvac_mode == HVAC_MODE_AUTO:
             if self.preset_mode == PRESET_NONE:
                 self._saved_target_temp = None
