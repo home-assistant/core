@@ -448,7 +448,9 @@ async def handle_subscribe_trigger(
             msg["id"], {"variables": variables, "context": context}
         )
         connection.send_message(
-            json.dumps(message, cls=ExtendedJSONEncoder, allow_nan=False)
+            json.dumps(
+                message, cls=ExtendedJSONEncoder, allow_nan=False, separators=(",", ":")
+            )
         )
 
     connection.subscriptions[msg["id"]] = (
