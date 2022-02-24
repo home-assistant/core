@@ -6,19 +6,16 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import cast
 
-import voluptuous as vol
 from whois import Domain
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DOMAIN, CONF_NAME, TIME_DAYS
+from homeassistant.const import CONF_DOMAIN, TIME_DAYS
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,21 +24,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import (
-    ATTR_EXPIRES,
-    ATTR_NAME_SERVERS,
-    ATTR_REGISTRAR,
-    ATTR_UPDATED,
-    DEFAULT_NAME,
-    DOMAIN,
-)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_DOMAIN): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
+from .const import ATTR_EXPIRES, ATTR_NAME_SERVERS, ATTR_REGISTRAR, ATTR_UPDATED, DOMAIN
 
 
 @dataclass
