@@ -125,6 +125,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_device = ElkSystem(
             discovery_info.macaddress, discovery_info.ip, 0
         )
+        _LOGGER.debug("Elk discovered from dhcp: %s", self._discovered_device)
         return await self._async_handle_discovery()
 
     async def async_step_integration_discovery(
@@ -135,6 +136,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info["mac_address"],
             discovery_info["ip_address"],
             discovery_info["port"],
+        )
+        _LOGGER.debug(
+            "Elk discovered from integration discovery: %s", self._discovered_device
         )
         return await self._async_handle_discovery()
 
@@ -305,6 +309,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Handle import."""
+        _LOGGER.debug("Elk is importing from yaml")
         url = _make_url_from_data(user_input)
 
         if self._url_already_configured(url):
