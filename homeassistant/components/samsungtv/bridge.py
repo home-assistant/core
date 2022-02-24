@@ -353,7 +353,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
             result = None
             try:
                 LOGGER.debug("Try config: %s", config)
-                with SamsungTVWSAsyncConnection(
+                async with SamsungTVWSAsyncConnection(
                     host=self.host,
                     endpoint=REMOTE_ENDPOINT,
                     port=self.port,
