@@ -82,15 +82,15 @@ def build_schema(user_input):
             CONF_PASSWORD,
             description={"suggested_value": user_input.get(CONF_PASSWORD, "")},
         ): str,
-        vol.Optional(
+        vol.Required(
             CONF_LIMIT_REFETCH_TO_URL_CHANGE,
             default=user_input.get(CONF_LIMIT_REFETCH_TO_URL_CHANGE, False),
         ): bool,
-        vol.Optional(
+        vol.Required(
             CONF_FRAMERATE,
-            description={"suggested_value": user_input.get(CONF_FRAMERATE, "")},
+            description={"suggested_value": user_input.get(CONF_FRAMERATE, 2)},
         ): int,
-        vol.Optional(
+        vol.Required(
             CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL, True)
         ): bool,
     }
@@ -289,6 +289,10 @@ class GenericOptionsFlowHandler(OptionsFlow):
                         CONF_STILL_IMAGE_URL: user_input.get(CONF_STILL_IMAGE_URL),
                         CONF_CONTENT_TYPE: still_format,
                         CONF_USERNAME: user_input.get(CONF_USERNAME),
+                        CONF_LIMIT_REFETCH_TO_URL_CHANGE: user_input.get(
+                            CONF_LIMIT_REFETCH_TO_URL_CHANGE
+                        ),
+                        CONF_FRAMERATE: user_input.get(CONF_FRAMERATE),
                         CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL),
                     },
                 )
