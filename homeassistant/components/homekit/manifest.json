@@ -8,8 +8,8 @@
     "PyQRCode==1.2.1",
     "base36==0.1.1"
   ],
-  "dependencies": ["http", "camera", "ffmpeg", "network"],
-  "after_dependencies": ["zeroconf"],
+  "dependencies": ["http", "network"],
+  "after_dependencies": ["camera", "ffmpeg", "zeroconf"],
   "codeowners": ["@bdraco"],
   "zeroconf": ["_homekit._tcp.local."],
   "config_flow": true,
