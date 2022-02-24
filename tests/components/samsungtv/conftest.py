@@ -1,10 +1,10 @@
 """Fixtures for Samsung TV."""
 from datetime import datetime
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from samsungctl import Remote
-from samsungtvws import SamsungTVWS
+from samsungtvws.async_connection import SamsungTVWSAsyncConnection
 from samsungtvws.async_rest import SamsungTVAsyncRest
 
 import homeassistant.util.dt as dt_util
@@ -37,14 +37,14 @@ def remote_fixture() -> Mock:
 def remotews_fixture() -> Mock:
     """Patch the samsungtvws SamsungTVWS."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncConnection"
     ) as remotews_class, patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest"
     ) as rest_api_class:
         rest_api = Mock(SamsungTVAsyncRest)
-        remotews = Mock(SamsungTVWS)
-        remotews.__enter__ = Mock(return_value=remotews)
-        remotews.__exit__ = Mock()
+        remotews = Mock(SamsungTVWSAsyncConnection)
+        remotews.__aenter__ = AsyncMock(return_value=remotews)
+        remotews.__aexit__ = AsyncMock()
         rest_api.rest_device_info.return_value = {
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
             "device": {
@@ -55,7 +55,8 @@ def remotews_fixture() -> Mock:
                 "networkType": "wireless",
             },
         }
-        remotews.app_list.return_value = SAMPLE_APP_LIST
+        remotews.connection = AsyncMock()
+        remotews.connection.recv.return_value = SAMPLE_APP_LIST
         remotews.token = "FAKE_TOKEN"
         rest_api_class.return_value = rest_api
         remotews_class.return_value = remotews
@@ -66,14 +67,14 @@ def remotews_fixture() -> Mock:
 def remotews_no_device_info_fixture() -> Mock:
     """Patch the samsungtvws SamsungTVWS."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncConnection"
     ) as remotews_class, patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest"
     ) as rest_api_class:
         rest_api = Mock(SamsungTVAsyncRest)
-        remotews = Mock(SamsungTVWS)
-        remotews.__enter__ = Mock(return_value=remotews)
-        remotews.__exit__ = Mock()
+        remotews = Mock(SamsungTVWSAsyncConnection)
+        remotews.__aenter__ = AsyncMock(return_value=remotews)
+        remotews.__aexit__ = AsyncMock()
         rest_api.rest_device_info.return_value = None
         remotews.token = "FAKE_TOKEN"
         rest_api_class.return_value = rest_api
@@ -85,14 +86,14 @@ def remotews_no_device_info_fixture() -> Mock:
 def remotews_soundbar_fixture() -> Mock:
     """Patch the samsungtvws SamsungTVWS."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncConnection"
     ) as remotews_class, patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest"
     ) as rest_api_class:
         rest_api = Mock(SamsungTVAsyncRest)
-        remotews = Mock(SamsungTVWS)
-        remotews.__enter__ = Mock(return_value=remotews)
-        remotews.__exit__ = Mock()
+        remotews = Mock(SamsungTVWSAsyncConnection)
+        remotews.__aenter__ = AsyncMock(return_value=remotews)
+        remotews.__aexit__ = AsyncMock()
         rest_api.rest_device_info.return_value = {
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
             "device": {
