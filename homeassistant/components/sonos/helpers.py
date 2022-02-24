@@ -3,30 +3,58 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import Any, Protocol, TypeVar, overload
 
 from soco import SoCo
 from soco.exceptions import SoCoException, SoCoUPnPException
 from typing_extensions import Concatenate, ParamSpec
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import SONOS_SPEAKER_ACTIVITY
 from .exception import SonosUpdateError
-
-if TYPE_CHECKING:
-    from .entity import SonosEntity
-    from .household_coordinator import SonosHouseholdCoordinator
-    from .speaker import SonosSpeaker
 
 UID_PREFIX = "RINCON_"
 UID_POSTFIX = "01400"
 
 _LOGGER = logging.getLogger(__name__)
 
-_T = TypeVar("_T", bound="SonosSpeaker | SonosEntity | SonosHouseholdCoordinator")
+_T = TypeVar("_T", bound="_SonosEntityProtocol")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
+
+
+class _SonosEntityProtocol(Protocol):
+    """Protocol class for Sonos entities, used for error decororator.
+
+    Only include attributes / methods which ALL instances should have!
+    """
+
+    hass: HomeAssistant
+
+    @property
+    def soco(self) -> SoCo:
+        """Return the SoCo instance."""
+        raise NotImplementedError
+
+
+@overload
+def soco_error(
+    errorcodes: None = ...,
+) -> Callable[  # type: ignore[misc]
+    [Callable[Concatenate[_T, _P], _R]], Callable[Concatenate[_T, _P], _R]
+]:
+    ...
+
+
+@overload
+def soco_error(
+    errorcodes: list[str],
+) -> Callable[  # type: ignore[misc]
+    [Callable[Concatenate[_T, _P], _R]], Callable[Concatenate[_T, _P], _R | None]
+]:
+    ...
 
 
 def soco_error(
@@ -43,7 +71,7 @@ def soco_error(
 
         def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> _R | None:
             """Wrap for all soco UPnP exception."""
-            args_soco = next((arg for arg in args if isinstance(arg, SoCo)), None)
+            args_soco = next((arg for arg in args if isinstance(arg, SoCo)), None)  # type: ignore[attr-defined]
             try:
                 result = funct(self, *args, **kwargs)
             except (OSError, SoCoException, SoCoUPnPException) as err:
