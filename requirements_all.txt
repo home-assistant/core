@@ -1221,9 +1221,6 @@ phone_modem==0.1.1
 # homeassistant.components.onewire
 pi1wire==0.1.0
 
-# homeassistant.components.pi4ioe5v9xxxx
-pi4ioe5v9xxxx==0.0.2
-
 # homeassistant.components.rpi_pfio
 pifacecommon==4.2.2
 
