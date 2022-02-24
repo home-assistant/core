@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from asyncio.exceptions import TimeoutError as AsyncioTimeoutError
 import contextlib
 from typing import Any
 
-from asyncio.exceptions import TimeoutError
 from requests.exceptions import Timeout as RequestsTimeout
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
@@ -381,7 +381,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     "Working but unsupported config: %s, error: %s", config, err
                 )
                 result = RESULT_NOT_SUPPORTED
-            except (OSError, TimeoutError, ConnectionFailure) as err:
+            except (OSError, AsyncioTimeoutError, ConnectionFailure) as err:
                 LOGGER.debug("Failing config: %s, error: %s", config, err)
         # pylint: disable=useless-else-on-loop
         else:
@@ -433,7 +433,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
             except ConnectionFailure as err:
                 LOGGER.debug("ConnectionFailure %s", err)
                 self._notify_reauth_callback()
-            except (WebSocketException, TimeoutError, OSError) as err:
+            except (WebSocketException, AsyncioTimeoutError, OSError) as err:
                 LOGGER.debug("WebSocketException, OSError %s", err)
                 self._remote = None
             else:
