@@ -4,11 +4,11 @@ from __future__ import annotations
 import logging
 
 from twitchAPI.twitch import (
-    Twitch,
+    AuthScope,
     InvalidTokenException,
     MissingScopeException,
+    Twitch,
     TwitchAuthorizationException,
-    AuthScope,
 )
 import voluptuous as vol
 
