@@ -137,9 +137,25 @@ CLIMATE_MOES = {
         SIG_EP_OUTPUT: [zigpy.zcl.clusters.general.Ota.cluster_id],
     }
 }
+
+CLIMATE_ZONNSMART = {
+    1: {
+        SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+        SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.THERMOSTAT,
+        SIG_EP_INPUT: [
+            zigpy.zcl.clusters.general.Basic.cluster_id,
+            zigpy.zcl.clusters.hvac.Thermostat.cluster_id,
+            zigpy.zcl.clusters.hvac.UserInterface.cluster_id,
+            61148,
+        ],
+        SIG_EP_OUTPUT: [zigpy.zcl.clusters.general.Ota.cluster_id],
+    }
+}
+
 MANUF_SINOPE = "Sinope Technologies"
 MANUF_ZEN = "Zen Within"
 MANUF_MOES = "_TZE200_ckud7u2l"
+MANUF_ZONNSMART = "_TZE200_hue3yfsn"
 
 ZCL_ATTR_PLUG = {
     "abs_min_heat_setpoint_limit": 800,
@@ -229,6 +245,14 @@ async def device_climate_moes(device_climate_mock):
 
     return await device_climate_mock(
         CLIMATE_MOES, manuf=MANUF_MOES, quirk=zhaquirks.tuya.ts0601_trv.MoesHY368_Type1
+    )
+
+@pytest.fixture
+async def device_climate_zonnsmart(device_climate_mock):
+    """ZONNSMART thermostat."""
+
+    return await device_climate_mock(
+        CLIMATE_ZONNSMART, manuf=MANUF_ZONNSMART, quirk=zhaquirks.tuya.ts0601_trv.ZonnsmartTV01_ZG
     )
 
 
@@ -1326,3 +1350,101 @@ async def test_set_moes_operation_mode(hass, device_climate_moes):
 
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_COMPLEX
+
+
+async def test_set_zonnsmart_preset(hass, device_climate_zonnsmart):
+    """Test setting preset from homeassistant for zonnsmart trv."""
+
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate_zonnsmart, hass)
+    thrm_cluster = device_climate_zonnsmart.device.endpoints[1].thermostat
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_SCHEDULE},
+        blocking=True,
+    )
+
+    assert thrm_cluster.write_attributes.await_count == 1
+    assert thrm_cluster.write_attributes.call_args_list[0][0][0] == {
+        "operation_preset": 0
+    }
+
+    thrm_cluster.write_attributes.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "holiday"},
+        blocking=True,
+    )
+
+    assert thrm_cluster.write_attributes.await_count == 2
+    assert thrm_cluster.write_attributes.call_args_list[0][0][0] == {
+        "operation_preset": 1
+    }
+    assert thrm_cluster.write_attributes.call_args_list[1][0][0] == {
+        "operation_preset": 3
+    }
+
+    thrm_cluster.write_attributes.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "frost protect"},
+        blocking=True,
+    )
+
+    assert thrm_cluster.write_attributes.await_count == 2
+    assert thrm_cluster.write_attributes.call_args_list[0][0][0] == {
+        "operation_preset": 1
+    }
+    assert thrm_cluster.write_attributes.call_args_list[1][0][0] == {
+        "operation_preset": 4
+    }
+
+    thrm_cluster.write_attributes.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_NONE},
+        blocking=True,
+    )
+
+    assert thrm_cluster.write_attributes.await_count == 1
+    assert thrm_cluster.write_attributes.call_args_list[0][0][0] == {
+        "operation_preset": 1
+    }
+
+async def test_set_zonnsmart_operation_mode(hass, device_climate_zonnsmart):
+    """Test setting preset from trv for zonnsmart trv."""
+
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate_zonnsmart, hass)
+    thrm_cluster = device_climate_zonnsmart.device.endpoints[1].thermostat
+
+    await send_attributes_report(hass, thrm_cluster, {"operation_preset": 0})
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_SCHEDULE
+
+    await send_attributes_report(hass, thrm_cluster, {"operation_preset": 1})
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+    await send_attributes_report(hass, thrm_cluster, {"operation_preset": 2})
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == "holiday"
+
+    await send_attributes_report(hass, thrm_cluster, {"operation_preset": 3})
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == "holiday"
+
+    await send_attributes_report(hass, thrm_cluster, {"operation_preset": 4})
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == "frost protect"
