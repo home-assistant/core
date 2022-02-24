@@ -402,32 +402,36 @@ async def test_options_template_error(hass, fakeimgbytes_png, fakevidcontainer):
         options=TESTDATA,
     )
 
-    mock_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("av.open", return_value=fakevidcontainer):
+        mock_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
 
-    result = await hass.config_entries.options.async_init(mock_entry.entry_id)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
+        result = await hass.config_entries.options.async_init(mock_entry.entry_id)
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
 
-    # try updating the still image url
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/2"},
-    )
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        # try updating the still image url
+        data = TESTDATA.copy()
+        data[CONF_STILL_IMAGE_URL] = "http://127.0.0.1/testurl/2"
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input=data,
+        )
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
-    result3 = await hass.config_entries.options.async_init(mock_entry.entry_id)
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result3["step_id"] == "init"
+        result3 = await hass.config_entries.options.async_init(mock_entry.entry_id)
+        assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result3["step_id"] == "init"
 
-    # verify that an invalid template reports the correct UI error.
-    result4 = await hass.config_entries.options.async_configure(
-        result3["flow_id"],
-        user_input={CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/{{1/0}}"},
-    )
-    assert result4.get("type") == data_entry_flow.RESULT_TYPE_FORM
-    assert result4["errors"] == {"still_image_url": "template_error"}
+        # verify that an invalid template reports the correct UI error.
+        data[CONF_STILL_IMAGE_URL] = "http://127.0.0.1/testurl/{{1/0}}"
+        result4 = await hass.config_entries.options.async_configure(
+            result3["flow_id"],
+            user_input=data,
+        )
+        assert result4.get("type") == data_entry_flow.RESULT_TYPE_FORM
+        assert result4["errors"] == {"still_image_url": "template_error"}
 
 
 # These below can be deleted after deprecation period is finished.
