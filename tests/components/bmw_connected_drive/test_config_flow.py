@@ -1,13 +1,10 @@
 """Test the for the BMW Connected Drive config flow."""
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.bmw_connected_drive.config_flow import DOMAIN
 from homeassistant.components.bmw_connected_drive.const import CONF_READ_ONLY
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
-from homeassistant.data_entry_flow import UnknownStep
 
 from tests.common import MockConfigEntry
 
@@ -84,25 +81,6 @@ async def test_full_user_flow_implementation(hass):
         assert result2["data"] == FIXTURE_COMPLETE_ENTRY
 
         assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_full_config_flow_implementation(hass):
-    """Test registering an integration from YAML and raising an error."""
-    with patch(
-        "bimmer_connected.account.ConnectedDriveAccount._get_vehicles",
-        return_value=[],
-    ), patch(
-        "homeassistant.components.bmw_connected_drive.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        with pytest.raises(UnknownStep):
-            await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data=FIXTURE_USER_INPUT,
-            )
-
-        assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_options_flow_implementation(hass):
