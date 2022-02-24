@@ -1,9 +1,14 @@
 """Test Z-Wave sensor."""
+import pytest
+
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.zwave import const, sensor
 import homeassistant.const
 
 from tests.mock.zwave import MockEntityValues, MockNode, MockValue, value_changed
+
+# Integration is disabled
+pytest.skip("Integration has been disabled in the manifest", allow_module_level=True)
 
 
 def test_get_device_detects_none(mock_openzwave):

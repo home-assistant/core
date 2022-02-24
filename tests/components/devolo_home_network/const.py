@@ -18,6 +18,7 @@ CONNECTED_STATIONS = {
 
 DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     host=IP,
+    addresses=[IP],
     port=14791,
     hostname="test.local.",
     type="_dvl-deviceapi._tcp.local.",
@@ -38,6 +39,7 @@ DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
 
 DISCOVERY_INFO_WRONG_DEVICE = zeroconf.ZeroconfServiceInfo(
     host="mock_host",
+    addresses=["mock_host"],
     hostname="mock_hostname",
     name="mock_name",
     port=None,

@@ -12,8 +12,13 @@
     {
       "hostname": "blink*",
       "macaddress": "00037F*"
-    }    
+    },
+    {
+      "hostname": "blink*",
+      "macaddress": "20A171*"
+    }   
   ],
   "config_flow": true,
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["blinkpy"]
 }

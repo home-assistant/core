@@ -190,9 +190,8 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
 
             await self._async_mark_done(hass)
 
-            await hass.config_entries.flow.async_init(
-                "met", context={"source": "onboarding"}
-            )
+            # Integrations to set up when finishing onboarding
+            onboard_integrations = ["met", "radio_browser"]
 
             # pylint: disable=import-outside-toplevel
             from homeassistant.components import hassio
@@ -201,9 +200,17 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
                 hassio.is_hassio(hass)
                 and "raspberrypi" in hassio.get_core_info(hass)["machine"]
             ):
-                await hass.config_entries.flow.async_init(
-                    "rpi_power", context={"source": "onboarding"}
+                onboard_integrations.append("rpi_power")
+
+            # Set up integrations after onboarding
+            await asyncio.gather(
+                *(
+                    hass.config_entries.flow.async_init(
+                        domain, context={"source": "onboarding"}
+                    )
+                    for domain in onboard_integrations
                 )
+            )
 
             return self.json({})
 

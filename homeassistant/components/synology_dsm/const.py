@@ -382,6 +382,5 @@ SURVEILLANCE_SWITCH: tuple[SynologyDSMSwitchEntityDescription, ...] = (
         key="home_mode",
         name="Home Mode",
         icon="mdi:home-account",
-        entity_category=EntityCategory.CONFIG,
     ),
 )

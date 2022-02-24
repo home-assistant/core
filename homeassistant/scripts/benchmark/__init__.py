@@ -65,7 +65,7 @@ async def fire_events(hass):
     """Fire a million events."""
     count = 0
     event_name = "benchmark_event"
-    events_to_fire = 10 ** 6
+    events_to_fire = 10**6
 
     @core.callback
     def listener(_):
@@ -92,7 +92,7 @@ async def fire_events_with_filter(hass):
     """Fire a million events with a filter that rejects them."""
     count = 0
     event_name = "benchmark_event"
-    events_to_fire = 10 ** 6
+    events_to_fire = 10**6
 
     @core.callback
     def event_filter(event):
@@ -131,13 +131,13 @@ async def time_changed_helper(hass):
         nonlocal count
         count += 1
 
-        if count == 10 ** 6:
+        if count == 10**6:
             event.set()
 
     hass.helpers.event.async_track_time_change(listener, minute=0, second=0)
     event_data = {ATTR_NOW: datetime(2017, 10, 10, 15, 0, 0, tzinfo=dt_util.UTC)}
 
-    for _ in range(10 ** 6):
+    for _ in range(10**6):
         hass.bus.async_fire(EVENT_TIME_CHANGED, event_data)
 
     start = timer()
@@ -160,7 +160,7 @@ async def state_changed_helper(hass):
         nonlocal count
         count += 1
 
-        if count == 10 ** 6:
+        if count == 10**6:
             event.set()
 
     for idx in range(1000):
@@ -173,7 +173,7 @@ async def state_changed_helper(hass):
         "new_state": core.State(entity_id, "on"),
     }
 
-    for _ in range(10 ** 6):
+    for _ in range(10**6):
         hass.bus.async_fire(EVENT_STATE_CHANGED, event_data)
 
     start = timer()
@@ -188,7 +188,7 @@ async def state_changed_event_helper(hass):
     """Run a million events through state changed event helper with 1000 entities."""
     count = 0
     entity_id = "light.kitchen"
-    events_to_fire = 10 ** 6
+    events_to_fire = 10**6
 
     @core.callback
     def listener(*args):
@@ -223,7 +223,7 @@ async def state_changed_event_filter_helper(hass):
     """Run a million events through state changed event helper with 1000 entities that all get filtered."""
     count = 0
     entity_id = "light.kitchen"
-    events_to_fire = 10 ** 6
+    events_to_fire = 10**6
 
     @core.callback
     def listener(*args):
@@ -292,7 +292,7 @@ async def _logbook_filtering(hass, last_changed, last_updated):
     )
 
     def yield_events(event):
-        for _ in range(10 ** 5):
+        for _ in range(10**5):
             # pylint: disable=protected-access
             if logbook._keep_event(hass, event, entities_filter):
                 yield event
@@ -363,7 +363,7 @@ async def filtering_entity_id(hass):
 
     start = timer()
 
-    for i in range(10 ** 5):
+    for i in range(10**5):
         entities_filter(entity_ids[i % size])
 
     return timer() - start
@@ -373,7 +373,7 @@ async def filtering_entity_id(hass):
 async def valid_entity_id(hass):
     """Run valid entity ID a million times."""
     start = timer()
-    for _ in range(10 ** 6):
+    for _ in range(10**6):
         core.valid_entity_id("light.kitchen")
     return timer() - start
 
@@ -383,7 +383,7 @@ async def json_serialize_states(hass):
     """Serialize million states with websocket default encoder."""
     states = [
         core.State("light.kitchen", "on", {"friendly_name": "Kitchen Lights"})
-        for _ in range(10 ** 6)
+        for _ in range(10**6)
     ]
 
     start = timer()

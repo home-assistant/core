@@ -34,7 +34,8 @@
         "step": {
             "init": {
                 "data": {
-                    "code": "Standaardcode voor sloten, gebruikt als er geen is opgegeven"
+                    "code": "Standaardcode voor sloten, gebruikt als er geen is opgegeven",
+                    "lock_code_digits": "Aantal cijfers in PIN code voor sloten"
                 }
             }
         }

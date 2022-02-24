@@ -317,6 +317,7 @@ def mock_group(test_state=None, group_number=0):
 
     _mock_group = Mock(member_ids=[], observe=Mock(), **state)
     _mock_group.name = f"tradfri_group_{group_number}"
+    _mock_group.id = group_number
     return _mock_group
 
 
@@ -327,11 +328,11 @@ async def test_group(hass, mock_gateway, mock_api_factory):
     mock_gateway.mock_groups.append(mock_group(state, 1))
     await setup_integration(hass)
 
-    group = hass.states.get("light.tradfri_group_0")
+    group = hass.states.get("light.tradfri_group_mock_gateway_id_0")
     assert group is not None
     assert group.state == "off"
 
-    group = hass.states.get("light.tradfri_group_1")
+    group = hass.states.get("light.tradfri_group_mock_gateway_id_1")
     assert group is not None
     assert group.state == "on"
     assert group.attributes["brightness"] == 100
@@ -349,18 +350,25 @@ async def test_group_turn_on(hass, mock_gateway, mock_api_factory):
 
     # Use the turn_off service call to change the light state.
     await hass.services.async_call(
-        "light", "turn_on", {"entity_id": "light.tradfri_group_0"}, blocking=True
-    )
-    await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": "light.tradfri_group_1", "brightness": 100},
+        {"entity_id": "light.tradfri_group_mock_gateway_id_0"},
         blocking=True,
     )
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": "light.tradfri_group_2", "brightness": 100, "transition": 1},
+        {"entity_id": "light.tradfri_group_mock_gateway_id_1", "brightness": 100},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": "light.tradfri_group_mock_gateway_id_2",
+            "brightness": 100,
+            "transition": 1,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -378,7 +386,10 @@ async def test_group_turn_off(hass, mock_gateway, mock_api_factory):
 
     # Use the turn_off service call to change the light state.
     await hass.services.async_call(
-        "light", "turn_off", {"entity_id": "light.tradfri_group_0"}, blocking=True
+        "light",
+        "turn_off",
+        {"entity_id": "light.tradfri_group_mock_gateway_id_0"},
+        blocking=True,
     )
     await hass.async_block_till_done()
 

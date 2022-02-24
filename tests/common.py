@@ -44,7 +44,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import BLOCK_LOG_TIMEOUT, HomeAssistant, State
+from homeassistant.core import BLOCK_LOG_TIMEOUT, HomeAssistant
 from homeassistant.helpers import (
     area_registry,
     device_registry,
@@ -583,6 +583,7 @@ class MockModule:
         async_migrate_entry=None,
         async_remove_entry=None,
         partial_manifest=None,
+        async_remove_config_entry_device=None,
     ):
         """Initialize the mock module."""
         self.__name__ = f"homeassistant.components.{domain}"
@@ -623,6 +624,9 @@ class MockModule:
 
         if async_remove_entry is not None:
             self.async_remove_entry = async_remove_entry
+
+        if async_remove_config_entry_device is not None:
+            self.async_remove_config_entry_device = async_remove_config_entry_device
 
     def mock_manifest(self):
         """Generate a mock manifest to represent this module."""
@@ -931,11 +935,39 @@ def mock_restore_cache(hass, states):
     last_states = {}
     for state in states:
         restored_state = state.as_dict()
-        restored_state["attributes"] = json.loads(
-            json.dumps(restored_state["attributes"], cls=JSONEncoder)
+        restored_state = {
+            **restored_state,
+            "attributes": json.loads(
+                json.dumps(restored_state["attributes"], cls=JSONEncoder)
+            ),
+        }
+        last_states[state.entity_id] = restore_state.StoredState.from_dict(
+            {"state": restored_state, "last_seen": now}
         )
-        last_states[state.entity_id] = restore_state.StoredState(
-            State.from_dict(restored_state), now
+    data.last_states = last_states
+    _LOGGER.debug("Restore cache: %s", data.last_states)
+    assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
+
+    hass.data[key] = data
+
+
+def mock_restore_cache_with_extra_data(hass, states):
+    """Mock the DATA_RESTORE_CACHE."""
+    key = restore_state.DATA_RESTORE_STATE_TASK
+    data = restore_state.RestoreStateData(hass)
+    now = date_util.utcnow()
+
+    last_states = {}
+    for state, extra_data in states:
+        restored_state = state.as_dict()
+        restored_state = {
+            **restored_state,
+            "attributes": json.loads(
+                json.dumps(restored_state["attributes"], cls=JSONEncoder)
+            ),
+        }
+        last_states[state.entity_id] = restore_state.StoredState.from_dict(
+            {"state": restored_state, "extra_data": extra_data, "last_seen": now}
         )
     data.last_states = last_states
     _LOGGER.debug("Restore cache: %s", data.last_states)

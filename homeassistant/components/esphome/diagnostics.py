@@ -1,4 +1,4 @@
-"""Diahgnostics support for ESPHome."""
+"""Diagnostics support for ESPHome."""
 from __future__ import annotations
 
 from typing import Any, cast

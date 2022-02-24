@@ -9,5 +9,6 @@
   ],
   "config_flow": true,
   "codeowners": [],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["googleapiclient"]
 }

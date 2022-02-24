@@ -8,5 +8,6 @@
   "codeowners": [
     "@cnico"
   ],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["flipr_api"]
 }

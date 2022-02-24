@@ -4,9 +4,13 @@ from unittest.mock import Mock, call
 from aiowebostv import WebOsTvPairError
 import pytest
 
-from homeassistant.components.notify import ATTR_MESSAGE, DOMAIN as NOTIFY_DOMAIN
+from homeassistant.components.notify import (
+    ATTR_DATA,
+    ATTR_MESSAGE,
+    DOMAIN as NOTIFY_DOMAIN,
+)
 from homeassistant.components.webostv import DOMAIN
-from homeassistant.const import CONF_ICON, CONF_SERVICE_DATA
+from homeassistant.const import ATTR_ICON
 from homeassistant.setup import async_setup_component
 
 from . import setup_webostv
@@ -26,8 +30,8 @@ async def test_notify(hass, client):
         TV_NAME,
         {
             ATTR_MESSAGE: MESSAGE,
-            CONF_SERVICE_DATA: {
-                CONF_ICON: ICON_PATH,
+            ATTR_DATA: {
+                ATTR_ICON: ICON_PATH,
             },
         },
         blocking=True,
@@ -41,7 +45,7 @@ async def test_notify(hass, client):
         TV_NAME,
         {
             ATTR_MESSAGE: MESSAGE,
-            CONF_SERVICE_DATA: {
+            ATTR_DATA: {
                 "OTHER_DATA": "not_used",
             },
         },
@@ -50,6 +54,20 @@ async def test_notify(hass, client):
     assert client.mock_calls[0] == call.connect()
     assert client.connect.call_count == 1
     client.send_message.assert_called_with(MESSAGE, icon_path=None)
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        TV_NAME,
+        {
+            ATTR_MESSAGE: "only message, no data",
+        },
+        blocking=True,
+    )
+
+    assert client.connect.call_count == 1
+    assert client.send_message.call_args == call(
+        "only message, no data", icon_path=None
+    )
 
 
 async def test_notify_not_connected(hass, client, monkeypatch):
@@ -63,8 +81,8 @@ async def test_notify_not_connected(hass, client, monkeypatch):
         TV_NAME,
         {
             ATTR_MESSAGE: MESSAGE,
-            CONF_SERVICE_DATA: {
-                CONF_ICON: ICON_PATH,
+            ATTR_DATA: {
+                ATTR_ICON: ICON_PATH,
             },
         },
         blocking=True,
@@ -85,8 +103,8 @@ async def test_icon_not_found(hass, caplog, client, monkeypatch):
         TV_NAME,
         {
             ATTR_MESSAGE: MESSAGE,
-            CONF_SERVICE_DATA: {
-                CONF_ICON: ICON_PATH,
+            ATTR_DATA: {
+                ATTR_ICON: ICON_PATH,
             },
         },
         blocking=True,
@@ -116,8 +134,8 @@ async def test_connection_errors(hass, caplog, client, monkeypatch, side_effect,
         TV_NAME,
         {
             ATTR_MESSAGE: MESSAGE,
-            CONF_SERVICE_DATA: {
-                CONF_ICON: ICON_PATH,
+            ATTR_DATA: {
+                ATTR_ICON: ICON_PATH,
             },
         },
         blocking=True,

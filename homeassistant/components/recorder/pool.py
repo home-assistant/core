@@ -5,7 +5,7 @@ from sqlalchemy.pool import NullPool, StaticPool
 
 
 class RecorderPool(StaticPool, NullPool):
-    """A hybird of NullPool and StaticPool.
+    """A hybrid of NullPool and StaticPool.
 
     When called from the creating thread acts like StaticPool
     When called from any other thread, acts like NullPool

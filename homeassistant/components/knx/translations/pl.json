@@ -14,7 +14,8 @@
                     "individual_address": "Indywidualny adres dla po\u0142\u0105czenia",
                     "local_ip": "Lokalny adres IP Home Assistant (pozostaw puste w celu automatycznego wykrywania)",
                     "port": "Port",
-                    "route_back": "Tryb Route Back / NAT"
+                    "route_back": "Tryb Route Back / NAT",
+                    "tunneling_type": "Typ tunelowania KNX"
                 },
                 "description": "Prosz\u0119 wprowadzi\u0107 informacje o po\u0142\u0105czeniu urz\u0105dzenia tuneluj\u0105cego."
             },
@@ -59,7 +60,8 @@
                     "host": "Nazwa hosta lub adres IP",
                     "local_ip": "Lokalny adres IP (pozostaw pusty, je\u015bli nie masz pewno\u015bci)",
                     "port": "Port",
-                    "route_back": "Tryb Route Back / NAT"
+                    "route_back": "Tryb Route Back / NAT",
+                    "tunneling_type": "Typ tunelowania KNX"
                 }
             }
         }

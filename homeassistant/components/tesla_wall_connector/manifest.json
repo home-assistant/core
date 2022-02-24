@@ -21,5 +21,6 @@
   "codeowners": [
     "@einarhauks"
   ],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["tesla_wall_connector"]
 }

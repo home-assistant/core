@@ -12,5 +12,6 @@
   ],
   "config_flow": true,
   "quality_scale": "platinum",
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["brother", "pyasn1", "pysmi", "pysnmp"]
 }

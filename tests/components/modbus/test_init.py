@@ -76,6 +76,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
+    CONF_SLAVE,
     CONF_STRUCTURE,
     CONF_TIMEOUT,
     CONF_TYPE,
@@ -233,7 +234,7 @@ async def test_exception_struct_validator(do_config):
             {
                 CONF_NAME: TEST_MODBUS_NAME,
                 CONF_TYPE: TCP,
-                CONF_HOST: TEST_MODBUS_HOST + "2",
+                CONF_HOST: TEST_MODBUS_HOST + " 2",
                 CONF_PORT: TEST_PORT_TCP,
             },
         ],
@@ -245,7 +246,7 @@ async def test_exception_struct_validator(do_config):
                 CONF_PORT: TEST_PORT_TCP,
             },
             {
-                CONF_NAME: TEST_MODBUS_NAME + "2",
+                CONF_NAME: TEST_MODBUS_NAME + " 2",
                 CONF_TYPE: TCP,
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
@@ -272,10 +273,12 @@ async def test_duplicate_modbus_validator(do_config):
                     {
                         CONF_NAME: TEST_ENTITY_NAME,
                         CONF_ADDRESS: 117,
+                        CONF_SLAVE: 0,
                     },
                     {
                         CONF_NAME: TEST_ENTITY_NAME,
                         CONF_ADDRESS: 119,
+                        CONF_SLAVE: 0,
                     },
                 ],
             }
@@ -290,10 +293,12 @@ async def test_duplicate_modbus_validator(do_config):
                     {
                         CONF_NAME: TEST_ENTITY_NAME,
                         CONF_ADDRESS: 117,
+                        CONF_SLAVE: 0,
                     },
                     {
-                        CONF_NAME: TEST_ENTITY_NAME + "2",
+                        CONF_NAME: TEST_ENTITY_NAME + " 2",
                         CONF_ADDRESS: 117,
+                        CONF_SLAVE: 0,
                     },
                 ],
             }
@@ -387,7 +392,7 @@ async def test_duplicate_entity_validator(do_config):
                 CONF_TYPE: TCP,
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
-                CONF_NAME: f"{TEST_MODBUS_NAME}2",
+                CONF_NAME: f"{TEST_MODBUS_NAME} 2",
             },
             {
                 CONF_TYPE: SERIAL,
@@ -397,7 +402,7 @@ async def test_duplicate_entity_validator(do_config):
                 CONF_PORT: TEST_PORT_SERIAL,
                 CONF_PARITY: "E",
                 CONF_STOPBITS: 1,
-                CONF_NAME: f"{TEST_MODBUS_NAME}3",
+                CONF_NAME: f"{TEST_MODBUS_NAME} 3",
             },
         ],
         {
@@ -409,6 +414,7 @@ async def test_duplicate_entity_validator(do_config):
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 117,
+                    CONF_SLAVE: 0,
                     CONF_SCAN_INTERVAL: 0,
                 }
             ],
@@ -544,6 +550,7 @@ async def mock_modbus_read_pymodbus_fixture(
                         CONF_INPUT_TYPE: do_type,
                         CONF_NAME: TEST_ENTITY_NAME,
                         CONF_ADDRESS: 51,
+                        CONF_SLAVE: 0,
                         CONF_SCAN_INTERVAL: do_scan_interval,
                     }
                 ],
@@ -592,7 +599,7 @@ async def test_pb_read(
     """Run test for different read."""
 
     # Check state
-    entity_id = f"{do_domain}.{TEST_ENTITY_NAME}"
+    entity_id = f"{do_domain}.{TEST_ENTITY_NAME}".replace(" ", "_")
     state = hass.states.get(entity_id).state
     assert hass.states.get(entity_id).state
 
@@ -674,7 +681,7 @@ async def test_delay(hass, mock_pymodbus):
     # We "hijiack" a binary_sensor to make a proper blackbox test.
     set_delay = 15
     set_scan_interval = 5
-    entity_id = f"{BINARY_SENSOR_DOMAIN}.{TEST_ENTITY_NAME}"
+    entity_id = f"{BINARY_SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
     config = {
         DOMAIN: [
             {
@@ -688,6 +695,7 @@ async def test_delay(hass, mock_pymodbus):
                         CONF_INPUT_TYPE: CALL_TYPE_COIL,
                         CONF_NAME: TEST_ENTITY_NAME,
                         CONF_ADDRESS: 52,
+                        CONF_SLAVE: 0,
                         CONF_SCAN_INTERVAL: set_scan_interval,
                     },
                 ],
@@ -736,6 +744,7 @@ async def test_delay(hass, mock_pymodbus):
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 117,
+                    CONF_SLAVE: 0,
                     CONF_SCAN_INTERVAL: 0,
                 }
             ],
@@ -759,6 +768,7 @@ async def test_shutdown(hass, caplog, mock_pymodbus, mock_modbus_with_pymodbus):
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
+                    CONF_SLAVE: 0,
                 }
             ]
         },
@@ -768,7 +778,7 @@ async def test_stop_restart(hass, caplog, mock_modbus):
     """Run test for service stop."""
 
     caplog.set_level(logging.INFO)
-    entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}"
+    entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
     hass.states.async_set(entity_id, 17)
     await hass.async_block_till_done()
