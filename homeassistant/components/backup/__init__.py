@@ -12,7 +12,7 @@ from .websocket import async_register_websocket_handlers
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Backup integration."""
     if is_hassio(hass):
-        LOGGER.warning(
+        LOGGER.error(
             "The backup integration is not supported on this installation method, "
             "please remove it from your configuration"
         )
