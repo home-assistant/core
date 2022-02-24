@@ -18,7 +18,6 @@ COMMENT_REQUIREMENTS = (
     "avion",
     "beacontools",
     "beewi_smartclim",  # depends on bluepy
-    "blinkt",
     "bluepy",
     "bme280spi",
     "bme680",

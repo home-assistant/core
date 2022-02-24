@@ -114,7 +114,6 @@ omit =
     homeassistant/components/blink/const.py
     homeassistant/components/blink/sensor.py
     homeassistant/components/blinksticklight/light.py
-    homeassistant/components/blinkt/light.py
     homeassistant/components/blockchain/sensor.py
     homeassistant/components/bloomsky/*
     homeassistant/components/bluesound/*
