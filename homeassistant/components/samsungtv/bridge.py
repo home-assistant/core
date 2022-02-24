@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 import contextlib
 from typing import Any
 
+from asyncio.exceptions import TimeoutError
 from requests.exceptions import Timeout as RequestsTimeout
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
@@ -369,7 +370,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     "Working but unsupported config: %s, error: %s", config, err
                 )
                 result = RESULT_NOT_SUPPORTED
-            except (OSError, ConnectionFailure) as err:
+            except (OSError, TimeoutError, ConnectionFailure) as err:
                 LOGGER.debug("Failing config: %s, error: %s", config, err)
         # pylint: disable=useless-else-on-loop
         else:
@@ -439,10 +440,10 @@ class SamsungTVWSBridge(SamsungTVBridge):
             # This is only happening when the auth was switched to DENY
             # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
             except ConnectionFailure as err:
-                LOGGER.debug("ConnectionFailure %s", err.__repr__())
+                LOGGER.debug("ConnectionFailure %s", err)
                 self._notify_reauth_callback()
-            except (WebSocketException, OSError) as err:
-                LOGGER.debug("WebSocketException, OSError %s", err.__repr__())
+            except (WebSocketException, TimeoutError, OSError) as err:
+                LOGGER.debug("WebSocketException, OSError %s", err)
                 self._remote = None
             else:
                 LOGGER.debug(
