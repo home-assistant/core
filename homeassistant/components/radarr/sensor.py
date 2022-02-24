@@ -1,13 +1,11 @@
 """Support for Radarr."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime
 import logging
-from typing import Any, cast
+from typing import cast
 
-from aiopyarr import ArrException, RadarrMovie
-from aiopyarr.models.host_configuration import PyArrHostConfiguration
-from aiopyarr.radarr_client import RadarrClient
+from aiopyarr.models.radarr import RadarrCalendar, RadarrMovie
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -15,6 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -22,37 +21,20 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     DATA_BYTES,
-    DATA_EXABYTES,
     DATA_GIGABYTES,
     DATA_KILOBYTES,
     DATA_MEGABYTES,
-    DATA_PETABYTES,
-    DATA_TERABYTES,
-    DATA_YOTTABYTES,
-    DATA_ZETTABYTES,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
-from homeassistant.util import dt as dt_util
+
+from . import RadarrEntity
+from .const import DOMAIN
+from .coordinator import RadarrDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_DAYS = "days"
-CONF_INCLUDED = "include_paths"
-CONF_UNIT = "unit"
-CONF_URLBASE = "urlbase"
-
-DEFAULT_HOST = "localhost"
-DEFAULT_PORT = 7878
-DEFAULT_URLBASE = ""
-DEFAULT_DAYS = "1"
-DEFAULT_UNIT = DATA_GIGABYTES
-
-SCAN_INTERVAL = timedelta(minutes=10)
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -60,6 +42,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Disk Space",
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:harddisk",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="upcoming",
@@ -78,6 +61,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Movies",
         native_unit_of_measurement="Movies",
         icon="mdi:television",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="commands",
@@ -95,154 +79,140 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
-# Support to Yottabytes for the future, why not
 BYTE_SIZES = [
     DATA_BYTES,
     DATA_KILOBYTES,
     DATA_MEGABYTES,
     DATA_GIGABYTES,
-    DATA_TERABYTES,
-    DATA_PETABYTES,
-    DATA_EXABYTES,
-    DATA_ZETTABYTES,
-    DATA_YOTTABYTES,
 ]
+# Deprecated in Home Assistant 2022.4
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_DAYS, default=DEFAULT_DAYS): cv.string,
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_INCLUDED, default=[]): cv.ensure_list,
+        vol.Optional("days", default=1): cv.string,
+        vol.Optional(CONF_HOST, default="localhost"): cv.string,
+        vol.Optional("include_paths", default=[]): cv.ensure_list,
         vol.Optional(CONF_MONITORED_CONDITIONS, default=["movies"]): vol.All(
             cv.ensure_list, [vol.In(SENSOR_KEYS)]
         ),
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_PORT, default=7878): cv.port,
         vol.Optional(CONF_SSL, default=False): cv.boolean,
-        vol.Optional(CONF_UNIT, default=DEFAULT_UNIT): vol.In(BYTE_SIZES),
-        vol.Optional(CONF_URLBASE, default=DEFAULT_URLBASE): cv.string,
+        vol.Optional("unit", default=DATA_GIGABYTES): cv.string,
+        vol.Optional("urlbase", default=""): cv.string,
     }
 )
 
+PARALLEL_UPDATES = 1
 
-async def async_setup_platform(
+
+def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Radarr platform."""
-    host_configuration = PyArrHostConfiguration(
-        api_token=config[CONF_API_KEY],
-        ipaddress=config[CONF_HOST],
-        port=config[CONF_PORT],
-        ssl=config[CONF_SSL],
-        base_api_path=config[CONF_URLBASE],
-    )
-    radarr = RadarrClient(
-        host_configuration=host_configuration, session=async_get_clientsession(hass)
+    # deprecated in 2022.3
+    if "wanted" in config[CONF_MONITORED_CONDITIONS]:
+        _LOGGER.warning(
+            "Wanted is not a valid condition option. Please remove it from your config"
+        )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
     )
 
-    try:
-        await radarr.async_get_system_status()
-    except ArrException as ex:
-        raise PlatformNotReady() from ex
-    entities = [
-        RadarrSensor(config, radarr, description)
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Radarr sensors based on a config entry."""
+    async_add_entities(
+        RadarrSensor(
+            hass.data[DOMAIN][entry.entry_id],
+            description,
+        )
         for description in SENSOR_TYPES
-        if description.key in config[CONF_MONITORED_CONDITIONS]
-    ]
-    async_add_entities(entities, True)
+        if description.key != "wanted"
+    )
 
 
-class RadarrSensor(SensorEntity):
+class RadarrSensor(RadarrEntity, SensorEntity):
     """Implementation of the Radarr sensor."""
+
+    coordinator: RadarrDataUpdateCoordinator
 
     def __init__(
         self,
-        conf: ConfigType,
-        radarr: RadarrClient,
+        coordinator: RadarrDataUpdateCoordinator,
         description: SensorEntityDescription,
     ) -> None:
         """Create Radarr entity."""
+        super().__init__(coordinator)
         self.entity_description = description
-        self.radarr = radarr
-        self.included = cast(list, conf.get(CONF_INCLUDED))
-        self.days = int(cast(str, conf.get(CONF_DAYS)))
-        self.data: Any = None
         self._attr_name = f"Radarr {description.name}"
-        if description.key == "diskspace":
-            self._attr_native_unit_of_measurement = conf.get(CONF_UNIT)
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}/{description.name}"
 
     @property
-    def extra_state_attributes(self) -> dict[str, StateType]:
+    def extra_state_attributes(self) -> dict[str, StateType | datetime]:
         """Return the state attributes of the sensor."""
-        attributes: dict[str, None | str | int | float] = {}
-        if self.entity_description.key == "upcoming":
-            return {to_key(movie): release_date(movie) for movie in self.data}
         if self.entity_description.key == "commands":
-            return {command.name: command.status for command in self.data}
+            return {cmd.name: cmd.status for cmd in self.coordinator.commands}
         if self.entity_description.key == "diskspace":
-            for data in self.data:
-                free_space = to_unit(data.freeSpace, self.native_unit_of_measurement)
-                total_space = to_unit(data.totalSpace, self.native_unit_of_measurement)
-                attributes[data.path] = "{:.2f}/{:.2f}{} ({:.2f}%)".format(
-                    free_space,
-                    total_space,
-                    self.native_unit_of_measurement,
-                    0 if total_space == 0 else free_space / total_space * 100,
-                )
-        elif self.entity_description.key == "movies":
-            return {to_key(movie): movie.hasFile for movie in self.data}
+            return self.get_strings(cast(str, self.native_unit_of_measurement))
+        if self.entity_description.key == "movies":
+            return {to_key(movie): movie.hasFile for movie in self.coordinator.movies}
         if self.entity_description.key == "status":
-            return self.data.attributes
-        return attributes
+            return self.coordinator.system_status.attributes
+        return {to_key(movie): movie.releaseDate for movie in self.coordinator.calendar}
 
-    async def async_update(self) -> None:
-        """Update the data for the sensor."""
-        try:
-            if self.entity_description.key == "diskspace":
-                data = await self.radarr.async_get_diskspace()
-                if len(self.included) > 0:
-                    self.data = [datum for datum in data if datum.path in self.included]
-                else:
-                    self.data = data
-                space = sum(mount.freeSpace for mount in self.data)
-                self._attr_native_value = (
-                    f"{to_unit(space, self.native_unit_of_measurement):.2f}"
-                )
-            if self.entity_description.key == "upcoming":
-                local = dt_util.start_of_local_day().replace(microsecond=0)
-                start = dt_util.as_utc(local)
-                end = start + timedelta(days=self.days)
-                self.data = await self.radarr.async_get_calendar(
-                    start_date=start, end_date=end
-                )
-                self._attr_native_value = len(self.data)
-            if self.entity_description.key == "commands":
-                self.data = await self.radarr.async_get_commands()
-                self._attr_native_value = len(cast(list, self.data))
-            if self.entity_description.key == "status":
-                self.data = await self.radarr.async_get_system_status()
-                self._attr_native_value = self.data.version
-            if self.entity_description.key == "movies":
-                self.data = await self.radarr.async_get_movies()
-                self._attr_native_value = len(cast(list, self.data))
-        except ArrException as ex:
-            _LOGGER.warning(ex)
-        self._attr_available = self.native_value is not None
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        if self.entity_description.key == "diskspace":
+            space = 0
+            for mount in self.coordinator.rootfolder:
+                space += mount.freeSpace
+            return f"{to_unit(space, cast(str, self.native_unit_of_measurement)):.2f}"
+        if self.entity_description.key == "upcoming":
+            return len(self.coordinator.calendar)
+        if self.entity_description.key == "commands":
+            return len(self.coordinator.commands)
+        if self.entity_description.key == "movies":
+            return len(self.coordinator.movies)
+        return self.coordinator.system_status.version
 
-
-def release_date(movie: RadarrMovie) -> str:
-    """Get release date."""
-    date = movie.physicalRelease or movie.digitalRelease or movie.inCinemas
-    return date.isoformat()
+    def get_strings(self, unit: str) -> dict[str, StateType | datetime]:
+        """Get diskspace interpolated strings."""
+        attrs: dict[str, StateType | datetime] = {}
+        last_entry = None
+        for mnt in self.coordinator.disk_space:
+            for space in self.coordinator.rootfolder:
+                if (
+                    last_entry != space.freeSpace
+                    and mnt.freeSpace * 0.99 <= space.freeSpace <= mnt.freeSpace * 1.01
+                ):
+                    last_entry = space.freeSpace
+                    mnt.freeSpace = space.freeSpace
+                    attrs[mnt.path] = "{:.2f}/{:.2f}{} ({:.2f}%)".format(
+                        to_unit(space.freeSpace, unit),
+                        to_unit(mnt.totalSpace, unit),
+                        unit,
+                        0
+                        if mnt.totalSpace == 0
+                        else space.freeSpace / mnt.totalSpace * 100,
+                    )
+        return attrs
 
 
-def to_key(movie: RadarrMovie):
+def to_key(movie: RadarrMovie | RadarrCalendar) -> str:
     """Get key."""
     return f"{movie.title} ({movie.year})"
 
 
-def to_unit(value, unit) -> float:
+def to_unit(value: int, unit: str = DATA_GIGABYTES) -> float:
     """Convert bytes to give unit."""
-    return value / 1024 ** BYTE_SIZES.index(unit)
+    return cast(float, value / 1024 ** BYTE_SIZES.index(unit))

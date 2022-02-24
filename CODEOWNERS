@@ -749,6 +749,7 @@ tests/components/qwikswitch/* @kellerza
 homeassistant/components/rachio/* @bdraco
 tests/components/rachio/* @bdraco
 homeassistant/components/radarr/* @tkdrob
+tests/components/radarr/* @tkdrob
 homeassistant/components/radiotherm/* @vinnyfuria
 homeassistant/components/rainbird/* @konikvranik
 homeassistant/components/raincloud/* @vanstinator
