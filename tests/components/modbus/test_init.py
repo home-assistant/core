@@ -26,7 +26,6 @@ from homeassistant.components.modbus.const import (
     ATTR_ADDRESS,
     ATTR_HUB,
     ATTR_SLAVE,
-    ATTR_STATE,
     ATTR_UNIT,
     ATTR_VALUE,
     CALL_TYPE_COIL,
@@ -67,6 +66,7 @@ from homeassistant.components.modbus.validators import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
+    ATTR_STATE,
     CONF_ADDRESS,
     CONF_BINARY_SENSORS,
     CONF_COUNT,
