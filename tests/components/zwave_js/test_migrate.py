@@ -8,6 +8,7 @@ from zwave_js_server.model.node import Node
 from homeassistant.components.zwave_js.api import ENTRY_ID, ID, TYPE
 from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
+from homeassistant.const import LIGHT_LUX
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import AIR_TEMPERATURE_SENSOR, NOTIFICATION_MOTION_BINARY_SENSOR
@@ -341,6 +342,7 @@ async def test_migrate_zwave(
     assert luminance_entry.unique_id == "3245146787.52-49-0-Illuminance"
     assert luminance_entry.name == ZWAVE_LUMINANCE_NAME
     assert luminance_entry.icon == ZWAVE_LUMINANCE_ICON
+    assert luminance_entry.unit_of_measurement == LIGHT_LUX
 
     # check that the zwave config entry has been removed
     assert not hass.config_entries.async_entries("zwave")
