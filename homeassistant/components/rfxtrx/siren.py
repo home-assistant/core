@@ -1,7 +1,7 @@
 """Support for RFXtrx sirens."""
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Any
 
 import RFXtrx as rfxtrxmod
 
@@ -19,12 +19,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from . import (
+    DEFAULT_OFF_DELAY,
     DEFAULT_SIGNAL_REPETITIONS,
     DeviceTuple,
     RfxtrxCommandEntity,
     async_setup_platform_entry,
 )
-from .const import CONF_SIGNAL_REPETITIONS
+from .const import CONF_OFF_DELAY, CONF_SIGNAL_REPETITIONS
 
 SUPPORT_RFXTRX = SUPPORT_TURN_ON | SUPPORT_TONES
 
@@ -78,6 +79,7 @@ async def async_setup_entry(
                     entity_info.get(
                         CONF_SIGNAL_REPETITIONS, DEFAULT_SIGNAL_REPETITIONS
                     ),
+                    entity_info.get(CONF_OFF_DELAY, DEFAULT_OFF_DELAY),
                     auto,
                 )
             ]
@@ -93,6 +95,7 @@ async def async_setup_entry(
                         entity_info.get(
                             CONF_SIGNAL_REPETITIONS, DEFAULT_SIGNAL_REPETITIONS
                         ),
+                        entity_info.get(CONF_OFF_DELAY, DEFAULT_OFF_DELAY),
                         auto,
                     )
                 ]
@@ -106,7 +109,7 @@ class RfxtrxTimeoutMixin(Entity):
     """Mixin to support timeouts on data."""
 
     _timeout: CALLBACK_TYPE | None = None
-    _timeout_seconds: Final = 2.0
+    _timeout_seconds: float | None = None
 
     def _setup_timeout(self):
         @callback
@@ -114,7 +117,8 @@ class RfxtrxTimeoutMixin(Entity):
             self._timeout = None
             self.async_write_ha_state()
 
-        self._timeout = async_call_later(self.hass, self._timeout_seconds, _done)
+        if self._timeout_seconds:
+            self._timeout = async_call_later(self.hass, self._timeout_seconds, _done)
 
     def _cancel_timeout(self):
         if self._timeout:
@@ -127,12 +131,15 @@ class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxTimeoutMixin):
 
     _device: rfxtrxmod.ChimeDevice
 
-    def __init__(self, device, device_id, signal_repetitions=1, event=None):
+    def __init__(
+        self, device, device_id, signal_repetitions=1, off_delay=None, event=None
+    ):
         """Initialize the entity."""
         super().__init__(device, device_id, signal_repetitions, event)
         self._attr_available_tones = list(self._device.COMMANDS.values())
         self._attr_supported_features = SUPPORT_TURN_ON | SUPPORT_TONES
         self._default_tone = next(iter(self._device.COMMANDS))
+        self._timeout_seconds = off_delay
 
     @property
     def is_on(self):
@@ -177,12 +184,15 @@ class RfxtrxSecurityPanic(RfxtrxCommandEntity, SirenEntity, RfxtrxTimeoutMixin):
 
     _device: rfxtrxmod.SecurityDevice
 
-    def __init__(self, device, device_id, signal_repetitions=1, event=None):
+    def __init__(
+        self, device, device_id, signal_repetitions=1, off_delay=None, event=None
+    ):
         """Initialize the entity."""
         super().__init__(device, device_id, signal_repetitions, event)
         self._attr_supported_features = SUPPORT_TURN_ON | SUPPORT_TURN_OFF
         self._on_value = get_first_key(self._device.STATUS, SECURITY_PANIC_ON)
         self._off_value = get_first_key(self._device.STATUS, SECURITY_PANIC_OFF)
+        self._timeout_seconds = off_delay
 
     @property
     def is_on(self):
