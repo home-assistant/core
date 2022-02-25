@@ -73,10 +73,7 @@ class LidarrDataUpdateCoordinator(DataUpdateCoordinator):
                 ]
             )
 
-        except (
-            exceptions.ArrConnectionException,
-            asyncio.exceptions.TimeoutError,
-        ) as ex:
+        except exceptions.ArrConnectionException as ex:
             raise UpdateFailed(ex) from ex
         except exceptions.ArrAuthenticationException as ex:
             raise ConfigEntryAuthFailed(
