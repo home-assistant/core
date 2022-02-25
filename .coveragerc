@@ -722,7 +722,6 @@ omit =
     homeassistant/components/motion_blinds/const.py
     homeassistant/components/motion_blinds/cover.py
     homeassistant/components/motion_blinds/sensor.py
-    homeassistant/components/mpchc/media_player.py
     homeassistant/components/mpd/media_player.py
     homeassistant/components/mqtt_room/sensor.py
     homeassistant/components/msteams/notify.py
