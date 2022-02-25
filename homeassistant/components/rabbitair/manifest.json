@@ -11,7 +11,7 @@
     "_rabbitair._udp.local."
   ],
   "homekit": {},
-  "dependencies": [
+  "after_dependencies": [
     "zeroconf"
   ],
   "codeowners": [
