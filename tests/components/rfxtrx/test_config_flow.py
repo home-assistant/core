@@ -11,6 +11,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
+SOME_PROTOCOLS = ["ac", "arc"]
+
 
 def serial_connect(self):
     """Mock a serial connection."""
@@ -286,6 +288,7 @@ async def test_options_global(hass):
             "port": None,
             "device": "/dev/tty123",
             "automatic_add": False,
+            "protocols": None,
             "devices": {},
         },
         unique_id=DOMAIN,
@@ -298,7 +301,8 @@ async def test_options_global(hass):
     assert result["step_id"] == "prompt_options"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"automatic_add": True}
+        result["flow_id"],
+        user_input={"automatic_add": True, "protocols": SOME_PROTOCOLS},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -306,6 +310,44 @@ async def test_options_global(hass):
     await hass.async_block_till_done()
 
     assert entry.data["automatic_add"]
+
+    assert not set(entry.data["protocols"]) ^ set(SOME_PROTOCOLS)
+
+
+async def test_no_protocols(hass):
+    """Test we set protocols to None if none are selected."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "automatic_add": True,
+            "protocols": SOME_PROTOCOLS,
+            "devices": {},
+        },
+        unique_id=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "prompt_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"automatic_add": False, "protocols": []},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    await hass.async_block_till_done()
+
+    assert not entry.data["automatic_add"]
+
+    assert entry.data["protocols"] is None
 
 
 async def test_options_add_device(hass):

@@ -40,6 +40,7 @@ from .const import (
     COMMAND_GROUP_LIST,
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
+    CONF_PROTOCOLS,
     DATA_RFXOBJECT,
     DEVICE_PACKET_TYPE_LIGHTING4,
     EVENT_RFXTRX_EVENT,
@@ -123,15 +124,28 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 def _create_rfx(config):
     """Construct a rfx object based on config."""
+
+    modes = config.get(CONF_PROTOCOLS)
+
+    if modes:
+        _LOGGER.debug("Using modes: %s", ",".join(modes))
+    else:
+        _LOGGER.debug("No modes defined, using device configuration")
+
     if config[CONF_PORT] is not None:
         # If port is set then we create a TCP connection
         rfx = rfxtrxmod.Connect(
             (config[CONF_HOST], config[CONF_PORT]),
             None,
             transport_protocol=rfxtrxmod.PyNetworkTransport,
+            modes=modes,
         )
     else:
-        rfx = rfxtrxmod.Connect(config[CONF_DEVICE], None)
+        rfx = rfxtrxmod.Connect(
+            config[CONF_DEVICE],
+            None,
+            modes=modes,
+        )
 
     return rfx
 
