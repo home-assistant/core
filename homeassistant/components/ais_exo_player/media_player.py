@@ -273,6 +273,8 @@ class ExoPlayerDevice(MediaPlayerEntity):
     @property
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
+        if self._duration == 0:
+            return 100
         return float(self._duration) // 1000
 
     @property
