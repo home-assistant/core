@@ -15,21 +15,35 @@ async def setup_media_source(hass):
     assert await async_setup_component(hass, "media_source", {})
 
 
-async def test_browsing(hass, mock_camera_hls):
+async def test_browsing_hls(hass, mock_camera_hls):
     """Test browsing camera media source."""
     item = await media_source.async_browse_media(hass, "media-source://camera")
     assert item is not None
     assert item.title == "Camera"
     assert len(item.children) == 0
+    assert item.not_shown == 2
 
     # Adding stream enables HLS camera
     hass.config.components.add("stream")
 
     item = await media_source.async_browse_media(hass, "media-source://camera")
+    assert item.not_shown == 0
     assert len(item.children) == 2
+    assert item.children[0].media_content_type == FORMAT_CONTENT_TYPE["hls"]
 
 
-async def test_browsing_filter_non_hls(hass, mock_camera_web_rtc):
+async def test_browsing_mjpeg(hass, mock_camera):
+    """Test browsing camera media source."""
+    item = await media_source.async_browse_media(hass, "media-source://camera")
+    assert item is not None
+    assert item.title == "Camera"
+    assert len(item.children) == 2
+    assert item.not_shown == 0
+    assert item.children[0].media_content_type == "image/jpg"
+    assert item.children[1].media_content_type == "image/png"
+
+
+async def test_browsing_filter_web_rtc(hass, mock_camera_web_rtc):
     """Test browsing camera media source hides non-HLS cameras."""
     item = await media_source.async_browse_media(hass, "media-source://camera")
     assert item is not None

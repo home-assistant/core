@@ -73,10 +73,7 @@ class CameraMediaSource(MediaSource):
         if item.identifier:
             raise BrowseError("Unknown item")
 
-        supported_stream_types: list[str | None] = [None]
-
-        if "stream" in self.hass.config.components:
-            supported_stream_types.append(STREAM_TYPE_HLS)
+        can_stream_hls = "stream" in self.hass.config.components
 
         # Root. List cameras.
         component: EntityComponent = self.hass.data[DOMAIN]
@@ -86,7 +83,13 @@ class CameraMediaSource(MediaSource):
             camera = cast(Camera, camera)
             stream_type = camera.frontend_stream_type
 
-            if stream_type not in supported_stream_types:
+            if stream_type is None:
+                content_type = camera.content_type
+
+            elif can_stream_hls and stream_type == STREAM_TYPE_HLS:
+                content_type = FORMAT_CONTENT_TYPE[HLS_PROVIDER]
+
+            else:
                 not_shown += 1
                 continue
 
@@ -95,7 +98,7 @@ class CameraMediaSource(MediaSource):
                     domain=DOMAIN,
                     identifier=camera.entity_id,
                     media_class=MEDIA_CLASS_VIDEO,
-                    media_content_type=FORMAT_CONTENT_TYPE[HLS_PROVIDER],
+                    media_content_type=content_type,
                     title=camera.name,
                     thumbnail=f"/api/camera_proxy/{camera.entity_id}",
                     can_play=True,
