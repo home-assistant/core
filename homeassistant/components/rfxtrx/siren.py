@@ -106,7 +106,14 @@ async def async_setup_entry(
 
 
 class RfxtrxTimeoutMixin(Entity):
-    """Mixin to support timeouts on data."""
+    """Mixin to support timeouts on data.
+
+    Many 433 devices only send data when active. They will
+    repeatedly (every x seconds) send a command to indicate
+    being active and stop sending this command when inactive.
+    This mixin allow us to keep track of the timeout once
+    they go inactive.
+    """
 
     _timeout: CALLBACK_TYPE | None = None
     _timeout_seconds: float | None = None
