@@ -60,7 +60,6 @@ from .const import (
     CONF_BYTESIZE,
     CONF_CLIMATES,
     CONF_CLOSE_COMM_ON_ERROR,
-    CONF_DATA_COUNT,
     CONF_DATA_TYPE,
     CONF_FANS,
     CONF_INPUT_TYPE,
@@ -72,7 +71,6 @@ from .const import (
     CONF_PRECISION,
     CONF_RETRIES,
     CONF_RETRY_ON_EMPTY,
-    CONF_REVERSE_ORDER,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_STATE_CLOSED,
@@ -210,7 +208,6 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
 
 
 CLIMATE_SCHEMA = vol.All(
-    cv.deprecated(CONF_DATA_COUNT, replacement_key=CONF_COUNT),
     BASE_STRUCT_SCHEMA.extend(
         {
             vol.Required(CONF_TARGET_TEMP): cv.positive_int,
@@ -254,13 +251,11 @@ LIGHT_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
 FAN_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
 
 SENSOR_SCHEMA = vol.All(
-    cv.deprecated(CONF_REVERSE_ORDER),
     BASE_STRUCT_SCHEMA.extend(
         {
             vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-            vol.Optional(CONF_REVERSE_ORDER): cv.boolean,
         }
     ),
 )

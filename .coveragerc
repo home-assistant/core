@@ -722,7 +722,6 @@ omit =
     homeassistant/components/motion_blinds/const.py
     homeassistant/components/motion_blinds/cover.py
     homeassistant/components/motion_blinds/sensor.py
-    homeassistant/components/mpchc/media_player.py
     homeassistant/components/mpd/media_player.py
     homeassistant/components/mqtt_room/sensor.py
     homeassistant/components/msteams/notify.py
@@ -896,10 +895,7 @@ omit =
     homeassistant/components/philips_js/remote.py
     homeassistant/components/philips_js/switch.py
     homeassistant/components/pi_hole/sensor.py
-    homeassistant/components/pi4ioe5v9xxxx/binary_sensor.py
-    homeassistant/components/pi4ioe5v9xxxx/switch.py
     homeassistant/components/picotts/tts.py
-    homeassistant/components/piglow/light.py
     homeassistant/components/pilight/*
     homeassistant/components/ping/__init__.py
     homeassistant/components/ping/const.py
@@ -995,7 +991,6 @@ omit =
     homeassistant/components/rova/sensor.py
     homeassistant/components/rpi_camera/*
     homeassistant/components/rpi_gpio/*
-    homeassistant/components/rpi_gpio_pwm/light.py
     homeassistant/components/rpi_pfio/*
     homeassistant/components/rpi_rf/switch.py
     homeassistant/components/rtorrent/sensor.py
@@ -1047,7 +1042,6 @@ omit =
     homeassistant/components/shelly/number.py
     homeassistant/components/shelly/sensor.py
     homeassistant/components/shelly/utils.py
-    homeassistant/components/sht31/sensor.py
     homeassistant/components/sigfox/sensor.py
     homeassistant/components/simplepush/notify.py
     homeassistant/components/simplisafe/__init__.py

@@ -37,7 +37,6 @@ from .const import (
     CONF_VERSION,
     DOMAIN,
     MYSENSORS_GATEWAY_START_TASK,
-    MYSENSORS_GATEWAYS,
     ConfGatewayType,
     GatewayId,
 )
@@ -120,16 +119,6 @@ async def try_connect(
     except OSError as err:
         _LOGGER.info("Try gateway connect failed with exception", exc_info=err)
         return False
-
-
-def get_mysensors_gateway(
-    hass: HomeAssistant, gateway_id: GatewayId
-) -> BaseAsyncGateway | None:
-    """Return the Gateway for a given GatewayId."""
-    if MYSENSORS_GATEWAYS not in hass.data[DOMAIN]:
-        hass.data[DOMAIN][MYSENSORS_GATEWAYS] = {}
-    gateways = hass.data[DOMAIN].get(MYSENSORS_GATEWAYS)
-    return gateways.get(gateway_id)
 
 
 async def setup_gateway(
