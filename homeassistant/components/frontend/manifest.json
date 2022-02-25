@@ -11,8 +11,7 @@
     "diagnostics",
     "http",
     "lovelace",
-    "onboarding",
-    "search",
+    "onboarding",    "search",
     "system_log",
     "websocket_api"
   ],
