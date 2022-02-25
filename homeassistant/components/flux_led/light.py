@@ -178,7 +178,7 @@ async def async_setup_entry(
             FluxLight(
                 coordinator,
                 entry.unique_id or entry.entry_id,
-                entry.data[CONF_NAME],
+                entry.data.get(CONF_NAME, entry.title),
                 list(custom_effect_colors),
                 options.get(CONF_CUSTOM_EFFECT_SPEED_PCT, DEFAULT_EFFECT_SPEED),
                 options.get(CONF_CUSTOM_EFFECT_TRANSITION, TRANSITION_GRADUAL),

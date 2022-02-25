@@ -5,6 +5,7 @@
             "hazardous": "Hasardeux",
             "moderate": "Mod\u00e9r\u00e9",
             "unhealthy": "Mauvais pour la sant\u00e9",
+            "unhealthy_for_sensitive_groups": "Mauvaise qualit\u00e9 pour les groupes sensibles",
             "very_unhealthy": "Tr\u00e8s mauvais pour la sant\u00e9"
         },
         "climacell__pollen_index": {

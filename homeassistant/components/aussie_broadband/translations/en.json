@@ -18,6 +18,13 @@
                 "description": "Update password for {username}",
                 "title": "Reauthenticate Integration"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Update password for {username}",
+                "title": "Reauthenticate Integration"
+            },
             "service": {
                 "data": {
                     "services": "Services"

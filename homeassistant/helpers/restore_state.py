@@ -258,7 +258,7 @@ def _encode(value: Any) -> Any:
     """Little helper to JSON encode a value."""
     try:
         return JSONEncoder.default(
-            None,  # type: ignore
+            None,  # type: ignore[arg-type]
             value,
         )
     except TypeError:

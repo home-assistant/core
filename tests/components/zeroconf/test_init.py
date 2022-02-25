@@ -780,6 +780,15 @@ async def test_info_from_service_prefers_ipv4(hass):
     assert info.host == "192.168.66.12"
 
 
+async def test_info_from_service_can_return_ipv6(hass):
+    """Test that IPv6-only devices can be discovered."""
+    service_type = "_test._tcp.local."
+    service_info = get_service_info_mock(service_type, f"test.{service_type}")
+    service_info.addresses = ["fd11:1111:1111:0:1234:1234:1234:1234"]
+    info = zeroconf.info_from_service(service_info)
+    assert info.host == "fd11:1111:1111:0:1234:1234:1234:1234"
+
+
 async def test_get_instance(hass, mock_async_zeroconf):
     """Test we get an instance."""
     assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})

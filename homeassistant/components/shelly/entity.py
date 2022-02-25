@@ -183,7 +183,9 @@ async def async_setup_entry_rpc(
 
         for key in key_instances:
             # Filter non-existing sensors
-            if description.sub_key not in wrapper.device.status[key]:
+            if description.sub_key not in wrapper.device.status[
+                key
+            ] and not description.supported(wrapper.device.status[key]):
                 continue
 
             # Filter and remove entities that according to settings should not create an entity
@@ -266,6 +268,7 @@ class RpcEntityDescription(EntityDescription, RpcEntityRequiredKeysMixin):
     removal_condition: Callable[[dict, str], bool] | None = None
     extra_state_attributes: Callable[[dict, dict], dict | None] | None = None
     use_polling_wrapper: bool = False
+    supported: Callable = lambda _: False
 
 
 @dataclass
@@ -505,7 +508,9 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
         """Value of sensor."""
         if callable(self.entity_description.value):
             self._last_value = self.entity_description.value(
-                self.wrapper.device.status[self.key][self.entity_description.sub_key],
+                self.wrapper.device.status[self.key].get(
+                    self.entity_description.sub_key
+                ),
                 self._last_value,
             )
         else:

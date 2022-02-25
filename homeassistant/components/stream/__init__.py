@@ -120,10 +120,8 @@ CONFIG_SCHEMA = vol.Schema(
 def filter_libav_logging() -> None:
     """Filter libav logging to only log when the stream logger is at DEBUG."""
 
-    stream_debug_enabled = logging.getLogger(__name__).isEnabledFor(logging.DEBUG)
-
     def libav_filter(record: logging.LogRecord) -> bool:
-        return stream_debug_enabled
+        return logging.getLogger(__name__).isEnabledFor(logging.DEBUG)
 
     for logging_namespace in (
         "libav.mp4",
@@ -247,7 +245,7 @@ class Stream:
         self, fmt: str, timeout: int = OUTPUT_IDLE_TIMEOUT
     ) -> StreamOutput:
         """Add provider output stream."""
-        if not self._outputs.get(fmt):
+        if not (provider := self._outputs.get(fmt)):
 
             @callback
             def idle_callback() -> None:
@@ -261,7 +259,7 @@ class Stream:
                 self.hass, IdleTimer(self.hass, timeout, idle_callback)
             )
             self._outputs[fmt] = provider
-        return self._outputs[fmt]
+        return provider
 
     def remove_provider(self, provider: StreamOutput) -> None:
         """Remove provider output stream."""
@@ -342,9 +340,11 @@ class Stream:
                 self._logger.error("Error from stream worker: %s", str(err))
 
             stream_state.discontinuity()
-            if not self.keepalive or self._thread_quit.is_set():
+            if not _should_retry() or self._thread_quit.is_set():
                 if self._fast_restart_once:
-                    # The stream source is updated, restart without any delay.
+                    # The stream source is updated, restart without any delay and reset the retry
+                    # backoff for the new url.
+                    wait_timeout = 0
                     self._fast_restart_once = False
                     self._thread_quit.clear()
                     continue
@@ -446,3 +446,8 @@ class Stream:
         return await self._keyframe_converter.async_get_image(
             width=width, height=height
         )
+
+
+def _should_retry() -> bool:
+    """Return true if worker failures should be retried, for disabling during tests."""
+    return True

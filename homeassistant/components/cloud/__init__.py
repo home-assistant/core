@@ -1,6 +1,8 @@
 """Component to integrate the Home Assistant cloud."""
+from __future__ import annotations
+
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from enum import Enum
 
 from hass_nabucasa import Cloud
@@ -152,7 +154,8 @@ def async_is_connected(hass: HomeAssistant) -> bool:
 
 @callback
 def async_listen_connection_change(
-    hass: HomeAssistant, target: Callable[[CloudConnectionState], None]
+    hass: HomeAssistant,
+    target: Callable[[CloudConnectionState], Awaitable[None] | None],
 ) -> Callable[[], None]:
     """Notify on connection state changes."""
     return async_dispatcher_connect(hass, SIGNAL_CLOUD_CONNECTION_STATE, target)

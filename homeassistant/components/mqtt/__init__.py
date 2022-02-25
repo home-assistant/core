@@ -50,7 +50,13 @@ from homeassistant.core import (
 )
 from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.exceptions import HomeAssistantError, TemplateError, Unauthorized
-from homeassistant.helpers import config_validation as cv, event, template
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    event,
+    template,
+)
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.frame import report
@@ -173,49 +179,53 @@ MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
     required=True,
 )
 
+CONFIG_SCHEMA_BASE = vol.Schema(
+    {
+        vol.Optional(CONF_CLIENT_ID): cv.string,
+        vol.Optional(CONF_KEEPALIVE, default=DEFAULT_KEEPALIVE): vol.All(
+            vol.Coerce(int), vol.Range(min=15)
+        ),
+        vol.Optional(CONF_BROKER): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_CERTIFICATE): vol.Any("auto", cv.isfile),
+        vol.Inclusive(
+            CONF_CLIENT_KEY, "client_key_auth", msg=CLIENT_KEY_AUTH_MSG
+        ): cv.isfile,
+        vol.Inclusive(
+            CONF_CLIENT_CERT, "client_key_auth", msg=CLIENT_KEY_AUTH_MSG
+        ): cv.isfile,
+        vol.Optional(CONF_TLS_INSECURE): cv.boolean,
+        vol.Optional(CONF_TLS_VERSION, default=DEFAULT_TLS_PROTOCOL): vol.Any(
+            "auto", "1.0", "1.1", "1.2"
+        ),
+        vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.All(
+            cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])
+        ),
+        vol.Optional(CONF_WILL_MESSAGE, default=DEFAULT_WILL): MQTT_WILL_BIRTH_SCHEMA,
+        vol.Optional(CONF_BIRTH_MESSAGE, default=DEFAULT_BIRTH): MQTT_WILL_BIRTH_SCHEMA,
+        vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
+        # discovery_prefix must be a valid publish topic because if no
+        # state topic is specified, it will be created with the given prefix.
+        vol.Optional(
+            CONF_DISCOVERY_PREFIX, default=DEFAULT_PREFIX
+        ): valid_publish_topic,
+    }
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            cv.deprecated(CONF_TLS_VERSION),
-            vol.Schema(
-                {
-                    vol.Optional(CONF_CLIENT_ID): cv.string,
-                    vol.Optional(CONF_KEEPALIVE, default=DEFAULT_KEEPALIVE): vol.All(
-                        vol.Coerce(int), vol.Range(min=15)
-                    ),
-                    vol.Optional(CONF_BROKER): cv.string,
-                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                    vol.Optional(CONF_USERNAME): cv.string,
-                    vol.Optional(CONF_PASSWORD): cv.string,
-                    vol.Optional(CONF_CERTIFICATE): vol.Any("auto", cv.isfile),
-                    vol.Inclusive(
-                        CONF_CLIENT_KEY, "client_key_auth", msg=CLIENT_KEY_AUTH_MSG
-                    ): cv.isfile,
-                    vol.Inclusive(
-                        CONF_CLIENT_CERT, "client_key_auth", msg=CLIENT_KEY_AUTH_MSG
-                    ): cv.isfile,
-                    vol.Optional(CONF_TLS_INSECURE): cv.boolean,
-                    vol.Optional(
-                        CONF_TLS_VERSION, default=DEFAULT_TLS_PROTOCOL
-                    ): vol.Any("auto", "1.0", "1.1", "1.2"),
-                    vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.All(
-                        cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])
-                    ),
-                    vol.Optional(
-                        CONF_WILL_MESSAGE, default=DEFAULT_WILL
-                    ): MQTT_WILL_BIRTH_SCHEMA,
-                    vol.Optional(
-                        CONF_BIRTH_MESSAGE, default=DEFAULT_BIRTH
-                    ): MQTT_WILL_BIRTH_SCHEMA,
-                    vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
-                    # discovery_prefix must be a valid publish topic because if no
-                    # state topic is specified, it will be created with the given prefix.
-                    vol.Optional(
-                        CONF_DISCOVERY_PREFIX, default=DEFAULT_PREFIX
-                    ): valid_publish_topic,
-                }
-            ),
+            cv.deprecated(CONF_BIRTH_MESSAGE),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_BROKER),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_DISCOVERY),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_PASSWORD),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_PORT),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_TLS_VERSION),  # Deprecated June 2020
+            cv.deprecated(CONF_USERNAME),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_WILL_MESSAGE),  # Deprecated in HA Core 2022.3
+            CONFIG_SCHEMA_BASE,
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -604,11 +614,9 @@ def _merge_config(entry, conf):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
-    conf = hass.data.get(DATA_MQTT_CONFIG)
-
     # If user didn't have configuration.yaml config, generate defaults
-    if conf is None:
-        conf = CONFIG_SCHEMA({DOMAIN: dict(entry.data)})[DOMAIN]
+    if (conf := hass.data.get(DATA_MQTT_CONFIG)) is None:
+        conf = CONFIG_SCHEMA_BASE(dict(entry.data))
     elif any(key in conf for key in entry.data):
         shared_keys = conf.keys() & entry.data.keys()
         override = {k: entry.data[k] for k in shared_keys}
@@ -800,7 +808,7 @@ class MQTT:
         self = hass.data[DATA_MQTT]
 
         if (conf := hass.data.get(DATA_MQTT_CONFIG)) is None:
-            conf = CONFIG_SCHEMA({DOMAIN: dict(entry.data)})[DOMAIN]
+            conf = CONFIG_SCHEMA_BASE(dict(entry.data))
 
         self.conf = _merge_config(entry, conf)
         await self.async_disconnect()
@@ -895,7 +903,7 @@ class MQTT:
 
     async def async_connect(self) -> None:
         """Connect to the host. Does not process messages yet."""
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         import paho.mqtt.client as mqtt
 
         result: int | None = None
@@ -1000,7 +1008,7 @@ class MQTT:
         Resubscribe to all topics we were subscribed to and publish birth
         message.
         """
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         import paho.mqtt.client as mqtt
 
         if result_code != mqtt.CONNACK_ACCEPTED:
@@ -1159,7 +1167,7 @@ class MQTT:
 
 def _raise_on_error(result_code: int | None) -> None:
     """Raise error if error result."""
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     import paho.mqtt.client as mqtt
 
     if result_code is not None and result_code != 0:
@@ -1169,7 +1177,7 @@ def _raise_on_error(result_code: int | None) -> None:
 
 
 def _matcher_for_topic(subscription: str) -> Any:
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from paho.mqtt.matcher import MQTTMatcher
 
     matcher = MQTTMatcher()
@@ -1181,8 +1189,8 @@ def _matcher_for_topic(subscription: str) -> Any:
 @websocket_api.websocket_command(
     {vol.Required("type"): "mqtt/device/debug_info", vol.Required("device_id"): str}
 )
-@websocket_api.async_response
-async def websocket_mqtt_info(hass, connection, msg):
+@callback
+def websocket_mqtt_info(hass, connection, msg):
     """Get MQTT debug info for device."""
     device_id = msg["device_id"]
     mqtt_info = debug_info.info_for_device(hass, device_id)
@@ -1197,9 +1205,9 @@ async def websocket_mqtt_info(hass, connection, msg):
 async def websocket_remove_device(hass, connection, msg):
     """Delete device."""
     device_id = msg["device_id"]
-    dev_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
 
-    if not (device := dev_registry.async_get(device_id)):
+    if not (device := device_registry.async_get(device_id)):
         connection.send_error(
             msg["id"], websocket_api.const.ERR_NOT_FOUND, "Device not found"
         )
@@ -1209,7 +1217,10 @@ async def websocket_remove_device(hass, connection, msg):
         config_entry = hass.config_entries.async_get_entry(config_entry)
         # Only delete the device if it belongs to an MQTT device entry
         if config_entry.domain == DOMAIN:
-            dev_registry.async_remove_device(device_id)
+            await async_remove_config_entry_device(hass, config_entry, device)
+            device_registry.async_update_device(
+                device_id, remove_config_entry_id=config_entry.entry_id
+            )
             connection.send_message(websocket_api.result_message(msg["id"]))
             return
 
@@ -1287,3 +1298,14 @@ def async_subscribe_connection_status(
 def is_connected(hass: HomeAssistant) -> bool:
     """Return if MQTT client is connected."""
     return hass.data[DATA_MQTT].connected
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove MQTT config entry from a device."""
+    # pylint: disable-next=import-outside-toplevel
+    from . import device_automation
+
+    await device_automation.async_removed_from_device(hass, device_entry.id)
+    return True

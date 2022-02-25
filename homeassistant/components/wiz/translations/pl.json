@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci"
         },
         "error": {
@@ -26,7 +27,7 @@
             },
             "user": {
                 "data": {
-                    "host": "[%key::common::config_flow::data::ip%]",
+                    "host": "Adres IP",
                     "name": "Nazwa"
                 },
                 "description": "Je\u015bli nie podasz adresu IP, zostanie u\u017cyte wykrywanie do odnalezienia urz\u0105dze\u0144."

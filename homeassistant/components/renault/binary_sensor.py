@@ -79,29 +79,61 @@ class RenaultBinarySensor(
         return None
 
 
-BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = (
-    RenaultBinarySensorEntityDescription(
-        key="plugged_in",
-        coordinator="battery",
-        device_class=BinarySensorDeviceClass.PLUG,
-        name="Plugged In",
-        on_key="plugStatus",
-        on_value=PlugState.PLUGGED.value,
-    ),
-    RenaultBinarySensorEntityDescription(
-        key="charging",
-        coordinator="battery",
-        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
-        name="Charging",
-        on_key="chargingStatus",
-        on_value=ChargeState.CHARGE_IN_PROGRESS.value,
-    ),
-    RenaultBinarySensorEntityDescription(
-        key="hvac_status",
-        coordinator="hvac_status",
-        icon_fn=lambda e: "mdi:fan" if e.is_on else "mdi:fan-off",
-        name="HVAC",
-        on_key="hvacStatus",
-        on_value="on",
-    ),
+BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
+    [
+        RenaultBinarySensorEntityDescription(
+            key="plugged_in",
+            coordinator="battery",
+            device_class=BinarySensorDeviceClass.PLUG,
+            name="Plugged In",
+            on_key="plugStatus",
+            on_value=PlugState.PLUGGED.value,
+        ),
+        RenaultBinarySensorEntityDescription(
+            key="charging",
+            coordinator="battery",
+            device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+            name="Charging",
+            on_key="chargingStatus",
+            on_value=ChargeState.CHARGE_IN_PROGRESS.value,
+        ),
+        RenaultBinarySensorEntityDescription(
+            key="hvac_status",
+            coordinator="hvac_status",
+            icon_fn=lambda e: "mdi:fan" if e.is_on else "mdi:fan-off",
+            name="HVAC",
+            on_key="hvacStatus",
+            on_value="on",
+        ),
+        RenaultBinarySensorEntityDescription(
+            key="lock_status",
+            coordinator="lock_status",
+            # lock: on means open (unlocked), off means closed (locked)
+            device_class=BinarySensorDeviceClass.LOCK,
+            name="Lock",
+            on_key="lockStatus",
+            on_value="unlocked",
+        ),
+        RenaultBinarySensorEntityDescription(
+            key="hatch_status",
+            coordinator="lock_status",
+            # On means open, Off means closed
+            device_class=BinarySensorDeviceClass.DOOR,
+            name="Hatch",
+            on_key="hatchStatus",
+            on_value="open",
+        ),
+    ]
+    + [
+        RenaultBinarySensorEntityDescription(
+            key=f"{door.replace(' ','_').lower()}_door_status",
+            coordinator="lock_status",
+            # On means open, Off means closed
+            device_class=BinarySensorDeviceClass.DOOR,
+            name=f"{door} Door",
+            on_key=f"doorStatus{door.replace(' ','')}",
+            on_value="open",
+        )
+        for door in ("Rear Left", "Rear Right", "Driver", "Passenger")
+    ],
 )

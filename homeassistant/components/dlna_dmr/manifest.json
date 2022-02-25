@@ -5,6 +5,7 @@
   "documentation": "https://www.home-assistant.io/integrations/dlna_dmr",
   "requirements": ["async-upnp-client==0.23.5"],
   "dependencies": ["ssdp"],
+  "after_dependencies": ["media_source"],
   "ssdp": [
     {
       "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",

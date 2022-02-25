@@ -8,11 +8,21 @@ on:
       - rc
       - master
   pull_request: ~
+  workflow_dispatch:
+    inputs:
+      full:
+        description: 'Full run (regardless of changes)'
+        default: false
+        type: boolean
+      lint-only:
+        description: 'Skip pytest'
+        default: false
+        type: boolean
 
 env:
-  CACHE_VERSION: 7
-  PIP_CACHE_VERSION: 1
-  HA_SHORT_VERSION: 2022.3
+  CACHE_VERSION: 9
+  PIP_CACHE_VERSION: 3
+  HA_SHORT_VERSION: 2022.4
   DEFAULT_PYTHON: 3.9
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   PIP_CACHE: /tmp/pip-cache
@@ -108,7 +118,8 @@ jobs:
           if [[ "${{ github.ref }}" == "refs/heads/dev" ]] \
             || [[ "${{ github.ref }}" == "refs/heads/master" ]] \
             || [[ "${{ github.ref }}" == "refs/heads/rc" ]] \
-            || [[ "${{ steps.core.outputs.any }}" == "true" ]];
+            || [[ "${{ steps.core.outputs.any }}" == "true" ]] \
+            || [[ "${{ github.event.inputs.full }}" == "true" ]];
           then
             test_groups="[1, 2, 3, 4, 5, 6]"
             test_group_count=6
@@ -524,10 +535,10 @@ jobs:
   prepare-tests:
     name: Prepare tests for Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       matrix:
-        python-version: [3.9]
+        python-version: ["3.9", "3.10"]
     outputs:
       python-key: ${{ steps.generate-python-key.outputs.key }}
     container: homeassistant/ci-azure:${{ matrix.python-version }}
@@ -707,7 +718,10 @@ jobs:
 
   pytest:
     runs-on: ubuntu-latest
-    if: needs.changes.outputs.test_full_suite == 'true' || needs.changes.outputs.tests_glob
+    if: |
+      (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
+      && github.event.inputs.lint-only != 'true'
+      && (needs.changes.outputs.test_full_suite == 'true' || needs.changes.outputs.tests_glob)
     needs:
       - changes
       - gen-requirements-all
@@ -721,7 +735,7 @@ jobs:
       fail-fast: false
       matrix:
         group: ${{ fromJson(needs.changes.outputs.test_groups) }}
-        python-version: [3.9]
+        python-version: ["3.9", "3.10"]
     name: >-
       Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
     container: homeassistant/ci-azure:${{ matrix.python-version }}

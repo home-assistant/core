@@ -30,7 +30,11 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from . import config_flow
 from .browse_media import async_browse_media
 from .const import DOMAIN, LOGGER, SPOTIFY_SCOPES
-from .util import is_spotify_media_type, resolve_spotify_media_type
+from .util import (
+    is_spotify_media_type,
+    resolve_spotify_media_type,
+    spotify_uri_from_media_browser_url,
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -50,6 +54,7 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 __all__ = [
     "async_browse_media",
     "DOMAIN",
+    "spotify_uri_from_media_browser_url",
     "is_spotify_media_type",
     "resolve_spotify_media_type",
 ]

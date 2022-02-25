@@ -20,7 +20,12 @@
             "cancel": "Annuler"
         },
         "tuya__curtain_mode": {
-            "morning": "Matin"
+            "morning": "Matin",
+            "night": "Nuit"
+        },
+        "tuya__curtain_motor_mode": {
+            "back": "Retour",
+            "forward": "Avance rapide"
         },
         "tuya__decibel_sensitivity": {
             "0": "Faible sensibilit\u00e9",
@@ -56,7 +61,10 @@
         },
         "tuya__humidifier_spray_mode": {
             "auto": "Auto",
-            "health": "Sant\u00e9"
+            "health": "Sant\u00e9",
+            "humidity": "Humidit\u00e9",
+            "sleep": "Sommeil",
+            "work": "Travail"
         },
         "tuya__ipc_work_mode": {
             "0": "Mode faible consommation",

@@ -56,7 +56,8 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Sekunden, um ein Ger\u00e4t als 'zu Hause' zu betrachten"
+                    "consider_home": "Sekunden, um ein Ger\u00e4t als 'zu Hause' zu betrachten",
+                    "old_discovery": "Alte Erkennungsmethode aktivieren"
                 }
             }
         }

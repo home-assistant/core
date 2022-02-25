@@ -14,6 +14,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    ATTR_CONNECTIONS,
     CONF_EXCLUDE,
     CONF_HOST,
     CONF_INCLUDE,
@@ -28,6 +29,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -226,7 +228,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug("Setting up elkm1 %s", conf["host"])
 
-    if not entry.unique_id or ":" not in entry.unique_id and is_ip_address(host):
+    if (not entry.unique_id or ":" not in entry.unique_id) and is_ip_address(host):
+        _LOGGER.debug(
+            "Unique id for %s is missing during setup, trying to fill from discovery",
+            host,
+        )
         if device := await async_discover_device(hass, host):
             async_update_entry_from_discovery(hass, entry, device)
 
@@ -274,7 +280,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         if not await async_wait_for_elk_to_sync(
-            elk, LOGIN_TIMEOUT, SYNC_TIMEOUT, conf[CONF_HOST]
+            elk, LOGIN_TIMEOUT, SYNC_TIMEOUT, bool(conf[CONF_USERNAME])
         ):
             return False
     except asyncio.TimeoutError as exc:
@@ -286,6 +292,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = {
         "elk": elk,
         "prefix": conf[CONF_PREFIX],
+        "mac": entry.unique_id,
         "auto_configure": conf[CONF_AUTO_CONFIGURE],
         "config": config,
         "keypads": {},
@@ -324,7 +331,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_wait_for_elk_to_sync(
-    elk: elkm1.Elk, login_timeout: int, sync_timeout: int, conf_host: str
+    elk: elkm1.Elk,
+    login_timeout: int,
+    sync_timeout: int,
+    password_auth: bool,
 ) -> bool:
     """Wait until the elk has finished sync. Can fail login or timeout."""
 
@@ -350,15 +360,21 @@ async def async_wait_for_elk_to_sync(
     success = True
     elk.add_handler("login", login_status)
     elk.add_handler("sync_complete", sync_complete)
-    events = ((login_event, login_timeout), (sync_event, sync_timeout))
+    events = []
+    if password_auth:
+        events.append(("login", login_event, login_timeout))
+    events.append(("sync_complete", sync_event, sync_timeout))
 
-    for event, timeout in events:
+    for name, event, timeout in events:
+        _LOGGER.debug("Waiting for %s event for %s seconds", name, timeout)
         try:
             async with async_timeout.timeout(timeout):
                 await event.wait()
         except asyncio.TimeoutError:
+            _LOGGER.debug("Timed out waiting for %s event", name)
             elk.disconnect()
             raise
+        _LOGGER.debug("Received %s event", name)
 
     return success
 
@@ -420,6 +436,7 @@ class ElkEntity(Entity):
         """Initialize the base of all Elk devices."""
         self._elk = elk
         self._element = element
+        self._mac = elk_data["mac"]
         self._prefix = elk_data["prefix"]
         self._name_prefix = f"{self._prefix} " if self._prefix else ""
         self._temperature_unit = elk_data["config"]["temperature_unit"]
@@ -499,10 +516,13 @@ class ElkAttachedEntity(ElkEntity):
         device_name = "ElkM1"
         if self._prefix:
             device_name += f" {self._prefix}"
-        return DeviceInfo(
+        device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{self._prefix}_system")},
             manufacturer="ELK Products, Inc.",
             model="M1",
             name=device_name,
             sw_version=self._elk.panel.elkm1_version,
         )
+        if self._mac:
+            device_info[ATTR_CONNECTIONS] = {(CONNECTION_NETWORK_MAC, self._mac)}
+        return device_info

@@ -1,4 +1,5 @@
 """Support for Z-Wave."""
+# pylint: disable=import-error
 # pylint: disable=import-outside-toplevel
 from __future__ import annotations
 
@@ -355,8 +356,6 @@ async def async_setup_entry(  # noqa: C901
     from openzwave.group import ZWaveGroup
     from openzwave.network import ZWaveNetwork
     from openzwave.option import ZWaveOption
-
-    # pylint: enable=import-error
     from pydispatch import dispatcher
 
     if async_is_ozw_migrated(hass) or async_is_zwave_js_migrated(hass):

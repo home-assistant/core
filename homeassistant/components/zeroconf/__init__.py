@@ -541,9 +541,9 @@ def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
             if isinstance(value, bytes):
                 properties[key] = value.decode("utf-8")
 
-    if not (addresses := service.addresses):
+    if not (addresses := service.addresses or service.parsed_addresses()):
         return None
-    if (host := _first_non_link_local_or_v6_address(addresses)) is None:
+    if (host := _first_non_link_local_address(addresses)) is None:
         return None
 
     return ZeroconfServiceInfo(
@@ -557,11 +557,18 @@ def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
     )
 
 
-def _first_non_link_local_or_v6_address(addresses: list[bytes]) -> str | None:
-    """Return the first ipv6 or non-link local ipv4 address."""
+def _first_non_link_local_address(
+    addresses: list[bytes] | list[str],
+) -> str | None:
+    """Return the first ipv6 or non-link local ipv4 address, preferring IPv4."""
     for address in addresses:
         ip_addr = ip_address(address)
-        if not ip_addr.is_link_local or ip_addr.version == 6:
+        if not ip_addr.is_link_local and ip_addr.version == 4:
+            return str(ip_addr)
+    # If we didn't find a good IPv4 address, check for IPv6 addresses.
+    for address in addresses:
+        ip_addr = ip_address(address)
+        if not ip_addr.is_link_local and ip_addr.version == 6:
             return str(ip_addr)
     return None
 

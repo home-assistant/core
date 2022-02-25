@@ -12,6 +12,7 @@ from renault_api.kamereon.models import (
     KamereonVehicleCockpitData,
     KamereonVehicleHvacStatusData,
     KamereonVehicleLocationData,
+    KamereonVehicleResStateData,
 )
 
 from homeassistant.components.sensor import (
@@ -332,5 +333,20 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         name="Location Last Activity",
         value_lambda=_get_utc_value,
+    ),
+    RenaultSensorEntityDescription(
+        key="res_state",
+        coordinator="res_state",
+        data_key="details",
+        entity_class=RenaultSensor[KamereonVehicleResStateData],
+        name="Remote Engine Start",
+    ),
+    RenaultSensorEntityDescription(
+        key="res_state_code",
+        coordinator="res_state",
+        data_key="code",
+        entity_class=RenaultSensor[KamereonVehicleResStateData],
+        entity_registry_enabled_default=False,
+        name="Remote Engine Start Code",
     ),
 )
