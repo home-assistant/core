@@ -149,11 +149,11 @@ async def _async_create_bridge_with_updated_data(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> SamsungTVLegacyBridge | SamsungTVWSBridge:
     """Create a bridge object and update any missing data in the config entry."""
-    updated_data = {}
-    host = entry.data[CONF_HOST]
-    port = entry.data.get(CONF_PORT)
-    method = entry.data.get(CONF_METHOD)
-    info = None
+    updated_data: dict[str, str | int] = {}
+    host: str = entry.data[CONF_HOST]
+    port: int | None = entry.data.get(CONF_PORT)
+    method: str | None = entry.data.get(CONF_METHOD)
+    info: dict[str, Any] | None = None
 
     if not port or not method:
         if method == METHOD_LEGACY:
@@ -162,7 +162,7 @@ async def _async_create_bridge_with_updated_data(
             # When we imported from yaml we didn't setup the method
             # because we didn't know it
             port, method, info = await async_get_device_info(hass, None, host)
-            if not port:
+            if not port or not method:
                 raise ConfigEntryNotReady(
                     "Failed to determine connection method, make sure the device is on."
                 )
@@ -172,7 +172,7 @@ async def _async_create_bridge_with_updated_data(
 
     bridge = _async_get_device_bridge(hass, {**entry.data, **updated_data})
 
-    mac = entry.data.get(CONF_MAC)
+    mac: str | None = entry.data.get(CONF_MAC)
     if not mac and bridge.method == METHOD_WEBSOCKET:
         if info:
             mac = mac_from_device_info(info)
