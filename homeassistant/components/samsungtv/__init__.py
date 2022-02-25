@@ -133,7 +133,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def stop_bridge(event: Event) -> None:
         """Stop SamsungTV bridge connection."""
-        await bridge.async_stop()
+        LOGGER.debug("Stopping SamsungTVBridge %s", bridge.host)
+        await bridge.async_close_remote()
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
@@ -196,7 +197,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        await hass.data[DOMAIN][entry.entry_id].async_stop()
+        bridge: SamsungTVBridge = hass.data[DOMAIN][entry.entry_id]
+        LOGGER.debug("Stopping SamsungTVBridge %s", bridge.host)
+        await bridge.async_close_remote()
     return unload_ok
 
 

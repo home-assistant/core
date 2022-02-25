@@ -135,10 +135,6 @@ class SamsungTVBridge(ABC):
     async def async_close_remote(self) -> None:
         """Close remote object."""
 
-    @abstractmethod
-    async def async_stop(self) -> None:
-        """Stop Bridge."""
-
     def _notify_reauth_callback(self) -> None:
         """Notify access denied callback."""
         if self._reauth_callback is not None:
@@ -282,11 +278,6 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             self._remote = None
         except OSError:
             LOGGER.debug("Could not establish connection")
-
-    async def async_stop(self) -> None:
-        """Stop Bridge."""
-        LOGGER.debug("Stopping SamsungTVLegacyBridge")
-        await self.async_close_remote()
 
 
 class SamsungTVWSBridge(SamsungTVBridge):
@@ -476,8 +467,3 @@ class SamsungTVWSBridge(SamsungTVBridge):
             self._remote = None
         except OSError:
             LOGGER.debug("Could not establish connection")
-
-    async def async_stop(self) -> None:
-        """Stop Bridge."""
-        LOGGER.debug("Stopping SamsungTVWSBridge")
-        await self.async_close_remote()
