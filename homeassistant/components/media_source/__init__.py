@@ -2,20 +2,19 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import dataclasses
-from datetime import timedelta
 from typing import Any
-from urllib.parse import quote
 
 import voluptuous as vol
 
 from homeassistant.components import frontend, websocket_api
-from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     CONTENT_AUTH_EXPIRY_TIME,
     BrowseError,
     BrowseMedia,
+)
+from homeassistant.components.media_player.browse_media import (
+    async_process_play_media_url,
 )
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
@@ -177,13 +176,10 @@ async def websocket_resolve_media(
         connection.send_error(msg["id"], "resolve_media_failed", str(err))
         return
 
-    data = dataclasses.asdict(media)
-
-    if data["url"][0] == "/":
-        data["url"] = async_sign_path(
-            hass,
-            quote(data["url"]),
-            timedelta(seconds=msg["expires"]),
-        )
-
-    connection.send_result(msg["id"], data)
+    connection.send_result(
+        msg["id"],
+        {
+            "url": async_process_play_media_url(hass, media.url),
+            "mime_type": media.mime_type,
+        },
+    )
