@@ -32,7 +32,7 @@ from tests.common import MockConfigEntry
 
 TESTDATA = {
     CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
-    CONF_STREAM_SOURCE: "http://127.0.0.2/testurl/2",
+    CONF_STREAM_SOURCE: "http://127.0.0.1/testurl/2",
     CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
     CONF_USERNAME: "fred_flintstone",
     CONF_PASSWORD: "bambam",
@@ -48,26 +48,19 @@ TESTDATA_YAML = {
 
 
 @respx.mock
-async def test_form(hass, fakeimgbytes_png, fakevidcontainer):
+async def test_form(hass, fakeimg_png, fakevidcontainer, user_flow):
     """Test the form with a normal set of settings."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == "form"
-    assert result["errors"] == {}
 
     with patch("av.open", return_value=fakevidcontainer) as mock_setup:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+            user_flow["flow_id"],
             TESTDATA,
         )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "http://127.0.0.1/testurl/1"
     assert result2["options"] == {
         CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
-        CONF_STREAM_SOURCE: "http://127.0.0.2/testurl/2",
+        CONF_STREAM_SOURCE: "http://127.0.0.1/testurl/2",
         CONF_RTSP_TRANSPORT: None,
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
         CONF_USERNAME: "fred_flintstone",
@@ -83,9 +76,8 @@ async def test_form(hass, fakeimgbytes_png, fakevidcontainer):
 
 
 @respx.mock
-async def test_form_only_stillimage(hass, fakeimgbytes_png, fakevidcontainer):
+async def test_form_only_stillimage(hass, fakeimg_png, user_flow):
     """Test we complete ok if the user wants still images only."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -93,17 +85,11 @@ async def test_form_only_stillimage(hass, fakeimgbytes_png, fakevidcontainer):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
+    data = TESTDATA.copy()
+    data.pop(CONF_STREAM_SOURCE)
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
-            CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
-            CONF_USERNAME: "fred_flintstone",
-            CONF_PASSWORD: "bambam",
-            CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
-            CONF_FRAMERATE: 5,
-            CONF_VERIFY_SSL: False,
-        },
+        user_flow["flow_id"],
+        data,
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "http://127.0.0.1/testurl/1"
@@ -124,21 +110,13 @@ async def test_form_only_stillimage(hass, fakeimgbytes_png, fakevidcontainer):
 
 
 @respx.mock
-async def test_form_rtsp_mode(hass, fakeimgbytes_png, fakevidcontainer):
+async def test_form_rtsp_mode(hass, fakeimg_png, fakevidcontainer, user_flow):
     """Test we complete ok if the user enters a stream url."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == "form"
-    assert result["errors"] == {}
-
     with patch("av.open", return_value=fakevidcontainer) as mock_setup:
         data = TESTDATA
         data[CONF_RTSP_TRANSPORT] = "tcp"
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], data
+            user_flow["flow_id"], data
         )
     print(f"result2={result2}")
     assert "errors" not in result2, f"errors={result2['errors']}"
@@ -147,7 +125,7 @@ async def test_form_rtsp_mode(hass, fakeimgbytes_png, fakevidcontainer):
     assert result2["options"] == {
         CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
-        CONF_STREAM_SOURCE: "http://127.0.0.2/testurl/2",
+        CONF_STREAM_SOURCE: "http://127.0.0.1/testurl/2",
         CONF_RTSP_TRANSPORT: "tcp",
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
@@ -167,19 +145,12 @@ async def test_form_only_stream(hass, fakevidcontainer):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    data = TESTDATA.copy()
+    data.pop(CONF_STILL_IMAGE_URL)
     with patch("av.open", return_value=fakevidcontainer) as mock_setup:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
-                CONF_STREAM_SOURCE: "http://127.0.0.1/testurl/2",
-                CONF_RTSP_TRANSPORT: "tcp",
-                CONF_USERNAME: "fred_flintstone",
-                CONF_PASSWORD: "bambam",
-                CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
-                CONF_FRAMERATE: 5,
-                CONF_VERIFY_SSL: False,
-            },
+            data,
         )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "http://127.0.0.1/testurl/2"
@@ -199,14 +170,10 @@ async def test_form_only_stream(hass, fakevidcontainer):
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_form_still_and_stream_not_provided(hass):
+async def test_form_still_and_stream_not_provided(hass, user_flow):
     """Test we show a suitable error if neither still or stream URL are provided."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
+        user_flow["flow_id"],
         {
             CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
             CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
@@ -219,17 +186,15 @@ async def test_form_still_and_stream_not_provided(hass):
 
 
 @respx.mock
-async def test_form_image_timeout(hass, fakevidcontainer):
+async def test_form_image_timeout(hass, fakevidcontainer, user_flow):
     """Test we handle invalid image timeout."""
     respx.get("http://127.0.0.1/testurl/1").side_effect = [
         httpx.TimeoutException,
     ]
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+
     with patch("av.open", return_value=fakevidcontainer):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+            user_flow["flow_id"],
             TESTDATA,
         )
     await hass.async_block_till_done()
@@ -239,15 +204,12 @@ async def test_form_image_timeout(hass, fakevidcontainer):
 
 
 @respx.mock
-async def test_form_stream_invalidimage(hass, fakevidcontainer):
+async def test_form_stream_invalidimage(hass, fakevidcontainer, user_flow):
     """Test we handle invalid image when a stream is specified."""
     respx.get("http://127.0.0.1/testurl/1").respond(stream=b"invalid")
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
     with patch("av.open", return_value=fakevidcontainer):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+            user_flow["flow_id"],
             TESTDATA,
         )
     await hass.async_block_till_done()
@@ -257,15 +219,12 @@ async def test_form_stream_invalidimage(hass, fakevidcontainer):
 
 
 @respx.mock
-async def test_form_stream_invalidimage2(hass, fakevidcontainer):
+async def test_form_stream_invalidimage2(hass, fakevidcontainer, user_flow):
     """Test we handle invalid image when a stream is specified."""
     respx.get("http://127.0.0.1/testurl/1").respond(content=None)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
     with patch("av.open", return_value=fakevidcontainer):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+            user_flow["flow_id"],
             TESTDATA,
         )
     await hass.async_block_till_done()
@@ -275,17 +234,12 @@ async def test_form_stream_invalidimage2(hass, fakevidcontainer):
 
 
 @respx.mock
-async def test_form_stream_invalidimage3(hass, fakevidcontainer):
+async def test_form_stream_invalidimage3(hass, fakevidcontainer, user_flow):
     """Test we handle invalid image when a stream is specified."""
-    # string = bytes([0xFF]).decode("utf-8")
-
     respx.get("http://127.0.0.1/testurl/1").respond(content=bytes([0xFF]))
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
     with patch("av.open", return_value=fakevidcontainer):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+            user_flow["flow_id"],
             TESTDATA,
         )
     await hass.async_block_till_done()
@@ -295,15 +249,11 @@ async def test_form_stream_invalidimage3(hass, fakevidcontainer):
 
 
 @respx.mock
-async def test_form_stream_file_not_found(hass, fakeimgbytes_png):
+async def test_form_stream_file_not_found(hass, fakeimg_png, user_flow):
     """Test we handle file not found."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
     with patch("av.open", side_effect=av.error.FileNotFoundError(0, 0)):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+            user_flow["flow_id"],
             TESTDATA,
         )
     assert result2["type"] == "form"
@@ -311,15 +261,11 @@ async def test_form_stream_file_not_found(hass, fakeimgbytes_png):
 
 
 @respx.mock
-async def test_form_stream_http_not_found(hass, fakeimgbytes_png):
+async def test_form_stream_http_not_found(hass, fakeimg_png, user_flow):
     """Test we handle invalid auth."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
     with patch("av.open", side_effect=av.error.HTTPNotFoundError(0, 0)):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+            user_flow["flow_id"],
             TESTDATA,
         )
     assert result2["type"] == "form"
@@ -327,15 +273,11 @@ async def test_form_stream_http_not_found(hass, fakeimgbytes_png):
 
 
 @respx.mock
-async def test_form_stream_timeout(hass, fakeimgbytes_png):
+async def test_form_stream_timeout(hass, fakeimg_png, user_flow):
     """Test we handle invalid auth."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
     with patch("av.open", side_effect=av.error.TimeoutError(0, 0)):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+            user_flow["flow_id"],
             TESTDATA,
         )
     assert result2["type"] == "form"
@@ -343,15 +285,11 @@ async def test_form_stream_timeout(hass, fakeimgbytes_png):
 
 
 @respx.mock
-async def test_form_stream_unauthorised(hass, fakeimgbytes_png):
+async def test_form_stream_unauthorised(hass, fakeimg_png, user_flow):
     """Test we handle invalid auth."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
     with patch("av.open", side_effect=av.error.HTTPUnauthorizedError(0, 0)):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+            user_flow["flow_id"],
             TESTDATA,
         )
     assert result2["type"] == "form"
@@ -359,15 +297,11 @@ async def test_form_stream_unauthorised(hass, fakeimgbytes_png):
 
 
 @respx.mock
-async def test_form_stream_novideo(hass, fakeimgbytes_png):
+async def test_form_stream_novideo(hass, fakeimg_png, user_flow):
     """Test we handle invalid stream."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
     with patch("av.open", side_effect=KeyError()):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+            user_flow["flow_id"],
             TESTDATA,
         )
     assert result2["type"] == "form"
@@ -375,15 +309,12 @@ async def test_form_stream_novideo(hass, fakeimgbytes_png):
 
 
 @respx.mock
-async def test_form_stream_permission_error(hass, fakeimgbytes_png):
+async def test_form_stream_permission_error(hass, fakeimgbytes_png, user_flow):
     """Test we handle permission error."""
     respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
     with patch("av.open", side_effect=PermissionError()):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+            user_flow["flow_id"],
             TESTDATA,
         )
     assert result2["type"] == "form"
@@ -391,16 +322,11 @@ async def test_form_stream_permission_error(hass, fakeimgbytes_png):
 
 
 @respx.mock
-async def test_form_no_route_to_host(hass, fakeimgbytes_png):
+async def test_form_no_route_to_host(hass, fakeimg_png, user_flow):
     """Test we handle no route to host."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
     with patch("av.open", side_effect=OSError(errno.EHOSTUNREACH, "No route to host")):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+            user_flow["flow_id"],
             TESTDATA,
         )
     assert result2["type"] == "form"
@@ -408,16 +334,11 @@ async def test_form_no_route_to_host(hass, fakeimgbytes_png):
 
 
 @respx.mock
-async def test_form_stream_io_error(hass, fakeimgbytes_png):
+async def test_form_stream_io_error(hass, fakeimg_png, user_flow):
     """Test we handle no io error when setting up stream."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
     with patch("av.open", side_effect=OSError(errno.EIO, "Input/output error")):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+            user_flow["flow_id"],
             TESTDATA,
         )
     assert result2["type"] == "form"
@@ -425,17 +346,13 @@ async def test_form_stream_io_error(hass, fakeimgbytes_png):
 
 
 @respx.mock
-async def test_form_oserror(hass, fakeimgbytes_png):
+async def test_form_oserror(hass, fakeimg_png, user_flow):
     """Test we handle OS error when setting up stream."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
     with patch("av.open", side_effect=OSError("Some other OSError")), pytest.raises(
         OSError
     ):
         await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+            user_flow["flow_id"],
             TESTDATA,
         )
 
@@ -488,9 +405,8 @@ async def test_options_template_error(hass, fakeimgbytes_png, fakevidcontainer):
 
 # These below can be deleted after deprecation period is finished.
 @respx.mock
-async def test_import(hass, fakeimgbytes_png, fakevidcontainer):
+async def test_import(hass, fakeimg_png, fakevidcontainer):
     """Test configuration.yaml import used during migration."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
     with patch("av.open", return_value=fakevidcontainer):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TESTDATA_YAML
@@ -508,7 +424,7 @@ async def test_import(hass, fakeimgbytes_png, fakevidcontainer):
 
 
 @respx.mock
-async def test_import_invalid_still_image(hass, fakeimgbytes_png, fakevidcontainer):
+async def test_import_invalid_still_image(hass, fakevidcontainer):
     """Test configuration.yaml import used during migration."""
     respx.get("http://127.0.0.1/testurl/1").respond(stream=b"invalid")
     with patch("av.open", return_value=fakevidcontainer):
@@ -537,17 +453,8 @@ async def test_import_other_error(hass, fakeimgbytes_png, fakevidcontainer):
 
 
 @respx.mock
-async def test_unload_entry(hass, fakeimgbytes_png, fakevidcontainer):
+async def test_unload_entry(hass, fakeimg_png, fakevidcontainer):
     """Test unloading the generic IP Camera entry."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
-
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == "form"
-    assert result["errors"] == {}
-
     with patch("av.open", return_value=fakevidcontainer):
         mock_entry = MockConfigEntry(domain=DOMAIN, data=TESTDATA)
         mock_entry.add_to_hass(hass)
