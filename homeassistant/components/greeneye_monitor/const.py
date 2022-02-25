@@ -13,7 +13,8 @@ CONF_TEMPERATURE_SENSORS = "temperature_sensors"
 CONF_TIME_UNIT = "time_unit"
 CONF_VOLTAGE_SENSORS = "voltage"
 
-DATA_GREENEYE_MONITOR = "greeneye_monitor"
+DATA_MONITORS = "monitors"
+DATA_PORTS = "ports"
 DOMAIN = "greeneye_monitor"
 
 SENSOR_TYPE_CURRENT = "current_sensor"

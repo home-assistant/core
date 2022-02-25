@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 import greeneye
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
@@ -34,7 +36,8 @@ from .const import (
     CONF_TEMPERATURE_SENSORS,
     CONF_TIME_UNIT,
     CONF_VOLTAGE_SENSORS,
-    DATA_GREENEYE_MONITOR,
+    DATA_MONITORS,
+    DATA_PORTS,
     DOMAIN,
     TEMPERATURE_UNIT_CELSIUS,
 )
@@ -117,34 +120,62 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: COMPONENT_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the GreenEye Monitor component."""
-    monitors = greeneye.Monitors()
-    hass.data[DATA_GREENEYE_MONITOR] = monitors
+    if server_config := config.get(DOMAIN):
+        await start_monitoring_server(hass, server_config[CONF_PORT])
 
-    server_config = config[DOMAIN]
-    await monitors.start_server(server_config[CONF_PORT])
+        num_sensors = 0
+        for monitor_config in config[DOMAIN][CONF_MONITORS]:
+            num_sensors += len(monitor_config[CONF_CHANNELS])
+            num_sensors += len(monitor_config[CONF_PULSE_COUNTERS])
+            num_sensors += len(monitor_config[CONF_TEMPERATURE_SENSORS][CONF_SENSORS])
+            num_sensors += len(monitor_config[CONF_VOLTAGE_SENSORS])
 
-    async def close_monitors(event: Event) -> None:
-        """Close the Monitors object."""
-        await monitors.close()
+        if num_sensors == 0:
+            _LOGGER.error(
+                "Configuration must specify at least one "
+                "channel, voltage, pulse counter or temperature sensor"
+            )
+            return False
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_monitors)
-
-    num_sensors = 0
-    for monitor_config in config[DOMAIN][CONF_MONITORS]:
-        num_sensors += len(monitor_config[CONF_CHANNELS])
-        num_sensors += len(monitor_config[CONF_PULSE_COUNTERS])
-        num_sensors += len(monitor_config[CONF_TEMPERATURE_SENSORS][CONF_SENSORS])
-        num_sensors += len(monitor_config[CONF_VOLTAGE_SENSORS])
-
-    if num_sensors == 0:
-        _LOGGER.error(
-            "Configuration must specify at least one "
-            "channel, voltage, pulse counter or temperature sensor"
+        hass.async_create_task(
+            async_load_platform(hass, Platform.SENSOR, DOMAIN, config[DOMAIN], config)
         )
-        return False
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Set up greeneye_monitor from a config entry."""
+    await start_monitoring_server(hass, config_entry.data[CONF_PORT])
 
     hass.async_create_task(
-        async_load_platform(hass, Platform.SENSOR, DOMAIN, config[DOMAIN], config)
+        hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
     )
 
     return True
+
+
+async def start_monitoring_server(hass: HomeAssistant, port: int) -> None:
+    """Start the monitoring server on the given port, if it isn't already started."""
+    monitors = get_monitors(hass)
+    ports: set[int] = hass.data[DOMAIN].setdefault(DATA_PORTS, set())
+    if port not in ports:
+        await monitors.start_server(port)
+        ports.add(port)
+
+
+def get_monitors(hass: HomeAssistant) -> greeneye.Monitors:
+    """Get the Monitors object, creating it if necessary."""
+    if DOMAIN not in hass.data:
+        monitors = greeneye.Monitors()
+        hass.data[DOMAIN] = {
+            DATA_MONITORS: monitors,
+        }
+
+        async def close_monitors(event: Event) -> None:
+            """Close the Monitors object."""
+            await monitors.close()
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_monitors)
+
+    return cast(greeneye.Monitors, hass.data[DOMAIN][DATA_MONITORS])

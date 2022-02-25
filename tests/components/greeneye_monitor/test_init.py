@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock
 
-import pytest
-
 from homeassistant.components.greeneye_monitor import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -39,12 +37,31 @@ async def test_setup_fails_if_no_sensors_defined(
     assert not success
 
 
-@pytest.mark.xfail(reason="Currently failing. Will fix in subsequent PR.")
 async def test_setup_succeeds_no_config(
     hass: HomeAssistant, monitors: AsyncMock
 ) -> None:
     """Test that component setup succeeds if there is no config present in the YAML."""
     assert await async_setup_component(hass, DOMAIN, {})
+
+
+async def test_config_entry_setup_creates_entities(
+    hass: HomeAssistant, monitors: AsyncMock
+) -> None:
+    """Test that component setup from a config entry creates entities for all sensors reported by the GEM."""
+    await connect_monitor(hass, monitors, SINGLE_MONITOR_SERIAL_NUMBER)
+    assert await setup_greeneye_monitor_component_with_config(hass, None)
+
+    for number in range(1, 9):
+        assert_temperature_sensor_registered(
+            hass, SINGLE_MONITOR_SERIAL_NUMBER, number, None
+        )
+    for number in range(1, 5):
+        assert_pulse_counter_registered(
+            hass, SINGLE_MONITOR_SERIAL_NUMBER, number, None, "pulses", "s"
+        )
+    for number in range(1, 33):
+        assert_power_sensor_registered(hass, SINGLE_MONITOR_SERIAL_NUMBER, number, None)
+    assert_voltage_sensor_registered(hass, SINGLE_MONITOR_SERIAL_NUMBER, 1, None)
 
 
 async def test_setup_creates_temperature_entities(

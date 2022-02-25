@@ -6,12 +6,15 @@ from typing import Any, Union
 import greeneye
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_SENSORS,
     CONF_TEMPERATURE_UNIT,
     ELECTRIC_POTENTIAL_VOLT,
     POWER_WATT,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
     TIME_HOURS,
     TIME_MINUTES,
     TIME_SECONDS,
@@ -32,7 +35,8 @@ from .const import (
     CONF_TEMPERATURE_SENSORS,
     CONF_TIME_UNIT,
     CONF_VOLTAGE_SENSORS,
-    DATA_GREENEYE_MONITOR,
+    DATA_MONITORS,
+    DOMAIN,
 )
 
 DATA_PULSES = "pulses"
@@ -41,6 +45,45 @@ DATA_WATT_SECONDS = "watt_seconds"
 UNIT_WATTS = POWER_WATT
 
 COUNTER_ICON = "mdi:counter"
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up GEM sensors from the config entry."""
+
+    def on_new_monitor(monitor: greeneye.monitor.Monitor) -> None:
+        entities: list[GEMSensor] = []
+        for channel in monitor.channels:
+            entities.append(
+                CurrentSensor(monitor, channel.number + 1, None, channel.net_metering)
+            )
+
+        for pulse_counter in monitor.pulse_counters:
+            entities.append(
+                PulseCounter(
+                    monitor, pulse_counter.number + 1, None, "pulses", TIME_SECONDS, 1.0
+                )
+            )
+
+        for temperature_sensor in monitor.temperature_sensors:
+            if temperature_sensor.unit == greeneye.api.TemperatureUnit.CELSIUS:
+                unit = TEMP_CELSIUS
+            else:
+                unit = TEMP_FAHRENHEIT
+            entities.append(
+                TemperatureSensor(monitor, temperature_sensor.number + 1, None, unit)
+            )
+
+        entities.append(VoltageSensor(monitor, 1, None))
+        async_add_entities(entities)
+
+    monitors: greeneye.Monitors = hass.data[DOMAIN][DATA_MONITORS]
+    monitors.add_listener(on_new_monitor)
+    for monitor in monitors.monitors.values():
+        on_new_monitor(monitor)
 
 
 async def async_setup_platform(
@@ -114,7 +157,7 @@ async def async_setup_platform(
         if len(monitor_configs) == 0:
             monitors.remove_listener(on_new_monitor)
 
-    monitors: greeneye.Monitors = hass.data[DATA_GREENEYE_MONITOR]
+    monitors: greeneye.Monitors = hass.data[DOMAIN][DATA_MONITORS]
     monitors.add_listener(on_new_monitor)
     for monitor in monitors.monitors.values():
         on_new_monitor(monitor)
@@ -136,7 +179,7 @@ class GEMSensor(SensorEntity):
     def __init__(
         self,
         monitor: greeneye.monitor.Monitor,
-        name: str,
+        name: str | None,
         sensor_type: str,
         sensor: UnderlyingSensorType,
         number: int,
@@ -172,7 +215,7 @@ class CurrentSensor(GEMSensor):
         self,
         monitor: greeneye.monitor.Monitor,
         number: int,
-        name: str,
+        name: str | None,
         net_metering: bool,
     ) -> None:
         """Construct the entity."""
@@ -205,7 +248,7 @@ class PulseCounter(GEMSensor):
         self,
         monitor: greeneye.monitor.Monitor,
         number: int,
-        name: str,
+        name: str | None,
         counted_quantity: str,
         time_unit: str,
         counted_quantity_per_pulse: float,
@@ -259,7 +302,11 @@ class TemperatureSensor(GEMSensor):
     _attr_device_class = SensorDeviceClass.TEMPERATURE
 
     def __init__(
-        self, monitor: greeneye.monitor.Monitor, number: int, name: str, unit: str
+        self,
+        monitor: greeneye.monitor.Monitor,
+        number: int,
+        name: str | None,
+        unit: str,
     ) -> None:
         """Construct the entity."""
         super().__init__(
@@ -281,7 +328,7 @@ class VoltageSensor(GEMSensor):
     _attr_device_class = SensorDeviceClass.VOLTAGE
 
     def __init__(
-        self, monitor: greeneye.monitor.Monitor, number: int, name: str
+        self, monitor: greeneye.monitor.Monitor, number: int, name: str | None
     ) -> None:
         """Construct the entity."""
         super().__init__(monitor, name, "volts", monitor.voltage_sensor, number)

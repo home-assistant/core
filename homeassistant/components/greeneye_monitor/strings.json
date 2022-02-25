@@ -1,0 +1,15 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Choose the port on which to listen for packets from your GEM(s).",
+                "data": {
+                    "port": "[%key:common::config_flow::data::port%]"
+                }
+            }
+        },
+        "abort": {
+            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+        }
+    }
+}

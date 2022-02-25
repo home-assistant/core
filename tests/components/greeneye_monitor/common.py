@@ -28,6 +28,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry
+
 SINGLE_MONITOR_SERIAL_NUMBER = 110011
 
 
@@ -158,10 +160,25 @@ MULTI_MONITOR_CONFIG = {
 }
 
 
+def make_new_config_entry() -> MockConfigEntry:
+    """Create a mock config entry matching what is created when the integration is first added."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        version=1,
+        data={CONF_PORT: 7513},
+    )
+
+
 async def setup_greeneye_monitor_component_with_config(
-    hass: HomeAssistant, config: ConfigType
+    hass: HomeAssistant, config: ConfigType | None
 ) -> bool:
     """Set up the greeneye_monitor component with the given config. Return True if successful, False otherwise."""
+    if config is None:
+        config = {}
+        config_entry = make_new_config_entry()
+        config_entry.add_to_hass(hass)
+
     result = await async_setup_component(
         hass,
         DOMAIN,
@@ -199,17 +216,19 @@ def add_listeners(mock: MagicMock | AsyncMock) -> None:
     mock.notify_all_listeners = notify_all_listeners
 
 
-def mock_pulse_counter() -> MagicMock:
+def mock_pulse_counter(number: int) -> MagicMock:
     """Create a mock GreenEye Monitor pulse counter."""
     pulse_counter = mock_with_listeners()
+    pulse_counter.number = number
     pulse_counter.pulses = 1000
     pulse_counter.pulses_per_second = 10
     return pulse_counter
 
 
-def mock_temperature_sensor() -> MagicMock:
+def mock_temperature_sensor(number: int) -> MagicMock:
     """Create a mock GreenEye Monitor temperature sensor."""
     temperature_sensor = mock_with_listeners()
+    temperature_sensor.number = number
     temperature_sensor.temperature = 32.0
     return temperature_sensor
 
@@ -221,9 +240,10 @@ def mock_voltage_sensor() -> MagicMock:
     return voltage_sensor
 
 
-def mock_channel() -> MagicMock:
+def mock_channel(number: int) -> MagicMock:
     """Create a mock GreenEye Monitor CT channel."""
     channel = mock_with_listeners()
+    channel.number = number
     channel.absolute_watt_seconds = 1000
     channel.polarized_watt_seconds = -400
     channel.watts = None
@@ -235,9 +255,9 @@ def mock_monitor(serial_number: int) -> MagicMock:
     monitor = mock_with_listeners()
     monitor.serial_number = serial_number
     monitor.voltage_sensor = mock_voltage_sensor()
-    monitor.pulse_counters = [mock_pulse_counter() for i in range(0, 4)]
-    monitor.temperature_sensors = [mock_temperature_sensor() for i in range(0, 8)]
-    monitor.channels = [mock_channel() for i in range(0, 32)]
+    monitor.pulse_counters = [mock_pulse_counter(i) for i in range(0, 4)]
+    monitor.temperature_sensors = [mock_temperature_sensor(i) for i in range(0, 8)]
+    monitor.channels = [mock_channel(i) for i in range(0, 32)]
     return monitor
 
 

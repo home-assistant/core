@@ -1,4 +1,6 @@
 """Common fixtures for testing greeneye_monitor."""
+from __future__ import annotations
+
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -36,7 +38,7 @@ def assert_temperature_sensor_registered(
     hass: HomeAssistant,
     serial_number: int,
     number: int,
-    name: str,
+    name: str | None,
 ):
     """Assert that a temperature sensor entity was registered properly."""
     sensor = assert_sensor_registered(hass, serial_number, "temp", number, name)
@@ -47,7 +49,7 @@ def assert_pulse_counter_registered(
     hass: HomeAssistant,
     serial_number: int,
     number: int,
-    name: str,
+    name: str | None,
     quantity: str,
     per_time: str,
 ):
@@ -57,7 +59,7 @@ def assert_pulse_counter_registered(
 
 
 def assert_power_sensor_registered(
-    hass: HomeAssistant, serial_number: int, number: int, name: str
+    hass: HomeAssistant, serial_number: int, number: int, name: str | None
 ) -> None:
     """Assert that a power sensor entity was registered properly."""
     sensor = assert_sensor_registered(hass, serial_number, "current", number, name)
@@ -66,7 +68,7 @@ def assert_power_sensor_registered(
 
 
 def assert_voltage_sensor_registered(
-    hass: HomeAssistant, serial_number: int, number: int, name: str
+    hass: HomeAssistant, serial_number: int, number: int, name: str | None
 ) -> None:
     """Assert that a voltage sensor entity was registered properly."""
     sensor = assert_sensor_registered(hass, serial_number, "volts", number, name)
@@ -96,7 +98,7 @@ def assert_sensor_registered(
     return sensor
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def monitors() -> AsyncMock:
     """Provide a mock greeneye.Monitors object that has listeners and can add new monitors."""
     with patch("greeneye.Monitors", new=AsyncMock) as mock_monitors:

@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port"
+                },
+                "description": "Choose the port on which to listen for packets from your GEM(s)."
+            }
+        }
+    }
+}
