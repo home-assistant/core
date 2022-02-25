@@ -40,7 +40,7 @@ async def test_entry_diagnostics(
         },
         "device": {
             "configuration_url": "http://192.168.1.2",
-            "identifiers": [["kostal_plenticore", "12345"]],
+            "identifiers": "**REDACTED**",
             "manufacturer": "Kostal",
             "model": "PLENTICORE plus 10",
             "name": "scb",

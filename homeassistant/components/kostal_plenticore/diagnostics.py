@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -34,8 +34,9 @@ async def async_get_config_entry_diagnostics(
             for module_id, settings in available_settings_data.items()
         },
     }
-    data["device"] = {
-        **plenticore.device_info,
-    }
+
+    device_info = {**plenticore.device_info}
+    device_info["identifiers"] = REDACTED  # contains serial number
+    data["device"] = device_info
 
     return data
