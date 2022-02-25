@@ -62,7 +62,7 @@ SOURCE_UNIGNORE = "unignore"
 # This is used to signal that re-authentication is required by the user.
 SOURCE_REAUTH = "reauth"
 
-HANDLERS = Registry()
+HANDLERS: Registry[str, type[ConfigFlow]] = Registry()
 
 STORAGE_KEY = "core.config_entries"
 STORAGE_VERSION = 1
@@ -530,8 +530,10 @@ class ConfigEntry:
             )
             return False
         # Handler may be a partial
+        # Keep for backwards compatibility
+        # https://github.com/home-assistant/core/pull/67087#discussion_r812559950
         while isinstance(handler, functools.partial):
-            handler = handler.func
+            handler = handler.func  # type: ignore[unreachable]
 
         if self.version == handler.VERSION:
             return True
@@ -753,7 +755,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         if not context or "source" not in context:
             raise KeyError("Context not set or doesn't have a source set")
 
-        flow = cast(ConfigFlow, handler())
+        flow = handler()
         flow.init_step = context["source"]
         return flow
 
@@ -1496,7 +1498,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         if entry.domain not in HANDLERS:
             raise data_entry_flow.UnknownHandler
 
-        return cast(OptionsFlow, HANDLERS[entry.domain].async_get_options_flow(entry))
+        return HANDLERS[entry.domain].async_get_options_flow(entry)
 
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult

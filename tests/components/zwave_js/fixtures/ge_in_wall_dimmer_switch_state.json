@@ -638,5 +638,6 @@
     "mandatoryControlledCCs": []
   },
   "interviewStage": "Complete",
-  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0063:0x4944:0x3038:5.26"
+  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0063:0x4944:0x3038:5.26",
+  "isControllerNode": false
 }

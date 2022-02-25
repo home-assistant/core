@@ -56,7 +56,8 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Segundos para considerar um dispositivo em 'casa'"
+                    "consider_home": "Segundos para considerar um dispositivo em 'casa'",
+                    "old_discovery": "Ativar m\u00e9todo de descoberta antigo"
                 }
             }
         }

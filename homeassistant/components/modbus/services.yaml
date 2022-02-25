@@ -14,13 +14,13 @@ write_coil:
       name: State
       description: State to write.
       required: true
-      example: false
+      example: "0 or [1,0]"
       selector:
         object:
-    unit:
-      name: Unit
-      description: Address of the modbus unit.
-      required: true
+    slave:
+      name: Slave
+      description: Address of the modbus unit/slave.
+      required: false
       selector:
         number:
           min: 1
@@ -44,10 +44,10 @@ write_register:
         number:
           min: 0
           max: 65535
-    unit:
-      name: Unit
-      description: Address of the modbus unit.
-      required: true
+    slave:
+      name: Slave
+      description: Address of the modbus unit/slave.
+      required: false
       selector:
         number:
           min: 1

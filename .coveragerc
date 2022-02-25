@@ -101,10 +101,8 @@ omit =
     homeassistant/components/baidu/tts.py
     homeassistant/components/balboa/__init__.py
     homeassistant/components/beewi_smartclim/sensor.py
-    homeassistant/components/bbb_gpio/*
     homeassistant/components/bbox/device_tracker.py
     homeassistant/components/bbox/sensor.py
-    homeassistant/components/bh1750/sensor.py
     homeassistant/components/bitcoin/sensor.py
     homeassistant/components/bizkaibus/sensor.py
     homeassistant/components/blink/__init__.py
@@ -114,14 +112,10 @@ omit =
     homeassistant/components/blink/const.py
     homeassistant/components/blink/sensor.py
     homeassistant/components/blinksticklight/light.py
-    homeassistant/components/blinkt/light.py
     homeassistant/components/blockchain/sensor.py
     homeassistant/components/bloomsky/*
     homeassistant/components/bluesound/*
     homeassistant/components/bluetooth_tracker/*
-    homeassistant/components/bme280/__init__.py
-    homeassistant/components/bme280/const.py
-    homeassistant/components/bme280/sensor.py
     homeassistant/components/bme680/sensor.py
     homeassistant/components/bmp280/sensor.py
     homeassistant/components/bmw_connected_drive/__init__.py
@@ -394,13 +388,10 @@ omit =
     homeassistant/components/freebox/router.py
     homeassistant/components/freebox/sensor.py
     homeassistant/components/freebox/switch.py
-    homeassistant/components/fritz/__init__.py
     homeassistant/components/fritz/binary_sensor.py
-    homeassistant/components/fritz/button.py
     homeassistant/components/fritz/common.py
     homeassistant/components/fritz/const.py
     homeassistant/components/fritz/device_tracker.py
-    homeassistant/components/fritz/diagnostics.py
     homeassistant/components/fritz/sensor.py
     homeassistant/components/fritz/services.py
     homeassistant/components/fritz/switch.py
@@ -625,7 +616,6 @@ omit =
     homeassistant/components/launch_library/sensor.py
     homeassistant/components/lcn/binary_sensor.py
     homeassistant/components/lcn/climate.py
-    homeassistant/components/lcn/cover.py
     homeassistant/components/lcn/helpers.py
     homeassistant/components/lcn/scene.py
     homeassistant/components/lcn/sensor.py
@@ -723,6 +713,7 @@ omit =
     homeassistant/components/mochad/*
     homeassistant/components/modbus/climate.py
     homeassistant/components/modbus/binary_sensor.py
+    homeassistant/components/modem_callerid/button.py
     homeassistant/components/modem_callerid/sensor.py
     homeassistant/components/moehlenhoff_alpha2/__init__.py
     homeassistant/components/moehlenhoff_alpha2/climate.py
@@ -764,6 +755,7 @@ omit =
     homeassistant/components/nad/media_player.py
     homeassistant/components/nanoleaf/__init__.py
     homeassistant/components/nanoleaf/button.py
+    homeassistant/components/nanoleaf/device_trigger.py
     homeassistant/components/nanoleaf/diagnostics.py
     homeassistant/components/nanoleaf/entity.py
     homeassistant/components/nanoleaf/light.py
@@ -863,7 +855,6 @@ omit =
     homeassistant/components/openweathermap/weather_update_coordinator.py
     homeassistant/components/opnsense/*
     homeassistant/components/opple/light.py
-    homeassistant/components/orangepi_gpio/*
     homeassistant/components/oru/*
     homeassistant/components/orvibo/switch.py
     homeassistant/components/osramlightify/light.py
@@ -871,6 +862,8 @@ omit =
     homeassistant/components/overkiz/__init__.py
     homeassistant/components/overkiz/binary_sensor.py
     homeassistant/components/overkiz/button.py
+    homeassistant/components/overkiz/climate.py
+    homeassistant/components/overkiz/climate_entities/*
     homeassistant/components/overkiz/cover.py
     homeassistant/components/overkiz/cover_entities/*
     homeassistant/components/overkiz/coordinator.py
@@ -1124,6 +1117,7 @@ omit =
     homeassistant/components/sonos/favorites.py
     homeassistant/components/sonos/helpers.py
     homeassistant/components/sonos/household_coordinator.py
+    homeassistant/components/sonos/media.py
     homeassistant/components/sonos/media_browser.py
     homeassistant/components/sonos/media_player.py
     homeassistant/components/sonos/speaker.py
@@ -1242,13 +1236,13 @@ omit =
     homeassistant/components/tmb/sensor.py
     homeassistant/components/todoist/calendar.py
     homeassistant/components/todoist/const.py
-    homeassistant/components/tof/sensor.py
     homeassistant/components/tolo/__init__.py
     homeassistant/components/tolo/binary_sensor.py
     homeassistant/components/tolo/button.py
     homeassistant/components/tolo/climate.py
     homeassistant/components/tolo/fan.py
     homeassistant/components/tolo/light.py
+    homeassistant/components/tolo/number.py
     homeassistant/components/tolo/select.py
     homeassistant/components/tolo/sensor.py
     homeassistant/components/tomato/device_tracker.py

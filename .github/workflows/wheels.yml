@@ -137,7 +137,6 @@ jobs:
             sed -i "s|# RPi.GPIO|RPi.GPIO|g" ${requirement_file}
             sed -i "s|# raspihats|raspihats|g" ${requirement_file}
             sed -i "s|# rpi-rf|rpi-rf|g" ${requirement_file}
-            sed -i "s|# blinkt|blinkt|g" ${requirement_file}
             sed -i "s|# fritzconnection|fritzconnection|g" ${requirement_file}
             sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
             sed -i "s|# evdev|evdev|g" ${requirement_file}

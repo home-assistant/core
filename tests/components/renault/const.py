@@ -229,6 +229,17 @@ MOCK_VEHICLES = {
                 ATTR_STATE: "plugged",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_plug_state",
             },
+            {
+                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start",
+                ATTR_STATE: STATE_UNKNOWN,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777999_res_state",
+            },
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start_code",
+                ATTR_STATE: STATE_UNKNOWN,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777999_res_state_code",
+            },
         ],
     },
     "zoe_50": {
@@ -246,6 +257,7 @@ MOCK_VEHICLES = {
             "hvac_status": "hvac_status.2.json",
             "location": "location.json",
             "lock_status": "lock_status.1.json",
+            "res_state": "res_state.1.json",
         },
         Platform.BINARY_SENSOR: [
             {
@@ -441,6 +453,17 @@ MOCK_VEHICLES = {
                 ATTR_STATE: "2020-02-18T16:58:38+00:00",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_location_last_activity",
             },
+            {
+                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start",
+                ATTR_STATE: "Stopped, ready for RES",
+                ATTR_UNIQUE_ID: "vf1aaaaa555777999_res_state",
+            },
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start_code",
+                ATTR_STATE: "10",
+                ATTR_UNIQUE_ID: "vf1aaaaa555777999_res_state_code",
+            },
         ],
     },
     "captur_phev": {
@@ -457,6 +480,7 @@ MOCK_VEHICLES = {
             "cockpit": "cockpit_fuel.json",
             "location": "location.json",
             "lock_status": "lock_status.1.json",
+            "res_state": "res_state.1.json",
         },
         Platform.BINARY_SENSOR: [
             {
@@ -641,6 +665,17 @@ MOCK_VEHICLES = {
                 ATTR_STATE: "2020-02-18T16:58:38+00:00",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_location_last_activity",
             },
+            {
+                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start",
+                ATTR_STATE: "Stopped, ready for RES",
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_res_state",
+            },
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start_code",
+                ATTR_STATE: "10",
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_res_state_code",
+            },
         ],
     },
     "captur_fuel": {
@@ -655,6 +690,7 @@ MOCK_VEHICLES = {
             "cockpit": "cockpit_fuel.json",
             "location": "location.json",
             "lock_status": "lock_status.1.json",
+            "res_state": "res_state.1.json",
         },
         Platform.BINARY_SENSOR: [
             {
@@ -742,6 +778,17 @@ MOCK_VEHICLES = {
                 ATTR_ENTITY_ID: "sensor.reg_number_location_last_activity",
                 ATTR_STATE: "2020-02-18T16:58:38+00:00",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_location_last_activity",
+            },
+            {
+                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start",
+                ATTR_STATE: "Stopped, ready for RES",
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_res_state",
+            },
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start_code",
+                ATTR_STATE: "10",
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_res_state_code",
             },
         ],
     },
