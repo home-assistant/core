@@ -895,8 +895,6 @@ omit =
     homeassistant/components/philips_js/remote.py
     homeassistant/components/philips_js/switch.py
     homeassistant/components/pi_hole/sensor.py
-    homeassistant/components/pi4ioe5v9xxxx/binary_sensor.py
-    homeassistant/components/pi4ioe5v9xxxx/switch.py
     homeassistant/components/picotts/tts.py
     homeassistant/components/pilight/*
     homeassistant/components/ping/__init__.py
