@@ -588,6 +588,12 @@ async def test_turn_off_websocket(hass: HomeAssistant, remotews: Mock) -> None:
         assert remotews.send_key.call_count == 1
         assert remotews.send_key.call_args_list == [call("KEY_POWER")]
 
+        assert await hass.services.async_call(
+            DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+        # key not called
+        assert remotews.send_key.call_count == 1
+
 
 async def test_turn_off_legacy(hass: HomeAssistant, remote: Mock) -> None:
     """Test for turn_off."""
