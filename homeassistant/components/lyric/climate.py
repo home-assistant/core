@@ -48,8 +48,8 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 """ Only LCC models support presets """
-SUPPORT_FLAGS_LCC = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE_RANGE | SUPPORT_FAN_MODE
-SUPPORT_FLAGS_TCC = SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_RANGE | SUPPORT_FAN_MODE
+SUPPORT_FLAGS_LCC = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE_RANGE
+SUPPORT_FLAGS_TCC = SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_RANGE
 
 LYRIC_HVAC_ACTION_OFF = "EquipmentOff"
 LYRIC_HVAC_ACTION_HEAT = "Heat"
@@ -90,6 +90,7 @@ SCHEMA_HOLD_TIME = {
         lambda td: strftime("%H:%M:%S", localtime(time() + td.total_seconds())),
     )
 }
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -264,11 +265,11 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         device = self.device
-        
+
         if HVAC_MODES[device.changeableValues.mode] != HVAC_MODE_OFF:
             target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
             target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-            
+
             if device.changeableValues.autoChangeoverActive:
                 if target_temp_low is None or target_temp_high is None:
                     raise HomeAssistantError(
@@ -310,9 +311,10 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         _LOGGER.debug("HVAC mode from frontend: %s", hvac_mode)
         try:
             if LYRIC_HVAC_MODES[hvac_mode] == LYRIC_HVAC_MODE_HEAT_COOL:
-                """ If the system is off, turn it to Heat first then to Auto, otherwise it turns to
-                Auto briefly and then reverts to Off (perhaps related to heatCoolMode). This is the
-                behavior that happens with the native app as well, so likely a bug in the api itself """
+                #If the system is off, turn it to Heat first then to Auto, otherwise it turns to
+                #Auto briefly and then reverts to Off (perhaps related to heatCoolMode). This is the
+                #behavior that happens with the native app as well, so likely a bug in the api itself
+
                 if HVAC_MODES[self.device.changeableValues.mode] == HVAC_MODE_OFF:
                     _LOGGER.debug("HVAC mode passed to lyric: %s", HVAC_MODES[LYRIC_HVAC_MODE_COOL])
                     await self._update_thermostat(
