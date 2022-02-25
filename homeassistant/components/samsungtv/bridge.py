@@ -176,11 +176,15 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
 
     async def async_is_on(self) -> bool:
         """Tells if the TV is on."""
+        return await self.hass.async_add_executor_job(self._is_on)
+
+    def _is_on(self) -> bool:
+        """Tells if the TV is on."""
         if self._remote is not None:
-            await self.async_close_remote()
+            self._close_remote()
 
         try:
-            remote = await self.hass.async_add_executor_job(self._get_remote)
+            remote = self._get_remote()
             return remote is not None
         except (
             UnhandledResponse,
@@ -248,12 +252,17 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
 
     async def async_send_key(self, key: str, key_type: str | None = None) -> None:
         """Send a key to the tv and handles exceptions."""
+        await self.hass.async_add_executor_job(self._send_key, key)
+
+    def _send_key(self, key: str) -> None:
+        """Send a key to the tv and handles exceptions."""
         try:
             # recreate connection if connection was dead
             retry_count = 1
             for _ in range(retry_count + 1):
                 try:
-                    await self._async_send_key(key, key_type)
+                    if remote := self._get_remote():
+                        remote.control(key)
                     break
                 except (
                     ConnectionClosed,
@@ -270,21 +279,16 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             # Different reasons, e.g. hostname not resolveable
             pass
 
-    async def _async_send_key(self, key: str, key_type: str | None = None) -> None:
-        """Send the key using legacy protocol."""
-        return await self.hass.async_add_executor_job(self._send_key, key)
-
-    def _send_key(self, key: str) -> None:
-        """Send the key using legacy protocol."""
-        if remote := self._get_remote():
-            remote.control(key)
-
     async def async_close_remote(self) -> None:
+        """Close remote object."""
+        await self.hass.async_add_executor_job(self._close_remote)
+
+    def _close_remote(self) -> None:
         """Close remote object."""
         try:
             if self._remote is not None:
                 # Close the current remote connection
-                await self.hass.async_add_executor_job(self._remote.close)
+                self._remote.close()
             self._remote = None
         except OSError:
             LOGGER.debug("Could not establish connection")
@@ -292,7 +296,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
     async def async_stop(self) -> None:
         """Stop Bridge."""
         LOGGER.debug("Stopping SamsungTVLegacyBridge")
-        await self.async_close_remote()
+        await self.hass.async_add_executor_job(self._close_remote)
 
 
 class SamsungTVWSBridge(SamsungTVBridge):
@@ -335,11 +339,15 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     async def async_is_on(self) -> bool:
         """Tells if the TV is on."""
+        return await self.hass.async_add_executor_job(self._is_on)
+
+    def _is_on(self) -> bool:
+        """Tells if the TV is on."""
         if self._remote is not None:
-            await self.async_close_remote()
+            self._close_remote()
 
         try:
-            remote = await self.hass.async_add_executor_job(self._get_remote)
+            remote = self._get_remote()
             return remote is not None
         except (
             UnhandledResponse,
@@ -400,23 +408,35 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     async def async_device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""
+        return await self.hass.async_add_executor_job(self._device_info)
+
+    def _device_info(self) -> dict[str, Any] | None:
+        """Try to gather infos of this TV."""
         if remote := self._get_remote(avoid_open=True):
             with contextlib.suppress(HttpApiError, RequestsTimeout):
-                device_info: dict[str, Any] = await self.hass.async_add_executor_job(
-                    remote.rest_device_info
-                )
+                device_info: dict[str, Any] = remote.rest_device_info()
                 return device_info
 
         return None
 
     async def async_send_key(self, key: str, key_type: str | None = None) -> None:
         """Send a key to the tv and handles exceptions."""
+        await self.hass.async_add_executor_job(self._send_key, key, key_type)
+
+    def _send_key(self, key: str, key_type: str | None = None) -> None:
+        """Send a key to the tv and handles exceptions."""
+        if key == "KEY_POWEROFF":
+            key = "KEY_POWER"
         try:
             # recreate connection if connection was dead
             retry_count = 1
             for _ in range(retry_count + 1):
                 try:
-                    await self._async_send_key(key, key_type)
+                    if remote := self._get_remote():
+                        if key_type == "run_app":
+                            remote.run_app(key)
+                        else:
+                            remote.send_key(key)
                     break
                 except (
                     ConnectionClosed,
@@ -432,20 +452,6 @@ class SamsungTVWSBridge(SamsungTVBridge):
         except OSError:
             # Different reasons, e.g. hostname not resolveable
             pass
-
-    async def _async_send_key(self, key: str, key_type: str | None = None) -> None:
-        """Send the key using websocket protocol."""
-        return await self.hass.async_add_executor_job(self._send_key, key, key_type)
-
-    def _send_key(self, key: str, key_type: str | None = None) -> None:
-        """Send the key using websocket protocol."""
-        if key == "KEY_POWEROFF":
-            key = "KEY_POWER"
-        if remote := self._get_remote():
-            if key_type == "run_app":
-                remote.run_app(key)
-            else:
-                remote.send_key(key)
 
     def _get_remote(self, avoid_open: bool = False) -> SamsungTVWS:
         """Create or return a remote control instance."""
@@ -487,10 +493,14 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     async def async_close_remote(self) -> None:
         """Close remote object."""
+        await self.hass.async_add_executor_job(self._close_remote)
+
+    def _close_remote(self) -> None:
+        """Close remote object."""
         try:
             if self._remote is not None:
                 # Close the current remote connection
-                await self.hass.async_add_executor_job(self._remote.close)
+                self._remote.close()
             self._remote = None
         except OSError:
             LOGGER.debug("Could not establish connection")
@@ -498,4 +508,4 @@ class SamsungTVWSBridge(SamsungTVBridge):
     async def async_stop(self) -> None:
         """Stop Bridge."""
         LOGGER.debug("Stopping SamsungTVWSBridge")
-        await self.async_close_remote()
+        await self.hass.async_add_executor_job(self._close_remote)
