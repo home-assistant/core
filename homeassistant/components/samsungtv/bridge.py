@@ -97,7 +97,6 @@ class SamsungTVBridge(ABC):
         self.method = method
         self.host = host
         self.token: str | None = None
-        self._remote: Remote | SamsungTVWS | None = None
         self._reauth_callback: CALLBACK_TYPE | None = None
         self._new_token_callback: CALLBACK_TYPE | None = None
 
@@ -134,10 +133,6 @@ class SamsungTVBridge(ABC):
         """Send a key to the tv and handles exceptions."""
 
     @abstractmethod
-    def _get_remote(self, avoid_open: bool = False) -> Remote | SamsungTVWS:
-        """Get Remote object."""
-
-    @abstractmethod
     async def async_close_remote(self) -> None:
         """Close remote object."""
 
@@ -169,6 +164,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             CONF_PORT: None,
             CONF_TIMEOUT: 1,
         }
+        self._remote: Remote | None = None
 
     async def async_mac_from_device(self) -> None:
         """Try to fetch the mac address of the TV."""
@@ -232,7 +228,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         """Try to gather infos of this device."""
         return None
 
-    def _get_remote(self, avoid_open: bool = False) -> Remote:
+    def _get_remote(self) -> Remote:
         """Create or return a remote control instance."""
         if self._remote is None:
             # We need to create a new instance to reconnect.
@@ -314,6 +310,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
         super().__init__(hass, method, host, port)
         self.token = token
         self._app_list: dict[str, str] | None = None
+        self._remote: SamsungTVWS | None = None
 
     async def async_mac_from_device(self) -> str | None:
         """Try to fetch the mac address of the TV."""
