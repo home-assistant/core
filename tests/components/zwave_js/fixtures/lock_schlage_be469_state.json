@@ -2103,5 +2103,6 @@
             },
             "value": 0
         }
-    ]
+    ],
+    "isControllerNode": false
 }

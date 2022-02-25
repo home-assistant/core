@@ -2915,5 +2915,6 @@
 			"version": 1,
 			"isSecure": true
 		}
-	]
+	],
+"isControllerNode": false
 }
