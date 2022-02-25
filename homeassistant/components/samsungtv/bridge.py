@@ -19,7 +19,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_TIMEOUT,
-    CONF_TOKEN,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
@@ -367,8 +366,6 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 ) as remote:
                     remote.open("samsung.remote.control")
                     self.token = remote.token
-                    if self.token is None:
-                        config[CONF_TOKEN] = "*****"
                     LOGGER.debug("Working config: %s", config)
                     return RESULT_SUCCESS
             except WebSocketException as err:
