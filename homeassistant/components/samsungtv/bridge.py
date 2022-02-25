@@ -255,11 +255,11 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         return self._remote
 
     async def async_send_key(self, key: str, key_type: str | None = None) -> None:
-        """Send a key to the tv and handles exceptions."""
+        """Send the key using legacy protocol."""
         await self.hass.async_add_executor_job(self._send_key, key)
 
     def _send_key(self, key: str) -> None:
-        """Send a key to the tv and handles exceptions."""
+        """Send the key using legacy protocol."""
         try:
             # recreate connection if connection was dead
             retry_count = 1
@@ -424,11 +424,11 @@ class SamsungTVWSBridge(SamsungTVBridge):
         return None
 
     async def async_send_key(self, key: str, key_type: str | None = None) -> None:
-        """Send a key to the tv and handles exceptions."""
+        """Send the key using websocket protocol."""
         await self.hass.async_add_executor_job(self._send_key, key, key_type)
 
     def _send_key(self, key: str, key_type: str | None = None) -> None:
-        """Send a key to the tv and handles exceptions."""
+        """Send the key using websocket protocol."""
         if key == "KEY_POWEROFF":
             key = "KEY_POWER"
         try:
