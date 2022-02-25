@@ -48,6 +48,7 @@ ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
+                    CONF_DATA_TYPE: DataType.INT16,
                 }
             ]
         },
@@ -57,8 +58,7 @@ ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_SLAVE: 10,
-                    CONF_COUNT: 1,
-                    CONF_DATA_TYPE: "int",
+                    CONF_DATA_TYPE: DataType.INT16,
                     CONF_PRECISION: 0,
                     CONF_SCALE: 1,
                     CONF_OFFSET: 0,
@@ -75,8 +75,7 @@ ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_SLAVE: 10,
-                    CONF_COUNT: 1,
-                    CONF_DATA_TYPE: "int",
+                    CONF_DATA_TYPE: DataType.INT16,
                     CONF_PRECISION: 0,
                     CONF_SCALE: 1,
                     CONF_OFFSET: 0,
@@ -90,7 +89,7 @@ ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
-                    CONF_COUNT: 1,
+                    CONF_DATA_TYPE: DataType.INT16,
                     CONF_SWAP: CONF_SWAP_NONE,
                 }
             ]
@@ -100,7 +99,7 @@ ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
-                    CONF_COUNT: 1,
+                    CONF_DATA_TYPE: DataType.INT16,
                     CONF_SWAP: CONF_SWAP_BYTE,
                 }
             ]
@@ -110,7 +109,7 @@ ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
-                    CONF_COUNT: 2,
+                    CONF_DATA_TYPE: DataType.INT32,
                     CONF_SWAP: CONF_SWAP_WORD,
                 }
             ]
@@ -120,7 +119,7 @@ ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
-                    CONF_COUNT: 2,
+                    CONF_DATA_TYPE: DataType.INT32,
                     CONF_SWAP: CONF_SWAP_WORD_BYTE,
                 }
             ]
@@ -253,8 +252,7 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
     [
         (
             {
-                CONF_COUNT: 1,
-                CONF_DATA_TYPE: DataType.INT,
+                CONF_DATA_TYPE: DataType.INT16,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
                 CONF_PRECISION: 0,
@@ -271,8 +269,7 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
         (
             {
-                CONF_COUNT: 1,
-                CONF_DATA_TYPE: DataType.INT,
+                CONF_DATA_TYPE: DataType.INT16,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 13,
                 CONF_PRECISION: 0,
@@ -283,8 +280,7 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
         (
             {
-                CONF_COUNT: 1,
-                CONF_DATA_TYPE: DataType.INT,
+                CONF_DATA_TYPE: DataType.INT16,
                 CONF_SCALE: 3,
                 CONF_OFFSET: 13,
                 CONF_PRECISION: 0,
@@ -295,8 +291,7 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
         (
             {
-                CONF_COUNT: 1,
-                CONF_DATA_TYPE: DataType.UINT,
+                CONF_DATA_TYPE: DataType.UINT16,
                 CONF_SCALE: 3,
                 CONF_OFFSET: 13,
                 CONF_PRECISION: 4,
@@ -307,8 +302,7 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
         (
             {
-                CONF_COUNT: 1,
-                CONF_DATA_TYPE: DataType.INT,
+                CONF_DATA_TYPE: DataType.INT16,
                 CONF_SCALE: 1.5,
                 CONF_OFFSET: 0,
                 CONF_PRECISION: 0,
@@ -319,8 +313,7 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
         (
             {
-                CONF_COUNT: 1,
-                CONF_DATA_TYPE: DataType.INT,
+                CONF_DATA_TYPE: DataType.INT16,
                 CONF_SCALE: "1.5",
                 CONF_OFFSET: "5",
                 CONF_PRECISION: "1",
@@ -331,8 +324,7 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
         (
             {
-                CONF_COUNT: 1,
-                CONF_DATA_TYPE: DataType.INT,
+                CONF_DATA_TYPE: DataType.INT16,
                 CONF_SCALE: 2.4,
                 CONF_OFFSET: 0,
                 CONF_PRECISION: 2,
@@ -343,8 +335,7 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
         (
             {
-                CONF_COUNT: 1,
-                CONF_DATA_TYPE: DataType.INT,
+                CONF_DATA_TYPE: DataType.INT16,
                 CONF_SCALE: 1,
                 CONF_OFFSET: -10.3,
                 CONF_PRECISION: 1,
@@ -355,8 +346,7 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
         (
             {
-                CONF_COUNT: 2,
-                CONF_DATA_TYPE: DataType.INT,
+                CONF_DATA_TYPE: DataType.INT32,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
                 CONF_PRECISION: 0,
@@ -367,8 +357,7 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
         (
             {
-                CONF_COUNT: 2,
-                CONF_DATA_TYPE: DataType.UINT,
+                CONF_DATA_TYPE: DataType.UINT32,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
                 CONF_PRECISION: 0,
@@ -379,8 +368,7 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
         (
             {
-                CONF_COUNT: 4,
-                CONF_DATA_TYPE: DataType.UINT,
+                CONF_DATA_TYPE: DataType.UINT64,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
                 CONF_PRECISION: 0,
@@ -391,8 +379,7 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
         (
             {
-                CONF_COUNT: 4,
-                CONF_DATA_TYPE: DataType.UINT,
+                CONF_DATA_TYPE: DataType.UINT64,
                 CONF_SCALE: 2,
                 CONF_OFFSET: 3,
                 CONF_PRECISION: 0,
@@ -403,8 +390,7 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
         (
             {
-                CONF_COUNT: 4,
-                CONF_DATA_TYPE: DataType.UINT,
+                CONF_DATA_TYPE: DataType.UINT64,
                 CONF_SCALE: 2.0,
                 CONF_OFFSET: 3.0,
                 CONF_PRECISION: 0,
@@ -415,9 +401,8 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
         (
             {
-                CONF_COUNT: 2,
                 CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
-                CONF_DATA_TYPE: DataType.UINT,
+                CONF_DATA_TYPE: DataType.UINT32,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
                 CONF_PRECISION: 0,
@@ -428,9 +413,8 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
         (
             {
-                CONF_COUNT: 2,
                 CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                CONF_DATA_TYPE: DataType.UINT,
+                CONF_DATA_TYPE: DataType.UINT32,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
                 CONF_PRECISION: 0,
@@ -441,9 +425,8 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
         (
             {
-                CONF_COUNT: 2,
                 CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                CONF_DATA_TYPE: DataType.FLOAT,
+                CONF_DATA_TYPE: DataType.FLOAT32,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
                 CONF_PRECISION: 5,
@@ -480,9 +463,8 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
         (
             {
-                CONF_COUNT: 2,
                 CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
-                CONF_DATA_TYPE: DataType.UINT,
+                CONF_DATA_TYPE: DataType.UINT32,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
                 CONF_PRECISION: 0,
@@ -493,8 +475,7 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
         (
             {
-                CONF_COUNT: 1,
-                CONF_DATA_TYPE: DataType.INT,
+                CONF_DATA_TYPE: DataType.INT16,
                 CONF_SWAP: CONF_SWAP_NONE,
             },
             [0x0102],
@@ -503,8 +484,7 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
         (
             {
-                CONF_COUNT: 1,
-                CONF_DATA_TYPE: DataType.INT,
+                CONF_DATA_TYPE: DataType.INT16,
                 CONF_SWAP: CONF_SWAP_BYTE,
             },
             [0x0201],
@@ -513,8 +493,7 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
         (
             {
-                CONF_COUNT: 2,
-                CONF_DATA_TYPE: DataType.INT,
+                CONF_DATA_TYPE: DataType.INT32,
                 CONF_SWAP: CONF_SWAP_BYTE,
             },
             [0x0102, 0x0304],
@@ -523,8 +502,7 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
         (
             {
-                CONF_COUNT: 2,
-                CONF_DATA_TYPE: DataType.INT,
+                CONF_DATA_TYPE: DataType.INT32,
                 CONF_SWAP: CONF_SWAP_WORD,
             },
             [0x0102, 0x0304],
@@ -533,8 +511,7 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
         (
             {
-                CONF_COUNT: 2,
-                CONF_DATA_TYPE: DataType.INT,
+                CONF_DATA_TYPE: DataType.INT32,
                 CONF_SWAP: CONF_SWAP_WORD_BYTE,
             },
             [0x0102, 0x0304],
@@ -543,7 +520,6 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
         (
             {
-                CONF_COUNT: 2,
                 CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
                 CONF_DATA_TYPE: DataType.FLOAT32,
                 CONF_PRECISION: 2,
@@ -578,14 +554,12 @@ async def test_all_sensor(hass, mock_do_cycle, expected):
     [
         (
             {
-                CONF_COUNT: 1,
                 CONF_DATA_TYPE: DataType.INT16,
             },
             [7, 9],
         ),
         (
             {
-                CONF_COUNT: 2,
                 CONF_DATA_TYPE: DataType.INT32,
             },
             [7],
@@ -675,9 +649,8 @@ async def test_lazy_error_sensor(hass, mock_do_cycle, start_expect, end_expect):
         ),
         (
             {
-                CONF_COUNT: 1,
                 CONF_PRECISION: 0,
-                CONF_DATA_TYPE: DataType.INT,
+                CONF_DATA_TYPE: DataType.INT16,
             },
             [0x0101],
             "257",
