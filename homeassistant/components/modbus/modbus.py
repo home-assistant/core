@@ -40,6 +40,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     ATTR_ADDRESS,
     ATTR_HUB,
+    ATTR_SLAVE,
     ATTR_UNIT,
     ATTR_VALUE,
     CALL_TYPE_COIL,

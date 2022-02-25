@@ -25,6 +25,7 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.modbus.const import (
     ATTR_ADDRESS,
     ATTR_HUB,
+    ATTR_SLAVE,
     ATTR_UNIT,
     ATTR_VALUE,
     CALL_TYPE_COIL,
