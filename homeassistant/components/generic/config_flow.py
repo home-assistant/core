@@ -7,6 +7,7 @@ import imghdr
 import logging
 from typing import Any
 
+from async_timeout import timeout
 import av
 from httpx import HTTPStatusError, RequestError, TimeoutException
 import voluptuous as vol
@@ -126,10 +127,14 @@ async def async_test_still(hass, info) -> tuple[dict[str, str], str | None]:
         auth = generate_auth(info)
         try:
             async_client = get_async_client(hass, verify_ssl=verify_ssl)
-            response = await async_client.get(url, auth=auth, timeout=GET_IMAGE_TIMEOUT)
-            response.raise_for_status()
-            image = response.content
+            async with timeout(GET_IMAGE_TIMEOUT):
+                response = await async_client.get(
+                    url, auth=auth, timeout=GET_IMAGE_TIMEOUT
+                )
+                response.raise_for_status()
+                image = response.content
         except (
+            TimeoutError,
             RequestError,
             HTTPStatusError,
             TimeoutException,
