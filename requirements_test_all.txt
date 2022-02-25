@@ -1456,7 +1456,7 @@ total_connect_client==2022.2.1
 transmissionrpc==0.11
 
 # homeassistant.components.twinkly
-ttls==1.4.2
+ttls==1.4.3
 
 # homeassistant.components.tuya
 tuya-iot-py-sdk==0.6.6
