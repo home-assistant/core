@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from homeassistant.components import media_source
 from homeassistant.components.media_player import BrowseError, BrowseMedia
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_ALBUM,
@@ -184,7 +185,7 @@ async def item_payload(item, get_thumbnail_url=None):
     )
 
 
-async def library_payload():
+async def library_payload(hass):
     """
     Create response payload to describe contents of a specific library.
 
@@ -221,6 +222,16 @@ async def library_payload():
             ]
         )
     )
+
+    try:
+        item = await media_source.async_browse_media(hass, None)
+        # If domain is None, it's overview of available sources
+        if item.domain is None:
+            library_info.children.extend(item.children)
+        else:
+            library_info.children.append(item)
+    except media_source.BrowseError:
+        pass
 
     return library_info
 

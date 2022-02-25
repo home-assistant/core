@@ -12,7 +12,11 @@ from jsonrpc_base.jsonrpc import ProtocolError, TransportError
 from pykodi import CannotConnectError
 import voluptuous as vol
 
+from homeassistant.components import media_source
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player.browse_media import (
+    async_process_play_media_url,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
@@ -24,6 +28,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_SEASON,
     MEDIA_TYPE_TRACK,
     MEDIA_TYPE_TVSHOW,
+    MEDIA_TYPE_URL,
     MEDIA_TYPE_VIDEO,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
@@ -691,8 +696,13 @@ class KodiEntity(MediaPlayerEntity):
         await self._kodi.media_seek(position)
 
     @cmd
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
         """Send the play_media command to the media player."""
+        if media_source.is_media_source_id(media_id):
+            media_type = MEDIA_TYPE_URL
+            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            media_id = play_item.url
+
         media_type_lower = media_type.lower()
 
         if media_type_lower == MEDIA_TYPE_CHANNEL:
@@ -700,7 +710,7 @@ class KodiEntity(MediaPlayerEntity):
         elif media_type_lower == MEDIA_TYPE_PLAYLIST:
             await self._kodi.play_playlist(int(media_id))
         elif media_type_lower == "directory":
-            await self._kodi.play_directory(str(media_id))
+            await self._kodi.play_directory(media_id)
         elif media_type_lower in [
             MEDIA_TYPE_ARTIST,
             MEDIA_TYPE_ALBUM,
@@ -719,7 +729,9 @@ class KodiEntity(MediaPlayerEntity):
                 {MAP_KODI_MEDIA_TYPES[media_type_lower]: int(media_id)}
             )
         else:
-            await self._kodi.play_file(str(media_id))
+            media_id = async_process_play_media_url(self.hass, media_id)
+
+            await self._kodi.play_file(media_id)
 
     @cmd
     async def async_set_shuffle(self, shuffle):
@@ -898,7 +910,10 @@ class KodiEntity(MediaPlayerEntity):
             )
 
         if media_content_type in [None, "library"]:
-            return await library_payload()
+            return await library_payload(self.hass)
+
+        if media_source.is_media_source_id(media_content_id):
+            return await media_source.async_browse_media(self.hass, media_content_id)
 
         payload = {
             "search_type": media_content_type,
