@@ -342,9 +342,6 @@ class SamsungTVWSBridge(SamsungTVBridge):
         except ConnectionFailure:
             # We got a response so it's working.
             return True
-        except OSError:
-            # Different reasons, e.g. hostname not resolveable
-            return False
 
     async def async_try_connect(self) -> str:
         """Try to connect to the Websocket TV."""
