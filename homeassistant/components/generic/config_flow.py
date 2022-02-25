@@ -29,8 +29,6 @@ from homeassistant.helpers import config_validation as cv, template as template_
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .camera import generate_auth
-
-# pylint: disable=unused-import
 from .const import (
     CONF_CONTENT_TYPE,
     CONF_FRAMERATE,
