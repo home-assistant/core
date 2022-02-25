@@ -187,7 +187,8 @@ async def test_websocket_resolve_media(hass, hass_ws_client, filename):
     assert msg["id"] == 1
     assert msg["result"]["mime_type"] == media.mime_type
 
-    # Validate url is signed.
+    # Validate url is relative and signed.
+    assert msg["result"]["url"][0] == "/"
     parsed = yarl.URL(msg["result"]["url"])
     assert parsed.path == getattr(media, "url")
     assert "authSig" in parsed.query
