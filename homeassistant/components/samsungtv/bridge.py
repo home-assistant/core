@@ -337,11 +337,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
         if self._remote is not None:
             self._close_remote()
 
-        try:
-            return self._get_remote() is not None
-        except ConnectionFailure:
-            # We got a response so it's working.
-            return True
+        return self._get_remote() is not None
 
     async def async_try_connect(self) -> str:
         """Try to connect to the Websocket TV."""
