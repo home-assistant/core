@@ -317,8 +317,8 @@ async def test_pushed_outputs_status_change(hass, entry, lcn_connection):
     state.state = STATE_CLOSED
 
     # push status "open"
-    input = ModStatusOutput(address, 0, 100)
-    await device_connection.async_process_input(input)
+    inp = ModStatusOutput(address, 0, 100)
+    await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
     state = hass.states.get("cover.cover_outputs")
@@ -326,8 +326,8 @@ async def test_pushed_outputs_status_change(hass, entry, lcn_connection):
     assert state.state == STATE_OPENING
 
     # push status "stop"
-    input = ModStatusOutput(address, 0, 0)
-    await device_connection.async_process_input(input)
+    inp = ModStatusOutput(address, 0, 0)
+    await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
     state = hass.states.get("cover.cover_outputs")
@@ -335,8 +335,8 @@ async def test_pushed_outputs_status_change(hass, entry, lcn_connection):
     assert state.state not in (STATE_OPENING, STATE_CLOSING)
 
     # push status "close"
-    input = ModStatusOutput(address, 1, 100)
-    await device_connection.async_process_input(input)
+    inp = ModStatusOutput(address, 1, 100)
+    await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
     state = hass.states.get("cover.cover_outputs")
@@ -355,8 +355,8 @@ async def test_pushed_relays_status_change(hass, entry, lcn_connection):
 
     # push status "open"
     states[0:2] = [True, False]
-    input = ModStatusRelays(address, states)
-    await device_connection.async_process_input(input)
+    inp = ModStatusRelays(address, states)
+    await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
     state = hass.states.get("cover.cover_relays")
@@ -365,8 +365,8 @@ async def test_pushed_relays_status_change(hass, entry, lcn_connection):
 
     # push status "stop"
     states[0] = False
-    input = ModStatusRelays(address, states)
-    await device_connection.async_process_input(input)
+    inp = ModStatusRelays(address, states)
+    await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
     state = hass.states.get("cover.cover_relays")
@@ -375,8 +375,8 @@ async def test_pushed_relays_status_change(hass, entry, lcn_connection):
 
     # push status "close"
     states[0:2] = [True, True]
-    input = ModStatusRelays(address, states)
-    await device_connection.async_process_input(input)
+    inp = ModStatusRelays(address, states)
+    await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
     state = hass.states.get("cover.cover_relays")
