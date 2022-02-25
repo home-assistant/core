@@ -5,6 +5,7 @@ from datetime import timedelta
 from functools import wraps
 import logging
 import re
+from typing import Any
 import urllib.parse
 
 import jsonrpc_base
@@ -696,7 +697,9 @@ class KodiEntity(MediaPlayerEntity):
         await self._kodi.media_seek(position)
 
     @cmd
-    async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Send the play_media command to the media player."""
         if media_source.is_media_source_id(media_id):
             media_type = MEDIA_TYPE_URL

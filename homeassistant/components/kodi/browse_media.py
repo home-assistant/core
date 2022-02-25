@@ -1,5 +1,6 @@
 """Support for media browsing."""
 import asyncio
+import contextlib
 import logging
 
 from homeassistant.components import media_source
@@ -223,15 +224,13 @@ async def library_payload(hass):
         )
     )
 
-    try:
+    with contextlib.suppress(media_source.BrowseError):
         item = await media_source.async_browse_media(hass, None)
         # If domain is None, it's overview of available sources
         if item.domain is None:
             library_info.children.extend(item.children)
         else:
             library_info.children.append(item)
-    except media_source.BrowseError:
-        pass
 
     return library_info
 
