@@ -138,9 +138,6 @@ async def browse_media(hass, media_content_type=None, media_content_id=None):
     if media_content_id.startswith("ais_spotify"):
         return await ais_spotify_library(hass, media_content_type, media_content_id)
 
-    if media_content_id.startswith("ais_youtube"):
-        return await ais_youtube_library(hass)
-
     if media_content_id.startswith("ais_favorites"):
         return ais_favorites_library(hass)
 
@@ -255,16 +252,6 @@ def ais_media_library(hass) -> BrowseMedia:
                 title="Spotify",
                 media_class="spotify",
                 media_content_id="ais_spotify",
-                media_content_type=MEDIA_TYPE_APP,
-                can_expand=True,
-                can_play=False,
-            )
-        )
-        ais_library_info.children.append(
-            BrowseMedia(
-                title="YouTube",
-                media_class="youtube",
-                media_content_id="ais_youtube",
                 media_content_type=MEDIA_TYPE_APP,
                 can_expand=True,
                 can_play=False,
@@ -965,11 +952,6 @@ def spotify_item_payload(item):
         payload["thumbnail"] = spotify_fetch_image_url(item[MEDIA_TYPE_ALBUM])
 
     return BrowseMedia(**payload)
-
-
-async def ais_youtube_library(hass) -> BrowseMedia:
-    """Create response payload to describe contents of a specific library."""
-    raise BrowseError("AIS TODO - pracujemy nad tym.:)")
 
 
 async def get_media_content_id_form_ais(hass, media_content_id):
