@@ -899,7 +899,6 @@ omit =
     homeassistant/components/pi4ioe5v9xxxx/binary_sensor.py
     homeassistant/components/pi4ioe5v9xxxx/switch.py
     homeassistant/components/picotts/tts.py
-    homeassistant/components/piglow/light.py
     homeassistant/components/pilight/*
     homeassistant/components/ping/__init__.py
     homeassistant/components/ping/const.py

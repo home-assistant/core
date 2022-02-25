@@ -1223,9 +1223,6 @@ pifacecommon==4.2.2
 # homeassistant.components.rpi_pfio
 pifacedigitalio==3.0.5
 
-# homeassistant.components.piglow
-piglow==1.2.4
-
 # homeassistant.components.pilight
 pilight==0.1.1
 
