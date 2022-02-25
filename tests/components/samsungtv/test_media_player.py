@@ -440,10 +440,10 @@ async def test_send_key_unhandled_response(hass: HomeAssistant, remote: Mock) ->
     assert state.state == STATE_ON
 
 
-async def test_send_key_websocketexception(hass: HomeAssistant, remote: Mock) -> None:
+async def test_send_key_websocketexception(hass: HomeAssistant, remotews: Mock) -> None:
     """Testing unhandled response exception."""
-    await setup_samsungtv(hass, MOCK_CONFIG)
-    remote.control = Mock(side_effect=WebSocketException("Boom"))
+    await setup_samsungtv(hass, MOCK_CONFIGWS)
+    remotews.send_key = Mock(side_effect=WebSocketException("Boom"))
     assert await hass.services.async_call(
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
