@@ -11,6 +11,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
+    ATTR_TEMPERATURE,
     CONF_NAME,
     CONF_TEMPERATURE_UNIT,
     PRECISION_TENTHS,
@@ -26,7 +27,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import get_hub
 from .base_platform import BaseStructPlatform
 from .const import (
-    ATTR_TEMPERATURE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,

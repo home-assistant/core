@@ -33,6 +33,8 @@ from .const import (
 )
 from .util import MQTT_WILL_BIRTH_SCHEMA
 
+MQTT_TIMEOUT = 5
+
 
 class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
@@ -337,7 +339,7 @@ def try_connection(broker, port, username, password, protocol="3.1"):
     client.loop_start()
 
     try:
-        return result.get(timeout=5)
+        return result.get(timeout=MQTT_TIMEOUT)
     except queue.Empty:
         return False
     finally:

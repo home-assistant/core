@@ -25,7 +25,7 @@ from homeassistant.core import State
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
 
-ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}"
+ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
 
 
 @pytest.mark.parametrize(
@@ -244,8 +244,8 @@ async def test_config_slave_binary_sensor(hass, mock_modbus):
     """Run config test for binary sensor."""
     assert SENSOR_DOMAIN in hass.config.components
 
-    for addon in ["", "_1", "_2", "_3"]:
-        entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}{addon}"
+    for addon in ["", " 1", " 2", " 3"]:
+        entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}{addon}".replace(" ", "_")
         assert hass.states.get(entity_id) is not None
 
 
@@ -315,5 +315,5 @@ async def test_slave_binary_sensor(hass, expected, slaves, mock_do_cycle):
     assert hass.states.get(ENTITY_ID).state == expected
 
     for i in range(8):
-        entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}_{i+1}"
+        entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}_{i+1}".replace(" ", "_")
         assert hass.states.get(entity_id).state == slaves[i]

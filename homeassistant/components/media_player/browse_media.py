@@ -15,7 +15,9 @@ from .const import CONTENT_AUTH_EXPIRY_TIME, MEDIA_CLASS_DIRECTORY
 
 
 @callback
-def async_process_play_media_url(hass: HomeAssistant, media_content_id: str) -> str:
+def async_process_play_media_url(
+    hass: HomeAssistant, media_content_id: str, *, allow_relative_url: bool = False
+) -> str:
     """Update a media URL with authentication if it points at Home Assistant."""
     if media_content_id[0] != "/" and not is_hass_url(hass, media_content_id):
         return media_content_id
@@ -34,8 +36,8 @@ def async_process_play_media_url(hass: HomeAssistant, media_content_id: str) -> 
         )
         media_content_id = str(parsed.join(yarl.URL(signed_path)))
 
-    # prepend external URL
-    if media_content_id[0] == "/":
+    # convert relative URL to absolute URL
+    if media_content_id[0] == "/" and not allow_relative_url:
         media_content_id = f"{get_url(hass)}{media_content_id}"
 
     return media_content_id
@@ -56,6 +58,7 @@ class BrowseMedia:
         children: list[BrowseMedia] | None = None,
         children_media_class: str | None = None,
         thumbnail: str | None = None,
+        not_shown: int = 0,
     ) -> None:
         """Initialize browse media item."""
         self.media_class = media_class
@@ -67,12 +70,10 @@ class BrowseMedia:
         self.children = children
         self.children_media_class = children_media_class
         self.thumbnail = thumbnail
+        self.not_shown = not_shown
 
     def as_dict(self, *, parent: bool = True) -> dict:
         """Convert Media class to browse media dictionary."""
-        if self.children_media_class is None:
-            self.calculate_children_class()
-
         response = {
             "title": self.title,
             "media_class": self.media_class,
@@ -80,12 +81,17 @@ class BrowseMedia:
             "media_content_id": self.media_content_id,
             "can_play": self.can_play,
             "can_expand": self.can_expand,
-            "children_media_class": self.children_media_class,
             "thumbnail": self.thumbnail,
         }
 
         if not parent:
             return response
+
+        if self.children_media_class is None:
+            self.calculate_children_class()
+
+        response["not_shown"] = self.not_shown
+        response["children_media_class"] = self.children_media_class
 
         if self.children:
             response["children"] = [

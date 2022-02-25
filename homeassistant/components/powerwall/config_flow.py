@@ -9,6 +9,7 @@ from tesla_powerwall import (
     MissingAttributeError,
     Powerwall,
     PowerwallUnreachableError,
+    SiteInfo,
 )
 import voluptuous as vol
 
@@ -23,11 +24,12 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def _login_and_fetch_site_info(power_wall: Powerwall, password: str):
+def _login_and_fetch_site_info(
+    power_wall: Powerwall, password: str
+) -> tuple[SiteInfo, str]:
     """Login to the powerwall and fetch the base info."""
     if password is not None:
         power_wall.login(password)
-    power_wall.detect_and_pin_version()
     return power_wall.get_site_info(), power_wall.get_gateway_din()
 
 
@@ -60,7 +62,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the powerwall flow."""
         self.ip_address: str | None = None
         self.title: str | None = None
@@ -101,7 +103,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_confirm_discovery()
 
     async def _async_try_connect(
-        self, user_input
+        self, user_input: dict[str, Any]
     ) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
         """Try to connect to the powerwall."""
         info = None
@@ -120,7 +122,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return errors, info
 
-    async def async_step_confirm_discovery(self, user_input=None) -> FlowResult:
+    async def async_step_confirm_discovery(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Confirm a discovered powerwall."""
         assert self.ip_address is not None
         assert self.unique_id is not None
@@ -148,9 +152,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] | None = {}
         if user_input is not None:
             errors, info = await self._async_try_connect(user_input)
             if not errors:
@@ -176,9 +182,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth_confirm(self, user_input=None):
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle reauth confirmation."""
-        errors = {}
+        assert self.reauth_entry is not None
+        errors: dict[str, str] | None = {}
         if user_input is not None:
             entry_data = self.reauth_entry.data
             errors, _ = await self._async_try_connect(
@@ -197,7 +206,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, data):
+    async def async_step_reauth(self, data: dict[str, str]) -> FlowResult:
         """Handle configuration by re-auth."""
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]

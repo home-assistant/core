@@ -23,5 +23,5 @@ async def async_get_config_entry_diagnostics(
     ]
     return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
-        "device_info": await hass.async_add_executor_job(bridge.device_info),
+        "device_info": await bridge.async_device_info(),
     }

@@ -43,6 +43,8 @@ async def async_get_media_source(hass: HomeAssistant) -> RadioMediaSource:
 class RadioMediaSource(MediaSource):
     """Provide Radio stations as media sources."""
 
+    name = "Radio Browser"
+
     def __init__(
         self, hass: HomeAssistant, radios: RadioBrowser, entry: ConfigEntry
     ) -> None:
