@@ -190,11 +190,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         try:
             remote = self._get_remote()
             return remote is not None
-        except (
-            UnhandledResponse,
-            AccessDenied,
-            ConnectionFailure,
-        ):
+        except (UnhandledResponse, AccessDenied):
             # We got a response so it's working.
             return True
         except OSError:
@@ -353,11 +349,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
         try:
             remote = self._get_remote()
             return remote is not None
-        except (
-            UnhandledResponse,
-            AccessDenied,
-            ConnectionFailure,
-        ):
+        except ConnectionFailure:
             # We got a response so it's working.
             return True
         except OSError:
@@ -443,16 +435,12 @@ class SamsungTVWSBridge(SamsungTVBridge):
                             remote.send_key(key)
                     break
                 except (
-                    ConnectionClosed,
                     BrokenPipeError,
                     WebSocketException,
                 ):
                     # BrokenPipe can occur when the commands is sent to fast
                     # WebSocketException can occur when timed out
                     self._remote = None
-        except (UnhandledResponse, AccessDenied):
-            # We got a response so it's on.
-            LOGGER.debug("Failed sending command %s", key, exc_info=True)
         except OSError:
             # Different reasons, e.g. hostname not resolveable
             pass
