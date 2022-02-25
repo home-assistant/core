@@ -43,6 +43,7 @@ FOLLOW_ACTIVE = {"followed_at": "2020-01-20T21:22:42"}
 
 
 def make_data(data):
+   """Create a data object."""
     return {"data": data, "total": len(data)}
 
 
