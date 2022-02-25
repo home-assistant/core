@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -17,7 +16,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, KEY_COORDINATOR
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,7 +126,7 @@ class OptionsFlow(config_entries.OptionsFlow):
     """Handle an options flow for Rabbit Air."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize."""
+        """Initialize options flow."""
         self.config_entry = config_entry
 
     async def async_step_init(
@@ -135,18 +134,9 @@ class OptionsFlow(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
-            coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id][
-                KEY_COORDINATOR
-            ]
-            scan_interval: int = user_input.get(
-                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-            )
-            update_interval = timedelta(seconds=scan_interval)
-            _LOGGER.debug("Set the update interval to %s", update_interval)
-            coordinator.update_interval = update_interval
             return self.async_create_entry(title="", data=user_input)
 
-        scan_interval = self.config_entry.options.get(
+        scan_interval: int = self.config_entry.options.get(
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
         )
         return self.async_show_form(
