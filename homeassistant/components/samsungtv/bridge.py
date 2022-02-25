@@ -264,13 +264,8 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
                     if remote := self._get_remote():
                         remote.control(key)
                     break
-                except (
-                    ConnectionClosed,
-                    BrokenPipeError,
-                    WebSocketException,
-                ):
+                except (ConnectionClosed, BrokenPipeError):
                     # BrokenPipe can occur when the commands is sent to fast
-                    # WebSocketException can occur when timed out
                     self._remote = None
         except (UnhandledResponse, AccessDenied):
             # We got a response so it's on.
