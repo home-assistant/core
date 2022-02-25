@@ -29,7 +29,15 @@
         },
         "tuya__humidifier_level": {
             "level_1": "Nivel 1",
-            "level_10": "Nivel 10"
+            "level_10": "Nivel 10",
+            "level_2": "Nivel 2",
+            "level_3": "Nivel 3",
+            "level_4": "Nivel 4",
+            "level_5": "Nivel 5",
+            "level_6": "Nivel 6",
+            "level_7": "Nivel 7",
+            "level_8": "Nivel 8",
+            "level_9": "Nivel 9"
         },
         "tuya__humidifier_spray_mode": {
             "health": "Salud",
