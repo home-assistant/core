@@ -6,7 +6,7 @@ import yarl
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import MEDIA_CLASS_DIRECTORY, BrowseError
-from homeassistant.components.media_source import const
+from homeassistant.components.media_source import const, models
 from homeassistant.setup import async_setup_component
 
 
@@ -59,6 +59,30 @@ async def test_async_browse_media(hass):
     assert len(media.children) == 1, media.children
     media.children[0].title = "Epic Sax Guy 10 Hours"
     assert media.not_shown == 1
+
+    # Test content filter adds to original not_shown
+    orig_browse = models.MediaSourceItem.async_browse
+
+    async def not_shown_browse(self):
+        """Patch browsed item to set not_shown base value."""
+        item = await orig_browse(self)
+        item.not_shown = 10
+        return item
+
+    with patch(
+        "homeassistant.components.media_source.models.MediaSourceItem.async_browse",
+        not_shown_browse,
+    ):
+        media = await media_source.async_browse_media(
+            hass,
+            "",
+            content_filter=lambda item: item.media_content_type.startswith("video/"),
+        )
+    assert isinstance(media, media_source.models.BrowseMediaSource)
+    assert media.title == "media"
+    assert len(media.children) == 1, media.children
+    media.children[0].title = "Epic Sax Guy 10 Hours"
+    assert media.not_shown == 11
 
     # Test invalid media content
     with pytest.raises(BrowseError):

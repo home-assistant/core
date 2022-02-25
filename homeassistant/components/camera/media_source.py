@@ -81,11 +81,13 @@ class CameraMediaSource(MediaSource):
         # Root. List cameras.
         component: EntityComponent = self.hass.data[DOMAIN]
         children = []
+        not_shown = 0
         for camera in component.entities:
             camera = cast(Camera, camera)
             stream_type = camera.frontend_stream_type
 
             if stream_type not in supported_stream_types:
+                not_shown += 1
                 continue
 
             children.append(
@@ -111,4 +113,5 @@ class CameraMediaSource(MediaSource):
             can_expand=True,
             children_media_class=MEDIA_CLASS_VIDEO,
             children=children,
+            not_shown=not_shown,
         )
