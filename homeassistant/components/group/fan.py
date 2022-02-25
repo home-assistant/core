@@ -311,16 +311,13 @@ class FanGroup(GroupEntity, FanEntity):
             "_preset_mode", SUPPORT_PRESET_MODE, ATTR_PRESET_MODE
         )
 
-        self._preset_modes = None
         all_supported_preset_modes = list(
             find_state_attributes(on_states, ATTR_PRESET_MODES)
         )
-        if all_supported_preset_modes:
-            # Merge all presets mode from all prsets mode with a union merge.
-            self._preset_modes = list(set().union(*all_supported_preset_modes))
-            if "None" in self._preset_modes:
-                self._preset_modes.remove("None")
-                self._preset_modes.insert(0, "None")
+        if attribute_equal(on_states, ATTR_PRESET_MODES):
+            self._preset_modes = all_supported_preset_modes[0]
+        else:
+            self._preset_modes = None
 
         self._supported_features = reduce(
             ior, [feature for feature in SUPPORTED_FLAGS if self._fans[feature]], 0
