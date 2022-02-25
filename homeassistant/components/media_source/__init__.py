@@ -179,7 +179,9 @@ async def websocket_resolve_media(
     connection.send_result(
         msg["id"],
         {
-            "url": async_process_play_media_url(hass, media.url),
+            "url": async_process_play_media_url(
+                hass, media.url, allow_relative_url=True
+            ),
             "mime_type": media.mime_type,
         },
     )
