@@ -235,7 +235,7 @@ async def test_form_image_timeout(hass, fakevidcontainer):
     await hass.async_block_till_done()
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "unable_still_load"}
+    assert result2["errors"] == {"still_image_url": "unable_still_load"}
 
 
 @respx.mock
@@ -253,7 +253,7 @@ async def test_form_stream_invalidimage(hass, fakevidcontainer):
     await hass.async_block_till_done()
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_still_image"}
+    assert result2["errors"] == {"still_image_url": "invalid_still_image"}
 
 
 @respx.mock
@@ -271,7 +271,27 @@ async def test_form_stream_invalidimage2(hass, fakevidcontainer):
     await hass.async_block_till_done()
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "unable_still_load"}
+    assert result2["errors"] == {"still_image_url": "unable_still_load"}
+
+
+@respx.mock
+async def test_form_stream_invalidimage3(hass, fakevidcontainer):
+    """Test we handle invalid image when a stream is specified."""
+    # string = bytes([0xFF]).decode("utf-8")
+
+    respx.get("http://127.0.0.1/testurl/1").respond(content=bytes([0xFF]))
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch("av.open", return_value=fakevidcontainer):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            TESTDATA,
+        )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"still_image_url": "invalid_still_image"}
 
 
 @respx.mock
@@ -287,7 +307,39 @@ async def test_form_stream_file_not_found(hass, fakeimgbytes_png):
             TESTDATA,
         )
     assert result2["type"] == "form"
-    assert result2["errors"] == {"stream_source": "stream_no_route_to_host"}
+    assert result2["errors"] == {"stream_source": "stream_file_not_found"}
+
+
+@respx.mock
+async def test_form_stream_http_not_found(hass, fakeimgbytes_png):
+    """Test we handle invalid auth."""
+    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch("av.open", side_effect=av.error.HTTPNotFoundError(0, 0)):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            TESTDATA,
+        )
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"stream_source": "stream_http_not_found"}
+
+
+@respx.mock
+async def test_form_stream_timeout(hass, fakeimgbytes_png):
+    """Test we handle invalid auth."""
+    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch("av.open", side_effect=av.error.TimeoutError(0, 0)):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            TESTDATA,
+        )
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"stream_source": "timeout"}
 
 
 @respx.mock

@@ -96,6 +96,19 @@ def build_schema(user_input):
     return vol.Schema(spec)
 
 
+def get_image_type(image):
+    """Get the format of downloaded bytes that could be an image."""
+    fmt = imghdr.what(None, h=image)
+    if fmt is None:
+        # if imghdr can't figure it out, could be svg.
+        try:
+            if image.decode("utf-8").startswith("<svg"):
+                return "svg+xml"
+        except UnicodeDecodeError:
+            return None
+    return fmt
+
+
 async def async_test_connection(
     hass, info
 ) -> tuple[dict[str, str], str | None, str | None]:
@@ -128,23 +141,21 @@ async def async_test_connection(
             HTTPStatusError,
             TimeoutException,
         ) as err:
-            _LOGGER.error("Error getting camera image from %s: %s", url, err)
-            return {"base": "unable_still_load"}, None, None
+            _LOGGER.error(
+                "Error getting camera image from %s: %s", url, type(err).__name__
+            )
+            return {CONF_STILL_IMAGE_URL: "unable_still_load"}, None, None
 
         if not image:
-            return {"base": "unable_still_load"}, None, None
-        fmt = imghdr.what(None, h=image)
-        if fmt is None:
-            # if imghdr can't figure it out, could be svg.
-            if image.decode("utf-8").startswith("<svg"):
-                fmt = "svg+xml"
+            return {CONF_STILL_IMAGE_URL: "unable_still_load"}, None, None
+        fmt = get_image_type(image)
         _LOGGER.debug(
             "Still image at '%s' detected format: %s",
             info[CONF_STILL_IMAGE_URL],
             fmt,
         )
         if fmt not in SUPPORTED_IMAGE_TYPES:
-            return {"base": "invalid_still_image"}, None, None
+            return {CONF_STILL_IMAGE_URL: "invalid_still_image"}, None, None
         fmt = "image/" + fmt
 
     # Second level functionality is to get a stream.
@@ -172,8 +183,12 @@ async def async_test_connection(
             )
             _ = container.streams.video[0]
         # pylint: disable=c-extension-no-member
-        except av.error.FileNotFoundError:
-            return {CONF_STREAM_SOURCE: "stream_no_route_to_host"}, None, None
+        except (av.error.FileNotFoundError):
+            return {CONF_STREAM_SOURCE: "stream_file_not_found"}, None, None
+        except (av.error.HTTPNotFoundError):
+            return {CONF_STREAM_SOURCE: "stream_http_not_found"}, None, None
+        except (av.error.TimeoutError):
+            return {CONF_STREAM_SOURCE: "timeout"}, None, None
         except av.error.HTTPUnauthorizedError:  # pylint: disable=c-extension-no-member
             return {CONF_STREAM_SOURCE: "stream_unauthorised"}, None, None
         except (KeyError, IndexError):
