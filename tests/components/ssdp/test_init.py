@@ -25,7 +25,7 @@ from tests.common import async_fire_time_changed
 
 
 def _ssdp_headers(headers):
-    ssdp_headers = CaseInsensitiveDict(headers, _timestamp=datetime(2021, 1, 1, 12, 00))
+    ssdp_headers = CaseInsensitiveDict(headers, _timestamp=datetime.now())
     ssdp_headers["_udn"] = udn_from_headers(ssdp_headers)
     return ssdp_headers
 
@@ -486,7 +486,7 @@ async def test_scan_with_registered_callback(
         mock_call_data.ssdp_usn == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::mock-st"
     )
     assert mock_call_data.ssdp_headers["x-rincon-bootseq"] == "55"
-    assert mock_call_data.ssdp_udn == ANY
+    assert mock_call_data.ssdp_udn == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"
     assert mock_call_data.ssdp_headers["_timestamp"] == ANY
     assert mock_call_data.x_homeassistant_matching_domains == set()
     assert mock_call_data.upnp == {
