@@ -582,6 +582,19 @@ async def test_turn_off_os_error(
     assert "Could not establish connection" in caplog.text
 
 
+async def test_turn_off_ws_os_error(
+    hass: HomeAssistant, remotews: Mock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test for turn_off with OSError."""
+    caplog.set_level(logging.DEBUG)
+    await setup_samsungtv(hass, MOCK_CONFIGWS)
+    remotews.close = Mock(side_effect=OSError("BOOM"))
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    assert "Could not establish connection" in caplog.text
+
+
 async def test_volume_up(hass: HomeAssistant, remote: Mock) -> None:
     """Test for volume_up."""
     await setup_samsungtv(hass, MOCK_CONFIG)
