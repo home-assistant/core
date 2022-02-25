@@ -97,7 +97,7 @@ class SamsungTVBridge(ABC):
         self.method = method
         self.host = host
         self.token: str | None = None
-        self._remote: Remote | None = None
+        self._remote: Remote | SamsungTVWS | None = None
         self._reauth_callback: CALLBACK_TYPE | None = None
         self._new_token_callback: CALLBACK_TYPE | None = None
 
@@ -125,24 +125,9 @@ class SamsungTVBridge(ABC):
     async def async_get_app_list(self) -> dict[str, str] | None:
         """Get installed app list."""
 
+    @abstractmethod
     async def async_is_on(self) -> bool:
         """Tells if the TV is on."""
-        if self._remote is not None:
-            await self.async_close_remote()
-
-        try:
-            remote = await self.hass.async_add_executor_job(self._get_remote)
-            return remote is not None
-        except (
-            UnhandledResponse,
-            AccessDenied,
-            ConnectionFailure,
-        ):
-            # We got a response so it's working.
-            return True
-        except OSError:
-            # Different reasons, e.g. hostname not resolveable
-            return False
 
     async def async_send_key(self, key: str, key_type: str | None = None) -> None:
         """Send a key to the tv and handles exceptions."""
@@ -222,6 +207,25 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
     async def async_get_app_list(self) -> dict[str, str]:
         """Get installed app list."""
         return {}
+
+    async def async_is_on(self) -> bool:
+        """Tells if the TV is on."""
+        if self._remote is not None:
+            await self.async_close_remote()
+
+        try:
+            remote = await self.hass.async_add_executor_job(self._get_remote)
+            return remote is not None
+        except (
+            UnhandledResponse,
+            AccessDenied,
+            ConnectionFailure,
+        ):
+            # We got a response so it's working.
+            return True
+        except OSError:
+            # Different reasons, e.g. hostname not resolveable
+            return False
 
     async def async_try_connect(self) -> str:
         """Try to connect to the Legacy TV."""
@@ -327,6 +331,25 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 }
 
         return self._app_list
+
+    async def async_is_on(self) -> bool:
+        """Tells if the TV is on."""
+        if self._remote is not None:
+            await self.async_close_remote()
+
+        try:
+            remote = await self.hass.async_add_executor_job(self._get_remote)
+            return remote is not None
+        except (
+            UnhandledResponse,
+            AccessDenied,
+            ConnectionFailure,
+        ):
+            # We got a response so it's working.
+            return True
+        except OSError:
+            # Different reasons, e.g. hostname not resolveable
+            return False
 
     async def async_try_connect(self) -> str:
         """Try to connect to the Websocket TV."""
