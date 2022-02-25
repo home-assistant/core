@@ -28,5 +28,8 @@ then
 fi
 
 rm -rf dist build
-python3.9 setup.py sdist bdist_wheel
-python3.9 -m twine upload dist/* --skip-existing
+# python3.9 setup.py sdist bdist_wheel
+# python3.9 -m twine upload dist/* --skip-existing
+
+python -m build
+twine upload dist/* --skip-existing
