@@ -4,12 +4,6 @@
 # homeassistant.components.aemet
 AEMET-OpenData==0.2.1
 
-# homeassistant.components.sht31
-Adafruit-GPIO==1.0.3
-
-# homeassistant.components.sht31
-Adafruit-SHT31==1.0.2
-
 # homeassistant.components.adax
 Adax-local==0.1.3
 
