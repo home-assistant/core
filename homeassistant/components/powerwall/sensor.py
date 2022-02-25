@@ -97,7 +97,7 @@ class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
     @property
     def native_value(self) -> float:
         """Get the current value in kW."""
-        return self.data.meters.get_meter(self._meter).get_power(precision=3)
+        return abs(self.data.meters.get_meter(self._meter).get_power(precision=3))
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
