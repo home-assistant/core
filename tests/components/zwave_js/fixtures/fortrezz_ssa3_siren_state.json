@@ -351,5 +351,6 @@
     "commandsDroppedTX": 0,
     "timeoutResponse": 1
   },
-  "highestSecurityClass": -1
+  "highestSecurityClass": -1,
+  "isControllerNode": false
 }
