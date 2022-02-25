@@ -224,6 +224,9 @@ async def library_payload(hass):
         )
     )
 
+    for child in library_info.children:
+        child.thumbnail = "https://brands.home-assistant.io/_/kodi/logo.png"
+
     with contextlib.suppress(media_source.BrowseError):
         item = await media_source.async_browse_media(hass, None)
         # If domain is None, it's overview of available sources
