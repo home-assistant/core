@@ -9,7 +9,6 @@ from requests.exceptions import Timeout as RequestsTimeout
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
 from samsungtvws import SamsungTVWS
-from samsungtvws.async_rest import SamsungTVAsyncRest
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from websocket import WebSocketException
 
@@ -23,7 +22,6 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
@@ -307,9 +305,6 @@ class SamsungTVWSBridge(SamsungTVBridge):
         """Initialize Bridge."""
         super().__init__(hass, method, host, port)
         self.token = token
-        self._rest_api = SamsungTVAsyncRest(
-            host, session=async_get_clientsession(hass), port=port
-        )
         self._app_list: dict[str, str] | None = None
 
     async def async_mac_from_device(self) -> str | None:
@@ -381,10 +376,13 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     async def async_device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""
-        if self._get_remote(avoid_open=True):
+        if remote := self._get_remote(avoid_open=True):
             with contextlib.suppress(HttpApiError, RequestsTimeout):
-                device_info: dict[str, Any] = await self._rest_api.rest_device_info()
+                device_info: dict[str, Any] = await self.hass.async_add_executor_job(
+                    remote.rest_device_info
+                )
                 return device_info
+
         return None
 
     async def _async_send_key(self, key: str, key_type: str | None = None) -> None:
@@ -417,7 +415,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     name=VALUE_CONF_NAME,
                 )
                 if not avoid_open:
-                    self._remote.open()
+                    self._remote.open("samsung.remote.control")
             # This is only happening when the auth was switched to DENY
             # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
             except ConnectionFailure as err:

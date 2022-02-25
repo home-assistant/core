@@ -43,7 +43,7 @@ from .const import (
     SensorType,
 )
 from .device import MySensorsDevice, get_mysensors_devices
-from .gateway import finish_setup, get_mysensors_gateway, gw_stop, setup_gateway
+from .gateway import finish_setup, gw_stop, setup_gateway
 from .helpers import on_unload
 
 _LOGGER = logging.getLogger(__name__)
@@ -244,7 +244,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Remove an instance of the MySensors integration."""
 
-    gateway = get_mysensors_gateway(hass, entry.entry_id)
+    gateway: BaseAsyncGateway = hass.data[DOMAIN][MYSENSORS_GATEWAYS][entry.entry_id]
 
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS_WITH_ENTRY_SUPPORT
@@ -314,10 +314,7 @@ def setup_mysensors_platform(
             )
             continue
         gateway_id, node_id, child_id, value_type = dev_id
-        gateway: BaseAsyncGateway | None = get_mysensors_gateway(hass, gateway_id)
-        if not gateway:
-            _LOGGER.warning("Skipping setup of %s, no gateway found", dev_id)
-            continue
+        gateway: BaseAsyncGateway = hass.data[DOMAIN][MYSENSORS_GATEWAYS][gateway_id]
 
         if isinstance(device_class, dict):
             child = gateway.sensors[node_id].children[child_id]

@@ -18,8 +18,8 @@ from async_upnp_client.const import (
     SsdpSource,
 )
 from async_upnp_client.description_cache import DescriptionCache
-from async_upnp_client.ssdp import SSDP_PORT, determine_source_target
-from async_upnp_client.ssdp_listener import SsdpDevice, SsdpListener
+from async_upnp_client.ssdp import SSDP_PORT, determine_source_target, is_ipv4_address
+from async_upnp_client.ssdp_listener import SsdpDevice, SsdpDeviceTracker, SsdpListener
 from async_upnp_client.utils import CaseInsensitiveDict
 
 from homeassistant import config_entries
@@ -399,7 +399,7 @@ class Scanner:
         # address. This matches pysonos' behavior
         # https://github.com/amelchio/pysonos/blob/d4329b4abb657d106394ae69357805269708c996/pysonos/discovery.py#L120
         for listener in self._ssdp_listeners:
-            if len(listener.source) == 2:
+            if is_ipv4_address(listener.source):
                 await listener.async_search((str(IPV4_BROADCAST), SSDP_PORT))
 
     async def async_start(self) -> None:
@@ -420,19 +420,26 @@ class Scanner:
 
     async def _async_start_ssdp_listeners(self) -> None:
         """Start the SSDP Listeners."""
+        # Devices are shared between all sources.
+        device_tracker = SsdpDeviceTracker()
         for source_ip in await self._async_build_source_set():
             source_ip_str = str(source_ip)
-            source_tuple: AddressTupleVXType = (
-                (source_ip_str, 0, 0, int(getattr(source_ip, "scope_id")))
-                if source_ip.version == 6
-                else (source_ip_str, 0)
-            )
+            if source_ip.version == 6:
+                source_tuple: AddressTupleVXType = (
+                    source_ip_str,
+                    0,
+                    0,
+                    int(getattr(source_ip, "scope_id")),
+                )
+            else:
+                source_tuple = (source_ip_str, 0)
             source, target = determine_source_target(source_tuple)
             self._ssdp_listeners.append(
                 SsdpListener(
                     async_callback=self._ssdp_listener_callback,
                     source=source,
                     target=target,
+                    device_tracker=device_tracker,
                 )
             )
         results = await asyncio.gather(

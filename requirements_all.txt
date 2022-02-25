@@ -4,12 +4,6 @@
 # homeassistant.components.aemet
 AEMET-OpenData==0.2.1
 
-# homeassistant.components.sht31
-Adafruit-GPIO==1.0.3
-
-# homeassistant.components.sht31
-Adafruit-SHT31==1.0.2
-
 # homeassistant.components.adax
 Adax-local==0.1.3
 
@@ -18,9 +12,6 @@ HAP-python==4.4.0
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
-
-# homeassistant.components.orangepi_gpio
-OPi.GPIO==0.5.2
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -185,7 +176,7 @@ aiohomekit==0.7.14
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==4.2.1
+aiohue==4.3.0
 
 # homeassistant.components.homewizard
 aiohwenergy==0.8.0
@@ -337,14 +328,12 @@ asmog==0.0.6
 # homeassistant.components.asterisk_mbox
 asterisk_mbox==0.5.0
 
-# homeassistant.components.dlna_dms
-async-upnp-client==0.23.5
-
 # homeassistant.components.dlna_dmr
+# homeassistant.components.dlna_dms
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.24.0
+async-upnp-client==0.25.0
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -421,9 +410,6 @@ blockchain==1.4.4
 # homeassistant.components.decora
 # homeassistant.components.miflora
 # bluepy==1.3.0
-
-# homeassistant.components.bme280
-# bme280spi==0.2.0
 
 # homeassistant.components.bme680
 # bme680==1.0.5
@@ -833,7 +819,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220223.0
+home-assistant-frontend==20220224.0
 
 # homeassistant.components.zwave
 # homeassistant-pyozw==0.1.10
@@ -866,7 +852,6 @@ hydrawiser==0.2
 # homeassistant.components.hyperion
 hyperion-py==0.7.4
 
-# homeassistant.components.bme280
 # homeassistant.components.htu21d
 # i2csense==0.0.4
 
@@ -1223,17 +1208,11 @@ phone_modem==0.1.1
 # homeassistant.components.onewire
 pi1wire==0.1.0
 
-# homeassistant.components.pi4ioe5v9xxxx
-pi4ioe5v9xxxx==0.0.2
-
 # homeassistant.components.rpi_pfio
 pifacecommon==4.2.2
 
 # homeassistant.components.rpi_pfio
 pifacedigitalio==3.0.5
-
-# homeassistant.components.piglow
-piglow==1.2.4
 
 # homeassistant.components.pilight
 pilight==0.1.1
@@ -1265,7 +1244,6 @@ plugwise==0.16.6
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
 
-# homeassistant.components.mhz19
 # homeassistant.components.serial_pm
 pmsensor==0.4
 
@@ -1307,9 +1285,6 @@ pushover_complete==1.1.1
 
 # homeassistant.components.pvoutput
 pvo==0.2.2
-
-# homeassistant.components.rpi_gpio_pwm
-pwmled==1.6.10
 
 # homeassistant.components.canary
 py-canary==0.5.1
@@ -1976,9 +1951,6 @@ python-tado==0.12.0
 # homeassistant.components.telegram_bot
 python-telegram-bot==13.1
 
-# homeassistant.components.twitch
-python-twitch-client==0.6.0
-
 # homeassistant.components.vlc
 python-vlc==1.1.2
 
@@ -2143,7 +2115,7 @@ rxv==0.7.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws[async]==1.7.0
+samsungtvws==1.7.0
 
 # homeassistant.components.satel_integra
 satel_integra==0.3.4
@@ -2209,7 +2181,6 @@ smart-meter-texas==0.4.7
 # homeassistant.components.smarthab
 smarthab==0.21
 
-# homeassistant.components.bme280
 # homeassistant.components.bme680
 # homeassistant.components.envirophat
 # homeassistant.components.htu21d
@@ -2372,7 +2343,7 @@ tp-connected==0.0.4
 transmissionrpc==0.11
 
 # homeassistant.components.twinkly
-ttls==1.4.2
+ttls==1.4.3
 
 # homeassistant.components.tuya
 tuya-iot-py-sdk==0.6.6
@@ -2382,6 +2353,9 @@ twentemilieu==0.5.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
+
+# homeassistant.components.twitch
+twitchAPI==2.5.2
 
 # homeassistant.components.rainforest_eagle
 uEagle==0.0.2

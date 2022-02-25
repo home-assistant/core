@@ -141,7 +141,7 @@ aiohomekit==0.7.14
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==4.2.1
+aiohue==4.3.0
 
 # homeassistant.components.homewizard
 aiohwenergy==0.8.0
@@ -251,14 +251,12 @@ aprslib==0.7.0
 # homeassistant.components.arcam_fmj
 arcam-fmj==0.12.0
 
-# homeassistant.components.dlna_dms
-async-upnp-client==0.23.5
-
 # homeassistant.components.dlna_dmr
+# homeassistant.components.dlna_dms
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.24.0
+async-upnp-client==0.25.0
 
 # homeassistant.components.sleepiq
 asyncsleepiq==1.1.0
@@ -555,7 +553,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220223.0
+home-assistant-frontend==20220224.0
 
 # homeassistant.components.zwave
 # homeassistant-pyozw==0.1.10
@@ -802,10 +800,6 @@ plugwise==0.16.6
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
-
-# homeassistant.components.mhz19
-# homeassistant.components.serial_pm
-pmsensor==0.4
 
 # homeassistant.components.poolsense
 poolsense==0.0.8
@@ -1238,9 +1232,6 @@ python-songpal==0.14
 # homeassistant.components.tado
 python-tado==0.12.0
 
-# homeassistant.components.twitch
-python-twitch-client==0.6.0
-
 # homeassistant.components.awair
 python_awair==0.2.1
 
@@ -1336,7 +1327,7 @@ rxv==0.7.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws[async]==1.7.0
+samsungtvws==1.7.0
 
 # homeassistant.components.dhcp
 scapy==2.4.5
@@ -1459,7 +1450,7 @@ total_connect_client==2022.2.1
 transmissionrpc==0.11
 
 # homeassistant.components.twinkly
-ttls==1.4.2
+ttls==1.4.3
 
 # homeassistant.components.tuya
 tuya-iot-py-sdk==0.6.6
@@ -1469,6 +1460,9 @@ twentemilieu==0.5.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
+
+# homeassistant.components.twitch
+twitchAPI==2.5.2
 
 # homeassistant.components.rainforest_eagle
 uEagle==0.0.2

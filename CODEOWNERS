@@ -689,7 +689,6 @@ homeassistant/components/openweathermap/* @fabaff @freekode @nzapponi
 tests/components/openweathermap/* @fabaff @freekode @nzapponi
 homeassistant/components/opnsense/* @mtreinish
 tests/components/opnsense/* @mtreinish
-homeassistant/components/orangepi_gpio/* @pascallj
 homeassistant/components/oru/* @bvlaicu
 homeassistant/components/overkiz/* @imicknl @vlebourl @tetienne
 tests/components/overkiz/* @imicknl @vlebourl @tetienne
@@ -708,7 +707,6 @@ homeassistant/components/persistent_notification/* @home-assistant/core
 tests/components/persistent_notification/* @home-assistant/core
 homeassistant/components/philips_js/* @elupus
 tests/components/philips_js/* @elupus
-homeassistant/components/pi4ioe5v9xxxx/* @antonverburg
 homeassistant/components/pi_hole/* @fabaff @johnluetke @shenxn
 tests/components/pi_hole/* @fabaff @johnluetke @shenxn
 homeassistant/components/picnic/* @corneyl
@@ -798,7 +796,6 @@ homeassistant/components/roomba/* @pschmitt @cyr-ius @shenxn
 tests/components/roomba/* @pschmitt @cyr-ius @shenxn
 homeassistant/components/roon/* @pavoni
 tests/components/roon/* @pavoni
-homeassistant/components/rpi_gpio_pwm/* @soldag
 homeassistant/components/rpi_power/* @shenxn @swetoast
 tests/components/rpi_power/* @shenxn @swetoast
 homeassistant/components/rtsp_to_webrtc/* @allenporter

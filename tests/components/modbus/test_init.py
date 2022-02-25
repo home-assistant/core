@@ -26,7 +26,6 @@ from homeassistant.components.modbus.const import (
     ATTR_ADDRESS,
     ATTR_HUB,
     ATTR_SLAVE,
-    ATTR_STATE,
     ATTR_UNIT,
     ATTR_VALUE,
     CALL_TYPE_COIL,
@@ -67,6 +66,7 @@ from homeassistant.components.modbus.validators import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
+    ATTR_STATE,
     CONF_ADDRESS,
     CONF_BINARY_SENSORS,
     CONF_COUNT,
@@ -711,34 +711,33 @@ async def test_delay(hass, mock_pymodbus):
         ]
     }
     mock_pymodbus.read_coils.return_value = ReadResult([0x01])
-    now = dt_util.utcnow()
-    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
+    start_time = dt_util.utcnow()
+    with mock.patch(
+        "homeassistant.helpers.event.dt_util.utcnow", return_value=start_time
+    ):
         assert await async_setup_component(hass, DOMAIN, config) is True
         await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
-    # pass first scan_interval
-    start_time = now
-    now = now + timedelta(seconds=(set_scan_interval + 1))
-    with mock.patch(
-        "homeassistant.helpers.event.dt_util.utcnow", return_value=now, autospec=True
-    ):
-        async_fire_time_changed(hass, now)
-        await hass.async_block_till_done()
-        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-
-    stop_time = start_time + timedelta(seconds=(set_delay + 1))
-    step_timedelta = timedelta(seconds=1)
-    while now < stop_time:
-        now = now + step_timedelta
-        with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
+    time_sensor_active = start_time + timedelta(seconds=2)
+    time_after_delay = start_time + timedelta(seconds=(set_delay))
+    time_after_scan = start_time + timedelta(seconds=(set_delay + set_scan_interval))
+    time_stop = time_after_scan + timedelta(seconds=10)
+    now = start_time
+    while now < time_stop:
+        now += timedelta(seconds=1)
+        with mock.patch(
+            "homeassistant.helpers.event.dt_util.utcnow",
+            return_value=now,
+            autospec=True,
+        ):
             async_fire_time_changed(hass, now)
             await hass.async_block_till_done()
-            assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-    now = now + step_timedelta + timedelta(seconds=2)
-    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
-        async_fire_time_changed(hass, now)
-        await hass.async_block_till_done()
-        assert hass.states.get(entity_id).state == STATE_ON
+            if now > time_sensor_active:
+                if now <= time_after_delay:
+                    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+                elif now > time_after_scan:
+                    assert hass.states.get(entity_id).state == STATE_ON
 
 
 @pytest.mark.parametrize(
