@@ -50,6 +50,8 @@ from .util import (
     most_frequent_attribute,
     reduce_attribute,
     states_equal,
+    find_state_attributes,
+    mean_tuple,
 )
 
 SUPPORTED_FLAGS = {
@@ -172,13 +174,6 @@ class FanGroup(GroupEntity, FanEntity):
                     self._fans[feature].add(entity_id)
                 else:
                     self._fans[feature].discard(entity_id)
-            preset_modes = new_state.attributes.get(ATTR_PRESET_MODES)
-            if self._preset_modes is None:
-                self._preset_modes = preset_modes
-            else:
-                self._preset_modes = [
-                    value for value in self._preset_modes if value in preset_modes
-                ]
 
         if update_state:
             self.async_defer_or_update_ha_state()
@@ -315,6 +310,17 @@ class FanGroup(GroupEntity, FanEntity):
         self._set_attr_most_frequent(
             "_preset_mode", SUPPORT_PRESET_MODE, ATTR_PRESET_MODE
         )
+
+        self._preset_modes = None
+        all_supported_preset_modes = list(
+            find_state_attributes(on_states, ATTR_PRESET_MODES)
+        )
+        if all_supported_preset_modes:
+            # Merge all presets mode from all prsets mode with a union merge.
+            self._preset_modes = list(set().union(*all_supported_preset_modes))
+            if "None" in self._preset_modes:
+                self._preset_modes.remove("None")
+                self._preset_modes.insert(0, "None")
 
         self._supported_features = reduce(
             ior, [feature for feature in SUPPORTED_FLAGS if self._fans[feature]], 0
