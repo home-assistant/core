@@ -797,7 +797,6 @@ homeassistant/components/roomba/* @pschmitt @cyr-ius @shenxn
 tests/components/roomba/* @pschmitt @cyr-ius @shenxn
 homeassistant/components/roon/* @pavoni
 tests/components/roon/* @pavoni
-homeassistant/components/rpi_gpio_pwm/* @soldag
 homeassistant/components/rpi_power/* @shenxn @swetoast
 tests/components/rpi_power/* @shenxn @swetoast
 homeassistant/components/rtsp_to_webrtc/* @allenporter

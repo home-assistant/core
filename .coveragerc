@@ -993,7 +993,6 @@ omit =
     homeassistant/components/rova/sensor.py
     homeassistant/components/rpi_camera/*
     homeassistant/components/rpi_gpio/*
-    homeassistant/components/rpi_gpio_pwm/light.py
     homeassistant/components/rpi_pfio/*
     homeassistant/components/rpi_rf/switch.py
     homeassistant/components/rtorrent/sensor.py
