@@ -1987,9 +1987,6 @@ python-tado==0.12.0
 # homeassistant.components.telegram_bot
 python-telegram-bot==13.1
 
-# homeassistant.components.twitch
-python-twitch-client==0.6.0
-
 # homeassistant.components.vlc
 python-vlc==1.1.2
 
@@ -2394,6 +2391,9 @@ twentemilieu==0.5.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
+
+# homeassistant.components.twitch
+twitchAPI==2.5.2
 
 # homeassistant.components.rainforest_eagle
 uEagle==0.0.2
