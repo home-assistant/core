@@ -129,33 +129,9 @@ class SamsungTVBridge(ABC):
     async def async_is_on(self) -> bool:
         """Tells if the TV is on."""
 
+    @abstractmethod
     async def async_send_key(self, key: str, key_type: str | None = None) -> None:
         """Send a key to the tv and handles exceptions."""
-        try:
-            # recreate connection if connection was dead
-            retry_count = 1
-            for _ in range(retry_count + 1):
-                try:
-                    await self._async_send_key(key, key_type)
-                    break
-                except (
-                    ConnectionClosed,
-                    BrokenPipeError,
-                    WebSocketException,
-                ):
-                    # BrokenPipe can occur when the commands is sent to fast
-                    # WebSocketException can occur when timed out
-                    self._remote = None
-        except (UnhandledResponse, AccessDenied):
-            # We got a response so it's on.
-            LOGGER.debug("Failed sending command %s", key, exc_info=True)
-        except OSError:
-            # Different reasons, e.g. hostname not resolveable
-            pass
-
-    @abstractmethod
-    async def _async_send_key(self, key: str, key_type: str | None = None) -> None:
-        """Send the key."""
 
     @abstractmethod
     def _get_remote(self, avoid_open: bool = False) -> Remote | SamsungTVWS:
@@ -279,6 +255,30 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             except (ConnectionClosed, OSError):
                 pass
         return self._remote
+
+    async def async_send_key(self, key: str, key_type: str | None = None) -> None:
+        """Send a key to the tv and handles exceptions."""
+        try:
+            # recreate connection if connection was dead
+            retry_count = 1
+            for _ in range(retry_count + 1):
+                try:
+                    await self._async_send_key(key, key_type)
+                    break
+                except (
+                    ConnectionClosed,
+                    BrokenPipeError,
+                    WebSocketException,
+                ):
+                    # BrokenPipe can occur when the commands is sent to fast
+                    # WebSocketException can occur when timed out
+                    self._remote = None
+        except (UnhandledResponse, AccessDenied):
+            # We got a response so it's on.
+            LOGGER.debug("Failed sending command %s", key, exc_info=True)
+        except OSError:
+            # Different reasons, e.g. hostname not resolveable
+            pass
 
     async def _async_send_key(self, key: str, key_type: str | None = None) -> None:
         """Send the key using legacy protocol."""
@@ -407,6 +407,30 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 return device_info
 
         return None
+
+    async def async_send_key(self, key: str, key_type: str | None = None) -> None:
+        """Send a key to the tv and handles exceptions."""
+        try:
+            # recreate connection if connection was dead
+            retry_count = 1
+            for _ in range(retry_count + 1):
+                try:
+                    await self._async_send_key(key, key_type)
+                    break
+                except (
+                    ConnectionClosed,
+                    BrokenPipeError,
+                    WebSocketException,
+                ):
+                    # BrokenPipe can occur when the commands is sent to fast
+                    # WebSocketException can occur when timed out
+                    self._remote = None
+        except (UnhandledResponse, AccessDenied):
+            # We got a response so it's on.
+            LOGGER.debug("Failed sending command %s", key, exc_info=True)
+        except OSError:
+            # Different reasons, e.g. hostname not resolveable
+            pass
 
     async def _async_send_key(self, key: str, key_type: str | None = None) -> None:
         """Send the key using websocket protocol."""
