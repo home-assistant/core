@@ -5,7 +5,7 @@ import asyncio
 import logging
 from typing import Any
 
-from rabbitair import Client, Model
+from rabbitair import Client, Model, State
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import DeviceInfo
@@ -18,14 +18,22 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-MODELS = {Model.BioGS: "BioGS 2.0", Model.MinusA2: "MinusA2", Model.A3: "A3"}
+MODELS = {
+    Model.A3: "A3",
+    Model.BioGS: "BioGS 2.0",
+    Model.MinusA2: "MinusA2",
+    None: None,
+}
 
 
-class RabbitAirBaseEntity(CoordinatorEntity):
+class RabbitAirBaseEntity(CoordinatorEntity[State]):
     """Base class for Rabbit Air entity."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, client: Client, entry: ConfigEntry
+        self,
+        coordinator: DataUpdateCoordinator[State],
+        client: Client,
+        entry: ConfigEntry,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
