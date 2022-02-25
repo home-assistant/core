@@ -632,7 +632,7 @@ async def test_entity_availability(hass: HomeAssistant):
     assert state.state == "unavailable"
 
 
-@pytest.mark.parametrize("port,entry_type", ((8009, None),))
+@pytest.mark.parametrize("port,entry_type", ((8009, None), (12345, None)))
 async def test_device_registry(hass: HomeAssistant, port, entry_type):
     """Test device registry integration."""
     entity_id = "media_player.speaker"
@@ -856,7 +856,6 @@ async def test_entity_browse_media(hass: HomeAssistant, hass_ws_client):
         "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
         "can_play": True,
         "can_expand": False,
-        "children_media_class": None,
         "thumbnail": None,
     }
     assert expected_child_1 in response["result"]["children"]
@@ -868,7 +867,6 @@ async def test_entity_browse_media(hass: HomeAssistant, hass_ws_client):
         "media_content_id": "media-source://media_source/local/test.mp3",
         "can_play": True,
         "can_expand": False,
-        "children_media_class": None,
         "thumbnail": None,
     }
     assert expected_child_2 in response["result"]["children"]
@@ -912,7 +910,6 @@ async def test_entity_browse_media_audio_only(
         "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
         "can_play": True,
         "can_expand": False,
-        "children_media_class": None,
         "thumbnail": None,
     }
     assert expected_child_1 not in response["result"]["children"]
@@ -924,7 +921,6 @@ async def test_entity_browse_media_audio_only(
         "media_content_id": "media-source://media_source/local/test.mp3",
         "can_play": True,
         "can_expand": False,
-        "children_media_class": None,
         "thumbnail": None,
     }
     assert expected_child_2 in response["result"]["children"]
@@ -1861,7 +1857,6 @@ async def test_cast_platform_browse_media(hass: HomeAssistant, hass_ws_client):
         "media_content_id": "",
         "can_play": False,
         "can_expand": True,
-        "children_media_class": None,
         "thumbnail": "https://brands.home-assistant.io/_/spotify/logo.png",
     }
     assert expected_child in response["result"]["children"]
@@ -1888,6 +1883,7 @@ async def test_cast_platform_browse_media(hass: HomeAssistant, hass_ws_client):
         "children_media_class": None,
         "thumbnail": None,
         "children": [],
+        "not_shown": 0,
     }
     assert response["result"] == expected_response
 

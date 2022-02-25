@@ -20,6 +20,7 @@ from pymodbus.transaction import ModbusRtuFramer
 import voluptuous as vol
 
 from homeassistant.const import (
+    ATTR_STATE,
     CONF_DELAY,
     CONF_HOST,
     CONF_METHOD,
@@ -39,7 +40,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     ATTR_ADDRESS,
     ATTR_HUB,
-    ATTR_STATE,
+    ATTR_SLAVE,
     ATTR_UNIT,
     ATTR_VALUE,
     CALL_TYPE_COIL,
@@ -156,7 +157,11 @@ async def async_modbus_setup(
 
     async def async_write_register(service: ServiceCall) -> None:
         """Write Modbus registers."""
-        unit = int(float(service.data[ATTR_UNIT]))
+        unit = 0
+        if ATTR_UNIT in service.data:
+            unit = int(float(service.data[ATTR_UNIT]))
+        if ATTR_SLAVE in service.data:
+            unit = int(float(service.data[ATTR_SLAVE]))
         address = int(float(service.data[ATTR_ADDRESS]))
         value = service.data[ATTR_VALUE]
         hub = hub_collect[
@@ -173,7 +178,11 @@ async def async_modbus_setup(
 
     async def async_write_coil(service: ServiceCall) -> None:
         """Write Modbus coil."""
-        unit = service.data[ATTR_UNIT]
+        unit = 0
+        if ATTR_UNIT in service.data:
+            unit = int(float(service.data[ATTR_UNIT]))
+        if ATTR_SLAVE in service.data:
+            unit = int(float(service.data[ATTR_SLAVE]))
         address = service.data[ATTR_ADDRESS]
         state = service.data[ATTR_STATE]
         hub = hub_collect[
@@ -195,7 +204,8 @@ async def async_modbus_setup(
             schema=vol.Schema(
                 {
                     vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
-                    vol.Required(ATTR_UNIT): cv.positive_int,
+                    vol.Exclusive(ATTR_SLAVE, "unit"): cv.positive_int,
+                    vol.Exclusive(ATTR_UNIT, "unit"): cv.positive_int,
                     vol.Required(ATTR_ADDRESS): cv.positive_int,
                     vol.Required(x_write[2]): vol.Any(
                         cv.positive_int, vol.All(cv.ensure_list, [x_write[3]])

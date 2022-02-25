@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositivo ya est\u00e1 configurado"
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "reauth_successful": "Reauntenticaci\u00f3n exitosa"
         },
         "error": {
             "cannot_connect": "No se pudo conectar",

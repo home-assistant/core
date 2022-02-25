@@ -120,10 +120,8 @@ CONFIG_SCHEMA = vol.Schema(
 def filter_libav_logging() -> None:
     """Filter libav logging to only log when the stream logger is at DEBUG."""
 
-    stream_debug_enabled = logging.getLogger(__name__).isEnabledFor(logging.DEBUG)
-
     def libav_filter(record: logging.LogRecord) -> bool:
-        return stream_debug_enabled
+        return logging.getLogger(__name__).isEnabledFor(logging.DEBUG)
 
     for logging_namespace in (
         "libav.mp4",
@@ -247,7 +245,7 @@ class Stream:
         self, fmt: str, timeout: int = OUTPUT_IDLE_TIMEOUT
     ) -> StreamOutput:
         """Add provider output stream."""
-        if not self._outputs.get(fmt):
+        if not (provider := self._outputs.get(fmt)):
 
             @callback
             def idle_callback() -> None:
@@ -261,7 +259,7 @@ class Stream:
                 self.hass, IdleTimer(self.hass, timeout, idle_callback)
             )
             self._outputs[fmt] = provider
-        return self._outputs[fmt]
+        return provider
 
     def remove_provider(self, provider: StreamOutput) -> None:
         """Remove provider output stream."""

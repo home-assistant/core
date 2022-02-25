@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No se han encontrado dispositivos en la red"
+        },
+        "step": {
+            "user": {
+                "description": "Escoge un dispositivo a configurar"
+            }
+        }
+    }
+}
