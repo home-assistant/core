@@ -89,7 +89,7 @@ class AbodeCamera(AbodeDevice, Camera):
     ) -> bytes | None:
         """Get a camera image."""
         if not self.capture():
-           return None
+            return None
         self.refresh_image()
 
         if self._response:
