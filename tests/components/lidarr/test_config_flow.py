@@ -7,9 +7,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components.lidarr.const import (
     CONF_MAX_RECORDS,
     CONF_UPCOMING_DAYS,
-    DEFAULT_MAX_RECORDS,
     DEFAULT_NAME,
-    DEFAULT_UPCOMING_DAYS,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
@@ -43,6 +41,7 @@ async def test_flow_user_form(
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == CONF_DATA
+    assert result["options"] == {CONF_MAX_RECORDS: 1000, CONF_UPCOMING_DAYS: 7}
 
 
 async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
@@ -150,10 +149,6 @@ async def test_options_flow(
 ):
     """Test updating options."""
     entry = create_entry(hass)
-
-    assert entry.options[CONF_UPCOMING_DAYS] == DEFAULT_UPCOMING_DAYS
-    assert entry.options[CONF_MAX_RECORDS] == DEFAULT_MAX_RECORDS
-
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

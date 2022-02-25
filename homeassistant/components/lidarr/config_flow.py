@@ -87,7 +87,14 @@ class LidarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
                     return self.async_abort(reason="reauth_successful")
 
-                return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
+                return self.async_create_entry(
+                    title=DEFAULT_NAME,
+                    data=user_input,
+                    options={
+                        CONF_UPCOMING_DAYS: DEFAULT_UPCOMING_DAYS,
+                        CONF_MAX_RECORDS: DEFAULT_MAX_RECORDS,
+                    },
+                )
 
         user_input = user_input or {}
         return self.async_show_form(

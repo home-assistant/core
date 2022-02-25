@@ -13,14 +13,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    CONF_MAX_RECORDS,
-    CONF_UPCOMING_DAYS,
-    DEFAULT_MAX_RECORDS,
-    DEFAULT_NAME,
-    DEFAULT_UPCOMING_DAYS,
-    DOMAIN,
-)
+from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import LidarrDataUpdateCoordinator
 
 PLATFORMS = [SENSOR_DOMAIN]
@@ -28,14 +21,6 @@ PLATFORMS = [SENSOR_DOMAIN]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Lidarr from a config entry."""
-    if not entry.options:
-        options = {
-            CONF_UPCOMING_DAYS: entry.data.get(
-                CONF_UPCOMING_DAYS, DEFAULT_UPCOMING_DAYS
-            ),
-            CONF_MAX_RECORDS: entry.data.get(CONF_MAX_RECORDS, DEFAULT_MAX_RECORDS),
-        }
-        hass.config_entries.async_update_entry(entry, options=options)
     host_configuration = PyArrHostConfiguration(
         api_token=entry.data[CONF_API_KEY],
         verify_ssl=entry.data[CONF_VERIFY_SSL],
@@ -48,11 +33,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     coordinator = LidarrDataUpdateCoordinator(hass, host_configuration, api_client)
     await coordinator.async_config_entry_first_refresh()
-
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -60,9 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
@@ -76,17 +56,18 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
 class LidarrEntity(CoordinatorEntity):
     """Defines a base Lidarr entity."""
 
+    coordinator: LidarrDataUpdateCoordinator
+
     def __init__(
         self,
         coordinator: LidarrDataUpdateCoordinator,
-        entry_id: str,
     ) -> None:
         """Initialize the Lidarr entity."""
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
             configuration_url=coordinator.host_configuration.base_url,
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, entry_id)},
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer=DEFAULT_NAME,
             name=DEFAULT_NAME,
             sw_version=coordinator.system_status.version,

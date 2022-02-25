@@ -1,6 +1,7 @@
 """Support for Lidarr."""
 from __future__ import annotations
 
+from datetime import datetime
 from typing import cast
 
 from aiopyarr import Diskspace, LidarrQueueItem
@@ -65,16 +66,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Lidarr sensors based on a config entry."""
-    entities = [
+    async_add_entities(
         LidarrSensor(
             hass.data[DOMAIN][entry.entry_id],
             description,
-            entry.entry_id,
         )
         for description in SENSOR_TYPES
-    ]
-
-    async_add_entities(entities, True)
+    )
 
 
 class LidarrSensor(LidarrEntity, SensorEntity):
@@ -86,16 +84,15 @@ class LidarrSensor(LidarrEntity, SensorEntity):
         self,
         coordinator: LidarrDataUpdateCoordinator,
         description: SensorEntityDescription,
-        entry_id: str,
     ) -> None:
         """Create Lidarr entity."""
-        super().__init__(coordinator, entry_id)
+        super().__init__(coordinator)
         self.entity_description = description
         self._attr_name = f"Lidarr {description.name}"
-        self._attr_unique_id = f"{entry_id}/{description.name}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}/{description.name}"
 
     @property
-    def extra_state_attributes(self) -> dict[str, StateType]:
+    def extra_state_attributes(self) -> dict[str, StateType | datetime]:
         """Return the state attributes of the sensor."""
         if self.entity_description.key == "commands":
             return {c.name: c.status for c in self.coordinator.commands}
@@ -113,7 +110,7 @@ class LidarrSensor(LidarrEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if self.entity_description.key == "commands":
-            return len(list({command.name for command in self.coordinator.commands}))
+            return len(self.coordinator.commands)
         if self.entity_description.key == "diskspace":
             fre = sum(m.freeSpace for m in self.coordinator.disk_space)
             return f"{to_unit(fre, cast(str, self.native_unit_of_measurement)):.2f}"
@@ -126,11 +123,13 @@ class LidarrSensor(LidarrEntity, SensorEntity):
         return self.coordinator.wanted.totalRecords
 
 
-def to_attr(albums: list[LidarrCalendar] | list[LidarrAlbum]) -> dict[str, StateType]:
+def to_attr(
+    albums: list[LidarrCalendar] | list[LidarrAlbum],
+) -> dict[str, StateType | datetime]:
     """Get attributes."""
     if len(albums) > 0 and isinstance(albums[0], LidarrCalendar):
         return {
-            f"{album.title} ({album.artist.artistName})": album.releaseDate.isoformat()
+            f"{album.title} ({album.artist.artistName})": album.releaseDate
             for album in albums
         }
     return {
@@ -139,6 +138,7 @@ def to_attr(albums: list[LidarrCalendar] | list[LidarrAlbum]) -> dict[str, State
             album.artist.artistName,
         ): f"{album.statistics.trackFileCount}/{album.statistics.trackCount}"
         for album in albums
+        if hasattr(album.statistics, "trackFileCount")
     }
 
 
