@@ -49,6 +49,7 @@ from .const import (
 DOMAIN = "rfxtrx"
 
 DEFAULT_SIGNAL_REPETITIONS = 1
+DEFAULT_OFF_DELAY = 2.0
 
 SIGNAL_EVENT = f"{DOMAIN}_event"
 
@@ -81,6 +82,7 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.BINARY_SENSOR,
     Platform.COVER,
+    Platform.SIREN,
 ]
 
 
