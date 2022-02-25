@@ -39,12 +39,9 @@ class RabbitAirBaseEntity(CoordinatorEntity[State]):
         super().__init__(coordinator)
         self._client = client
         self._entry = entry
-        # Use assert to suppress the type warning. We always set a unique ID in
-        # the config flow, so it should never be None.
-        assert entry.unique_id is not None
         self._attr_unique_id = entry.unique_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.unique_id)},
+            identifiers={(DOMAIN, entry.unique_id)},  # type: ignore[arg-type]
             manufacturer="Rabbit Air",
             model=MODELS.get(coordinator.data.model),
             name=entry.title,
