@@ -35,6 +35,7 @@ async def test_browsing_filter_non_hls(hass, mock_camera_web_rtc):
     assert item is not None
     assert item.title == "Camera"
     assert len(item.children) == 0
+    assert item.not_shown == 2
 
 
 async def test_resolving(hass, mock_camera_hls):
