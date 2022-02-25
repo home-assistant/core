@@ -5,7 +5,8 @@
         "data": {
           "description": "Sign-in with your Verisure My Pages account.",
           "email": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "2fa_enabled": "maf?"
         }
       },
       "installation": {
@@ -19,6 +20,12 @@
           "description": "Re-authenticate with your Verisure My Pages account.",
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "2fa": {
+        "data": {
+          "description": "provide 2fa code",
+          "2fa_code": "code"
         }
       }
     },

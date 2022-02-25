@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 from http import HTTPStatus
+from os import path
 
 from verisure import (
     Error as VerisureError,
@@ -27,11 +28,16 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize the Verisure hub."""
         self.imageseries: dict[str, list] = {}
         self.entry = entry
+        pth = hass.config.path(STORAGE_DIR, f"verisure_{entry.entry_id}")
+        if path.exists(
+            hass.config.path(STORAGE_DIR, f"verisure-{entry.data[CONF_EMAIL]}")
+        ):
+            pth = hass.config.path(STORAGE_DIR, f"verisure-{entry.data[CONF_EMAIL]}")
 
         self.verisure = Verisure(
             username=entry.data[CONF_EMAIL],
             password=entry.data[CONF_PASSWORD],
-            cookieFileName=hass.config.path(STORAGE_DIR, f"verisure_{entry.entry_id}"),
+            cookieFileName=pth,
         )
 
         super().__init__(

@@ -15,8 +15,11 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
+    CONF_2FA_CODE,
+    CONF_2FA_ENABLED,
     CONF_GIID,
     CONF_LOCK_CODE_DIGITS,
     CONF_LOCK_DEFAULT_CODE,
@@ -35,6 +38,7 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     entry: ConfigEntry
     installations: dict[str, str]
     password: str
+    session_for_setup: Verisure
 
     @staticmethod
     @callback
@@ -49,9 +53,20 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            verisure = Verisure(
-                username=user_input[CONF_EMAIL], password=user_input[CONF_PASSWORD]
+            path = self.hass.config.path(
+                STORAGE_DIR, f"verisure-{user_input[CONF_EMAIL]}"
             )
+            verisure = Verisure(
+                username=user_input[CONF_EMAIL],
+                password=user_input[CONF_PASSWORD],
+                cookieFileName=path,
+            )
+            if user_input[CONF_2FA_ENABLED]:
+                self.session_for_setup = verisure
+                await self.hass.async_add_executor_job(verisure.login_mfa)
+                self.email = user_input[CONF_EMAIL]
+                self.password = user_input[CONF_PASSWORD]
+                return await self.async_step_2fa()
             try:
                 await self.hass.async_add_executor_job(verisure.login)
             except VerisureLoginError as ex:
@@ -76,6 +91,7 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_EMAIL): str,
                     vol.Required(CONF_PASSWORD): str,
+                    vol.Optional(CONF_2FA_ENABLED): bool,
                 }
             ),
             errors=errors,
@@ -158,6 +174,40 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+        )
+
+    async def async_step_2fa(self, user_input: dict[str, Any] = None) -> FlowResult:
+        """Handle 2FA step."""
+        if user_input is not None:
+            verisure = self.session_for_setup
+            try:
+                await self.hass.async_add_executor_job(
+                    verisure.mfa_validate, user_input[CONF_2FA_CODE], "yes"
+                )
+                await self.hass.async_add_executor_job(verisure.login)
+            except VerisureLoginError as ex:
+                LOGGER.debug("Could not log in to Verisure, %s", ex)
+                return self.async_abort(reason="invalid_2fa")
+            except (VerisureError, VerisureResponseError) as ex:
+                LOGGER.debug("Unexpected response from Verisure, %s", ex)
+                return self.async_abort(reason="unknown")
+            else:
+                self.installations = {
+                    inst["giid"]: f"{inst['alias']} ({inst['street']})"
+                    for inst in verisure.installations
+                }
+
+                return await self.async_step_installation()
+
+        return self.async_show_form(
+            step_id="2fa",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_2FA_CODE): vol.All(
+                        vol.Length(min=6, max=6), vol.Coerce(str)
+                    )
+                }
+            ),
         )
 
 

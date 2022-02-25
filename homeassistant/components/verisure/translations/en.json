@@ -9,6 +9,12 @@
             "unknown": "Unexpected error"
         },
         "step": {
+            "2fa": {
+                "data": {
+                    "2fa_code": "code",
+                    "description": "provide 2fa code"
+                }
+            },
             "installation": {
                 "data": {
                     "giid": "Installation"
@@ -24,6 +30,7 @@
             },
             "user": {
                 "data": {
+                    "2fa_enabled": "maf",
                     "description": "Sign-in with your Verisure My Pages account.",
                     "email": "Email",
                     "password": "Password"
