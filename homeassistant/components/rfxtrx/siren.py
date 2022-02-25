@@ -105,7 +105,7 @@ async def async_setup_entry(
     )
 
 
-class RfxtrxTimeoutMixin(Entity):
+class RfxtrxOffDelayMixin(Entity):
     """Mixin to support timeouts on data.
 
     Many 433 devices only send data when active. They will
@@ -116,7 +116,7 @@ class RfxtrxTimeoutMixin(Entity):
     """
 
     _timeout: CALLBACK_TYPE | None = None
-    _timeout_seconds: float | None = None
+    _off_delay: float | None = None
 
     def _setup_timeout(self):
         @callback
@@ -124,8 +124,8 @@ class RfxtrxTimeoutMixin(Entity):
             self._timeout = None
             self.async_write_ha_state()
 
-        if self._timeout_seconds:
-            self._timeout = async_call_later(self.hass, self._timeout_seconds, _done)
+        if self._off_delay:
+            self._timeout = async_call_later(self.hass, self._off_delay, _done)
 
     def _cancel_timeout(self):
         if self._timeout:
@@ -133,7 +133,7 @@ class RfxtrxTimeoutMixin(Entity):
             self._timeout = None
 
 
-class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxTimeoutMixin):
+class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin):
     """Representation of a RFXtrx chime."""
 
     _device: rfxtrxmod.ChimeDevice
@@ -146,7 +146,7 @@ class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxTimeoutMixin):
         self._attr_available_tones = list(self._device.COMMANDS.values())
         self._attr_supported_features = SUPPORT_TURN_ON | SUPPORT_TONES
         self._default_tone = next(iter(self._device.COMMANDS))
-        self._timeout_seconds = off_delay
+        self._off_delay = off_delay
 
     @property
     def is_on(self):
@@ -186,7 +186,7 @@ class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxTimeoutMixin):
             self.async_write_ha_state()
 
 
-class RfxtrxSecurityPanic(RfxtrxCommandEntity, SirenEntity, RfxtrxTimeoutMixin):
+class RfxtrxSecurityPanic(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin):
     """Representation of a security device."""
 
     _device: rfxtrxmod.SecurityDevice
@@ -199,7 +199,7 @@ class RfxtrxSecurityPanic(RfxtrxCommandEntity, SirenEntity, RfxtrxTimeoutMixin):
         self._attr_supported_features = SUPPORT_TURN_ON | SUPPORT_TURN_OFF
         self._on_value = get_first_key(self._device.STATUS, SECURITY_PANIC_ON)
         self._off_value = get_first_key(self._device.STATUS, SECURITY_PANIC_OFF)
-        self._timeout_seconds = off_delay
+        self._off_delay = off_delay
 
     @property
     def is_on(self):
