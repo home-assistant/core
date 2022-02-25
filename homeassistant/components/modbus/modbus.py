@@ -20,6 +20,7 @@ from pymodbus.transaction import ModbusRtuFramer
 import voluptuous as vol
 
 from homeassistant.const import (
+    ATTR_STATE,
     CONF_DELAY,
     CONF_HOST,
     CONF_METHOD,
@@ -40,7 +41,6 @@ from .const import (
     ATTR_ADDRESS,
     ATTR_HUB,
     ATTR_SLAVE,
-    ATTR_STATE,
     ATTR_UNIT,
     ATTR_VALUE,
     CALL_TYPE_COIL,
