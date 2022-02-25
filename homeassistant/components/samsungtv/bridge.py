@@ -67,7 +67,7 @@ async def async_get_device_info(
     bridge = SamsungTVBridge.get_bridge(hass, METHOD_LEGACY, host, LEGACY_PORT)
     result = await bridge.async_try_connect()
     if result in (RESULT_SUCCESS, RESULT_AUTH_MISSING):
-        return LEGACY_PORT, METHOD_LEGACY, None
+        return LEGACY_PORT, METHOD_LEGACY, await bridge.async_device_info()
 
     return None, None, None
 
