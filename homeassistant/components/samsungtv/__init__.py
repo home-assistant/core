@@ -39,7 +39,6 @@ from .const import (
     LEGACY_PORT,
     LOGGER,
     METHOD_LEGACY,
-    METHOD_WEBSOCKET,
 )
 
 
@@ -173,7 +172,7 @@ async def _async_create_bridge_with_updated_data(
     bridge = _async_get_device_bridge(hass, {**entry.data, **updated_data})
 
     mac: str | None = entry.data.get(CONF_MAC)
-    if not mac and bridge.method == METHOD_WEBSOCKET:
+    if not mac:
         if info:
             mac = mac_from_device_info(info)
         else:
