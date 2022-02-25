@@ -188,8 +188,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             self._close_remote()
 
         try:
-            remote = self._get_remote()
-            return remote is not None
+            return self._get_remote() is not None
         except (UnhandledResponse, AccessDenied):
             # We got a response so it's working.
             return True
@@ -342,8 +341,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
             self._close_remote()
 
         try:
-            remote = self._get_remote()
-            return remote is not None
+            return self._get_remote() is not None
         except ConnectionFailure:
             # We got a response so it's working.
             return True
