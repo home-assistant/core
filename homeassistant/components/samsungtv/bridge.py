@@ -137,15 +137,9 @@ class SamsungTVBridge(ABC):
     def _get_remote(self, avoid_open: bool = False) -> Remote | SamsungTVWS:
         """Get Remote object."""
 
+    @abstractmethod
     async def async_close_remote(self) -> None:
         """Close remote object."""
-        try:
-            if self._remote is not None:
-                # Close the current remote connection
-                await self.hass.async_add_executor_job(self._remote.close)
-            self._remote = None
-        except OSError:
-            LOGGER.debug("Could not establish connection")
 
     def _notify_reauth_callback(self) -> None:
         """Notify access denied callback."""
@@ -288,6 +282,16 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         """Send the key using legacy protocol."""
         if remote := self._get_remote():
             remote.control(key)
+
+    async def async_close_remote(self) -> None:
+        """Close remote object."""
+        try:
+            if self._remote is not None:
+                # Close the current remote connection
+                await self.hass.async_add_executor_job(self._remote.close)
+            self._remote = None
+        except OSError:
+            LOGGER.debug("Could not establish connection")
 
     async def async_stop(self) -> None:
         """Stop Bridge."""
@@ -483,6 +487,16 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     self.token = self._remote.token
                     self._notify_new_token_callback()
         return self._remote
+
+    async def async_close_remote(self) -> None:
+        """Close remote object."""
+        try:
+            if self._remote is not None:
+                # Close the current remote connection
+                await self.hass.async_add_executor_job(self._remote.close)
+            self._remote = None
+        except OSError:
+            LOGGER.debug("Could not establish connection")
 
     async def async_stop(self) -> None:
         """Stop Bridge."""
