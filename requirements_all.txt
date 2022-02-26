@@ -307,6 +307,9 @@ anel_pwrctrl-homeassistant==0.0.1.dev2
 # homeassistant.components.anthemav
 anthemav==1.2.0
 
+# homeassistant.components.apcupsd
+apcaccess==0.0.13
+
 # homeassistant.components.apprise
 apprise==0.9.7
 
