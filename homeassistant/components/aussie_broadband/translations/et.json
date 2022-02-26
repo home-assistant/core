@@ -18,6 +18,13 @@
                 "description": "{username} salas\u00f5na v\u00e4rskendamine",
                 "title": "Taastuvasta sidumine"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                },
+                "description": "{username} salas\u00f5na v\u00e4rskendamine",
+                "title": "Taastuvasta sidumine"
+            },
             "service": {
                 "data": {
                     "services": "Teenused"

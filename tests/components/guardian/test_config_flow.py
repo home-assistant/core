@@ -13,6 +13,8 @@ from homeassistant.components.guardian.config_flow import (
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 
+from tests.common import MockConfigEntry
+
 
 async def test_duplicate_error(hass, config, config_entry, setup_guardian):
     """Test that errors are shown when duplicate entries are added."""
@@ -72,6 +74,7 @@ async def test_step_zeroconf(hass, setup_guardian):
     """Test the zeroconf step."""
     zeroconf_data = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.100",
+        addresses=["192.168.1.100"],
         port=7777,
         hostname="GVC1-ABCD.local.",
         type="_api._udp.local.",
@@ -101,6 +104,7 @@ async def test_step_zeroconf_already_in_progress(hass):
     """Test the zeroconf step aborting because it's already in progress."""
     zeroconf_data = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.100",
+        addresses=["192.168.1.100"],
         port=7777,
         hostname="GVC1-ABCD.local.",
         type="_api._udp.local.",
@@ -166,3 +170,45 @@ async def test_step_dhcp_already_in_progress(hass):
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_in_progress"
+
+
+async def test_step_dhcp_already_setup_match_mac(hass):
+    """Test we abort if the device is already setup with matching unique id and discovered via DHCP."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"}, unique_id="guardian_ABCD"
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=dhcp.DhcpServiceInfo(
+            ip="192.168.1.100",
+            hostname="GVC1-ABCD.local.",
+            macaddress="aa:bb:cc:dd:ab:cd",
+        ),
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_step_dhcp_already_setup_match_ip(hass):
+    """Test we abort if the device is already setup with matching ip and discovered via DHCP."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: "192.168.1.100"},
+        unique_id="guardian_0000",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=dhcp.DhcpServiceInfo(
+            ip="192.168.1.100",
+            hostname="GVC1-ABCD.local.",
+            macaddress="aa:bb:cc:dd:ab:cd",
+        ),
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"

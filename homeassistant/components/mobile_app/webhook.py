@@ -44,7 +44,7 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
+from homeassistant.helpers.entity import validate_entity_category
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -109,7 +109,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DELAY_SAVE = 10
 
-WEBHOOK_COMMANDS = Registry()
+WEBHOOK_COMMANDS = Registry()  # type: ignore[var-annotated]
 
 COMBINED_CLASSES = set(BINARY_SENSOR_CLASSES + SENSOR_CLASSES)
 SENSOR_TYPES = [ATTR_SENSOR_TYPE_BINARY_SENSOR, ATTR_SENSOR_TYPE_SENSOR]
@@ -423,7 +423,7 @@ def _validate_state_class_sensor(value: dict):
             vol.Optional(ATTR_SENSOR_STATE, default=None): vol.Any(
                 None, bool, str, int, float
             ),
-            vol.Optional(ATTR_SENSOR_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+            vol.Optional(ATTR_SENSOR_ENTITY_CATEGORY): validate_entity_category,
             vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): cv.icon,
             vol.Optional(ATTR_SENSOR_STATE_CLASS): vol.In(SENSOSR_STATE_CLASSES),
         },

@@ -12,7 +12,7 @@ from async_upnp_client.exceptions import UpnpError
 from async_upnp_client.profiles.igd import IgdDevice
 
 from homeassistant.components import ssdp
-from homeassistant.components.ssdp import SsdpChange
+from homeassistant.components.ssdp import SsdpChange, SsdpServiceInfo
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -71,19 +71,22 @@ class Device:
         return device
 
     async def async_ssdp_callback(
-        self, headers: Mapping[str, Any], change: SsdpChange
+        self, service_info: SsdpServiceInfo, change: SsdpChange
     ) -> None:
         """SSDP callback, update if needed."""
-        _LOGGER.debug("SSDP Callback, change: %s, headers: %s", change, headers)
-        if ssdp.ATTR_SSDP_LOCATION not in headers:
+        _LOGGER.debug(
+            "SSDP Callback, change: %s, headers: %s", change, service_info.ssdp_headers
+        )
+        if service_info.ssdp_location is None:
             return
 
-        location = headers[ssdp.ATTR_SSDP_LOCATION]
         device = self._igd_device.device
-        if location == device.device_url:
+        if service_info.ssdp_location == device.device_url:
             return
 
-        new_upnp_device = await async_create_upnp_device(self.hass, location)
+        new_upnp_device = await async_create_upnp_device(
+            self.hass, service_info.ssdp_location
+        )
         device.reinit(new_upnp_device)
 
     @property

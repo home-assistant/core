@@ -51,7 +51,8 @@ class HASensemeLight(SensemeEntity, LightEntity):
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
         self._attr_is_on = self._device.light_on
-        self._attr_brightness = int(min(255, self._device.light_brightness * 16))
+        if self._device.light_brightness is not None:
+            self._attr_brightness = int(min(255, self._device.light_brightness * 16))
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""

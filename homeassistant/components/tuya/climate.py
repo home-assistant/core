@@ -73,11 +73,23 @@ CLIMATE_DESCRIPTIONS: dict[str, TuyaClimateEntityDescription] = {
         key="qn",
         switch_only_hvac_mode=HVAC_MODE_HEAT,
     ),
+    # Heater
+    # https://developer.tuya.com/en/docs/iot/categoryrs?id=Kaiuz0nfferyx
+    "rs": TuyaClimateEntityDescription(
+        key="rs",
+        switch_only_hvac_mode=HVAC_MODE_HEAT,
+    ),
     # Thermostat
     # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
     "wk": TuyaClimateEntityDescription(
         key="wk",
         switch_only_hvac_mode=HVAC_MODE_HEAT_COOL,
+    ),
+    # Thermostatic Radiator Valve
+    # Not documented
+    "wkf": TuyaClimateEntityDescription(
+        key="wkf",
+        switch_only_hvac_mode=HVAC_MODE_HEAT,
     ),
 }
 
@@ -155,8 +167,12 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         self._attr_temperature_unit = TEMP_CELSIUS
 
         # Figure out current temperature, use preferred unit or what is available
-        celsius_type = self.find_dpcode(DPCode.TEMP_CURRENT, dptype=DPType.INTEGER)
-        farhenheit_type = self.find_dpcode(DPCode.TEMP_CURRENT_F, dptype=DPType.INTEGER)
+        celsius_type = self.find_dpcode(
+            (DPCode.TEMP_CURRENT, DPCode.UPPER_TEMP), dptype=DPType.INTEGER
+        )
+        farhenheit_type = self.find_dpcode(
+            (DPCode.TEMP_CURRENT_F, DPCode.UPPER_TEMP_F), dptype=DPType.INTEGER
+        )
         if farhenheit_type and (
             prefered_temperature_unit == TEMP_FAHRENHEIT
             or (prefered_temperature_unit == TEMP_CELSIUS and not celsius_type)
@@ -223,7 +239,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
         # Determine fan modes
         if enum_type := self.find_dpcode(
-            DPCode.FAN_SPEED_ENUM, dptype=DPType.ENUM, prefer_function=True
+            (DPCode.FAN_SPEED_ENUM, DPCode.WINDSPEED),
+            dptype=DPType.ENUM,
+            prefer_function=True,
         ):
             self._attr_supported_features |= SUPPORT_FAN_MODE
             self._attr_fan_modes = enum_type.range
@@ -346,6 +364,13 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         temperature = self.device.status.get(self._current_temperature.dpcode)
         if temperature is None:
             return None
+
+        if self._current_temperature.scale == 0 and self._current_temperature.step != 1:
+            # The current temperature can have a scale of 0 or 1 and is used for
+            # rounding, Home Assistant doesn't need to round but we will always
+            # need to divide the value by 10^1 in case of 0 as scale.
+            # https://developer.tuya.com/en/docs/iot/shift-temperature-scale-follow-the-setting-of-app-account-center?id=Ka9qo7so58efq#title-7-Round%20values
+            temperature = temperature / 10
 
         return self._current_temperature.scale_value(temperature)
 

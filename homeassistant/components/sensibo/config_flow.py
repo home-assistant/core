@@ -6,7 +6,8 @@ import logging
 
 import aiohttp
 import async_timeout
-from pysensibo import SensiboClient, SensiboError
+from pysensibo import SensiboClient
+from pysensibo.exceptions import AuthenticationError, SensiboError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -16,7 +17,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import _INITIAL_FETCH_FIELDS, DEFAULT_NAME, DOMAIN, TIMEOUT
+from .const import DEFAULT_NAME, DOMAIN, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,11 +38,12 @@ async def async_validate_api(hass: HomeAssistant, api_key: str) -> bool:
 
     try:
         async with async_timeout.timeout(TIMEOUT):
-            if await client.async_get_devices(_INITIAL_FETCH_FIELDS):
+            if await client.async_get_devices():
                 return True
     except (
         aiohttp.ClientConnectionError,
         asyncio.TimeoutError,
+        AuthenticationError,
         SensiboError,
     ) as err:
         _LOGGER.error("Failed to get devices from Sensibo servers %s", err)

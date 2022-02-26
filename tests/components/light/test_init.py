@@ -1899,7 +1899,8 @@ async def test_light_service_call_color_temp_conversion(
     _, data = entity0.last_call("turn_on")
     assert data == {"brightness": 255, "color_temp": 153}
     _, data = entity1.last_call("turn_on")
-    assert data == {"brightness": 255, "rgbww_color": (0, 0, 0, 0, 255)}
+    # Home Assistant uses RGBCW so a mireds of 153 should be maximum cold at 100% brightness so 255
+    assert data == {"brightness": 255, "rgbww_color": (0, 0, 0, 255, 0)}
 
     await hass.services.async_call(
         "light",
@@ -1917,7 +1918,63 @@ async def test_light_service_call_color_temp_conversion(
     _, data = entity0.last_call("turn_on")
     assert data == {"brightness": 128, "color_temp": 500}
     _, data = entity1.last_call("turn_on")
-    assert data == {"brightness": 128, "rgbww_color": (0, 0, 0, 128, 0)}
+    # Home Assistant uses RGBCW so a mireds of 500 should be maximum warm at 50% brightness so 128
+    assert data == {"brightness": 128, "rgbww_color": (0, 0, 0, 0, 128)}
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": [
+                entity0.entity_id,
+                entity1.entity_id,
+            ],
+            "brightness_pct": 100,
+            "color_temp": 327,
+        },
+        blocking=True,
+    )
+    _, data = entity0.last_call("turn_on")
+    assert data == {"brightness": 255, "color_temp": 327}
+    _, data = entity1.last_call("turn_on")
+    # Home Assistant uses RGBCW so a mireds of 328 should be the midway point at 100% brightness so 127 (rounding), 128
+    assert data == {"brightness": 255, "rgbww_color": (0, 0, 0, 127, 128)}
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": [
+                entity0.entity_id,
+                entity1.entity_id,
+            ],
+            "brightness_pct": 100,
+            "color_temp": 240,
+        },
+        blocking=True,
+    )
+    _, data = entity0.last_call("turn_on")
+    assert data == {"brightness": 255, "color_temp": 240}
+    _, data = entity1.last_call("turn_on")
+    assert data == {"brightness": 255, "rgbww_color": (0, 0, 0, 191, 64)}
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": [
+                entity0.entity_id,
+                entity1.entity_id,
+            ],
+            "brightness_pct": 100,
+            "color_temp": 410,
+        },
+        blocking=True,
+    )
+    _, data = entity0.last_call("turn_on")
+    assert data == {"brightness": 255, "color_temp": 410}
+    _, data = entity1.last_call("turn_on")
+    assert data == {"brightness": 255, "rgbww_color": (0, 0, 0, 66, 189)}
 
 
 async def test_light_service_call_white_mode(hass, enable_custom_integrations):

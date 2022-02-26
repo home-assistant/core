@@ -10,7 +10,6 @@ from typing import Any, Final
 from unittest import mock
 
 from aiohomekit.model import Accessories, Accessory
-from aiohomekit.model.services import ServicesTypes
 from aiohomekit.testing import FakeController, FakePairing
 
 from homeassistant.components import zeroconf
@@ -175,7 +174,9 @@ async def setup_platform(hass):
     """Load the platform but with a fake Controller API."""
     config = {"discovery": {}}
 
-    with mock.patch("aiohomekit.Controller") as controller:
+    with mock.patch(
+        "homeassistant.components.homekit_controller.utils.Controller"
+    ) as controller:
         fake_controller = controller.return_value = FakeController()
         await async_setup_component(hass, DOMAIN, config)
 
@@ -221,6 +222,7 @@ async def device_config_changed(hass, accessories):
 
     discovery_info = zeroconf.ZeroconfServiceInfo(
         host="127.0.0.1",
+        addresses=["127.0.0.1"],
         hostname="mock_hostname",
         name="TestDevice",
         port=8080,
@@ -261,7 +263,7 @@ async def setup_test_component(hass, setup_accessory, capitalize=False, suffix=N
 
     domain = None
     for service in accessory.services:
-        service_name = ServicesTypes.get_short_uuid(service.type)
+        service_name = service.type
         if service_name in HOMEKIT_ACCESSORY_DISPATCH:
             domain = HOMEKIT_ACCESSORY_DISPATCH[service_name]
             break

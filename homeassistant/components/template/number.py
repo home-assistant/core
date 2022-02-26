@@ -108,6 +108,7 @@ class TemplateNumber(TemplateEntity, NumberEntity):
     ) -> None:
         """Initialize the number."""
         super().__init__(hass, config=config, unique_id=unique_id)
+        assert self._attr_name is not None
         self._value_template = config[CONF_STATE]
         self._command_set_value = Script(
             hass, config[CONF_SET_VALUE], self._attr_name, DOMAIN

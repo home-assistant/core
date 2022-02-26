@@ -331,8 +331,7 @@ class GroupManager:
             heos_const.EVENT_CONNECTED,
             SIGNAL_HEOS_PLAYER_ADDED,
         ):
-            groups = await self.async_get_group_membership()
-            if groups:
+            if groups := await self.async_get_group_membership():
                 self._group_membership = groups
                 _LOGGER.debug("Groups updated due to change event")
                 # Let players know to update

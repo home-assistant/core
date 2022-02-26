@@ -9,6 +9,7 @@
     "models": ["PowerView"]
   },
   "dhcp": [
+    {"registered_devices": true},
     {
       "hostname": "hunter*",
       "macaddress": "002674*"

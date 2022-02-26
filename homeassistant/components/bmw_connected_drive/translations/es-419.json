@@ -12,7 +12,8 @@
         "step": {
             "account_options": {
                 "data": {
-                    "read_only": "Solo lectura (solo sensores y notificaci\u00f3n, sin ejecuci\u00f3n de servicios, sin bloqueo)"
+                    "read_only": "Solo lectura (solo sensores y notificaci\u00f3n, sin ejecuci\u00f3n de servicios, sin bloqueo)",
+                    "use_location": "Use la ubicaci\u00f3n de Home Assistant para encuestas de ubicaci\u00f3n de autom\u00f3viles (obligatorio para veh\u00edculos que no sean i3/i8 fabricados antes de julio de 2014)"
                 }
             }
         }

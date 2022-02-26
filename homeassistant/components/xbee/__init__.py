@@ -1,4 +1,5 @@
 """Support for XBee Zigbee devices."""
+# pylint: disable=import-error
 from binascii import hexlify, unhexlify
 import logging
 

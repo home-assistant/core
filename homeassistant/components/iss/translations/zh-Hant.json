@@ -9,7 +9,16 @@
                 "data": {
                     "show_on_map": "\u65bc\u5730\u5716\u986f\u793a\uff1f"
                 },
-                "description": "\u662f\u5426\u8981\u8a2d\u5b9a\u570b\u969b\u592a\u7a7a\u7ad9\uff1f"
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a\u570b\u969b\u592a\u7a7a\u7ad9\uff08ISS\uff09\uff1f"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "\u65bc\u5730\u5716\u986f\u793a"
+                }
             }
         }
     }
