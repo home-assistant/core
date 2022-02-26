@@ -737,7 +737,6 @@ homeassistant/components/panel_custom/* @home-assistant/frontend
 tests/components/panel_custom/* @home-assistant/frontend
 homeassistant/components/panel_iframe/* @home-assistant/frontend
 tests/components/panel_iframe/* @home-assistant/frontend
-homeassistant/components/pcal9535a/* @Shulyaka
 homeassistant/components/persistent_notification/* @home-assistant/core
 tests/components/persistent_notification/* @home-assistant/core
 homeassistant/components/philips_js/* @elupus
