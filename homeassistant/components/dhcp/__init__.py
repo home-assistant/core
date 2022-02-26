@@ -159,7 +159,7 @@ class WatcherBase:
     async def async_start(self):
         """Start the watcher."""
 
-    def process_client(self, ip_address, hostname, mac_address):
+    def process_client(self, ip_address: str, hostname: str, mac_address: str) -> None:
         """Process a client."""
         return run_callback_threadsafe(
             self.hass.loop,
@@ -170,7 +170,9 @@ class WatcherBase:
         ).result()
 
     @callback
-    def async_process_client(self, ip_address, hostname, mac_address):
+    def async_process_client(
+        self, ip_address: str, hostname: str, mac_address: str
+    ) -> None:
         """Process a client."""
         made_ip_address = make_ip_address(ip_address)
 
@@ -355,15 +357,15 @@ class DeviceTrackerRegisteredWatcher(WatcherBase):
     async def async_start(self):
         """Stop watching for device tracker registrations."""
         self._unsub = async_dispatcher_connect(
-            self.hass, CONNECTED_DEVICE_REGISTERED, self._async_process_device_state
+            self.hass, CONNECTED_DEVICE_REGISTERED, self._async_process_device_data
         )
 
     @callback
-    def _async_process_device_state(self, data: dict[str, Any]) -> None:
+    def _async_process_device_data(self, data: dict[str, str | None]) -> None:
         """Process a device tracker state."""
-        ip_address = data.get(ATTR_IP)
-        hostname = data.get(ATTR_HOST_NAME, "")
-        mac_address = data.get(ATTR_MAC)
+        ip_address = data[ATTR_IP]
+        hostname = data[ATTR_HOST_NAME] or ""
+        mac_address = data[ATTR_MAC]
 
         if ip_address is None or mac_address is None:
             return
