@@ -148,7 +148,7 @@ class GitHubDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @staticmethod
     async def _handle_error(error: GitHubException) -> None:
         """Handle an error."""
-        LOGGER.error("An error occurred while processing new event - %s", error)
+        LOGGER.error("An error occurred while processing new events - %s", error)
 
     async def subscribe(self) -> None:
         """Subscribe to repository events."""
