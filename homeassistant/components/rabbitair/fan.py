@@ -79,9 +79,9 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
         await self._set_state(power=False)
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
-        return self.coordinator.data.power is True
+        return self.coordinator.data.power
 
     @property
     def percentage(self) -> int | None:
