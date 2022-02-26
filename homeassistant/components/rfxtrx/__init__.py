@@ -12,7 +12,6 @@ import RFXtrx as rfxtrxmod
 import async_timeout
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -87,9 +86,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the RFXtrx component."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -163,7 +160,7 @@ def _get_device_lookup(devices):
     return lookup
 
 
-async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
+async def async_setup_internal(hass, entry: ConfigEntry):
     """Set up the RFXtrx component."""
     config = entry.data
 
@@ -285,7 +282,7 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
 
 async def async_setup_platform_entry(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
     supported: Callable[[rfxtrxmod.RFXtrxEvent], bool],
     constructor: Callable[
