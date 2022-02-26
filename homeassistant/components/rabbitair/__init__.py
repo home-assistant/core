@@ -33,7 +33,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host: str = entry.data[CONF_HOST]
     token: str = entry.data[CONF_ACCESS_TOKEN]
 
-    _LOGGER.debug("Initializing with host %s, token %s", host, token[:5])
     zeroconf_instance = await zeroconf.async_get_async_instance(hass)
     device: Client = UdpClient(host, token, zeroconf=zeroconf_instance)
 
