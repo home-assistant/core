@@ -29,8 +29,8 @@ from homeassistant.components.fan import (
     SERVICE_TURN_ON,
     SUPPORT_DIRECTION,
     SUPPORT_OSCILLATE,
-    SUPPORT_SET_SPEED,
     SUPPORT_PRESET_MODE,
+    SUPPORT_SET_SPEED,
 )
 from homeassistant.components.group import SERVICE_RELOAD
 from homeassistant.components.group.fan import DEFAULT_NAME
@@ -49,7 +49,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, get_fixture_path
-
 
 FAN_GROUP = "fan.fan_group"
 
@@ -402,8 +401,7 @@ async def test_preset_modes(hass, setup_comp):
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_MODE_SMART
     assert ATTR_ASSUMED_STATE not in state.attributes
 
-    ### Test assumed state ###
-    ##########################
+    # Test assumed state
     # Add Entity with a different preset_mode should set assumed state
     hass.states.async_set(
         PERCENTAGE_FULL_FAN_ENTITY_ID,
