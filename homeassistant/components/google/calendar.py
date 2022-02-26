@@ -156,12 +156,6 @@ class GoogleCalendarData:
             return True
         return event.get(TRANSPARENCY, OPAQUE) == OPAQUE
 
-    def _event_filter(self, event: dict[str, Any]) -> bool:
-        """Return True if the event is visible."""
-        if self.ignore_availability:
-            return True
-        return event.get(TRANSPARENCY, OPAQUE) == OPAQUE
-
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[dict[str, Any]]:
