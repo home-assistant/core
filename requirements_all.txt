@@ -50,7 +50,6 @@ PyViCare==2.16.1
 PyXiaomiGateway==0.13.4
 
 # homeassistant.components.bmp280
-# homeassistant.components.dht
 # homeassistant.components.mcp23017
 # homeassistant.components.rpi_gpio
 # homeassistant.components.rpi_rf
@@ -79,9 +78,6 @@ accuweather==0.3.0
 
 # homeassistant.components.bmp280
 adafruit-circuitpython-bmp280==3.1.1
-
-# homeassistant.components.dht
-adafruit-circuitpython-dht==3.7.0
 
 # homeassistant.components.mcp23017
 adafruit-circuitpython-mcp230xx==2.2.2
