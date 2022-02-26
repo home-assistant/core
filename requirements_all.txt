@@ -160,7 +160,7 @@ aioflo==2021.11.0
 aioftp==0.12.0
 
 # homeassistant.components.github
-aiogithubapi==22.2.3
+aiogithubapi==22.2.4
 
 # homeassistant.components.guardian
 aioguardian==2021.11.0
