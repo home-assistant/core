@@ -16,7 +16,6 @@ LEFT_METHOD = "left"
 RIGHT_METHOD = "right"
 INTEGRATION_METHOD = [TRAPEZOIDAL_METHOD, LEFT_METHOD, RIGHT_METHOD]
 
-# SI Metric prefixes
 UNIT_PREFIXES: dict[str | None, int] = {
     "k": 10**3,
     "M": 10**6,
@@ -25,7 +24,6 @@ UNIT_PREFIXES: dict[str | None, int] = {
 }
 PLATFORM_UNIT_PREFIXES: dict[str | None, int] = {None: 1, **UNIT_PREFIXES}
 
-# SI Time prefixes
 UNIT_TIME = {
     TIME_SECONDS: 1,
     TIME_MINUTES: 60,
