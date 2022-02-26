@@ -14,7 +14,7 @@ from aiogithubapi import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_UPDATE_INTERVAL, DOMAIN, LOGGER
+from .const import DEFAULT_UPDATE_INTERVAL, LOGGER
 
 GRAPHQL_REPOSITORY_QUERY = """
 query ($owner: String!, $repository: String!) {
@@ -114,7 +114,7 @@ class GitHubDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             LOGGER,
-            name=DOMAIN,
+            name=repository,
             update_interval=DEFAULT_UPDATE_INTERVAL,
         )
 
