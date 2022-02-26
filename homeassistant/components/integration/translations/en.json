@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "error": {
+            "unknown_error": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "method": "Method",
+                    "round": "Round",
+                    "source": "Source",
+                    "unit": "Unit",
+                    "unit_prefix": "Unit Prefix",
+                    "unit_time": "Unit Time"
+                }
+            }
+        }
+    }
+}

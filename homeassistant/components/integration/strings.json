@@ -1,0 +1,22 @@
+{
+    "config": {
+      "step": {
+        "user": {
+          "data": {
+            "method": "Method",
+            "round": "Round",
+            "source": "Source",
+            "unit": "Unit",
+            "unit_prefix": "Unit Prefix",
+            "unit_time": "Unit Time"
+          }
+        }
+      },
+      "error": {
+        "unknown_error": "[%key:common::config_flow::error::unknown%]"
+      },
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      }
+    }
+}
