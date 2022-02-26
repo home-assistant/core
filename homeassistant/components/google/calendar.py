@@ -41,6 +41,12 @@ DEFAULT_GOOGLE_SEARCH_PARAMS = {
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
+# Events have a transparency that determine whether or not they block time on calendar.
+# When an event is opaque, it means "Show me as busy" which is the default.  Events that
+# are not opaque are ignored by default.
+TRANSPARENCY = "transparency"
+OPAQUE = "opaque"
+
 
 def setup_platform(
     hass: HomeAssistant,
@@ -161,6 +167,12 @@ class GoogleCalendarData:
 
         return service, params
 
+    def _event_filter(self, event: dict[str, Any]) -> bool:
+        """Return True if the event is visible."""
+        if self.ignore_availability:
+            return True
+        return event.get(TRANSPARENCY, OPAQUE) == OPAQUE
+
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[dict[str, Any]]:
@@ -195,12 +207,8 @@ class GoogleCalendarData:
         result = await hass.async_add_executor_job(events.list(**params).execute)
 
         items = result.get("items", [])
-        for item in items:
-            if not self.ignore_availability and "transparency" in item:
-                if item["transparency"] == "opaque":
-                    event_list.append(item)
-            else:
-                event_list.append(item)
+        visible_items = filter(self._event_filter, items)
+        event_list.extend(visible_items)
         return result.get("nextPageToken")
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -215,15 +223,5 @@ class GoogleCalendarData:
         result = events.list(**params).execute()
 
         items = result.get("items", [])
-
-        new_event = None
-        for item in items:
-            if not self.ignore_availability and "transparency" in item:
-                if item["transparency"] == "opaque":
-                    new_event = item
-                    break
-            else:
-                new_event = item
-                break
-
-        self.event = new_event
+        valid_events = filter(self._event_filter, items)
+        self.event = next(valid_events, None)
