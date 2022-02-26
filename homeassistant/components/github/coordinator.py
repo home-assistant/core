@@ -16,7 +16,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, FALLBACK_UPDATE_INTERVAL, LOGGER, REFRESH_EVENT_TYPES
+from .const import FALLBACK_UPDATE_INTERVAL, LOGGER, REFRESH_EVENT_TYPES
 
 GRAPHQL_REPOSITORY_QUERY = """
 query ($owner: String!, $repository: String!) {
@@ -117,7 +117,7 @@ class GitHubDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             LOGGER,
-            name=DOMAIN,
+            name=repository,
             update_interval=FALLBACK_UPDATE_INTERVAL,
         )
 
