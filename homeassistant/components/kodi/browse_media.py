@@ -186,6 +186,15 @@ async def item_payload(item, get_thumbnail_url=None):
     )
 
 
+def media_source_content_filter(item: BrowseMedia) -> bool:
+    """Content filter for media sources."""
+    # Filter out cameras using PNG over MJPEG. They don't work in Kodi.
+    return not (
+        item.media_content_id.startswith("media-source://camera/")
+        and item.media_content_type == "image/png"
+    )
+
+
 async def library_payload(hass):
     """
     Create response payload to describe contents of a specific library.
@@ -224,8 +233,13 @@ async def library_payload(hass):
         )
     )
 
+    for child in library_info.children:
+        child.thumbnail = "https://brands.home-assistant.io/_/kodi/logo.png"
+
     with contextlib.suppress(media_source.BrowseError):
-        item = await media_source.async_browse_media(hass, None)
+        item = await media_source.async_browse_media(
+            hass, None, content_filter=media_source_content_filter
+        )
         # If domain is None, it's overview of available sources
         if item.domain is None:
             library_info.children.extend(item.children)

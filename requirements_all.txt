@@ -160,7 +160,7 @@ aioflo==2021.11.0
 aioftp==0.12.0
 
 # homeassistant.components.github
-aiogithubapi==22.2.3
+aiogithubapi==22.2.4
 
 # homeassistant.components.guardian
 aioguardian==2021.11.0
@@ -306,6 +306,9 @@ anel_pwrctrl-homeassistant==0.0.1.dev2
 
 # homeassistant.components.anthemav
 anthemav==1.2.0
+
+# homeassistant.components.apcupsd
+apcaccess==0.0.13
 
 # homeassistant.components.apprise
 apprise==0.9.7
@@ -786,7 +789,7 @@ habitipy==0.2.0
 hangups==0.4.17
 
 # homeassistant.components.cloud
-hass-nabucasa==0.53.1
+hass-nabucasa==0.54.0
 
 # homeassistant.components.splunk
 hass_splunk==0.1.1

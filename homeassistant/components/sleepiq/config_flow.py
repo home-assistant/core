@@ -1,6 +1,7 @@
 """Config flow to configure SleepIQ component."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from asyncsleepiq import AsyncSleepIQ, SleepIQLoginException, SleepIQTimeoutException
@@ -13,6 +14,8 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -27,6 +30,10 @@ class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """
         await self.async_set_unique_id(import_config[CONF_USERNAME].lower())
         self._abort_if_unique_id_configured()
+
+        if error := await try_connection(self.hass, import_config):
+            _LOGGER.error("Could not authenticate with SleepIQ server: %s", error)
+            return self.async_abort(reason=error)
 
         return self.async_create_entry(
             title=import_config[CONF_USERNAME], data=import_config
@@ -43,16 +50,15 @@ class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
             self._abort_if_unique_id_configured()
 
-            try:
-                await try_connection(self.hass, user_input)
-            except SleepIQLoginException:
-                errors["base"] = "invalid_auth"
-            except SleepIQTimeoutException:
-                errors["base"] = "cannot_connect"
+            if error := await try_connection(self.hass, user_input):
+                errors["base"] = error
             else:
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )
+
+        else:
+            user_input = {}
 
         return self.async_show_form(
             step_id="user",
@@ -60,9 +66,7 @@ class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(
                         CONF_USERNAME,
-                        default=user_input.get(CONF_USERNAME)
-                        if user_input is not None
-                        else "",
+                        default=user_input.get(CONF_USERNAME),
                     ): str,
                     vol.Required(CONF_PASSWORD): str,
                 }
@@ -72,10 +76,17 @@ class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-async def try_connection(hass: HomeAssistant, user_input: dict[str, Any]) -> None:
+async def try_connection(hass: HomeAssistant, user_input: dict[str, Any]) -> str | None:
     """Test if the given credentials can successfully login to SleepIQ."""
 
     client_session = async_get_clientsession(hass)
 
     gateway = AsyncSleepIQ(client_session=client_session)
-    await gateway.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+    try:
+        await gateway.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+    except SleepIQLoginException:
+        return "invalid_auth"
+    except SleepIQTimeoutException:
+        return "cannot_connect"
+
+    return None
