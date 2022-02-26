@@ -53,7 +53,6 @@ PyXiaomiGateway==0.13.4
 # homeassistant.components.dht
 # homeassistant.components.mcp23017
 # homeassistant.components.rpi_gpio
-# homeassistant.components.rpi_rf
 # RPi.GPIO==0.7.1a4
 
 # homeassistant.components.remember_the_milk
@@ -2101,9 +2100,6 @@ rova==0.2.1
 
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
-
-# homeassistant.components.rpi_rf
-# rpi-rf==0.9.7
 
 # homeassistant.components.rtsp_to_webrtc
 rtsp-to-webrtc==0.5.0
