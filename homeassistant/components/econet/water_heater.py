@@ -123,7 +123,7 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
-        op_mode_to_set = HA_STATE_TO_ECONET.get(operation_mode)
+        op_mode_to_set = HA_STATE_TO_ECONET.get(operation_mode.lower())
         if op_mode_to_set is not None:
             self.water_heater.set_mode(op_mode_to_set)
         else:
