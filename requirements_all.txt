@@ -2137,9 +2137,6 @@ scsgate==0.1.0
 # homeassistant.components.sendgrid
 sendgrid==6.8.2
 
-# homeassistant.components.sensehat
-sense-hat==2.2.0
-
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
 sense_energy==0.10.2
