@@ -9,6 +9,12 @@ from pysensibo.exceptions import AuthenticationError, SensiboError
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.sensibo.config_flow import (
+    CANNOT_CONNECT,
+    INVALID_AUTH,
+    NO_DEVICES,
+    NO_USERNAME,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
@@ -20,11 +26,6 @@ from homeassistant.data_entry_flow import (
 from tests.common import MockConfigEntry
 
 DOMAIN = "sensibo"
-
-
-def devices():
-    """Return list of test devices."""
-    return (yield from {"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]})
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -39,7 +40,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.sensibo.config_flow.SensiboClient.async_get_devices",
-        return_value=devices(),
+        return_value={"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]},
     ), patch(
         "homeassistant.components.sensibo.config_flow.SensiboClient.async_get_me",
         return_value={"result": {"username": "username"}},
@@ -69,7 +70,7 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.sensibo.config_flow.SensiboClient.async_get_devices",
-        return_value=devices(),
+        return_value={"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]},
     ), patch(
         "homeassistant.components.sensibo.config_flow.SensiboClient.async_get_me",
         return_value={"result": {"username": "username"}},
@@ -110,7 +111,7 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
         return_value=True,
     ), patch(
         "homeassistant.components.sensibo.config_flow.SensiboClient.async_get_devices",
-        return_value=devices(),
+        return_value={"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]},
     ), patch(
         "homeassistant.components.sensibo.config_flow.SensiboClient.async_get_me",
         return_value={"result": {"username": "username"}},
@@ -129,33 +130,112 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "error_message",
+    "error_message, p_error",
     [
-        (aiohttp.ClientConnectionError),
-        (asyncio.TimeoutError),
-        (AuthenticationError),
-        (SensiboError),
+        (aiohttp.ClientConnectionError, CANNOT_CONNECT),
+        (asyncio.TimeoutError, CANNOT_CONNECT),
+        (AuthenticationError, INVALID_AUTH),
+        (SensiboError, CANNOT_CONNECT),
     ],
 )
-async def test_flow_fails(hass: HomeAssistant, error_message) -> None:
+async def test_flow_fails(
+    hass: HomeAssistant, error_message: Exception, p_error: str
+) -> None:
     """Test config flow errors."""
 
-    result4 = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result4["type"] == RESULT_TYPE_FORM
-    assert result4["step_id"] == config_entries.SOURCE_USER
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == config_entries.SOURCE_USER
 
     with patch(
         "homeassistant.components.sensibo.config_flow.SensiboClient.async_get_devices",
         side_effect=error_message,
     ):
-        result4 = await hass.config_entries.flow.async_configure(
-            result4["flow_id"],
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
             user_input={
                 CONF_API_KEY: "1234567890",
             },
         )
 
-    assert result4["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": p_error}
+
+    with patch(
+        "homeassistant.components.sensibo.config_flow.SensiboClient.async_get_devices",
+        return_value={"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]},
+    ), patch(
+        "homeassistant.components.sensibo.config_flow.SensiboClient.async_get_me",
+        return_value={"result": {"username": "username"}},
+    ), patch(
+        "homeassistant.components.sensibo.async_setup_entry",
+        return_value=True,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_API_KEY: "1234567891",
+            },
+        )
+
+    assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result3["title"] == "Sensibo"
+    assert result3["data"] == {
+        "api_key": "1234567891",
+    }
+
+
+async def test_flow_get_no_devices(hass: HomeAssistant) -> None:
+    """Test config flow get no devices from api."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == config_entries.SOURCE_USER
+
+    with patch(
+        "homeassistant.components.sensibo.config_flow.SensiboClient.async_get_devices",
+        return_value={"result": []},
+    ), patch(
+        "homeassistant.components.sensibo.config_flow.SensiboClient.async_get_me",
+        return_value={"result": {}},
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_API_KEY: "1234567890",
+            },
+        )
+
+    assert result2["errors"] == {"base": NO_DEVICES}
+
+
+async def test_flow_get_no_username(hass: HomeAssistant) -> None:
+    """Test config flow get no username from api."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == config_entries.SOURCE_USER
+
+    with patch(
+        "homeassistant.components.sensibo.config_flow.SensiboClient.async_get_devices",
+        return_value={"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]},
+    ), patch(
+        "homeassistant.components.sensibo.config_flow.SensiboClient.async_get_me",
+        return_value={"result": {}},
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_API_KEY: "1234567890",
+            },
+        )
+
+    assert result2["errors"] == {"base": NO_USERNAME}

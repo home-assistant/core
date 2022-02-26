@@ -1,13 +1,9 @@
 """Adds config flow for Sensibo integration."""
 from __future__ import annotations
 
-import asyncio
-import logging
-
-import aiohttp
 import async_timeout
 from pysensibo import SensiboClient
-from pysensibo.exceptions import AuthenticationError, SensiboError
+from pysensibo.exceptions import AuthenticationError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -17,9 +13,12 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import DEFAULT_NAME, DOMAIN, TIMEOUT
+from .const import DEFAULT_NAME, DOMAIN, LOGGER, SENSIBO_ERRORS, TIMEOUT
 
-_LOGGER = logging.getLogger(__name__)
+INVALID_AUTH = "invalid_auth"
+CANNOT_CONNECT = "cannot_connect"
+NO_DEVICES = "no_devices"
+NO_USERNAME = "no_username"
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -28,7 +27,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def async_validate_api(hass: HomeAssistant, api_key: str) -> bool:
+async def async_validate_api(hass: HomeAssistant, api_key: str) -> str:
     """Get data from API."""
     client = SensiboClient(
         api_key,
@@ -38,41 +37,22 @@ async def async_validate_api(hass: HomeAssistant, api_key: str) -> bool:
 
     try:
         async with async_timeout.timeout(TIMEOUT):
-            if await client.async_get_devices():
-                return True
-    except (
-        aiohttp.ClientConnectionError,
-        asyncio.TimeoutError,
-        AuthenticationError,
-        SensiboError,
-    ) as err:
-        _LOGGER.error("Failed to get devices from Sensibo servers %s", err)
-    return False
+            device_query = await client.async_get_devices()
+            user_query = await client.async_get_me()
+    except AuthenticationError as err:
+        LOGGER.error("Could not authenticate on Sensibo servers %s", err)
+        return INVALID_AUTH
+    except SENSIBO_ERRORS as err:
+        LOGGER.error("Failed to get information from Sensibo servers %s", err)
+        return CANNOT_CONNECT
 
-
-async def async_get_username(hass: HomeAssistant, api_key: str) -> str | None:
-    """Return username from API."""
-    client = SensiboClient(
-        api_key,
-        session=async_get_clientsession(hass),
-        timeout=TIMEOUT,
-    )
-
-    try:
-        async with async_timeout.timeout(TIMEOUT):
-            userdetails = await client.async_get_me()
-    except (
-        aiohttp.ClientConnectionError,
-        asyncio.TimeoutError,
-        AuthenticationError,
-        SensiboError,
-    ) as err:
-        _LOGGER.error("Failed to get user details from Sensibo servers %s", err)
-        return None
-
-    if userdetails:
-        return userdetails["result"].get("username")
-    return None
+    devices = device_query["result"]
+    user = user_query["result"].get("username")
+    if not devices:
+        return NO_DEVICES
+    if not user:
+        return NO_USERNAME
+    return user
 
 
 class SensiboConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -98,16 +78,15 @@ class SensiboConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             api_key = user_input[CONF_API_KEY]
 
             validate = await async_validate_api(self.hass, api_key)
-            if validate:
-                username = await async_get_username(self.hass, api_key)
-                await self.async_set_unique_id(username)
+            if validate not in [INVALID_AUTH, CANNOT_CONNECT, NO_DEVICES, NO_USERNAME]:
+                await self.async_set_unique_id(validate)
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
                     data={CONF_API_KEY: api_key},
                 )
-            errors["base"] = "cannot_connect"
+            errors["base"] = validate
 
         return self.async_show_form(
             step_id="user",
