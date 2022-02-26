@@ -600,7 +600,7 @@ async def handle_validate_config(
             continue
 
         try:
-            await validator(hass, schema(msg[key]))  # type: ignore
+            await validator(hass, schema(msg[key]))  # type: ignore[operator]
         except vol.Invalid as err:
             result[key] = {"valid": False, "error": str(err)}
         else:
