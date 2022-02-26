@@ -369,11 +369,11 @@ def do_setup(hass: HomeAssistant, hass_config: ConfigType, config: ConfigType) -
     calendars = load_config(hass.config.path(YAML_DEVICES))
     hass.data[DOMAIN][DATA_CALENDARS] = calendars
 
+    calendar_service = hass.data[DOMAIN][DATA_SERVICE]
     track_new_found_calendars = convert(
         config.get(CONF_TRACK_NEW), bool, DEFAULT_CONF_TRACK_NEW
     )
     assert track_new_found_calendars is not None
-    calendar_service = hass.data[DOMAIN][DATA_SERVICE]
     setup_services(
         hass, hass_config, config, track_new_found_calendars, calendar_service
     )
