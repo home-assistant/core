@@ -37,7 +37,6 @@ COMMENT_REQUIREMENTS = (
     "python-lirc",
     "pyuserinput",
     "raspihats",
-    "rpi-rf",
     "RPi.GPIO",
     "smbus-cffi",
     "tensorflow",
