@@ -534,6 +534,7 @@ omit =
     homeassistant/components/insteon/schemas.py
     homeassistant/components/insteon/switch.py
     homeassistant/components/insteon/utils.py
+    homeassistant/components/integration/__init__.py
     homeassistant/components/intellifire/__init__.py
     homeassistant/components/intellifire/coordinator.py
     homeassistant/components/intellifire/binary_sensor.py
