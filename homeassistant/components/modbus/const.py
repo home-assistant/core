@@ -76,9 +76,6 @@ class DataType(str, Enum):
     """Data types used by sensor etc."""
 
     CUSTOM = "custom"
-    FLOAT = "float"  # deprecated
-    INT = "int"  # deprecated
-    UINT = "uint"  # deprecated
     STRING = "string"
     INT8 = "int8"
     INT16 = "int16"
