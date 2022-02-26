@@ -123,6 +123,33 @@
     },
     {
       "address": [0, 7, false],
+      "name": "Sensor_LockRegulator1",
+      "resource": "r1varsetpoint",
+      "domain": "binary_sensor",
+      "domain_data": {
+        "source": "R1VARSETPOINT"
+      }
+    },
+    {
+      "address": [0, 7, false],
+      "name": "Binary_Sensor1",
+      "resource": "binsensor1",
+      "domain": "binary_sensor",
+      "domain_data": {
+        "source": "BINSENSOR1"
+      }
+    },
+    {
+      "address": [0, 7, false],
+      "name": "Sensor_KeyLock",
+      "resource": "a5",
+      "domain": "binary_sensor",
+      "domain_data": {
+        "source": "A5"
+      }
+    },
+    {
+      "address": [0, 7, false],
       "name": "Sensor_Var1",
       "resource": "var1",
       "domain": "sensor",
