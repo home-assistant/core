@@ -253,6 +253,7 @@ SENSOR_SCHEMA = vol.All(
             vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+            vol.Optional(CONF_SLAVE_COUNT, default=0): cv.positive_int,
         }
     ),
 )
