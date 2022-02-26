@@ -1,6 +1,83 @@
 {
-    "state": {
-        "day": "Day",
-        "night": "Night"
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "conditions_not_selected": "Conditions not selected"
+        },
+        "step": {
+            "monitored_conditions": {
+                "data": {
+                    "ActualFlowTemperatureDesired": "Actual flow desired temperature",
+                    "AverageIgnitionTime": "Average ignition time",
+                    "CentralHeatingPump": "Central heating pump",
+                    "ContinuosHeating": "Continuos heating",
+                    "DesiredFlowTemperature": "Flow desired temperature",
+                    "DesiredStorageTemperature": "Storage desired temperature",
+                    "Flame": "Flame",
+                    "FlowTemperature": "Flow temperature",
+                    "HCSummerTemperatureLimit": "Summer temperature limit",
+                    "HWActualTemperature": "Hot water actual temperature",
+                    "HWOperativeMode": "Hot water operative mode",
+                    "HWTemperature": "Hot water temperature",
+                    "HWTemperatureDesired": "Hot water desired temperature",
+                    "HWTimerFriday": "Hot water friday timer",
+                    "HWTimerMonday": "Hot water monday timer",
+                    "HWTimerSaturday": "Hot water saturday timer",
+                    "HWTimerSunday": "Hot water sunday timer",
+                    "HWTimerThursday": "Hot water thursday timer",
+                    "HWTimerTuesday": "Hot water tuesday timer",
+                    "HWTimerWednesday": "Hot water wednesday timer",
+                    "HeatingPartLoad": "Heating part load",
+                    "HeatingSwitch": "Heating switch",
+                    "HolidayTemperature": "Holiday temperature",
+                    "HotWaterTemperature": "Hot water temperature",
+                    "MaxFlowTemperatureDesired": "Maximum flow desired temperature",
+                    "MaximumIgnitionTime": "Maximum ignition time",
+                    "MinFlowTemperatureDesired": "Minimum flow desired temperature",
+                    "MinimumIgnitionTime": "Minimum ignition time",
+                    "ModulationPercentage": "Modulation percentage",
+                    "OutdoorsTemperature": "Outdoor temperature",
+                    "OutsideTemp": "Outside temperature",
+                    "PowerEnergyConsumptionHeatingCircuit": "Heating circuit energy consumption",
+                    "PowerEnergyConsumptionHotWaterCircuit": "Hot water circuit energy consumption",
+                    "PowerEnergyConsumptionLastMonth": "Power energy consumption last month",
+                    "PowerEnergyConsumptionThisMonth": "Power energy consumption this month",
+                    "PumpStatus": "Pump status",
+                    "ReturnTemperature": "Return temperature",
+                    "RoomThermostat": "Room thermostat",
+                    "StateNumber": "State number",
+                    "StorageTemperature": "Storage temperature",
+                    "WaterPressure": "Water pressure",
+                    "Zone1ActualRoomTemperatureDesired": "Zone 1 actual temperature",
+                    "Zone1DayTemperature": "Zone 1 day temperature",
+                    "Zone1HolidayTemperature": "Zone 1 holiday temperature",
+                    "Zone1NightTemperature": "Zone 1 night temperature",
+                    "Zone1OperativeMode": "Zone 1 operative mode",
+                    "Zone1RoomTemperature": "Zone 1 room temperature",
+                    "Zone1RoomZoneMapping": "Zone 1 room zone mapping",
+                    "Zone1TimerFriday": "Zone 1 friday timer",
+                    "Zone1TimerMonday": "Zone 1 monday timer",
+                    "Zone1TimerSaturday": "Zone 1 saturday timer",
+                    "Zone1TimerSunday": "Zone 1 sunday timer",
+                    "Zone1TimerThursday": "Zone 1 thursday timer",
+                    "Zone1TimerTuesday": "Zone 1 tuesday timer",
+                    "Zone1TimerWednesday": "Zone 1 wednesday timer"
+                },
+                "title": "Choose monitored conditions"
+            },
+            "user": {
+                "data": {
+                    "cache_ttl": "Cache max age (seconds)",
+                    "circuit": "Circuit",
+                    "host": "Host",
+                    "name": "Name",
+                    "port": "Port"
+                },
+                "title": "Set up ebusd daemon parameters"
+            }
+        }
     }
 }

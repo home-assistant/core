@@ -5,13 +5,14 @@ import datetime
 import logging
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN
+from .const import CONF_CIRCUIT, DOMAIN, SENSOR_TYPES
 
 TIME_FRAME1_BEGIN = "time_frame1_begin"
 TIME_FRAME1_END = "time_frame1_end"
@@ -24,26 +25,22 @@ MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(seconds=15)
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Ebus sensor."""
-    if not discovery_info:
-        return
-    ebusd_api = hass.data[DOMAIN]
-    monitored_conditions = discovery_info["monitored_conditions"]
-    name = discovery_info["client_name"]
+    ebusd_api = hass.data[DOMAIN][entry.entry_id]
+    monitored_conditions = entry.data[CONF_MONITORED_CONDITIONS]
+    name = entry.data[CONF_NAME]
+    sensor_types = SENSOR_TYPES[entry.data[CONF_CIRCUIT]]
 
-    dev = []
+    sensors = []
     for condition in monitored_conditions:
-        dev.append(
-            EbusdSensor(ebusd_api, discovery_info["sensor_types"][condition], name)
-        )
+        sensors.append(EbusdSensor(ebusd_api, sensor_types[condition], name))
 
-    add_entities(dev, True)
+    async_add_entities(sensors, True)
 
 
 class EbusdSensor(SensorEntity):

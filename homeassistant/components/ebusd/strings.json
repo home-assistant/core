@@ -1,0 +1,83 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "circuit": "Circuit",
+          "cache_ttl": "Cache max age (seconds)"
+        },
+        "title": "Set up ebusd daemon parameters"
+      },
+      "monitored_conditions": {
+        "data": {
+            "ActualFlowTemperatureDesired": "Actual flow desired temperature",
+            "MaxFlowTemperatureDesired": "Maximum flow desired temperature",
+            "MinFlowTemperatureDesired": "Minimum flow desired temperature",
+            "PumpStatus": "Pump status",
+            "HCSummerTemperatureLimit": "Summer temperature limit",
+            "HolidayTemperature": "Holiday temperature",
+            "HWTemperatureDesired": "Hot water desired temperature",
+            "HWActualTemperature": "Hot water actual temperature",
+            "HWTimerMonday": "Hot water monday timer",
+            "HWTimerTuesday": "Hot water tuesday timer",
+            "HWTimerWednesday": "Hot water wednesday timer",
+            "HWTimerThursday": "Hot water thursday timer",
+            "HWTimerFriday": "Hot water friday timer",
+            "HWTimerSaturday": "Hot water saturday timer",
+            "HWTimerSunday": "Hot water sunday timer",
+            "HWOperativeMode": "Hot water operative mode",
+            "WaterPressure": "Water pressure",
+            "Zone1RoomZoneMapping": "Zone 1 room zone mapping",
+            "Zone1NightTemperature": "Zone 1 night temperature",
+            "Zone1DayTemperature": "Zone 1 day temperature",
+            "Zone1HolidayTemperature": "Zone 1 holiday temperature",
+            "Zone1RoomTemperature": "Zone 1 room temperature",
+            "Zone1ActualRoomTemperatureDesired": "Zone 1 actual temperature",
+            "Zone1TimerMonday": "Zone 1 monday timer",
+            "Zone1TimerTuesday": "Zone 1 tuesday timer",
+            "Zone1TimerWednesday": "Zone 1 wednesday timer",
+            "Zone1TimerThursday": "Zone 1 thursday timer",
+            "Zone1TimerFriday": "Zone 1 friday timer",
+            "Zone1TimerSaturday": "Zone 1 saturday timer",
+            "Zone1TimerSunday": "Zone 1 sunday timer",
+            "Zone1OperativeMode": "Zone 1 operative mode",
+            "ContinuosHeating": "Continuos heating",
+            "PowerEnergyConsumptionLastMonth": "Power energy consumption last month",
+            "PowerEnergyConsumptionThisMonth": "Power energy consumption this month",
+            "HWTemperature": "Hot water temperature",
+            "OutsideTemp": "Outside temperature",
+            "HotWaterTemperature": "Hot water temperature",
+            "StorageTemperature": "Storage temperature",
+            "DesiredStorageTemperature": "Storage desired temperature",
+            "OutdoorsTemperature": "Outdoor temperature",
+            "AverageIgnitionTime": "Average ignition time",
+            "MaximumIgnitionTime": "Maximum ignition time",
+            "MinimumIgnitionTime": "Minimum ignition time",
+            "ReturnTemperature": "Return temperature",
+            "CentralHeatingPump": "Central heating pump",
+            "HeatingSwitch": "Heating switch",
+            "DesiredFlowTemperature": "Flow desired temperature",
+            "FlowTemperature": "Flow temperature",
+            "Flame": "Flame",
+            "PowerEnergyConsumptionHeatingCircuit": "Heating circuit energy consumption",
+            "PowerEnergyConsumptionHotWaterCircuit": "Hot water circuit energy consumption",
+            "RoomThermostat": "Room thermostat",
+            "HeatingPartLoad": "Heating part load",
+            "StateNumber": "State number",
+            "ModulationPercentage": "Modulation percentage"
+        },
+        "title": "Choose monitored conditions"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "conditions_not_selected": "Conditions not selected"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

@@ -79,6 +79,7 @@ FLOWS = [
     "dunehd",
     "dynalite",
     "eafm",
+    "ebusd",
     "ecobee",
     "econet",
     "efergy",

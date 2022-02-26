@@ -241,7 +241,9 @@ omit =
     homeassistant/components/dwd_weather_warnings/sensor.py
     homeassistant/components/dweet/*
     homeassistant/components/ebox/sensor.py
-    homeassistant/components/ebusd/*
+    homeassistant/components/ebusd/__init__.py
+    homeassistant/components/ebusd/const.py
+    homeassistant/components/ebusd/sensor.py
     homeassistant/components/ecoal_boiler/*
     homeassistant/components/ecobee/__init__.py
     homeassistant/components/ecobee/binary_sensor.py

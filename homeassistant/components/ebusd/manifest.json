@@ -1,6 +1,7 @@
 {
   "domain": "ebusd",
   "name": "ebusd",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ebusd",
   "requirements": ["ebusdpy==0.0.17"],
   "codeowners": [],

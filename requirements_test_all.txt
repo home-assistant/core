@@ -391,6 +391,9 @@ dsmr_parser==0.32
 # homeassistant.components.dynalite
 dynalite_devices==0.1.46
 
+# homeassistant.components.ebusd
+ebusdpy==0.0.17
+
 # homeassistant.components.elgato
 elgato==3.0.0
 
