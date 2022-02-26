@@ -347,14 +347,15 @@ def setup_services(
             start = {"dateTime": start_dt, "timeZone": str(hass.config.time_zone)}
             end = {"dateTime": end_dt, "timeZone": str(hass.config.time_zone)}
 
-        calendar_id = call.data[EVENT_CALENDAR_ID]
-        event = {
-            "summary": call.data[EVENT_SUMMARY],
-            "description": call.data[EVENT_DESCRIPTION],
-            "start": start,
-            "end": end,
-        }
-        event = calendar_service.create_event(calendar_id, event)
+        calendar_service.create_event(
+            call.data[EVENT_CALENDAR_ID],
+            {
+                "summary": call.data[EVENT_SUMMARY],
+                "description": call.data[EVENT_DESCRIPTION],
+                "start": start,
+                "end": end,
+            },
+        )
 
     # Only expose the add event service if we have the correct permissions
     if config.get(CONF_CALENDAR_ACCESS) is FeatureAccess.read_write:
