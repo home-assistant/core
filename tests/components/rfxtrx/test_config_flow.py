@@ -35,6 +35,16 @@ def com_port():
     return port
 
 
+async def init_hass_with_entry(hass, entry):
+    """Init hass with the entry under test."""
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    return await hass.config_entries.options.async_init(entry.entry_id)
+
+
 @patch("homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport", autospec=True)
 async def test_setup_network(transport_mock, hass):
     """Test we can setup network."""
@@ -293,9 +303,8 @@ async def test_options_global(hass):
         },
         unique_id=DOMAIN,
     )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
+        result = await init_hass_with_entry(hass, entry)
 
     assert result["type"] == "form"
     assert result["step_id"] == "prompt_options"
@@ -329,9 +338,8 @@ async def test_no_protocols(hass):
         },
         unique_id=DOMAIN,
     )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
+        result = await init_hass_with_entry(hass, entry)
 
     assert result["type"] == "form"
     assert result["step_id"] == "prompt_options"
@@ -364,9 +372,7 @@ async def test_options_add_device(hass):
         },
         unique_id=DOMAIN,
     )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await init_hass_with_entry(hass, entry)
 
     assert result["type"] == "form"
     assert result["step_id"] == "prompt_options"
@@ -467,10 +473,7 @@ async def test_options_replace_sensor_device(hass):
         },
         unique_id=DOMAIN,
     )
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await init_hass_with_entry(hass, entry)
 
     state = hass.states.get(
         "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_rssi_numeric"
@@ -633,10 +636,7 @@ async def test_options_replace_control_device(hass):
         },
         unique_id=DOMAIN,
     )
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await init_hass_with_entry(hass, entry)
 
     state = hass.states.get("binary_sensor.ac_118cdea_2")
     assert state
@@ -732,9 +732,7 @@ async def test_options_add_and_configure_device(hass):
         },
         unique_id=DOMAIN,
     )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await init_hass_with_entry(hass, entry)
 
     assert result["type"] == "form"
     assert result["step_id"] == "prompt_options"
@@ -848,12 +846,7 @@ async def test_options_configure_rfy_cover_device(hass):
         },
         unique_id=DOMAIN,
     )
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await init_hass_with_entry(hass, entry)
 
     assert result["type"] == "form"
     assert result["step_id"] == "prompt_options"
