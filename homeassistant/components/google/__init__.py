@@ -3,7 +3,6 @@ from collections.abc import Mapping
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 import logging
-import os
 from typing import Any
 
 from googleapiclient import discovery as google_discovery
@@ -161,7 +160,10 @@ ADD_EVENT_SERVICE_SCHEMA = vol.Schema(
 
 
 def do_authentication(
-    hass: HomeAssistant, hass_config: ConfigType, config: ConfigType
+    hass: HomeAssistant,
+    hass_config: ConfigType,
+    config: ConfigType,
+    storage: Storage,
 ) -> bool:
     """Notify user of actions and authenticate.
 
@@ -221,7 +223,6 @@ def do_authentication(
             # not ready yet, call again
             return
 
-        storage = Storage(hass.config.path(TOKEN_FILE))
         storage.put(credentials)
         do_setup(hass, hass_config, config)
         listener()
@@ -251,16 +252,16 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # component is set up by tts platform
         return True
 
-    token_file = hass.config.path(TOKEN_FILE)
-    if not os.path.isfile(token_file):
-        _LOGGER.debug("Token file does not exist, authenticating for first time")
-        do_authentication(hass, config, conf)
+    storage = Storage(hass.config.path(TOKEN_FILE))
+    creds = storage.get()
+    if (
+        not creds
+        or not creds.scopes
+        or conf[CONF_CALENDAR_ACCESS].scope not in creds.scopes
+    ):
+        do_authentication(hass, config, conf, storage)
     else:
-        if not check_correct_scopes(hass, token_file, conf):
-            _LOGGER.debug("Existing scopes are not sufficient, re-authenticating")
-            do_authentication(hass, config, conf)
-        else:
-            do_setup(hass, config, conf)
+        do_setup(hass, config, conf)
 
     return True
 
