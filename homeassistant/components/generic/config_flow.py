@@ -111,95 +111,90 @@ def get_image_type(image):
 async def async_test_still(hass, info) -> tuple[dict[str, str], str | None]:
     """Verify that the still image is valid before we create an entity."""
     fmt = None
-    if url := info.get(CONF_STILL_IMAGE_URL):
-        # First try getting a still image
-        if not isinstance(url, template_helper.Template) and url:
-            url = cv.template(url)
-            url.hass = hass
-        try:
-            url = url.async_render(parse_result=False)
-        except TemplateError as err:
-            _LOGGER.error("Error parsing template %s: %s", url, err)
-            return {CONF_STILL_IMAGE_URL: "template_error"}, None
-        verify_ssl = info.get(CONF_VERIFY_SSL)
-        auth = generate_auth(info)
-        try:
-            async_client = get_async_client(hass, verify_ssl=verify_ssl)
-            async with timeout(GET_IMAGE_TIMEOUT):
-                response = await async_client.get(
-                    url, auth=auth, timeout=GET_IMAGE_TIMEOUT
-                )
-                response.raise_for_status()
-                image = response.content
-        except (
-            TimeoutError,
-            RequestError,
-            HTTPStatusError,
-            TimeoutException,
-        ) as err:
-            _LOGGER.error(
-                "Error getting camera image from %s: %s", url, type(err).__name__
-            )
-            return {CONF_STILL_IMAGE_URL: "unable_still_load"}, None
+    if not (url := info.get(CONF_STILL_IMAGE_URL)):
+        return {}, None
+    if not isinstance(url, template_helper.Template) and url:
+        url = cv.template(url)
+        url.hass = hass
+    try:
+        url = url.async_render(parse_result=False)
+    except TemplateError as err:
+        _LOGGER.error("Error parsing template %s: %s", url, err)
+        return {CONF_STILL_IMAGE_URL: "template_error"}, None
+    verify_ssl = info.get(CONF_VERIFY_SSL)
+    auth = generate_auth(info)
+    try:
+        async_client = get_async_client(hass, verify_ssl=verify_ssl)
+        async with timeout(GET_IMAGE_TIMEOUT):
+            response = await async_client.get(url, auth=auth, timeout=GET_IMAGE_TIMEOUT)
+            response.raise_for_status()
+            image = response.content
+    except (
+        TimeoutError,
+        RequestError,
+        HTTPStatusError,
+        TimeoutException,
+    ) as err:
+        _LOGGER.error("Error getting camera image from %s: %s", url, type(err).__name__)
+        return {CONF_STILL_IMAGE_URL: "unable_still_load"}, None
 
-        if not image:
-            return {CONF_STILL_IMAGE_URL: "unable_still_load"}, None
-        fmt = get_image_type(image)
-        _LOGGER.debug(
-            "Still image at '%s' detected format: %s",
-            info[CONF_STILL_IMAGE_URL],
-            fmt,
-        )
-        if fmt not in SUPPORTED_IMAGE_TYPES:
-            return {CONF_STILL_IMAGE_URL: "invalid_still_image"}, None
-        return {}, "image/" + fmt
-    return {}, None
+    if not image:
+        return {CONF_STILL_IMAGE_URL: "unable_still_load"}, None
+    fmt = get_image_type(image)
+    _LOGGER.debug(
+        "Still image at '%s' detected format: %s",
+        info[CONF_STILL_IMAGE_URL],
+        fmt,
+    )
+    if fmt not in SUPPORTED_IMAGE_TYPES:
+        return {CONF_STILL_IMAGE_URL: "invalid_still_image"}, None
+    return {}, "image/" + fmt
 
 
 async def async_test_stream(hass, info) -> dict[str, str]:
     """Verify that the stream is valid before we create an entity."""
-    if stream_source := info.get(CONF_STREAM_SOURCE):
-        try:
-            # For RTSP streams, prefer TCP. This code is duplicated from
-            # homeassistant.components.stream.__init__.py:create_stream()
-            # It may be possible & better to call create_stream() directly.
-            stream_options: dict[str, str] = {}
-            if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
-                stream_options = {
-                    "rtsp_flags": "prefer_tcp",
-                    "stimeout": "5000000",
-                }
-            if rtsp_transport := info.get(CONF_RTSP_TRANSPORT):
-                stream_options[FFMPEG_OPTION_MAP[CONF_RTSP_TRANSPORT]] = rtsp_transport
-            _LOGGER.debug("Attempting to open stream %s", stream_source)
-            container = await hass.async_add_executor_job(
-                partial(
-                    av.open,
-                    stream_source,
-                    options=stream_options,
-                    timeout=SOURCE_TIMEOUT,
-                )
+    if not (stream_source := info.get(CONF_STREAM_SOURCE)):
+        return {}
+    try:
+        # For RTSP streams, prefer TCP. This code is duplicated from
+        # homeassistant.components.stream.__init__.py:create_stream()
+        # It may be possible & better to call create_stream() directly.
+        stream_options: dict[str, str] = {}
+        if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
+            stream_options = {
+                "rtsp_flags": "prefer_tcp",
+                "stimeout": "5000000",
+            }
+        if rtsp_transport := info.get(CONF_RTSP_TRANSPORT):
+            stream_options[FFMPEG_OPTION_MAP[CONF_RTSP_TRANSPORT]] = rtsp_transport
+        _LOGGER.debug("Attempting to open stream %s", stream_source)
+        container = await hass.async_add_executor_job(
+            partial(
+                av.open,
+                stream_source,
+                options=stream_options,
+                timeout=SOURCE_TIMEOUT,
             )
-            _ = container.streams.video[0]
-        # pylint: disable=c-extension-no-member
-        except (av.error.FileNotFoundError):
-            return {CONF_STREAM_SOURCE: "stream_file_not_found"}
-        except (av.error.HTTPNotFoundError):
-            return {CONF_STREAM_SOURCE: "stream_http_not_found"}
-        except (av.error.TimeoutError):
-            return {CONF_STREAM_SOURCE: "timeout"}
-        except av.error.HTTPUnauthorizedError:  # pylint: disable=c-extension-no-member
-            return {CONF_STREAM_SOURCE: "stream_unauthorised"}
-        except (KeyError, IndexError):
-            return {CONF_STREAM_SOURCE: "stream_novideo"}
-        except PermissionError:
-            return {CONF_STREAM_SOURCE: "stream_not_permitted"}
-        except OSError as err:
-            if err.errno == EHOSTUNREACH:
-                return {CONF_STREAM_SOURCE: "stream_no_route_to_host"}
-            if err.errno == EIO:  # input/output error
-                return {CONF_STREAM_SOURCE: "stream_io_error"}
-            raise err
+        )
+        _ = container.streams.video[0]
+    except (av.error.FileNotFoundError):  # pylint: disable=c-extension-no-member
+        return {CONF_STREAM_SOURCE: "stream_file_not_found"}
+    except (av.error.HTTPNotFoundError):  # pylint: disable=c-extension-no-member
+        return {CONF_STREAM_SOURCE: "stream_http_not_found"}
+    except (av.error.TimeoutError):  # pylint: disable=c-extension-no-member
+        return {CONF_STREAM_SOURCE: "timeout"}
+    except av.error.HTTPUnauthorizedError:  # pylint: disable=c-extension-no-member
+        return {CONF_STREAM_SOURCE: "stream_unauthorised"}
+    except (KeyError, IndexError):
+        return {CONF_STREAM_SOURCE: "stream_novideo"}
+    except PermissionError:
+        return {CONF_STREAM_SOURCE: "stream_not_permitted"}
+    except OSError as err:
+        if err.errno == EHOSTUNREACH:
+            return {CONF_STREAM_SOURCE: "stream_no_route_to_host"}
+        if err.errno == EIO:  # input/output error
+            return {CONF_STREAM_SOURCE: "stream_io_error"}
+        raise err
     return {}
 
 

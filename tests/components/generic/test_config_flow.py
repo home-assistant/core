@@ -118,7 +118,6 @@ async def test_form_rtsp_mode(hass, fakeimg_png, fakevidcontainer, user_flow):
         result2 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"], data
         )
-    print(f"result2={result2}")
     assert "errors" not in result2, f"errors={result2['errors']}"
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "http://127.0.0.1/testurl/1"
