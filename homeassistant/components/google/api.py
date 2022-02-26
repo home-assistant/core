@@ -75,8 +75,8 @@ class GoogleCalendarService:
         events = self._get_service().events()  # pylint: disable=no-member
         result = events.list(
             calendarId=calendar_id,
-            start_time=_api_time_format(start_time if start_time else dt.now()),
-            end_time=_api_time_format(end_time),
+            timeMin=_api_time_format(start_time if start_time else dt.now()),
+            timeMax=_api_time_format(end_time),
             q=search,
             maxResults=EVENT_PAGE_SIZE,
             pageToken=page_token,
