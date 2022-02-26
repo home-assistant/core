@@ -113,7 +113,7 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
     def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
         if self._is_model(Model.MinusA2):
-            return list(PRESET_MODES.keys())
+            return list(PRESET_MODES)
         if self._is_model(Model.A3):
             # A3 does not support Pollen mode
             return [k for k in PRESET_MODES if k != PRESET_MODE_POLLEN]
