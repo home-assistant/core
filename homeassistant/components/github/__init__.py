@@ -4,7 +4,7 @@ from __future__ import annotations
 from aiogithubapi import GitHubAPI
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import (
@@ -39,7 +39,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         await coordinator.async_config_entry_first_refresh()
         await coordinator.subscribe()
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, coordinator.unsubscribe)
 
         hass.data[DOMAIN][repository] = coordinator
 
