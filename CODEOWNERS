@@ -353,6 +353,8 @@ homeassistant/components/gogogate2/* @vangorra @bdraco
 tests/components/gogogate2/* @vangorra @bdraco
 homeassistant/components/goodwe/* @mletenay @starkillerOG
 tests/components/goodwe/* @mletenay @starkillerOG
+homeassistant/components/google/* @allenporter
+tests/components/google/* @allenporter
 homeassistant/components/google_assistant/* @home-assistant/cloud
 tests/components/google_assistant/* @home-assistant/cloud
 homeassistant/components/google_cloud/* @lufton
