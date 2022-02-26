@@ -33,7 +33,9 @@ class GoogleCalendarService:
 
     def _get_service(self) -> google_discovery.Resource:
         """Get the calendar service from the storage file token."""
-        return google_discovery.build("calendar", "v3", credentials=self._storage.get())
+        return google_discovery.build(
+            "calendar", "v3", credentials=self._storage.get(), cache_discovery=False
+        )
 
     def list_calendars(self) -> list[dict[str, Any]]:
         """Return the list of calendars the user has added to their list."""
@@ -43,7 +45,7 @@ class GoogleCalendarService:
     def create_event(self, calendar_id: str, event: dict[str, Any]) -> dict[str, Any]:
         """Create an event."""
         events = self._get_service().events()  # pylint: disable=no-member
-        return events.insert(calendarId=calendar_id, body=event)
+        return events.insert(calendarId=calendar_id, body=event).execute()
 
     async def async_list_events(
         self,
