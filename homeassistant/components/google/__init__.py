@@ -242,7 +242,7 @@ def do_authentication(
         )
 
     listener = track_utc_time_change(
-        hass, step2_exchange, second=range(0, 60, dev_flow.interval)
+        hass, step2_exchange, second=range(1, 60, dev_flow.interval)
     )
 
     return True
