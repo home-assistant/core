@@ -54,53 +54,12 @@ async def mock_code_flow(
 
 
 @pytest.fixture
-async def token_scopes() -> list[str]:
-    """Fixture for scopes used during test."""
-    return ["https://www.googleapis.com/auth/calendar"]
-
-
-@pytest.fixture
-async def creds(token_scopes: list[str]) -> OAuth2Credentials:
-    """Fixture that defines creds used in the test."""
-    token_expiry = utcnow() + datetime.timedelta(days=7)
-    return OAuth2Credentials(
-        access_token="ACCESS_TOKEN",
-        client_id="client-id",
-        client_secret="client-secret",
-        refresh_token="REFRESH_TOKEN",
-        token_expiry=token_expiry,
-        token_uri="http://example.com",
-        user_agent="n/a",
-        scopes=token_scopes,
-    )
-
-
-@pytest.fixture
 async def mock_exchange(creds: OAuth2Credentials) -> YieldFixture[Mock]:
     """Fixture for mocking out the exchange for credentials."""
     with patch(
         "oauth2client.client.OAuth2WebServerFlow.step2_exchange", return_value=creds
     ) as mock:
         yield mock
-
-
-@pytest.fixture(autouse=True)
-async def mock_token_write(hass: HomeAssistant) -> None:
-    """Fixture to avoid writing token files to disk."""
-    with patch(
-        "homeassistant.components.google.os.path.isfile", return_value=True
-    ), patch("homeassistant.components.google.Storage.put"):
-        yield
-
-
-@pytest.fixture
-async def mock_token_read(
-    hass: HomeAssistant,
-    creds: OAuth2Credentials,
-) -> None:
-    """Fixture to populate an existing token file."""
-    with patch("homeassistant.components.google.Storage.get", return_value=creds):
-        yield
 
 
 @pytest.fixture

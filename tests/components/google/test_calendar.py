@@ -21,7 +21,6 @@ from homeassistant.components.google import (
     CONF_TRACK,
     DEVICE_SCHEMA,
     SERVICE_SCAN_CALENDARS,
-    do_setup,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.template import DATE_STR_FORMAT
@@ -86,21 +85,18 @@ def get_calendar_info(calendar):
 
 
 @pytest.fixture(autouse=True)
-def mock_google_setup(hass, test_calendar):
+def mock_google_setup(hass, test_calendar, mock_token_read):
     """Mock the google set up functions."""
     hass.loop.run_until_complete(async_setup_component(hass, "group", {"group": {}}))
     calendar = get_calendar_info(test_calendar)
     calendars = {calendar[CONF_CAL_ID]: calendar}
-    patch_google_auth = patch(
-        "homeassistant.components.google.do_authentication", side_effect=do_setup
-    )
     patch_google_load = patch(
         "homeassistant.components.google.load_config", return_value=calendars
     )
     patch_google_services = patch("homeassistant.components.google.setup_services")
     async_mock_service(hass, "google", SERVICE_SCAN_CALENDARS)
 
-    with patch_google_auth, patch_google_load, patch_google_services:
+    with patch_google_load, patch_google_services:
         yield
 
 
