@@ -160,7 +160,7 @@ class PowerWallExportSensor(PowerWallEnergyDirectionSensor):
     @property
     def native_value(self) -> float:
         """Get the current value in kWh."""
-        return abs(self.meter.get_energy_exported())
+        return self.meter.get_energy_exported()
 
 
 class PowerWallImportSensor(PowerWallEnergyDirectionSensor):
@@ -177,4 +177,4 @@ class PowerWallImportSensor(PowerWallEnergyDirectionSensor):
     @property
     def native_value(self) -> float:
         """Get the current value in kWh."""
-        return abs(self.meter.get_energy_imported())
+        return self.meter.get_energy_imported()
