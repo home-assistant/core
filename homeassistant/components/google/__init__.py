@@ -7,9 +7,8 @@ from enum import Enum
 import logging
 from typing import Any
 
-from googleapiclient import discovery as google_discovery
-import httplib2
 from oauth2client.client import (
+    Credentials,
     FlowExchangeError,
     OAuth2DeviceCodeError,
     OAuth2WebServerFlow,
@@ -36,6 +35,8 @@ from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import convert
+
+from .api import GoogleCalendarService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,6 +78,7 @@ SERVICE_FOUND_CALENDARS = "found_calendar"
 SERVICE_ADD_EVENT = "add_event"
 
 DATA_CALENDARS = "calendars"
+DATA_SERVICE = "service"
 
 YAML_DEVICES = f"{DOMAIN}_calendars.yaml"
 
@@ -251,13 +253,16 @@ def do_authentication(
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Google platform."""
-    hass.data[DOMAIN] = {DATA_CALENDARS: {}}
 
     if not (conf := config.get(DOMAIN, {})):
         # component is set up by tts platform
         return True
 
     storage = Storage(hass.config.path(TOKEN_FILE))
+    hass.data[DOMAIN] = {
+        DATA_CALENDARS: {},
+        DATA_SERVICE: GoogleCalendarService(hass, storage),
+    }
     creds = storage.get()
     if (
         not creds
@@ -271,32 +276,12 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def check_correct_scopes(
-    hass: HomeAssistant, token_file: str, config: ConfigType
-) -> bool:
+def check_correct_scopes(creds: Credentials | None, config: ConfigType) -> bool:
     """Check for the correct scopes in file."""
-    creds = Storage(token_file).get()
     if not creds or not creds.scopes:
         return False
     target_scope = config[CONF_CALENDAR_ACCESS].scope
     return target_scope in creds.scopes
-
-
-class GoogleCalendarService:
-    """Calendar service interface to Google."""
-
-    def __init__(self, token_file: str) -> None:
-        """Init the Google Calendar service."""
-        self.token_file = token_file
-
-    def get(self) -> google_discovery.Resource:
-        """Get the calendar service from the storage file token."""
-        credentials = Storage(self.token_file).get()
-        http = credentials.authorize(httplib2.Http())
-        service = google_discovery.build(
-            "calendar", "v3", http=http, cache_discovery=False
-        )
-        return service
 
 
 def setup_services(
@@ -328,9 +313,7 @@ def setup_services(
 
     def _scan_for_calendars(call: ServiceCall) -> None:
         """Scan for new calendars."""
-        service = calendar_service.get()
-        cal_list = service.calendarList()
-        calendars = cal_list.list().execute()["items"]
+        calendars = calendar_service.list_calendars()
         for calendar in calendars:
             calendar["track"] = track_new_found_calendars
             hass.services.call(DOMAIN, SERVICE_FOUND_CALENDARS, calendar)
@@ -339,7 +322,6 @@ def setup_services(
 
     def _add_event(call: ServiceCall) -> None:
         """Add a new event to calendar."""
-        service = calendar_service.get()
         start = {}
         end = {}
 
@@ -374,14 +356,14 @@ def setup_services(
             start = {"dateTime": start_dt, "timeZone": str(hass.config.time_zone)}
             end = {"dateTime": end_dt, "timeZone": str(hass.config.time_zone)}
 
+        calendar_id = call.data[EVENT_CALENDAR_ID]
         event = {
             "summary": call.data[EVENT_SUMMARY],
             "description": call.data[EVENT_DESCRIPTION],
             "start": start,
             "end": end,
         }
-        service_data = {"calendarId": call.data[EVENT_CALENDAR_ID], "body": event}
-        event = service.events().insert(**service_data).execute()
+        event = calendar_service.create_event(calendar_id, event)
 
     # Only expose the add event service if we have the correct permissions
     if config.get(CONF_CALENDAR_ACCESS) is FeatureAccess.read_write:
@@ -392,16 +374,15 @@ def setup_services(
 
 def do_setup(hass: HomeAssistant, hass_config: ConfigType, config: ConfigType) -> None:
     """Run the setup after we have everything configured."""
-    _LOGGER.debug("Setting up integration")
     # Load calendars the user has configured
     calendars = load_config(hass.config.path(YAML_DEVICES))
     hass.data[DOMAIN][DATA_CALENDARS] = calendars
 
-    calendar_service = GoogleCalendarService(hass.config.path(TOKEN_FILE))
     track_new_found_calendars = convert(
         config.get(CONF_TRACK_NEW), bool, DEFAULT_CONF_TRACK_NEW
     )
     assert track_new_found_calendars is not None
+    calendar_service = hass.data[DOMAIN][DATA_SERVICE]
     setup_services(
         hass, hass_config, config, track_new_found_calendars, calendar_service
     )
