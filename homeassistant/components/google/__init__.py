@@ -1,4 +1,6 @@
 """Support for Google - Calendar Event Devices."""
+from __future__ import annotations
+
 from collections.abc import Mapping
 from datetime import datetime, timedelta, timezone
 from enum import Enum
@@ -28,7 +30,7 @@ from homeassistant.const import (
     CONF_OFFSET,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
@@ -196,6 +198,8 @@ def do_authentication(
         notification_id=NOTIFICATION_ID,
     )
 
+    listener: CALLBACK_TYPE | None = None
+
     def step2_exchange(now: datetime) -> None:
         """Keep trying to validate the user_code until it expires."""
         _LOGGER.debug("Attempting to validate user code")
@@ -212,6 +216,7 @@ def do_authentication(
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID,
             )
+            assert listener
             listener()
             return
 
@@ -224,6 +229,7 @@ def do_authentication(
         storage = Storage(hass.config.path(TOKEN_FILE))
         storage.put(credentials)
         do_setup(hass, hass_config, config)
+        assert listener
         listener()
         persistent_notification.create(
             hass,
