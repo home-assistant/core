@@ -70,6 +70,6 @@ class HoneywellSensor(SensorEntity):
         """Return the state."""
         if self.entity_description.key == TEMPERATURE_STATUS_KEY:
             return self._device.outdoor_temperature
-        if self.entity_description == HUMIDITY_STATUS_KEY:
+        if self.entity_description.key == HUMIDITY_STATUS_KEY:
             return self._device.outdoor_humidity
         return None
