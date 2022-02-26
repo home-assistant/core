@@ -75,7 +75,7 @@ SERVICE_SCAN_CALENDARS = "scan_for_calendars"
 SERVICE_FOUND_CALENDARS = "found_calendar"
 SERVICE_ADD_EVENT = "add_event"
 
-DATA_INDEX = "google_calendars"
+DATA_CALENDARS = "calendars"
 
 YAML_DEVICES = f"{DOMAIN}_calendars.yaml"
 
@@ -244,8 +244,7 @@ def do_authentication(
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Google platform."""
-    if DATA_INDEX not in hass.data:
-        hass.data[DATA_INDEX] = {}
+    hass.data[DOMAIN] = {DATA_CALENDARS: {}}
 
     if not (conf := config.get(DOMAIN, {})):
         # component is set up by tts platform
@@ -305,20 +304,16 @@ def setup_services(
     def _found_calendar(call: ServiceCall) -> None:
         """Check if we know about a calendar and generate PLATFORM_DISCOVER."""
         calendar = get_calendar_info(hass, call.data)
-        if hass.data[DATA_INDEX].get(calendar[CONF_CAL_ID]) is not None:
+        calendar_id = calendar[CONF_CAL_ID]
+        if calendar_id in hass.data[DOMAIN][DATA_CALENDARS]:
             return
-
-        hass.data[DATA_INDEX].update({calendar[CONF_CAL_ID]: calendar})
-
-        update_config(
-            hass.config.path(YAML_DEVICES), hass.data[DATA_INDEX][calendar[CONF_CAL_ID]]
-        )
-
+        hass.data[DOMAIN][DATA_CALENDARS][calendar_id] = calendar
+        update_config(hass.config.path(YAML_DEVICES), calendar)
         discovery.load_platform(
             hass,
             Platform.CALENDAR,
             DOMAIN,
-            hass.data[DATA_INDEX][calendar[CONF_CAL_ID]],
+            calendar,
             hass_config,
         )
 
@@ -392,7 +387,8 @@ def do_setup(hass: HomeAssistant, hass_config: ConfigType, config: ConfigType) -
     """Run the setup after we have everything configured."""
     _LOGGER.debug("Setting up integration")
     # Load calendars the user has configured
-    hass.data[DATA_INDEX] = load_config(hass.config.path(YAML_DEVICES))
+    calendars = load_config(hass.config.path(YAML_DEVICES))
+    hass.data[DOMAIN][DATA_CALENDARS] = calendars
 
     calendar_service = GoogleCalendarService(hass.config.path(TOKEN_FILE))
     track_new_found_calendars = convert(
@@ -403,7 +399,7 @@ def do_setup(hass: HomeAssistant, hass_config: ConfigType, config: ConfigType) -
         hass, hass_config, config, track_new_found_calendars, calendar_service
     )
 
-    for calendar in hass.data[DATA_INDEX].values():
+    for calendar in calendars.values():
         discovery.load_platform(hass, Platform.CALENDAR, DOMAIN, calendar, hass_config)
 
     # Look for any new calendars
