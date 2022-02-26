@@ -57,19 +57,22 @@ class UptimeRobotSwitch(UptimeRobotEntity, SwitchEntity):
         """Edit monitor status."""
         try:
             response = await self.api.async_edit_monitor(**kwargs)
-            self.async_write_ha_state()
         except UptimeRobotAuthenticationException:
             if self.coordinator.config_entry:
                 self.coordinator.config_entry.async_start_reauth(self.hass)
-            LOGGER.error("API exception: Authentiocation error with empty config entry")
+            LOGGER.error("API exception: Authentication error with empty config entry")
+        except Exception as exception:  # pylint: disable=broad-except
+            LOGGER.error("API exception: %s", exception)
         else:
             if response.status != API_ATTR_OK:
                 LOGGER.error("API exception: %s", response.error.message, exc_info=True)
+            else:
+                await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        await self._async_edit_monitor(id=self.monitor.id, status=1)
+        await self._async_edit_monitor(id=self.monitor.id, status=0)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn off switch."""
-        await self._async_edit_monitor(id=self.monitor.id, status=0)
+        await self._async_edit_monitor(id=self.monitor.id, status=1)
