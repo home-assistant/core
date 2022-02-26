@@ -8,7 +8,6 @@ import logging
 from typing import Any
 
 from oauth2client.client import (
-    Credentials,
     FlowExchangeError,
     OAuth2DeviceCodeError,
     OAuth2WebServerFlow,
@@ -274,14 +273,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         do_setup(hass, config, conf)
 
     return True
-
-
-def check_correct_scopes(creds: Credentials | None, config: ConfigType) -> bool:
-    """Check for the correct scopes in file."""
-    if not creds or not creds.scopes:
-        return False
-    target_scope = config[CONF_CALENDAR_ACCESS].scope
-    return target_scope in creds.scopes
 
 
 def setup_services(
