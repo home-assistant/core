@@ -1,0 +1,38 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Steam",
+        "description": "Documentation: https://www.home-assistant.io/integrations/steam_online\n\nUse https://steamid.io/ to find your Steam account ID",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "account": "Steam account ID"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Steam integration needs to be manually re-authenticated\n\nYou can find your key here: https://steamcommunity.com/dev/apikey"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_account": "Invalid account ID",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "accounts": "Names of accounts to be monitored"
+        }
+      }
+    }
+  }
+}
+  

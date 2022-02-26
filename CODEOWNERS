@@ -910,6 +910,8 @@ homeassistant/components/starline/* @anonym-tsk
 tests/components/starline/* @anonym-tsk
 homeassistant/components/statistics/* @fabaff @ThomDietrich
 tests/components/statistics/* @fabaff @ThomDietrich
+homeassistant/components/steam_online/* @tkdrob
+tests/components/steam_online/* @tkdrob
 homeassistant/components/steamist/* @bdraco
 tests/components/steamist/* @bdraco
 homeassistant/components/stiebel_eltron/* @fucm
