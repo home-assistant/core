@@ -4,7 +4,7 @@ from __future__ import annotations
 from aiogithubapi import GitHubAPI
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import (
@@ -38,6 +38,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
         await coordinator.async_config_entry_first_refresh()
+        await coordinator.subscribe()
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, coordinator.unsubscribe)
 
         hass.data[DOMAIN][repository] = coordinator
 
@@ -45,7 +47,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-
     return True
 
 
@@ -77,6 +78,10 @@ def async_cleanup_device_registry(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    repositories: dict[str, GitHubDataUpdateCoordinator] = hass.data[DOMAIN]
+    for coordinator in repositories.values():
+        coordinator.unsubscribe()
+
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data.pop(DOMAIN)
     return unload_ok
