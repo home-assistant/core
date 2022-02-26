@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_METHOD, TIME_HOURS
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
@@ -39,11 +40,11 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(data: dict[str, Any]) -> None:
+async def validate_input(data: dict[str, Any], hass: HomeAssistant) -> None:
     """Validate the user input allows us to connect."""
 
-    if data[CONF_SOURCE_SENSOR] is None:
-        raise Exception
+    if hass.states.get(data[CONF_SOURCE_SENSOR]) is None:
+        raise InvalidSourceSensorError
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -63,7 +64,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            await validate_input(user_input)
+            await validate_input(user_input, self.hass)
+        except InvalidSourceSensorError:
+            errors["base"] = "invalid_source"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
@@ -77,3 +80,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+
+class InvalidSourceSensorError(Exception):
+    """Handle invalid entity ids."""

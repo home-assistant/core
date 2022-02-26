@@ -4,6 +4,7 @@
             "already_configured": "Service is already configured"
         },
         "error": {
+            "invalid_source": "The given source sensor does not exists.",
             "unknown_error": "Unexpected error"
         },
         "step": {
