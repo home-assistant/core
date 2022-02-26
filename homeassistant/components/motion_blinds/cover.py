@@ -116,7 +116,13 @@ async def async_setup_entry(
             )
 
         else:
-            _LOGGER.warning("Blind type '%s' not yet supported", blind.blind_type)
+            _LOGGER.warning("Blind type '%s' not yet supported, "
+                            "assuming RollerBlind", blind.blind_type)
+            entities.append(
+                MotionPositionDevice(
+                    coordinator, blind, POSITION_DEVICE_MAP[BlindType.RollerBlind], config_entry
+                )
+            )
 
     async_add_entities(entities)
 
