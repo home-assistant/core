@@ -47,11 +47,10 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import GroupEntity
 from .util import (
     attribute_equal,
+    find_state_attributes,
     most_frequent_attribute,
     reduce_attribute,
     states_equal,
-    find_state_attributes,
-    mean_tuple,
 )
 
 SUPPORTED_FLAGS = {
@@ -194,7 +193,7 @@ class FanGroup(GroupEntity, FanEntity):
 
         await super().async_added_to_hass()
 
-    async def async_set_preset_mode(self, preset_mode: int) -> None:
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         await self._async_call_supported_entities(
             SERVICE_SET_PRESET_MODE,
@@ -305,19 +304,25 @@ class FanGroup(GroupEntity, FanEntity):
         self._set_attr_most_frequent(
             "_oscillating", SUPPORT_OSCILLATE, ATTR_OSCILLATING
         )
-        self._set_attr_most_frequent("_direction", SUPPORT_DIRECTION, ATTR_DIRECTION)
 
-        self._set_attr_most_frequent(
-            "_preset_mode", SUPPORT_PRESET_MODE, ATTR_PRESET_MODE
-        )
+        self._set_attr_most_frequent("_direction", SUPPORT_DIRECTION, ATTR_DIRECTION)
 
         all_supported_preset_modes = list(
             find_state_attributes(on_states, ATTR_PRESET_MODES)
         )
-        if attribute_equal(on_states, ATTR_PRESET_MODES):
+
+        if all_supported_preset_modes and attribute_equal(on_states, ATTR_PRESET_MODES):
             self._preset_modes = all_supported_preset_modes[0]
         else:
             self._preset_modes = None
+
+        if attribute_equal(on_states, ATTR_PRESET_MODE):
+            self._set_attr_most_frequent(
+                "_preset_mode", SUPPORT_PRESET_MODE, ATTR_PRESET_MODE
+            )
+        else:
+            self._attr_assumed_state = True
+            self._preset_mode = None
 
         self._supported_features = reduce(
             ior, [feature for feature in SUPPORTED_FLAGS if self._fans[feature]], 0
