@@ -77,7 +77,12 @@ from homeassistant.helpers.network import is_internal_request
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from .browse_media import build_item_response, get_media_info, library_payload
+from .browse_media import (
+    build_item_response,
+    get_media_info,
+    library_payload,
+    media_source_content_filter,
+)
 from .const import (
     CONF_WS_PORT,
     DATA_CONNECTION,
@@ -916,7 +921,9 @@ class KodiEntity(MediaPlayerEntity):
             return await library_payload(self.hass)
 
         if media_source.is_media_source_id(media_content_id):
-            return await media_source.async_browse_media(self.hass, media_content_id)
+            return await media_source.async_browse_media(
+                self.hass, media_content_id, content_filter=media_source_content_filter
+            )
 
         payload = {
             "search_type": media_content_type,
