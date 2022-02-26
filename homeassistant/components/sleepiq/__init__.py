@@ -26,7 +26,13 @@ from .coordinator import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 CONFIG_SCHEMA = vol.Schema(
     {
