@@ -6,11 +6,9 @@
   "requirements": [
     "python-rabbitair==0.0.6"
   ],
-  "ssdp": [],
   "zeroconf": [
     "_rabbitair._udp.local."
   ],
-  "homekit": {},
   "after_dependencies": [
     "zeroconf"
   ],
