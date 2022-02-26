@@ -31,8 +31,7 @@ class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(import_config[CONF_USERNAME].lower())
         self._abort_if_unique_id_configured()
 
-        error = await try_connection(self.hass, import_config)
-        if error is not None:
+        if (error := await try_connection(self.hass, import_config)) is not None:
             _LOGGER.error("Could not authenticate with SleepIQ server: %s", error)
             return self.async_abort(reason=error)
 
@@ -51,8 +50,7 @@ class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
             self._abort_if_unique_id_configured()
 
-            error = await try_connection(self.hass, user_input)
-            if error is None:
+            if (error := await try_connection(self.hass, user_input)) is None:
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )
