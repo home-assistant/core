@@ -195,6 +195,7 @@ class GoogleCalendarData:
             )
         except ServerNotFoundError as err:
             _LOGGER.error("Unable to connect to Google: %s", err)
-            return None
+            return
+
         valid_events = filter(self._event_filter, items)
         self.event = next(valid_events, None)
