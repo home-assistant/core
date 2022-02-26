@@ -602,9 +602,6 @@ enturclient==0.2.3
 # homeassistant.components.environment_canada
 env_canada==0.5.20
 
-# homeassistant.components.envirophat
-# envirophat==0.0.6
-
 # homeassistant.components.enphase_envoy
 envoy_reader==0.20.1
 
@@ -2188,7 +2185,6 @@ smart-meter-texas==0.4.7
 smarthab==0.21
 
 # homeassistant.components.bme680
-# homeassistant.components.envirophat
 # homeassistant.components.htu21d
 # homeassistant.components.raspihats
 # smbus-cffi==0.5.1

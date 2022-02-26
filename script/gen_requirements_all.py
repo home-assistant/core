@@ -22,7 +22,6 @@ COMMENT_REQUIREMENTS = (
     "bme680",
     "decora",
     "decora_wifi",
-    "envirophat",
     "evdev",
     "face_recognition",
     "homeassistant-pyozw",

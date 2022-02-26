@@ -297,7 +297,6 @@ omit =
     homeassistant/components/environment_canada/camera.py
     homeassistant/components/environment_canada/sensor.py
     homeassistant/components/environment_canada/weather.py
-    homeassistant/components/envirophat/sensor.py
     homeassistant/components/envisalink/*
     homeassistant/components/ephember/climate.py
     homeassistant/components/epson/__init__.py
