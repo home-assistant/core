@@ -6,7 +6,7 @@ import binascii
 from collections.abc import Callable
 import copy
 import logging
-from typing import NamedTuple
+from typing import NamedTuple, cast
 
 import RFXtrx as rfxtrxmod
 import async_timeout
@@ -242,11 +242,7 @@ async def async_setup_internal(hass, entry: ConfigEntry):
         devices[device_id] = config
 
     @callback
-    def _remove_device(event: Event):
-        if event.data["action"] != "remove":
-            return
-        device_entry = device_registry.deleted_devices[event.data["device_id"]]
-        device_id = next(iter(device_entry.identifiers))[1:]
+    def _remove_device(device_id: DeviceTuple):
         data = {
             **entry.data,
             CONF_DEVICES: {
@@ -258,8 +254,19 @@ async def async_setup_internal(hass, entry: ConfigEntry):
         hass.config_entries.async_update_entry(entry=entry, data=data)
         devices.pop(device_id)
 
+    @callback
+    def _updated_device(event: Event):
+        if event.data["action"] != "remove":
+            return
+        device_entry = device_registry.deleted_devices[event.data["device_id"]]
+        if entry.entry_id not in device_entry.config_entries:
+            return
+        device_id = get_device_tuple_from_identifiers(device_entry.identifiers)
+        if device_id:
+            _remove_device(device_id)
+
     entry.async_on_unload(
-        hass.bus.async_listen(EVENT_DEVICE_REGISTRY_UPDATED, _remove_device)
+        hass.bus.async_listen(EVENT_DEVICE_REGISTRY_UPDATED, _updated_device)
     )
 
     def _shutdown_rfxtrx(event):
@@ -424,6 +431,18 @@ def get_device_id(
         id_string = masked_id.decode("ASCII")
 
     return DeviceTuple(f"{device.packettype:x}", f"{device.subtype:x}", id_string)
+
+
+def get_device_tuple_from_identifiers(
+    identifiers: set[tuple[str, str]]
+) -> DeviceTuple | None:
+    """Calculate the device tuple from a device entry."""
+    identifier = next((x for x in identifiers if x[0] == DOMAIN), None)
+    if not identifier:
+        return None
+    # work around legacy identifier, being a multi tuple value
+    identifier2 = cast(tuple[str, str, str, str], identifier)
+    return DeviceTuple(identifier2[1], identifier2[2], identifier2[3])
 
 
 async def async_remove_config_entry_device(
