@@ -36,62 +36,6 @@ TEST_CALENDAR = {
 }
 
 
-class FakeStorage:
-    """A fake storage object for persiting creds."""
-
-    def __init__(self) -> None:
-        """Initialize FakeStorage."""
-        self._creds: Credentials | None = None
-
-    def get(self) -> Credentials | None:
-        """Get credentials from storage."""
-        return self._creds
-
-    def put(self, creds: Credentials) -> None:
-        """Put credentials in storage."""
-        self._creds = creds
-
-
-@pytest.fixture
-async def token_scopes() -> list[str]:
-    """Fixture for scopes used during test."""
-    return ["https://www.googleapis.com/auth/calendar"]
-
-
-@pytest.fixture
-async def creds(token_scopes: list[str]) -> OAuth2Credentials:
-    """Fixture that defines creds used in the test."""
-    token_expiry = utcnow() + datetime.timedelta(days=7)
-    return OAuth2Credentials(
-        access_token="ACCESS_TOKEN",
-        client_id="client-id",
-        client_secret="client-secret",
-        refresh_token="REFRESH_TOKEN",
-        token_expiry=token_expiry,
-        token_uri="http://example.com",
-        user_agent="n/a",
-        scopes=token_scopes,
-    )
-
-
-@pytest.fixture(autouse=True)
-async def storage() -> YieldFixture[FakeStorage]:
-    """Fixture to populate an existing token file for read on startup."""
-    storage = FakeStorage()
-    with patch("homeassistant.components.google.Storage", return_value=storage):
-        yield storage
-
-
-@pytest.fixture
-async def mock_token_read(
-    hass: HomeAssistant,
-    creds: OAuth2Credentials,
-    storage: FakeStorage,
-) -> None:
-    """Fixture to populate an existing token file for read on startup."""
-    storage.put(creds)
-
-
 @pytest.fixture
 def test_calendar():
     """Return a test calendar."""
