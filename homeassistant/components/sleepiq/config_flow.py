@@ -28,9 +28,9 @@ class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(import_config[CONF_USERNAME].lower())
         self._abort_if_unique_id_configured()
 
-        connection_result = await try_connection(self.hass, import_config)
-        if connection_result:
-            return self.async_abort(reason=connection_result)
+        error = await try_connection(self.hass, import_config)
+        if error is not None:
+            return self.async_abort(reason=error)
 
         return self.async_create_entry(
             title=import_config[CONF_USERNAME], data=import_config
@@ -47,13 +47,13 @@ class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
             self._abort_if_unique_id_configured()
 
-            connection_result = await try_connection(self.hass, user_input)
-            if not connection_result:
+            error = await try_connection(self.hass, user_input)
+            if error is None:
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )
 
-            errors["base"] = connection_result
+            errors["base"] = error
         else:
             user_input = {}
 
@@ -73,7 +73,7 @@ class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-async def try_connection(hass: HomeAssistant, user_input: dict[str, Any]) -> str:
+async def try_connection(hass: HomeAssistant, user_input: dict[str, Any]) -> str | None:
     """Test if the given credentials can successfully login to SleepIQ."""
 
     client_session = async_get_clientsession(hass)
@@ -86,4 +86,4 @@ async def try_connection(hass: HomeAssistant, user_input: dict[str, Any]) -> str
     except SleepIQTimeoutException:
         return "cannot_connect"
 
-    return ""
+    return None
