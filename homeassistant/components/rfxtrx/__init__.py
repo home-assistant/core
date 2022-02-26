@@ -175,22 +175,25 @@ async def async_setup_internal(hass, entry: ConfigEntry):
     def async_handle_receive(event):
         """Handle received messages from RFXtrx gateway."""
         # Log RFXCOM event
-        if not event.device.id_string:
+        device: rfxtrxmod.RFXtrxDevice = event.device
+        if not device.id_string:
             return
 
+        event_code = binascii.hexlify(event.data).decode("ASCII")
+
         event_data = {
-            "packet_type": event.device.packettype,
-            "sub_type": event.device.subtype,
-            "type_string": event.device.type_string,
-            "id_string": event.device.id_string,
-            "data": binascii.hexlify(event.data).decode("ASCII"),
+            "packet_type": device.packettype,
+            "sub_type": device.subtype,
+            "type_string": device.type_string,
+            "id_string": device.id_string,
+            "data": event_code,
             "values": getattr(event, "values", None),
         }
 
         _LOGGER.debug("Receive RFXCOM event: %s", event_data)
 
-        data_bits = get_device_data_bits(event.device, devices)
-        device_id = get_device_id(event.device, data_bits=data_bits)
+        data_bits = get_device_data_bits(device, devices)
+        device_id = get_device_id(device, data_bits=data_bits)
 
         if device_id not in devices:
             if config[CONF_AUTOMATIC_ADD]:
