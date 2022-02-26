@@ -35,7 +35,7 @@ def com_port():
     return port
 
 
-async def init_hass_with_entry(hass, entry):
+async def start_options_flow(hass, entry):
     """Init hass with the entry under test."""
     entry.add_to_hass(hass)
 
@@ -304,7 +304,7 @@ async def test_options_global(hass):
         unique_id=DOMAIN,
     )
     with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
-        result = await init_hass_with_entry(hass, entry)
+        result = await start_options_flow(hass, entry)
 
     assert result["type"] == "form"
     assert result["step_id"] == "prompt_options"
@@ -339,7 +339,7 @@ async def test_no_protocols(hass):
         unique_id=DOMAIN,
     )
     with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
-        result = await init_hass_with_entry(hass, entry)
+        result = await start_options_flow(hass, entry)
 
     assert result["type"] == "form"
     assert result["step_id"] == "prompt_options"
@@ -372,7 +372,7 @@ async def test_options_add_device(hass):
         },
         unique_id=DOMAIN,
     )
-    result = await init_hass_with_entry(hass, entry)
+    result = await start_options_flow(hass, entry)
 
     assert result["type"] == "form"
     assert result["step_id"] == "prompt_options"
@@ -473,7 +473,7 @@ async def test_options_replace_sensor_device(hass):
         },
         unique_id=DOMAIN,
     )
-    await init_hass_with_entry(hass, entry)
+    await start_options_flow(hass, entry)
 
     state = hass.states.get(
         "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_rssi_numeric"
@@ -636,7 +636,7 @@ async def test_options_replace_control_device(hass):
         },
         unique_id=DOMAIN,
     )
-    await init_hass_with_entry(hass, entry)
+    await start_options_flow(hass, entry)
 
     state = hass.states.get("binary_sensor.ac_118cdea_2")
     assert state
@@ -732,7 +732,7 @@ async def test_options_add_and_configure_device(hass):
         },
         unique_id=DOMAIN,
     )
-    result = await init_hass_with_entry(hass, entry)
+    result = await start_options_flow(hass, entry)
 
     assert result["type"] == "form"
     assert result["step_id"] == "prompt_options"
@@ -846,7 +846,7 @@ async def test_options_configure_rfy_cover_device(hass):
         },
         unique_id=DOMAIN,
     )
-    result = await init_hass_with_entry(hass, entry)
+    result = await start_options_flow(hass, entry)
 
     assert result["type"] == "form"
     assert result["step_id"] == "prompt_options"
