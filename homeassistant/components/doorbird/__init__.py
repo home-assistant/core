@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from http import HTTPStatus
 import logging
+from typing import Any
 
 from aiohttp import web
 from doorbirdpy import DoorBird
@@ -166,7 +167,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def _async_register_events(hass, doorstation):
+async def _async_register_events(
+    hass: HomeAssistant, doorstation: ConfiguredDoorBird
+) -> bool:
     try:
         await hass.async_add_executor_job(doorstation.register_events, hass)
     except requests.exceptions.HTTPError:
@@ -243,7 +246,7 @@ class ConfiguredDoorBird:
         """Get token for device."""
         return self._token
 
-    def register_events(self, hass):
+    def register_events(self, hass: HomeAssistant) -> None:
         """Register events on device."""
         # Get the URL of this server
         hass_url = get_url(hass)
@@ -271,7 +274,9 @@ class ConfiguredDoorBird:
     def _get_event_name(self, event):
         return f"{self.slug}_{event}"
 
-    def _register_event(self, hass_url, event, favs=None) -> bool:
+    def _register_event(
+        self, hass_url: str, event: str, favs: dict[str, Any] | None = None
+    ) -> bool:
         """Add a schedule entry in the device for a sensor."""
         url = f"{hass_url}{API_URL}/{event}?token={self._token}"
 
