@@ -258,9 +258,10 @@ class ConfiguredDoorBird:
 
         favorites = self.device.favorites()
         for event in self.doorstation_events:
-            self._register_event(hass_url, event, favs=favorites)
-
-            _LOGGER.info("Successfully registered URL for %s on %s", event, self.name)
+            if self._register_event(hass_url, event, favs=favorites):
+                _LOGGER.info(
+                    "Successfully registered URL for %s on %s", event, self.name
+                )
 
     @property
     def slug(self):
@@ -270,21 +271,23 @@ class ConfiguredDoorBird:
     def _get_event_name(self, event):
         return f"{self.slug}_{event}"
 
-    def _register_event(self, hass_url, event, favs=None):
+    def _register_event(self, hass_url, event, favs=None) -> bool:
         """Add a schedule entry in the device for a sensor."""
         url = f"{hass_url}{API_URL}/{event}?token={self._token}"
 
         # Register HA URL as webhook if not already, then get the ID
         if self.webhook_is_registered(url, favs=favs):
-            return
+            return True
 
         self.device.change_favorite("http", f"Home Assistant ({event})", url)
         if not self.webhook_is_registered(url):
             _LOGGER.warning(
-                'Could not find favorite for URL "%s". ' 'Skipping sensor "%s"',
+                'Unable to set favorite URL "%s". ' 'Event "%s" will not fire',
                 url,
                 event,
             )
+            return False
+        return True
 
     def webhook_is_registered(self, url, favs=None) -> bool:
         """Return whether the given URL is registered as a device favorite."""
