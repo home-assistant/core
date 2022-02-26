@@ -1,6 +1,7 @@
 """Config flow to configure SleepIQ component."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from asyncsleepiq import AsyncSleepIQ, SleepIQLoginException, SleepIQTimeoutException
@@ -13,6 +14,8 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -30,6 +33,7 @@ class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         error = await try_connection(self.hass, import_config)
         if error is not None:
+            _LOGGER.error("Could not authenticate with SleepIQ server: %s", error)
             return self.async_abort(reason=error)
 
         return self.async_create_entry(
