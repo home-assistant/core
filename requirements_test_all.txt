@@ -668,7 +668,7 @@ minio==5.0.10
 moehlenhoff-alpha2==1.1.2
 
 # homeassistant.components.motion_blinds
-motionblinds==0.5.13
+motionblinds==0.6.0
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
