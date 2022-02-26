@@ -18,12 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 EVENT_PAGE_SIZE = 100
 
 
-def _api_time_format(
-    time: datetime.datetime | None, default: datetime.datetime | None = None
-) -> str | None:
+def _api_time_format(time: datetime.datetime | None) -> str | None:
     """Convert a datetime to the api string format."""
-    if time is None:
-        time = default
     return time.isoformat("T") if time else None
 
 
@@ -79,8 +75,8 @@ class GoogleCalendarService:
         events = self._get_service().events()  # pylint: disable=no-member
         result = events.list(
             calendarId=calendar_id,
-            start_time=_api_time_format(start_time, default=dt.now()),
-            end_time=_api_time_format(start_time),
+            start_time=_api_time_format(start_time if start_time else dt.now()),
+            end_time=_api_time_format(end_time),
             q=search,
             maxResults=EVENT_PAGE_SIZE,
             pageToken=page_token,
