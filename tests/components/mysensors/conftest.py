@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator, Callable, Generator
 import json
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from mysensors import BaseSyncGateway
 from mysensors.persistence import MySensorsJSONDecoder
@@ -63,39 +63,53 @@ async def serial_transport_fixture(
     """Mock a serial transport."""
     with patch(
         "mysensors.gateway_serial.AsyncTransport", autospec=True
-    ) as transport_class, patch("mysensors.AsyncTasks", autospec=True) as tasks_class:
-        tasks = tasks_class.return_value
-        tasks.persistence = MagicMock
+    ) as transport_class, patch("mysensors.task.OTAFirmware", autospec=True), patch(
+        "mysensors.task.load_fw", autospec=True
+    ), patch(
+        "mysensors.task.Persistence", autospec=True
+    ) as persistence_class:
+        persistence = persistence_class.return_value
 
-        mock_gateway_features(tasks, transport_class, gateway_nodes)
+        mock_gateway_features(persistence, transport_class, gateway_nodes)
 
         yield transport_class
 
 
 def mock_gateway_features(
-    tasks: MagicMock, transport_class: MagicMock, nodes: dict[int, Sensor]
+    persistence: MagicMock, transport_class: MagicMock, nodes: dict[int, Sensor]
 ) -> None:
     """Mock the gateway features."""
 
-    async def mock_start_persistence() -> None:
+    async def mock_schedule_save_sensors() -> None:
         """Load nodes from via persistence."""
         gateway = transport_class.call_args[0][0]
         gateway.sensors.update(nodes)
 
-    tasks.start_persistence.side_effect = mock_start_persistence
+    persistence.schedule_save_sensors = AsyncMock(
+        side_effect=mock_schedule_save_sensors
+    )
 
-    async def mock_start() -> None:
+    async def mock_connect() -> None:
         """Mock the start method."""
+        transport.connect_task = MagicMock()
         gateway = transport_class.call_args[0][0]
         gateway.on_conn_made(gateway)
 
-    tasks.start.side_effect = mock_start
+    transport = transport_class.return_value
+    transport.connect_task = None
+    transport.connect.side_effect = mock_connect
 
 
 @pytest.fixture(name="transport")
 def transport_fixture(serial_transport: MagicMock) -> MagicMock:
     """Return the default mocked transport."""
     return serial_transport
+
+
+@pytest.fixture
+def transport_write(transport: MagicMock) -> MagicMock:
+    """Return the transport mock that accepts string messages."""
+    return transport.return_value.send
 
 
 @pytest.fixture(name="serial_entry")
@@ -119,16 +133,28 @@ def config_entry_fixture(serial_entry: MockConfigEntry) -> MockConfigEntry:
     return serial_entry
 
 
-@pytest.fixture
-async def integration(
+@pytest.fixture(name="integration")
+async def integration_fixture(
     hass: HomeAssistant, transport: MagicMock, config_entry: MockConfigEntry
-) -> AsyncGenerator[tuple[MockConfigEntry, Callable[[str], None]], None]:
+) -> AsyncGenerator[MockConfigEntry, None]:
     """Set up the mysensors integration with a config entry."""
     device = config_entry.data[CONF_DEVICE]
     config: dict[str, Any] = {DOMAIN: {CONF_GATEWAYS: [{CONF_DEVICE: device}]}}
     config_entry.add_to_hass(hass)
 
-    def receive_message(message_string: str) -> None:
+    with patch("homeassistant.components.mysensors.device.UPDATE_DELAY", new=0):
+        await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+        yield config_entry
+
+
+@pytest.fixture
+def receive_message(
+    transport: MagicMock, integration: MockConfigEntry
+) -> Callable[[str], None]:
+    """Receive a message for the gateway."""
+
+    def receive_message_callback(message_string: str) -> None:
         """Receive a message with the transport.
 
         The message_string parameter is a string in the MySensors message format.
@@ -137,14 +163,13 @@ async def integration(
         # node_id;child_id;command;ack;type;payload\n
         gateway.logic(message_string)
 
-    with patch("homeassistant.components.mysensors.device.UPDATE_DELAY", new=0):
-        await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
-        yield config_entry, receive_message
+    return receive_message_callback
 
 
 @pytest.fixture(name="gateway")
-def gateway_fixture(transport, integration) -> BaseSyncGateway:
+def gateway_fixture(
+    transport: MagicMock, integration: MockConfigEntry
+) -> BaseSyncGateway:
     """Return a setup gateway."""
     return transport.call_args[0][0]
 
