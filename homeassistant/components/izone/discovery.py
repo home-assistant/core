@@ -13,7 +13,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     DATA_CONFIG,
@@ -213,10 +212,10 @@ class DiscoveryService(pizone.Listener):
         @callback
         def controller_discovered(ctrl: pizone.Controller) -> None:
             """Discovered new controller."""
-            conf: ConfigType = hass.data.get(DATA_CONFIG)
+            conf = hass.data.get(DATA_CONFIG)
 
             # Filter out any entities excluded in the config file
-            if conf and ctrl.device_uid in conf[CONF_EXCLUDE]:
+            if conf and CONF_EXCLUDE in conf and ctrl.device_uid in conf[CONF_EXCLUDE]:
                 _LOGGER.info("Controller UID=%s ignored as excluded", ctrl.device_uid)
                 return
             if self._controllers.get(ctrl.device_uid) is not None:
