@@ -9,12 +9,7 @@ from homeassistant.components.sleepiq.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
-
-SLEEPIQ_CONFIG = {
-    CONF_USERNAME: "username",
-    CONF_PASSWORD: "password",
-}
+from tests.components.sleepiq.conftest import SLEEPIQ_CONFIG, setup_platform
 
 
 async def test_import(hass: HomeAssistant) -> None:
@@ -101,23 +96,17 @@ async def test_success(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_reauth_password(hass, mock_asyncsleepiq):
+async def test_reauth_password(hass):
     """Test reauth form."""
 
     # set up initially
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=SLEEPIQ_CONFIG,
-        unique_id="username",
-    )
-    entry.add_to_hass(hass)
+    entry = await setup_platform(hass)
     with patch("asyncsleepiq.AsyncSleepIQ.login", side_effect=SleepIQLoginException):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=entry.data
         )
     assert result["type"] == "form"
 
-    mock_asyncsleepiq.login.side_effect = None
     with patch("asyncsleepiq.AsyncSleepIQ.login", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -129,7 +118,7 @@ async def test_reauth_password(hass, mock_asyncsleepiq):
     assert result2["reason"] == "reauth_successful"
 
 
-async def test_reauth_new(hass, mock_asyncsleepiq):
+async def test_reauth_new(hass):
     """Test reauth form."""
 
     with patch("asyncsleepiq.AsyncSleepIQ.login", side_effect=SleepIQLoginException):
@@ -140,7 +129,6 @@ async def test_reauth_new(hass, mock_asyncsleepiq):
         )
     assert result["type"] == "form"
 
-    mock_asyncsleepiq.login.side_effect = None
     with patch("asyncsleepiq.AsyncSleepIQ.login", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
