@@ -88,6 +88,9 @@ def mock_gateway_features(
     persistence.schedule_save_sensors = AsyncMock(
         side_effect=mock_schedule_save_sensors
     )
+    # For some reason autospeccing does not recognize these methods.
+    persistence.safe_load_sensors = MagicMock()
+    persistence.save_sensors = MagicMock()
 
     async def mock_connect() -> None:
         """Mock the start method."""
