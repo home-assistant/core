@@ -58,6 +58,7 @@ async def test_discovery_flow_works(hass, aioclient_mock):
 
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
+        addresses=["192.168.43.183"],
         port=80,
         hostname="p1meter-ddeeff.local.",
         type="",
@@ -140,6 +141,7 @@ async def test_discovery_disabled_api(hass, aioclient_mock):
 
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
+        addresses=["192.168.43.183"],
         port=80,
         hostname="p1meter-ddeeff.local.",
         type="",
@@ -178,6 +180,7 @@ async def test_discovery_missing_data_in_service_info(hass, aioclient_mock):
 
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
+        addresses=["192.168.43.183"],
         port=80,
         hostname="p1meter-ddeeff.local.",
         type="",
@@ -206,6 +209,7 @@ async def test_discovery_invalid_api(hass, aioclient_mock):
 
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
+        addresses=["192.168.43.183"],
         port=80,
         hostname="p1meter-ddeeff.local.",
         type="",

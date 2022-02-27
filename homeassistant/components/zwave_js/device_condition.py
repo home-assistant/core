@@ -29,6 +29,7 @@ from .device_automation_helpers import (
     CONF_SUBTYPE,
     CONF_VALUE_ID,
     NODE_STATUSES,
+    generate_config_parameter_subtype,
     get_config_parameter_value_schema,
 )
 from .helpers import (
@@ -146,7 +147,7 @@ async def async_get_conditions(
                 **base_condition,
                 CONF_VALUE_ID: config_value.value_id,
                 CONF_TYPE: CONFIG_PARAMETER_TYPE,
-                CONF_SUBTYPE: f"{config_value.value_id} ({config_value.property_name})",
+                CONF_SUBTYPE: generate_config_parameter_subtype(config_value),
             }
             for config_value in node.get_configuration_values().values()
         ]

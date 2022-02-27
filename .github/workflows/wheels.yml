@@ -44,7 +44,7 @@ jobs:
             echo "GRPC_PYTHON_BUILD_WITH_CYTHON=true"
             echo "GRPC_PYTHON_DISABLE_LIBC_COMPATIBILITY=true"
             # GRPC on armv7 needs -lexecinfo (issue #56669) since home assistant installs
-            # execinfo-dev when building wheels. The setup.py does not have an option for
+            # execinfo-dev when building wheels. The setuptools build setup does not have an option for
             # adding a single LDFLAG so copy all relevant linux flags here (as of 1.43.0)
             echo "GRPC_PYTHON_LDFLAGS=-lpthread -Wl,-wrap,memcpy -static-libgcc -lexecinfo"
           ) > .env_file
@@ -136,8 +136,6 @@ jobs:
             sed -i "s|# beacontools|beacontools|g" ${requirement_file}
             sed -i "s|# RPi.GPIO|RPi.GPIO|g" ${requirement_file}
             sed -i "s|# raspihats|raspihats|g" ${requirement_file}
-            sed -i "s|# rpi-rf|rpi-rf|g" ${requirement_file}
-            sed -i "s|# blinkt|blinkt|g" ${requirement_file}
             sed -i "s|# fritzconnection|fritzconnection|g" ${requirement_file}
             sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
             sed -i "s|# evdev|evdev|g" ${requirement_file}
@@ -154,6 +152,7 @@ jobs:
             sed -i "s|# face_recognition|face_recognition|g" ${requirement_file}
             sed -i "s|# bme680|bme680|g" ${requirement_file}
             sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
+            sed -i "s|# homeassistant-pyozw|homeassistant-pyozw|g" ${requirement_file}
           done
 
       - name: Build wheels

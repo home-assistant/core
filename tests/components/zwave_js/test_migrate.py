@@ -8,6 +8,7 @@ from zwave_js_server.model.node import Node
 from homeassistant.components.zwave_js.api import ENTRY_ID, ID, TYPE
 from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
+from homeassistant.const import LIGHT_LUX
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import AIR_TEMPERATURE_SENSOR, NOTIFICATION_MOTION_BINARY_SENSOR
@@ -33,6 +34,10 @@ ZWAVE_MULTISENSOR_DEVICE_NAME = "Z-Wave Multisensor Device"
 ZWAVE_MULTISENSOR_DEVICE_AREA = "Z-Wave Multisensor Area"
 ZWAVE_SOURCE_NODE_ENTITY = "sensor.zwave_source_node"
 ZWAVE_SOURCE_NODE_UNIQUE_ID = "52-4321"
+ZWAVE_LUMINANCE_ENTITY = "sensor.zwave_luminance"
+ZWAVE_LUMINANCE_UNIQUE_ID = "52-6543"
+ZWAVE_LUMINANCE_NAME = "Z-Wave Luminance"
+ZWAVE_LUMINANCE_ICON = "mdi:zwave-test-luminance"
 ZWAVE_BATTERY_ENTITY = "sensor.zwave_battery_level"
 ZWAVE_BATTERY_UNIQUE_ID = "52-1234"
 ZWAVE_BATTERY_NAME = "Z-Wave Battery Level"
@@ -68,6 +73,14 @@ def zwave_migration_data_fixture(hass):
         unique_id=ZWAVE_SOURCE_NODE_UNIQUE_ID,
         platform="zwave",
         name="Z-Wave Source Node",
+    )
+    zwave_luminance_entry = er.RegistryEntry(
+        entity_id=ZWAVE_LUMINANCE_ENTITY,
+        unique_id=ZWAVE_LUMINANCE_UNIQUE_ID,
+        platform="zwave",
+        name=ZWAVE_LUMINANCE_NAME,
+        icon=ZWAVE_LUMINANCE_ICON,
+        unit_of_measurement="lux",
     )
     zwave_battery_entry = er.RegistryEntry(
         entity_id=ZWAVE_BATTERY_ENTITY,
@@ -131,6 +144,18 @@ def zwave_migration_data_fixture(hass):
             "unique_id": ZWAVE_SOURCE_NODE_UNIQUE_ID,
             "unit_of_measurement": zwave_source_node_entry.unit_of_measurement,
         },
+        ZWAVE_LUMINANCE_ENTITY: {
+            "node_id": 52,
+            "node_instance": 1,
+            "command_class": 49,
+            "command_class_label": "Luminance",
+            "value_index": 3,
+            "device_id": zwave_multisensor_device.id,
+            "domain": zwave_luminance_entry.domain,
+            "entity_id": zwave_luminance_entry.entity_id,
+            "unique_id": ZWAVE_LUMINANCE_UNIQUE_ID,
+            "unit_of_measurement": zwave_luminance_entry.unit_of_measurement,
+        },
         ZWAVE_BATTERY_ENTITY: {
             "node_id": 52,
             "node_instance": 1,
@@ -169,6 +194,7 @@ def zwave_migration_data_fixture(hass):
         {
             ZWAVE_SWITCH_ENTITY: zwave_switch_entry,
             ZWAVE_SOURCE_NODE_ENTITY: zwave_source_node_entry,
+            ZWAVE_LUMINANCE_ENTITY: zwave_luminance_entry,
             ZWAVE_BATTERY_ENTITY: zwave_battery_entry,
             ZWAVE_POWER_ENTITY: zwave_power_entry,
             ZWAVE_TAMPERING_ENTITY: zwave_tampering_entry,
@@ -218,6 +244,7 @@ async def test_migrate_zwave(
 
     migration_entity_map = {
         ZWAVE_SWITCH_ENTITY: "switch.smart_switch_6",
+        ZWAVE_LUMINANCE_ENTITY: "sensor.multisensor_6_illuminance",
         ZWAVE_BATTERY_ENTITY: "sensor.multisensor_6_battery_level",
     }
 
@@ -225,6 +252,7 @@ async def test_migrate_zwave(
         ZWAVE_SWITCH_ENTITY,
         ZWAVE_POWER_ENTITY,
         ZWAVE_SOURCE_NODE_ENTITY,
+        ZWAVE_LUMINANCE_ENTITY,
         ZWAVE_BATTERY_ENTITY,
         ZWAVE_TAMPERING_ENTITY,
     ]
@@ -279,6 +307,7 @@ async def test_migrate_zwave(
 
     # this should have been migrated and no longer present under that id
     assert not ent_reg.async_is_registered("sensor.multisensor_6_battery_level")
+    assert not ent_reg.async_is_registered("sensor.multisensor_6_illuminance")
 
     # these should not have been migrated and is still in the registry
     assert ent_reg.async_is_registered(ZWAVE_SOURCE_NODE_ENTITY)
@@ -295,6 +324,7 @@ async def test_migrate_zwave(
     # this is the new entity_ids of the zwave_js entities
     assert ent_reg.async_is_registered(ZWAVE_SWITCH_ENTITY)
     assert ent_reg.async_is_registered(ZWAVE_BATTERY_ENTITY)
+    assert ent_reg.async_is_registered(ZWAVE_LUMINANCE_ENTITY)
 
     # check that the migrated entries have correct attributes
     switch_entry = ent_reg.async_get(ZWAVE_SWITCH_ENTITY)
@@ -307,6 +337,12 @@ async def test_migrate_zwave(
     assert battery_entry.unique_id == "3245146787.52-128-0-level"
     assert battery_entry.name == ZWAVE_BATTERY_NAME
     assert battery_entry.icon == ZWAVE_BATTERY_ICON
+    luminance_entry = ent_reg.async_get(ZWAVE_LUMINANCE_ENTITY)
+    assert luminance_entry
+    assert luminance_entry.unique_id == "3245146787.52-49-0-Illuminance"
+    assert luminance_entry.name == ZWAVE_LUMINANCE_NAME
+    assert luminance_entry.icon == ZWAVE_LUMINANCE_ICON
+    assert luminance_entry.unit_of_measurement == LIGHT_LUX
 
     # check that the zwave config entry has been removed
     assert not hass.config_entries.async_entries("zwave")
@@ -317,6 +353,7 @@ async def test_migrate_zwave(
     assert not await hass.config_entries.async_setup(zwave_config_entry.entry_id)
 
 
+@pytest.mark.skip(reason="The old zwave integration has been disabled.")
 async def test_migrate_zwave_dry_run(
     hass,
     zwave_integration,

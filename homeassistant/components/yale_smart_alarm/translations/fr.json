@@ -11,7 +11,7 @@
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "area_id": "ID de la zone",
+                    "area_id": "ID de zone",
                     "name": "Nom",
                     "password": "Mot de passe",
                     "username": "Nom d'utilisateur"
@@ -28,9 +28,13 @@
         }
     },
     "options": {
+        "error": {
+            "code_format_mismatch": "Le code ne correspond pas au nombre de chiffres requis"
+        },
         "step": {
             "init": {
                 "data": {
+                    "code": "Code par d\u00e9faut pour les serrures, utilis\u00e9 si aucun n'est donn\u00e9",
                     "lock_code_digits": "Nombre de chiffres dans le code PIN pour les serrures"
                 }
             }

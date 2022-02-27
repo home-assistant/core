@@ -1,34 +1,36 @@
 """Tests for the Plugwise switch integration."""
+from unittest.mock import MagicMock
+
 from plugwise.exceptions import PlugwiseException
 import pytest
 
 from homeassistant.components.plugwise.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
-from tests.components.plugwise.common import async_init_integration
 
 
-async def test_adam_climate_switch_entities(hass, mock_smile_adam):
+async def test_adam_climate_switch_entities(
+    hass: HomeAssistant, mock_smile_adam: MagicMock, init_integration: MockConfigEntry
+) -> None:
     """Test creation of climate related switch entities."""
-    entry = await async_init_integration(hass, mock_smile_adam)
-    assert entry.state is ConfigEntryState.LOADED
-
     state = hass.states.get("switch.cv_pomp_relay")
-    assert str(state.state) == "on"
+    assert state
+    assert state.state == "on"
 
     state = hass.states.get("switch.fibaro_hc2_relay")
-    assert str(state.state) == "on"
+    assert state
+    assert state.state == "on"
 
 
-async def test_adam_climate_switch_negative_testing(hass, mock_smile_adam):
+async def test_adam_climate_switch_negative_testing(
+    hass: HomeAssistant, mock_smile_adam: MagicMock, init_integration: MockConfigEntry
+):
     """Test exceptions of climate related switch entities."""
     mock_smile_adam.set_switch_state.side_effect = PlugwiseException
-    entry = await async_init_integration(hass, mock_smile_adam)
-    assert entry.state is ConfigEntryState.LOADED
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -57,11 +59,10 @@ async def test_adam_climate_switch_negative_testing(hass, mock_smile_adam):
     )
 
 
-async def test_adam_climate_switch_changes(hass, mock_smile_adam):
+async def test_adam_climate_switch_changes(
+    hass: HomeAssistant, mock_smile_adam: MagicMock, init_integration: MockConfigEntry
+) -> None:
     """Test changing of climate related switch entities."""
-    entry = await async_init_integration(hass, mock_smile_adam)
-    assert entry.state is ConfigEntryState.LOADED
-
     await hass.services.async_call(
         "switch",
         "turn_off",
@@ -99,23 +100,23 @@ async def test_adam_climate_switch_changes(hass, mock_smile_adam):
     )
 
 
-async def test_stretch_switch_entities(hass, mock_stretch):
+async def test_stretch_switch_entities(
+    hass: HomeAssistant, mock_stretch: MagicMock, init_integration: MockConfigEntry
+) -> None:
     """Test creation of climate related switch entities."""
-    entry = await async_init_integration(hass, mock_stretch)
-    assert entry.state is ConfigEntryState.LOADED
-
     state = hass.states.get("switch.koelkast_92c4a_relay")
-    assert str(state.state) == "on"
+    assert state
+    assert state.state == "on"
 
     state = hass.states.get("switch.droger_52559_relay")
-    assert str(state.state) == "on"
+    assert state
+    assert state.state == "on"
 
 
-async def test_stretch_switch_changes(hass, mock_stretch):
+async def test_stretch_switch_changes(
+    hass: HomeAssistant, mock_stretch: MagicMock, init_integration: MockConfigEntry
+) -> None:
     """Test changing of power related switch entities."""
-    entry = await async_init_integration(hass, mock_stretch)
-    assert entry.state is ConfigEntryState.LOADED
-
     await hass.services.async_call(
         "switch",
         "turn_off",
@@ -150,12 +151,11 @@ async def test_stretch_switch_changes(hass, mock_stretch):
     )
 
 
-async def test_unique_id_migration_plug_relay(hass, mock_smile_adam):
+async def test_unique_id_migration_plug_relay(
+    hass: HomeAssistant, mock_smile_adam: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
     """Test unique ID migration of -plugs to -relay."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={"host": "1.1.1.1", "password": "test-password"}
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     registry = er.async_get(hass)
     # Entry to migrate
@@ -163,7 +163,7 @@ async def test_unique_id_migration_plug_relay(hass, mock_smile_adam):
         SWITCH_DOMAIN,
         DOMAIN,
         "21f2b542c49845e6bb416884c55778d6-plug",
-        config_entry=entry,
+        config_entry=mock_config_entry,
         suggested_object_id="playstation_smart_plug",
         disabled_by=None,
     )
@@ -172,12 +172,12 @@ async def test_unique_id_migration_plug_relay(hass, mock_smile_adam):
         SWITCH_DOMAIN,
         DOMAIN,
         "675416a629f343c495449970e2ca37b5-relay",
-        config_entry=entry,
+        config_entry=mock_config_entry,
         suggested_object_id="router",
         disabled_by=None,
     )
 
-    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.playstation_smart_plug") is not None

@@ -1,4 +1,6 @@
 """Extend the basic Accessory and Bridge functions."""
+from __future__ import annotations
+
 import logging
 
 from pyhap.accessory import Accessory, Bridge
@@ -90,7 +92,7 @@ SWITCH_TYPES = {
     TYPE_SWITCH: "Switch",
     TYPE_VALVE: "Valve",
 }
-TYPES = Registry()
+TYPES: Registry[str, type[HomeAccessory]] = Registry()
 
 
 def get_accessory(hass, driver, state, aid, config):  # noqa: C901

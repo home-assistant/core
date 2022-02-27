@@ -2,10 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
+            "cannot_connect": "Gagal terhubung",
             "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan"
         },
         "error": {
-            "bulb_time_out": "Tidak dapat terhubung ke bohlam. Mungkin bohlam offline atau IP/host yang salah dimasukkan. Nyalakan lampu dan coba lagi!",
+            "bulb_time_out": "Tidak dapat terhubung ke bohlam. Mungkin bohlam offline atau IP yang salah dimasukkan. Nyalakan lampu dan coba lagi!",
             "cannot_connect": "Gagal terhubung",
             "no_ip": "Bukan alamat IP yang valid.",
             "no_wiz_light": "Bohlam tidak dapat dihubungkan melalui integrasi Platform WiZ.",
@@ -26,10 +27,10 @@
             },
             "user": {
                 "data": {
-                    "host": "Host",
+                    "host": "Alamat IP",
                     "name": "Nama"
                 },
-                "description": "Jika host dibiarkan kosong, proses penemuan akan digunakan untuk menemukan perangkat."
+                "description": "Jika Alamat IP dibiarkan kosong, proses penemuan akan digunakan untuk menemukan perangkat."
             }
         }
     }

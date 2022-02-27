@@ -14,8 +14,6 @@ FLOW_STRETCH = "stretch (Stretch)"
 FLOW_TYPE = "flow_type"
 GATEWAY = "gateway"
 PW_TYPE = "plugwise_type"
-SCHEDULE_OFF = "false"
-SCHEDULE_ON = "true"
 SMILE = "smile"
 STRETCH = "stretch"
 STRETCH_USERNAME = "stretch"
@@ -27,7 +25,6 @@ PLATFORMS_GATEWAY = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
-SENSOR_PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 ZEROCONF_MAP = {
     "smile": "P1",
     "smile_thermo": "Anna",

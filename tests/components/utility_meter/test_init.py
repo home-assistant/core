@@ -62,7 +62,12 @@ async def test_services(hass):
                 "source": "sensor.energy",
                 "cycle": "hourly",
                 "tariffs": ["peak", "offpeak"],
-            }
+            },
+            "energy_bill2": {
+                "source": "sensor.energy",
+                "cycle": "hourly",
+                "tariffs": ["peak", "offpeak"],
+            },
         }
     }
 
@@ -152,6 +157,10 @@ async def test_services(hass):
 
     state = hass.states.get("sensor.energy_bill_offpeak")
     assert state.state == "0"
+
+    # meanwhile energy_bill2_peak accumulated all kWh
+    state = hass.states.get("sensor.energy_bill2_peak")
+    assert state.state == "4"
 
 
 async def test_cron(hass, legacy_patchable_time):

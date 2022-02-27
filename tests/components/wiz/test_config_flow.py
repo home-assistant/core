@@ -12,7 +12,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
 
 from . import (
-    FAKE_BULB_CONFIG,
     FAKE_DIMMABLE_BULB,
     FAKE_EXTENDED_WHITE_RANGE,
     FAKE_IP,
@@ -20,7 +19,6 @@ from . import (
     FAKE_RGBW_BULB,
     FAKE_RGBWW_BULB,
     FAKE_SOCKET,
-    FAKE_SOCKET_CONFIG,
     TEST_CONNECTION,
     TEST_SYSTEM_INFO,
     _patch_discovery,
@@ -184,12 +182,11 @@ async def test_discovered_by_dhcp_connection_fails(hass, source, data):
 
 
 @pytest.mark.parametrize(
-    "source, data, device, bulb_type, extended_white_range, name",
+    "source, data, bulb_type, extended_white_range, name",
     [
         (
             config_entries.SOURCE_DHCP,
             DHCP_DISCOVERY,
-            FAKE_BULB_CONFIG,
             FAKE_DIMMABLE_BULB,
             FAKE_EXTENDED_WHITE_RANGE,
             "WiZ Dimmable White ABCABC",
@@ -197,7 +194,6 @@ async def test_discovered_by_dhcp_connection_fails(hass, source, data):
         (
             config_entries.SOURCE_INTEGRATION_DISCOVERY,
             INTEGRATION_DISCOVERY,
-            FAKE_BULB_CONFIG,
             FAKE_DIMMABLE_BULB,
             FAKE_EXTENDED_WHITE_RANGE,
             "WiZ Dimmable White ABCABC",
@@ -205,7 +201,6 @@ async def test_discovered_by_dhcp_connection_fails(hass, source, data):
         (
             config_entries.SOURCE_DHCP,
             DHCP_DISCOVERY,
-            FAKE_BULB_CONFIG,
             FAKE_RGBW_BULB,
             FAKE_EXTENDED_WHITE_RANGE,
             "WiZ RGBW Tunable ABCABC",
@@ -213,7 +208,6 @@ async def test_discovered_by_dhcp_connection_fails(hass, source, data):
         (
             config_entries.SOURCE_INTEGRATION_DISCOVERY,
             INTEGRATION_DISCOVERY,
-            FAKE_BULB_CONFIG,
             FAKE_RGBW_BULB,
             FAKE_EXTENDED_WHITE_RANGE,
             "WiZ RGBW Tunable ABCABC",
@@ -221,7 +215,6 @@ async def test_discovered_by_dhcp_connection_fails(hass, source, data):
         (
             config_entries.SOURCE_DHCP,
             DHCP_DISCOVERY,
-            FAKE_BULB_CONFIG,
             FAKE_RGBWW_BULB,
             FAKE_EXTENDED_WHITE_RANGE,
             "WiZ RGBWW Tunable ABCABC",
@@ -229,7 +222,6 @@ async def test_discovered_by_dhcp_connection_fails(hass, source, data):
         (
             config_entries.SOURCE_INTEGRATION_DISCOVERY,
             INTEGRATION_DISCOVERY,
-            FAKE_BULB_CONFIG,
             FAKE_RGBWW_BULB,
             FAKE_EXTENDED_WHITE_RANGE,
             "WiZ RGBWW Tunable ABCABC",
@@ -237,7 +229,6 @@ async def test_discovered_by_dhcp_connection_fails(hass, source, data):
         (
             config_entries.SOURCE_DHCP,
             DHCP_DISCOVERY,
-            FAKE_SOCKET_CONFIG,
             FAKE_SOCKET,
             None,
             "WiZ Socket ABCABC",
@@ -245,7 +236,6 @@ async def test_discovered_by_dhcp_connection_fails(hass, source, data):
         (
             config_entries.SOURCE_INTEGRATION_DISCOVERY,
             INTEGRATION_DISCOVERY,
-            FAKE_SOCKET_CONFIG,
             FAKE_SOCKET,
             None,
             "WiZ Socket ABCABC",
@@ -253,11 +243,11 @@ async def test_discovered_by_dhcp_connection_fails(hass, source, data):
     ],
 )
 async def test_discovered_by_dhcp_or_integration_discovery(
-    hass, source, data, device, bulb_type, extended_white_range, name
+    hass, source, data, bulb_type, extended_white_range, name
 ):
     """Test we can configure when discovered from dhcp or discovery."""
     with _patch_wizlight(
-        device=device, extended_white_range=extended_white_range, bulb_type=bulb_type
+        device=None, extended_white_range=extended_white_range, bulb_type=bulb_type
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": source}, data=data
@@ -267,7 +257,9 @@ async def test_discovered_by_dhcp_or_integration_discovery(
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "discovery_confirm"
 
-    with patch(
+    with _patch_wizlight(
+        device=None, extended_white_range=extended_white_range, bulb_type=bulb_type
+    ), patch(
         "homeassistant.components.wiz.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
@@ -416,3 +408,70 @@ async def test_setup_via_discovery_cannot_connect(hass):
 
     assert result3["type"] == "abort"
     assert result3["reason"] == "cannot_connect"
+
+
+async def test_setup_via_discovery_exception_finds_nothing(hass):
+    """Test we do not find anything if discovery throws."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    with patch(
+        "homeassistant.components.wiz.discovery.find_wizlights",
+        side_effect=OSError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["reason"] == "no_devices_found"
+
+
+async def test_discovery_with_firmware_update(hass):
+    """Test we check the device again between first discovery and config entry creation."""
+    with _patch_wizlight(
+        device=None,
+        extended_white_range=FAKE_EXTENDED_WHITE_RANGE,
+        bulb_type=FAKE_RGBW_BULB,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data=INTEGRATION_DISCOVERY,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    # In between discovery and when the user clicks to set it up the firmware
+    # updates and we now can see its really RGBWW not RGBW since the older
+    # firmwares did not tell us how many white channels exist
+
+    with patch(
+        "homeassistant.components.wiz.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.wiz.async_setup", return_value=True
+    ) as mock_setup, _patch_wizlight(
+        device=None,
+        extended_white_range=FAKE_EXTENDED_WHITE_RANGE,
+        bulb_type=FAKE_RGBWW_BULB,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "WiZ RGBWW Tunable ABCABC"
+    assert result2["data"] == {
+        CONF_HOST: "1.1.1.1",
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1

@@ -7,7 +7,7 @@
   "zeroconf": ["_nanoleafms._tcp.local.", "_nanoleafapi._tcp.local."],
   "homekit" : {
     "models": [
-      "NL*"
+      "NL29", "NL42", "NL47", "NL48", "NL52", "NL59"
     ]
   },
   "ssdp": [

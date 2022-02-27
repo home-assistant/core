@@ -495,8 +495,6 @@ class SimpliSafe:
         """Start a websocket reconnection loop."""
         assert self._api.websocket
 
-        should_reconnect = True
-
         try:
             await self._api.websocket.async_connect()
             await self._api.websocket.async_listen()
@@ -508,12 +506,11 @@ class SimpliSafe:
         except Exception as err:  # pylint: disable=broad-except
             LOGGER.error("Unknown exception while connecting to websocket: %s", err)
 
-        if should_reconnect:
-            LOGGER.info("Disconnected from websocket; reconnecting")
-            await self._async_cancel_websocket_loop()
-            self._websocket_reconnect_task = self._hass.async_create_task(
-                self._async_start_websocket_loop()
-            )
+        LOGGER.info("Reconnecting to websocket")
+        await self._async_cancel_websocket_loop()
+        self._websocket_reconnect_task = self._hass.async_create_task(
+            self._async_start_websocket_loop()
+        )
 
     async def _async_cancel_websocket_loop(self) -> None:
         """Stop any existing websocket reconnection loop."""

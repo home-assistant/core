@@ -5,25 +5,25 @@ from aiohttp import ClientSession
 
 from homeassistant.core import HomeAssistant
 
+from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.components.plugwise.common import async_init_integration
 
 
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSession,
     mock_smile_adam: MagicMock,
-):
+    init_integration: MockConfigEntry,
+) -> None:
     """Test diagnostics."""
-    entry = await async_init_integration(hass, mock_smile_adam)
-    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == {
+    assert await get_diagnostics_for_config_entry(
+        hass, hass_client, init_integration
+    ) == {
         "gateway": {
-            "active_device": True,
-            "cooling_present": None,
+            "smile_name": "Adam",
             "gateway_id": "fe799307f1624099878210aa0b9f1475",
             "heater_id": "90986d591dcd426cae3ec3e8111ff730",
-            "single_master_thermostat": False,
-            "smile_name": "Adam",
+            "cooling_present": False,
             "notifications": {
                 "af82e4ccf9c548528166d38e560662a4": {
                     "warning": "Node Plug (with MAC address 000D6F000D13CB01, in room 'n.a.') has been unreachable since 23:03 2020-01-18. Please check the connection and restart the device."
@@ -34,10 +34,15 @@ async def test_diagnostics(
             "df4a4a8169904cdb9c03d61a21f42140": {
                 "class": "zone_thermostat",
                 "fw": "2016-10-27T02:00:00+02:00",
+                "hw": "255",
                 "location": "12493538af164a409c6a1c79e38afe1c",
+                "mac_address": None,
                 "model": "Lisa",
                 "name": "Zone Lisa Bios",
                 "vendor": "Plugwise",
+                "lower_bound": 0,
+                "upper_bound": 99.9,
+                "resolution": 0.01,
                 "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
                 "active_preset": "away",
                 "presets": {
@@ -55,18 +60,23 @@ async def test_diagnostics(
                     "CV Jessie",
                 ],
                 "selected_schedule": "None",
-                "schedule_temperature": 15.0,
                 "last_used": "Badkamer Schema",
-                "mode": "off",
-                "sensors": {"temperature": 16.5, "setpoint": 13.0, "battery": 67},
+                "schedule_temperature": 15.0,
+                "mode": "heat",
+                "sensors": {"temperature": 16.5, "setpoint": 13, "battery": 67},
             },
             "b310b72a0e354bfab43089919b9a88bf": {
                 "class": "thermo_sensor",
                 "fw": "2019-03-27T01:00:00+01:00",
+                "hw": "1",
                 "location": "c50f167537524366a5af7aa3942feb1e",
+                "mac_address": None,
                 "model": "Tom/Floor",
                 "name": "Floor kraan",
                 "vendor": "Plugwise",
+                "lower_bound": 0,
+                "upper_bound": 100.0,
+                "resolution": 0.01,
                 "sensors": {
                     "temperature": 26.0,
                     "setpoint": 21.5,
@@ -77,13 +87,18 @@ async def test_diagnostics(
             "a2c3583e0a6349358998b760cea82d2a": {
                 "class": "thermo_sensor",
                 "fw": "2019-03-27T01:00:00+01:00",
+                "hw": "1",
                 "location": "12493538af164a409c6a1c79e38afe1c",
+                "mac_address": None,
                 "model": "Tom/Floor",
                 "name": "Bios Cv Thermostatic Radiator ",
                 "vendor": "Plugwise",
+                "lower_bound": 0,
+                "upper_bound": 100.0,
+                "resolution": 0.01,
                 "sensors": {
                     "temperature": 17.2,
-                    "setpoint": 13.0,
+                    "setpoint": 13,
                     "battery": 62,
                     "temperature_difference": -0.2,
                     "valve_position": 0.0,
@@ -92,10 +107,15 @@ async def test_diagnostics(
             "b59bcebaf94b499ea7d46e4a66fb62d8": {
                 "class": "zone_thermostat",
                 "fw": "2016-08-02T02:00:00+02:00",
+                "hw": "255",
                 "location": "c50f167537524366a5af7aa3942feb1e",
+                "mac_address": None,
                 "model": "Lisa",
                 "name": "Zone Lisa WK",
                 "vendor": "Plugwise",
+                "lower_bound": 0,
+                "upper_bound": 99.9,
+                "resolution": 0.01,
                 "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
                 "active_preset": "home",
                 "presets": {
@@ -113,31 +133,39 @@ async def test_diagnostics(
                     "CV Jessie",
                 ],
                 "selected_schedule": "GF7  Woonkamer",
-                "schedule_temperature": 20.0,
                 "last_used": "GF7  Woonkamer",
+                "schedule_temperature": 20.0,
                 "mode": "auto",
                 "sensors": {"temperature": 20.9, "setpoint": 21.5, "battery": 34},
             },
             "fe799307f1624099878210aa0b9f1475": {
                 "class": "gateway",
                 "fw": "3.0.15",
+                "hw": "AME Smile 2.0 board",
                 "location": "1f9dcf83fd4e4b66b72ff787957bfe5d",
+                "mac_address": "012345670001",
                 "model": "Adam",
                 "name": "Adam",
                 "vendor": "Plugwise B.V.",
+                "zigbee_mac_address": "ABCD012345670101",
                 "binary_sensors": {"plugwise_notification": True},
                 "sensors": {"outdoor_temperature": 7.81},
             },
             "d3da73bde12a47d5a6b8f9dad971f2ec": {
                 "class": "thermo_sensor",
                 "fw": "2019-03-27T01:00:00+01:00",
+                "hw": "1",
                 "location": "82fa13f017d240daa0d0ea1775420f24",
+                "mac_address": None,
                 "model": "Tom/Floor",
                 "name": "Thermostatic Radiator Jessie",
                 "vendor": "Plugwise",
+                "lower_bound": 0,
+                "upper_bound": 100.0,
+                "resolution": 0.01,
                 "sensors": {
                     "temperature": 17.1,
-                    "setpoint": 15.0,
+                    "setpoint": 15,
                     "battery": 62,
                     "temperature_difference": 0.1,
                     "valve_position": 0.0,
@@ -146,10 +174,13 @@ async def test_diagnostics(
             "21f2b542c49845e6bb416884c55778d6": {
                 "class": "game_console",
                 "fw": "2019-06-21T02:00:00+02:00",
+                "hw": None,
                 "location": "cd143c07248f491493cea0533bc3d669",
+                "mac_address": None,
                 "model": "Plug",
                 "name": "Playstation Smart Plug",
                 "vendor": "Plugwise",
+                "zigbee_mac_address": "ABCD012345670A12",
                 "sensors": {
                     "electricity_consumed": 82.6,
                     "electricity_consumed_interval": 8.6,
@@ -161,10 +192,13 @@ async def test_diagnostics(
             "78d1126fc4c743db81b61c20e88342a7": {
                 "class": "central_heating_pump",
                 "fw": "2019-06-21T02:00:00+02:00",
+                "hw": None,
                 "location": "c50f167537524366a5af7aa3942feb1e",
+                "mac_address": None,
                 "model": "Plug",
                 "name": "CV Pomp",
                 "vendor": "Plugwise",
+                "zigbee_mac_address": "ABCD012345670A05",
                 "sensors": {
                     "electricity_consumed": 35.6,
                     "electricity_consumed_interval": 7.37,
@@ -176,26 +210,32 @@ async def test_diagnostics(
             "90986d591dcd426cae3ec3e8111ff730": {
                 "class": "heater_central",
                 "fw": None,
+                "hw": None,
                 "location": "1f9dcf83fd4e4b66b72ff787957bfe5d",
+                "mac_address": None,
                 "model": "Unknown",
                 "name": "OnOff",
                 "vendor": None,
-                "cooling_active": False,
-                "heating_state": True,
+                "lower_bound": 10,
+                "upper_bound": 90,
+                "resolution": 1,
+                "binary_sensors": {"heating_state": True},
                 "sensors": {
                     "water_temperature": 70.0,
                     "intended_boiler_temperature": 70.0,
                     "modulation_level": 1,
-                    "device_state": "heating",
                 },
             },
             "cd0ddb54ef694e11ac18ed1cbce5dbbd": {
                 "class": "vcr",
                 "fw": "2019-06-21T02:00:00+02:00",
+                "hw": None,
                 "location": "cd143c07248f491493cea0533bc3d669",
+                "mac_address": None,
                 "model": "Plug",
                 "name": "NAS",
                 "vendor": "Plugwise",
+                "zigbee_mac_address": "ABCD012345670A14",
                 "sensors": {
                     "electricity_consumed": 16.5,
                     "electricity_consumed_interval": 0.5,
@@ -207,10 +247,13 @@ async def test_diagnostics(
             "4a810418d5394b3f82727340b91ba740": {
                 "class": "router",
                 "fw": "2019-06-21T02:00:00+02:00",
+                "hw": None,
                 "location": "cd143c07248f491493cea0533bc3d669",
+                "mac_address": None,
                 "model": "Plug",
                 "name": "USG Smart Plug",
                 "vendor": "Plugwise",
+                "zigbee_mac_address": "ABCD012345670A16",
                 "sensors": {
                     "electricity_consumed": 8.5,
                     "electricity_consumed_interval": 0.0,
@@ -222,10 +265,13 @@ async def test_diagnostics(
             "02cf28bfec924855854c544690a609ef": {
                 "class": "vcr",
                 "fw": "2019-06-21T02:00:00+02:00",
+                "hw": None,
                 "location": "cd143c07248f491493cea0533bc3d669",
+                "mac_address": None,
                 "model": "Plug",
                 "name": "NVR",
                 "vendor": "Plugwise",
+                "zigbee_mac_address": "ABCD012345670A15",
                 "sensors": {
                     "electricity_consumed": 34.0,
                     "electricity_consumed_interval": 9.15,
@@ -237,10 +283,13 @@ async def test_diagnostics(
             "a28f588dc4a049a483fd03a30361ad3a": {
                 "class": "settop",
                 "fw": "2019-06-21T02:00:00+02:00",
+                "hw": None,
                 "location": "cd143c07248f491493cea0533bc3d669",
+                "mac_address": None,
                 "model": "Plug",
                 "name": "Fibaro HC2",
                 "vendor": "Plugwise",
+                "zigbee_mac_address": "ABCD012345670A13",
                 "sensors": {
                     "electricity_consumed": 12.5,
                     "electricity_consumed_interval": 3.8,
@@ -252,10 +301,15 @@ async def test_diagnostics(
             "6a3bf693d05e48e0b460c815a4fdd09d": {
                 "class": "zone_thermostat",
                 "fw": "2016-10-27T02:00:00+02:00",
+                "hw": "255",
                 "location": "82fa13f017d240daa0d0ea1775420f24",
+                "mac_address": None,
                 "model": "Lisa",
                 "name": "Zone Thermostat Jessie",
                 "vendor": "Plugwise",
+                "lower_bound": 0,
+                "upper_bound": 99.9,
+                "resolution": 0.01,
                 "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
                 "active_preset": "asleep",
                 "presets": {
@@ -273,21 +327,26 @@ async def test_diagnostics(
                     "CV Jessie",
                 ],
                 "selected_schedule": "CV Jessie",
-                "schedule_temperature": 15.0,
                 "last_used": "CV Jessie",
+                "schedule_temperature": 15.0,
                 "mode": "auto",
-                "sensors": {"temperature": 17.2, "setpoint": 15.0, "battery": 37},
+                "sensors": {"temperature": 17.2, "setpoint": 15, "battery": 37},
             },
             "680423ff840043738f42cc7f1ff97a36": {
                 "class": "thermo_sensor",
                 "fw": "2019-03-27T01:00:00+01:00",
+                "hw": "1",
                 "location": "08963fec7c53423ca5680aa4cb502c63",
+                "mac_address": None,
                 "model": "Tom/Floor",
                 "name": "Thermostatic Radiator Badkamer",
                 "vendor": "Plugwise",
+                "lower_bound": 0,
+                "upper_bound": 100.0,
+                "resolution": 0.01,
                 "sensors": {
                     "temperature": 19.1,
-                    "setpoint": 14.0,
+                    "setpoint": 14,
                     "battery": 51,
                     "temperature_difference": -0.4,
                     "valve_position": 0.0,
@@ -296,10 +355,15 @@ async def test_diagnostics(
             "f1fee6043d3642a9b0a65297455f008e": {
                 "class": "zone_thermostat",
                 "fw": "2016-10-27T02:00:00+02:00",
+                "hw": "255",
                 "location": "08963fec7c53423ca5680aa4cb502c63",
+                "mac_address": None,
                 "model": "Lisa",
                 "name": "Zone Thermostat Badkamer",
                 "vendor": "Plugwise",
+                "lower_bound": 0,
+                "upper_bound": 99.9,
+                "resolution": 0.01,
                 "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
                 "active_preset": "away",
                 "presets": {
@@ -317,18 +381,21 @@ async def test_diagnostics(
                     "CV Jessie",
                 ],
                 "selected_schedule": "Badkamer Schema",
-                "schedule_temperature": 15.0,
                 "last_used": "Badkamer Schema",
+                "schedule_temperature": 15.0,
                 "mode": "auto",
-                "sensors": {"temperature": 18.9, "setpoint": 14.0, "battery": 92},
+                "sensors": {"temperature": 18.9, "setpoint": 14, "battery": 92},
             },
             "675416a629f343c495449970e2ca37b5": {
                 "class": "router",
                 "fw": "2019-06-21T02:00:00+02:00",
+                "hw": None,
                 "location": "cd143c07248f491493cea0533bc3d669",
+                "mac_address": None,
                 "model": "Plug",
                 "name": "Ziggo Modem",
                 "vendor": "Plugwise",
+                "zigbee_mac_address": "ABCD012345670A01",
                 "sensors": {
                     "electricity_consumed": 12.2,
                     "electricity_consumed_interval": 2.97,
@@ -340,10 +407,15 @@ async def test_diagnostics(
             "e7693eb9582644e5b865dba8d4447cf1": {
                 "class": "thermostatic_radiator_valve",
                 "fw": "2019-03-27T01:00:00+01:00",
+                "hw": "1",
                 "location": "446ac08dd04d4eff8ac57489757b7314",
+                "mac_address": None,
                 "model": "Tom/Floor",
                 "name": "CV Kraan Garage",
                 "vendor": "Plugwise",
+                "lower_bound": 0,
+                "upper_bound": 100.0,
+                "resolution": 0.01,
                 "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
                 "active_preset": "no_frost",
                 "presets": {
@@ -361,8 +433,8 @@ async def test_diagnostics(
                     "CV Jessie",
                 ],
                 "selected_schedule": "None",
-                "schedule_temperature": 15.0,
                 "last_used": "Badkamer Schema",
+                "schedule_temperature": 15.0,
                 "mode": "heat",
                 "sensors": {
                     "temperature": 15.6,

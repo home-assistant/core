@@ -110,6 +110,7 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.paired_remotes = 2
     bulb.pixels_per_segment = 300
     bulb.segments = 2
+    bulb.diagnostics = {"mock_diag": "mock_diag"}
     bulb.music_pixels_per_segment = 150
     bulb.music_segments = 4
     bulb.operating_mode = "RGB&W"

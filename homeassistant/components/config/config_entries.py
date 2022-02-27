@@ -88,15 +88,17 @@ class ConfigManagerEntryResourceReloadView(HomeAssistantView):
             raise Unauthorized(config_entry_id=entry_id, permission="remove")
 
         hass = request.app["hass"]
+        entry = hass.config_entries.async_get_entry(entry_id)
+        if not entry:
+            return self.json_message("Invalid entry specified", HTTPStatus.NOT_FOUND)
+        assert isinstance(entry, config_entries.ConfigEntry)
 
         try:
-            result = await hass.config_entries.async_reload(entry_id)
+            await hass.config_entries.async_reload(entry_id)
         except config_entries.OperationNotAllowed:
             return self.json_message("Entry cannot be reloaded", HTTPStatus.FORBIDDEN)
-        except config_entries.UnknownEntry:
-            return self.json_message("Invalid entry specified", HTTPStatus.NOT_FOUND)
 
-        return self.json({"require_restart": not result})
+        return self.json({"require_restart": not entry.state.recoverable})
 
 
 def _prepare_config_flow_result_json(result, prepare_result_json):
@@ -317,8 +319,7 @@ async def config_entry_update(hass, connection, msg):
 @websocket_api.async_response
 async def config_entry_disable(hass, connection, msg):
     """Disable config entry."""
-    disabled_by = msg["disabled_by"]
-    if disabled_by is not None:
+    if (disabled_by := msg["disabled_by"]) is not None:
         disabled_by = config_entries.ConfigEntryDisabler(disabled_by)
 
     result = False
@@ -388,6 +389,7 @@ def entry_json(entry: config_entries.ConfigEntry) -> dict:
         "source": entry.source,
         "state": entry.state.value,
         "supports_options": supports_options,
+        "supports_remove_device": entry.supports_remove_device,
         "supports_unload": entry.supports_unload,
         "pref_disable_new_entities": entry.pref_disable_new_entities,
         "pref_disable_polling": entry.pref_disable_polling,

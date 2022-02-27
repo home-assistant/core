@@ -19,6 +19,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     PRESET_COMFORT,
     PRESET_ECO,
+    PRESET_NONE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
@@ -87,11 +88,13 @@ HA_TO_VICARE_HVAC_HEATING = {
 VICARE_TO_HA_PRESET_HEATING = {
     VICARE_PROGRAM_COMFORT: PRESET_COMFORT,
     VICARE_PROGRAM_ECO: PRESET_ECO,
+    VICARE_PROGRAM_NORMAL: PRESET_NONE,
 }
 
 HA_TO_VICARE_PRESET_HEATING = {
     PRESET_COMFORT: VICARE_PROGRAM_COMFORT,
     PRESET_ECO: VICARE_PROGRAM_ECO,
+    PRESET_NONE: VICARE_PROGRAM_NORMAL,
 }
 
 
@@ -171,6 +174,7 @@ class ViCareClimate(ClimateEntity):
             "name": self._device_config.getModel(),
             "manufacturer": "Viessmann",
             "model": (DOMAIN, self._device_config.getModel()),
+            "configuration_url": "https://developer.viessmann.com/",
         }
 
     def update(self):
@@ -322,7 +326,7 @@ class ViCareClimate(ClimateEntity):
     @property
     def preset_modes(self):
         """Return the available preset mode."""
-        return list(VICARE_TO_HA_PRESET_HEATING)
+        return list(HA_TO_VICARE_PRESET_HEATING)
 
     def set_preset_mode(self, preset_mode):
         """Set new preset mode and deactivate any existing programs."""
@@ -333,8 +337,12 @@ class ViCareClimate(ClimateEntity):
             )
 
         _LOGGER.debug("Setting preset to %s / %s", preset_mode, vicare_program)
-        self._circuit.deactivateProgram(self._current_program)
-        self._circuit.activateProgram(vicare_program)
+        if self._current_program != VICARE_PROGRAM_NORMAL:
+            # We can't deactivate "normal"
+            self._circuit.deactivateProgram(self._current_program)
+        if vicare_program != VICARE_PROGRAM_NORMAL:
+            # And we can't explicitly activate normal, either
+            self._circuit.activateProgram(vicare_program)
 
     @property
     def extra_state_attributes(self):

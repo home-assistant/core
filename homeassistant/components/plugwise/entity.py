@@ -4,6 +4,10 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.const import ATTR_NAME, ATTR_VIA_DEVICE, CONF_HOST
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    CONNECTION_ZIGBEE,
+)
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -30,13 +34,21 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseData]):
             configuration_url = f"http://{entry.data[CONF_HOST]}"
 
         data = coordinator.data.devices[device_id]
+        connections = set()
+        if mac := data.get("mac_address"):
+            connections.add((CONNECTION_NETWORK_MAC, mac))
+        if mac := data.get("zigbee_mac_address"):
+            connections.add((CONNECTION_ZIGBEE, mac))
+
         self._attr_device_info = DeviceInfo(
             configuration_url=configuration_url,
             identifiers={(DOMAIN, device_id)},
+            connections=connections,
             manufacturer=data.get("vendor"),
             model=data.get("model"),
             name=f"Smile {coordinator.data.gateway['smile_name']}",
             sw_version=data.get("fw"),
+            hw_version=data.get("hw"),
         )
 
         if device_id != coordinator.data.gateway["gateway_id"]:

@@ -111,7 +111,7 @@ def get_manual_configuration(
     hass: HomeAssistant,
     config: ConfigType,
     controller_conf: ConfigType,
-    controller_id: int,
+    controller_id: str,
 ) -> None:
     """Get manual configuration for IHC devices."""
     for platform in IHC_PLATFORMS:

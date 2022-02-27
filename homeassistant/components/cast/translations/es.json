@@ -12,7 +12,7 @@
                     "known_hosts": "Lista opcional de hosts conocidos si el descubrimiento mDNS no funciona."
                 },
                 "description": "Introduce la configuraci\u00f3n de Google Cast.",
-                "title": "Google Cast"
+                "title": "Configuraci\u00f3n de Google Cast"
             },
             "confirm": {
                 "description": "\u00bfQuieres iniciar la configuraci\u00f3n?"

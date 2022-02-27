@@ -32,6 +32,8 @@ from .const import DOMAIN
 from .entity import WizToggleEntity
 from .models import WizData
 
+RGB_WHITE_CHANNELS_COLOR_MODE = {1: COLOR_MODE_RGBW, 2: COLOR_MODE_RGBWW}
+
 
 def _async_pilot_builder(**kwargs: Any) -> PilotBuilder:
     """Create the PilotBuilder for turn on."""
@@ -79,10 +81,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         features: Features = bulb_type.features
         color_modes = set()
         if features.color:
-            if bulb_type.white_channels == 2:
-                color_modes.add(COLOR_MODE_RGBWW)
-            else:
-                color_modes.add(COLOR_MODE_RGBW)
+            color_modes.add(RGB_WHITE_CHANNELS_COLOR_MODE[bulb_type.white_channels])
         if features.color_tmp:
             color_modes.add(COLOR_MODE_COLOR_TEMP)
         if not color_modes and features.brightness:
@@ -90,12 +89,9 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         self._attr_supported_color_modes = color_modes
         self._attr_effect_list = wiz_data.scenes
         if bulb_type.bulb_type != BulbClass.DW:
-            self._attr_min_mireds = color_temperature_kelvin_to_mired(
-                bulb_type.kelvin_range.max
-            )
-            self._attr_max_mireds = color_temperature_kelvin_to_mired(
-                bulb_type.kelvin_range.min
-            )
+            kelvin = bulb_type.kelvin_range
+            self._attr_min_mireds = color_temperature_kelvin_to_mired(kelvin.max)
+            self._attr_max_mireds = color_temperature_kelvin_to_mired(kelvin.min)
         if bulb_type.features.effect:
             self._attr_supported_features = SUPPORT_EFFECT
         self._async_update_attrs()
@@ -108,9 +104,8 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         assert color_modes is not None
         if (brightness := state.get_brightness()) is not None:
             self._attr_brightness = max(0, min(255, brightness))
-        if (
-            COLOR_MODE_COLOR_TEMP in color_modes
-            and (color_temp := state.get_colortemp()) is not None
+        if COLOR_MODE_COLOR_TEMP in color_modes and (
+            color_temp := state.get_colortemp()
         ):
             self._attr_color_mode = COLOR_MODE_COLOR_TEMP
             self._attr_color_temp = color_temperature_kelvin_to_mired(color_temp)

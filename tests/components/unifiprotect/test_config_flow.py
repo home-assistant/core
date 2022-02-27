@@ -302,7 +302,7 @@ async def test_discovered_by_unifi_discovery_direct_connect(
     with _patch_discovery():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data=UNIFI_DISCOVERY_DICT,
         )
         await hass.async_block_till_done()
@@ -371,7 +371,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_updated(
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data=UNIFI_DISCOVERY_DICT,
         )
         await hass.async_block_till_done()
@@ -407,7 +407,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_updated_but_not_usin
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data=UNIFI_DISCOVERY_DICT,
         )
         await hass.async_block_till_done()
@@ -439,7 +439,7 @@ async def test_discovered_host_not_updated_if_existing_is_a_hostname(
     with _patch_discovery():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data=UNIFI_DISCOVERY_DICT,
         )
         await hass.async_block_till_done()
@@ -457,7 +457,7 @@ async def test_discovered_by_unifi_discovery(
     with _patch_discovery():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data=UNIFI_DISCOVERY_DICT,
         )
         await hass.async_block_till_done()
@@ -509,7 +509,7 @@ async def test_discovered_by_unifi_discovery_partial(
     with _patch_discovery():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data=UNIFI_DISCOVERY_DICT_PARTIAL,
         )
         await hass.async_block_till_done()
@@ -574,7 +574,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
     with _patch_discovery():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data=UNIFI_DISCOVERY_DICT,
         )
         await hass.async_block_till_done()
@@ -604,7 +604,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
     with _patch_discovery():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data=UNIFI_DISCOVERY_DICT,
         )
         await hass.async_block_till_done()
@@ -642,7 +642,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data=other_ip_dict,
         )
         await hass.async_block_till_done()
@@ -678,7 +678,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data=other_ip_dict,
         )
         await hass.async_block_till_done()
@@ -747,7 +747,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
     with _patch_discovery(), patch.object(hass.loop, "getaddrinfo", return_value=[]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data=other_ip_dict,
         )
         await hass.async_block_till_done()
@@ -768,7 +768,7 @@ async def test_discovery_can_be_ignored(hass: HomeAssistant, mock_nvr: NVR) -> N
     with _patch_discovery():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data=UNIFI_DISCOVERY_DICT,
         )
         await hass.async_block_till_done()

@@ -42,9 +42,9 @@ class GeniusBinarySensor(GeniusDevice, BinarySensorEntity):
         self._state_attr = state_attr
 
         if device.type[:21] == "Dual Channel Receiver":
-            self._name = f"{device.type[:21]} {device.id}"
+            self._attr_name = f"{device.type[:21]} {device.id}"
         else:
-            self._name = f"{device.type} {device.id}"
+            self._attr_name = f"{device.type} {device.id}"
 
     @property
     def is_on(self) -> bool:

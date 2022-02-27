@@ -20,6 +20,7 @@ from homeassistant.helpers.device_registry import (
 )
 
 from .const import DOMAIN, KNOWN_DEVICES
+from .utils import async_get_controller
 
 HOMEKIT_DIR = ".homekit"
 HOMEKIT_BRIDGE_DOMAIN = "homekit"
@@ -34,8 +35,6 @@ HOMEKIT_IGNORE = [
 ]
 
 PAIRING_FILE = "pairing.json"
-
-MDNS_SUFFIX = "._hap._tcp.local."
 
 PIN_FORMAT = re.compile(r"^(\d{3})-{0,1}(\d{2})-{0,1}(\d{3})$")
 
@@ -104,10 +103,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_setup_controller(self):
         """Create the controller."""
-        async_zeroconf_instance = await zeroconf.async_get_async_instance(self.hass)
-        self.controller = aiohomekit.Controller(
-            async_zeroconf_instance=async_zeroconf_instance
-        )
+        self.controller = await async_get_controller(self.hass)
 
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
@@ -115,9 +111,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             key = user_input["device"]
-            self.hkid = self.devices[key].device_id
-            self.model = self.devices[key].info["md"]
-            self.name = key[: -len(MDNS_SUFFIX)] if key.endswith(MDNS_SUFFIX) else key
+            self.hkid = self.devices[key].description.id
+            self.model = self.devices[key].description.model
+            self.name = self.devices[key].description.name
+
             await self.async_set_unique_id(
                 normalize_hkid(self.hkid), raise_on_progress=False
             )
@@ -127,15 +124,12 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self.controller is None:
             await self._async_setup_controller()
 
-        all_hosts = await self.controller.discover_ip()
-
         self.devices = {}
-        for host in all_hosts:
-            status_flags = int(host.info["sf"])
-            paired = not status_flags & 0x01
-            if paired:
+
+        async for discovery in self.controller.async_discover():
+            if discovery.paired:
                 continue
-            self.devices[host.info["name"]] = host
+            self.devices[discovery.description.name] = discovery
 
         if not self.devices:
             return self.async_abort(reason="no_devices")
@@ -156,33 +150,16 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self.controller is None:
             await self._async_setup_controller()
 
-        devices = await self.controller.discover_ip(max_seconds=5)
-        for device in devices:
-            if normalize_hkid(device.device_id) != unique_id:
-                continue
-            record = device.info
-            return await self.async_step_zeroconf(
-                zeroconf.ZeroconfServiceInfo(
-                    host=record["address"],
-                    port=record["port"],
-                    hostname=record["name"],
-                    type="_hap._tcp.local.",
-                    name=record["name"],
-                    properties={
-                        "md": record["md"],
-                        "pv": record["pv"],
-                        zeroconf.ATTR_PROPERTIES_ID: unique_id,
-                        "c#": record["c#"],
-                        "s#": record["s#"],
-                        "ff": record["ff"],
-                        "ci": record["ci"],
-                        "sf": record["sf"],
-                        "sh": "",
-                    },
-                )
-            )
+        try:
+            device = await self.controller.async_find(unique_id)
+        except aiohomekit.AccessoryNotFoundError:
+            return self.async_abort(reason="accessory_not_found_error")
 
-        return self.async_abort(reason="no_devices")
+        self.name = device.description.name
+        self.model = device.description.model
+        self.hkid = device.description.id
+
+        return self._async_step_pair_show_form()
 
     async def _hkid_is_homekit(self, hkid):
         """Determine if the device is a homekit bridge or accessory."""
@@ -358,12 +335,12 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # If it doesn't have a screen then the pin is static.
 
         # If it has a display it will display a pin on that display. In
-        # this case the code is random. So we have to call the start_pairing
+        # this case the code is random. So we have to call the async_start_pairing
         # API before the user can enter a pin. But equally we don't want to
-        # call start_pairing when the device is discovered, only when they
+        # call async_start_pairing when the device is discovered, only when they
         # click on 'Configure' in the UI.
 
-        # start_pairing will make the device show its pin and return a
+        # async_start_pairing will make the device show its pin and return a
         # callable. We call the callable with the pin that the user has typed
         # in.
 
@@ -418,8 +395,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # we always check to see if self.finish_paring has been
             # set.
             try:
-                discovery = await self.controller.find_ip_by_device_id(self.hkid)
-                self.finish_pairing = await discovery.start_pairing(self.hkid)
+                discovery = await self.controller.async_find(self.hkid)
+                self.finish_pairing = await discovery.async_start_pairing(self.hkid)
 
             except aiohomekit.BusyError:
                 # Already performing a pair setup operation with a different
