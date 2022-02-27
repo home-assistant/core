@@ -355,7 +355,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     timeout=config[CONF_TIMEOUT],
                     name=config[CONF_NAME],
                 ) as remote:
-                    remote.open("samsung.remote.control")
+                    remote.open()
                     self.token = remote.token
                     LOGGER.debug("Working config: %s", config)
                     return RESULT_SUCCESS
@@ -432,7 +432,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     name=VALUE_CONF_NAME,
                 )
                 if not avoid_open:
-                    self._remote.open("samsung.remote.control")
+                    self._remote.open()
             # This is only happening when the auth was switched to DENY
             # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
             except ConnectionFailure as err:
