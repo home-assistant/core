@@ -147,7 +147,7 @@ async def async_test_still(hass, info) -> tuple[dict[str, str], str | None]:
     )
     if fmt not in SUPPORTED_IMAGE_TYPES:
         return {CONF_STILL_IMAGE_URL: "invalid_still_image"}, None
-    return {}, "image/" + fmt
+    return {}, f"image/{fmt}"
 
 
 async def async_test_stream(hass, info) -> dict[str, str]:
