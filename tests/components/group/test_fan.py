@@ -598,8 +598,6 @@ async def test_service_calls(hass, setup_comp):
     fan_group_state = hass.states.get(FAN_GROUP)
     assert fan_group_state.attributes[ATTR_DIRECTION] == DIRECTION_FORWARD
 
-    print("HAHA")
-    print(FAN_GROUP)
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_DIRECTION,
@@ -613,7 +611,6 @@ async def test_service_calls(hass, setup_comp):
     fan_group_state = hass.states.get(FAN_GROUP)
     assert fan_group_state.attributes[ATTR_DIRECTION] == DIRECTION_REVERSE
 
-    print(FAN_GROUP)
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_PRESET_MODE,
