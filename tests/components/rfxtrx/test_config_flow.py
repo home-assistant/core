@@ -36,7 +36,7 @@ def com_port():
 
 
 async def start_options_flow(hass, entry):
-    """Init hass with the entry under test."""
+    """Start the options flow with the entry under test."""
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
