@@ -572,7 +572,6 @@ homeassistant/components/mastodon/* @fabaff
 homeassistant/components/matrix/* @tinloaf
 homeassistant/components/mazda/* @bdr99
 tests/components/mazda/* @bdr99
-homeassistant/components/mcp23017/* @jardiamj
 homeassistant/components/media_player/* @home-assistant/core
 tests/components/media_player/* @home-assistant/core
 homeassistant/components/media_source/* @hunterjm
