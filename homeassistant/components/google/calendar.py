@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from googleapiclient import discovery as google_discovery
 from httplib2 import ServerNotFoundError
 
 from homeassistant.components.calendar import (
@@ -20,17 +19,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle, dt
+from homeassistant.util import Throttle
 
 from . import (
     CONF_CAL_ID,
     CONF_IGNORE_AVAILABILITY,
     CONF_SEARCH,
     CONF_TRACK,
+    DATA_SERVICE,
     DEFAULT_CONF_OFFSET,
-    TOKEN_FILE,
-    GoogleCalendarService,
+    DOMAIN,
 )
+from .api import GoogleCalendarService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ def setup_platform(
     if not any(data[CONF_TRACK] for data in disc_info[CONF_ENTITIES]):
         return
 
-    calendar_service = GoogleCalendarService(hass.config.path(TOKEN_FILE))
+    calendar_service = hass.data[DOMAIN][DATA_SERVICE]
     entities = []
     for data in disc_info[CONF_ENTITIES]:
         if not data[CONF_TRACK]:
@@ -150,23 +150,6 @@ class GoogleCalendarData:
         self.ignore_availability = ignore_availability
         self.event: dict[str, Any] | None = None
 
-    def _prepare_query(
-        self,
-    ) -> tuple[google_discovery.Resource | None, dict[str, Any] | None]:
-        try:
-            service = self.calendar_service.get()
-        except ServerNotFoundError as err:
-            _LOGGER.error("Unable to connect to Google: %s", err)
-            return None, None
-        params = dict(DEFAULT_GOOGLE_SEARCH_PARAMS)
-        params["calendarId"] = self.calendar_id
-        params["maxResults"] = 100  # Page size
-
-        if self.search:
-            params["q"] = self.search
-
-        return service, params
-
     def _event_filter(self, event: dict[str, Any]) -> bool:
         """Return True if the event is visible."""
         if self.ignore_availability:
@@ -177,51 +160,36 @@ class GoogleCalendarData:
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[dict[str, Any]]:
         """Get all events in a specific time frame."""
-        service, params = await hass.async_add_executor_job(self._prepare_query)
-        if service is None or params is None:
-            return []
-        params["timeMin"] = start_date.isoformat("T")
-        params["timeMax"] = end_date.isoformat("T")
-
         event_list: list[dict[str, Any]] = []
-        events = await hass.async_add_executor_job(service.events)
         page_token: str | None = None
         while True:
-            page_token = await self.async_get_events_page(
-                hass, events, params, page_token, event_list
-            )
+            try:
+                items, page_token = await self.calendar_service.async_list_events(
+                    self.calendar_id,
+                    start_time=start_date,
+                    end_time=end_date,
+                    search=self.search,
+                    page_token=page_token,
+                )
+            except ServerNotFoundError as err:
+                _LOGGER.error("Unable to connect to Google: %s", err)
+                return []
+
+            event_list.extend(filter(self._event_filter, items))
             if not page_token:
                 break
         return event_list
 
-    async def async_get_events_page(
-        self,
-        hass: HomeAssistant,
-        events: google_discovery.Resource,
-        params: dict[str, Any],
-        page_token: str | None,
-        event_list: list[dict[str, Any]],
-    ) -> str | None:
-        """Get a page of events in a specific time frame."""
-        params["pageToken"] = page_token
-        result = await hass.async_add_executor_job(events.list(**params).execute)
-
-        items = result.get("items", [])
-        visible_items = filter(self._event_filter, items)
-        event_list.extend(visible_items)
-        return result.get("nextPageToken")
-
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self) -> None:
         """Get the latest data."""
-        service, params = self._prepare_query()
-        if service is None or params is None:
+        try:
+            items, _ = self.calendar_service.list_events(
+                self.calendar_id, search=self.search
+            )
+        except ServerNotFoundError as err:
+            _LOGGER.error("Unable to connect to Google: %s", err)
             return
-        params["timeMin"] = dt.now().isoformat("T")
 
-        events = service.events()
-        result = events.list(**params).execute()
-
-        items = result.get("items", [])
         valid_events = filter(self._event_filter, items)
         self.event = next(valid_events, None)

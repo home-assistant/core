@@ -6,10 +6,10 @@ import datetime
 from typing import Any, Generator, TypeVar
 from unittest.mock import Mock, patch
 
+from googleapiclient import discovery as google_discovery
 from oauth2client.client import Credentials, OAuth2Credentials
 import pytest
 
-from homeassistant.components.google import GoogleCalendarService
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
@@ -108,14 +108,21 @@ def mock_next_event():
         yield google_cal_data
 
 
+@pytest.fixture(autouse=True)
+def calendar_resource() -> YieldFixture[google_discovery.Resource]:
+    """Fixture to mock out the Google discovery API."""
+    with patch("homeassistant.components.google.api.google_discovery.build") as mock:
+        yield mock
+
+
 @pytest.fixture
 def mock_events_list(
-    google_service: GoogleCalendarService,
+    calendar_resource: google_discovery.Resource,
 ) -> Callable[[dict[str, Any]], None]:
     """Fixture to construct a fake event list API response."""
 
     def _put_result(response: dict[str, Any]) -> None:
-        google_service.return_value.get.return_value.events.return_value.list.return_value.execute.return_value = (
+        calendar_resource.return_value.events.return_value.list.return_value.execute.return_value = (
             response
         )
         return
@@ -125,12 +132,12 @@ def mock_events_list(
 
 @pytest.fixture
 def mock_calendars_list(
-    google_service: GoogleCalendarService,
+    calendar_resource: google_discovery.Resource,
 ) -> ApiResult:
     """Fixture to construct a fake calendar list API response."""
 
     def _put_result(response: dict[str, Any]) -> None:
-        google_service.return_value.get.return_value.calendarList.return_value.list.return_value.execute.return_value = (
+        calendar_resource.return_value.calendarList.return_value.list.return_value.execute.return_value = (
             response
         )
         return
@@ -140,11 +147,9 @@ def mock_calendars_list(
 
 @pytest.fixture
 def mock_insert_event(
-    google_service: GoogleCalendarService,
+    calendar_resource: google_discovery.Resource,
 ) -> Mock:
     """Fixture to create a mock to capture new events added to the API."""
     insert_mock = Mock()
-    google_service.return_value.get.return_value.events.return_value.insert = (
-        insert_mock
-    )
+    calendar_resource.return_value.events.return_value.insert = insert_mock
     return insert_mock

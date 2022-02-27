@@ -12,11 +12,7 @@ from oauth2client.client import (
 import pytest
 import yaml
 
-from homeassistant.components.google import (
-    DOMAIN,
-    SERVICE_ADD_EVENT,
-    GoogleCalendarService,
-)
+from homeassistant.components.google import DOMAIN, SERVICE_ADD_EVENT
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -118,15 +114,6 @@ async def component_setup(
     return _setup_func
 
 
-@pytest.fixture
-async def google_service() -> YieldFixture[GoogleCalendarService]:
-    """Fixture to capture service calls."""
-    with patch("homeassistant.components.google.GoogleCalendarService") as mock, patch(
-        "homeassistant.components.google.calendar.GoogleCalendarService", mock
-    ):
-        yield mock
-
-
 async def fire_alarm(hass, point_in_time):
     """Fire an alarm and wait for callbacks to run."""
     with patch("homeassistant.util.dt.utcnow", return_value=point_in_time):
@@ -150,7 +137,6 @@ async def test_setup_config_empty(
 
 async def test_init_success(
     hass: HomeAssistant,
-    google_service: GoogleCalendarService,
     mock_code_flow: Mock,
     mock_exchange: Mock,
     mock_notification: Mock,
@@ -243,7 +229,6 @@ async def test_existing_token(
     hass: HomeAssistant,
     mock_token_read: None,
     component_setup: ComponentSetup,
-    google_service: GoogleCalendarService,
     mock_calendars_yaml: None,
     mock_notification: Mock,
 ) -> None:
@@ -266,7 +251,6 @@ async def test_existing_token_missing_scope(
     token_scopes: list[str],
     mock_token_read: None,
     component_setup: ComponentSetup,
-    google_service: GoogleCalendarService,
     mock_calendars_yaml: None,
     mock_notification: Mock,
     mock_code_flow: Mock,
@@ -295,7 +279,6 @@ async def test_calendar_yaml_missing_required_fields(
     hass: HomeAssistant,
     mock_token_read: None,
     component_setup: ComponentSetup,
-    google_service: GoogleCalendarService,
     calendars_config: list[dict[str, Any]],
     mock_calendars_yaml: None,
     mock_notification: Mock,
@@ -313,7 +296,6 @@ async def test_invalid_calendar_yaml(
     hass: HomeAssistant,
     mock_token_read: None,
     component_setup: ComponentSetup,
-    google_service: GoogleCalendarService,
     calendars_config: list[dict[str, Any]],
     mock_calendars_yaml: None,
     mock_notification: Mock,
@@ -332,7 +314,6 @@ async def test_found_calendar_from_api(
     hass: HomeAssistant,
     mock_token_read: None,
     component_setup: ComponentSetup,
-    google_service: GoogleCalendarService,
     mock_calendars_list: ApiResult,
     test_calendar: dict[str, Any],
 ) -> None:
@@ -354,7 +335,6 @@ async def test_add_event(
     hass: HomeAssistant,
     mock_token_read: None,
     component_setup: ComponentSetup,
-    google_service: GoogleCalendarService,
     mock_calendars_list: ApiResult,
     test_calendar: dict[str, Any],
     mock_insert_event: Mock,
@@ -416,7 +396,6 @@ async def test_add_event_date_ranges(
     mock_token_read: None,
     calendars_config: list[dict[str, Any]],
     component_setup: ComponentSetup,
-    google_service: GoogleCalendarService,
     mock_calendars_list: ApiResult,
     test_calendar: dict[str, Any],
     mock_insert_event: Mock,

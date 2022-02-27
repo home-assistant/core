@@ -110,17 +110,7 @@ def set_time_zone():
     dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
 
 
-@pytest.fixture(name="google_service")
-def mock_google_service():
-    """Mock google service."""
-    patch_google_service = patch(
-        "homeassistant.components.google.calendar.GoogleCalendarService"
-    )
-    with patch_google_service as mock_service:
-        yield mock_service
-
-
-async def test_all_day_event(hass, mock_next_event):
+async def test_all_day_event(hass, mock_next_event, mock_token_read):
     """Test that we can create an event trigger on device."""
     week_from_today = dt_util.dt.date.today() + dt_util.dt.timedelta(days=7)
     end_event = week_from_today + dt_util.dt.timedelta(days=1)
@@ -302,9 +292,9 @@ async def test_all_day_offset_event(hass, mock_next_event):
     }
 
 
-async def test_update_error(hass, google_service):
+async def test_update_error(hass, calendar_resource):
     """Test that the calendar handles a server error."""
-    google_service.return_value.get = Mock(
+    calendar_resource.return_value.get = Mock(
         side_effect=httplib2.ServerNotFoundError("unit test")
     )
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
@@ -315,7 +305,7 @@ async def test_update_error(hass, google_service):
     assert state.state == "off"
 
 
-async def test_calendars_api(hass, hass_client, google_service):
+async def test_calendars_api(hass, hass_client):
     """Test the Rest API returns the calendar."""
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
     await hass.async_block_till_done()
@@ -332,11 +322,9 @@ async def test_calendars_api(hass, hass_client, google_service):
     ]
 
 
-async def test_http_event_api_failure(hass, hass_client, google_service):
+async def test_http_event_api_failure(hass, hass_client, calendar_resource):
     """Test the Rest API response during a calendar failure."""
-    google_service.return_value.get = Mock(
-        side_effect=httplib2.ServerNotFoundError("unit test")
-    )
+    calendar_resource.side_effect = httplib2.ServerNotFoundError("unit test")
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
     await hass.async_block_till_done()
@@ -352,7 +340,7 @@ async def test_http_event_api_failure(hass, hass_client, google_service):
     assert events == []
 
 
-async def test_http_api_event(hass, hass_client, google_service, mock_events_list):
+async def test_http_api_event(hass, hass_client, mock_events_list):
     """Test querying the API and fetching events from the server."""
     now = dt_util.now()
 
@@ -392,7 +380,7 @@ def create_ignore_avail_calendar() -> dict[str, Any]:
 
 
 @pytest.mark.parametrize("test_calendar", [create_ignore_avail_calendar()])
-async def test_opaque_event(hass, hass_client, google_service, mock_events_list):
+async def test_opaque_event(hass, hass_client, mock_events_list):
     """Test querying the API and fetching events from the server."""
     now = dt_util.now()
 
@@ -426,7 +414,7 @@ async def test_opaque_event(hass, hass_client, google_service, mock_events_list)
 
 
 @pytest.mark.parametrize("test_calendar", [create_ignore_avail_calendar()])
-async def test_transparent_event(hass, hass_client, google_service, mock_events_list):
+async def test_transparent_event(hass, hass_client, mock_events_list):
     """Test querying the API and fetching events from the server."""
     now = dt_util.now()
 
