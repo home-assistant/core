@@ -6,6 +6,7 @@ from asyncio.exceptions import TimeoutError as AsyncioTimeoutError
 import contextlib
 from typing import Any, cast
 
+import async_timeout
 from requests.exceptions import Timeout as RequestsTimeout
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
@@ -332,20 +333,27 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     async def async_get_app_list(self) -> dict[str, str] | None:
         """Get installed app list."""
-        if self._app_list is None:
-            if remote := await self._async_get_remote():
-                await remote.send_command(ChannelEmitCommand.get_installed_app())
-                response = process_api_response(await remote.connection.recv())
-                if response.get("data"):
-                    data = response["data"]
-                    if isinstance(data, dict) and data.get("data"):
-                        raw_app_list = data["data"]
-                        self._app_list = {
-                            app["name"]: app["appId"]
-                            for app in sorted(
-                                raw_app_list, key=lambda app: cast(str, app["name"])
-                            )
-                        }
+        if self._app_list is not None:
+            return self._app_list
+
+        if not (remote := await self._async_get_remote()):
+            return None
+
+        async with async_timeout.timeout(TIMEOUT_WEBSOCKET):
+            await remote.send_command(ChannelEmitCommand.get_installed_app())
+            response = process_api_response(await remote.connection.recv())
+            if not response.get("data"):
+                return None
+
+            data = response["data"]
+            if not isinstance(data, dict) or not data.get("data"):
+                return None
+
+            raw_app_list = data["data"]
+            self._app_list = {
+                app["name"]: app["appId"]
+                for app in sorted(raw_app_list, key=lambda app: cast(str, app["name"]))
+            }
 
         return self._app_list
 
