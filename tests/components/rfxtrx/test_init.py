@@ -1,14 +1,20 @@
 """The tests for the Rfxtrx component."""
 from __future__ import annotations
 
-from unittest.mock import call
+from unittest.mock import ANY, call, patch
 
+import RFXtrx as rfxtrxmod
+
+from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.components.rfxtrx.const import EVENT_RFXTRX_EVENT
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from tests.components.rfxtrx.conftest import setup_rfx_test_cfg
+from tests.common import MockConfigEntry
+from tests.components.rfxtrx.conftest import create_rfx_test_cfg, setup_rfx_test_cfg
+
+SOME_PROTOCOLS = ["ac", "arc"]
 
 
 async def test_fire_event(hass, rfxtrx):
@@ -118,3 +124,31 @@ async def test_ws_device_remove(hass, hass_ws_client):
 
     # Verify that the config entry has removed the device
     assert mock_entry.data["devices"] == {}
+
+
+async def test_connect(hass):
+    """Test that we attempt to connect to the device."""
+    entry_data = create_rfx_test_cfg(device="/dev/ttyUSBfake")
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    with patch.object(rfxtrxmod, "Connect") as connect:
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    connect.assert_called_once_with("/dev/ttyUSBfake", ANY, modes=ANY)
+
+
+async def test_connect_with_protocols(hass):
+    """Test that we attempt to set protocols."""
+    entry_data = create_rfx_test_cfg(device="/dev/ttyUSBfake", protocols=SOME_PROTOCOLS)
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    with patch.object(rfxtrxmod, "Connect") as connect:
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    connect.assert_called_once_with("/dev/ttyUSBfake", ANY, modes=SOME_PROTOCOLS)

@@ -60,6 +60,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await bulb.async_close()
         raise ConfigEntryNotReady(f"{ip_address}: {err}") from err
 
+    if bulb.mac != entry.unique_id:
+        # The ip address of the bulb has changed and its likely offline
+        # and another WiZ device has taken the IP. Avoid setting up
+        # since its the wrong device. As soon as the device comes back
+        # online the ip will get updated and setup will proceed.
+        raise ConfigEntryNotReady(
+            "Found bulb {bulb.mac} at {ip_address}, expected {entry.unique_id}"
+        )
+
     async def _async_update() -> None:
         """Update the WiZ device."""
         try:

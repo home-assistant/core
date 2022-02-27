@@ -5,31 +5,21 @@ import async_timeout
 import pytest
 
 from homeassistant import config as hass_config
-from homeassistant.components.demo.fan import (
-    PRESET_MODE_AUTO,
-    PRESET_MODE_ON,
-    PRESET_MODE_SLEEP,
-    PRESET_MODE_SMART,
-)
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
     ATTR_PERCENTAGE_STEP,
-    ATTR_PRESET_MODE,
-    ATTR_PRESET_MODES,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN,
     SERVICE_OSCILLATE,
     SERVICE_SET_DIRECTION,
     SERVICE_SET_PERCENTAGE,
-    SERVICE_SET_PRESET_MODE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SUPPORT_DIRECTION,
     SUPPORT_OSCILLATE,
-    SUPPORT_PRESET_MODE,
     SUPPORT_SET_SPEED,
 )
 from homeassistant.components.group import SERVICE_RELOAD
@@ -61,9 +51,9 @@ PERCENTAGE_LIMITED_FAN_ENTITY_ID = "fan.percentage_limited_fan"
 FULL_FAN_ENTITY_IDS = [LIVING_ROOM_FAN_ENTITY_ID, PERCENTAGE_FULL_FAN_ENTITY_ID]
 LIMITED_FAN_ENTITY_IDS = [CEILING_FAN_ENTITY_ID, PERCENTAGE_LIMITED_FAN_ENTITY_ID]
 
-FULL_SUPPORT_FEATURES = (
-    SUPPORT_SET_SPEED | SUPPORT_DIRECTION | SUPPORT_OSCILLATE | SUPPORT_PRESET_MODE
-)
+
+FULL_SUPPORT_FEATURES = SUPPORT_SET_SPEED | SUPPORT_DIRECTION | SUPPORT_OSCILLATE
+
 
 CONFIG_MISSING_FAN = {
     DOMAIN: [
@@ -247,6 +237,7 @@ async def test_attributes(hass, setup_comp):
 @pytest.mark.parametrize("config_count", [(CONFIG_FULL_SUPPORT, 2)])
 async def test_direction_oscillating(hass, setup_comp):
     """Test handling of direction and oscillating attributes."""
+
     hass.states.async_set(
         LIVING_ROOM_FAN_ENTITY_ID,
         STATE_ON,
@@ -284,6 +275,7 @@ async def test_direction_oscillating(hass, setup_comp):
     # Add Entity that supports
     # ### Test assumed state ###
     # ##########################
+
     # Add Entity with a different direction should set assumed state
     hass.states.async_set(
         PERCENTAGE_FULL_FAN_ENTITY_ID,
@@ -355,110 +347,6 @@ async def test_direction_oscillating(hass, setup_comp):
     assert state.attributes[ATTR_PERCENTAGE] == 50
     assert state.attributes[ATTR_OSCILLATING] is False
     assert state.attributes[ATTR_DIRECTION] == DIRECTION_FORWARD
-    assert ATTR_ASSUMED_STATE not in state.attributes
-
-
-@pytest.mark.parametrize("config_count", [(CONFIG_FULL_SUPPORT, 2)])
-async def test_preset_modes(hass, setup_comp):
-    """Test handling of preset modes attributes."""
-
-    hass.states.async_set(
-        LIVING_ROOM_FAN_ENTITY_ID,
-        STATE_ON,
-        {
-            ATTR_SUPPORTED_FEATURES: FULL_SUPPORT_FEATURES,
-            ATTR_PRESET_MODE: PRESET_MODE_SMART,
-            ATTR_PRESET_MODES: [
-                PRESET_MODE_AUTO,
-                PRESET_MODE_ON,
-                PRESET_MODE_SLEEP,
-                PRESET_MODE_SMART,
-            ],
-        },
-    )
-    hass.states.async_set(
-        PERCENTAGE_FULL_FAN_ENTITY_ID,
-        STATE_ON,
-        {
-            ATTR_SUPPORTED_FEATURES: FULL_SUPPORT_FEATURES,
-            ATTR_PRESET_MODE: PRESET_MODE_SMART,
-            ATTR_PRESET_MODES: [
-                PRESET_MODE_AUTO,
-                PRESET_MODE_ON,
-                PRESET_MODE_SLEEP,
-                PRESET_MODE_SMART,
-            ],
-        },
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(FAN_GROUP)
-    assert state.state == STATE_ON
-    assert state.attributes[ATTR_FRIENDLY_NAME] == DEFAULT_NAME
-    assert state.attributes[ATTR_ENTITY_ID] == [*FULL_FAN_ENTITY_IDS]
-    assert ATTR_ASSUMED_STATE not in state.attributes
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == FULL_SUPPORT_FEATURES
-    assert state.attributes[ATTR_PRESET_MODE] == PRESET_MODE_SMART
-    assert ATTR_ASSUMED_STATE not in state.attributes
-
-    # Test assumed state
-    # Add Entity with a different preset_mode should set assumed state
-    hass.states.async_set(
-        PERCENTAGE_FULL_FAN_ENTITY_ID,
-        STATE_ON,
-        {
-            ATTR_SUPPORTED_FEATURES: FULL_SUPPORT_FEATURES,
-            ATTR_PRESET_MODE: PRESET_MODE_ON,
-            ATTR_PRESET_MODES: [
-                PRESET_MODE_AUTO,
-                PRESET_MODE_ON,
-                PRESET_MODE_SLEEP,
-                PRESET_MODE_SMART,
-            ],
-        },
-    )
-
-    await hass.async_block_till_done()
-    state = hass.states.get(FAN_GROUP)
-    assert state.state == STATE_ON
-    assert state.attributes[ATTR_ASSUMED_STATE] is True
-    assert ATTR_ASSUMED_STATE in state.attributes
-    assert state.attributes[ATTR_PRESET_MODE] is None
-
-    # Now that everything is the same, no longer assumed state
-    # Group preset_mode only when all members has same preset_mode
-    hass.states.async_set(
-        LIVING_ROOM_FAN_ENTITY_ID,
-        STATE_ON,
-        {
-            ATTR_SUPPORTED_FEATURES: FULL_SUPPORT_FEATURES,
-            ATTR_PRESET_MODE: PRESET_MODE_SLEEP,
-            ATTR_PRESET_MODES: [
-                PRESET_MODE_AUTO,
-                PRESET_MODE_ON,
-                PRESET_MODE_SLEEP,
-                PRESET_MODE_SMART,
-            ],
-        },
-    )
-    hass.states.async_set(
-        PERCENTAGE_FULL_FAN_ENTITY_ID,
-        STATE_ON,
-        {
-            ATTR_SUPPORTED_FEATURES: FULL_SUPPORT_FEATURES,
-            ATTR_PRESET_MODE: PRESET_MODE_SLEEP,
-            ATTR_PRESET_MODES: [
-                PRESET_MODE_AUTO,
-                PRESET_MODE_ON,
-                PRESET_MODE_SLEEP,
-                PRESET_MODE_SMART,
-            ],
-        },
-    )
-    await hass.async_block_till_done()
-    state = hass.states.get(FAN_GROUP)
-    assert state.state == STATE_ON
-    assert state.attributes[ATTR_PRESET_MODE] == PRESET_MODE_SLEEP
     assert ATTR_ASSUMED_STATE not in state.attributes
 
 
@@ -598,8 +486,6 @@ async def test_service_calls(hass, setup_comp):
     fan_group_state = hass.states.get(FAN_GROUP)
     assert fan_group_state.attributes[ATTR_DIRECTION] == DIRECTION_FORWARD
 
-    print("HAHA")
-    print(FAN_GROUP)
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_DIRECTION,
@@ -612,34 +498,6 @@ async def test_service_calls(hass, setup_comp):
     assert percentage_full_fan_state.attributes[ATTR_DIRECTION] == DIRECTION_REVERSE
     fan_group_state = hass.states.get(FAN_GROUP)
     assert fan_group_state.attributes[ATTR_DIRECTION] == DIRECTION_REVERSE
-
-    print(FAN_GROUP)
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: FAN_GROUP, ATTR_PRESET_MODE: PRESET_MODE_AUTO},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    living_room_fan_state = hass.states.get(LIVING_ROOM_FAN_ENTITY_ID)
-    assert living_room_fan_state.attributes[ATTR_PRESET_MODE] == PRESET_MODE_AUTO
-    percentage_full_fan_state = hass.states.get(PERCENTAGE_FULL_FAN_ENTITY_ID)
-    assert percentage_full_fan_state.attributes[ATTR_PRESET_MODE] == PRESET_MODE_AUTO
-    fan_group_state = hass.states.get(FAN_GROUP)
-    assert fan_group_state.attributes[ATTR_PRESET_MODE] == PRESET_MODE_AUTO
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: FAN_GROUP, ATTR_PRESET_MODE: PRESET_MODE_SMART},
-        blocking=True,
-    )
-    living_room_fan_state = hass.states.get(LIVING_ROOM_FAN_ENTITY_ID)
-    assert living_room_fan_state.attributes[ATTR_PRESET_MODE] == PRESET_MODE_SMART
-    percentage_full_fan_state = hass.states.get(PERCENTAGE_FULL_FAN_ENTITY_ID)
-    assert percentage_full_fan_state.attributes[ATTR_PRESET_MODE] == PRESET_MODE_SMART
-    fan_group_state = hass.states.get(FAN_GROUP)
-    assert fan_group_state.attributes[ATTR_PRESET_MODE] == PRESET_MODE_SMART
 
 
 async def test_nested_group(hass):
