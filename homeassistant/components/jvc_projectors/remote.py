@@ -120,7 +120,6 @@ class JVCRemote(RemoteEntity):
             "low_latency": self._ll_state,
             "host_ip": self._host,
             "timeout": self.timeout,
-            # "command_in_flight": self._lock.locked(),
         }
 
     @property
@@ -146,8 +145,6 @@ class JVCRemote(RemoteEntity):
     async def async_update(self):
         """Retrieve latest state."""
         # Not implemented yet
-        # self._state = await self.jvc_client.async_is_on()
-        # self._ll_state = await self.jvc_client.async_get_low_latency_state()
 
     async def async_send_command(self, command: Iterable[str], **kwargs):
         """Send commands to a device."""
