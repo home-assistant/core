@@ -300,9 +300,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
         """Initialize Bridge."""
         super().__init__(hass, method, host, port)
         self.token = token
-        self._rest_api = SamsungTVAsyncRest(
-            host, session=async_get_clientsession(hass), port=port
-        )
+        self._rest_api: SamsungTVAsyncRest | None = None
         self._app_list: dict[str, str] | None = None
         self._remote: SamsungTVWSAsyncConnection | None = None
 
@@ -387,6 +385,13 @@ class SamsungTVWSBridge(SamsungTVBridge):
     async def async_device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""
         if await self._async_get_remote(avoid_open=True):
+            if self._rest_api is None:
+                self._rest_api = SamsungTVAsyncRest(
+                    self.host,
+                    session=async_get_clientsession(self.hass),
+                    port=self.port,
+                )
+
             with contextlib.suppress(HttpApiError, RequestsTimeout):
                 device_info: dict[str, Any] = await self._rest_api.rest_device_info()
                 return device_info
