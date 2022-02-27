@@ -1,9 +1,9 @@
 """Support for ISY994 fans."""
 from __future__ import annotations
 
+from collections import OrderedDict
 import math
 from typing import Any
-from collections import OrderedDict
 
 from pyisy.constants import ISY_VALUE_UNKNOWN, PROTO_INSTEON
 
