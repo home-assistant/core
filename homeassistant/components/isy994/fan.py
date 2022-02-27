@@ -44,7 +44,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ISY994 fan platform."""
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
-    entities: list[ISYFanEntity | ISYFanProgramEntity] = []
+    entities: list[ISYFanLincEntity | ISYFanEntity | ISYFanProgramEntity] = []
 
     for node in hass_isy_data[ISY994_NODES][FAN]:
         if hasattr(node, "node_def_id") and node.node_def_id == "FanLincMotor":
@@ -100,7 +100,8 @@ class ISYFanLincEntity(ISYNodeEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Send the turn on command to the ISY994 fan device."""
-        await self.async_set_preset_mode(preset_mode)
+        if preset_mode:
+            await self.async_set_preset_mode(preset_mode)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the turn off command to the ISY994 fan device."""
