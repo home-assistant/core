@@ -103,9 +103,14 @@ async def test_reauth_password(hass):
     entry = await setup_platform(hass)
     with patch("asyncsleepiq.AsyncSleepIQ.login", side_effect=SleepIQLoginException):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=entry.data
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+                "unique_id": entry.unique_id,
+            },
+            data=entry.data,
         )
-    assert result["type"] == "form"
 
     with patch("asyncsleepiq.AsyncSleepIQ.login", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
@@ -116,26 +121,3 @@ async def test_reauth_password(hass):
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result2["reason"] == "reauth_successful"
-
-
-async def test_reauth_new(hass):
-    """Test reauth form."""
-
-    with patch("asyncsleepiq.AsyncSleepIQ.login", side_effect=SleepIQLoginException):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_REAUTH},
-            data=SLEEPIQ_CONFIG,
-        )
-    assert result["type"] == "form"
-
-    with patch("asyncsleepiq.AsyncSleepIQ.login", return_value=True):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"password": "password"},
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["data"][CONF_USERNAME] == SLEEPIQ_CONFIG[CONF_USERNAME]
-    assert result2["data"][CONF_PASSWORD] == SLEEPIQ_CONFIG[CONF_PASSWORD]
