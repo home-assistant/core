@@ -4,7 +4,7 @@ aiodiscover==1.4.8
 aiohttp==3.8.1
 aiohttp_cors==0.7.0
 astral==2.2
-async-upnp-client==0.23.5
+async-upnp-client==0.25.0
 async_timeout==4.0.2
 atomicwrites==1.4.0
 attrs==21.2.0
