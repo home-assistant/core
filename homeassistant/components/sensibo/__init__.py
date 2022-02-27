@@ -1,11 +1,15 @@
 """The sensibo component."""
 from __future__ import annotations
 
+from pysensibo.exceptions import AuthenticationError
+
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN, LOGGER, PLATFORMS
 from .coordinator import SensiboDataUpdateCoordinator
+from .util import async_validate_api, NoDevicesError, NoUsernameError
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -28,3 +32,25 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             del hass.data[DOMAIN]
         return True
     return False
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    # Change entry unique id from api_key to username
+    if entry.version == 1:
+        api_key = entry.data[CONF_API_KEY]
+
+        try:
+            new_unique_id = await async_validate_api(hass, api_key)
+        except (AuthenticationError, ConnectionError, NoDevicesError, NoUsernameError):
+            return False
+
+        entry.version = 2
+
+        LOGGER.debug("Migrate Sensibo config entry unique id to %s", new_unique_id)
+        hass.config_entries.async_update_entry(
+            entry,
+            unique_id=new_unique_id,
+        )
+
+    return True
