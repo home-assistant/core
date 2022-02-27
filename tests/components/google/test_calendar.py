@@ -338,6 +338,21 @@ async def test_calendars_api(hass, hass_client):
     ]
 
 
+async def test_http_event_api_failure(hass, hass_client, calendar_resource):
+    """Test the Rest API response during a calendar failure."""
+    calendar_resource.side_effect = httplib2.ServerNotFoundError("unit test")
+
+    assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    response = await client.get(upcoming_event_url())
+    assert response.status == HTTPStatus.OK
+    # A failure to talk to the server results in an empty list of events
+    events = await response.json()
+    assert events == []
+
+
 async def test_http_api_event(hass, hass_client, mock_events_list_items):
     """Test querying the API and fetching events from the server."""
     event = {
@@ -355,21 +370,6 @@ async def test_http_api_event(hass, hass_client, mock_events_list_items):
     assert len(events) == 1
     assert "summary" in events[0]
     assert events[0]["summary"] == event["summary"]
-
-
-async def test_http_event_api_failure(hass, hass_client, calendar_resource):
-    """Test the Rest API response during a calendar failure."""
-    calendar_resource.side_effect = httplib2.ServerNotFoundError("unit test")
-
-    assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
-    await hass.async_block_till_done()
-
-    client = await hass_client()
-    response = await client.get(upcoming_event_url())
-    assert response.status == HTTPStatus.OK
-    # A failure to talk to the server results in an empty list of events
-    events = await response.json()
-    assert events == []
 
 
 def create_ignore_avail_calendar() -> dict[str, Any]:
