@@ -4,7 +4,10 @@
             "already_configured": "Account is already configured"
         },
         "error": {
-            "cannot_connect": "Failed to connect"
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "no_devices": "No devices discovered",
+            "no_username": "Could not get username"
         },
         "step": {
             "user": {
