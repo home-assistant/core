@@ -847,9 +847,6 @@ hydrawiser==0.2
 # homeassistant.components.hyperion
 hyperion-py==0.7.4
 
-# homeassistant.components.htu21d
-# i2csense==0.0.4
-
 # homeassistant.components.iammeter
 iammeter==0.1.7
 
@@ -2174,7 +2171,6 @@ smart-meter-texas==0.4.7
 smarthab==0.21
 
 # homeassistant.components.bme680
-# homeassistant.components.htu21d
 # homeassistant.components.raspihats
 # smbus-cffi==0.5.1
 
