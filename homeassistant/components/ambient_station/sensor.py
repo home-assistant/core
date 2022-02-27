@@ -53,12 +53,14 @@ TYPE_HUMIDITY8 = "humidity8"
 TYPE_HUMIDITY9 = "humidity9"
 TYPE_HUMIDITYIN = "humidityin"
 TYPE_LASTRAIN = "lastRain"
+TYPE_LIGHTNING_PER_DAY = "lightning_day"
+TYPE_LIGHTNING_PER_HOUR = "lightning_hour"
 TYPE_MAXDAILYGUST = "maxdailygust"
 TYPE_MONTHLYRAININ = "monthlyrainin"
-TYPE_PM25 = "pm25"
-TYPE_PM25_24H = "pm25_24h"
-TYPE_PM25_IN = "pm25_in"
-TYPE_PM25_IN_24H = "pm25_in_24h"
+TYPE_PM25 = "aqi_pm25"
+TYPE_PM25_24H = "aqi_pm25_24h"
+TYPE_PM25_IN = "aqi_pm25_in"
+TYPE_PM25_IN_24H = "aqi_pm25_in_24h"
 TYPE_SOILHUM1 = "soilhum1"
 TYPE_SOILHUM10 = "soilhum10"
 TYPE_SOILHUM2 = "soilhum2"
@@ -245,6 +247,20 @@ SENSOR_DESCRIPTIONS = (
         name="Last Rain",
         icon="mdi:water",
         device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key=TYPE_LIGHTNING_PER_DAY,
+        name="Lightning Strikes Per Day",
+        icon="mdi:lightning-bolt",
+        native_unit_of_measurement="strikes",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key=TYPE_LIGHTNING_PER_HOUR,
+        name="Lightning Strikes Per Hour",
+        icon="mdi:lightning-bolt",
+        native_unit_of_measurement="strikes",
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key=TYPE_MAXDAILYGUST,
