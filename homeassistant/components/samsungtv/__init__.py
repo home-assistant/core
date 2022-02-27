@@ -39,7 +39,6 @@ from .const import (
     LEGACY_PORT,
     LOGGER,
     METHOD_LEGACY,
-    METHOD_WEBSOCKET,
 )
 
 
@@ -134,7 +133,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def stop_bridge(event: Event) -> None:
         """Stop SamsungTV bridge connection."""
-        await bridge.async_stop()
+        LOGGER.debug("Stopping SamsungTVBridge %s", bridge.host)
+        await bridge.async_close_remote()
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
@@ -149,11 +149,11 @@ async def _async_create_bridge_with_updated_data(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> SamsungTVLegacyBridge | SamsungTVWSBridge:
     """Create a bridge object and update any missing data in the config entry."""
-    updated_data = {}
-    host = entry.data[CONF_HOST]
-    port = entry.data.get(CONF_PORT)
-    method = entry.data.get(CONF_METHOD)
-    info = None
+    updated_data: dict[str, str | int] = {}
+    host: str = entry.data[CONF_HOST]
+    port: int | None = entry.data.get(CONF_PORT)
+    method: str | None = entry.data.get(CONF_METHOD)
+    info: dict[str, Any] | None = None
 
     if not port or not method:
         if method == METHOD_LEGACY:
@@ -162,7 +162,7 @@ async def _async_create_bridge_with_updated_data(
             # When we imported from yaml we didn't setup the method
             # because we didn't know it
             port, method, info = await async_get_device_info(hass, None, host)
-            if not port:
+            if not port or not method:
                 raise ConfigEntryNotReady(
                     "Failed to determine connection method, make sure the device is on."
                 )
@@ -172,8 +172,8 @@ async def _async_create_bridge_with_updated_data(
 
     bridge = _async_get_device_bridge(hass, {**entry.data, **updated_data})
 
-    mac = entry.data.get(CONF_MAC)
-    if not mac and bridge.method == METHOD_WEBSOCKET:
+    mac: str | None = entry.data.get(CONF_MAC)
+    if not mac:
         if info:
             mac = mac_from_device_info(info)
         else:
@@ -197,7 +197,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        await hass.data[DOMAIN][entry.entry_id].async_stop()
+        bridge: SamsungTVBridge = hass.data[DOMAIN][entry.entry_id]
+        LOGGER.debug("Stopping SamsungTVBridge %s", bridge.host)
+        await bridge.async_close_remote()
     return unload_ok
 
 
