@@ -928,6 +928,9 @@ jellyfin-apiclient-python==1.7.2
 # homeassistant.components.rest
 jsonpath==0.82
 
+# homeassistant.components.jvc_projectors
+jvc-projector-remote-improve==1.2.9
+
 # homeassistant.components.kaiterra
 kaiterra-async-client==0.0.2
 

@@ -547,6 +547,7 @@ omit =
     homeassistant/components/juicenet/entity.py
     homeassistant/components/juicenet/sensor.py
     homeassistant/components/juicenet/switch.py
+    homeassistant/components/jvc_projectors/*
     homeassistant/components/kaiterra/*
     homeassistant/components/kankun/switch.py
     homeassistant/components/keba/*

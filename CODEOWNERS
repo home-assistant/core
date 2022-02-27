@@ -479,6 +479,7 @@ homeassistant/components/jewish_calendar/* @tsvi
 tests/components/jewish_calendar/* @tsvi
 homeassistant/components/juicenet/* @jesserockz
 tests/components/juicenet/* @jesserockz
+homeassistant/components/jvc_projectors/* @iloveicedgreentea
 homeassistant/components/kaiterra/* @Michsior14
 homeassistant/components/keba/* @dannerph
 homeassistant/components/keenetic_ndms2/* @foxel

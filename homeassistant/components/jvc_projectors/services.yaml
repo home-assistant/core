@@ -1,0 +1,34 @@
+info:
+  name: "Info Button"
+  description: "Calls the Info button"
+  target:
+    entity:
+      domain: remote
+
+gaming_mode_hdr:
+  name: "Gaming Mode HDR"
+  description: "Sets Gaming Mode HDR params"
+  target:
+    entity:
+      domain: remote
+
+gaming_mode_sdr:
+  name: "Gaming Mode SDR"
+  description: "Sets Gaming Mode SDR params"
+  target:
+    entity:
+      domain: remote
+
+hdr_picture_mode:
+  name: "Film Mode HDR"
+  description: "Sets Film HDR params"
+  target:
+    entity:
+      domain: remote
+
+sdr_picture_mode:
+  name: "Film Mode SDR"
+  description: "Sets Film SDR params"
+  target:
+    entity:
+      domain: remote

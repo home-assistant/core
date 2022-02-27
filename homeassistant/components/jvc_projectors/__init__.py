@@ -1,0 +1,1 @@
+"""The JVC Projector integration."""
