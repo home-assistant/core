@@ -111,6 +111,12 @@ class PowerWallChargingStatusSensor(PowerWallEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
 
     @property
+    def available(self) -> bool:
+       """Powerwall is available."""
+       # Return False if no battery is installed
+       return self.data.meters.get_meter(MeterType.BATTERY) is not None
+
+    @property
     def unique_id(self) -> str:
         """Device Uniqueid."""
         return f"{self.base_unique_id}_powerwall_charging"
@@ -118,10 +124,5 @@ class PowerWallChargingStatusSensor(PowerWallEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Powerwall is charging."""
-        # No battery present is equivalent to not on.
-        battery = self.data.meters.get_meter(MeterType.BATTERY)
-        if battery == None:
-            return False
-
         # is_sending_to returns true for values greater than 100 watts
-        return battery.is_sending_to()
+        return self.data.meters.get_meter(MeterType.BATTERY).is_sending_to()
