@@ -1,25 +1,16 @@
 """Adds config flow for Sensibo integration."""
 from __future__ import annotations
 
-import asyncio
-import logging
-
-import aiohttp
-import async_timeout
-from pysensibo import SensiboClient
-from pysensibo.exceptions import AuthenticationError, SensiboError
+from pysensibo.exceptions import AuthenticationError
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import DEFAULT_NAME, DOMAIN, TIMEOUT
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DEFAULT_NAME, DOMAIN
+from .util import NoDevicesError, NoUsernameError, async_validate_api
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -28,39 +19,14 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def async_validate_api(hass: HomeAssistant, api_key: str) -> bool:
-    """Get data from API."""
-    client = SensiboClient(
-        api_key,
-        session=async_get_clientsession(hass),
-        timeout=TIMEOUT,
-    )
-
-    try:
-        async with async_timeout.timeout(TIMEOUT):
-            if await client.async_get_devices():
-                return True
-    except (
-        aiohttp.ClientConnectionError,
-        asyncio.TimeoutError,
-        AuthenticationError,
-        SensiboError,
-    ) as err:
-        _LOGGER.error("Failed to get devices from Sensibo servers %s", err)
-    return False
-
-
 class SensiboConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Sensibo integration."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_import(self, config: dict) -> FlowResult:
         """Import a configuration from config.yaml."""
 
-        self.context.update(
-            {"title_placeholders": {"Sensibo": f"YAML import {DOMAIN}"}}
-        )
         return await self.async_step_user(user_input=config)
 
     async def async_step_user(self, user_input=None) -> FlowResult:
@@ -71,17 +37,24 @@ class SensiboConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
 
             api_key = user_input[CONF_API_KEY]
+            try:
+                username = await async_validate_api(self.hass, api_key)
+            except AuthenticationError:
+                errors["base"] = "invalid_auth"
+            except ConnectionError:
+                errors["base"] = "cannot_connect"
+            except NoDevicesError:
+                errors["base"] = "no_devices"
+            except NoUsernameError:
+                errors["base"] = "no_username"
+            else:
+                await self.async_set_unique_id(username)
+                self._abort_if_unique_id_configured()
 
-            await self.async_set_unique_id(api_key)
-            self._abort_if_unique_id_configured()
-
-            validate = await async_validate_api(self.hass, api_key)
-            if validate:
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
                     data={CONF_API_KEY: api_key},
                 )
-            errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",
