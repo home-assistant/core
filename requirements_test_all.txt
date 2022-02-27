@@ -256,7 +256,7 @@ arcam-fmj==0.12.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.23.5
+async-upnp-client==0.25.0
 
 # homeassistant.components.sleepiq
 asyncsleepiq==1.1.0

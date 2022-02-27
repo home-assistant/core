@@ -60,12 +60,14 @@ async def async_get_enabled_source_ips(
         if not adapter["enabled"]:
             continue
         if adapter["ipv4"]:
-            sources.extend(IPv4Address(ipv4["address"]) for ipv4 in adapter["ipv4"])
+            addrs_ipv4 = [IPv4Address(ipv4["address"]) for ipv4 in adapter["ipv4"]]
+            sources.extend(addrs_ipv4)
         if adapter["ipv6"]:
-            # With python 3.9 add scope_ids can be
-            # added by enumerating adapter["ipv6"]s
-            # IPv6Address(f"::%{ipv6['scope_id']}")
-            sources.extend(IPv6Address(ipv6["address"]) for ipv6 in adapter["ipv6"])
+            addrs_ipv6 = [
+                IPv6Address(f"{ipv6['address']}%{ipv6['scope_id']}")
+                for ipv6 in adapter["ipv6"]
+            ]
+            sources.extend(addrs_ipv6)
 
     return sources
 
