@@ -49,7 +49,6 @@ PyViCare==2.16.1
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.13.4
 
-# homeassistant.components.bmp280
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.7.1a4
 
@@ -73,9 +72,6 @@ abodepy==1.2.0
 
 # homeassistant.components.accuweather
 accuweather==0.3.0
-
-# homeassistant.components.bmp280
-adafruit-circuitpython-bmp280==3.1.1
 
 # homeassistant.components.adax
 adax==0.2.0
