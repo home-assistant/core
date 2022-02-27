@@ -5,15 +5,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
-from .config_flow import (
-    CANNOT_CONNECT,
-    INVALID_AUTH,
-    NO_DEVICES,
-    NO_USERNAME,
-    async_validate_api,
-)
 from .const import DOMAIN, LOGGER, PLATFORMS
 from .coordinator import SensiboDataUpdateCoordinator
+from .util import async_validate_api
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -43,15 +37,18 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Change entry unique id from api_key to username
     if entry.version == 1:
         api_key = entry.data[CONF_API_KEY]
-        new_unique_id = await async_validate_api(hass, api_key)
-        if new_unique_id in [INVALID_AUTH, CANNOT_CONNECT, NO_DEVICES, NO_USERNAME]:
+
+        try:
+            new_unique_id = await async_validate_api(hass, api_key)
+        except Exception:  # pylint: disable=broad-except
             return False
+
+        entry.version = 2
 
         LOGGER.debug("Migrate Sensibo config entry unique id to %s", new_unique_id)
         hass.config_entries.async_update_entry(
             entry,
             unique_id=new_unique_id,
         )
-        entry.version = 2
 
     return True
