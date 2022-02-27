@@ -98,16 +98,6 @@ async def mock_token_read(
     storage.put(creds)
 
 
-@pytest.fixture
-def mock_next_event():
-    """Mock the google calendar data."""
-    patch_google_cal = patch(
-        "homeassistant.components.google.calendar.GoogleCalendarData"
-    )
-    with patch_google_cal as google_cal_data:
-        yield google_cal_data
-
-
 @pytest.fixture(autouse=True)
 def calendar_resource() -> YieldFixture[google_discovery.Resource]:
     """Fixture to mock out the Google discovery API."""
@@ -128,6 +118,19 @@ def mock_events_list(
         return
 
     return _put_result
+
+
+@pytest.fixture
+def mock_events_list_items(
+    mock_events_list: Callable[[dict[str, Any]], None]
+) -> Callable[list[[dict[str, Any]]], None]:
+    """Fixture to construct an API response containing event items."""
+
+    def _put_items(items: list[dict[str, Any]]) -> None:
+        mock_events_list({"items": items})
+        return
+
+    return _put_items
 
 
 @pytest.fixture
