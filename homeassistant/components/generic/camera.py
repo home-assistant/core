@@ -114,7 +114,7 @@ def generate_auth(device_info) -> httpx.Auth | None:
     username = device_info.get(CONF_USERNAME)
     password = device_info.get(CONF_PASSWORD)
     authentication = device_info.get(CONF_AUTHENTICATION)
-    if username and password:
+    if username:
         if authentication == HTTP_DIGEST_AUTHENTICATION:
             return httpx.DigestAuth(username=username, password=password)
         return httpx.BasicAuth(username=username, password=password)
