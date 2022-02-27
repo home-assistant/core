@@ -32,7 +32,7 @@ _BATT_LEVEL_TO_PERCENT = {
 
 async def async_setup_entry(
     hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> bool:
+) -> None:
     """Initialize an IZone Controller."""
     disco = hass.data[DATA_DISCOVERY_SERVICE]
 
@@ -73,8 +73,6 @@ async def async_setup_entry(
         )
 
     disco.async_add_controller_discovered_listener(init_controller)
-
-    return True
 
 
 class SensorPowerChannel(ControllerCoordinatorEntity, SensorEntity):
