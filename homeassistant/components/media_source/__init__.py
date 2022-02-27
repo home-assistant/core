@@ -119,7 +119,7 @@ async def async_browse_media(
     item.children = [
         child for child in item.children if child.can_expand or content_filter(child)
     ]
-    item.not_shown = old_count - len(item.children)
+    item.not_shown += old_count - len(item.children)
     return item
 
 
