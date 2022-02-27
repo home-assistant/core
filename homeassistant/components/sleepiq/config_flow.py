@@ -23,6 +23,10 @@ class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self._username: str | None = None
+
     async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Import a SleepIQ account as a config entry.
 
@@ -73,6 +77,41 @@ class SleepIQFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             last_step=True,
+        )
+
+    async def async_step_reauth(self, user_input: dict[str, Any]) -> FlowResult:
+        """Perform reauth upon an API authentication error."""
+        self._username = user_input[CONF_USERNAME]
+        return await self.async_step_reauth_confirm(user_input)
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm reauth."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            data = {
+                CONF_USERNAME: self._username,
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+            }
+
+            if not (error := await try_connection(self.hass, data)):
+                assert self._username is not None
+                entry = await self.async_set_unique_id(self._username.lower())
+                if entry:
+                    self.hass.config_entries.async_update_entry(entry, data=data)
+                    await self.hass.config_entries.async_reload(entry.entry_id)
+                    return self.async_abort(reason="reauth_successful")
+                return self.async_create_entry(title=self._username, data=data)
+            errors["base"] = error
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
+            errors=errors,
+            description_placeholders={
+                CONF_USERNAME: self._username,
+            },
         )
 
 
