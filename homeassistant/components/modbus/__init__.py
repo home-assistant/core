@@ -136,7 +136,7 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
             ]
         ),
         vol.Optional(CONF_COUNT): cv.positive_int,
-        vol.Optional(CONF_DATA_TYPE, default=DataType.INT): vol.In(
+        vol.Optional(CONF_DATA_TYPE, default=DataType.INT16): vol.In(
             [
                 DataType.INT8,
                 DataType.INT16,
@@ -150,9 +150,6 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                 DataType.FLOAT32,
                 DataType.FLOAT64,
                 DataType.STRING,
-                DataType.INT,
-                DataType.UINT,
-                DataType.FLOAT,
                 DataType.STRING,
                 DataType.CUSTOM,
             ]

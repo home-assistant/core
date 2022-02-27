@@ -207,7 +207,6 @@ homeassistant/components/dexcom/* @gagebenne
 tests/components/dexcom/* @gagebenne
 homeassistant/components/dhcp/* @bdraco
 tests/components/dhcp/* @bdraco
-homeassistant/components/dht/* @thegardenmonkey
 homeassistant/components/diagnostics/* @home-assistant/core
 tests/components/diagnostics/* @home-assistant/core
 homeassistant/components/digital_ocean/* @fabaff
@@ -541,7 +540,6 @@ homeassistant/components/mastodon/* @fabaff
 homeassistant/components/matrix/* @tinloaf
 homeassistant/components/mazda/* @bdr99
 tests/components/mazda/* @bdr99
-homeassistant/components/mcp23017/* @jardiamj
 homeassistant/components/media_source/* @hunterjm
 tests/components/media_source/* @hunterjm
 homeassistant/components/mediaroom/* @dgomes

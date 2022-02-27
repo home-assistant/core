@@ -50,10 +50,7 @@ PyViCare==2.16.1
 PyXiaomiGateway==0.13.4
 
 # homeassistant.components.bmp280
-# homeassistant.components.dht
-# homeassistant.components.mcp23017
 # homeassistant.components.rpi_gpio
-# homeassistant.components.rpi_rf
 # RPi.GPIO==0.7.1a4
 
 # homeassistant.components.remember_the_milk
@@ -79,12 +76,6 @@ accuweather==0.3.0
 
 # homeassistant.components.bmp280
 adafruit-circuitpython-bmp280==3.1.1
-
-# homeassistant.components.dht
-adafruit-circuitpython-dht==3.7.0
-
-# homeassistant.components.mcp23017
-adafruit-circuitpython-mcp230xx==2.2.2
 
 # homeassistant.components.adax
 adax==0.2.0
@@ -602,9 +593,6 @@ enturclient==0.2.3
 # homeassistant.components.environment_canada
 env_canada==0.5.20
 
-# homeassistant.components.envirophat
-# envirophat==0.0.6
-
 # homeassistant.components.enphase_envoy
 envoy_reader==0.20.1
 
@@ -732,7 +720,7 @@ goalzero==0.2.1
 goodwe==0.2.15
 
 # homeassistant.components.google
-google-api-python-client==1.6.4
+google-api-python-client==2.38.0
 
 # homeassistant.components.google_pubsub
 google-cloud-pubsub==2.9.0
@@ -822,7 +810,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220224.0
+home-assistant-frontend==20220226.0
 
 # homeassistant.components.zwave
 # homeassistant-pyozw==0.1.10
@@ -854,9 +842,6 @@ hydrawiser==0.2
 
 # homeassistant.components.hyperion
 hyperion-py==0.7.4
-
-# homeassistant.components.htu21d
-# i2csense==0.0.4
 
 # homeassistant.components.iammeter
 iammeter==0.1.7
@@ -2099,9 +2084,6 @@ rova==0.2.1
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
 
-# homeassistant.components.rpi_rf
-# rpi-rf==0.9.7
-
 # homeassistant.components.rtsp_to_webrtc
 rtsp-to-webrtc==0.5.0
 
@@ -2137,9 +2119,6 @@ scsgate==0.1.0
 
 # homeassistant.components.sendgrid
 sendgrid==6.8.2
-
-# homeassistant.components.sensehat
-sense-hat==2.2.0
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
@@ -2185,8 +2164,6 @@ smart-meter-texas==0.4.7
 smarthab==0.21
 
 # homeassistant.components.bme680
-# homeassistant.components.envirophat
-# homeassistant.components.htu21d
 # homeassistant.components.raspihats
 # smbus-cffi==0.5.1
 
