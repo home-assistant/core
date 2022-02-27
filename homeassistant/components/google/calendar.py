@@ -145,7 +145,7 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self) -> None:
-        """Update event data."""
+        """Get the latest data."""
         try:
             items, _ = self._calendar_service.list_events(
                 self._calendar_id, search=self._search
@@ -154,9 +154,9 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
             _LOGGER.error("Unable to connect to Google: %s", err)
             return
 
-        valid_events = filter(self._event_filter, items)
-        event = next(valid_events, None)
-        if event:
-            event = calculate_offset(copy.deepcopy(event), self._offset)
-            self._offset_reached = is_offset_reached(event)
-        self._event = event
+        # Pick the first visible evemt. Make a copy since calculate_offset mutates the event
+        valid_items = filter(self._event_filter, items)
+        self._event = copy.deepcopy(next(valid_items, None))
+        if self._event:
+            calculate_offset(self._event, self._offset)
+            self._offset_reached = is_offset_reached(self._event)
