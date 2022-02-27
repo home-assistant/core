@@ -1,13 +1,15 @@
 """The sensibo component."""
 from __future__ import annotations
 
+from pysensibo.exceptions import AuthenticationError
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, LOGGER, PLATFORMS
 from .coordinator import SensiboDataUpdateCoordinator
-from .util import async_validate_api
+from .util import async_validate_api, NoDevicesError, NoUsernameError
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -40,7 +42,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         try:
             new_unique_id = await async_validate_api(hass, api_key)
-        except Exception:  # pylint: disable=broad-except
+        except (AuthenticationError, ConnectionError, NoDevicesError, NoUsernameError):
             return False
 
         entry.version = 2
