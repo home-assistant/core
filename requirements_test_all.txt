@@ -125,7 +125,7 @@ aioesphomeapi==10.8.2
 aioflo==2021.11.0
 
 # homeassistant.components.github
-aiogithubapi==22.2.3
+aiogithubapi==22.2.4
 
 # homeassistant.components.guardian
 aioguardian==2021.11.0
@@ -493,7 +493,7 @@ goalzero==0.2.1
 goodwe==0.2.15
 
 # homeassistant.components.google
-google-api-python-client==1.6.4
+google-api-python-client==2.38.0
 
 # homeassistant.components.google_pubsub
 google-cloud-pubsub==2.9.0
@@ -532,7 +532,7 @@ habitipy==0.2.0
 hangups==0.4.17
 
 # homeassistant.components.cloud
-hass-nabucasa==0.53.1
+hass-nabucasa==0.54.0
 
 # homeassistant.components.tasmota
 hatasmota==0.3.1
@@ -553,7 +553,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220224.0
+home-assistant-frontend==20220226.0
 
 # homeassistant.components.zwave
 # homeassistant-pyozw==0.1.10
@@ -1235,9 +1235,6 @@ python-songpal==0.14
 # homeassistant.components.tado
 python-tado==0.12.0
 
-# homeassistant.components.twitch
-python-twitch-client==0.6.0
-
 # homeassistant.components.awair
 python_awair==0.2.1
 
@@ -1466,6 +1463,9 @@ twentemilieu==0.5.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
+
+# homeassistant.components.twitch
+twitchAPI==2.5.2
 
 # homeassistant.components.rainforest_eagle
 uEagle==0.0.2

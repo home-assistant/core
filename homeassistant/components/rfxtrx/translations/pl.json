@@ -72,6 +72,7 @@
                     "debug": "W\u0142\u0105cz debugowanie",
                     "device": "Wybierz urz\u0105dzenie do skonfigurowania",
                     "event_code": "Podaj kod zdarzenia do dodania",
+                    "protocols": "Protoko\u0142y",
                     "remove_device": "Wybierz urz\u0105dzenie do usuni\u0119cia"
                 },
                 "title": "Opcje Rfxtrx"

@@ -41,6 +41,7 @@
         "data": {
           "debug": "Enable debugging",
           "automatic_add": "Enable automatic add",
+          "protocols": "Protocols",
           "event_code": "Enter event code to add",
           "device": "Select device to configure"
         },

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import itertools
 import os
 from typing import TypedDict, cast
 
@@ -23,6 +24,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
     DeviceRegistry,
@@ -40,6 +42,7 @@ from .const import (
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
     CONF_OFF_DELAY,
+    CONF_PROTOCOLS,
     CONF_REPLACE_DEVICE,
     CONF_SIGNAL_REPETITIONS,
     CONF_VENETIAN_BLIND_MODE,
@@ -54,6 +57,8 @@ from .switch import supported as switch_supported
 
 CONF_EVENT_CODE = "event_code"
 CONF_MANUAL_PATH = "Enter Manually"
+
+RECV_MODES = sorted(itertools.chain(*rfxtrxmod.lowlevel.Status.RECMODES))
 
 
 class DeviceData(TypedDict):
@@ -96,6 +101,7 @@ class OptionsFlow(config_entries.OptionsFlow):
         if user_input is not None:
             self._global_options = {
                 CONF_AUTOMATIC_ADD: user_input[CONF_AUTOMATIC_ADD],
+                CONF_PROTOCOLS: user_input[CONF_PROTOCOLS] or None,
             }
             if CONF_DEVICE in user_input:
                 entry_id = user_input[CONF_DEVICE]
@@ -145,6 +151,10 @@ class OptionsFlow(config_entries.OptionsFlow):
                 CONF_AUTOMATIC_ADD,
                 default=self._config_entry.data[CONF_AUTOMATIC_ADD],
             ): bool,
+            vol.Optional(
+                CONF_PROTOCOLS,
+                default=self._config_entry.data.get(CONF_PROTOCOLS) or [],
+            ): cv.multi_select(RECV_MODES),
             vol.Optional(CONF_EVENT_CODE): str,
             vol.Optional(CONF_DEVICE): vol.In(configure_devices),
         }
