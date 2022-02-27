@@ -117,7 +117,6 @@ tests/components/blink/* @fronzbot
 homeassistant/components/blueprint/* @home-assistant/core
 tests/components/blueprint/* @home-assistant/core
 homeassistant/components/bluesound/* @thrawnarn
-homeassistant/components/bmp280/* @belidzs
 homeassistant/components/bmw_connected_drive/* @gerard33 @rikroe
 tests/components/bmw_connected_drive/* @gerard33 @rikroe
 homeassistant/components/bond/* @bdraco @prystupa @joshs85
