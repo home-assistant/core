@@ -58,13 +58,13 @@ async def test_setup_hass(
     assert state.state == "sunny"
     assert state.attributes[ATTR_SMHI_CLOUDINESS] == 50
     assert state.attributes[ATTR_SMHI_THUNDER_PROBABILITY] == 33
-    assert state.attributes[ATTR_SMHI_WIND_GUST_SPEED] == 17
+    assert state.attributes[ATTR_SMHI_WIND_GUST_SPEED] == 5
     assert state.attributes[ATTR_ATTRIBUTION].find("SMHI") >= 0
     assert state.attributes[ATTR_WEATHER_HUMIDITY] == 55
     assert state.attributes[ATTR_WEATHER_PRESSURE] == 1024
     assert state.attributes[ATTR_WEATHER_TEMPERATURE] == 17
     assert state.attributes[ATTR_WEATHER_VISIBILITY] == 50
-    assert state.attributes[ATTR_WEATHER_WIND_SPEED] == 7
+    assert state.attributes[ATTR_WEATHER_WIND_SPEED] == 2
     assert state.attributes[ATTR_WEATHER_WIND_BEARING] == 134
     assert len(state.attributes["forecast"]) == 4
 

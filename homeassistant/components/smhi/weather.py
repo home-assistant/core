@@ -158,8 +158,7 @@ class SmhiWeather(WeatherEntity):
         if self._forecasts:
             self._attr_temperature = self._forecasts[0].temperature
             self._attr_humidity = self._forecasts[0].humidity
-            # Convert from m/s to km/h
-            self._attr_wind_speed = round(self._forecasts[0].wind_speed * 18 / 5)
+            self._attr_wind_speed = round(self._forecasts[0].wind_speed)
             self._attr_wind_bearing = self._forecasts[0].wind_direction
             self._attr_visibility = self._forecasts[0].horizontal_visibility
             self._attr_pressure = self._forecasts[0].pressure
@@ -173,8 +172,7 @@ class SmhiWeather(WeatherEntity):
             )
             self._attr_extra_state_attributes = {
                 ATTR_SMHI_CLOUDINESS: self._forecasts[0].cloudiness,
-                # Convert from m/s to km/h
-                ATTR_SMHI_WIND_GUST_SPEED: round(self._forecasts[0].wind_gust * 18 / 5),
+                ATTR_SMHI_WIND_GUST_SPEED: round(self._forecasts[0].wind_gust),
                 ATTR_SMHI_THUNDER_PROBABILITY: self._forecasts[0].thunder,
             }
 
