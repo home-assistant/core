@@ -1438,7 +1438,7 @@ async def test_condition_warning(hass, caplog):
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"error_type": script._StopScript, "result": {"result": False}}],
+            "1": [{"error_type": script._AbortScript, "result": {"result": False}}],
             "1/entity_id/0": [{"error_type": ConditionError}],
         },
         expected_script_execution="aborted",
@@ -1492,7 +1492,7 @@ async def test_condition_basic(hass, caplog):
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [
                 {
-                    "error_type": script._StopScript,
+                    "error_type": script._AbortScript,
                     "result": {"entities": ["test.entity"], "result": False},
                 }
             ],
@@ -1547,7 +1547,7 @@ async def test_shorthand_template_condition(hass, caplog):
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [
                 {
-                    "error_type": script._StopScript,
+                    "error_type": script._AbortScript,
                     "result": {"entities": ["test.entity"], "result": False},
                 }
             ],
@@ -1613,7 +1613,7 @@ async def test_condition_validation(hass, caplog):
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [
                 {
-                    "error_type": script._StopScript,
+                    "error_type": script._AbortScript,
                     "result": {"result": False},
                 }
             ],
@@ -3508,6 +3508,8 @@ async def test_validate_action_config(hass):
             ]
         },
         cv.SCRIPT_ACTION_VARIABLES: {"variables": {"hello": "world"}},
+        cv.SCRIPT_ACTION_STOP: {"stop": "Stop it right there buddy..."},
+        cv.SCRIPT_ACTION_FAIL: {"fail": "Stand up, and try again!"},
     }
     expected_templates = {
         cv.SCRIPT_ACTION_CHECK_CONDITION: None,
@@ -3778,3 +3780,72 @@ async def test_platform_async_validate_action_config(hass):
         platform.async_validate_action_config.return_value = config
         await script.async_validate_action_config(hass, config)
         platform.async_validate_action_config.assert_awaited()
+
+
+async def test_stop_action(hass, caplog):
+    """Test if automation stops on calling the stop action."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+
+    alias = "stop step"
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": event},
+            {
+                "alias": alias,
+                "stop": "In the name of love",
+            },
+            {"event": event},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert "Stop script sequence: In the name of love" in caplog.text
+    caplog.clear()
+    assert len(events) == 1
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [{"result": {"stop": "In the name of love"}}],
+        }
+    )
+
+
+async def test_fail_action(hass, caplog):
+    """Test if automation fails on calling the fail action."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+
+    alias = "stop step"
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": event},
+            {
+                "alias": alias,
+                "fail": "Epic one...",
+            },
+            {"event": event},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert "Fail script sequence: Epic one..." in caplog.text
+    caplog.clear()
+    assert len(events) == 1
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [
+                {"error_type": script._AbortScript, "result": {"fail": "Epic one..."}}
+            ],
+        },
+        expected_script_execution="aborted",
+    )
