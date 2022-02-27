@@ -140,7 +140,6 @@ jobs:
             sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
             sed -i "s|# evdev|evdev|g" ${requirement_file}
             sed -i "s|# smbus-cffi|smbus-cffi|g" ${requirement_file}
-            sed -i "s|# i2csense|i2csense|g" ${requirement_file}
             sed -i "s|# python-eq3bt|python-eq3bt|g" ${requirement_file}
             sed -i "s|# pycups|pycups|g" ${requirement_file}
             sed -i "s|# homekit|homekit|g" ${requirement_file}
