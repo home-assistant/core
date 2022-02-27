@@ -9,10 +9,11 @@ from homeassistant.components.azure_data_explorer.const import (
     CONF_MAX_DELAY,
     CONF_SEND_INTERVAL,
     CONF_USE_FREE,
+    DATA_FILTER,
 )
 
 AZURE_DATA_EXPLORER_PATH = "homeassistant.components.azure_data_explorer"
-CLIENT_PATH = f"{AZURE_DATA_EXPLORER_PATH}.client.AzureDataExplorerClient"
+CLIENT_PATH = f"{AZURE_DATA_EXPLORER_PATH}.AzureDataExplorer"
 CONFIG_FLOW_PATH = f"{AZURE_DATA_EXPLORER_PATH}.config_flow"
 
 
@@ -36,6 +37,7 @@ BASE_CONFIG_FULL = {
     CONF_USE_FREE: False,
     CONF_SEND_INTERVAL: 5,
     CONF_MAX_DELAY: 10,
+    DATA_FILTER: {"azure_data_explorer": ""},
 }
 
 

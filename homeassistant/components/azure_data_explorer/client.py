@@ -21,13 +21,13 @@ class AzureDataExplorerClient:
 
     def __init__(
         self,
-        clusteringesturi,
-        database,
-        table,
-        client_id,
-        client_secret,
-        authority_id,
-        use_free_cluster,
+        clusteringesturi: str,
+        database: str,
+        table: str,
+        client_id: str,
+        client_secret: str,
+        authority_id: str,
+        use_free_cluster: bool,
     ) -> None:
         """Create the right class."""
 
@@ -77,7 +77,7 @@ class AzureDataExplorerClient:
 
         query = "%s | take 1" % self.table
 
-        self.query_client.execute(self.database, query)
+        self.query_client.execute_query(self.database, query)
 
     def ingest_data(self, adx_events: str) -> None:
         """Send data to Axure Data Explorer."""

@@ -41,41 +41,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(
-    hass: HomeAssistant, data: dict[str, Any]
-) -> dict[str, Any] | None:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-    client = AzureDataExplorerClient(
-        clusteringesturi=data["clusteringesturi"],
-        database=data["database"],
-        table=data["table"],
-        client_id=data["client_id"],
-        client_secret=data["client_secret"],
-        authority_id=data["authority_id"],
-        use_free_cluster=data["use_free_cluster"],
-    )
-
-    try:
-        await hass.async_add_executor_job(client.test_connection)
-
-    except KustoAuthenticationError as exp:
-        _LOGGER.error(exp)
-        return {"base": "invalid_auth"}
-
-    except KustoServiceError as exp:
-        _LOGGER.error(exp)
-        return {"base": "cannot_connect"}
-
-    except Exception as exp:  # pylint: disable=broad-except
-        _LOGGER.error(exp)
-        return {"base": "unknown"}
-
-    return None
-
-
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Azure Data Explorer."""
 
@@ -83,8 +48,42 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the config flow."""
-        self._data: dict[str, Any] = {}
         self._options: dict[str, Any] = deepcopy(DEFAULT_OPTIONS)
+        self._data = None
+
+    async def validate_input(
+        self, hass: HomeAssistant, data: dict[str, Any]
+    ) -> dict[str, Any] | None:
+        """Validate the user input allows us to connect.
+
+        Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
+        """
+        client = AzureDataExplorerClient(
+            clusteringesturi=data["clusteringesturi"],
+            database=data["database"],
+            table=data["table"],
+            client_id=data["client_id"],
+            client_secret=data["client_secret"],
+            authority_id=data["authority_id"],
+            use_free_cluster=data["use_free_cluster"],
+        )
+
+        try:
+            await hass.async_add_executor_job(client.test_connection)
+
+        except KustoAuthenticationError as exp:
+            _LOGGER.error(exp)
+            return {"base": "invalid_auth"}
+
+        except KustoServiceError as exp:
+            _LOGGER.error(exp)
+            return {"base": "cannot_connect"}
+
+        except Exception as exp:  # pylint: disable=broad-except
+            _LOGGER.error(exp)
+            return {"base": "unknown"}
+
+        return None
 
     @staticmethod
     def async_get_options_flow(config_entry):
@@ -103,7 +102,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         self._data = user_input
-        errors = await validate_input(self.hass, user_input)
+        errors = await self.validate_input(self.hass, user_input)
 
         if errors is not None:
             return self.async_show_form(

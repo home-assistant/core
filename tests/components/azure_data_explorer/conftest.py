@@ -1,4 +1,5 @@
 """Test fixtures for ADX."""
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from unittest.mock import patch
@@ -23,24 +24,57 @@ _LOGGER = logging.getLogger(__name__)
 
 
 # fixtures for both init and config flow tests
-@pytest.fixture(autouse=True, name="mock_test_connection")
-def mock_test_connection():
-    """Mock azure data explorer test_connection, used to test the connection."""
-    with patch(f"{CLIENT_PATH}.test_connection") as test_connection:
-        yield test_connection
+@dataclass
+class FilterTest:
+    """Class for capturing a filter test."""
 
-
-@pytest.fixture(autouse=True, name="mock_ingest_data")
-def mock_ingest_data():
-    """Mock azure data explorer data ingestion."""
-    with patch(f"{CLIENT_PATH}.ingest_data") as ingest_data:
-        yield ingest_data
+    entity_id: str
+    expected_count: int
 
 
 @pytest.fixture(name="filter_schema")
 def mock_filter_schema():
     """Return an empty filter."""
     return {}
+
+
+@pytest.fixture(autouse=False, name="mock_azure_data_explorer_test_connection")
+def mock_azure_data_explorer_test_connection():
+    """Mock azure data explorer test_connection, used to test the connection."""
+    with patch(
+        f"{CLIENT_PATH}.test_connection", return_value=None
+    ) as AzureDataExplorer_test_connection:
+        yield AzureDataExplorer_test_connection
+
+
+@pytest.fixture(autouse=False, name="mock_test_connection")
+def mock_test_connection():
+    """Mock azure data explorer client test_connection, used to test the connection."""
+    with patch(
+        f"{AZURE_DATA_EXPLORER_PATH}.AzureDataExplorerClient.test_connection",
+        return_value=None,
+    ) as test_connection:
+        yield test_connection
+
+
+@pytest.fixture(autouse=False, name="mock_azure_data_explorer_client_ingest_data")
+def mock_azure_data_explorer_client_ingest_data():
+    """Mock azure data explorer client_ingest_data."""
+    with patch(
+        f"{AZURE_DATA_EXPLORER_PATH}.AzureDataExplorerClient.ingest_data",
+        return_value=None,
+    ) as ingest_data:
+        yield ingest_data
+
+
+@pytest.fixture(autouse=False, name="mock_validate_input")
+def mock_validate_input():
+    """Mock validate_input ."""
+    with patch(
+        f"{AZURE_DATA_EXPLORER_PATH}.config_flow.ConfigFlow.validate_input",
+        return_value=None,
+    ) as ingestionResult:
+        yield ingestionResult
 
 
 @pytest.fixture(name="entry")
@@ -83,3 +117,34 @@ def mock_setup_entry():
         f"{AZURE_DATA_EXPLORER_PATH}.async_setup_entry", return_value=True
     ) as setup_entry:
         yield setup_entry
+
+
+# Fixtures for client tests
+@pytest.fixture(autouse=True, name="mock_managed_streaming")
+def mock_managed_streaming():
+    """Mock ManagedStreamingIngestClient ingest_from_stream."""
+    with patch(
+        "azure.kusto.ingest.ManagedStreamingIngestClient.ingest_from_stream",
+        return_value=True,
+    ) as ingestionResult:
+        yield ingestionResult
+
+
+@pytest.fixture(autouse=True, name="mock_queued")
+def mock_queued():
+    """Mock QueuedIngestClient ingest_from_stream."""
+    with patch(
+        "azure.kusto.ingest.QueuedIngestClient.ingest_from_stream",
+        return_value=True,
+    ) as ingestionResult:
+        yield ingestionResult
+
+
+@pytest.fixture(autouse=True, name="mock_execute_query")
+def mock_execute_query():
+    """Mock KustoClient execute_query."""
+    with patch(
+        "azure.kusto.data.KustoClient.execute_query",
+        return_value=True,
+    ) as KustoResponseDataSet:
+        yield KustoResponseDataSet

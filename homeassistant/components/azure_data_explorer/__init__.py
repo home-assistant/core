@@ -6,20 +6,15 @@ from collections.abc import Callable
 from datetime import datetime
 import json
 import logging
-from multiprocessing import AuthenticationError
 from typing import Any
 
-from azure.kusto.data.exceptions import KustoServiceError
+from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import Event, HomeAssistant, State
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    IntegrationError,
-)
+from homeassistant.exceptions import ConfigEntryNotReady, IntegrationError
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.json import JSONEncoder
@@ -72,11 +67,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Do the setup based on the config entry and the filter from yaml."""
     hass.data.setdefault(DOMAIN, {DATA_FILTER: FILTER_SCHEMA({})})
-    adx = AzureDataExplorer(
-        hass,
-        entry,
-        hass.data[DOMAIN][DATA_FILTER],
-    )
+    adx = AzureDataExplorer(hass, entry)
     try:
         await adx.test_connection()
     except KustoServiceError as exp:
@@ -84,9 +75,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise IntegrationError(
             "Could not find Azure Data Explorer database or table"
         ) from exp
-    except AuthenticationError as exp:
+    except KustoAuthenticationError as exp:
         _LOGGER.error(exp)
-        raise ConfigEntryAuthFailed(
+        raise ConfigEntryNotReady(
             "Could not authenticate to Azure Data Explorer"
         ) from exp
     except Exception as exp:  # pylint: disable=broad-except
@@ -117,15 +108,12 @@ class AzureDataExplorer:
         self,
         hass: HomeAssistant,
         entry: ConfigEntry,
-        entities_filter: vol.Schema,
     ) -> None:
         """Initialize the listener."""
 
         self.hass = hass
         self._entry = entry
-        self._entities_filter = entities_filter
-
-        # self._client = AzureDataExplorerClient(**self._entry.data)
+        self._entities_filter = hass.data[DOMAIN][DATA_FILTER]
 
         self._client = AzureDataExplorerClient(
             clusteringesturi=self._entry.data["clusteringesturi"],
@@ -187,7 +175,7 @@ class AzureDataExplorer:
             )
 
     async def async_listen(self, event: Event) -> None:
-        """Listen for new messages on the bus and queue them for AEH."""
+        """Listen for new messages on the bus and queue them for ADX."""
         if state := event.data.get("new_state"):
             await self._queue.put((2, (event.time_fired, state)))
 
@@ -199,12 +187,14 @@ class AzureDataExplorer:
         while not self._queue.empty():
             _, event = self._queue.get_nowait()
             adx_event, dropped = self._parse_event(*event, dropped)
+            self._queue.task_done()
             if adx_event is not None:
                 adx_events.append(adx_event)
-            if dropped:
-                _LOGGER.warning(
-                    "Dropped %d old events, consider filtering messages", dropped
-                )
+
+        if dropped:
+            _LOGGER.warning(
+                "Dropped %d old events, consider filtering messages", dropped
+            )
 
         if len(adx_events) > 0:
 
@@ -216,14 +206,11 @@ class AzureDataExplorer:
                 )
 
             except KustoServiceError as err:
-                _LOGGER.error("Could not find database or table")
-                _LOGGER.error(err)
-            except AuthenticationError as err:
-                _LOGGER.error("Could not authenticate to Azure Data Explorer")
-                _LOGGER.error(err)
+                _LOGGER.error("Could not find database or table: %s", err)
+            except KustoAuthenticationError as err:
+                _LOGGER.error("Could not authenticate to Azure Data Explorer: %s", err)
             except Exception as err:  # pylint: disable=broad-except
-                _LOGGER.error("Unknown error")
-                _LOGGER.error(err)
+                _LOGGER.error("Unknown error: %s", err)
         self._schedule_next_send()
 
     def _parse_event(
@@ -233,20 +220,16 @@ class AzureDataExplorer:
         dropped: int,
     ) -> tuple[str | None, int]:
         """Parse event by checking if it needs to be sent, and format it."""
-        self._queue.task_done()
+
         if not state:
             self._shutdown = True
-            return None, dropped + 1
+            return None, dropped
         if state.state in FILTER_STATES or not self._entities_filter(state.entity_id):
-            return None, dropped + 1
+            return None, dropped
         if (utcnow() - time_fired).seconds > self._max_delay + self._send_interval:
             return None, dropped + 1
-        try:
-            json_string = bytes(json.dumps(obj=state, cls=JSONEncoder).encode("utf-8"))
-            json_dictionary = json.loads(json_string)
-            json_event = json.dumps(json_dictionary)
-        except Exception as exp:  # pylint: disable=broad-except
-            _LOGGER.error(exp)
-            return (None, dropped + 1)
+        json_string = bytes(json.dumps(obj=state, cls=JSONEncoder).encode("utf-8"))
+        json_dictionary = json.loads(json_string)
+        json_event = json.dumps(json_dictionary)
 
         return (json_event, dropped)
