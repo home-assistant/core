@@ -493,6 +493,7 @@ omit =
     homeassistant/components/icloud/sensor.py
     homeassistant/components/izone/climate.py
     homeassistant/components/izone/discovery.py
+    homeassistant/components/izone/sensor.py
     homeassistant/components/izone/__init__.py
     homeassistant/components/idteck_prox/*
     homeassistant/components/ifttt/*
