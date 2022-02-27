@@ -81,12 +81,12 @@ async def async_setup_platform(
         "operation, please remove 'generic' (IP camera) section(s) from "
         "configuration.yaml"
     )
-    imagesource = config.get(CONF_STILL_IMAGE_URL)
-    streamsource = config.get(CONF_STREAM_SOURCE)
+    image = config.get(CONF_STILL_IMAGE_URL)
+    stream = config.get(CONF_STREAM_SOURCE)
     config_new = {
         CONF_NAME: config[CONF_NAME],
-        CONF_STILL_IMAGE_URL: imagesource.template if imagesource is not None else None,
-        CONF_STREAM_SOURCE: streamsource.template if streamsource is not None else None,
+        CONF_STILL_IMAGE_URL: image.template if image is not None else None,
+        CONF_STREAM_SOURCE: stream.template if stream is not None else None,
         CONF_AUTHENTICATION: config.get(CONF_AUTHENTICATION),
         CONF_USERNAME: config.get(CONF_USERNAME),
         CONF_PASSWORD: config.get(CONF_PASSWORD),

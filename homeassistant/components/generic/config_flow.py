@@ -1,6 +1,7 @@
 """Config flow for generic (IP Camera)."""
 from __future__ import annotations
 
+import contextlib
 from errno import EHOSTUNREACH, EIO
 from functools import partial
 import imghdr
@@ -100,11 +101,9 @@ def get_image_type(image):
     fmt = imghdr.what(None, h=image)
     if fmt is None:
         # if imghdr can't figure it out, could be svg.
-        try:
+        with contextlib.suppress(UnicodeDecodeError):
             if image.decode("utf-8").startswith("<svg"):
                 return "svg+xml"
-        except UnicodeDecodeError:
-            return None
     return fmt
 
 
