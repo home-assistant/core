@@ -9,12 +9,12 @@ from pyisy.constants import ISY_VALUE_UNKNOWN, PROTO_INSTEON
 
 from homeassistant.components.fan import (
     DOMAIN as FAN,
-    SUPPORT_SET_SPEED,
-    SUPPORT_PRESET_MODE,
-    SPEED_OFF,
+    SPEED_HIGH,
     SPEED_LOW,
     SPEED_MEDIUM,
-    SPEED_HIGH,
+    SPEED_OFF,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_SET_SPEED,
     FanEntity,
 )
 from homeassistant.config_entries import ConfigEntry
