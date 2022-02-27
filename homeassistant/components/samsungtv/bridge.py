@@ -227,10 +227,6 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         """Try to gather infos of this device."""
         return None
 
-    async def _async_get_remote(self, avoid_open: bool = False) -> Remote:
-        """Create or return a remote control instance."""
-        return await self.hass.async_add_executor_job(self._get_remote)
-
     def _get_remote(self) -> Remote:
         """Create or return a remote control instance."""
         if self._remote is None:
@@ -333,7 +329,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
     async def async_is_on(self) -> bool:
         """Tells if the TV is on."""
         if self._remote is not None:
-            await self._async_close_remote()
+            await self.async_close_remote()
 
         return (await self._async_get_remote()) is not None
 
@@ -413,9 +409,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                                 ChannelEmitCommand.launch_app(key)
                             )
                         else:
-                            await remote.send_command(
-                                ws_remote.SendRemoteKey.click(key)
-                            )
+                            await remote.send_command(SendRemoteKey.click(key))
                     break
                 except (
                     BrokenPipeError,
