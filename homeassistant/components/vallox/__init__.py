@@ -11,8 +11,10 @@ from uuid import UUID
 from vallox_websocket_api import PROFILE as VALLOX_PROFILE, Vallox
 from vallox_websocket_api.exceptions import ValloxApiException
 from vallox_websocket_api.vallox import (
-    get_next_filter_change_date as calculate_next_filter_change_date,
-    get_uuid as calculate_uuid,
+    get_model as _api_get_model,
+    get_next_filter_change_date as _api_get_next_filter_change_date,
+    get_sw_version as _api_get_sw_version,
+    get_uuid as _api_get_uuid,
 )
 import voluptuous as vol
 
@@ -20,8 +22,13 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType, StateType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import (
     DEFAULT_FAN_SPEED_AWAY,
@@ -114,16 +121,34 @@ class ValloxState:
 
         return value
 
+    def get_model(self) -> str | None:
+        """Return the model, if any."""
+        model = _api_get_model(self.metric_cache)
+
+        if not isinstance(model, str) or model == "Unknown":
+            return None
+
+        return model
+
+    def get_sw_version(self) -> str | None:
+        """Return the SW version."""
+        sw_version = _api_get_sw_version(self.metric_cache)
+
+        if not isinstance(sw_version, str):
+            return None
+
+        return sw_version
+
     def get_uuid(self) -> UUID | None:
         """Return cached UUID value."""
-        uuid = calculate_uuid(self.metric_cache)
+        uuid = _api_get_uuid(self.metric_cache)
         if not isinstance(uuid, UUID):
             raise ValueError
         return uuid
 
     def get_next_filter_change_date(self) -> date | None:
         """Return the next filter change date."""
-        next_filter_change_date = calculate_next_filter_change_date(self.metric_cache)
+        next_filter_change_date = _api_get_next_filter_change_date(self.metric_cache)
 
         if not isinstance(next_filter_change_date, date):
             return None
@@ -291,3 +316,37 @@ class ValloxServiceHandler:
         # be observed by all parties involved.
         if result:
             await self._coordinator.async_request_refresh()
+
+
+class ValloxEntity(CoordinatorEntity[ValloxDataUpdateCoordinator]):
+    """Representation of a Vallox entity."""
+
+    _device_config_url: str | None
+
+    def __init__(self, name: str, coordinator: ValloxDataUpdateCoordinator) -> None:
+        """Initialize a Vallox entity."""
+        super().__init__(coordinator)
+
+        if self.coordinator.config_entry is not None:
+            self._device_config_url = (
+                f"http://{self.coordinator.config_entry.data[CONF_HOST]}"
+            )
+        else:
+            self._device_config_url = None
+
+        self._device_uuid = self.coordinator.data.get_uuid()
+        self._device_model = self.coordinator.data.get_model()
+        self._device_name = name
+        self._device_sw_version = self.coordinator.data.get_sw_version()
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device information of the entity."""
+        return DeviceInfo(
+            configuration_url=self._device_config_url,
+            identifiers={(DOMAIN, str(self._device_uuid))},
+            manufacturer=DEFAULT_NAME,
+            model=self._device_model,
+            name=self._device_name,
+            sw_version=self._device_sw_version,
+        )
