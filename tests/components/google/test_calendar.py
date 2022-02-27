@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import copy
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import Mock, patch
@@ -110,27 +109,17 @@ def set_time_zone():
     dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
 
 
-def create_test_event(updates: dict[str, Any]) -> dict[str, Any]:
-    """Create a test event with overrides from the default template."""
-    event = copy.deepcopy(TEST_EVENT)
-    event.update(updates)
-    return event
-
-
-def create_upcoming_event(updates: dict[str, Any]) -> dict[str, Any]:
-    """Create a test event with an arbitrary start/end time."""
+def upcoming() -> dict[str, Any]:
+    """Create a test event with an arbitrary start/end time fetched from the api url."""
     now = dt_util.now()
-    return create_test_event(
-        {
-            "start": {"dateTime": now.isoformat()},
-            "end": {"dateTime": (now + dt_util.dt.timedelta(minutes=5)).isoformat()},
-            **updates,
-        }
-    )
+    return {
+        "start": {"dateTime": now.isoformat()},
+        "end": {"dateTime": (now + dt_util.dt.timedelta(minutes=5)).isoformat()},
+    }
 
 
-def get_event_api_url() -> str:
-    """Return a calendar API to return active events."""
+def upcoming_event_url() -> str:
+    """Return a calendar API to return events created by upcoming()."""
     now = dt_util.now()
     start = (now - dt_util.dt.timedelta(minutes=60)).isoformat()
     end = (now + dt_util.dt.timedelta(minutes=60)).isoformat()
@@ -141,12 +130,11 @@ async def test_all_day_event(hass, mock_events_list_items, mock_token_read):
     """Test that we can create an event trigger on device."""
     week_from_today = dt_util.dt.date.today() + dt_util.dt.timedelta(days=7)
     end_event = week_from_today + dt_util.dt.timedelta(days=1)
-    event = create_test_event(
-        {
-            "start": {"date": week_from_today.isoformat()},
-            "end": {"date": end_event.isoformat()},
-        }
-    )
+    event = {
+        **TEST_EVENT,
+        "start": {"date": week_from_today.isoformat()},
+        "end": {"date": end_event.isoformat()},
+    }
     mock_events_list_items([event])
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
@@ -171,12 +159,11 @@ async def test_future_event(hass, mock_events_list_items):
     """Test that we can create an event trigger on device."""
     one_hour_from_now = dt_util.now() + dt_util.dt.timedelta(minutes=30)
     end_event = one_hour_from_now + dt_util.dt.timedelta(minutes=60)
-    event = create_test_event(
-        {
-            "start": {"dateTime": one_hour_from_now.isoformat()},
-            "end": {"dateTime": end_event.isoformat()},
-        }
-    )
+    event = {
+        **TEST_EVENT,
+        "start": {"dateTime": one_hour_from_now.isoformat()},
+        "end": {"dateTime": end_event.isoformat()},
+    }
     mock_events_list_items([event])
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
@@ -201,12 +188,11 @@ async def test_in_progress_event(hass, mock_events_list_items):
     """Test that we can create an event trigger on device."""
     middle_of_event = dt_util.now() - dt_util.dt.timedelta(minutes=30)
     end_event = middle_of_event + dt_util.dt.timedelta(minutes=60)
-    event = create_test_event(
-        {
-            "start": {"dateTime": middle_of_event.isoformat()},
-            "end": {"dateTime": end_event.isoformat()},
-        }
-    )
+    event = {
+        **TEST_EVENT,
+        "start": {"dateTime": middle_of_event.isoformat()},
+        "end": {"dateTime": end_event.isoformat()},
+    }
     mock_events_list_items([event])
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
@@ -232,13 +218,12 @@ async def test_offset_in_progress_event(hass, mock_events_list_items):
     middle_of_event = dt_util.now() + dt_util.dt.timedelta(minutes=14)
     end_event = middle_of_event + dt_util.dt.timedelta(minutes=60)
     event_summary = "Test Event in Progress"
-    event = create_test_event(
-        {
-            "start": {"dateTime": middle_of_event.isoformat()},
-            "end": {"dateTime": end_event.isoformat()},
-            "summary": f"{event_summary} !!-15",
-        }
-    )
+    event = {
+        **TEST_EVENT,
+        "start": {"dateTime": middle_of_event.isoformat()},
+        "end": {"dateTime": end_event.isoformat()},
+        "summary": f"{event_summary} !!-15",
+    }
     mock_events_list_items([event])
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
@@ -265,13 +250,12 @@ async def test_all_day_offset_in_progress_event(hass, mock_events_list_items):
     tomorrow = dt_util.dt.date.today() + dt_util.dt.timedelta(days=1)
     end_event = tomorrow + dt_util.dt.timedelta(days=1)
     event_summary = "Test All Day Event Offset In Progress"
-    event = create_test_event(
-        {
-            "start": {"date": tomorrow.isoformat()},
-            "end": {"date": end_event.isoformat()},
-            "summary": f"{event_summary} !!-25:0",
-        }
-    )
+    event = {
+        **TEST_EVENT,
+        "start": {"date": tomorrow.isoformat()},
+        "end": {"date": end_event.isoformat()},
+        "summary": f"{event_summary} !!-25:0",
+    }
     mock_events_list_items([event])
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
@@ -298,13 +282,12 @@ async def test_all_day_offset_event(hass, mock_events_list_items):
     end_event = tomorrow + dt_util.dt.timedelta(days=1)
     offset_hours = 1 + dt_util.now().hour
     event_summary = "Test All Day Event Offset"
-    event = create_test_event(
-        {
-            "start": {"date": tomorrow.isoformat()},
-            "end": {"date": end_event.isoformat()},
-            "summary": f"{event_summary} !!-{offset_hours}:0",
-        }
-    )
+    event = {
+        **TEST_EVENT,
+        "start": {"date": tomorrow.isoformat()},
+        "end": {"date": end_event.isoformat()},
+        "summary": f"{event_summary} !!-{offset_hours}:0",
+    }
     mock_events_list_items([event])
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
@@ -357,18 +340,21 @@ async def test_calendars_api(hass, hass_client):
 
 async def test_http_api_event(hass, hass_client, mock_events_list_items):
     """Test querying the API and fetching events from the server."""
-    event = create_upcoming_event({"summary": "Event title"})
+    event = {
+        **TEST_EVENT,
+        **upcoming(),
+    }
     mock_events_list_items([event])
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
     await hass.async_block_till_done()
 
     client = await hass_client()
-    response = await client.get(get_event_api_url())
+    response = await client.get(upcoming_event_url())
     assert response.status == HTTPStatus.OK
     events = await response.json()
     assert len(events) == 1
     assert "summary" in events[0]
-    assert events[0]["summary"] == "Event title"
+    assert events[0]["summary"] == event["summary"]
 
 
 async def test_http_event_api_failure(hass, hass_client, calendar_resource):
@@ -379,7 +365,7 @@ async def test_http_event_api_failure(hass, hass_client, calendar_resource):
     await hass.async_block_till_done()
 
     client = await hass_client()
-    response = await client.get(get_event_api_url())
+    response = await client.get(upcoming_event_url())
     assert response.status == HTTPStatus.OK
     # A failure to talk to the server results in an empty list of events
     events = await response.json()
@@ -404,13 +390,17 @@ async def test_opaque_event(
     hass, hass_client, mock_events_list_items, transparency, expect_visible_event
 ):
     """Test querying the API and fetching events from the server."""
-    event = create_upcoming_event({"transparency": transparency})
+    event = {
+        **TEST_EVENT,
+        **upcoming(),
+        "transparency": transparency,
+    }
     mock_events_list_items([event])
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
     await hass.async_block_till_done()
 
     client = await hass_client()
-    response = await client.get(get_event_api_url())
+    response = await client.get(upcoming_event_url())
     assert response.status == HTTPStatus.OK
     events = await response.json()
     assert (len(events) > 0) == expect_visible_event
