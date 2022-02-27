@@ -3,10 +3,20 @@ from __future__ import annotations
 
 import math
 from typing import Any
+from collections import OrderedDict
 
 from pyisy.constants import ISY_VALUE_UNKNOWN, PROTO_INSTEON
 
-from homeassistant.components.fan import DOMAIN as FAN, SUPPORT_SET_SPEED, FanEntity
+from homeassistant.components.fan import (
+    DOMAIN as FAN,
+    SUPPORT_SET_SPEED,
+    SUPPORT_PRESET_MODE,
+    SPEED_OFF,
+    SPEED_LOW,
+    SPEED_MEDIUM,
+    SPEED_HIGH,
+    FanEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,6 +32,12 @@ from .helpers import migrate_old_unique_ids
 
 SPEED_RANGE = (1, 255)  # off is not included
 
+FANLINC_FAN_MODES = OrderedDict(
+    [(0, SPEED_OFF), (64, SPEED_LOW), (191, SPEED_MEDIUM), (255, SPEED_HIGH)]
+)
+
+FANLINC_FAN_MODES_REV = OrderedDict([(v, k) for k, v in FANLINC_FAN_MODES.items()])
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -31,13 +47,69 @@ async def async_setup_entry(
     entities: list[ISYFanEntity | ISYFanProgramEntity] = []
 
     for node in hass_isy_data[ISY994_NODES][FAN]:
-        entities.append(ISYFanEntity(node))
+        if hasattr(node, "node_def_id") and node.node_def_id == "FanLincMotor":
+            entities.append(ISYFanLincEntity(node))
+        else:
+            entities.append(ISYFanEntity(node))
 
     for name, status, actions in hass_isy_data[ISY994_PROGRAMS][FAN]:
         entities.append(ISYFanProgramEntity(name, status, actions))
 
     await migrate_old_unique_ids(hass, FAN, entities)
     async_add_entities(entities)
+
+
+class ISYFanLincEntity(ISYNodeEntity, FanEntity):
+    """Representation of an ISY994 fan device."""
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the current preset mode."""
+        mode = next(
+            (v for k, v in FANLINC_FAN_MODES.items() if self._node.status <= k),
+            SPEED_OFF,
+        )
+        return mode
+
+    @property
+    def preset_modes(self) -> list[str]:
+        """Return a list of available preset modes."""
+        return list(FANLINC_FAN_MODES.values())
+
+    @property
+    def is_on(self) -> bool | None:
+        """Get if the fan is on."""
+        if self._node.status == ISY_VALUE_UNKNOWN:
+            return None
+        return bool(self._node.status != 0)
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new target fan mode."""
+        isy_speed = FANLINC_FAN_MODES_REV.get(preset_mode, ISY_VALUE_UNKNOWN)
+        if isy_speed != ISY_VALUE_UNKNOWN:
+            if isy_speed == 0:
+                await self._node.turn_off()
+                return
+            await self._node.turn_on(val=isy_speed)
+
+    async def async_turn_on(
+        self,
+        speed: str | None = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Send the turn on command to the ISY994 fan device."""
+        await self.async_set_preset_mode(preset_mode)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Send the turn off command to the ISY994 fan device."""
+        await self._node.turn_off()
+
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return SUPPORT_PRESET_MODE
 
 
 class ISYFanEntity(ISYNodeEntity, FanEntity):
