@@ -207,7 +207,6 @@ homeassistant/components/dexcom/* @gagebenne
 tests/components/dexcom/* @gagebenne
 homeassistant/components/dhcp/* @bdraco
 tests/components/dhcp/* @bdraco
-homeassistant/components/dht/* @thegardenmonkey
 homeassistant/components/diagnostics/* @home-assistant/core
 tests/components/diagnostics/* @home-assistant/core
 homeassistant/components/digital_ocean/* @fabaff
@@ -353,6 +352,8 @@ homeassistant/components/gogogate2/* @vangorra @bdraco
 tests/components/gogogate2/* @vangorra @bdraco
 homeassistant/components/goodwe/* @mletenay @starkillerOG
 tests/components/goodwe/* @mletenay @starkillerOG
+homeassistant/components/google/* @allenporter
+tests/components/google/* @allenporter
 homeassistant/components/google_assistant/* @home-assistant/cloud
 tests/components/google_assistant/* @home-assistant/cloud
 homeassistant/components/google_cloud/* @lufton
@@ -707,7 +708,6 @@ homeassistant/components/persistent_notification/* @home-assistant/core
 tests/components/persistent_notification/* @home-assistant/core
 homeassistant/components/philips_js/* @elupus
 tests/components/philips_js/* @elupus
-homeassistant/components/pi4ioe5v9xxxx/* @antonverburg
 homeassistant/components/pi_hole/* @fabaff @johnluetke @shenxn
 tests/components/pi_hole/* @fabaff @johnluetke @shenxn
 homeassistant/components/picnic/* @corneyl
@@ -797,7 +797,6 @@ homeassistant/components/roomba/* @pschmitt @cyr-ius @shenxn
 tests/components/roomba/* @pschmitt @cyr-ius @shenxn
 homeassistant/components/roon/* @pavoni
 tests/components/roon/* @pavoni
-homeassistant/components/rpi_gpio_pwm/* @soldag
 homeassistant/components/rpi_power/* @shenxn @swetoast
 tests/components/rpi_power/* @shenxn @swetoast
 homeassistant/components/rtsp_to_webrtc/* @allenporter

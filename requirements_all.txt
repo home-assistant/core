@@ -4,12 +4,6 @@
 # homeassistant.components.aemet
 AEMET-OpenData==0.2.1
 
-# homeassistant.components.sht31
-Adafruit-GPIO==1.0.3
-
-# homeassistant.components.sht31
-Adafruit-SHT31==1.0.2
-
 # homeassistant.components.adax
 Adax-local==0.1.3
 
@@ -56,10 +50,8 @@ PyViCare==2.16.1
 PyXiaomiGateway==0.13.4
 
 # homeassistant.components.bmp280
-# homeassistant.components.dht
 # homeassistant.components.mcp23017
 # homeassistant.components.rpi_gpio
-# homeassistant.components.rpi_rf
 # RPi.GPIO==0.7.1a4
 
 # homeassistant.components.remember_the_milk
@@ -85,9 +77,6 @@ accuweather==0.3.0
 
 # homeassistant.components.bmp280
 adafruit-circuitpython-bmp280==3.1.1
-
-# homeassistant.components.dht
-adafruit-circuitpython-dht==3.7.0
 
 # homeassistant.components.mcp23017
 adafruit-circuitpython-mcp230xx==2.2.2
@@ -166,7 +155,7 @@ aioflo==2021.11.0
 aioftp==0.12.0
 
 # homeassistant.components.github
-aiogithubapi==22.2.3
+aiogithubapi==22.2.4
 
 # homeassistant.components.guardian
 aioguardian==2021.11.0
@@ -312,6 +301,9 @@ anel_pwrctrl-homeassistant==0.0.1.dev2
 
 # homeassistant.components.anthemav
 anthemav==1.2.0
+
+# homeassistant.components.apcupsd
+apcaccess==0.0.13
 
 # homeassistant.components.apprise
 apprise==0.9.7
@@ -605,9 +597,6 @@ enturclient==0.2.3
 # homeassistant.components.environment_canada
 env_canada==0.5.20
 
-# homeassistant.components.envirophat
-# envirophat==0.0.6
-
 # homeassistant.components.enphase_envoy
 envoy_reader==0.20.1
 
@@ -735,7 +724,7 @@ goalzero==0.2.1
 goodwe==0.2.15
 
 # homeassistant.components.google
-google-api-python-client==1.6.4
+google-api-python-client==2.38.0
 
 # homeassistant.components.google_pubsub
 google-cloud-pubsub==2.9.0
@@ -792,7 +781,7 @@ habitipy==0.2.0
 hangups==0.4.17
 
 # homeassistant.components.cloud
-hass-nabucasa==0.53.1
+hass-nabucasa==0.54.0
 
 # homeassistant.components.splunk
 hass_splunk==0.1.1
@@ -825,7 +814,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220224.0
+home-assistant-frontend==20220226.0
 
 # homeassistant.components.zwave
 # homeassistant-pyozw==0.1.10
@@ -1214,17 +1203,11 @@ phone_modem==0.1.1
 # homeassistant.components.onewire
 pi1wire==0.1.0
 
-# homeassistant.components.pi4ioe5v9xxxx
-pi4ioe5v9xxxx==0.0.2
-
 # homeassistant.components.rpi_pfio
 pifacecommon==4.2.2
 
 # homeassistant.components.rpi_pfio
 pifacedigitalio==3.0.5
-
-# homeassistant.components.piglow
-piglow==1.2.4
 
 # homeassistant.components.pilight
 pilight==0.1.1
@@ -1297,9 +1280,6 @@ pushover_complete==1.1.1
 
 # homeassistant.components.pvoutput
 pvo==0.2.2
-
-# homeassistant.components.rpi_gpio_pwm
-pwmled==1.6.10
 
 # homeassistant.components.canary
 py-canary==0.5.1
@@ -1969,9 +1949,6 @@ python-tado==0.12.0
 # homeassistant.components.telegram_bot
 python-telegram-bot==13.1
 
-# homeassistant.components.twitch
-python-twitch-client==0.6.0
-
 # homeassistant.components.vlc
 python-vlc==1.1.2
 
@@ -2117,9 +2094,6 @@ rova==0.2.1
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
 
-# homeassistant.components.rpi_rf
-# rpi-rf==0.9.7
-
 # homeassistant.components.rtsp_to_webrtc
 rtsp-to-webrtc==0.5.0
 
@@ -2155,9 +2129,6 @@ scsgate==0.1.0
 
 # homeassistant.components.sendgrid
 sendgrid==6.8.2
-
-# homeassistant.components.sensehat
-sense-hat==2.2.0
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
@@ -2203,7 +2174,6 @@ smart-meter-texas==0.4.7
 smarthab==0.21
 
 # homeassistant.components.bme680
-# homeassistant.components.envirophat
 # homeassistant.components.htu21d
 # homeassistant.components.raspihats
 # smbus-cffi==0.5.1
@@ -2364,7 +2334,7 @@ tp-connected==0.0.4
 transmissionrpc==0.11
 
 # homeassistant.components.twinkly
-ttls==1.4.2
+ttls==1.4.3
 
 # homeassistant.components.tuya
 tuya-iot-py-sdk==0.6.6
@@ -2374,6 +2344,9 @@ twentemilieu==0.5.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
+
+# homeassistant.components.twitch
+twitchAPI==2.5.2
 
 # homeassistant.components.rainforest_eagle
 uEagle==0.0.2

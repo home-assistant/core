@@ -44,13 +44,7 @@ async def async_setup_entry(
     )
 
     platform = entity_platform.async_get_current_platform()
-
     platform.async_register_entity_service(SERVICE_REJECT_CALL, {}, "async_reject_call")
-    _LOGGER.warning(
-        "Calling reject_call service is deprecated and will be removed after 2022.4; "
-        "A new button entity is now available with the same function "
-        "and replaces the existing service"
-    )
 
 
 class ModemCalleridSensor(SensorEntity):
@@ -94,4 +88,9 @@ class ModemCalleridSensor(SensorEntity):
 
     async def async_reject_call(self) -> None:
         """Reject Incoming Call."""
+        _LOGGER.warning(
+            "Calling reject_call service is deprecated and will be removed after 2022.4; "
+            "A new button entity is now available with the same function "
+            "and replaces the existing service"
+        )
         await self.api.reject_call(self.device)

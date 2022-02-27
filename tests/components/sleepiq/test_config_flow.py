@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from asyncsleepiq import SleepIQLoginException, SleepIQTimeoutException
+import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.sleepiq.const import DOMAIN
@@ -26,6 +27,21 @@ async def test_import(hass: HomeAssistant) -> None:
     assert entry.data[CONF_PASSWORD] == SLEEPIQ_CONFIG[CONF_PASSWORD]
 
 
+@pytest.mark.parametrize(
+    "side_effect", [SleepIQLoginException, SleepIQTimeoutException]
+)
+async def test_import_failure(hass: HomeAssistant, side_effect) -> None:
+    """Test that we won't import a config entry on login failure."""
+    with patch(
+        "asyncsleepiq.AsyncSleepIQ.login",
+        side_effect=side_effect,
+    ):
+        assert await setup.async_setup_component(hass, DOMAIN, {DOMAIN: SLEEPIQ_CONFIG})
+        await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+
+
 async def test_show_set_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
     with patch("asyncsleepiq.AsyncSleepIQ.login"):
@@ -37,11 +53,18 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
         assert result["step_id"] == "user"
 
 
-async def test_login_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we show user form with appropriate error on login failure."""
+@pytest.mark.parametrize(
+    "side_effect,error",
+    [
+        (SleepIQLoginException, "invalid_auth"),
+        (SleepIQTimeoutException, "cannot_connect"),
+    ],
+)
+async def test_login_failure(hass: HomeAssistant, side_effect, error) -> None:
+    """Test that we show user form with appropriate error on login failure."""
     with patch(
         "asyncsleepiq.AsyncSleepIQ.login",
-        side_effect=SleepIQLoginException,
+        side_effect=side_effect,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=SLEEPIQ_CONFIG
@@ -49,22 +72,7 @@ async def test_login_invalid_auth(hass: HomeAssistant) -> None:
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_login_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we show user form with appropriate error on login failure."""
-    with patch(
-        "asyncsleepiq.AsyncSleepIQ.login",
-        side_effect=SleepIQTimeoutException,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=SLEEPIQ_CONFIG
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "cannot_connect"}
+        assert result["errors"] == {"base": error}
 
 
 async def test_success(hass: HomeAssistant) -> None:
