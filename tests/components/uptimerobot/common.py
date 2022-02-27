@@ -20,7 +20,8 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-MOCK_UPTIMEROBOT_API_KEY = "0242ac120003"
+MOCK_UPTIMEROBOT_API_KEY = "u0242ac120003"
+MOCK_UPTIMEROBOT_API_KEY_READ_ONLY = "ur0242ac120003"
 MOCK_UPTIMEROBOT_EMAIL = "test@test.test"
 MOCK_UPTIMEROBOT_UNIQUE_ID = "1234567890"
 
@@ -50,6 +51,13 @@ MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA = {
     "domain": DOMAIN,
     "title": MOCK_UPTIMEROBOT_EMAIL,
     "data": {"platform": DOMAIN, "api_key": MOCK_UPTIMEROBOT_API_KEY},
+    "unique_id": MOCK_UPTIMEROBOT_UNIQUE_ID,
+    "source": config_entries.SOURCE_USER,
+}
+MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA_KEY_READ_ONLY = {
+    "domain": DOMAIN,
+    "title": MOCK_UPTIMEROBOT_EMAIL,
+    "data": {"platform": DOMAIN, "api_key": MOCK_UPTIMEROBOT_API_KEY_READ_ONLY},
     "unique_id": MOCK_UPTIMEROBOT_UNIQUE_ID,
     "source": config_entries.SOURCE_USER,
 }
