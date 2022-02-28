@@ -50,7 +50,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         local_schema = vol.Schema({vol.Required(CONF_HOST): str})
-        print(self._discovered_hosts)
         if user_input is None:
             if len(self._discovered_hosts) > 1:
                 return await self.async_step_pick_device()
