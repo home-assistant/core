@@ -48,11 +48,13 @@ def mock_asyncsleepiq():
         sleeper_l.name = SLEEPER_L_NAME
         sleeper_l.in_bed = True
         sleeper_l.sleep_number = 40
+        sleeper_l.pressure = 1000
 
         sleeper_r.side = "R"
         sleeper_r.name = SLEEPER_R_NAME
         sleeper_r.in_bed = False
         sleeper_r.sleep_number = 80
+        sleeper_r.pressure = 1400
 
         yield client
 
