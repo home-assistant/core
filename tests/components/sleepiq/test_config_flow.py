@@ -112,7 +112,7 @@ async def test_reauth_password(hass):
             data=entry.data,
         )
 
-    with patch("asyncsleepiq.AsyncSleepIQ.login", return_value=True):
+    with patch("homeassistant.components.sleepiq.config_flow.AsyncSleepIQ.login", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"password": "password"},
