@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -63,9 +63,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await gateway.login(email, password)
-    except SleepIQLoginException:
+    except SleepIQLoginException as err:
         _LOGGER.error("Could not authenticate with SleepIQ server")
-        return False
+        raise ConfigEntryAuthFailed(err) from err
     except SleepIQTimeoutException as err:
         raise ConfigEntryNotReady(
             str(err) or "Timed out during authentication"

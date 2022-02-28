@@ -19,13 +19,11 @@ COMMENT_REQUIREMENTS = (
     "beacontools",
     "beewi_smartclim",  # depends on bluepy
     "bluepy",
-    "bme680",
     "decora",
     "decora_wifi",
     "evdev",
     "face_recognition",
     "homeassistant-pyozw",
-    "i2csense",
     "opencv-python-headless",
     "pybluez",
     "pycups",
