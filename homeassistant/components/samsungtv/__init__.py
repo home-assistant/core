@@ -188,10 +188,10 @@ async def _async_create_bridge_with_updated_data(
             )
 
         if mac:
-            LOGGER.debug("Updated mac to %s for %s", mac, host)
+            LOGGER.info("Updated mac to %s for %s", mac, host)
             updated_data[CONF_MAC] = mac
         else:
-            LOGGER.debug("Failed to get mac for %s", host)
+            LOGGER.info("Failed to get mac for %s", host)
 
     if updated_data:
         data = {**entry.data, **updated_data}
