@@ -5,6 +5,7 @@ from dataclasses import asdict, dataclass
 import hashlib
 import json
 from pathlib import Path
+from tarfile import TarError
 from tempfile import TemporaryDirectory
 
 from securetar import SecureTarFile, atomic_contents_add
@@ -50,17 +51,20 @@ class BackupManager:
 
         def _read_backups() -> None:
             for backup_path in self.backup_dir.glob("*.tar"):
-                with SecureTarFile(backup_path, "r", gzip=False) as backup_file:
-                    if data_file := backup_file.extractfile("./backup.json"):
-                        data = json.loads(data_file.read())
-                        backup = Backup(
-                            slug=data["slug"],
-                            name=data["name"],
-                            date=data["date"],
-                            path=backup_path,
-                            size=round(backup_path.stat().st_size / 1_048_576, 2),
-                        )
-                        backups[backup.slug] = backup
+                try:
+                    with SecureTarFile(backup_path, "r", gzip=False) as backup_file:
+                        if data_file := backup_file.extractfile("./backup.json"):
+                            data = json.loads(data_file.read())
+                            backup = Backup(
+                                slug=data["slug"],
+                                name=data["name"],
+                                date=data["date"],
+                                path=backup_path,
+                                size=round(backup_path.stat().st_size / 1_048_576, 2),
+                            )
+                            backups[backup.slug] = backup
+                except (OSError, TarError, json.JSONDecodeError) as err:
+                    LOGGER.warning("Unable to read backup %s: %s", backup_path, err)
 
         await self.hass.async_add_executor_job(_read_backups)
         LOGGER.debug("Loaded %s backups", len(backups))
@@ -79,7 +83,19 @@ class BackupManager:
         if not self._loaded:
             await self.load_backups()
 
-        return self._backups.get(slug)
+        if not (backup := self._backups.get(slug)):
+            return None
+
+        if not backup.path.exists():
+            LOGGER.debug(
+                "Removing tracked backup (%s) that does not exists on the expected path %s",
+                backup.slug,
+                backup.path,
+            )
+            self._backups.pop(slug)
+            return None
+
+        return backup
 
     async def remove_backup(self, slug: str) -> None:
         """Remove a backup."""

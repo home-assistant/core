@@ -47,6 +47,8 @@ async def test_remove(
         True,
     ), patch(
         "pathlib.Path.unlink"
+    ), patch(
+        "pathlib.Path.exists", return_value=True
     ):
         await client.send_json({"id": 1, "type": "backup/remove", "slug": "abc123"})
         msg = await client.receive_json()

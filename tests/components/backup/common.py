@@ -25,7 +25,5 @@ async def setup_backup_integration(
     configuration: ConfigType | None = None,
 ) -> bool:
     """Set up the Backup integration."""
-    with patch(
-        "homeassistant.components.backup.is_hassio", return_value=with_hassio
-    ), patch("pathlib.Path.mkdir"):
+    with patch("homeassistant.components.backup.is_hassio", return_value=with_hassio):
         return await async_setup_component(hass, DOMAIN, configuration or {})

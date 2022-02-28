@@ -37,6 +37,21 @@ async def test_load_backups(hass: HomeAssistant) -> None:
     assert backups == {TEST_BACKUP.slug: TEST_BACKUP}
 
 
+async def test_load_backups_with_exception(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test loading backups with exception."""
+    manager = BackupManager(hass)
+    with patch("pathlib.Path.glob", return_value=[TEST_BACKUP.path]), patch(
+        "tarfile.open", side_effect=OSError("Test ecxeption")
+    ):
+        await manager.load_backups()
+    backups = await manager.get_backups()
+    assert f"Unable to read backup {TEST_BACKUP.path}: Test ecxeption" in caplog.text
+    assert backups == {}
+
+
 async def test_removing_non_existing_backup(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -46,6 +61,31 @@ async def test_removing_non_existing_backup(
 
     await manager.remove_backup("non_existing")
     assert "Removed backup located at" not in caplog.text
+
+
+async def test_getting_backup_that_does_not_exist(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+):
+    """Test getting backup that does not exist."""
+    manager = BackupManager(hass)
+
+    with patch(
+        "homeassistant.components.backup.websocket.BackupManager._backups",
+        {TEST_BACKUP.slug: TEST_BACKUP},
+    ), patch(
+        "homeassistant.components.backup.websocket.BackupManager._loaded",
+        True,
+    ), patch(
+        "pathlib.Path.exists", return_value=False
+    ):
+        backup = await manager.get_backup(TEST_BACKUP.slug)
+        assert backup is None
+
+        assert (
+            f"Removing tracked backup ({TEST_BACKUP.slug}) that "
+            f"does not exists on the expected path {TEST_BACKUP.path}" in caplog.text
+        )
 
 
 async def test_generate_backup_when_backing_up(hass: HomeAssistant) -> None:
@@ -78,10 +118,13 @@ async def test_generate_backup(
         "pathlib.Path.is_file", lambda x: x.name != ".storage"
     ), patch(
         "pathlib.Path.is_dir",
-        lambda x: x.name in (manager.backup_dir.as_posix(), ".storage"),
+        lambda x: x.name == ".storage",
     ), patch(
         "pathlib.Path.exists",
         lambda x: x != manager.backup_dir,
+    ), patch(
+        "pathlib.Path.is_symlink",
+        lambda _: False,
     ), patch(
         "pathlib.Path.mkdir",
         MagicMock(),
