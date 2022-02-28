@@ -1,11 +1,7 @@
 """Platform for binary sensor integration."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
-
-import async_timeout
-from laundrify_aio.errors import ApiConnectionError, ApiUnauthorized
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -13,22 +9,10 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    CONF_POLL_INTERVAL,
-    DEFAULT_POLL_INTERVAL,
-    DOMAIN,
-    MANUFACTURER,
-    MODEL,
-    REQUEST_TIMEOUT,
-)
+from .const import DOMAIN, MANUFACTURER, MODEL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,37 +22,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors from a config entry created in the integrations UI."""
 
-    laundrify_api = hass.data[DOMAIN][config.entry_id]["api"]
-
-    async def async_update_data():
-        """Fetch data from API endpoint.
-
-        This is the place to pre-process the data to lookup tables
-        so entities can quickly look up their data.
-        """
-        try:
-            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
-            # handled by the data update coordinator.
-            async with async_timeout.timeout(REQUEST_TIMEOUT):
-                return await laundrify_api.get_machines()
-        except ApiUnauthorized as err:
-            # Raising ConfigEntryAuthFailed will cancel future updates
-            # and start a config flow with SOURCE_REAUTH (async_step_reauth)
-            raise ConfigEntryAuthFailed from err
-        except ApiConnectionError as err:
-            raise UpdateFailed from err
-
-    poll_interval = config.options.get(CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL)
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="binary_sensor",
-        update_method=async_update_data,
-        update_interval=timedelta(seconds=poll_interval),
-    )
-
-    await coordinator.async_config_entry_first_refresh()
+    coordinator = hass.data[DOMAIN][config.entry_id]["coordinator"]
 
     async_add_entities(
         LaundrifyPowerPlug(coordinator, idx) for idx, ent in enumerate(coordinator.data)
