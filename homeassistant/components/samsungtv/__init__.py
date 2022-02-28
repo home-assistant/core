@@ -156,6 +156,7 @@ async def _async_create_bridge_with_updated_data(
     info: dict[str, Any] | None = None
 
     if not port or not method:
+        LOGGER.debug("Attempting to get port or method for %s", host)
         if method == METHOD_LEGACY:
             port = LEGACY_PORT
         else:
@@ -167,6 +168,7 @@ async def _async_create_bridge_with_updated_data(
                     "Failed to determine connection method, make sure the device is on."
                 )
 
+        LOGGER.info("Updated port to %s and method to %s for %s", port, method, host)
         updated_data[CONF_PORT] = port
         updated_data[CONF_METHOD] = method
 
