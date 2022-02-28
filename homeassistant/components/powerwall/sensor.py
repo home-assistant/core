@@ -45,7 +45,11 @@ async def async_setup_entry(
         | PowerWallImportSensor
         | PowerWallExportSensor
         | PowerWallChargeSensor
-    ] = [PowerWallChargeSensor(powerwall_data)]
+        | PowerWallBackupReserveSensor
+    ] = [
+        PowerWallChargeSensor(powerwall_data),
+        PowerWallBackupReserveSensor(powerwall_data),
+    ]
 
     for meter in data.meters.meters:
         entities.extend(
@@ -109,6 +113,25 @@ class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
             ATTR_INSTANT_TOTAL_CURRENT: meter.get_instant_total_current(),
             ATTR_IS_ACTIVE: meter.is_active(),
         }
+
+
+class PowerWallBackupReserveSensor(PowerWallEntity, SensorEntity):
+    """Representation of the Powerwall backup reserve setting."""
+
+    _attr_name = "Powerwall Backup Reserve"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_device_class = SensorDeviceClass.BATTERY
+
+    @property
+    def unique_id(self) -> str:
+        """Device Uniqueid."""
+        return f"{self.base_unique_id}_backup_reserve"
+
+    @property
+    def native_value(self) -> int:
+        """Get the current value in percentage."""
+        return round(self.data.backup_reserve)
 
 
 class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
