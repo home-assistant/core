@@ -6,10 +6,6 @@
   "requirements": [
     "laundrify_aio==1.0.0"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@xLarry"
   ],

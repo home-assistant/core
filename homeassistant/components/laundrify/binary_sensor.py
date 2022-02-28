@@ -37,7 +37,7 @@ async def async_setup_entry(
     hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up sensors from a config entry created in the integrations UI."""
-    # API object has been stored here by __init__.py
+
     laundrify_api = hass.data[DOMAIN][config.entry_id]["api"]
 
     async def async_update_data():
@@ -63,22 +63,11 @@ async def async_setup_entry(
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        # Name of the data. For logging purposes.
         name="binary_sensor",
         update_method=async_update_data,
-        # Polling interval. Will only be polled if there are subscribers.
         update_interval=timedelta(seconds=poll_interval),
     )
 
-    #
-    # Fetch initial data so we have data when entities subscribe
-    #
-    # If the refresh fails, async_config_entry_first_refresh will
-    # raise ConfigEntryNotReady and setup will try again later
-    #
-    # If you do not want to retry setup on failure, use
-    # coordinator.async_refresh() instead
-    #
     await coordinator.async_config_entry_first_refresh()
 
     async_add_entities(
@@ -87,15 +76,7 @@ async def async_setup_entry(
 
 
 class LaundrifyPowerPlug(CoordinatorEntity, BinarySensorEntity):
-    """An entity using CoordinatorEntity.
-
-    The CoordinatorEntity class provides:
-      should_poll
-      async_update
-      async_added_to_hass
-      available
-
-    """
+    """Representation of a laundrify Power Plug."""
 
     _attr_device_class = BinarySensorDeviceClass.RUNNING
     _attr_icon = "mdi:washing-machine"
