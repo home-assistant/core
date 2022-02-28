@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from rabbitair import Mode, Model, Speed
+from rabbitair import Client, Mode, Model, Speed, State
 
 from homeassistant.components.fan import (
     SUPPORT_PRESET_MODE,
@@ -14,6 +14,7 @@ from homeassistant.components.fan import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
@@ -45,9 +46,27 @@ PRESET_MODES = {
 
 class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
     """Fan control functions of the Rabbit Air air purifier."""
-    
+
     _attr_supported_features = SUPPORT_PRESET_MODE | SUPPORT_SET_SPEED
 
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[State],
+        client: Client,
+        entry: ConfigEntry,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator, client, entry)
+
+        if self._is_model(Model.MinusA2):
+            self._attr_preset_modes = list(PRESET_MODES)
+        elif self._is_model(Model.A3):
+            # A3 does not support Pollen mode
+            self._attr_preset_modes = [
+                k for k in PRESET_MODES if k != PRESET_MODE_POLLEN
+            ]
+
+        self._attr_speed_count = len(SPEED_LIST)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
@@ -96,11 +115,6 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
         )
 
     @property
-    def speed_count(self) -> int:
-        """Return the number of speeds the fan supports."""
-        return len(SPEED_LIST)
-
-    @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         mode = self.coordinator.data.mode
@@ -108,16 +122,6 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
             return None
         # Get key by value in dictionary
         return next(k for k, v in PRESET_MODES.items() if v == mode)
-
-    @property
-    def preset_modes(self) -> list[str] | None:
-        """Return a list of available preset modes."""
-        if self._is_model(Model.MinusA2):
-            return list(PRESET_MODES)
-        if self._is_model(Model.A3):
-            # A3 does not support Pollen mode
-            return [k for k in PRESET_MODES if k != PRESET_MODE_POLLEN]
-        return None
 
 
 async def async_setup_entry(

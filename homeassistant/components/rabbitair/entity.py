@@ -39,6 +39,7 @@ class RabbitAirBaseEntity(CoordinatorEntity[State]):
         super().__init__(coordinator)
         self._client = client
         self._entry = entry
+        self._attr_name = entry.title or "Rabbit Air"
         self._attr_unique_id = entry.unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.unique_id)},  # type: ignore[arg-type]
@@ -68,8 +69,3 @@ class RabbitAirBaseEntity(CoordinatorEntity[State]):
         # immediately we provide a better user experience, especially if the
         # default polling interval is set too long.
         await self.coordinator.async_refresh()
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of this entity, if any."""
-        return self._entry.title or "RabbitAir"
