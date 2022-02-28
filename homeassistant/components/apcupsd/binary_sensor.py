@@ -18,7 +18,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up an APCUPSd Online Status binary sensor."""
     data_service = hass.data[DOMAIN][config_entry.entry_id]
 
