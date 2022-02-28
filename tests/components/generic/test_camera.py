@@ -17,11 +17,11 @@ from tests.common import AsyncMock, Mock
 
 
 @respx.mock
-async def test_fetching_url(hass, hass_client, fakeimgbytes_png, fakevidcontainer):
+async def test_fetching_url(hass, hass_client, fakeimgbytes_png, mock_av_open):
     """Test that it fetches the given url."""
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
 
-    with patch("av.open", return_value=fakevidcontainer):
+    with mock_av_open:
         await async_setup_component(
             hass,
             "camera",
@@ -180,14 +180,14 @@ async def test_limit_refetch(hass, hass_client, fakeimgbytes_png, fakeimgbytes_j
 
 @respx.mock
 async def test_stream_source(
-    hass, hass_client, hass_ws_client, fakeimgbytes_png, fakevidcontainer
+    hass, hass_client, hass_ws_client, fakeimgbytes_png, mock_av_open
 ):
     """Test that the stream source is rendered."""
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
     respx.get("http://example.com/0a").respond(stream=fakeimgbytes_png)
 
     hass.states.async_set("sensor.temp", "0")
-    with patch("av.open", return_value=fakevidcontainer):
+    with mock_av_open:
         assert await async_setup_component(
             hass,
             "camera",
@@ -228,12 +228,12 @@ async def test_stream_source(
 
 @respx.mock
 async def test_stream_source_error(
-    hass, hass_client, hass_ws_client, fakeimgbytes_png, fakevidcontainer
+    hass, hass_client, hass_ws_client, fakeimgbytes_png, mock_av_open
 ):
     """Test that the stream source has an error."""
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
 
-    with patch("av.open", return_value=fakevidcontainer):
+    with mock_av_open:
         assert await async_setup_component(
             hass,
             "camera",
@@ -276,12 +276,12 @@ async def test_stream_source_error(
 
 @respx.mock
 async def test_setup_alternative_options(
-    hass, hass_ws_client, fakeimgbytes_png, fakevidcontainer
+    hass, hass_ws_client, fakeimgbytes_png, mock_av_open
 ):
     """Test that the stream source is setup with different config options."""
     respx.get("https://example.com").respond(stream=fakeimgbytes_png)
 
-    with patch("av.open", return_value=fakevidcontainer):
+    with mock_av_open:
         assert await async_setup_component(
             hass,
             "camera",
@@ -303,9 +303,7 @@ async def test_setup_alternative_options(
 
 
 @respx.mock
-async def test_no_stream_source(
-    hass, hass_client, hass_ws_client, fakeimgbytes_png, fakevidcontainer
-):
+async def test_no_stream_source(hass, hass_client, hass_ws_client, fakeimgbytes_png):
     """Test a stream request without stream source option set."""
     respx.get("https://example.com").respond(stream=fakeimgbytes_png)
 
@@ -348,7 +346,7 @@ async def test_no_stream_source(
 
 @respx.mock
 async def test_camera_content_type(
-    hass, hass_client, fakeimgbytes_svg, fakeimgbytes_jpg, fakevidcontainer
+    hass, hass_client, fakeimgbytes_svg, fakeimgbytes_jpg, mock_av_open
 ):
     """Test generic camera with custom content_type."""
     urlsvg = "https://upload.wikimedia.org/wikipedia/commons/0/02/SVG_logo.svg"
@@ -374,14 +372,14 @@ async def test_camera_content_type(
         "verify_ssl": True,
     }
 
-    with patch("av.open", return_value=fakevidcontainer):
+    with mock_av_open:
         result1 = await hass.config_entries.flow.async_init(
             "generic",
             data=cam_config_jpg,
             context={"source": SOURCE_IMPORT, "unique_id": 12345},
         )
         await hass.async_block_till_done()
-    with patch("av.open", return_value=fakevidcontainer):
+    with mock_av_open:
         result2 = await hass.config_entries.flow.async_init(
             "generic",
             data=cam_config_svg,
@@ -409,9 +407,7 @@ async def test_camera_content_type(
 
 
 @respx.mock
-async def test_timeout_cancelled(
-    hass, hass_client, fakeimgbytes_png, fakeimgbytes_jpg, fakevidcontainer
-):
+async def test_timeout_cancelled(hass, hass_client, fakeimgbytes_png, fakeimgbytes_jpg):
     """Test that timeouts and cancellations return last image."""
 
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
@@ -461,11 +457,9 @@ async def test_timeout_cancelled(
         assert await resp.read() == fakeimgbytes_png
 
 
-async def test_no_still_image_url(
-    hass, hass_client, fakeimgbytes_png, fakevidcontainer
-):
+async def test_no_still_image_url(hass, hass_client, mock_av_open):
     """Test that the component can grab images from stream with no still_image_url."""
-    with patch("av.open", return_value=fakevidcontainer):
+    with mock_av_open:
         assert await async_setup_component(
             hass,
             "camera",
@@ -509,10 +503,10 @@ async def test_no_still_image_url(
         assert await resp.read() == b"stream_keyframe_image"
 
 
-async def test_frame_interval_property(hass, fakevidcontainer):
+async def test_frame_interval_property(hass, mock_av_open):
     """Test that the frame interval is calculated and returned correctly."""
 
-    with patch("av.open", return_value=fakevidcontainer):
+    with mock_av_open:
         await async_setup_component(
             hass,
             "camera",
