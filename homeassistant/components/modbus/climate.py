@@ -28,8 +28,8 @@ from . import get_hub
 from .base_platform import BaseStructPlatform
 from .const import (
     CALL_TYPE_REGISTER_HOLDING,
-    CALL_TYPE_WRITE_REGISTERS,
     CALL_TYPE_WRITE_REGISTER,
+    CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
@@ -123,14 +123,20 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             for i in range(0, len(as_bytes), 2)
         ]
         registers = self._swap_registers(raw_regs)
-        
-        if isinstance(target_temperature, list):
+
+        if isinstance(registers, list):
             result = await self._hub.async_pymodbus_call(
-                self._slave, self._target_temperature_register, [int(float(i)) for i in registers], CALL_TYPE_WRITE_REGISTERS
+                self._slave,
+                self._target_temperature_register,
+                [int(float(i)) for i in registers],
+                CALL_TYPE_WRITE_REGISTERS,
             )
         else:
             result = await self._hub.async_pymodbus_call(
-                self._slave, self._target_temperature_register, target_temperature, CALL_TYPE_WRITE_REGISTER
+                self._slave,
+                self._target_temperature_register,
+                target_temperature,
+                CALL_TYPE_WRITE_REGISTER,
             )
         self._attr_available = result is not None
         await self.async_update()
