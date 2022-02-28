@@ -106,13 +106,11 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
     def percentage(self) -> int | None:
         """Return the current speed as a percentage."""
         speed = self.coordinator.data.speed
-        return (
-            None
-            if speed is None
-            else 0
-            if speed is Speed.SuperSilent
-            else ordered_list_item_to_percentage(SPEED_LIST, speed)
-        )
+        if speed is None:
+            return None
+        if speed is Speed.SuperSilent:
+            return 0
+        return ordered_list_item_to_percentage(SPEED_LIST, speed)
 
     @property
     def preset_mode(self) -> str | None:
