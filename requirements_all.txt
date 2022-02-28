@@ -2032,9 +2032,6 @@ radiotherm==2.1.0
 # homeassistant.components.raincloud
 raincloudy==0.0.7
 
-# homeassistant.components.raspihats
-# raspihats==2.2.3
-
 # homeassistant.components.raspyrfm
 raspyrfm-client==1.2.8
 
@@ -2158,9 +2155,6 @@ smart-meter-texas==0.4.7
 
 # homeassistant.components.smarthab
 smarthab==0.21
-
-# homeassistant.components.raspihats
-# smbus-cffi==0.5.1
 
 # homeassistant.components.smhi
 smhi-pkg==1.0.15
