@@ -88,12 +88,10 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
         entity_id: str,
     ) -> None:
         """Create the Calendar event device."""
-        self.data = GoogleCalendarData(
-            calendar_service,
-            calendar_id,
-            data.get(CONF_SEARCH),
-            data.get(CONF_IGNORE_AVAILABILITY, False),
-        )
+        self._calendar_service = calendar_service
+        self._calendar_id = calendar_id
+        self._search: str | None = data.get(CONF_SEARCH)
+        self._ignore_availability: bool = data.get(CONF_IGNORE_AVAILABILITY, False)
         self._event: dict[str, Any] | None = None
         self._name: str = data[CONF_NAME]
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
@@ -115,44 +113,9 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
         """Return the name of the entity."""
         return self._name
 
-    async def async_get_events(
-        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
-    ) -> list[dict[str, Any]]:
-        """Get all events in a specific time frame."""
-        return await self.data.async_get_events(hass, start_date, end_date)
-
-    def update(self) -> None:
-        """Update event data."""
-        self.data.update()
-        event = copy.deepcopy(self.data.event)
-        if event is None:
-            self._event = event
-            return
-        event = calculate_offset(event, self._offset)
-        self._offset_reached = is_offset_reached(event)
-        self._event = event
-
-
-class GoogleCalendarData:
-    """Class to utilize calendar service object to get next event."""
-
-    def __init__(
-        self,
-        calendar_service: GoogleCalendarService,
-        calendar_id: str,
-        search: str | None,
-        ignore_availability: bool,
-    ) -> None:
-        """Set up how we are going to search the google calendar."""
-        self.calendar_service = calendar_service
-        self.calendar_id = calendar_id
-        self.search = search
-        self.ignore_availability = ignore_availability
-        self.event: dict[str, Any] | None = None
-
     def _event_filter(self, event: dict[str, Any]) -> bool:
         """Return True if the event is visible."""
-        if self.ignore_availability:
+        if self._ignore_availability:
             return True
         return event.get(TRANSPARENCY, OPAQUE) == OPAQUE
 
@@ -164,11 +127,11 @@ class GoogleCalendarData:
         page_token: str | None = None
         while True:
             try:
-                items, page_token = await self.calendar_service.async_list_events(
-                    self.calendar_id,
+                items, page_token = await self._calendar_service.async_list_events(
+                    self._calendar_id,
                     start_time=start_date,
                     end_time=end_date,
-                    search=self.search,
+                    search=self._search,
                     page_token=page_token,
                 )
             except ServerNotFoundError as err:
@@ -184,12 +147,16 @@ class GoogleCalendarData:
     def update(self) -> None:
         """Get the latest data."""
         try:
-            items, _ = self.calendar_service.list_events(
-                self.calendar_id, search=self.search
+            items, _ = self._calendar_service.list_events(
+                self._calendar_id, search=self._search
             )
         except ServerNotFoundError as err:
             _LOGGER.error("Unable to connect to Google: %s", err)
             return
 
-        valid_events = filter(self._event_filter, items)
-        self.event = next(valid_events, None)
+        # Pick the first visible evemt. Make a copy since calculate_offset mutates the event
+        valid_items = filter(self._event_filter, items)
+        self._event = copy.deepcopy(next(valid_items, None))
+        if self._event:
+            calculate_offset(self._event, self._offset)
+            self._offset_reached = is_offset_reached(self._event)
