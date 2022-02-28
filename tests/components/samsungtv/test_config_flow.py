@@ -837,7 +837,7 @@ async def test_autodetect_websocket(hass: HomeAssistant) -> None:
     ) as remotews, patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
     ) as rest_api_class:
-                remote = Mock(SamsungTVWSAsyncConnection)
+        remote = Mock(SamsungTVWSAsyncConnection)
         remote.__aenter__ = AsyncMock(return_value=remote)
         remote.__aexit__ = AsyncMock(return_value=False)
         remote.connection = AsyncMock()

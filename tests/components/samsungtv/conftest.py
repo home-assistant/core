@@ -61,7 +61,8 @@ def remotews_fixture() -> Mock:
         remotews = Mock(SamsungTVWSAsyncConnection)
         remotews.__aenter__ = AsyncMock(return_value=remotews)
         remotews.__aexit__ = AsyncMock()
-        remotews.app_list.return_value = SAMPLE_APP_LIST
+        remotews.connection = AsyncMock()
+        remotews.connection.recv.return_value = SAMPLE_APP_LIST
         remotews.token = "FAKE_TOKEN"
         remotews_class.return_value = remotews
         yield remotews
