@@ -706,7 +706,6 @@ omit =
     homeassistant/components/mjpeg/util.py
     homeassistant/components/mochad/*
     homeassistant/components/modbus/climate.py
-    homeassistant/components/modbus/binary_sensor.py
     homeassistant/components/modem_callerid/button.py
     homeassistant/components/modem_callerid/sensor.py
     homeassistant/components/moehlenhoff_alpha2/__init__.py

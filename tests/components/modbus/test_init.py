@@ -42,6 +42,7 @@ from homeassistant.components.modbus.const import (
     CONF_INPUT_TYPE,
     CONF_MSG_WAIT,
     CONF_PARITY,
+    CONF_SLAVE_COUNT,
     CONF_STOPBITS,
     CONF_SWAP,
     CONF_SWAP_BYTE,
@@ -208,6 +209,13 @@ async def test_ok_struct_validator(do_config):
             CONF_DATA_TYPE: DataType.STRING,
             CONF_STRUCTURE: ">f",
             CONF_SWAP: CONF_SWAP_WORD,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_COUNT: 2,
+            CONF_DATA_TYPE: DataType.CUSTOM,
+            CONF_STRUCTURE: ">f",
+            CONF_SLAVE_COUNT: 5,
         },
     ],
 )

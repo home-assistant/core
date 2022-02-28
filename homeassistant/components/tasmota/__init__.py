@@ -15,15 +15,13 @@ from hatasmota.const import (
 from hatasmota.discovery import clear_discovery_topic
 from hatasmota.models import TasmotaDeviceConfig
 from hatasmota.mqtt import TasmotaMQTTClient
-import voluptuous as vol
 
-from homeassistant.components import mqtt, websocket_api
+from homeassistant.components import mqtt
 from homeassistant.components.mqtt.subscription import (
     async_prepare_subscribe_topics,
     async_subscribe_topics,
     async_unsubscribe_topics,
 )
-from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -39,7 +37,6 @@ from .const import (
     CONF_DISCOVERY_PREFIX,
     DATA_REMOVE_DISCOVER_COMPONENT,
     DATA_UNSUB,
-    DOMAIN,
     PLATFORMS,
 )
 
@@ -48,7 +45,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tasmota from a config entry."""
-    websocket_api.async_register_command(hass, websocket_remove_device)
     hass.data[DATA_UNSUB] = []
 
     async def _publish(
@@ -216,37 +212,6 @@ async def async_setup_device(
         await _remove_device(hass, config_entry, mac, tasmota_mqtt, device_registry)
     else:
         _update_device(hass, config_entry, config, device_registry)
-
-
-@websocket_api.websocket_command(
-    {vol.Required("type"): "tasmota/device/remove", vol.Required("device_id"): str}
-)
-@callback
-def websocket_remove_device(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
-) -> None:
-    """Delete device."""
-    device_id = msg["device_id"]
-    dev_registry = dr.async_get(hass)
-
-    if not (device := dev_registry.async_get(device_id)):
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Device not found"
-        )
-        return
-
-    for config_entry_id in device.config_entries:
-        config_entry = hass.config_entries.async_get_entry(config_entry_id)
-        assert config_entry
-        # Only delete the device if it belongs to a Tasmota device entry
-        if config_entry.domain == DOMAIN:
-            dev_registry.async_remove_device(device_id)
-            connection.send_message(websocket_api.result_message(msg["id"]))
-            return
-
-    connection.send_error(
-        msg["id"], websocket_api.const.ERR_NOT_FOUND, "Non Tasmota device"
-    )
 
 
 async def async_remove_config_entry_device(
