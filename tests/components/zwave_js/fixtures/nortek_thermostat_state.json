@@ -1275,5 +1275,6 @@
                 "label": "Dimming duration"
             }
         }
-    ]
+    ],
+    "isControllerNode": false
 }
