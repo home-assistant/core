@@ -35,7 +35,7 @@ async def async_setup_entry(
             # Only add battery powered blinds
             entities.append(MotionBatterySensor(coordinator, blind))
 
-    # Do not add singnal sensor twice for direct WiFi blinds
+    # Do not add signal sensor twice for direct WiFi blinds
     if motion_gateway.device_type not in DEVICE_TYPES_WIFI:
         entities.append(
             MotionSignalStrengthSensor(coordinator, motion_gateway, TYPE_GATEWAY)
