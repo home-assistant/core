@@ -9,10 +9,7 @@ from homeassistant.components.sleepiq.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-SLEEPIQ_CONFIG = {
-    CONF_USERNAME: "username",
-    CONF_PASSWORD: "password",
-}
+from tests.components.sleepiq.conftest import SLEEPIQ_CONFIG, setup_platform
 
 
 async def test_import(hass: HomeAssistant) -> None:
@@ -97,3 +94,36 @@ async def test_success(hass: HomeAssistant) -> None:
     assert result2["data"][CONF_USERNAME] == SLEEPIQ_CONFIG[CONF_USERNAME]
     assert result2["data"][CONF_PASSWORD] == SLEEPIQ_CONFIG[CONF_PASSWORD]
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reauth_password(hass):
+    """Test reauth form."""
+
+    # set up initially
+    entry = await setup_platform(hass)
+    with patch(
+        "homeassistant.components.sleepiq.config_flow.AsyncSleepIQ.login",
+        side_effect=SleepIQLoginException,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+                "unique_id": entry.unique_id,
+            },
+            data=entry.data,
+        )
+
+    with patch(
+        "homeassistant.components.sleepiq.config_flow.AsyncSleepIQ.login",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"password": "password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["reason"] == "reauth_successful"
