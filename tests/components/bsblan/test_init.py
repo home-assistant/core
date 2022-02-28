@@ -44,16 +44,3 @@ async def test_config_entry_not_ready(
 
     assert len(mock_bsblan.state.mock_calls) == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-# async def test_config_entry_no_authentication(
-#     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-# ) -> None:
-#     """Test the BSBLan configuration entry not ready."""
-#     aioclient_mock.post(
-#         "http://example.local:80/1234/JQ?Parameter=6224,6225,6226",
-#         exc=aiohttp.ClientError,
-#     )
-
-#     entry = await init_integration_without_auth(hass, aioclient_mock)
-#     assert entry.state is ConfigEntryState.SETUP_RETRY
