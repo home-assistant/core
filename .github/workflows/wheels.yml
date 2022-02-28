@@ -149,7 +149,6 @@ jobs:
             sed -i "s|# PySwitchbot|PySwitchbot|g" ${requirement_file}
             sed -i "s|# pySwitchmate|pySwitchmate|g" ${requirement_file}
             sed -i "s|# face_recognition|face_recognition|g" ${requirement_file}
-            sed -i "s|# bme680|bme680|g" ${requirement_file}
             sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
             sed -i "s|# homeassistant-pyozw|homeassistant-pyozw|g" ${requirement_file}
           done
