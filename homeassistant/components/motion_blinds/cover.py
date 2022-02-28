@@ -1,7 +1,7 @@
 """Support for Motion Blinds using their WLAN API."""
 import logging
 
-from motionblinds import BlindType, DEVICE_TYPES_WIFI
+from motionblinds import DEVICE_TYPES_WIFI, BlindType
 import voluptuous as vol
 
 from homeassistant.components.cover import (
@@ -12,7 +12,11 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, device_registry as dr, entity_platform
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_platform,
+)
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -81,21 +85,34 @@ async def async_setup_entry(
         if blind.type in POSITION_DEVICE_MAP:
             entities.append(
                 MotionPositionDevice(
-                    coordinator, blind, POSITION_DEVICE_MAP[blind.type], config_entry, sw_version
+                    coordinator,
+                    blind,
+                    POSITION_DEVICE_MAP[blind.type],
+                    config_entry,
+                    sw_version,
                 )
             )
 
         elif blind.type in TILT_DEVICE_MAP:
             entities.append(
                 MotionTiltDevice(
-                    coordinator, blind, TILT_DEVICE_MAP[blind.type], config_entry, sw_version
+                    coordinator,
+                    blind,
+                    TILT_DEVICE_MAP[blind.type],
+                    config_entry,
+                    sw_version,
                 )
             )
 
         elif blind.type in TDBU_DEVICE_MAP:
             entities.append(
                 MotionTDBUDevice(
-                    coordinator, blind, TDBU_DEVICE_MAP[blind.type], config_entry, sw_version, "Top"
+                    coordinator,
+                    blind,
+                    TDBU_DEVICE_MAP[blind.type],
+                    config_entry,
+                    sw_version,
+                    "Top",
                 )
             )
             entities.append(
@@ -120,11 +137,17 @@ async def async_setup_entry(
             )
 
         else:
-            _LOGGER.warning("Blind type '%s' not yet supported, "
-                            "assuming RollerBlind", blind.blind_type)
+            _LOGGER.warning(
+                "Blind type '%s' not yet supported, " "assuming RollerBlind",
+                blind.blind_type,
+            )
             entities.append(
                 MotionPositionDevice(
-                    coordinator, blind, POSITION_DEVICE_MAP[BlindType.RollerBlind], config_entry, sw_version
+                    coordinator,
+                    blind,
+                    POSITION_DEVICE_MAP[BlindType.RollerBlind],
+                    config_entry,
+                    sw_version,
                 )
             )
 
@@ -150,11 +173,11 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
 
         if blind.device_type in DEVICE_TYPES_WIFI:
             via_device = ()
-            connections={(dr.CONNECTION_NETWORK_MAC, blind.mac)}
+            connections = {(dr.CONNECTION_NETWORK_MAC, blind.mac)}
             name = blind.blind_type
         else:
-            via_device=(DOMAIN, blind._gateway.mac)
-            connections={}
+            via_device = (DOMAIN, blind._gateway.mac)
+            connections = {}
             name = f"{blind.blind_type}-{blind.mac[12:]}"
             sw_version = None
 
@@ -269,7 +292,9 @@ class MotionTiltDevice(MotionPositionDevice):
 class MotionTDBUDevice(MotionPositionDevice):
     """Representation of a Motion Top Down Bottom Up blind Device."""
 
-    def __init__(self, coordinator, blind, device_class, config_entry, sw_version, motor):
+    def __init__(
+        self, coordinator, blind, device_class, config_entry, sw_version, motor
+    ):
         """Initialize the blind."""
         super().__init__(coordinator, blind, device_class, config_entry, sw_version)
         self._motor = motor

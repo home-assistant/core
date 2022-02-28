@@ -1,5 +1,5 @@
 """Support for Motion Blinds sensors."""
-from motionblinds import BlindType, DEVICE_TYPES_WIFI
+from motionblinds import DEVICE_TYPES_WIFI, BlindType
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
