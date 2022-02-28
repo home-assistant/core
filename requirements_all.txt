@@ -401,9 +401,6 @@ blockchain==1.4.4
 # homeassistant.components.miflora
 # bluepy==1.3.0
 
-# homeassistant.components.bme680
-# bme680==1.0.5
-
 # homeassistant.components.bond
 bond-api==0.1.16
 
@@ -2162,7 +2159,6 @@ smart-meter-texas==0.4.7
 # homeassistant.components.smarthab
 smarthab==0.21
 
-# homeassistant.components.bme680
 # homeassistant.components.raspihats
 # smbus-cffi==0.5.1
 
