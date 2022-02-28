@@ -1338,6 +1338,9 @@ scapy==2.4.5
 # homeassistant.components.screenlogic
 screenlogicpy==0.5.4
 
+# homeassistant.components.backup
+securetar==2022.2.0
+
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
 sense_energy==0.10.2
