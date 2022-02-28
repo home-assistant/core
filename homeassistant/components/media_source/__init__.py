@@ -21,6 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
+from homeassistant.helpers.network import is_internal_request
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
@@ -124,8 +125,13 @@ async def async_browse_media(
 
 
 @bind_hass
-async def async_resolve_media(hass: HomeAssistant, media_content_id: str) -> PlayMedia:
-    """Get info to play media."""
+async def async_resolve_media(
+    hass: HomeAssistant, media_content_id: str, *, is_external_consumer: bool = False
+) -> PlayMedia:
+    """Get info to play media.
+
+    External consumers cannot access content on the internal network.
+    """
     if DOMAIN not in hass.data:
         raise Unresolvable("Media Source not loaded")
 
@@ -133,6 +139,11 @@ async def async_resolve_media(hass: HomeAssistant, media_content_id: str) -> Pla
         item = _get_media_item(hass, media_content_id)
     except ValueError as err:
         raise Unresolvable(str(err)) from err
+
+    if is_external_consumer and item.async_media_source().internal_only:
+        raise Unresolvable(
+            "Unable to access this content while not on the internal network"
+        )
 
     return await item.async_resolve()
 
@@ -171,7 +182,11 @@ async def websocket_resolve_media(
 ) -> None:
     """Resolve media."""
     try:
-        media = await async_resolve_media(hass, msg["media_content_id"])
+        media = await async_resolve_media(
+            hass,
+            msg["media_content_id"],
+            is_external_consumer=not is_internal_request(hass),
+        )
     except Unresolvable as err:
         connection.send_error(msg["id"], "resolve_media_failed", str(err))
         return

@@ -109,6 +109,7 @@ class MediaSource(ABC):
     """Represents a source of media files."""
 
     name: str | None = None
+    internal_only = False
 
     def __init__(self, domain: str) -> None:
         """Initialize a media source."""

@@ -41,6 +41,7 @@ class DmsMediaSource(MediaSource):
     """Provide DLNA Media Servers as media sources."""
 
     name = "DLNA Servers"
+    internal_only = True
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize DLNA source."""
