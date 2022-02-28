@@ -42,7 +42,12 @@ async def test_remove(
     with patch(
         "homeassistant.components.backup.websocket.BackupManager._backups",
         {TEST_BACKUP.slug: TEST_BACKUP},
-    ), patch("pathlib.Path.unlink"):
+    ), patch(
+        "homeassistant.components.backup.websocket.BackupManager._loaded",
+        True,
+    ), patch(
+        "pathlib.Path.unlink"
+    ):
         await client.send_json({"id": 1, "type": "backup/remove", "slug": "abc123"})
         msg = await client.receive_json()
 

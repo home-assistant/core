@@ -2,7 +2,6 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from awesomeversion import AwesomeVersion
 import pytest
 
 from homeassistant.components.backup import BackupManager
@@ -21,21 +20,21 @@ async def test_constructor(hass: HomeAssistant) -> None:
 async def test_load_backups(hass: HomeAssistant) -> None:
     """Test loading backups."""
     manager = BackupManager(hass)
-
-    with patch("pathlib.Path.glob", return_value=[Path("abc123.tar")]), patch(
+    with patch("pathlib.Path.glob", return_value=[TEST_BACKUP.path]), patch(
         "tarfile.open", return_value=MagicMock()
     ), patch(
         "json.loads",
         return_value={
-            "slug": "abc123",
-            "name": "Test",
-            "date": "1970-01-01T00:00:00.000Z",
+            "slug": TEST_BACKUP.slug,
+            "name": TEST_BACKUP.name,
+            "date": TEST_BACKUP.date,
         },
     ), patch(
-        "pathlib.Path.stat", return_value=MagicMock(st_size=123)
+        "pathlib.Path.stat", return_value=MagicMock(st_size=TEST_BACKUP.size)
     ):
-        await hass.async_add_executor_job(manager.load_backups)
-        assert manager.backups == {TEST_BACKUP.slug: TEST_BACKUP}
+        await manager.load_backups()
+    backups = await manager.get_backups()
+    assert backups == {TEST_BACKUP.slug: TEST_BACKUP}
 
 
 async def test_removing_non_existing_backup(
@@ -44,9 +43,8 @@ async def test_removing_non_existing_backup(
 ) -> None:
     """Test removing not existing backup."""
     manager = BackupManager(hass)
-    assert not manager.backups
 
-    manager.remove_backup("non_existing")
+    await manager.remove_backup("non_existing")
     assert "Removed backup located at" not in caplog.text
 
 
@@ -79,12 +77,22 @@ async def test_generate_backup(
     ), patch("pathlib.Path.stat", MagicMock(st_size=123)), patch(
         "pathlib.Path.is_file", lambda x: x.name != ".storage"
     ), patch(
-        "pathlib.Path.is_dir", lambda x: x.name == ".storage"
+        "pathlib.Path.is_dir",
+        lambda x: x.name in (manager.backup_dir.as_posix(), ".storage"),
+    ), patch(
+        "pathlib.Path.exists",
+        lambda x: x != manager.backup_dir,
+    ), patch(
+        "pathlib.Path.mkdir",
+        MagicMock(),
     ), patch(
         "homeassistant.components.backup.manager.json_util.save_json"
     ) as mocked_json_util, patch(
-        "homeassistant.components.backup.manager.VERSION",
-        AwesomeVersion("2025.1.0"),
+        "homeassistant.components.backup.manager.HAVERSION",
+        "2025.1.0",
+    ), patch(
+        "homeassistant.components.backup.websocket.BackupManager._loaded",
+        True,
     ):
         await manager.generate_backup()
 
@@ -95,7 +103,8 @@ async def test_generate_backup(
 
         assert (
             manager.backup_dir.as_posix()
-            in mocked_tarfile.call_args_list[-1][0][0].as_posix()
+            in mocked_tarfile.call_args_list[0].kwargs["name"]
         )
 
     assert "Generated new backup with slug " in caplog.text
+    assert "Creating backup directory" in caplog.text

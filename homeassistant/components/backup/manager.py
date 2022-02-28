@@ -35,13 +35,14 @@ class Backup:
 class BackupManager:
     """Backup manager for the Backup integration."""
 
+    _backups: dict[str, Backup] = {}
+    _loaded = False
+
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the backup manager."""
         self.hass = hass
         self.backup_dir = Path(hass.config.path("backups"))
         self.backing_up = False
-        self._loaded = False
-        self._backups: dict[str, Backup] = {}
 
     async def load_backups(self) -> None:
         """Load data of stored backup files."""
