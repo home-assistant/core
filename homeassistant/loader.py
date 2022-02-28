@@ -60,13 +60,22 @@ MAX_LOAD_CONCURRENTLY = 4
 MOVED_ZEROCONF_PROPS = ("macaddress", "model", "manufacturer")
 
 
-class DHCPMatcher(TypedDict):
-    """Matcher for the dhcp integration."""
+class DHCPMatcherRequired(TypedDict, total=True):
+    """Matcher for the dhcp integration for required fields."""
 
     domain: str
-    macaddress: str | None
-    hostname: str | None
-    registered_devices: bool | None
+
+
+class DHCPMatcherOptional(TypedDict, total=False):
+    """Matcher for the dhcp integration for optional fields."""
+
+    macaddress: str
+    hostname: str
+    registered_devices: bool
+
+
+class DHCPMatcher(DHCPMatcherRequired, DHCPMatcherOptional):
+    """Matcher for the dhcp integration."""
 
 
 class Manifest(TypedDict, total=False):
