@@ -162,7 +162,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if TYPE_CHECKING:
         assert entry.unique_id is not None
 
-    if blind.device_type not in DEVICE_TYPES_WIFI:
+    if motion_gateway.device_type not in DEVICE_TYPES_WIFI:
         device_registry = dr.async_get(hass)
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
