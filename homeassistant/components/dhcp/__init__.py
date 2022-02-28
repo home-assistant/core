@@ -54,7 +54,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_dhcp
+from homeassistant.loader import DHCPMatcher, async_get_dhcp
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.network import is_invalid, is_link_local, is_loopback
 
@@ -153,7 +153,7 @@ class WatcherBase:
         self,
         hass: HomeAssistant,
         address_data: dict[str, dict[str, str]],
-        integration_matchers: list[dict[str, str | bool]],
+        integration_matchers: list[DHCPMatcher],
     ) -> None:
         """Initialize class."""
         super().__init__()
@@ -230,27 +230,23 @@ class WatcherBase:
                     device_domains.add(entry.domain)
 
         for matcher in self._integration_matchers:
-            if (
-                matcher.get(REGISTERED_DEVICES)
-                and not matcher["domain"] in device_domains
-            ):
+            domain = matcher["domain"]
+
+            if matcher.get(REGISTERED_DEVICES) and domain not in device_domains:
                 continue
 
-            if (matcher_mac := matcher.get(MAC_ADDRESS)) is not None:
-                assert isinstance(matcher_mac, str)
-                if not fnmatch.fnmatch(uppercase_mac, matcher_mac):
-                    continue
+            if (
+                matcher_mac := matcher.get(MAC_ADDRESS)
+            ) is not None and not fnmatch.fnmatch(uppercase_mac, matcher_mac):
+                continue
 
             if (
-                (matcher_hostname := matcher.get(HOSTNAME)) is not None
-                and isinstance(matcher_hostname, str)
-                and not fnmatch.fnmatch(lowercase_hostname, matcher_hostname)
-            ):
+                matcher_hostname := matcher.get(HOSTNAME)
+            ) is not None and not fnmatch.fnmatch(lowercase_hostname, matcher_hostname):
                 continue
 
             _LOGGER.debug("Matched %s against %s", data, matcher)
-            assert isinstance(matcher["domain"], str)
-            matched_domains.add(matcher["domain"])
+            matched_domains.add(domain)
 
         for domain in matched_domains:
             discovery_flow.async_create_flow(
@@ -272,7 +268,7 @@ class NetworkWatcher(WatcherBase):
         self,
         hass: HomeAssistant,
         address_data: dict[str, dict[str, str]],
-        integration_matchers: list[dict[str, str | bool]],
+        integration_matchers: list[DHCPMatcher],
     ) -> None:
         """Initialize class."""
         super().__init__(hass, address_data, integration_matchers)
@@ -322,7 +318,7 @@ class DeviceTrackerWatcher(WatcherBase):
         self,
         hass: HomeAssistant,
         address_data: dict[str, dict[str, str]],
-        integration_matchers: list[dict[str, str | bool]],
+        integration_matchers: list[DHCPMatcher],
     ) -> None:
         """Initialize class."""
         super().__init__(hass, address_data, integration_matchers)
@@ -375,7 +371,7 @@ class DeviceTrackerRegisteredWatcher(WatcherBase):
         self,
         hass: HomeAssistant,
         address_data: dict[str, dict[str, str]],
-        integration_matchers: list[dict[str, str | bool]],
+        integration_matchers: list[DHCPMatcher],
     ) -> None:
         """Initialize class."""
         super().__init__(hass, address_data, integration_matchers)
@@ -413,7 +409,7 @@ class DHCPWatcher(WatcherBase):
         self,
         hass: HomeAssistant,
         address_data: dict[str, dict[str, str]],
-        integration_matchers: list[dict[str, str | bool]],
+        integration_matchers: list[DHCPMatcher],
     ) -> None:
         """Initialize class."""
         super().__init__(hass, address_data, integration_matchers)
