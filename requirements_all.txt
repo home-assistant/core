@@ -1966,7 +1966,7 @@ python-picnic-api==1.1.0
 python-qbittorrent==0.4.2
 
 # homeassistant.components.rabbitair
-python-rabbitair==0.0.6
+python-rabbitair==0.0.7
 
 # homeassistant.components.ripple
 python-ripple-api==0.0.3
