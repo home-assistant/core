@@ -143,7 +143,8 @@ class BackupManager:
                 path=tar_file_path,
                 size=round(tar_file_path.stat().st_size / 1_048_576, 2),
             )
-            self._backups[slug] = backup
+            if self._loaded:
+                self._backups[slug] = backup
             LOGGER.debug("Generated new backup with slug %s", slug)
             return backup
         finally:
