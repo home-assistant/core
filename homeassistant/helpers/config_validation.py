@@ -15,7 +15,9 @@ import logging
 from numbers import Number
 import os
 import re
-from socket import _GLOBAL_DEFAULT_TIMEOUT  # type: ignore # private, not in typeshed
+from socket import (  # type: ignore[attr-defined]  # private, not in typeshed
+    _GLOBAL_DEFAULT_TIMEOUT,
+)
 from typing import Any, TypeVar, cast, overload
 from urllib.parse import urlparse
 from uuid import UUID
@@ -163,7 +165,7 @@ def boolean(value: Any) -> bool:
             return False
     elif isinstance(value, Number):
         # type ignore: https://github.com/python/mypy/issues/3186
-        return value != 0  # type: ignore
+        return value != 0  # type: ignore[comparison-overlap]
     raise vol.Invalid(f"invalid boolean value {value}")
 
 
@@ -421,7 +423,7 @@ def date(value: Any) -> date_sys:
 
 def time_period_str(value: str) -> timedelta:
     """Validate and transform time offset."""
-    if isinstance(value, int):  # type: ignore
+    if isinstance(value, int):  # type: ignore[unreachable]
         raise vol.Invalid("Make sure you wrap time values in quotes")
     if not isinstance(value, str):
         raise vol.Invalid(TIME_PERIOD_ERROR.format(value))
@@ -585,7 +587,7 @@ def template(value: Any | None) -> template_helper.Template:
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
 
-    template_value = template_helper.Template(str(value))  # type: ignore
+    template_value = template_helper.Template(str(value))  # type: ignore[no-untyped-call]
 
     try:
         template_value.ensure_valid()
@@ -603,7 +605,7 @@ def dynamic_template(value: Any | None) -> template_helper.Template:
     if not template_helper.is_template_string(str(value)):
         raise vol.Invalid("template value does not contain a dynamic template")
 
-    template_value = template_helper.Template(str(value))  # type: ignore
+    template_value = template_helper.Template(str(value))  # type: ignore[no-untyped-call]
     try:
         template_value.ensure_valid()
         return template_value
@@ -796,7 +798,7 @@ def _deprecated_or_removed(
         """Check if key is in config and log warning or error."""
         if key in config:
             try:
-                near = f"near {config.__config_file__}:{config.__line__} "  # type: ignore
+                near = f"near {config.__config_file__}:{config.__line__} "  # type: ignore[attr-defined]
             except AttributeError:
                 near = ""
             arguments: tuple[str, ...]
@@ -937,6 +939,8 @@ def key_dependency(
 
 def custom_serializer(schema: Any) -> Any:
     """Serialize additional types for voluptuous_serialize."""
+    from . import selector  # pylint: disable=import-outside-toplevel
+
     if schema is positive_time_period_dict:
         return {"type": "positive_time_period_dict"}
 
@@ -948,6 +952,9 @@ def custom_serializer(schema: Any) -> Any:
 
     if isinstance(schema, multi_select):
         return {"type": "multi_select", "options": schema.options}
+
+    if isinstance(schema, selector.Selector):
+        return schema.serialize()
 
     return voluptuous_serialize.UNSUPPORTED
 
@@ -1026,7 +1033,12 @@ def script_action(value: Any) -> dict:
     if not isinstance(value, dict):
         raise vol.Invalid("expected dictionary")
 
-    return ACTION_TYPE_SCHEMAS[determine_script_action(value)](value)
+    try:
+        action = determine_script_action(value)
+    except ValueError as err:
+        raise vol.Invalid(str(err))
+
+    return ACTION_TYPE_SCHEMAS[action](value)
 
 
 SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])
@@ -1437,7 +1449,10 @@ def determine_script_action(action: dict[str, Any]) -> str:
     if CONF_VARIABLES in action:
         return SCRIPT_ACTION_VARIABLES
 
-    return SCRIPT_ACTION_CALL_SERVICE
+    if CONF_SERVICE in action or CONF_SERVICE_TEMPLATE in action:
+        return SCRIPT_ACTION_CALL_SERVICE
+
+    raise ValueError("Unable to determine action")
 
 
 ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {

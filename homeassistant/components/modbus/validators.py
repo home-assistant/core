@@ -39,28 +39,13 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-OLD_DATA_TYPES = {
-    DataType.INT: {
-        1: DataType.INT16,
-        2: DataType.INT32,
-        4: DataType.INT64,
-    },
-    DataType.UINT: {
-        1: DataType.UINT16,
-        2: DataType.UINT32,
-        4: DataType.UINT64,
-    },
-    DataType.FLOAT: {
-        1: DataType.FLOAT16,
-        2: DataType.FLOAT32,
-        4: DataType.FLOAT64,
-    },
-}
 ENTRY = namedtuple("ENTRY", ["struct_id", "register_count"])
 DEFAULT_STRUCT_FORMAT = {
+    DataType.INT8: ENTRY("b", 1),
     DataType.INT16: ENTRY("h", 1),
     DataType.INT32: ENTRY("i", 2),
     DataType.INT64: ENTRY("q", 4),
+    DataType.UINT8: ENTRY("c", 1),
     DataType.UINT16: ENTRY("H", 1),
     DataType.UINT32: ENTRY("I", 2),
     DataType.UINT64: ENTRY("Q", 4),
@@ -79,19 +64,14 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     name = config[CONF_NAME]
     structure = config.get(CONF_STRUCTURE)
     swap_type = config.get(CONF_SWAP)
-    if data_type in (DataType.INT, DataType.UINT, DataType.FLOAT):
-        error = f"{name}  with {data_type} is not valid, trying to convert"
-        _LOGGER.warning(error)
-        try:
-            data_type = OLD_DATA_TYPES[data_type][config.get(CONF_COUNT, 1)]
-            config[CONF_DATA_TYPE] = data_type
-        except KeyError as exp:
-            error = f"{name}  cannot convert automatically {data_type}"
-            raise vol.Invalid(error) from exp
     if config[CONF_DATA_TYPE] != DataType.CUSTOM:
         if structure:
             error = f"{name}  structure: cannot be mixed with {data_type}"
             raise vol.Invalid(error)
+        if data_type not in DEFAULT_STRUCT_FORMAT:
+            error = f"Error in sensor {name}. data_type `{data_type}` not supported"
+            raise vol.Invalid(error)
+
         structure = f">{DEFAULT_STRUCT_FORMAT[data_type].struct_id}"
         if CONF_COUNT not in config:
             config[CONF_COUNT] = DEFAULT_STRUCT_FORMAT[data_type].register_count
@@ -207,8 +187,7 @@ def duplicate_entity_validator(config: dict) -> dict:
                     addr += "_" + str(entry[CONF_COMMAND_ON])
                 if CONF_COMMAND_OFF in entry:
                     addr += "_" + str(entry[CONF_COMMAND_OFF])
-                if CONF_SLAVE in entry:
-                    addr += "_" + str(entry[CONF_SLAVE])
+                addr += "_" + str(entry[CONF_SLAVE])
                 if addr in addresses:
                     err = f"Modbus {component}/{name} address {addr} is duplicate, second entry not loaded!"
                     _LOGGER.warning(err)

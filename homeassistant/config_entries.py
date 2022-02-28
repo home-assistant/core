@@ -62,7 +62,7 @@ SOURCE_UNIGNORE = "unignore"
 # This is used to signal that re-authentication is required by the user.
 SOURCE_REAUTH = "reauth"
 
-HANDLERS = Registry()
+HANDLERS: Registry[str, type[ConfigFlow]] = Registry()
 
 STORAGE_KEY = "core.config_entries"
 STORAGE_VERSION = 1
@@ -175,6 +175,7 @@ class ConfigEntry:
         "options",
         "unique_id",
         "supports_unload",
+        "supports_remove_device",
         "pref_disable_new_entities",
         "pref_disable_polling",
         "source",
@@ -257,6 +258,9 @@ class ConfigEntry:
         # Supports unload
         self.supports_unload = False
 
+        # Supports remove device
+        self.supports_remove_device = False
+
         # Listeners to call on update
         self.update_listeners: list[
             weakref.ReferenceType[UpdateListenerType] | weakref.WeakMethod
@@ -287,6 +291,9 @@ class ConfigEntry:
             integration = await loader.async_get_integration(hass, self.domain)
 
         self.supports_unload = await support_entry_unload(hass, self.domain)
+        self.supports_remove_device = await support_remove_from_device(
+            hass, self.domain
+        )
 
         try:
             component = integration.get_component()
@@ -523,8 +530,10 @@ class ConfigEntry:
             )
             return False
         # Handler may be a partial
+        # Keep for backwards compatibility
+        # https://github.com/home-assistant/core/pull/67087#discussion_r812559950
         while isinstance(handler, functools.partial):
-            handler = handler.func
+            handler = handler.func  # type: ignore[unreachable]
 
         if self.version == handler.VERSION:
             return True
@@ -746,7 +755,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         if not context or "source" not in context:
             raise KeyError("Context not set or doesn't have a source set")
 
-        flow = cast(ConfigFlow, handler())
+        flow = handler()
         flow.init_step = context["source"]
         return flow
 
@@ -1213,7 +1222,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             match_dict = {}  # Match any entry
         for entry in self._async_current_entries(include_ignore=False):
             if all(
-                item in ChainMap(entry.options, entry.data).items()  # type: ignore
+                item in ChainMap(entry.options, entry.data).items()  # type: ignore[arg-type]
                 for item in match_dict.items()
             ):
                 raise data_entry_flow.AbortFlow("already_configured")
@@ -1489,7 +1498,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         if entry.domain not in HANDLERS:
             raise data_entry_flow.UnknownHandler
 
-        return cast(OptionsFlow, HANDLERS[entry.domain].async_get_options_flow(entry))
+        return HANDLERS[entry.domain].async_get_options_flow(entry)
 
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
@@ -1615,3 +1624,10 @@ async def support_entry_unload(hass: HomeAssistant, domain: str) -> bool:
     integration = await loader.async_get_integration(hass, domain)
     component = integration.get_component()
     return hasattr(component, "async_unload_entry")
+
+
+async def support_remove_from_device(hass: HomeAssistant, domain: str) -> bool:
+    """Test if a domain supports being removed from a device."""
+    integration = await loader.async_get_integration(hass, domain)
+    component = integration.get_component()
+    return hasattr(component, "async_remove_config_entry_device")

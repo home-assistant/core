@@ -16,6 +16,7 @@ from homeassistant.components.device_tracker.const import (
     ATTR_IP,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
+    CONNECTED_DEVICE_REGISTERED,
     SOURCE_TYPE_ROUTER,
 )
 from homeassistant.components.dhcp.const import DOMAIN
@@ -26,6 +27,7 @@ from homeassistant.const import (
     STATE_NOT_HOME,
 )
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -628,6 +630,59 @@ async def test_device_tracker_hostname_and_macaddress_exists_before_start(hass):
         hostname="connect",
         macaddress="b8b7f16db533",
     )
+
+
+async def test_device_tracker_registered(hass):
+    """Test matching based on hostname and macaddress when registered."""
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
+        device_tracker_watcher = dhcp.DeviceTrackerRegisteredWatcher(
+            hass,
+            {},
+            [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
+        )
+        await device_tracker_watcher.async_start()
+        await hass.async_block_till_done()
+        async_dispatcher_send(
+            hass,
+            CONNECTED_DEVICE_REGISTERED,
+            {"ip": "192.168.210.56", "mac": "b8b7f16db533", "host_name": "connect"},
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_init.mock_calls) == 1
+    assert mock_init.mock_calls[0][1][0] == "mock-domain"
+    assert mock_init.mock_calls[0][2]["context"] == {
+        "source": config_entries.SOURCE_DHCP
+    }
+    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.210.56",
+        hostname="connect",
+        macaddress="b8b7f16db533",
+    )
+    await device_tracker_watcher.async_stop()
+    await hass.async_block_till_done()
+
+
+async def test_device_tracker_registered_hostname_none(hass):
+    """Test handle None hostname."""
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
+        device_tracker_watcher = dhcp.DeviceTrackerRegisteredWatcher(
+            hass,
+            {},
+            [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
+        )
+        await device_tracker_watcher.async_start()
+        await hass.async_block_till_done()
+        async_dispatcher_send(
+            hass,
+            CONNECTED_DEVICE_REGISTERED,
+            {"ip": "192.168.210.56", "mac": "b8b7f16db533", "host_name": None},
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_init.mock_calls) == 0
+    await device_tracker_watcher.async_stop()
+    await hass.async_block_till_done()
 
 
 async def test_device_tracker_hostname_and_macaddress_after_start(hass):

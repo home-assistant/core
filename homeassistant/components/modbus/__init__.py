@@ -60,7 +60,6 @@ from .const import (
     CONF_BYTESIZE,
     CONF_CLIMATES,
     CONF_CLOSE_COMM_ON_ERROR,
-    CONF_DATA_COUNT,
     CONF_DATA_TYPE,
     CONF_FANS,
     CONF_INPUT_TYPE,
@@ -72,8 +71,8 @@ from .const import (
     CONF_PRECISION,
     CONF_RETRIES,
     CONF_RETRY_ON_EMPTY,
-    CONF_REVERSE_ORDER,
     CONF_SCALE,
+    CONF_SLAVE_COUNT,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
     CONF_STATE_OFF,
@@ -118,7 +117,7 @@ BASE_COMPONENT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_ADDRESS): cv.positive_int,
-        vol.Optional(CONF_SLAVE): cv.positive_int,
+        vol.Optional(CONF_SLAVE, default=0): cv.positive_int,
         vol.Optional(
             CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
         ): cv.positive_int,
@@ -137,11 +136,13 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
             ]
         ),
         vol.Optional(CONF_COUNT): cv.positive_int,
-        vol.Optional(CONF_DATA_TYPE, default=DataType.INT): vol.In(
+        vol.Optional(CONF_DATA_TYPE, default=DataType.INT16): vol.In(
             [
+                DataType.INT8,
                 DataType.INT16,
                 DataType.INT32,
                 DataType.INT64,
+                DataType.UINT8,
                 DataType.UINT16,
                 DataType.UINT32,
                 DataType.UINT64,
@@ -149,9 +150,6 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                 DataType.FLOAT32,
                 DataType.FLOAT64,
                 DataType.STRING,
-                DataType.INT,
-                DataType.UINT,
-                DataType.FLOAT,
                 DataType.STRING,
                 DataType.CUSTOM,
             ]
@@ -207,7 +205,6 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
 
 
 CLIMATE_SCHEMA = vol.All(
-    cv.deprecated(CONF_DATA_COUNT, replacement_key=CONF_COUNT),
     BASE_STRUCT_SCHEMA.extend(
         {
             vol.Required(CONF_TARGET_TEMP): cv.positive_int,
@@ -251,13 +248,11 @@ LIGHT_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
 FAN_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
 
 SENSOR_SCHEMA = vol.All(
-    cv.deprecated(CONF_REVERSE_ORDER),
     BASE_STRUCT_SCHEMA.extend(
         {
             vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-            vol.Optional(CONF_REVERSE_ORDER): cv.boolean,
         }
     ),
 )
@@ -268,6 +263,7 @@ BINARY_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_COIL): vol.In(
             [CALL_TYPE_COIL, CALL_TYPE_DISCRETE]
         ),
+        vol.Optional(CONF_SLAVE_COUNT, default=0): cv.positive_int,
     }
 )
 

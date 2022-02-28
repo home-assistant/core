@@ -1,11 +1,7 @@
 [
   {
-    "active_device": false,
-    "cooling_present": false,
-    "gateway_id": "0000aaaa0000aaaa0000aaaa0000aa00",
-    "heater_id": null,
-    "single_master_thermostat": false,
     "smile_name": "Stretch",
+    "gateway_id": "0000aaaa0000aaaa0000aaaa0000aa00",
     "notifications": {}
   },
   {

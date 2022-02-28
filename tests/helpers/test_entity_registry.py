@@ -1220,9 +1220,9 @@ def test_entity_registry_items():
 async def test_deprecated_disabled_by_str(hass, registry, caplog):
     """Test deprecated str use of disabled_by converts to enum and logs a warning."""
     entry = registry.async_get_or_create(
-        "light",
-        "hue",
-        "5678",
+        domain="light.kitchen",
+        platform="hue",
+        unique_id="5678",
         disabled_by=er.RegistryEntryDisabler.USER.value,
     )
 
@@ -1233,9 +1233,9 @@ async def test_deprecated_disabled_by_str(hass, registry, caplog):
 async def test_deprecated_entity_category_str(hass, registry, caplog):
     """Test deprecated str use of entity_category converts to enum and logs a warning."""
     entry = er.RegistryEntry(
-        "light",
-        "hue",
-        "5678",
+        entity_id="light.kitchen",
+        unique_id="5678",
+        platform="hue",
         entity_category="diagnostic",
     )
 
@@ -1246,9 +1246,9 @@ async def test_deprecated_entity_category_str(hass, registry, caplog):
 async def test_invalid_entity_category_str(hass, registry, caplog):
     """Test use of invalid entity category."""
     entry = er.RegistryEntry(
-        "light",
-        "hue",
-        "5678",
+        entity_id="light.kitchen",
+        unique_id="5678",
+        platform="hue",
         entity_category="invalid",
     )
 

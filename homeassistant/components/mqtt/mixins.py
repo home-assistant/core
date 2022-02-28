@@ -25,7 +25,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -496,7 +496,7 @@ class MqttAvailability(Entity):
         return self._available_latest
 
 
-async def cleanup_device_registry(hass, device_id):
+async def cleanup_device_registry(hass, device_id, config_entry_id):
     """Remove device registry entry if there are no remaining entities or triggers."""
     # Local import to avoid circular dependencies
     # pylint: disable-next=import-outside-toplevel
@@ -512,7 +512,9 @@ async def cleanup_device_registry(hass, device_id):
         and not await device_trigger.async_get_triggers(hass, device_id)
         and not tag.async_has_tags(hass, device_id)
     ):
-        device_registry.async_remove_device(device_id)
+        device_registry.async_update_device(
+            device_id, remove_config_entry_id=config_entry_id
+        )
 
 
 class MqttDiscoveryUpdate(Entity):
@@ -542,7 +544,9 @@ class MqttDiscoveryUpdate(Entity):
             entity_registry = er.async_get(self.hass)
             if entity_entry := entity_registry.async_get(self.entity_id):
                 entity_registry.async_remove(self.entity_id)
-                await cleanup_device_registry(self.hass, entity_entry.device_id)
+                await cleanup_device_registry(
+                    self.hass, entity_entry.device_id, entity_entry.config_entry_id
+                )
             else:
                 await self.async_remove(force_remove=True)
 
@@ -817,3 +821,29 @@ class MqttEntity(
     def unique_id(self):
         """Return a unique ID."""
         return self._unique_id
+
+
+@callback
+def async_removed_from_device(
+    hass: HomeAssistant, event: Event, mqtt_device_id: str, config_entry_id: str
+) -> bool:
+    """Check if the passed event indicates MQTT was removed from a device."""
+    device_id = event.data["device_id"]
+    if event.data["action"] not in ("remove", "update"):
+        return False
+
+    if device_id != mqtt_device_id:
+        return False
+
+    if event.data["action"] == "update":
+        if "config_entries" not in event.data["changes"]:
+            return False
+        device_registry = dr.async_get(hass)
+        if not (device_entry := device_registry.async_get(device_id)):
+            # The device is already removed, do cleanup when we get "remove" event
+            return False
+        if config_entry_id in device_entry.config_entries:
+            # Not removed from device
+            return False
+
+    return True

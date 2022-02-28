@@ -141,9 +141,12 @@ TIMEOUT_EVENT_START = 15
 _LOGGER = logging.getLogger(__name__)
 
 
-def split_entity_id(entity_id: str) -> list[str]:
+def split_entity_id(entity_id: str) -> tuple[str, str]:
     """Split a state entity ID into domain and object ID."""
-    return entity_id.split(".", 1)
+    domain, _, object_id = entity_id.partition(".")
+    if not domain or not object_id:
+        raise ValueError(f"Invalid entity ID {entity_id}")
+    return domain, object_id
 
 
 VALID_ENTITY_ID = re.compile(r"^(?!.+__)(?!_)[\da-z_]+(?<!_)\.(?!_)[\da-z_]+(?<!_)$")
@@ -238,8 +241,8 @@ class HomeAssistant:
     """Root object of the Home Assistant home automation."""
 
     auth: AuthManager
-    http: HomeAssistantHTTP = None  # type: ignore
-    config_entries: ConfigEntries = None  # type: ignore
+    http: HomeAssistantHTTP = None  # type: ignore[assignment]
+    config_entries: ConfigEntries = None  # type: ignore[assignment]
 
     def __init__(self) -> None:
         """Initialize new Home Assistant object."""
@@ -765,7 +768,7 @@ class Event:
 
     def __eq__(self, other: Any) -> bool:
         """Return the comparison."""
-        return (  # type: ignore
+        return (  # type: ignore[no-any-return]
             self.__class__ == other.__class__
             and self.event_type == other.event_type
             and self.data == other.data
@@ -1125,7 +1128,7 @@ class State:
 
     def __eq__(self, other: Any) -> bool:
         """Return the comparison of the state."""
-        return (  # type: ignore
+        return (  # type: ignore[no-any-return]
             self.__class__ == other.__class__
             and self.entity_id == other.entity_id
             and self.state == other.state

@@ -18,6 +18,13 @@
                 "description": "Zaktualizuj has\u0142o dla {username}",
                 "title": "Ponownie uwierzytelnij integracj\u0119"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Has\u0142o"
+                },
+                "description": "Zaktualizuj has\u0142o dla {username}",
+                "title": "Ponownie uwierzytelnij integracj\u0119"
+            },
             "service": {
                 "data": {
                     "services": "Us\u0142ugi"

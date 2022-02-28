@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from googleapiclient import discovery as google_discovery
 from httplib2 import ServerNotFoundError
 
 from homeassistant.components.calendar import (
@@ -20,17 +19,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle, dt
+from homeassistant.util import Throttle
 
 from . import (
     CONF_CAL_ID,
     CONF_IGNORE_AVAILABILITY,
     CONF_SEARCH,
     CONF_TRACK,
+    DATA_SERVICE,
     DEFAULT_CONF_OFFSET,
-    TOKEN_FILE,
-    GoogleCalendarService,
+    DOMAIN,
 )
+from .api import GoogleCalendarService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +40,12 @@ DEFAULT_GOOGLE_SEARCH_PARAMS = {
 }
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
+
+# Events have a transparency that determine whether or not they block time on calendar.
+# When an event is opaque, it means "Show me as busy" which is the default.  Events that
+# are not opaque are ignored by default.
+TRANSPARENCY = "transparency"
+OPAQUE = "opaque"
 
 
 def setup_platform(
@@ -55,7 +61,7 @@ def setup_platform(
     if not any(data[CONF_TRACK] for data in disc_info[CONF_ENTITIES]):
         return
 
-    calendar_service = GoogleCalendarService(hass.config.path(TOKEN_FILE))
+    calendar_service = hass.data[DOMAIN][DATA_SERVICE]
     entities = []
     for data in disc_info[CONF_ENTITIES]:
         if not data[CONF_TRACK]:
@@ -82,12 +88,10 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
         entity_id: str,
     ) -> None:
         """Create the Calendar event device."""
-        self.data = GoogleCalendarData(
-            calendar_service,
-            calendar_id,
-            data.get(CONF_SEARCH),
-            data.get(CONF_IGNORE_AVAILABILITY, False),
-        )
+        self._calendar_service = calendar_service
+        self._calendar_id = calendar_id
+        self._search: str | None = data.get(CONF_SEARCH)
+        self._ignore_availability: bool = data.get(CONF_IGNORE_AVAILABILITY, False)
         self._event: dict[str, Any] | None = None
         self._name: str = data[CONF_NAME]
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
@@ -109,121 +113,50 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
         """Return the name of the entity."""
         return self._name
 
-    async def async_get_events(
-        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
-    ) -> list[dict[str, Any]]:
-        """Get all events in a specific time frame."""
-        return await self.data.async_get_events(hass, start_date, end_date)
-
-    def update(self) -> None:
-        """Update event data."""
-        self.data.update()
-        event = copy.deepcopy(self.data.event)
-        if event is None:
-            self._event = event
-            return
-        event = calculate_offset(event, self._offset)
-        self._offset_reached = is_offset_reached(event)
-        self._event = event
-
-
-class GoogleCalendarData:
-    """Class to utilize calendar service object to get next event."""
-
-    def __init__(
-        self,
-        calendar_service: GoogleCalendarService,
-        calendar_id: str,
-        search: str | None,
-        ignore_availability: bool,
-    ) -> None:
-        """Set up how we are going to search the google calendar."""
-        self.calendar_service = calendar_service
-        self.calendar_id = calendar_id
-        self.search = search
-        self.ignore_availability = ignore_availability
-        self.event: dict[str, Any] | None = None
-
-    def _prepare_query(
-        self,
-    ) -> tuple[google_discovery.Resource | None, dict[str, Any] | None]:
-        try:
-            service = self.calendar_service.get()
-        except ServerNotFoundError as err:
-            _LOGGER.error("Unable to connect to Google: %s", err)
-            return None, None
-        params = dict(DEFAULT_GOOGLE_SEARCH_PARAMS)
-        params["calendarId"] = self.calendar_id
-        params["maxResults"] = 100  # Page size
-
-        if self.search:
-            params["q"] = self.search
-
-        return service, params
+    def _event_filter(self, event: dict[str, Any]) -> bool:
+        """Return True if the event is visible."""
+        if self._ignore_availability:
+            return True
+        return event.get(TRANSPARENCY, OPAQUE) == OPAQUE
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[dict[str, Any]]:
         """Get all events in a specific time frame."""
-        service, params = await hass.async_add_executor_job(self._prepare_query)
-        if service is None or params is None:
-            return []
-        params["timeMin"] = start_date.isoformat("T")
-        params["timeMax"] = end_date.isoformat("T")
-
         event_list: list[dict[str, Any]] = []
-        events = await hass.async_add_executor_job(service.events)
         page_token: str | None = None
         while True:
-            page_token = await self.async_get_events_page(
-                hass, events, params, page_token, event_list
-            )
+            try:
+                items, page_token = await self._calendar_service.async_list_events(
+                    self._calendar_id,
+                    start_time=start_date,
+                    end_time=end_date,
+                    search=self._search,
+                    page_token=page_token,
+                )
+            except ServerNotFoundError as err:
+                _LOGGER.error("Unable to connect to Google: %s", err)
+                return []
+
+            event_list.extend(filter(self._event_filter, items))
             if not page_token:
                 break
         return event_list
 
-    async def async_get_events_page(
-        self,
-        hass: HomeAssistant,
-        events: google_discovery.Resource,
-        params: dict[str, Any],
-        page_token: str | None,
-        event_list: list[dict[str, Any]],
-    ) -> str | None:
-        """Get a page of events in a specific time frame."""
-        params["pageToken"] = page_token
-        result = await hass.async_add_executor_job(events.list(**params).execute)
-
-        items = result.get("items", [])
-        for item in items:
-            if not self.ignore_availability and "transparency" in item:
-                if item["transparency"] == "opaque":
-                    event_list.append(item)
-            else:
-                event_list.append(item)
-        return result.get("nextPageToken")
-
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self) -> None:
         """Get the latest data."""
-        service, params = self._prepare_query()
-        if service is None or params is None:
+        try:
+            items, _ = self._calendar_service.list_events(
+                self._calendar_id, search=self._search
+            )
+        except ServerNotFoundError as err:
+            _LOGGER.error("Unable to connect to Google: %s", err)
             return
-        params["timeMin"] = dt.now().isoformat("T")
 
-        events = service.events()
-        result = events.list(**params).execute()
-
-        items = result.get("items", [])
-
-        new_event = None
-        for item in items:
-            if not self.ignore_availability and "transparency" in item:
-                if item["transparency"] == "opaque":
-                    new_event = item
-                    break
-            else:
-                new_event = item
-                break
-
-        self.event = new_event
+        # Pick the first visible evemt. Make a copy since calculate_offset mutates the event
+        valid_items = filter(self._event_filter, items)
+        self._event = copy.deepcopy(next(valid_items, None))
+        if self._event:
+            calculate_offset(self._event, self._offset)
+            self._offset_reached = is_offset_reached(self._event)

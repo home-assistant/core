@@ -24,7 +24,7 @@ from motioneye_client.const import (
 )
 import voluptuous as vol
 
-from homeassistant.components.mjpeg.camera import (
+from homeassistant.components.mjpeg import (
     CONF_MJPEG_URL,
     CONF_STILL_IMAGE_URL,
     MjpegCamera,

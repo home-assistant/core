@@ -1,21 +1,20 @@
 PyJWT==2.1.0
 PyNaCl==1.4.0
-aiodiscover==1.4.7
+aiodiscover==1.4.8
 aiohttp==3.8.1
 aiohttp_cors==0.7.0
 astral==2.2
-async-upnp-client==0.23.5
+async-upnp-client==0.25.0
 async_timeout==4.0.2
 atomicwrites==1.4.0
 attrs==21.2.0
-awesomeversion==22.1.0
+awesomeversion==22.2.0
 bcrypt==3.1.7
 certifi>=2021.5.30
 ciso8601==2.2.0
 cryptography==35.0.0
-emoji==1.6.3
-hass-nabucasa==0.52.1
-home-assistant-frontend==20220214.0
+hass-nabucasa==0.54.0
+home-assistant-frontend==20220226.0
 httpx==0.21.3
 ifaddr==0.1.7
 jinja2==3.0.3
@@ -49,7 +48,7 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.43.0
+grpcio==1.44.0
 
 # libcst >=0.4.0 requires a newer Rust than we currently have available,
 # thus our wheels builds fail. This pins it to the last working version,
@@ -94,5 +93,5 @@ python-engineio>=3.13.1,<4.0
 python-socketio>=4.6.0,<5.0
 
 # Constrain multidict to avoid typing issues
-# https://github.com/home-assistant/core/pull/64792
-multidict<6.0.0
+# https://github.com/home-assistant/core/pull/67046
+multidict>=6.0.2

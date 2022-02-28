@@ -44,6 +44,9 @@ def _create_mocked_device(throw_exception=False, wired_mac=MAC, wireless_mac=Non
         bssid=None,
         ssid=None,
         bleID=None,
+        serialNumber=None,
+        generation=None,
+        model=None,
         version=SW_VERSION,
     )
     type(mocked_device).get_system_info = AsyncMock(return_value=sys_info)

@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable
 from contextlib import closing
-import logging
 
 import aiohttp
 from aiohttp import web
@@ -14,6 +13,7 @@ from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,
@@ -29,13 +29,12 @@ from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_web,
     async_get_clientsession,
 )
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, DOMAIN, LOGGER
 
-CONF_MJPEG_URL = "mjpeg_url"
-CONF_STILL_IMAGE_URL = "still_image_url"
 CONTENT_TYPE_HEADER = "Content-Type"
 
 DEFAULT_NAME = "Mjpeg Camera"
@@ -62,32 +61,50 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up a MJPEG IP Camera."""
-    filter_urllib3_logging()
+    """Set up the MJPEG IP camera from platform."""
+    LOGGER.warning(
+        "Configuration of the MJPEG IP Camera platform in YAML is deprecated "
+        "and will be removed in Home Assistant 2022.5; Your existing "
+        "configuration has been imported into the UI automatically and can be "
+        "safely removed from your configuration.yaml file"
+    )
 
     if discovery_info:
         config = PLATFORM_SCHEMA(discovery_info)
 
-    async_add_entities(
-        [
-            MjpegCamera(
-                name=config[CONF_NAME],
-                authentication=config[CONF_AUTHENTICATION],
-                username=config.get(CONF_USERNAME),
-                password=config[CONF_PASSWORD],
-                mjpeg_url=config[CONF_MJPEG_URL],
-                still_image_url=config.get(CONF_STILL_IMAGE_URL),
-                verify_ssl=config[CONF_VERIFY_SSL],
-            )
-        ]
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
     )
 
 
-def filter_urllib3_logging() -> None:
-    """Filter header errors from urllib3 due to a urllib3 bug."""
-    urllib3_logger = logging.getLogger("urllib3.connectionpool")
-    if not any(isinstance(x, NoHeaderErrorFilter) for x in urllib3_logger.filters):
-        urllib3_logger.addFilter(NoHeaderErrorFilter())
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up a MJPEG IP Camera based on a config entry."""
+    async_add_entities(
+        [
+            MjpegCamera(
+                name=entry.title,
+                authentication=entry.options[CONF_AUTHENTICATION],
+                username=entry.options.get(CONF_USERNAME),
+                password=entry.options[CONF_PASSWORD],
+                mjpeg_url=entry.options[CONF_MJPEG_URL],
+                still_image_url=entry.options.get(CONF_STILL_IMAGE_URL),
+                verify_ssl=entry.options[CONF_VERIFY_SSL],
+                unique_id=entry.entry_id,
+                device_info=DeviceInfo(
+                    name=entry.title,
+                    identifiers={(DOMAIN, entry.entry_id)},
+                ),
+            )
+        ]
+    )
 
 
 def extract_image_from_mjpeg(stream: Iterable[bytes]) -> bytes | None:
@@ -124,6 +141,8 @@ class MjpegCamera(Camera):
         username: str | None = None,
         password: str = "",
         verify_ssl: bool = True,
+        unique_id: str | None = None,
+        device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize a MJPEG camera."""
         super().__init__()
@@ -142,6 +161,11 @@ class MjpegCamera(Camera):
         ):
             self._auth = aiohttp.BasicAuth(self._username, password=self._password)
         self._verify_ssl = verify_ssl
+
+        if unique_id is not None:
+            self._attr_unique_id = unique_id
+        if device_info is not None:
+            self._attr_device_info = device_info
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
@@ -164,10 +188,10 @@ class MjpegCamera(Camera):
                 return image
 
         except asyncio.TimeoutError:
-            _LOGGER.error("Timeout getting camera image from %s", self.name)
+            LOGGER.error("Timeout getting camera image from %s", self.name)
 
         except aiohttp.ClientError as err:
-            _LOGGER.error("Error getting new camera image from %s: %s", self.name, err)
+            LOGGER.error("Error getting new camera image from %s: %s", self.name, err)
 
         return None
 
@@ -208,11 +232,3 @@ class MjpegCamera(Camera):
         stream_coro = websession.get(self._mjpeg_url, auth=self._auth)
 
         return await async_aiohttp_proxy_web(self.hass, request, stream_coro)
-
-
-class NoHeaderErrorFilter(logging.Filter):
-    """Filter out urllib3 Header Parsing Errors due to a urllib3 bug."""
-
-    def filter(self, record: logging.LogRecord) -> bool:
-        """Filter out Header Parsing Errors."""
-        return "Failed to parse headers" not in record.getMessage()

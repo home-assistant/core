@@ -3,11 +3,13 @@
   "name": "SleepIQ",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sleepiq",
-  "requirements": ["sleepyq==0.8.1"],
-  "codeowners": ["@mfugate1"],
+  "requirements": ["asyncsleepiq==1.1.0"],
+  "codeowners": ["@mfugate1", "@kbickar"],
   "dhcp": [
-      {"macaddress": "64DBA0*"}
+    {
+      "macaddress": "64DBA0*"
+    }
   ],
   "iot_class": "cloud_polling",
-  "loggers": ["sleepyq"]
+  "loggers": ["asyncsleepiq"]
 }

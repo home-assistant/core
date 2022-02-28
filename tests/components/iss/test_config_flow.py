@@ -90,13 +90,17 @@ async def test_options(hass: HomeAssistant):
 
     config_entry.add_to_hass(hass)
 
-    optionflow = await hass.config_entries.options.async_init(config_entry.entry_id)
+    with patch("homeassistant.components.iss.async_setup_entry", return_value=True):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
-    configured = await hass.config_entries.options.async_configure(
-        optionflow["flow_id"],
-        user_input={
-            CONF_SHOW_ON_MAP: True,
-        },
-    )
+        optionflow = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert configured.get("type") == "create_entry"
+        configured = await hass.config_entries.options.async_configure(
+            optionflow["flow_id"],
+            user_input={
+                CONF_SHOW_ON_MAP: True,
+            },
+        )
+
+        assert configured.get("type") == "create_entry"
+        assert config_entry.options == {CONF_SHOW_ON_MAP: True}

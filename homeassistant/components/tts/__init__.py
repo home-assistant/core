@@ -344,9 +344,7 @@ class SpeechManager:
 
         This method is a coroutine.
         """
-        provider = self.providers.get(engine)
-
-        if provider is None:
+        if (provider := self.providers.get(engine)) is None:
             raise HomeAssistantError(f"Provider {engine} not found")
 
         msg_hash = hashlib.sha1(bytes(message, "utf-8")).hexdigest()

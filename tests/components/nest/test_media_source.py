@@ -90,6 +90,12 @@ def frame_image_data(frame_i, total_frames):
     return img
 
 
+@pytest.fixture(autouse=True)
+async def setup_media_source(hass) -> None:
+    """Set up media source."""
+    assert await async_setup_component(hass, "media_source", {})
+
+
 @pytest.fixture
 def mp4() -> io.BytesIO:
     """Generate test mp4 clip."""

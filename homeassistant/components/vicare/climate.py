@@ -174,6 +174,7 @@ class ViCareClimate(ClimateEntity):
             "name": self._device_config.getModel(),
             "manufacturer": "Viessmann",
             "model": (DOMAIN, self._device_config.getModel()),
+            "configuration_url": "https://developer.viessmann.com/",
         }
 
     def update(self):

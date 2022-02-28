@@ -110,7 +110,7 @@ class FluxPowerStateSelect(FluxConfigAtStartSelect, SelectEntity):
     ) -> None:
         """Initialize the power state select."""
         super().__init__(device, entry)
-        self._attr_name = f"{entry.data[CONF_NAME]} Power Restored"
+        self._attr_name = f"{entry.data.get(CONF_NAME, entry.title)} Power Restored"
         base_unique_id = entry.unique_id or entry.entry_id
         self._attr_unique_id = f"{base_unique_id}_power_restored"
         self._async_set_current_option_from_device()
@@ -237,7 +237,7 @@ class FluxWhiteChannelSelect(FluxConfigAtStartSelect):
     ) -> None:
         """Initialize the white channel select."""
         super().__init__(device, entry)
-        self._attr_name = f"{entry.data[CONF_NAME]} White Channel"
+        self._attr_name = f"{entry.data.get(CONF_NAME, entry.title)} White Channel"
         base_unique_id = entry.unique_id or entry.entry_id
         self._attr_unique_id = f"{base_unique_id}_white_channel"
 

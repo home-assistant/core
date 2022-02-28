@@ -464,7 +464,7 @@ class TibberSensorRT(TibberSensor, update_coordinator.CoordinatorEntity):
             ts_local = dt_util.parse_datetime(live_measurement["timestamp"])
             if ts_local is not None:
                 if self.last_reset is None or (
-                    state < 0.5 * self.native_value  # type: ignore # native_value is float
+                    state < 0.5 * self.native_value  # type: ignore[operator]  # native_value is float
                     and (
                         ts_local.hour == 0
                         or (ts_local - self.last_reset) > timedelta(hours=24)

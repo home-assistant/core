@@ -255,12 +255,12 @@ class Entity(ABC):
     # SAFE TO OVERWRITE
     # The properties and methods here are safe to overwrite when inheriting
     # this class. These may be used to customize the behavior of the entity.
-    entity_id: str = None  # type: ignore
+    entity_id: str = None  # type: ignore[assignment]
 
     # Owning hass instance. Will be set by EntityPlatform
     # While not purely typed, it makes typehinting more useful for us
     # and removes the need for constant None checks or asserts.
-    hass: HomeAssistant = None  # type: ignore
+    hass: HomeAssistant = None  # type: ignore[assignment]
 
     # Owning platform instance. Will be set by EntityPlatform
     platform: EntityPlatform | None = None
@@ -707,10 +707,11 @@ class Entity(ABC):
             await self.parallel_updates.acquire()
 
         try:
+            task: asyncio.Future[None]
             if hasattr(self, "async_update"):
-                task = self.hass.async_create_task(self.async_update())  # type: ignore
+                task = self.hass.async_create_task(self.async_update())  # type: ignore[attr-defined]
             elif hasattr(self, "update"):
-                task = self.hass.async_add_executor_job(self.update)  # type: ignore
+                task = self.hass.async_add_executor_job(self.update)  # type: ignore[attr-defined]
             else:
                 return
 
@@ -770,7 +771,7 @@ class Entity(ABC):
     @callback
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
-        self.hass = None  # type: ignore
+        self.hass = None  # type: ignore[assignment]
         self.platform = None
         self.parallel_updates = None
         self._added = False

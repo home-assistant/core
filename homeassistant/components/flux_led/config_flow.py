@@ -165,8 +165,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except FLUX_LED_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             else:
-                mac_address = device[ATTR_ID]
-                if mac_address is not None:
+                if (mac_address := device[ATTR_ID]) is not None:
                     await self.async_set_unique_id(
                         dr.format_mac(mac_address), raise_on_progress=False
                     )

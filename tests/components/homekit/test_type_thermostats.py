@@ -7,12 +7,16 @@ import pytest
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_MODE,
+    ATTR_FAN_MODES,
     ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
+    ATTR_SWING_MODE,
+    ATTR_SWING_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TARGET_TEMP_STEP,
@@ -24,6 +28,12 @@ from homeassistant.components.climate.const import (
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_HUMIDITY,
     DOMAIN as DOMAIN_CLIMATE,
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
+    FAN_OFF,
+    FAN_ON,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
@@ -31,11 +41,22 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
+    SERVICE_SET_FAN_MODE,
+    SERVICE_SET_SWING_MODE,
+    SUPPORT_FAN_MODE,
+    SUPPORT_SWING_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
+    SWING_BOTH,
+    SWING_HORIZONTAL,
+    SWING_OFF,
 )
 from homeassistant.components.homekit.const import (
     ATTR_VALUE,
+    CHAR_CURRENT_FAN_STATE,
+    CHAR_ROTATION_SPEED,
+    CHAR_SWING_MODE,
+    CHAR_TARGET_FAN_STATE,
     DEFAULT_MAX_TEMP_WATER_HEATER,
     DEFAULT_MIN_TEMP_WATER_HEATER,
     PROP_MAX_VALUE,
@@ -2017,3 +2038,314 @@ async def test_thermostat_with_temp_clamps(hass, hk_driver, events):
     assert acc.char_target_heat_cool.value == 3
     assert acc.char_current_temp.value == 1000
     assert acc.char_display_units.value == 0
+
+
+async def test_thermostat_with_fan_modes_with_auto(hass, hk_driver, events):
+    """Test a thermostate with fan modes with an auto fan mode."""
+    entity_id = "climate.test"
+    hass.states.async_set(
+        entity_id,
+        HVAC_MODE_OFF,
+        {
+            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE
+            | SUPPORT_TARGET_TEMPERATURE_RANGE
+            | SUPPORT_FAN_MODE
+            | SUPPORT_SWING_MODE,
+            ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH],
+            ATTR_SWING_MODES: [SWING_BOTH, SWING_OFF, SWING_HORIZONTAL],
+            ATTR_HVAC_ACTION: CURRENT_HVAC_IDLE,
+            ATTR_FAN_MODE: FAN_AUTO,
+            ATTR_SWING_MODE: SWING_BOTH,
+            ATTR_HVAC_MODES: [
+                HVAC_MODE_HEAT,
+                HVAC_MODE_HEAT_COOL,
+                HVAC_MODE_FAN_ONLY,
+                HVAC_MODE_COOL,
+                HVAC_MODE_OFF,
+                HVAC_MODE_AUTO,
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    await acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.char_cooling_thresh_temp.value == 23.0
+    assert acc.char_heating_thresh_temp.value == 19.0
+    assert acc.ordered_fan_speeds == [FAN_LOW, FAN_MEDIUM, FAN_HIGH]
+    assert CHAR_ROTATION_SPEED in acc.fan_chars
+    assert CHAR_TARGET_FAN_STATE in acc.fan_chars
+    assert CHAR_SWING_MODE in acc.fan_chars
+    assert CHAR_CURRENT_FAN_STATE in acc.fan_chars
+    assert acc.char_speed.value == 100
+
+    hass.states.async_set(
+        entity_id,
+        HVAC_MODE_OFF,
+        {
+            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE
+            | SUPPORT_TARGET_TEMPERATURE_RANGE
+            | SUPPORT_FAN_MODE
+            | SUPPORT_SWING_MODE,
+            ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH],
+            ATTR_SWING_MODES: [SWING_BOTH, SWING_OFF, SWING_HORIZONTAL],
+            ATTR_HVAC_ACTION: CURRENT_HVAC_IDLE,
+            ATTR_FAN_MODE: FAN_LOW,
+            ATTR_SWING_MODE: SWING_BOTH,
+            ATTR_HVAC_MODES: [
+                HVAC_MODE_HEAT,
+                HVAC_MODE_HEAT_COOL,
+                HVAC_MODE_FAN_ONLY,
+                HVAC_MODE_COOL,
+                HVAC_MODE_OFF,
+                HVAC_MODE_AUTO,
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_speed.value == pytest.approx(100 / 3)
+
+    call_set_swing_mode = async_mock_service(
+        hass, DOMAIN_CLIMATE, SERVICE_SET_SWING_MODE
+    )
+    char_swing_iid = acc.char_swing.to_HAP()[HAP_REPR_IID]
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_swing_iid,
+                    HAP_REPR_VALUE: 0,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+
+    await hass.async_block_till_done()
+    assert len(call_set_swing_mode) == 1
+    assert call_set_swing_mode[-1].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_swing_mode[-1].data[ATTR_SWING_MODE] == SWING_OFF
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_swing_iid,
+                    HAP_REPR_VALUE: 1,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+
+    await hass.async_block_till_done()
+    assert len(call_set_swing_mode) == 2
+    assert call_set_swing_mode[-1].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_swing_mode[-1].data[ATTR_SWING_MODE] == SWING_BOTH
+
+    call_set_fan_mode = async_mock_service(hass, DOMAIN_CLIMATE, SERVICE_SET_FAN_MODE)
+    char_rotation_speed_iid = acc.char_speed.to_HAP()[HAP_REPR_IID]
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_rotation_speed_iid,
+                    HAP_REPR_VALUE: 100,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+
+    await hass.async_block_till_done()
+    assert len(call_set_fan_mode) == 1
+    assert call_set_fan_mode[-1].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == FAN_HIGH
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_rotation_speed_iid,
+                    HAP_REPR_VALUE: 100 / 3,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+
+    await hass.async_block_till_done()
+    assert len(call_set_fan_mode) == 2
+    assert call_set_fan_mode[-1].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == FAN_LOW
+
+    char_active_iid = acc.char_active.to_HAP()[HAP_REPR_IID]
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_active_iid,
+                    HAP_REPR_VALUE: 0,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+
+    await hass.async_block_till_done()
+    assert acc.char_active.value == 1
+
+    char_target_fan_state_iid = acc.char_target_fan_state.to_HAP()[HAP_REPR_IID]
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_target_fan_state_iid,
+                    HAP_REPR_VALUE: 1,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+
+    await hass.async_block_till_done()
+    assert len(call_set_fan_mode) == 3
+    assert call_set_fan_mode[-1].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == FAN_AUTO
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_target_fan_state_iid,
+                    HAP_REPR_VALUE: 0,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+
+    await hass.async_block_till_done()
+    assert len(call_set_fan_mode) == 4
+    assert call_set_fan_mode[-1].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == FAN_MEDIUM
+
+
+async def test_thermostat_with_fan_modes_with_off(hass, hk_driver, events):
+    """Test a thermostate with fan modes that can turn off."""
+    entity_id = "climate.test"
+    hass.states.async_set(
+        entity_id,
+        HVAC_MODE_COOL,
+        {
+            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE
+            | SUPPORT_TARGET_TEMPERATURE_RANGE
+            | SUPPORT_FAN_MODE
+            | SUPPORT_SWING_MODE,
+            ATTR_FAN_MODES: [FAN_ON, FAN_OFF],
+            ATTR_SWING_MODES: [SWING_BOTH, SWING_OFF, SWING_HORIZONTAL],
+            ATTR_HVAC_ACTION: CURRENT_HVAC_IDLE,
+            ATTR_FAN_MODE: FAN_ON,
+            ATTR_SWING_MODE: SWING_BOTH,
+            ATTR_HVAC_MODES: [
+                HVAC_MODE_HEAT,
+                HVAC_MODE_HEAT_COOL,
+                HVAC_MODE_FAN_ONLY,
+                HVAC_MODE_COOL,
+                HVAC_MODE_OFF,
+                HVAC_MODE_AUTO,
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    await acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.char_cooling_thresh_temp.value == 23.0
+    assert acc.char_heating_thresh_temp.value == 19.0
+    assert acc.ordered_fan_speeds == []
+    assert CHAR_ROTATION_SPEED not in acc.fan_chars
+    assert CHAR_TARGET_FAN_STATE not in acc.fan_chars
+    assert CHAR_SWING_MODE in acc.fan_chars
+    assert CHAR_CURRENT_FAN_STATE in acc.fan_chars
+    assert acc.char_active.value == 1
+
+    hass.states.async_set(
+        entity_id,
+        HVAC_MODE_COOL,
+        {
+            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE
+            | SUPPORT_TARGET_TEMPERATURE_RANGE
+            | SUPPORT_FAN_MODE
+            | SUPPORT_SWING_MODE,
+            ATTR_FAN_MODES: [FAN_ON, FAN_OFF],
+            ATTR_SWING_MODES: [SWING_BOTH, SWING_OFF, SWING_HORIZONTAL],
+            ATTR_HVAC_ACTION: CURRENT_HVAC_IDLE,
+            ATTR_FAN_MODE: FAN_OFF,
+            ATTR_SWING_MODE: SWING_BOTH,
+            ATTR_HVAC_MODES: [
+                HVAC_MODE_HEAT,
+                HVAC_MODE_HEAT_COOL,
+                HVAC_MODE_FAN_ONLY,
+                HVAC_MODE_COOL,
+                HVAC_MODE_OFF,
+                HVAC_MODE_AUTO,
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_active.value == 0
+
+    call_set_fan_mode = async_mock_service(hass, DOMAIN_CLIMATE, SERVICE_SET_FAN_MODE)
+    char_active_iid = acc.char_active.to_HAP()[HAP_REPR_IID]
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_active_iid,
+                    HAP_REPR_VALUE: 1,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+
+    await hass.async_block_till_done()
+    assert len(call_set_fan_mode) == 1
+    assert call_set_fan_mode[-1].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == FAN_ON
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_active_iid,
+                    HAP_REPR_VALUE: 0,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+
+    await hass.async_block_till_done()
+    assert len(call_set_fan_mode) == 2
+    assert call_set_fan_mode[-1].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == FAN_OFF

@@ -13,8 +13,8 @@ from homeassistant.components.sensor import (
     DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
     STATE_CLASSES_SCHEMA,
+    RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -30,7 +30,6 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
@@ -144,7 +143,7 @@ async def _async_setup_entity(
     async_add_entities([MqttSensor(hass, config, config_entry, discovery_data)])
 
 
-class MqttSensor(MqttEntity, SensorEntity, RestoreEntity):
+class MqttSensor(MqttEntity, RestoreSensor):
     """Representation of a sensor that can be updated using MQTT."""
 
     _entity_id_format = ENTITY_ID_FORMAT
@@ -172,6 +171,8 @@ class MqttSensor(MqttEntity, SensorEntity, RestoreEntity):
             and expire_after > 0
             and (last_state := await self.async_get_last_state()) is not None
             and last_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+            and (last_sensor_data := await self.async_get_last_sensor_data())
+            is not None
             # We might have set up a trigger already after subscribing from
             # super().async_added_to_hass(), then we should not restore state
             and not self._expiration_trigger
@@ -182,7 +183,7 @@ class MqttSensor(MqttEntity, SensorEntity, RestoreEntity):
                 _LOGGER.debug("Skip state recovery after reload for %s", self.entity_id)
                 return
             self._expired = False
-            self._state = last_state.state
+            self._state = last_sensor_data.native_value
 
             self._expiration_trigger = async_track_point_in_utc_time(
                 self.hass, self._value_is_expired, expiration_at

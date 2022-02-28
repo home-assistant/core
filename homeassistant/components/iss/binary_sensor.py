@@ -71,7 +71,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-
     name = entry.title
     show_on_map = entry.options.get(CONF_SHOW_ON_MAP, False)
 

@@ -1,6 +1,7 @@
 """The dhcp integration."""
 from __future__ import annotations
 
+from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
 import fnmatch
@@ -25,6 +26,7 @@ from homeassistant.components.device_tracker.const import (
     ATTR_IP,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
+    CONNECTED_DEVICE_REGISTERED,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     SOURCE_TYPE_ROUTER,
 )
@@ -42,6 +44,7 @@ from homeassistant.helpers.device_registry import (
     async_get,
     format_mac,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
     async_track_state_added_domain,
     async_track_time_interval,
@@ -109,16 +112,23 @@ class DhcpServiceInfo(BaseServiceInfo):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the dhcp component."""
+    watchers: list[WatcherBase] = []
+    address_data: dict[str, dict[str, str]] = {}
+    integration_matchers = await async_get_dhcp(hass)
+
+    # For the passive classes we need to start listening
+    # for state changes and connect the dispatchers before
+    # everything else starts up or we will miss events
+    for passive_cls in (DeviceTrackerRegisteredWatcher, DeviceTrackerWatcher):
+        passive_watcher = passive_cls(hass, address_data, integration_matchers)
+        await passive_watcher.async_start()
+        watchers.append(passive_watcher)
 
     async def _initialize(_):
-        address_data = {}
-        integration_matchers = await async_get_dhcp(hass)
-        watchers = []
-
-        for cls in (DHCPWatcher, DeviceTrackerWatcher, NetworkWatcher):
-            watcher = cls(hass, address_data, integration_matchers)
-            await watcher.async_start()
-            watchers.append(watcher)
+        for active_cls in (DHCPWatcher, NetworkWatcher):
+            active_watcher = active_cls(hass, address_data, integration_matchers)
+            await active_watcher.async_start()
+            watchers.append(active_watcher)
 
         async def _async_stop(*_):
             for watcher in watchers:
@@ -141,7 +151,15 @@ class WatcherBase:
         self._integration_matchers = integration_matchers
         self._address_data = address_data
 
-    def process_client(self, ip_address, hostname, mac_address):
+    @abstractmethod
+    async def async_stop(self):
+        """Stop the watcher."""
+
+    @abstractmethod
+    async def async_start(self):
+        """Start the watcher."""
+
+    def process_client(self, ip_address: str, hostname: str, mac_address: str) -> None:
         """Process a client."""
         return run_callback_threadsafe(
             self.hass.loop,
@@ -152,7 +170,9 @@ class WatcherBase:
         ).result()
 
     @callback
-    def async_process_client(self, ip_address, hostname, mac_address):
+    def async_process_client(
+        self, ip_address: str, hostname: str, mac_address: str
+    ) -> None:
         """Process a client."""
         made_ip_address = make_ip_address(ip_address)
 
@@ -313,6 +333,39 @@ class DeviceTrackerWatcher(WatcherBase):
         ip_address = attributes.get(ATTR_IP)
         hostname = attributes.get(ATTR_HOST_NAME, "")
         mac_address = attributes.get(ATTR_MAC)
+
+        if ip_address is None or mac_address is None:
+            return
+
+        self.async_process_client(ip_address, hostname, _format_mac(mac_address))
+
+
+class DeviceTrackerRegisteredWatcher(WatcherBase):
+    """Class to watch data from device tracker registrations."""
+
+    def __init__(self, hass, address_data, integration_matchers):
+        """Initialize class."""
+        super().__init__(hass, address_data, integration_matchers)
+        self._unsub = None
+
+    async def async_stop(self):
+        """Stop watching for device tracker registrations."""
+        if self._unsub:
+            self._unsub()
+            self._unsub = None
+
+    async def async_start(self):
+        """Stop watching for device tracker registrations."""
+        self._unsub = async_dispatcher_connect(
+            self.hass, CONNECTED_DEVICE_REGISTERED, self._async_process_device_data
+        )
+
+    @callback
+    def _async_process_device_data(self, data: dict[str, str | None]) -> None:
+        """Process a device tracker state."""
+        ip_address = data[ATTR_IP]
+        hostname = data[ATTR_HOST_NAME] or ""
+        mac_address = data[ATTR_MAC]
 
         if ip_address is None or mac_address is None:
             return

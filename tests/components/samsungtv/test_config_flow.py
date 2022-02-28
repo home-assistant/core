@@ -44,6 +44,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from .const import SAMPLE_APP_LIST
+
 from tests.common import MockConfigEntry
 
 RESULT_ALREADY_CONFIGURED = "already_configured"
@@ -320,7 +322,7 @@ async def test_ssdp(hass: HomeAssistant, no_mac_address: Mock) -> None:
 
     no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
     with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.device_info",
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO,
     ):
         # confirm to add the entry
@@ -349,7 +351,7 @@ async def test_ssdp_noprefix(hass: HomeAssistant, no_mac_address: Mock) -> None:
 
     no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
     with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.device_info",
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO_2,
     ):
         # confirm to add the entry
@@ -397,7 +399,7 @@ async def test_ssdp_legacy_missing_auth(hass: HomeAssistant) -> None:
         # missing authentication
 
         with patch(
-            "homeassistant.components.samsungtv.bridge.SamsungTVLegacyBridge.try_connect",
+            "homeassistant.components.samsungtv.bridge.SamsungTVLegacyBridge.async_try_connect",
             return_value=RESULT_AUTH_MISSING,
         ):
             result = await hass.config_entries.flow.async_configure(
@@ -419,7 +421,7 @@ async def test_ssdp_legacy_not_supported(hass: HomeAssistant) -> None:
     assert result["step_id"] == "confirm"
 
     with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVLegacyBridge.try_connect",
+        "homeassistant.components.samsungtv.bridge.SamsungTVLegacyBridge.async_try_connect",
         return_value=RESULT_NOT_SUPPORTED,
     ):
         # device not supported
@@ -496,7 +498,7 @@ async def test_ssdp_not_successful(hass: HomeAssistant) -> None:
         "homeassistant.components.samsungtv.bridge.SamsungTVWS.open",
         side_effect=OSError("Boom"),
     ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.device_info",
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO,
     ):
 
@@ -525,7 +527,7 @@ async def test_ssdp_not_successful_2(hass: HomeAssistant) -> None:
         "homeassistant.components.samsungtv.bridge.SamsungTVWS.open",
         side_effect=ConnectionFailure("Boom"),
     ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.device_info",
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO,
     ):
 
@@ -552,7 +554,7 @@ async def test_ssdp_already_in_progress(
 
     no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
     with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.device_info",
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO,
     ):
 
@@ -579,7 +581,7 @@ async def test_ssdp_already_configured(
 
     no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
     with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.device_info",
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO,
     ):
 
@@ -817,6 +819,7 @@ async def test_autodetect_websocket(hass: HomeAssistant) -> None:
         remote = Mock(SamsungTVWS)
         remote.__enter__ = Mock(return_value=remote)
         remote.__exit__ = Mock(return_value=False)
+        remote.app_list.return_value = SAMPLE_APP_LIST
         remote.rest_device_info.return_value = {
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
             "device": {
@@ -863,6 +866,7 @@ async def test_websocket_no_mac(hass: HomeAssistant) -> None:
         remote = Mock(SamsungTVWS)
         remote.__enter__ = Mock(return_value=remote)
         remote.__exit__ = Mock(return_value=False)
+        remote.app_list.return_value = SAMPLE_APP_LIST
         remote.rest_device_info.return_value = {
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
             "device": {

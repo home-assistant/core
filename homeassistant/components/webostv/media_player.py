@@ -248,8 +248,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             if maj_v and min_v:
                 self._attr_device_info["sw_version"] = f"{maj_v}.{min_v}"
 
-            model = self._client.system_info.get("modelName")
-            if model:
+            if model := self._client.system_info.get("modelName"):
                 self._attr_device_info["model"] = model
 
         self._attr_extra_state_attributes = {}

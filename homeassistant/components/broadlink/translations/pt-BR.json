@@ -13,7 +13,7 @@
             "invalid_host": "Nome de host ou endere\u00e7o IP inv\u00e1lido",
             "unknown": "Erro inesperado"
         },
-        "flow_title": "{name} ( {model} em {host} )",
+        "flow_title": "{name} ({model} em {host})",
         "step": {
             "auth": {
                 "title": "Autenticar no dispositivo"

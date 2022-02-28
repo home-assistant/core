@@ -5,7 +5,7 @@ import asyncio
 
 from aiohttp.client_exceptions import ClientConnectionError
 import async_timeout
-from pysensibo import SensiboError
+from pysensibo.exceptions import AuthenticationError, SensiboError
 import voluptuous as vol
 
 from homeassistant.components.climate import (
@@ -35,6 +35,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -146,6 +147,7 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data[device_id]["id"])},
             name=coordinator.data[device_id]["name"],
+            connections={(CONNECTION_NETWORK_MAC, coordinator.data[device_id]["mac"])},
             manufacturer="Sensibo",
             configuration_url="https://home.sensibo.com/",
             model=coordinator.data[device_id]["model"],
@@ -318,18 +320,19 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
         except (
             ClientConnectionError,
             asyncio.TimeoutError,
+            AuthenticationError,
             SensiboError,
         ) as err:
             raise HomeAssistantError(
                 f"Failed to set AC state for device {self.name} to Sensibo servers: {err}"
             ) from err
         LOGGER.debug("Result: %s", result)
-        if result["status"] == "Success":
+        if result["result"]["status"] == "Success":
             self.coordinator.data[self.unique_id][AC_STATE_TO_DATA[name]] = value
             self.async_write_ha_state()
             return
 
-        failure = result["failureReason"]
+        failure = result["result"]["failureReason"]
         raise HomeAssistantError(
             f"Could not set state for device {self.name} due to reason {failure}"
         )

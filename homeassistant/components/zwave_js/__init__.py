@@ -12,6 +12,7 @@ from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.notification import (
     EntryControlNotification,
     NotificationNotification,
+    PowerLevelNotification,
 )
 from zwave_js_server.model.value import Value, ValueNotification
 
@@ -41,6 +42,7 @@ from homeassistant.helpers.typing import ConfigType
 from .addon import AddonError, AddonManager, AddonState, get_addon_manager
 from .api import async_register_api
 from .const import (
+    ATTR_ACKNOWLEDGED_FRAMES,
     ATTR_COMMAND_CLASS,
     ATTR_COMMAND_CLASS_NAME,
     ATTR_DATA_TYPE,
@@ -57,6 +59,8 @@ from .const import (
     ATTR_PROPERTY_KEY,
     ATTR_PROPERTY_KEY_NAME,
     ATTR_PROPERTY_NAME,
+    ATTR_STATUS,
+    ATTR_TEST_NODE_ID,
     ATTR_TYPE,
     ATTR_VALUE,
     ATTR_VALUE_RAW,
@@ -261,12 +265,6 @@ async def async_setup_entry(  # noqa: C901
             )
         )
 
-        # Create a ping button for each device
-        await async_setup_platform(BUTTON_DOMAIN)
-        async_dispatcher_send(
-            hass, f"{DOMAIN}_{entry.entry_id}_add_ping_button_entity", node
-        )
-
         # add listeners to handle new values that get added later
         for event in ("value added", "value updated", "metadata updated"):
             entry.async_on_unload(
@@ -295,12 +293,19 @@ async def async_setup_entry(  # noqa: C901
 
     async def async_on_node_added(node: ZwaveNode) -> None:
         """Handle node added event."""
-        await async_setup_platform(SENSOR_DOMAIN)
+        # No need for a ping button or node status sensor for controller nodes
+        if not node.is_controller_node:
+            # Create a node status sensor for each device
+            await async_setup_platform(SENSOR_DOMAIN)
+            async_dispatcher_send(
+                hass, f"{DOMAIN}_{entry.entry_id}_add_node_status_sensor", node
+            )
 
-        # Create a node status sensor for each device
-        async_dispatcher_send(
-            hass, f"{DOMAIN}_{entry.entry_id}_add_node_status_sensor", node
-        )
+            # Create a ping button for each device
+            await async_setup_platform(BUTTON_DOMAIN)
+            async_dispatcher_send(
+                hass, f"{DOMAIN}_{entry.entry_id}_add_ping_button_entity", node
+            )
 
         # we only want to run discovery when the node has reached ready state,
         # otherwise we'll have all kinds of missing info issues.
@@ -393,7 +398,9 @@ async def async_setup_entry(  # noqa: C901
 
     @callback
     def async_on_notification(
-        notification: EntryControlNotification | NotificationNotification,
+        notification: EntryControlNotification
+        | NotificationNotification
+        | PowerLevelNotification,
     ) -> None:
         """Relay stateless notification events from Z-Wave nodes to hass."""
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
@@ -416,7 +423,7 @@ async def async_setup_entry(  # noqa: C901
                     ATTR_EVENT_DATA: notification.event_data,
                 }
             )
-        else:
+        elif isinstance(notification, NotificationNotification):
             event_data.update(
                 {
                     ATTR_COMMAND_CLASS_NAME: "Notification",
@@ -427,6 +434,17 @@ async def async_setup_entry(  # noqa: C901
                     ATTR_PARAMETERS: notification.parameters,
                 }
             )
+        elif isinstance(notification, PowerLevelNotification):
+            event_data.update(
+                {
+                    ATTR_COMMAND_CLASS_NAME: "Power Level",
+                    ATTR_TEST_NODE_ID: notification.test_node_id,
+                    ATTR_STATUS: notification.status,
+                    ATTR_ACKNOWLEDGED_FRAMES: notification.acknowledged_frames,
+                }
+            )
+        else:
+            raise TypeError(f"Unhandled notification type: {notification}")
 
         hass.bus.async_fire(ZWAVE_JS_NOTIFICATION_EVENT, event_data)
 

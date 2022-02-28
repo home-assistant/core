@@ -27,6 +27,7 @@ from .mixins import (
     CONF_CONNECTIONS,
     CONF_IDENTIFIERS,
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    async_removed_from_device,
     async_setup_entry_helper,
     cleanup_device_registry,
     device_info_from_config,
@@ -126,9 +127,11 @@ class MQTTTagScanner:
         if not payload:
             # Empty payload: Remove tag scanner
             _LOGGER.info("Removing tag scanner: %s", discovery_hash)
-            await self.tear_down()
+            self.tear_down()
             if self.device_id:
-                await cleanup_device_registry(self.hass, self.device_id)
+                await cleanup_device_registry(
+                    self.hass, self.device_id, self._config_entry.entry_id
+                )
         else:
             # Non-empty payload: Update tag scanner
             _LOGGER.info("Updating tag scanner: %s", discovery_hash)
@@ -155,7 +158,7 @@ class MQTTTagScanner:
         await self.subscribe_topics()
         if self.device_id:
             self._remove_device_updated = self.hass.bus.async_listen(
-                EVENT_DEVICE_REGISTRY_UPDATED, self.device_removed
+                EVENT_DEVICE_REGISTRY_UPDATED, self.device_updated
             )
         self._remove_discovery = async_dispatcher_connect(
             self.hass,
@@ -174,7 +177,10 @@ class MQTTTagScanner:
             if not tag_id:  # No output from template, ignore
                 return
 
-            await self.hass.components.tag.async_scan_tag(tag_id, self.device_id)
+            # Importing tag via hass.components in case it is overridden
+            # in a custom_components (custom_components.tag)
+            tag = self.hass.components.tag
+            await tag.async_scan_tag(tag_id, self.device_id)
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
@@ -189,26 +195,31 @@ class MQTTTagScanner:
         )
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
-    async def device_removed(self, event):
-        """Handle the removal of a device."""
-        device_id = event.data["device_id"]
-        if event.data["action"] != "remove" or device_id != self.device_id:
+    async def device_updated(self, event):
+        """Handle the update or removal of a device."""
+        if not async_removed_from_device(
+            self.hass, event, self.device_id, self._config_entry.entry_id
+        ):
             return
 
-        await self.tear_down()
+        # Stop subscribing to discovery updates to not trigger when we clear the
+        # discovery topic
+        self.tear_down()
 
-    async def tear_down(self):
+        # Clear the discovery topic so the entity is not rediscovered after a restart
+        discovery_topic = self.discovery_data[ATTR_DISCOVERY_TOPIC]
+        mqtt.publish(self.hass, discovery_topic, "", retain=True)
+
+    def tear_down(self):
         """Cleanup tag scanner."""
         discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]
         discovery_id = discovery_hash[1]
-        discovery_topic = self.discovery_data[ATTR_DISCOVERY_TOPIC]
 
         clear_discovery_hash(self.hass, discovery_hash)
         if self.device_id:
             self._remove_device_updated()
         self._remove_discovery()
 
-        mqtt.publish(self.hass, discovery_topic, "", retain=True)
         self._sub_state = subscription.async_unsubscribe_topics(
             self.hass, self._sub_state
         )

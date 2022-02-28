@@ -297,6 +297,7 @@ def async_request_configuration(hass, config, host, web_root):
         async_setup_sabnzbd(hass, sab_api, config, config.get(CONF_NAME, DEFAULT_NAME))
 
     _CONFIGURING[host] = configurator.async_request_config(
+        hass,
         DEFAULT_NAME,
         async_configuration_callback,
         description="Enter the API Key",

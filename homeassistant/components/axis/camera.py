@@ -2,7 +2,7 @@
 from urllib.parse import urlencode
 
 from homeassistant.components.camera import SUPPORT_STREAM
-from homeassistant.components.mjpeg.camera import MjpegCamera, filter_urllib3_logging
+from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import HTTP_DIGEST_AUTHENTICATION
 from homeassistant.core import HomeAssistant
