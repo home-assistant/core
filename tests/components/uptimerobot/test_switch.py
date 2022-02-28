@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from pyuptimerobot import UptimeRobotAuthenticationException
+from pyuptimerobot import UptimeRobotAuthenticationException, UptimeRobotException
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -143,7 +143,7 @@ async def test_general_exception(hass: HomeAssistant, caplog) -> None:
 
     with patch(
         "pyuptimerobot.UptimeRobot.async_edit_monitor",
-        side_effect=OSError,
+        side_effect=UptimeRobotException,
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
