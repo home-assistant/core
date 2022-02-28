@@ -50,12 +50,7 @@ from homeassistant.core import (
 )
 from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.exceptions import HomeAssistantError, TemplateError, Unauthorized
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    event,
-    template,
-)
+from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
@@ -588,7 +583,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf: ConfigType | None = config.get(DOMAIN)
 
     websocket_api.async_register_command(hass, websocket_subscribe)
-    websocket_api.async_register_command(hass, websocket_remove_device)
     websocket_api.async_register_command(hass, websocket_mqtt_info)
     debug_info.initialize(hass)
 
@@ -1196,37 +1190,6 @@ def websocket_mqtt_info(hass, connection, msg):
     mqtt_info = debug_info.info_for_device(hass, device_id)
 
     connection.send_result(msg["id"], mqtt_info)
-
-
-@websocket_api.websocket_command(
-    {vol.Required("type"): "mqtt/device/remove", vol.Required("device_id"): str}
-)
-@websocket_api.async_response
-async def websocket_remove_device(hass, connection, msg):
-    """Delete device."""
-    device_id = msg["device_id"]
-    device_registry = dr.async_get(hass)
-
-    if not (device := device_registry.async_get(device_id)):
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Device not found"
-        )
-        return
-
-    for config_entry in device.config_entries:
-        config_entry = hass.config_entries.async_get_entry(config_entry)
-        # Only delete the device if it belongs to an MQTT device entry
-        if config_entry.domain == DOMAIN:
-            await async_remove_config_entry_device(hass, config_entry, device)
-            device_registry.async_update_device(
-                device_id, remove_config_entry_id=config_entry.entry_id
-            )
-            connection.send_message(websocket_api.result_message(msg["id"]))
-            return
-
-    connection.send_error(
-        msg["id"], websocket_api.const.ERR_NOT_FOUND, "Non MQTT device"
-    )
 
 
 @websocket_api.websocket_command(
