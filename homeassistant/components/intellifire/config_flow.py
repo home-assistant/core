@@ -38,20 +38,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the Config Flow Handler."""
         self._discovered_host: str = ""
         self._config_context = {}
+        self._discovered_hosts: [str] | None = None
 
     async def _find_fireplaces(self):
         """Perform UDP discovery."""
         fireplace_finder = AsyncUDPFireplaceFinder()
-        ips = await fireplace_finder.search_fireplace(timeout=1)
-        if ip := ips[0]:
-            self._discovered_host = ip
+        self._discovered_hosts = await fireplace_finder.search_fireplace(timeout=1)
 
     async def async_step_local_config(self, user_input=None):
         """Handle local ip configuration."""
-        local_schema = vol.Schema(
-            {vol.Required(CONF_HOST, default=self._discovered_host): str}
-        )
+
         errors = {}
+        local_schema = vol.Schema({vol.Required(CONF_HOST): str})
+        print(self._discovered_hosts)
+        if user_input is None:
+            if len(self._discovered_hosts) > 1:
+                return await self.async_step_pick_device()
+            if len(self._discovered_hosts) == 1:
+                user_input = {CONF_HOST: self._discovered_hosts[0]}
+                local_schema = vol.Schema(
+                    {vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str}
+                )
 
         if user_input is not None:
             try:
@@ -85,6 +92,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="local_config", errors=errors, data_schema=local_schema
+        )
+
+    async def async_step_pick_device(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Pick which device to configure."""
+
+        if user_input is not None:
+            return await self.async_step_local_config(user_input=user_input)
+
+        return self.async_show_form(
+            step_id="pick_device",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_HOST): vol.In(self._discovered_hosts)}
+            ),
         )
 
     async def async_step_user(

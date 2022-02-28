@@ -17,6 +17,10 @@
         "user": {
           "description": "Username and password are the same information used in your IntelliFire Android/iOS application.",
           "title": "IntelliFire Config"
+        },
+        "pick_device": {
+"title": "Device Selection",
+        "description": "The following IntelliFire devices were discovered. Please select which you wish to configure."
         }
       }
     }
