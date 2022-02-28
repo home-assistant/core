@@ -995,6 +995,7 @@ omit =
     homeassistant/components/screenlogic/__init__.py
     homeassistant/components/screenlogic/binary_sensor.py
     homeassistant/components/screenlogic/climate.py
+    homeassistant/components/screenlogic/diagnostics.py
     homeassistant/components/screenlogic/light.py
     homeassistant/components/screenlogic/number.py
     homeassistant/components/screenlogic/sensor.py
