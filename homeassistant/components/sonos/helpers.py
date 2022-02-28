@@ -55,15 +55,21 @@ def soco_error(
                     )
                     return None
 
-                # In order of preference:
-                #  * SonosSpeaker instance
-                #  * SoCo instance passed as an arg
-                #  * SoCo instance (as self)
-                speaker_or_soco = getattr(self, "speaker", args_soco or self)
-                zone_name = speaker_or_soco.zone_name
-                # Prefer the entity_id if available, zone name as a fallback
-                # Needed as SonosSpeaker instances are not entities
-                target = getattr(self, "entity_id", zone_name)
+                if entity_id := getattr(self, "entity_id", None):
+                    target = entity_id
+                elif zone_name := getattr(self, "zone_name", None):
+                    target = zone_name
+                elif speaker := getattr(self, "speaker", None):
+                    target = speaker.zone_name
+                elif soco := getattr(self, "soco", args_soco):
+                    # Only use attributes with no I/O
+                    target = (
+                        soco._player_name  # pylint: disable=protected-access
+                        or soco.ip_address
+                    )
+                else:
+                    raise RuntimeError("Unexpected use of soco_error") from err
+
                 message = f"Error calling {function} on {target}: {err}"
                 raise SonosUpdateError(message) from err
 
