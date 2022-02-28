@@ -7,12 +7,12 @@ from asyncsleepiq import SleepIQBed
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SleepIQData, SleepIQPauseUpdateCoordinator
-from .entity import SleepIQBedCoordinator
+from .entity import SleepIQBedEntity
 
 
 async def async_setup_entry(
@@ -28,7 +28,7 @@ async def async_setup_entry(
     )
 
 
-class SleepNumberPrivateSwitch(SleepIQBedCoordinator, SwitchEntity):
+class SleepNumberPrivateSwitch(SleepIQBedEntity, SwitchEntity):
     """Representation of SleepIQ privacy mode."""
 
     def __init__(
@@ -39,15 +39,17 @@ class SleepNumberPrivateSwitch(SleepIQBedCoordinator, SwitchEntity):
         self._attr_name = f"SleepNumber {bed.name} Pause Mode"
         self._attr_unique_id = f"{bed.id}-pause-mode"
 
-    @property
-    def is_on(self) -> bool:
-        """Return whether the switch is on or off."""
-        return bool(self.bed.paused)
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         await self.bed.set_pause_mode(True)
+        self._async_update_attrs()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         await self.bed.set_pause_mode(False)
+        self._async_update_attrs()
+
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update switch attributes."""
+        self._attr_is_on = self.bed.paused
