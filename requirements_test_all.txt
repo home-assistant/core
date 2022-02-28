@@ -1343,7 +1343,7 @@ screenlogicpy==0.5.4
 sense_energy==0.10.2
 
 # homeassistant.components.sentry
-sentry-sdk==1.5.5
+sentry-sdk==1.5.6
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
