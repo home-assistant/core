@@ -1,0 +1,101 @@
+{
+  "hvac_mode": {
+    "name": "Operating mode",
+    "error": 0,
+    "value": "heat",
+    "desc": "Komfort",
+    "dataType": 1,
+    "readonly": 0,
+    "unit": ""
+  },
+  "target_temperature": {
+    "name": "Room temperature Comfort setpoint",
+    "error": 0,
+    "value": "18.5",
+    "desc": "",
+    "dataType": 0,
+    "readonly": 0,
+    "unit": "&deg;C"
+  },
+  "target_temperature_high": {
+    "name": "Komfortsollwert Maximum",
+    "error": 0,
+    "value": "23.0",
+    "desc": "",
+    "dataType": 0,
+    "readonly": 0,
+    "unit": "&deg;C"
+  },
+  "target_temperature_low": {
+    "name": "Room temp reduced setpoint",
+    "error": 0,
+    "value": "17.0",
+    "desc": "",
+    "dataType": 0,
+    "readonly": 0,
+    "unit": "&deg;C"
+  },
+  "min_temp": {
+    "name": "Room temp frost protection setpoint",
+    "error": 0,
+    "value": "8.0",
+    "desc": "",
+    "dataType": 0,
+    "readonly": 0,
+    "unit": "&deg;C"
+  },
+  "max_temp": {
+    "name": "Summer/winter changeover temp heat circuit 1",
+    "error": 0,
+    "value": "20.0",
+    "desc": "",
+    "dataType": 0,
+    "readonly": 0,
+    "unit": "&deg;C"
+  },
+  "hvac_mode2": {
+    "name": "Operating mode",
+    "error": 0,
+    "value": "2",
+    "desc": "Reduziert",
+    "dataType": 1,
+    "readonly": 0,
+    "unit": ""
+  },
+  "hvac_action": {
+    "name": "Status heating circuit 1",
+    "error": 0,
+    "value": "122",
+    "desc": "Raumtemp\u2019begrenzung",
+    "dataType": 1,
+    "readonly": 1,
+    "unit": ""
+  },
+  "outside_temperature": {
+    "name": "Outside temp sensor local",
+    "error": 0,
+    "value": "6.1",
+    "desc": "",
+    "dataType": 0,
+    "readonly": 0,
+    "unit": "&deg;C"
+  },
+  "current_temperature": {
+    "name": "Room temp 1 actual value",
+    "error": 0,
+    "value": "18.6",
+    "desc": "",
+    "dataType": 0,
+    "readonly": 1,
+    "unit": "&deg;C"
+  },
+  "room1_thermostat_mode": {
+    "name": "Raumthermostat 1",
+    "error": 0,
+    "value": "0",
+    "desc": "Kein Bedarf",
+    "dataType": 1,
+    "readonly": 1,
+    "unit": ""
+  }
+}
