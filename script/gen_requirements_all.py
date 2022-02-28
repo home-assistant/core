@@ -33,9 +33,7 @@ COMMENT_REQUIREMENTS = (
     "python-gammu",
     "python-lirc",
     "pyuserinput",
-    "raspihats",
     "RPi.GPIO",
-    "smbus-cffi",
     "tensorflow",
     "tf-models-official",
 )
