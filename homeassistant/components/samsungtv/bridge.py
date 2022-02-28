@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from asyncio.exceptions import TimeoutError as AsyncioTimeoutError
 import contextlib
 from typing import Any
 
-from requests.exceptions import Timeout as RequestsTimeout
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
 from samsungtvws import SamsungTVWS
@@ -387,7 +387,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     timeout=TIMEOUT_WEBSOCKET,
                 )
 
-            with contextlib.suppress(HttpApiError, RequestsTimeout):
+            with contextlib.suppress(HttpApiError, AsyncioTimeoutError):
                 device_info: dict[str, Any] = await self._rest_api.rest_device_info()
                 LOGGER.debug("Device info on %s is: %s", self.host, device_info)
                 return device_info
