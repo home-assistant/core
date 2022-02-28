@@ -1,5 +1,5 @@
 """Support for Motion Blinds sensors."""
-from motionblinds import BlindType
+from motionblinds import BlindType, DEVICE_TYPES_WIFI
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -52,9 +52,14 @@ class MotionBatterySensor(CoordinatorEntity, SensorEntity):
         """Initialize the Motion Battery Sensor."""
         super().__init__(coordinator)
 
+        if blind.device_type in DEVICE_TYPES_WIFI:
+            name = f"{blind.blind_type}-battery"
+        else:
+            name = f"{blind.blind_type}-battery-{blind.mac[12:]}"
+
         self._blind = blind
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, blind.mac)})
-        self._attr_name = f"{blind.blind_type}-battery-{blind.mac[12:]}"
+        self._attr_name = name
         self._attr_unique_id = f"{blind.mac}-battery"
 
     @property
@@ -96,9 +101,14 @@ class MotionTDBUBatterySensor(MotionBatterySensor):
         """Initialize the Motion Battery Sensor."""
         super().__init__(coordinator, blind)
 
+        if blind.device_type in DEVICE_TYPES_WIFI:
+            name = f"{blind.blind_type}-{motor}-battery"
+        else:
+            name = f"{blind.blind_type}-{motor}-battery-{blind.mac[12:]}"
+
         self._motor = motor
         self._attr_unique_id = f"{blind.mac}-{motor}-battery"
-        self._attr_name = f"{blind.blind_type}-{motor}-battery-{blind.mac[12:]}"
+        self._attr_name = name
 
     @property
     def native_value(self):
@@ -130,17 +140,18 @@ class MotionSignalStrengthSensor(CoordinatorEntity, SensorEntity):
         """Initialize the Motion Signal Strength Sensor."""
         super().__init__(coordinator)
 
+        if device_type == TYPE_GATEWAY:
+            name = "Motion gateway signal strength"
+        elif device.device_type in DEVICE_TYPES_WIFI:
+            name = f"{self._device.blind_type} signal strength"
+        else:
+            name = f"{self._device.blind_type} signal strength - {self._device.mac[12:]}"
+
         self._device = device
         self._device_type = device_type
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device.mac)})
         self._attr_unique_id = f"{device.mac}-RSSI"
-
-    @property
-    def name(self):
-        """Return the name of the blind signal strength sensor."""
-        if self._device_type == TYPE_GATEWAY:
-            return "Motion gateway signal strength"
-        return f"{self._device.blind_type} signal strength - {self._device.mac[12:]}"
+        self._attr_name = name
 
     @property
     def available(self):

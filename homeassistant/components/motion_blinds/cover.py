@@ -1,7 +1,7 @@
 """Support for Motion Blinds using their WLAN API."""
 import logging
 
-from motionblinds import BlindType
+from motionblinds import BlindType, DEVICE_TYPES_WIFI
 import voluptuous as vol
 
 from homeassistant.components.cover import (
@@ -144,15 +144,22 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         self._blind = blind
         self._config_entry = config_entry
 
+        if blind.device_type in DEVICE_TYPES_WIFI:
+            via_device = ()
+            name = blind.blind_type
+        else:
+            via_device=(DOMAIN, blind._gateway.mac)
+            name = f"{blind.blind_type}-{blind.mac[12:]}"
+
         self._attr_device_class = device_class
-        self._attr_name = f"{blind.blind_type}-{blind.mac[12:]}"
+        self._attr_name = name
         self._attr_unique_id = blind.mac
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, blind.mac)},
             manufacturer=MANUFACTURER,
             model=blind.blind_type,
-            name=f"{blind.blind_type}-{blind.mac[12:]}",
-            via_device=(DOMAIN, blind._gateway.mac),
+            name=name,
+            via_device=via_device,
             hw_version=blind.wireless_name,
         )
 
