@@ -1,6 +1,6 @@
 {
   "domain": "apcupsd",
-  "name": "APCUPSd",
+  "name": "apcupsd",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/apcupsd",
   "dependencies": [],
