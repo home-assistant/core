@@ -46,12 +46,7 @@ class UptimeRobotSwitch(UptimeRobotEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return True if the entity is on."""
-        return bool(self.monitor.status == 2)
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.monitor.status not in (8, 9)
+        return bool(self.monitor.status != 0)
 
     async def _async_edit_monitor(self, **kwargs: Any) -> None:
         """Edit monitor status."""
