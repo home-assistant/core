@@ -42,6 +42,16 @@ PRESET_MODES = {
 }
 
 
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up a config entry."""
+    hass_data: HomeAssistantRabbitAirData = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
+        [RabbitAirFanEntity(hass_data.coordinator, hass_data.device, entry)]
+    )
+
+
 class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
     """Fan control functions of the Rabbit Air air purifier."""
 
@@ -118,13 +128,3 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
             return None
         # Get key by value in dictionary
         return next(k for k, v in PRESET_MODES.items() if v == mode)
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Set up a config entry."""
-    hass_data: HomeAssistantRabbitAirData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        [RabbitAirFanEntity(hass_data.coordinator, hass_data.device, entry)]
-    )
