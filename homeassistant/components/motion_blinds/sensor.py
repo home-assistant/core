@@ -143,9 +143,9 @@ class MotionSignalStrengthSensor(CoordinatorEntity, SensorEntity):
         if device_type == TYPE_GATEWAY:
             name = "Motion gateway signal strength"
         elif device.device_type in DEVICE_TYPES_WIFI:
-            name = f"{self._device.blind_type} signal strength"
+            name = f"{device.blind_type} signal strength"
         else:
-            name = f"{self._device.blind_type} signal strength - {self._device.mac[12:]}"
+            name = f"{device.blind_type} signal strength - {device.mac[12:]}"
 
         self._device = device
         self._device_type = device_type
