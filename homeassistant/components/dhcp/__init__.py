@@ -236,12 +236,10 @@ class WatcherBase:
             ):
                 continue
 
-            if (
-                (matcher_mac := matcher.get(MAC_ADDRESS)) is not None
-                and isinstance(matcher_mac, str)
-                and not fnmatch.fnmatch(uppercase_mac, matcher_mac)
-            ):
-                continue
+            if (matcher_mac := matcher.get(MAC_ADDRESS)) is not None:
+                assert isinstance(matcher_mac, str)
+                if not fnmatch.fnmatch(uppercase_mac, matcher_mac):
+                    continue
 
             if (
                 (matcher_hostname := matcher.get(HOSTNAME)) is not None
