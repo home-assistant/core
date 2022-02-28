@@ -3,7 +3,13 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from pyoverkiz.enums import OverkizCommand, OverkizState, UIClass, UIWidget
+from pyoverkiz.enums import (
+    OverkizCommand,
+    OverkizCommandParam,
+    OverkizState,
+    UIClass,
+    UIWidget,
+)
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -13,6 +19,7 @@ from homeassistant.components.cover import (
     SUPPORT_STOP,
     CoverDeviceClass,
 )
+from homeassistant.components.overkiz.coordinator import OverkizDataUpdateCoordinator
 
 from .generic_cover import COMMANDS_STOP, OverkizGenericCover
 
@@ -99,3 +106,39 @@ class VerticalCover(OverkizGenericCover):
         """Close the cover."""
         if command := self.executor.select_command(*COMMANDS_CLOSE):
             await self.executor.async_execute_command(command)
+
+
+class LowSpeedCover(VerticalCover):
+    """Representation of an Overkiz Low Speed cover."""
+
+    def __init__(
+        self,
+        device_url: str,
+        coordinator: OverkizDataUpdateCoordinator,
+    ) -> None:
+        """Initialize the device."""
+        super().__init__(device_url, coordinator)
+        self._attr_name = f"{self._attr_name} Low Speed"
+        self._attr_unique_id = f"{self._attr_unique_id}_low_speed"
+
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
+        """Move the cover to a specific position."""
+        await self.async_set_cover_position_low_speed(**kwargs)
+
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the cover."""
+        await self.async_set_cover_position_low_speed(**{ATTR_POSITION: 100})
+
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close the cover."""
+        await self.async_set_cover_position_low_speed(**{ATTR_POSITION: 0})
+
+    async def async_set_cover_position_low_speed(self, **kwargs: Any) -> None:
+        """Move the cover to a specific position with a low speed."""
+        position = 100 - kwargs.get(ATTR_POSITION, 0)
+
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED,
+            position,
+            OverkizCommandParam.LOWSPEED,
+        )

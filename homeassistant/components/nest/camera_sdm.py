@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 import datetime
+import functools
 import logging
 from pathlib import Path
 
@@ -72,7 +73,6 @@ class NestCamera(Camera):
         self._create_stream_url_lock = asyncio.Lock()
         self._stream_refresh_unsub: Callable[[], None] | None = None
         self._attr_is_streaming = CameraLiveStreamTrait.NAME in self._device.traits
-        self._placeholder_image: bytes | None = None
 
     @property
     def should_poll(self) -> bool:
@@ -217,11 +217,13 @@ class NestCamera(Camera):
         stream = await self.async_create_stream()
         if stream:
             return await stream.async_get_image(width, height)
-        if not self._placeholder_image:
-            self._placeholder_image = await self.hass.async_add_executor_job(
-                PLACEHOLDER.read_bytes
-            )
-        return self._placeholder_image
+        return await self.hass.async_add_executor_job(self.placeholder_image)
+
+    @classmethod
+    @functools.cache
+    def placeholder_image(cls) -> bytes:
+        """Return placeholder image to use when no stream is available."""
+        return PLACEHOLDER.read_bytes()
 
     async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str | None:
         """Return the source of the stream."""

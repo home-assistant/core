@@ -25,10 +25,12 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import is_internal_request
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CLIENT_SCAN_INTERVAL,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
     DISPATCHERS,
@@ -246,6 +248,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return None
 
     await hass.async_add_executor_job(get_plex_account, plex_server)
+
+    @callback
+    def scheduled_client_scan(_):
+        _LOGGER.debug("Scheduled scan for new clients on %s", plex_server.friendly_name)
+        async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+
+    entry.async_on_unload(
+        async_track_time_interval(
+            hass,
+            scheduled_client_scan,
+            CLIENT_SCAN_INTERVAL,
+        )
+    )
 
     return True
 

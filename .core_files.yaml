@@ -129,7 +129,7 @@ requirements: &requirements
   - .github/workflows/*
   - homeassistant/package_constraints.txt
   - requirements*.txt
-  - setup.py
+  - setup.cfg
 
 any:
   - *base_platforms

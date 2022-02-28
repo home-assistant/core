@@ -12,7 +12,7 @@
         "flow_title": "{name}",
         "step": {
             "reauth_confirm": {
-                "description": "The Sonarr integration needs to be manually re-authenticated with the Sonarr API hosted at: {host}",
+                "description": "The Sonarr integration needs to be manually re-authenticated with the Sonarr API hosted at: {url}",
                 "title": "Reauthenticate Integration"
             },
             "user": {
@@ -22,6 +22,7 @@
                     "host": "Host",
                     "port": "Port",
                     "ssl": "Uses an SSL certificate",
+                    "url": "URL",
                     "verify_ssl": "Verify SSL certificate"
                 }
             }

@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries as core_ce, data_entry_flow
 from homeassistant.components.config import config_entries
-from homeassistant.config_entries import HANDLERS
+from homeassistant.config_entries import HANDLERS, ConfigFlow
 from homeassistant.core import callback
 from homeassistant.generated import config_flows
 from homeassistant.helpers import config_validation as cv
@@ -190,6 +190,37 @@ async def test_reload_entry_in_failed_state(hass, client, hass_admin_user):
         f"/api/config/config_entries/entry/{entry.entry_id}/reload"
     )
     assert resp.status == HTTPStatus.FORBIDDEN
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+async def test_reload_entry_in_setup_retry(hass, client, hass_admin_user):
+    """Test reloading an entry via the API that is in setup retry."""
+    mock_setup_entry = AsyncMock(return_value=True)
+    mock_unload_entry = AsyncMock(return_value=True)
+    mock_migrate_entry = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=mock_setup_entry,
+            async_unload_entry=mock_unload_entry,
+            async_migrate_entry=mock_migrate_entry,
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+    entry = MockConfigEntry(domain="comp", state=core_ce.ConfigEntryState.SETUP_RETRY)
+    entry.supports_unload = True
+    entry.add_to_hass(hass)
+
+    with patch.dict(HANDLERS, {"comp": ConfigFlow, "test": ConfigFlow}):
+        resp = await client.post(
+            f"/api/config/config_entries/entry/{entry.entry_id}/reload"
+        )
+        await hass.async_block_till_done()
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data == {"require_restart": False}
     assert len(hass.config_entries.async_entries()) == 1
 
 

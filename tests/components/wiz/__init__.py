@@ -7,7 +7,7 @@ from typing import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pywizlight import SCENES, BulbType, PilotParser, wizlight
-from pywizlight.bulblibrary import FEATURE_MAP, BulbClass, KelvinRange
+from pywizlight.bulblibrary import BulbClass, Features, KelvinRange
 from pywizlight.discovery import DiscoveredBulb
 
 from homeassistant.components.wiz.const import DOMAIN
@@ -84,10 +84,23 @@ REAL_BULB_CONFIG = json.loads(
     "ewfHex":"ff00ffff000000",\
     "ping":0}}'
 )
+FAKE_DUAL_HEAD_RGBWW_BULB = BulbType(
+    bulb_type=BulbClass.RGB,
+    name="ESP01_DHRGB_03",
+    features=Features(
+        color=True, color_tmp=True, effect=True, brightness=True, dual_head=True
+    ),
+    kelvin_range=KelvinRange(2700, 6500),
+    fw_version="1.0.0",
+    white_channels=2,
+    white_to_color_ratio=80,
+)
 FAKE_RGBWW_BULB = BulbType(
     bulb_type=BulbClass.RGB,
     name="ESP01_SHRGB_03",
-    features=FEATURE_MAP[BulbClass.RGB],
+    features=Features(
+        color=True, color_tmp=True, effect=True, brightness=True, dual_head=False
+    ),
     kelvin_range=KelvinRange(2700, 6500),
     fw_version="1.0.0",
     white_channels=2,
@@ -96,7 +109,9 @@ FAKE_RGBWW_BULB = BulbType(
 FAKE_RGBW_BULB = BulbType(
     bulb_type=BulbClass.RGB,
     name="ESP01_SHRGB_03",
-    features=FEATURE_MAP[BulbClass.RGB],
+    features=Features(
+        color=True, color_tmp=True, effect=True, brightness=True, dual_head=False
+    ),
     kelvin_range=KelvinRange(2700, 6500),
     fw_version="1.0.0",
     white_channels=1,
@@ -105,7 +120,9 @@ FAKE_RGBW_BULB = BulbType(
 FAKE_DIMMABLE_BULB = BulbType(
     bulb_type=BulbClass.DW,
     name="ESP01_DW_03",
-    features=FEATURE_MAP[BulbClass.DW],
+    features=Features(
+        color=False, color_tmp=False, effect=True, brightness=True, dual_head=False
+    ),
     kelvin_range=KelvinRange(2700, 6500),
     fw_version="1.0.0",
     white_channels=1,
@@ -114,7 +131,9 @@ FAKE_DIMMABLE_BULB = BulbType(
 FAKE_TURNABLE_BULB = BulbType(
     bulb_type=BulbClass.TW,
     name="ESP01_TW_03",
-    features=FEATURE_MAP[BulbClass.TW],
+    features=Features(
+        color=False, color_tmp=True, effect=True, brightness=True, dual_head=False
+    ),
     kelvin_range=KelvinRange(2700, 6500),
     fw_version="1.0.0",
     white_channels=1,
@@ -123,10 +142,23 @@ FAKE_TURNABLE_BULB = BulbType(
 FAKE_SOCKET = BulbType(
     bulb_type=BulbClass.SOCKET,
     name="ESP01_SOCKET_03",
-    features=FEATURE_MAP[BulbClass.SOCKET],
+    features=Features(
+        color=False, color_tmp=False, effect=False, brightness=False, dual_head=False
+    ),
     kelvin_range=KelvinRange(2700, 6500),
     fw_version="1.0.0",
     white_channels=2,
+    white_to_color_ratio=80,
+)
+FAKE_OLD_FIRMWARE_DIMMABLE_BULB = BulbType(
+    bulb_type=BulbClass.DW,
+    name=None,
+    features=Features(
+        color=False, color_tmp=False, effect=True, brightness=True, dual_head=False
+    ),
+    kelvin_range=None,
+    fw_version="1.8.0",
+    white_channels=1,
     white_to_color_ratio=80,
 )
 
@@ -171,6 +203,7 @@ def _mocked_wizlight(device, extended_white_range, bulb_type) -> wizlight:
     bulb.start_push = AsyncMock(side_effect=_save_setup_callback)
     bulb.async_close = AsyncMock()
     bulb.set_speed = AsyncMock()
+    bulb.set_ratio = AsyncMock()
     bulb.diagnostics = {
         "mocked": "mocked",
         "roomId": 123,

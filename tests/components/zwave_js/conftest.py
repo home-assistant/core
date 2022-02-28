@@ -181,6 +181,12 @@ def controller_state_fixture():
     return json.loads(load_fixture("zwave_js/controller_state.json"))
 
 
+@pytest.fixture(name="controller_node_state", scope="session")
+def controller_node_state_fixture():
+    """Load the controller node state fixture data."""
+    return json.loads(load_fixture("zwave_js/controller_node_state.json"))
+
+
 @pytest.fixture(name="version_state", scope="session")
 def version_state_fixture():
     """Load the version state fixture data."""
@@ -274,6 +280,12 @@ def climate_radio_thermostat_ct100_plus_different_endpoints_state_fixture():
             "zwave_js/climate_radio_thermostat_ct100_plus_different_endpoints_state.json"
         )
     )
+
+
+@pytest.fixture(name="climate_adc_t3000_state", scope="session")
+def climate_adc_t3000_state_fixture():
+    """Load the climate ADC-T3000 node state fixture data."""
+    return json.loads(load_fixture("zwave_js/climate_adc_t3000_state.json"))
 
 
 @pytest.fixture(name="climate_danfoss_lc_13_state", scope="session")
@@ -491,6 +503,12 @@ def zp3111_state_fixture():
     return json.loads(load_fixture("zwave_js/zp3111-5_state.json"))
 
 
+@pytest.fixture(name="express_controls_ezmultipli_state", scope="session")
+def light_express_controls_ezmultipli_state_fixture():
+    """Load the Express Controls EZMultiPli node state fixture data."""
+    return json.loads(load_fixture("zwave_js/express_controls_ezmultipli_state.json"))
+
+
 @pytest.fixture(name="client")
 def mock_client_fixture(controller_state, version_state, log_config_state):
     """Mock a client."""
@@ -521,6 +539,14 @@ def mock_client_fixture(controller_state, version_state, log_config_state):
         client.ws_server_url = "ws://test:3000/zjs"
 
         yield client
+
+
+@pytest.fixture(name="controller_node")
+def controller_node_fixture(client, controller_node_state):
+    """Mock a controller node."""
+    node = Node(client, copy.deepcopy(controller_node_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
 
 
 @pytest.fixture(name="multisensor_6")
@@ -606,6 +632,46 @@ def climate_radio_thermostat_ct100_plus_different_endpoints_fixture(
         client,
         copy.deepcopy(climate_radio_thermostat_ct100_plus_different_endpoints_state),
     )
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="climate_adc_t3000")
+def climate_adc_t3000_fixture(client, climate_adc_t3000_state):
+    """Mock a climate ADC-T3000 node."""
+    node = Node(client, copy.deepcopy(climate_adc_t3000_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="climate_adc_t3000_missing_setpoint")
+def climate_adc_t3000_missing_setpoint_fixture(client, climate_adc_t3000_state):
+    """Mock a climate ADC-T3000 node with missing de-humidify setpoint."""
+    data = copy.deepcopy(climate_adc_t3000_state)
+    data["name"] = f"{data['name']} missing setpoint"
+    for value in data["values"][:]:
+        if (
+            value["commandClassName"] == "Humidity Control Setpoint"
+            and value["propertyKeyName"] == "De-humidifier"
+        ):
+            data["values"].remove(value)
+    node = Node(client, data)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="climate_adc_t3000_missing_mode")
+def climate_adc_t3000_missing_mode_fixture(client, climate_adc_t3000_state):
+    """Mock a climate ADC-T3000 node with missing mode setpoint."""
+    data = copy.deepcopy(climate_adc_t3000_state)
+    data["name"] = f"{data['name']} missing mode"
+    for value in data["values"]:
+        if value["commandClassName"] == "Humidity Control Mode":
+            states = value["metadata"]["states"]
+            for key in list(states.keys()):
+                if states[key] == "De-humidify":
+                    del states[key]
+    node = Node(client, data)
     client.driver.controller.nodes[node.node_id] = node
     return node
 
@@ -933,5 +999,13 @@ def zp3111_not_ready_fixture(client, zp3111_not_ready_state):
 def zp3111_fixture(client, zp3111_state):
     """Mock a zp3111 4-in-1 sensor node."""
     node = Node(client, copy.deepcopy(zp3111_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="express_controls_ezmultipli")
+def express_controls_ezmultipli_fixture(client, express_controls_ezmultipli_state):
+    """Mock a Express Controls EZMultiPli node."""
+    node = Node(client, copy.deepcopy(express_controls_ezmultipli_state))
     client.driver.controller.nodes[node.node_id] = node
     return node

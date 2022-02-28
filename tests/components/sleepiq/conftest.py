@@ -1,4 +1,6 @@
 """Common methods for SleepIQ."""
+from __future__ import annotations
+
 from unittest.mock import create_autospec, patch
 
 from asyncsleepiq import SleepIQBed, SleepIQSleeper
@@ -18,6 +20,12 @@ SLEEPER_L_NAME = "SleeperL"
 SLEEPER_R_NAME = "Sleeper R"
 SLEEPER_L_NAME_LOWER = SLEEPER_L_NAME.lower().replace(" ", "_")
 SLEEPER_R_NAME_LOWER = SLEEPER_R_NAME.lower().replace(" ", "_")
+
+
+SLEEPIQ_CONFIG = {
+    CONF_USERNAME: "user@email.com",
+    CONF_PASSWORD: "password",
+}
 
 
 @pytest.fixture
@@ -49,14 +57,14 @@ def mock_asyncsleepiq():
         yield client
 
 
-async def setup_platform(hass: HomeAssistant, platform) -> MockConfigEntry:
+async def setup_platform(
+    hass: HomeAssistant, platform: str | None = None
+) -> MockConfigEntry:
     """Set up the SleepIQ platform."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_USERNAME: "user@email.com",
-            CONF_PASSWORD: "password",
-        },
+        data=SLEEPIQ_CONFIG,
+        unique_id=SLEEPIQ_CONFIG[CONF_USERNAME].lower(),
     )
     mock_entry.add_to_hass(hass)
 

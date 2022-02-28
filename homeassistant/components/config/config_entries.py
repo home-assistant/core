@@ -88,15 +88,17 @@ class ConfigManagerEntryResourceReloadView(HomeAssistantView):
             raise Unauthorized(config_entry_id=entry_id, permission="remove")
 
         hass = request.app["hass"]
+        entry = hass.config_entries.async_get_entry(entry_id)
+        if not entry:
+            return self.json_message("Invalid entry specified", HTTPStatus.NOT_FOUND)
+        assert isinstance(entry, config_entries.ConfigEntry)
 
         try:
-            result = await hass.config_entries.async_reload(entry_id)
+            await hass.config_entries.async_reload(entry_id)
         except config_entries.OperationNotAllowed:
             return self.json_message("Entry cannot be reloaded", HTTPStatus.FORBIDDEN)
-        except config_entries.UnknownEntry:
-            return self.json_message("Invalid entry specified", HTTPStatus.NOT_FOUND)
 
-        return self.json({"require_restart": not result})
+        return self.json({"require_restart": not entry.state.recoverable})
 
 
 def _prepare_config_flow_result_json(result, prepare_result_json):
