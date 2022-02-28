@@ -3,7 +3,7 @@
   "name": "IntelliFire",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/intellifire",
-  "requirements": ["intellifire4py==0.9.9"],
+  "requirements": ["intellifire4py==0.9.10"],
   "dependencies": [],
   "codeowners": ["@jeeftor"],
   "iot_class": "local_polling",
