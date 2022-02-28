@@ -1,7 +1,6 @@
 """Support for Rabbit Air fan entity."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from rabbitair import Client, Mode, Model, Speed, State
@@ -23,8 +22,6 @@ from homeassistant.util.percentage import (
 from . import HomeAssistantRabbitAirData
 from .const import DOMAIN
 from .entity import RabbitAirBaseEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 SPEED_LIST = [
     Speed.Silent,
