@@ -2,15 +2,13 @@
 import asyncio
 from datetime import datetime, timedelta
 import logging
-from unittest.mock import DEFAULT as DEFAULT_MOCK, AsyncMock, Mock, call, patch
+from unittest.mock import DEFAULT as DEFAULT_MOCK, Mock, call, patch
 
 import pytest
 from samsungctl import exceptions
-from samsungtvws.async_connection import SamsungTVWSAsyncConnection
-from samsungtvws.async_rest import SamsungTVAsyncRest
+from samsungtvws import SamsungTVWS
 from samsungtvws.exceptions import ConnectionFailure
-from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
-from websockets.exceptions import WebSocketException
+from websocket import WebSocketException
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.media_player.const import (
@@ -96,13 +94,6 @@ MOCK_CALLS_WS = {
     CONF_TOKEN: "123456789",
     CONF_TIMEOUT: TIMEOUT_WEBSOCKET,
     CONF_NAME: "HomeAssistant",
-    "endpoint": "samsung.remote.control",
-}
-
-MOCK_CALLS_REST = {
-    CONF_HOST: "fake_host",
-    CONF_PORT: 8001,
-    CONF_TIMEOUT: TIMEOUT_WEBSOCKET,
 }
 
 MOCK_ENTRY_WS = {
@@ -168,38 +159,20 @@ async def test_setup_without_turnon(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("remotews")
 async def test_setup_websocket(hass: HomeAssistant) -> None:
     """Test setup of platform."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncConnection"
-    ) as remote_class, patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest"
-    ) as rest_api_class:
-        rest_api = Mock(SamsungTVAsyncRest)
-        remote = Mock(SamsungTVWSAsyncConnection)
-        remote.__aenter__ = AsyncMock(return_value=remote)
-        remote.__aexit__ = AsyncMock()
-        remote.connection = AsyncMock()
-        remote.connection.recv.return_value = SAMPLE_APP_LIST
-        rest_api.rest_device_info.return_value = {
-            "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
-            "device": {
-                "modelName": "82GXARRS",
-                "wifiMac": "aa:bb:cc:dd:ee:ff",
-                "name": "[TV] Living Room",
-                "type": "Samsung SmartTV",
-                "networkType": "wireless",
-            },
-        }
+
+    with patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remote_class:
+        remote = Mock(SamsungTVWS)
+        remote.__enter__ = Mock(return_value=remote)
+        remote.__exit__ = Mock()
+        remote.app_list.return_value = SAMPLE_APP_LIST
+
         remote.token = "123456789"
-        rest_api_class.return_value = rest_api
         remote_class.return_value = remote
 
         await setup_samsungtv(hass, MOCK_CONFIGWS)
 
-        assert remote_class.call_count == 2
-        assert remote_class.call_args_list == [
-            call(**MOCK_CALLS_WS),
-            call(**MOCK_CALLS_WS),
-        ]
+        assert remote_class.call_count == 1
+        assert remote_class.call_args_list == [call(**MOCK_CALLS_WS)]
         assert hass.states.get(ENTITY_ID)
 
         await hass.async_block_till_done()
@@ -209,7 +182,9 @@ async def test_setup_websocket(hass: HomeAssistant) -> None:
         assert config_entries[0].data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
 
 
-async def test_setup_websocket_2(hass: HomeAssistant, mock_now: datetime) -> None:
+async def test_setup_websocket_2(
+    hass: HomeAssistant, mock_now: datetime, rest_api: Mock
+) -> None:
     """Test setup of platform from config entry."""
     entity_id = f"{DOMAIN}.fake"
 
@@ -224,29 +199,22 @@ async def test_setup_websocket_2(hass: HomeAssistant, mock_now: datetime) -> Non
     assert len(config_entries) == 1
     assert entry is config_entries[0]
 
-    with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncConnection"
-    ) as remote_class, patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest"
-    ) as rest_api_class:
-        rest_api = Mock(SamsungTVAsyncRest)
-        remote = Mock(SamsungTVWSAsyncConnection)
-        remote.__aenter__ = AsyncMock(return_value=remote)
-        remote.__aexit__ = AsyncMock()
-        remote.connection = AsyncMock()
-        remote.connection.recv.return_value = SAMPLE_APP_LIST
-        rest_api.rest_device_info.return_value = {
-            "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
-            "device": {
-                "modelName": "82GXARRS",
-                "wifiMac": "aa:bb:cc:dd:ee:ff",
-                "name": "[TV] Living Room",
-                "type": "Samsung SmartTV",
-                "networkType": "wireless",
-            },
-        }
+    rest_api.rest_device_info.return_value = {
+        "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
+        "device": {
+            "modelName": "82GXARRS",
+            "wifiMac": "aa:bb:cc:dd:ee:ff",
+            "name": "[TV] Living Room",
+            "type": "Samsung SmartTV",
+            "networkType": "wireless",
+        },
+    }
+    with patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remote_class:
+        remote = Mock(SamsungTVWS)
+        remote.__enter__ = Mock(return_value=remote)
+        remote.__exit__ = Mock()
+        remote.app_list.return_value = SAMPLE_APP_LIST
         remote.token = "987654321"
-        rest_api_class.return_value = rest_api
         remote_class.return_value = remote
         assert await async_setup_component(hass, SAMSUNGTV_DOMAIN, {})
         await hass.async_block_till_done()
@@ -260,7 +228,7 @@ async def test_setup_websocket_2(hass: HomeAssistant, mock_now: datetime) -> Non
 
     state = hass.states.get(entity_id)
     assert state
-    assert remote_class.call_count == 3
+    assert remote_class.call_count == 2
     assert remote_class.call_args_list[0] == call(**MOCK_CALLS_WS)
 
 
@@ -608,16 +576,14 @@ async def test_turn_off_websocket(hass: HomeAssistant, remotews: Mock) -> None:
             DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
         )
         # key called
-        assert remotews.send_command.call_count == 2
-        command = remotews.send_command.call_args_list[1].args[0]
-        assert isinstance(command, SendRemoteKey)
-        assert command.params["DataOfCmd"] == "KEY_POWER"
+        assert remotews.send_key.call_count == 1
+        assert remotews.send_key.call_args_list == [call("KEY_POWER")]
 
         assert await hass.services.async_call(
             DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
         )
         # key not called
-        assert remotews.send_command.call_count == 2
+        assert remotews.send_key.call_count == 1
 
 
 async def test_turn_off_legacy(hass: HomeAssistant, remote: Mock) -> None:
@@ -956,10 +922,8 @@ async def test_play_media_app(hass: HomeAssistant, remotews: Mock) -> None:
         },
         True,
     )
-    assert remotews.send_command.call_count == 2
-    command = remotews.send_command.call_args_list[1].args[0]
-    assert isinstance(command, ChannelEmitCommand)
-    assert command.params["data"]["appId"] == "3201608010191"
+    assert remotews.run_app.call_count == 1
+    assert remotews.run_app.call_args_list == [call("3201608010191")]
 
 
 async def test_select_source_app(hass: HomeAssistant, remotews: Mock) -> None:
@@ -971,7 +935,5 @@ async def test_select_source_app(hass: HomeAssistant, remotews: Mock) -> None:
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "Deezer"},
         True,
     )
-    assert remotews.send_command.call_count == 2
-    command = remotews.send_command.call_args_list[1].args[0]
-    assert isinstance(command, ChannelEmitCommand)
-    assert command.params["data"]["appId"] == "3201608010191"
+    assert remotews.run_app.call_count == 1
+    assert remotews.run_app.call_args_list == [call("3201608010191")]

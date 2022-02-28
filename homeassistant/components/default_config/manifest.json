@@ -36,6 +36,6 @@
     "zeroconf",
     "zone"
   ],
-  "codeowners": [],
+  "codeowners": ["@home-assistant/core"],
   "quality_scale": "internal"
 }

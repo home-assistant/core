@@ -1,11 +1,10 @@
 """Fixtures for Samsung TV."""
 from datetime import datetime
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from samsungctl import Remote
-from samsungtvws.async_connection import SamsungTVWSAsyncConnection
-from samsungtvws.async_rest import SamsungTVAsyncRest
+from samsungtvws import SamsungTVWS
 
 import homeassistant.util.dt as dt_util
 
@@ -33,19 +32,14 @@ def remote_fixture() -> Mock:
         yield remote
 
 
-@pytest.fixture(name="remotews")
-def remotews_fixture() -> Mock:
-    """Patch the samsungtvws SamsungTVWS."""
+@pytest.fixture(name="rest_api", autouse=True)
+def rest_api_fixture() -> Mock:
+    """Patch the samsungtvws SamsungTVAsyncRest."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncConnection"
-    ) as remotews_class, patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest"
+        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
+        autospec=True,
     ) as rest_api_class:
-        rest_api = Mock(SamsungTVAsyncRest)
-        remotews = Mock(SamsungTVWSAsyncConnection)
-        remotews.__aenter__ = AsyncMock(return_value=remotews)
-        remotews.__aexit__ = AsyncMock()
-        rest_api.rest_device_info.return_value = {
+        rest_api_class.return_value.rest_device_info.return_value = {
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
             "device": {
                 "modelName": "82GXARRS",
@@ -55,57 +49,20 @@ def remotews_fixture() -> Mock:
                 "networkType": "wireless",
             },
         }
-        remotews.connection = AsyncMock()
-        remotews.connection.recv.return_value = SAMPLE_APP_LIST
-        remotews.token = "FAKE_TOKEN"
-        rest_api_class.return_value = rest_api
-        remotews_class.return_value = remotews
-        yield remotews
+        yield rest_api_class.return_value
 
 
-@pytest.fixture(name="remotews_no_device_info")
-def remotews_no_device_info_fixture() -> Mock:
+@pytest.fixture(name="remotews")
+def remotews_fixture() -> Mock:
     """Patch the samsungtvws SamsungTVWS."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncConnection"
-    ) as remotews_class, patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest"
-    ) as rest_api_class:
-        rest_api = Mock(SamsungTVAsyncRest)
-        remotews = Mock(SamsungTVWSAsyncConnection)
-        remotews.__aenter__ = AsyncMock(return_value=remotews)
-        remotews.__aexit__ = AsyncMock()
-        rest_api.rest_device_info.return_value = None
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
+    ) as remotews_class:
+        remotews = Mock(SamsungTVWS)
+        remotews.__enter__ = Mock(return_value=remotews)
+        remotews.__exit__ = Mock()
+        remotews.app_list.return_value = SAMPLE_APP_LIST
         remotews.token = "FAKE_TOKEN"
-        rest_api_class.return_value = rest_api
-        remotews_class.return_value = remotews
-        yield remotews
-
-
-@pytest.fixture(name="remotews_soundbar")
-def remotews_soundbar_fixture() -> Mock:
-    """Patch the samsungtvws SamsungTVWS."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncConnection"
-    ) as remotews_class, patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest"
-    ) as rest_api_class:
-        rest_api = Mock(SamsungTVAsyncRest)
-        remotews = Mock(SamsungTVWSAsyncConnection)
-        remotews.__aenter__ = AsyncMock(return_value=remotews)
-        remotews.__aexit__ = AsyncMock()
-        rest_api.rest_device_info.return_value = {
-            "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
-            "device": {
-                "modelName": "82GXARRS",
-                "wifiMac": "aa:bb:cc:dd:ee:ff",
-                "mac": "aa:bb:cc:dd:ee:ff",
-                "name": "[TV] Living Room",
-                "type": "Samsung SoundBar",
-            },
-        }
-        remotews.token = "FAKE_TOKEN"
-        rest_api_class.return_value = rest_api
         remotews_class.return_value = remotews
         yield remotews
 

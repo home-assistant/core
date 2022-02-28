@@ -82,5 +82,7 @@ class GoogleCalendarService:
             q=search,
             maxResults=EVENT_PAGE_SIZE,
             pageToken=page_token,
+            singleEvents=True,  # Flattens recurring events
+            orderBy="startTime",
         ).execute()
         return (result["items"], result.get("nextPageToken"))
