@@ -2,10 +2,11 @@
   "config": {
     "step": {
       "user": {
-        "description": "The inverter must be connected via an RS485 adaptor, please select serial port and the inverter's address as configured on the LCD panel",
+        "description": "The inverter must be connected via an RS485 adaptor or TCP, please select serial port and the inverter's address as configured on the LCD panel",
         "data": {
-          "port": "RS485 or USB-RS485 Adaptor Port",
-          "address": "Inverter Address"
+          "port": "RS485 or USB-RS485 Adaptor Port or TCP",
+          "address": "Inverter Bus Address",
+          "host": "TCP Host:Port"
         }
       }
     },

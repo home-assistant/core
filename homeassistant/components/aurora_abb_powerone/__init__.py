@@ -10,10 +10,13 @@
 
 import logging
 
-from aurorapy.client import AuroraError, AuroraSerialClient
+from aurorapy.client import AuroraError, AuroraSerialClient, AuroraTCPClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_PORT, Platform
+from homeassistant.const import CONF_ADDRESS  # Bus address
+from homeassistant.const import CONF_HOST  # Network address
+from homeassistant.const import CONF_PORT  # RS485 Device or TCP
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -27,10 +30,15 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Aurora ABB PowerOne from a config entry."""
-
     comport = entry.data[CONF_PORT]
     address = entry.data[CONF_ADDRESS]
-    ser_client = AuroraSerialClient(address, comport, parity="N", timeout=1)
+
+    if entry.data[CONF_PORT] == "TCP":
+        ip, __, port = entry.data[CONF_HOST].rpartition(":")
+        client = AuroraTCPClient(ip=ip, port=int(port), address=address)
+    else:
+        client = AuroraSerialClient(address, comport, parity="N", timeout=1)
+
     # To handle yaml import attempts in darkness, (re)try connecting only if
     # unique_id not yet assigned.
     if entry.unique_id is None:
@@ -67,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     return False
             hass.config_entries.async_update_entry(entry, unique_id=new_id)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = ser_client
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = client
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True

@@ -4,12 +4,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aurorapy.client import AuroraError, AuroraSerialClient
+from aurorapy.client import AuroraError, AuroraSerialClient, AuroraTCPClient
 import serial.tools.list_ports
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.const import CONF_ADDRESS, CONF_PORT
+from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
@@ -33,8 +33,14 @@ def validate_and_connect(
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    comport = data[CONF_PORT]
-    address = data[CONF_ADDRESS]
+    if data[CONF_PORT] == "TCP":
+        return __validate_connect_tcp(data[CONF_HOST], data[CONF_ADDRESS])
+
+    return __validate_connect_serial(data[CONF_PORT], data[CONF_ADDRESS])
+
+
+def __validate_connect_serial(comport, address):
+
     _LOGGER.debug("Initialising com port=%s", comport)
     ret = {}
     ret["title"] = DEFAULT_INTEGRATION_TITLE
@@ -56,10 +62,38 @@ def validate_and_connect(
     return ret
 
 
+def __validate_connect_tcp(host, address):
+
+    _LOGGER.debug("Initialising connection to %s", host)
+    ret = {}
+    ret["title"] = DEFAULT_INTEGRATION_TITLE
+    try:
+        ip, __, port = host.rpartition(":")
+        port = int(port)
+        ip = ip.strip("[]")
+        client = AuroraTCPClient(ip=ip, port=port, address=address)
+        client.connect()
+        ret[ATTR_SERIAL_NUMBER] = client.serial_number()
+        ret[ATTR_MODEL] = f"{client.version()} ({client.pn()})"
+        ret[ATTR_FIRMWARE] = client.firmware(1)
+        _LOGGER.info("Returning device info=%s", ret)
+    except AuroraError as err:
+        _LOGGER.warning("Could not connect to %s", host)
+        raise err
+    finally:
+        try:
+            client.close()
+        except AuroraError:  # ignore errors on exit - there is no way to check if socket is really open
+            pass
+
+    # Return info we want to store in the config entry.
+    return ret
+
+
 def scan_comports() -> tuple[list[str] | None, str | None]:
     """Find and store available com ports for the GUI dropdown."""
     com_ports = serial.tools.list_ports.comports(include_links=True)
-    com_ports_list = []
+    com_ports_list = ["TCP"]
     for port in com_ports:
         com_ports_list.append(port.device)
         _LOGGER.debug("COM port option: %s", port.device)
@@ -89,8 +123,6 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._com_ports_list is None:
             result = await self.hass.async_add_executor_job(scan_comports)
             self._com_ports_list, self._default_com_port = result
-            if self._default_com_port is None:
-                return self.async_abort(reason="no_serial_ports")
 
         # Handle the initial step.
         if user_input is not None:
@@ -130,6 +162,7 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_ADDRESS, default=DEFAULT_ADDRESS): vol.In(
                 range(MIN_ADDRESS, MAX_ADDRESS + 1)
             ),
+            vol.Optional(CONF_HOST, default=""): str,
         }
         schema = vol.Schema(config_options)
 

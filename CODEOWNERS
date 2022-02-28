@@ -93,8 +93,8 @@ homeassistant/components/august/* @bdraco
 tests/components/august/* @bdraco
 homeassistant/components/aurora/* @djtimca
 tests/components/aurora/* @djtimca
-homeassistant/components/aurora_abb_powerone/* @davet2001
-tests/components/aurora_abb_powerone/* @davet2001
+homeassistant/components/aurora_abb_powerone/* @davet2001 @maugsburger
+tests/components/aurora_abb_powerone/* @davet2001 @maugsburger
 homeassistant/components/aussie_broadband/* @nickw444 @Bre77
 tests/components/aussie_broadband/* @nickw444 @Bre77
 homeassistant/components/auth/* @home-assistant/core

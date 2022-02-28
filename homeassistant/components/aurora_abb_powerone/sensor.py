@@ -5,7 +5,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from aurorapy.client import AuroraError, AuroraSerialClient
+from aurorapy.client import AuroraBaseClient, AuroraError
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -73,7 +73,7 @@ class AuroraSensor(AuroraEntity, SensorEntity):
 
     def __init__(
         self,
-        client: AuroraSerialClient,
+        client: AuroraBaseClient,
         data: Mapping[str, Any],
         entity_description: SensorEntityDescription,
     ) -> None:
@@ -127,5 +127,7 @@ class AuroraSensor(AuroraEntity, SensorEntity):
                         "Communication with %s lost",
                         self.name,
                     )
-            if self.client.serline.isOpen():
+            try:
                 self.client.close()
+            except AuroraError:  # ignore errors on exit
+                pass

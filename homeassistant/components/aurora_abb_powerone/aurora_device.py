@@ -5,7 +5,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from aurorapy.client import AuroraSerialClient
+from aurorapy.client import AuroraBaseClient
 
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 class AuroraEntity(Entity):
     """Representation of an Aurora ABB PowerOne device."""
 
-    def __init__(self, client: AuroraSerialClient, data: Mapping[str, Any]) -> None:
+    def __init__(self, client: AuroraBaseClient, data: Mapping[str, Any]) -> None:
         """Initialise the basic device."""
         self._data = data
         self.type = "device"
