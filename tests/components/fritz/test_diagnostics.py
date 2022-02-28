@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .const import MOCK_USER_DATA
+from .const import MOCK_MESH_MASTER_MAC, MOCK_USER_DATA
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -69,6 +69,7 @@ async def test_entry_diagnostics(
             "latest_firmware": None,
             "mesh_role": "master",
             "model": "FRITZ!Box 7530 AX",
+            "unique_id": MOCK_MESH_MASTER_MAC,
             "update_available": False,
             "wan_link_properties": {
                 "NewLayer1DownstreamMaxBitRate": 318557000,
