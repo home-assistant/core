@@ -3,9 +3,9 @@ import copy
 import json
 from unittest.mock import call
 
-from homeassistant.components import websocket_api
-from homeassistant.components.tasmota.const import DEFAULT_PREFIX
+from homeassistant.components.tasmota.const import DEFAULT_PREFIX, DOMAIN
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from .test_common import DEFAULT_CONFIG
 
@@ -111,6 +111,7 @@ async def test_tasmota_ws_remove_discovered_device(
     hass, device_reg, entity_reg, hass_ws_client, mqtt_mock, setup_tasmota
 ):
     """Test Tasmota websocket device removal."""
+    assert await async_setup_component(hass, "config", {})
     config = copy.deepcopy(DEFAULT_CONFIG)
     mac = config["mac"]
 
@@ -124,8 +125,14 @@ async def test_tasmota_ws_remove_discovered_device(
     assert device_entry is not None
 
     client = await hass_ws_client(hass)
+    tasmota_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     await client.send_json(
-        {"id": 5, "type": "tasmota/device/remove", "device_id": device_entry.id}
+        {
+            "id": 5,
+            "config_entry_id": tasmota_config_entry.entry_id,
+            "type": "config/device_registry/remove_config_entry",
+            "device_id": device_entry.id,
+        }
     )
     response = await client.receive_json()
     assert response["success"]
@@ -135,57 +142,3 @@ async def test_tasmota_ws_remove_discovered_device(
         set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is None
-
-
-async def test_tasmota_ws_remove_discovered_device_twice(
-    hass, device_reg, hass_ws_client, mqtt_mock, setup_tasmota
-):
-    """Test Tasmota websocket device removal."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
-    mac = config["mac"]
-
-    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
-    await hass.async_block_till_done()
-
-    # Verify device entry is created
-    device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
-    )
-    assert device_entry is not None
-
-    client = await hass_ws_client(hass)
-    await client.send_json(
-        {"id": 5, "type": "tasmota/device/remove", "device_id": device_entry.id}
-    )
-    response = await client.receive_json()
-    assert response["success"]
-
-    await client.send_json(
-        {"id": 6, "type": "tasmota/device/remove", "device_id": device_entry.id}
-    )
-    response = await client.receive_json()
-    assert not response["success"]
-    assert response["error"]["code"] == websocket_api.const.ERR_NOT_FOUND
-    assert response["error"]["message"] == "Device not found"
-
-
-async def test_tasmota_ws_remove_non_tasmota_device(
-    hass, device_reg, hass_ws_client, mqtt_mock, setup_tasmota
-):
-    """Test Tasmota websocket device removal of device belonging to other domain."""
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-
-    device_entry = device_reg.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
-    assert device_entry is not None
-
-    client = await hass_ws_client(hass)
-    await client.send_json(
-        {"id": 5, "type": "tasmota/device/remove", "device_id": device_entry.id}
-    )
-    response = await client.receive_json()
-    assert not response["success"]
-    assert response["error"]["code"] == websocket_api.const.ERR_NOT_FOUND
