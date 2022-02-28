@@ -322,6 +322,9 @@ anel_pwrctrl-homeassistant==0.0.1.dev2
 # homeassistant.components.anthemav
 anthemav==1.2.0
 
+# homeassistant.components.apcupsd
+apcaccess==0.0.13
+
 # homeassistant.components.apprise
 apprise==0.9.7
 
@@ -807,7 +810,7 @@ habitipy==0.2.0
 hangups==0.4.17
 
 # homeassistant.components.cloud
-hass-nabucasa==0.53.1
+hass-nabucasa==0.54.0
 
 # homeassistant.components.splunk
 hass_splunk==0.1.1
@@ -840,7 +843,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220224.0
+home-assistant-frontend==20220226.0
 
 # homeassistant.components.zwave
 # homeassistant-pyozw==0.1.10
@@ -1990,9 +1993,6 @@ python-tado==0.12.0
 # homeassistant.components.telegram_bot
 python-telegram-bot==13.1
 
-# homeassistant.components.twitch
-python-twitch-client==0.6.0
-
 # homeassistant.components.vlc
 python-vlc==1.1.2
 
@@ -2387,7 +2387,7 @@ tp-connected==0.0.4
 transmissionrpc==0.11
 
 # homeassistant.components.twinkly
-ttls==1.4.2
+ttls==1.4.3
 
 # homeassistant.components.tuya
 tuya-iot-py-sdk==0.6.6
@@ -2397,6 +2397,9 @@ twentemilieu==0.5.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
+
+# homeassistant.components.twitch
+twitchAPI==2.5.2
 
 # homeassistant.components.rainforest_eagle
 uEagle==0.0.2
