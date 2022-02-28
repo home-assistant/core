@@ -834,6 +834,10 @@ async def test_autodetect_websocket(hass: HomeAssistant) -> None:
     ) as remotews, patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
     ) as rest_api_class:
+        remote = Mock(SamsungTVWS)
+        remote.__enter__ = Mock(return_value=remote)
+        remote.__exit__ = Mock(return_value=False)
+        remote.app_list.return_value = SAMPLE_APP_LIST
         rest_api_class.return_value.rest_device_info = AsyncMock(
             return_value={
                 "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
@@ -848,11 +852,6 @@ async def test_autodetect_websocket(hass: HomeAssistant) -> None:
                 },
             }
         )
-        remote = Mock(SamsungTVWS)
-        remote.__enter__ = Mock(return_value=remote)
-        remote.__exit__ = Mock(return_value=False)
-        remote.app_list.return_value = SAMPLE_APP_LIST
-
         remote.token = "123456789"
         remotews.return_value = remote
 
@@ -883,6 +882,10 @@ async def test_websocket_no_mac(hass: HomeAssistant) -> None:
     ) as rest_api_class, patch(
         "getmac.get_mac_address", return_value="gg:hh:ii:ll:mm:nn"
     ):
+        remote = Mock(SamsungTVWS)
+        remote.__enter__ = Mock(return_value=remote)
+        remote.__exit__ = Mock(return_value=False)
+        remote.app_list.return_value = SAMPLE_APP_LIST
         rest_api_class.return_value.rest_device_info = AsyncMock(
             return_value={
                 "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
@@ -895,10 +898,6 @@ async def test_websocket_no_mac(hass: HomeAssistant) -> None:
                 },
             }
         )
-        remote = Mock(SamsungTVWS)
-        remote.__enter__ = Mock(return_value=remote)
-        remote.__exit__ = Mock(return_value=False)
-        remote.app_list.return_value = SAMPLE_APP_LIST
 
         remote.token = "123456789"
         remotews.return_value = remote
