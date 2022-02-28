@@ -389,6 +389,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
             with contextlib.suppress(HttpApiError, RequestsTimeout):
                 device_info: dict[str, Any] = await self._rest_api.rest_device_info()
+                LOGGER.debug("Device info on %s is: %s", self.host, device_info)
                 return device_info
 
         return None
