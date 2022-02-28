@@ -116,7 +116,6 @@ omit =
     homeassistant/components/bloomsky/*
     homeassistant/components/bluesound/*
     homeassistant/components/bluetooth_tracker/*
-    homeassistant/components/bme680/sensor.py
     homeassistant/components/bmw_connected_drive/__init__.py
     homeassistant/components/bmw_connected_drive/binary_sensor.py
     homeassistant/components/bmw_connected_drive/button.py
