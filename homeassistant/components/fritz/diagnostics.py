@@ -22,6 +22,7 @@ async def async_get_config_entry_diagnostics(
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "device_info": {
             "model": avm_wrapper.model,
+            "unique_id": avm_wrapper.unique_id,
             "current_firmware": avm_wrapper.current_firmware,
             "latest_firmware": avm_wrapper.latest_firmware,
             "update_available": avm_wrapper.update_available,
