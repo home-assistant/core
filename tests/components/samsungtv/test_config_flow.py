@@ -1,6 +1,6 @@
 """Tests for Samsung TV config flow."""
 import socket
-from unittest.mock import Mock, call, patch
+from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 import pytest
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
@@ -178,10 +178,9 @@ AUTODETECT_WEBSOCKET_SSL = {
 }
 DEVICEINFO_WEBSOCKET_SSL = {
     "host": "fake_host",
-    "name": "HomeAssistant",
+    "session": ANY,
     "port": 8002,
     "timeout": TIMEOUT_WEBSOCKET,
-    "token": "123456789",
 }
 
 
@@ -456,8 +455,11 @@ async def test_ssdp_websocket_success_populates_mac_address(
     assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
-async def test_ssdp_websocket_not_supported(hass: HomeAssistant) -> None:
+async def test_ssdp_websocket_not_supported(
+    hass: HomeAssistant, rest_api: Mock
+) -> None:
     """Test starting a flow from discovery for not supported device."""
+    rest_api.rest_device_info.return_value = None
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=OSError("Boom"),
@@ -630,9 +632,10 @@ async def test_import_legacy(hass: HomeAssistant, no_mac_address: Mock) -> None:
     assert entries[0].data[CONF_PORT] == LEGACY_PORT
 
 
-@pytest.mark.usefixtures("remote", "remotews_no_device_info", "no_mac_address")
-async def test_import_legacy_without_name(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("remote", "remotews", "no_mac_address")
+async def test_import_legacy_without_name(hass: HomeAssistant, rest_api: Mock) -> None:
     """Test importing from yaml without a name."""
+    rest_api.rest_device_info.return_value = None
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
@@ -762,9 +765,19 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remotews_soundbar")
-async def test_zeroconf_ignores_soundbar(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("remotews")
+async def test_zeroconf_ignores_soundbar(hass: HomeAssistant, rest_api: Mock) -> None:
     """Test starting a flow from zeroconf where the device is actually a soundbar."""
+    rest_api.rest_device_info.return_value = {
+        "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
+        "device": {
+            "modelName": "82GXARRS",
+            "wifiMac": "aa:bb:cc:dd:ee:ff",
+            "mac": "aa:bb:cc:dd:ee:ff",
+            "name": "[TV] Living Room",
+            "type": "Samsung SoundBar",
+        },
+    }
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -775,9 +788,10 @@ async def test_zeroconf_ignores_soundbar(hass: HomeAssistant) -> None:
     assert result["reason"] == "not_supported"
 
 
-@pytest.mark.usefixtures("remote", "remotews_no_device_info")
-async def test_zeroconf_no_device_info(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("remote", "remotews")
+async def test_zeroconf_no_device_info(hass: HomeAssistant, rest_api: Mock) -> None:
     """Test starting a flow from zeroconf where device_info returns None."""
+    rest_api.rest_device_info.return_value = None
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -815,23 +829,29 @@ async def test_autodetect_websocket(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=OSError("Boom"),
-    ), patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remotews:
+    ), patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
+    ) as remotews, patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
+    ) as rest_api_class:
         remote = Mock(SamsungTVWS)
         remote.__enter__ = Mock(return_value=remote)
         remote.__exit__ = Mock(return_value=False)
         remote.app_list.return_value = SAMPLE_APP_LIST
-        remote.rest_device_info.return_value = {
-            "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
-            "device": {
-                "modelName": "82GXARRS",
-                "networkType": "wireless",
-                "wifiMac": "aa:bb:cc:dd:ee:ff",
-                "udn": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
-                "mac": "aa:bb:cc:dd:ee:ff",
-                "name": "[TV] Living Room",
-                "type": "Samsung SmartTV",
-            },
-        }
+        rest_api_class.return_value.rest_device_info = AsyncMock(
+            return_value={
+                "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
+                "device": {
+                    "modelName": "82GXARRS",
+                    "networkType": "wireless",
+                    "wifiMac": "aa:bb:cc:dd:ee:ff",
+                    "udn": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
+                    "mac": "aa:bb:cc:dd:ee:ff",
+                    "name": "[TV] Living Room",
+                    "type": "Samsung SmartTV",
+                },
+            }
+        )
         remote.token = "123456789"
         remotews.return_value = remote
 
@@ -841,11 +861,8 @@ async def test_autodetect_websocket(hass: HomeAssistant) -> None:
         assert result["type"] == "create_entry"
         assert result["data"][CONF_METHOD] == "websocket"
         assert result["data"][CONF_TOKEN] == "123456789"
-        assert remotews.call_count == 2
-        assert remotews.call_args_list == [
-            call(**AUTODETECT_WEBSOCKET_SSL),
-            call(**DEVICEINFO_WEBSOCKET_SSL),
-        ]
+        remotews.assert_called_once_with(**AUTODETECT_WEBSOCKET_SSL)
+        rest_api_class.assert_called_once_with(**DEVICEINFO_WEBSOCKET_SSL)
         await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -861,22 +878,27 @@ async def test_websocket_no_mac(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS"
     ) as remotews, patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
+    ) as rest_api_class, patch(
         "getmac.get_mac_address", return_value="gg:hh:ii:ll:mm:nn"
     ):
         remote = Mock(SamsungTVWS)
         remote.__enter__ = Mock(return_value=remote)
         remote.__exit__ = Mock(return_value=False)
         remote.app_list.return_value = SAMPLE_APP_LIST
-        remote.rest_device_info.return_value = {
-            "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
-            "device": {
-                "modelName": "82GXARRS",
-                "networkType": "lan",
-                "udn": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
-                "name": "[TV] Living Room",
-                "type": "Samsung SmartTV",
-            },
-        }
+        rest_api_class.return_value.rest_device_info = AsyncMock(
+            return_value={
+                "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
+                "device": {
+                    "modelName": "82GXARRS",
+                    "networkType": "lan",
+                    "udn": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
+                    "name": "[TV] Living Room",
+                    "type": "Samsung SmartTV",
+                },
+            }
+        )
+
         remote.token = "123456789"
         remotews.return_value = remote
 
@@ -887,11 +909,8 @@ async def test_websocket_no_mac(hass: HomeAssistant) -> None:
         assert result["data"][CONF_METHOD] == "websocket"
         assert result["data"][CONF_TOKEN] == "123456789"
         assert result["data"][CONF_MAC] == "gg:hh:ii:ll:mm:nn"
-        assert remotews.call_count == 2
-        assert remotews.call_args_list == [
-            call(**AUTODETECT_WEBSOCKET_SSL),
-            call(**DEVICEINFO_WEBSOCKET_SSL),
-        ]
+        remotews.assert_called_once_with(**AUTODETECT_WEBSOCKET_SSL)
+        rest_api_class.assert_called_once_with(**DEVICEINFO_WEBSOCKET_SSL)
         await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -1166,18 +1185,16 @@ async def test_update_legacy_missing_mac_from_dhcp(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("remote")
 async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(
-    hass: HomeAssistant,
+    hass: HomeAssistant, rest_api: Mock
 ) -> None:
     """Test missing mac added when there is no unique id."""
+    rest_api.rest_device_info.side_effect = HttpApiError
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_LEGACY_ENTRY,
     )
     entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWS.rest_device_info",
-        side_effect=HttpApiError,
-    ), patch(
         "homeassistant.components.samsungtv.bridge.Remote.__enter__",
         return_value=True,
     ), patch(
