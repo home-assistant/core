@@ -899,7 +899,7 @@ pybotvac==0.0.23
 pycfdns==1.2.2
 
 # homeassistant.components.cast
-pychromecast==10.2.3
+pychromecast==10.3.0
 
 # homeassistant.components.climacell
 pyclimacell==0.18.2
