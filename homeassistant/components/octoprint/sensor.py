@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -47,13 +47,23 @@ async def async_setup_entry(
 
     assert device_id is not None
 
-    entities: list[SensorEntity] = []
-    if coordinator.data["printer"]:
-        printer_info = coordinator.data["printer"]
-        types = ["actual", "target"]
-        for tool in printer_info.temperatures:
-            for temp_type in types:
-                entities.append(
+    known_tools = set()
+
+    @callback
+    def async_add_tool_sensors() -> None:
+        if not coordinator.data["printer"]:
+            return
+
+        new_tools = []
+        for tool in [
+            tool
+            for tool in coordinator.data["printer"].temperatures
+            if tool.name not in known_tools
+        ]:
+            assert device_id is not None
+            known_tools.add(tool.name)
+            for temp_type in ("actual", "target"):
+                new_tools.append(
                     OctoPrintTemperatureSensor(
                         coordinator,
                         tool.name,
@@ -61,13 +71,20 @@ async def async_setup_entry(
                         device_id,
                     )
                 )
-    else:
-        _LOGGER.debug("Printer appears to be offline, skipping temperature sensors")
+        if new_tools:
+            async_add_entities(new_tools)
 
-    entities.append(OctoPrintStatusSensor(coordinator, device_id))
-    entities.append(OctoPrintJobPercentageSensor(coordinator, device_id))
-    entities.append(OctoPrintEstimatedFinishTimeSensor(coordinator, device_id))
-    entities.append(OctoPrintStartTimeSensor(coordinator, device_id))
+    config_entry.async_on_unload(coordinator.async_add_listener(async_add_tool_sensors))
+
+    if coordinator.data["printer"]:
+        async_add_tool_sensors()
+
+    entities: list[SensorEntity] = [
+        OctoPrintStatusSensor(coordinator, device_id),
+        OctoPrintJobPercentageSensor(coordinator, device_id),
+        OctoPrintEstimatedFinishTimeSensor(coordinator, device_id),
+        OctoPrintStartTimeSensor(coordinator, device_id),
+    ]
 
     async_add_entities(entities)
 

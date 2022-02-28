@@ -56,7 +56,8 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Bir cihaz\u0131 'evde' varsaymak i\u00e7in saniye"
+                    "consider_home": "Bir cihaz\u0131 'evde' varsaymak i\u00e7in saniye",
+                    "old_discovery": "Eski ke\u015fif y\u00f6ntemini etkinle\u015ftir"
                 }
             }
         }

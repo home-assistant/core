@@ -2,6 +2,7 @@
 import unittest.mock
 from unittest.mock import MagicMock, patch
 
+import async_timeout
 import pytest
 
 from homeassistant import config as hass_config
@@ -1470,12 +1471,12 @@ async def test_reload_with_base_integration_platform_not_setup(hass):
 
 async def test_nested_group(hass):
     """Test nested light group."""
-    hass.states.async_set("light.kitchen", "on")
     await async_setup_component(
         hass,
         LIGHT_DOMAIN,
         {
             LIGHT_DOMAIN: [
+                {"platform": "demo"},
                 {
                     "platform": DOMAIN,
                     "entities": ["light.bedroom_group"],
@@ -1483,7 +1484,7 @@ async def test_nested_group(hass):
                 },
                 {
                     "platform": DOMAIN,
-                    "entities": ["light.kitchen", "light.bedroom"],
+                    "entities": ["light.bed_light", "light.kitchen_lights"],
                     "name": "Bedroom Group",
                 },
             ]
@@ -1496,9 +1497,25 @@ async def test_nested_group(hass):
     state = hass.states.get("light.bedroom_group")
     assert state is not None
     assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_ENTITY_ID) == ["light.kitchen", "light.bedroom"]
+    assert state.attributes.get(ATTR_ENTITY_ID) == [
+        "light.bed_light",
+        "light.kitchen_lights",
+    ]
 
     state = hass.states.get("light.nested_group")
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ENTITY_ID) == ["light.bedroom_group"]
+
+    # Test controlling the nested group
+    async with async_timeout.timeout(0.5):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TOGGLE,
+            {ATTR_ENTITY_ID: "light.nested_group"},
+            blocking=True,
+        )
+    assert hass.states.get("light.bed_light").state == STATE_OFF
+    assert hass.states.get("light.kitchen_lights").state == STATE_OFF
+    assert hass.states.get("light.bedroom_group").state == STATE_OFF
+    assert hass.states.get("light.nested_group").state == STATE_OFF

@@ -125,8 +125,7 @@ def _migrate_aftv_entity(hass, aftv, entry_unique_id):
         # entity already exist, nothing to do
         return
 
-    old_unique_id = aftv.device_properties.get(PROP_SERIALNO)
-    if not old_unique_id:
+    if not (old_unique_id := aftv.device_properties.get(PROP_SERIALNO)):
         # serial no not found, exit
         return
 

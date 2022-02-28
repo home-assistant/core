@@ -101,15 +101,15 @@ def _create_index(instance, table_name, index_name):
         "be patient!",
         index_name,
     )
-    try:
-        with session_scope(session=instance.get_session()) as session:
+    with session_scope(session=instance.get_session()) as session:
+        try:
             connection = session.connection()
             index.create(connection)
-    except (InternalError, OperationalError, ProgrammingError) as err:
-        raise_if_exception_missing_str(err, ["already exists", "duplicate"])
-        _LOGGER.warning(
-            "Index %s already exists on %s, continuing", index_name, table_name
-        )
+        except (InternalError, OperationalError, ProgrammingError) as err:
+            raise_if_exception_missing_str(err, ["already exists", "duplicate"])
+            _LOGGER.warning(
+                "Index %s already exists on %s, continuing", index_name, table_name
+            )
 
     _LOGGER.debug("Finished creating %s", index_name)
 
@@ -129,19 +129,19 @@ def _drop_index(instance, table_name, index_name):
     success = False
 
     # Engines like DB2/Oracle
-    try:
-        with session_scope(session=instance.get_session()) as session:
+    with session_scope(session=instance.get_session()) as session:
+        try:
             connection = session.connection()
             connection.execute(text(f"DROP INDEX {index_name}"))
-    except SQLAlchemyError:
-        pass
-    else:
-        success = True
+        except SQLAlchemyError:
+            pass
+        else:
+            success = True
 
     # Engines like SQLite, SQL Server
     if not success:
-        try:
-            with session_scope(session=instance.get_session()) as session:
+        with session_scope(session=instance.get_session()) as session:
+            try:
                 connection = session.connection()
                 connection.execute(
                     text(
@@ -150,15 +150,15 @@ def _drop_index(instance, table_name, index_name):
                         )
                     )
                 )
-        except SQLAlchemyError:
-            pass
-        else:
-            success = True
+            except SQLAlchemyError:
+                pass
+            else:
+                success = True
 
     if not success:
         # Engines like MySQL, MS Access
-        try:
-            with session_scope(session=instance.get_session()) as session:
+        with session_scope(session=instance.get_session()) as session:
+            try:
                 connection = session.connection()
                 connection.execute(
                     text(
@@ -167,10 +167,10 @@ def _drop_index(instance, table_name, index_name):
                         )
                     )
                 )
-        except SQLAlchemyError:
-            pass
-        else:
-            success = True
+            except SQLAlchemyError:
+                pass
+            else:
+                success = True
 
     if success:
         _LOGGER.debug(
@@ -203,8 +203,8 @@ def _add_columns(instance, table_name, columns_def):
 
     columns_def = [f"ADD {col_def}" for col_def in columns_def]
 
-    try:
-        with session_scope(session=instance.get_session()) as session:
+    with session_scope(session=instance.get_session()) as session:
+        try:
             connection = session.connection()
             connection.execute(
                 text(
@@ -214,14 +214,14 @@ def _add_columns(instance, table_name, columns_def):
                 )
             )
             return
-    except (InternalError, OperationalError, ProgrammingError):
-        # Some engines support adding all columns at once,
-        # this error is when they don't
-        _LOGGER.info("Unable to use quick column add. Adding 1 by 1")
+        except (InternalError, OperationalError, ProgrammingError):
+            # Some engines support adding all columns at once,
+            # this error is when they don't
+            _LOGGER.info("Unable to use quick column add. Adding 1 by 1")
 
     for column_def in columns_def:
-        try:
-            with session_scope(session=instance.get_session()) as session:
+        with session_scope(session=instance.get_session()) as session:
+            try:
                 connection = session.connection()
                 connection.execute(
                     text(
@@ -230,13 +230,13 @@ def _add_columns(instance, table_name, columns_def):
                         )
                     )
                 )
-        except (InternalError, OperationalError, ProgrammingError) as err:
-            raise_if_exception_missing_str(err, ["already exists", "duplicate"])
-            _LOGGER.warning(
-                "Column %s already exists on %s, continuing",
-                column_def.split(" ")[1],
-                table_name,
-            )
+            except (InternalError, OperationalError, ProgrammingError) as err:
+                raise_if_exception_missing_str(err, ["already exists", "duplicate"])
+                _LOGGER.warning(
+                    "Column %s already exists on %s, continuing",
+                    column_def.split(" ")[1],
+                    table_name,
+                )
 
 
 def _modify_columns(instance, engine, table_name, columns_def):
@@ -271,8 +271,8 @@ def _modify_columns(instance, engine, table_name, columns_def):
     else:
         columns_def = [f"MODIFY {col_def}" for col_def in columns_def]
 
-    try:
-        with session_scope(session=instance.get_session()) as session:
+    with session_scope(session=instance.get_session()) as session:
+        try:
             connection = session.connection()
             connection.execute(
                 text(
@@ -282,12 +282,12 @@ def _modify_columns(instance, engine, table_name, columns_def):
                 )
             )
             return
-    except (InternalError, OperationalError):
-        _LOGGER.info("Unable to use quick column modify. Modifying 1 by 1")
+        except (InternalError, OperationalError):
+            _LOGGER.info("Unable to use quick column modify. Modifying 1 by 1")
 
     for column_def in columns_def:
-        try:
-            with session_scope(session=instance.get_session()) as session:
+        with session_scope(session=instance.get_session()) as session:
+            try:
                 connection = session.connection()
                 connection.execute(
                     text(
@@ -296,10 +296,10 @@ def _modify_columns(instance, engine, table_name, columns_def):
                         )
                     )
                 )
-        except (InternalError, OperationalError):
-            _LOGGER.exception(
-                "Could not modify column %s in table %s", column_def, table_name
-            )
+            except (InternalError, OperationalError):
+                _LOGGER.exception(
+                    "Could not modify column %s in table %s", column_def, table_name
+                )
 
 
 def _update_states_table_with_foreign_key_options(instance, engine):
@@ -330,17 +330,17 @@ def _update_states_table_with_foreign_key_options(instance, engine):
     )
 
     for alter in alters:
-        try:
-            with session_scope(session=instance.get_session()) as session:
+        with session_scope(session=instance.get_session()) as session:
+            try:
                 connection = session.connection()
                 connection.execute(DropConstraint(alter["old_fk"]))
                 for fkc in states_key_constraints:
                     if fkc.column_keys == alter["columns"]:
                         connection.execute(AddConstraint(fkc))
-        except (InternalError, OperationalError):
-            _LOGGER.exception(
-                "Could not update foreign options in %s table", TABLE_STATES
-            )
+            except (InternalError, OperationalError):
+                _LOGGER.exception(
+                    "Could not update foreign options in %s table", TABLE_STATES
+                )
 
 
 def _drop_foreign_key_constraints(instance, engine, table, columns):
@@ -361,16 +361,16 @@ def _drop_foreign_key_constraints(instance, engine, table, columns):
     )
 
     for drop in drops:
-        try:
-            with session_scope(session=instance.get_session()) as session:
+        with session_scope(session=instance.get_session()) as session:
+            try:
                 connection = session.connection()
                 connection.execute(DropConstraint(drop))
-        except (InternalError, OperationalError):
-            _LOGGER.exception(
-                "Could not drop foreign constraints in %s table on %s",
-                TABLE_STATES,
-                columns,
-            )
+            except (InternalError, OperationalError):
+                _LOGGER.exception(
+                    "Could not drop foreign constraints in %s table on %s",
+                    TABLE_STATES,
+                    columns,
+                )
 
 
 def _apply_update(instance, new_version, old_version):  # noqa: C901

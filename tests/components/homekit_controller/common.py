@@ -174,7 +174,9 @@ async def setup_platform(hass):
     """Load the platform but with a fake Controller API."""
     config = {"discovery": {}}
 
-    with mock.patch("aiohomekit.Controller") as controller:
+    with mock.patch(
+        "homeassistant.components.homekit_controller.utils.Controller"
+    ) as controller:
         fake_controller = controller.return_value = FakeController()
         await async_setup_component(hass, DOMAIN, config)
 
@@ -220,6 +222,7 @@ async def device_config_changed(hass, accessories):
 
     discovery_info = zeroconf.ZeroconfServiceInfo(
         host="127.0.0.1",
+        addresses=["127.0.0.1"],
         hostname="mock_hostname",
         name="TestDevice",
         port=8080,

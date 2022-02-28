@@ -1,17 +1,25 @@
 """DataUpdateCoordinator for Plugwise."""
 from datetime import timedelta
+from typing import Any, NamedTuple
 
-import async_timeout
 from plugwise import Smile
-from plugwise.exceptions import XMLDataMissingError
+from plugwise.exceptions import PlugwiseException, XMLDataMissingError
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DEFAULT_TIMEOUT, DOMAIN, LOGGER
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
 
 
-class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[bool]):
+class PlugwiseData(NamedTuple):
+    """Plugwise data stored in the DataUpdateCoordinator."""
+
+    gateway: dict[str, Any]
+    devices: dict[str, dict[str, Any]]
+
+
+class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
     """Class to manage fetching Plugwise data from single endpoint."""
 
     def __init__(self, hass: HomeAssistant, api: Smile) -> None:
@@ -23,14 +31,25 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[bool]):
             update_interval=DEFAULT_SCAN_INTERVAL.get(
                 str(api.smile_type), timedelta(seconds=60)
             ),
+            # Don't refresh immediately, give the device time to process
+            # the change in state before we query it.
+            request_refresh_debouncer=Debouncer(
+                hass,
+                LOGGER,
+                cooldown=1.5,
+                immediate=False,
+            ),
         )
         self.api = api
 
-    async def _async_update_data(self) -> bool:
+    async def _async_update_data(self) -> PlugwiseData:
         """Fetch data from Plugwise."""
         try:
-            async with async_timeout.timeout(DEFAULT_TIMEOUT):
-                await self.api.full_update_device()
+            data = await self.api.async_update()
         except XMLDataMissingError as err:
-            raise UpdateFailed("Smile update failed") from err
-        return True
+            raise UpdateFailed(
+                f"No XML data received for: {self.api.smile_name}"
+            ) from err
+        except PlugwiseException as err:
+            raise UpdateFailed(f"Updated failed for: {self.api.smile_name}") from err
+        return PlugwiseData(*data)

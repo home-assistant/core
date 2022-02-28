@@ -1,12 +1,12 @@
 """Test Media Source initialization."""
 from unittest.mock import Mock, patch
-from urllib.parse import quote
 
 import pytest
+import yarl
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import MEDIA_CLASS_DIRECTORY, BrowseError
-from homeassistant.components.media_source import const
+from homeassistant.components.media_source import const, models
 from homeassistant.setup import async_setup_component
 
 
@@ -58,9 +58,34 @@ async def test_async_browse_media(hass):
     assert media.title == "media"
     assert len(media.children) == 1, media.children
     media.children[0].title = "Epic Sax Guy 10 Hours"
+    assert media.not_shown == 1
+
+    # Test content filter adds to original not_shown
+    orig_browse = models.MediaSourceItem.async_browse
+
+    async def not_shown_browse(self):
+        """Patch browsed item to set not_shown base value."""
+        item = await orig_browse(self)
+        item.not_shown = 10
+        return item
+
+    with patch(
+        "homeassistant.components.media_source.models.MediaSourceItem.async_browse",
+        not_shown_browse,
+    ):
+        media = await media_source.async_browse_media(
+            hass,
+            "",
+            content_filter=lambda item: item.media_content_type.startswith("video/"),
+        )
+    assert isinstance(media, media_source.models.BrowseMediaSource)
+    assert media.title == "media"
+    assert len(media.children) == 1, media.children
+    media.children[0].title = "Epic Sax Guy 10 Hours"
+    assert media.not_shown == 11
 
     # Test invalid media content
-    with pytest.raises(ValueError):
+    with pytest.raises(BrowseError):
         await media_source.async_browse_media(hass, "invalid")
 
     # Test base URI returns all domains
@@ -80,6 +105,8 @@ async def test_async_resolve_media(hass):
         media_source.generate_media_source_id(media_source.DOMAIN, "local/test.mp3"),
     )
     assert isinstance(media, media_source.models.PlayMedia)
+    assert media.url == "/media/local/test.mp3"
+    assert media.mime_type == "audio/mpeg"
 
 
 async def test_async_unresolve_media(hass):
@@ -90,6 +117,14 @@ async def test_async_unresolve_media(hass):
     # Test no media content
     with pytest.raises(media_source.Unresolvable):
         await media_source.async_resolve_media(hass, "")
+
+    # Test invalid media content
+    with pytest.raises(media_source.Unresolvable):
+        await media_source.async_resolve_media(hass, "invalid")
+
+    # Test invalid media source
+    with pytest.raises(media_source.Unresolvable):
+        await media_source.async_resolve_media(hass, "media-source://media_source2")
 
 
 async def test_websocket_browse_media(hass, hass_ws_client):
@@ -153,7 +188,10 @@ async def test_websocket_resolve_media(hass, hass_ws_client, filename):
 
     client = await hass_ws_client(hass)
 
-    media = media_source.models.PlayMedia(f"/media/local/{filename}", "audio/mpeg")
+    media = media_source.models.PlayMedia(
+        f"/media/local/{filename}",
+        "audio/mpeg",
+    )
 
     with patch(
         "homeassistant.components.media_source.async_resolve_media",
@@ -171,8 +209,13 @@ async def test_websocket_resolve_media(hass, hass_ws_client, filename):
 
     assert msg["success"]
     assert msg["id"] == 1
-    assert msg["result"]["url"].startswith(quote(media.url))
     assert msg["result"]["mime_type"] == media.mime_type
+
+    # Validate url is relative and signed.
+    assert msg["result"]["url"][0] == "/"
+    parsed = yarl.URL(msg["result"]["url"])
+    assert parsed.path == getattr(media, "url")
+    assert "authSig" in parsed.query
 
     with patch(
         "homeassistant.components.media_source.async_resolve_media",

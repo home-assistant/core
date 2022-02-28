@@ -1,8 +1,6 @@
 """Plugwise Sensor component for Home Assistant."""
 from __future__ import annotations
 
-from plugwise.smile import Smile
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -19,18 +17,10 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    COOL_ICON,
-    COORDINATOR,
-    DOMAIN,
-    FLAME_ICON,
-    IDLE_ICON,
-    LOGGER,
-    UNIT_LUMEN,
-)
+from .const import DOMAIN, UNIT_LUMEN
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
@@ -73,13 +63,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="water_temperature",
         name="Water Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key="return_temperature",
-        name="Return Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -266,16 +249,12 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-)
-
-INDICATE_ACTIVE_LOCAL_DEVICE_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key="cooling_state",
-        name="Cooling State",
-    ),
-    SensorEntityDescription(
-        key="flame_state",
-        name="Flame State",
+        key="humidity",
+        name="Relative Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -286,160 +265,44 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Smile sensors from a config entry."""
-    api = hass.data[DOMAIN][config_entry.entry_id]["api"]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: list[SmileSensor] = []
-    all_devices = api.get_all_devices()
-    single_thermostat = api.single_master_thermostat()
-    for dev_id, device_properties in all_devices.items():
-        data = api.get_device_data(dev_id)
+    entities: list[PlugwiseSensorEnity] = []
+    for device_id, device in coordinator.data.devices.items():
         for description in SENSORS:
-            if data.get(description.key) is None:
+            if (
+                "sensors" not in device
+                or device["sensors"].get(description.key) is None
+            ):
                 continue
 
-            if "power" in device_properties["types"]:
-                model = None
-
-                if "plug" in device_properties["types"]:
-                    model = "Metered Switch"
-
-                entities.append(
-                    PwPowerSensor(
-                        api,
-                        coordinator,
-                        device_properties["name"],
-                        dev_id,
-                        model,
-                        description,
-                    )
+            entities.append(
+                PlugwiseSensorEnity(
+                    coordinator,
+                    device_id,
+                    description,
                 )
-            else:
-                entities.append(
-                    PwThermostatSensor(
-                        api,
-                        coordinator,
-                        device_properties["name"],
-                        dev_id,
-                        description,
-                    )
-                )
+            )
 
-        if single_thermostat is False:
-            for description in INDICATE_ACTIVE_LOCAL_DEVICE_SENSORS:
-                if description.key not in data:
-                    continue
-
-                entities.append(
-                    PwAuxDeviceSensor(
-                        api,
-                        coordinator,
-                        device_properties["name"],
-                        dev_id,
-                        description,
-                    )
-                )
-                break
-
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
-class SmileSensor(PlugwiseEntity, SensorEntity):
-    """Represent Smile Sensors."""
+class PlugwiseSensorEnity(PlugwiseEntity, SensorEntity):
+    """Represent Plugwise Sensors."""
 
     def __init__(
         self,
-        api: Smile,
         coordinator: PlugwiseDataUpdateCoordinator,
-        name: str,
-        dev_id: str,
+        device_id: str,
         description: SensorEntityDescription,
     ) -> None:
         """Initialise the sensor."""
-        super().__init__(api, coordinator, name, dev_id)
+        super().__init__(coordinator, device_id)
         self.entity_description = description
-        self._attr_unique_id = f"{dev_id}-{description.key}"
+        self._attr_unique_id = f"{device_id}-{description.key}"
+        self._attr_name = (f"{self.device.get('name', '')} {description.name}").lstrip()
 
-        if dev_id == self._api.heater_id:
-            self._entity_name = "Auxiliary"
-
-        self._name = f"{self._entity_name} {description.name}"
-
-        if dev_id == self._api.gateway_id:
-            self._entity_name = f"Smile {self._entity_name}"
-
-
-class PwThermostatSensor(SmileSensor):
-    """Thermostat (or generic) sensor devices."""
-
-    @callback
-    def _async_process_data(self) -> None:
-        """Update the entity."""
-        if not (data := self._api.get_device_data(self._dev_id)):
-            LOGGER.error("Received no data for device %s", self._entity_name)
-            self.async_write_ha_state()
-            return
-
-        self._attr_native_value = data.get(self.entity_description.key)
-        self.async_write_ha_state()
-
-
-class PwAuxDeviceSensor(SmileSensor):
-    """Auxiliary Device Sensors."""
-
-    _cooling_state = False
-    _heating_state = False
-
-    @callback
-    def _async_process_data(self) -> None:
-        """Update the entity."""
-        if not (data := self._api.get_device_data(self._dev_id)):
-            LOGGER.error("Received no data for device %s", self._entity_name)
-            self.async_write_ha_state()
-            return
-
-        if data.get("heating_state") is not None:
-            self._heating_state = data["heating_state"]
-        if data.get("cooling_state") is not None:
-            self._cooling_state = data["cooling_state"]
-
-        self._attr_native_value = "idle"
-        self._attr_icon = IDLE_ICON
-        if self._heating_state:
-            self._attr_native_value = "heating"
-            self._attr_icon = FLAME_ICON
-        if self._cooling_state:
-            self._attr_native_value = "cooling"
-            self._attr_icon = COOL_ICON
-
-        self.async_write_ha_state()
-
-
-class PwPowerSensor(SmileSensor):
-    """Power sensor entities."""
-
-    def __init__(
-        self,
-        api: Smile,
-        coordinator: PlugwiseDataUpdateCoordinator,
-        name: str,
-        dev_id: str,
-        model: str | None,
-        description: SensorEntityDescription,
-    ) -> None:
-        """Set up the Plugwise API."""
-        super().__init__(api, coordinator, name, dev_id, description)
-        self._model = model
-        if dev_id == self._api.gateway_id:
-            self._model = "P1 DSMR"
-
-    @callback
-    def _async_process_data(self) -> None:
-        """Update the entity."""
-        if not (data := self._api.get_device_data(self._dev_id)):
-            LOGGER.error("Received no data for device %s", self._entity_name)
-            self.async_write_ha_state()
-            return
-
-        self._attr_native_value = data.get(self.entity_description.key)
-        self.async_write_ha_state()
+    @property
+    def native_value(self) -> int | float | None:
+        """Return the value reported by the sensor."""
+        return self.device["sensors"].get(self.entity_description.key)

@@ -97,12 +97,17 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         _version = _properties.get("version", "n/a")
         _name = f"{ZEROCONF_MAP.get(_product, _product)} v{_version}"
 
-        self.context["title_placeholders"] = {
-            CONF_HOST: discovery_info.host,
-            CONF_NAME: _name,
-            CONF_PORT: discovery_info.port,
-            CONF_USERNAME: self._username,
-        }
+        self.context.update(
+            {
+                "title_placeholders": {
+                    CONF_HOST: discovery_info.host,
+                    CONF_NAME: _name,
+                    CONF_PORT: discovery_info.port,
+                    CONF_USERNAME: self._username,
+                },
+                "configuration_url": f"http://{discovery_info.host}:{discovery_info.port}",
+            }
+        )
         return await self.async_step_user()
 
     async def async_step_user(

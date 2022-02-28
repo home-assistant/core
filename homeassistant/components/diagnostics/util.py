@@ -12,7 +12,7 @@ T = TypeVar("T")
 
 
 @overload
-def async_redact_data(data: Mapping, to_redact: Iterable[Any]) -> dict:  # type: ignore
+def async_redact_data(data: Mapping, to_redact: Iterable[Any]) -> dict:  # type: ignore[misc]
     ...
 
 

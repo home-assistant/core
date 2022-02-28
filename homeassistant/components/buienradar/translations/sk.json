@@ -1,0 +1,21 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Zemepisn\u00e1 \u0161\u00edrka",
+                    "longitude": "Zemepisn\u00e1 d\u013a\u017eka"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "country_code": "K\u00f3d krajiny"
+                }
+            }
+        }
+    }
+}

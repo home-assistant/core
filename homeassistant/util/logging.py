@@ -33,6 +33,15 @@ class HideSensitiveDataFilter(logging.Filter):
 class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
     """Process the log in another thread."""
 
+    def prepare(self, record: logging.LogRecord) -> logging.LogRecord:
+        """Prepare a record for queuing.
+
+        This is added as a workaround for https://bugs.python.org/issue46755
+        """
+        record = super().prepare(record)
+        record.stack_info = None
+        return record
+
     def handle(self, record: logging.LogRecord) -> Any:
         """
         Conditionally emit the specified logging record.
@@ -60,11 +69,11 @@ def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
     This allows us to avoid blocking I/O and formatting messages
     in the event loop as log messages are written in another thread.
     """
-    simple_queue = queue.SimpleQueue()  # type: ignore
+    simple_queue: queue.SimpleQueue[logging.Handler] = queue.SimpleQueue()
     queue_handler = HomeAssistantQueueHandler(simple_queue)
     logging.root.addHandler(queue_handler)
 
-    migrated_handlers = []
+    migrated_handlers: list[logging.Handler] = []
     for handler in logging.root.handlers[:]:
         if handler is queue_handler:
             continue
