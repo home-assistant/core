@@ -1662,6 +1662,43 @@ async def test_dump_service(hass, mqtt_mock):
     assert writes[1][1][0] == "bla/2,test2\n"
 
 
+async def test_mqtt_ws_remove_discovered_device(
+    hass, device_reg, entity_reg, hass_ws_client, mqtt_mock
+):
+    """Test MQTT websocket device removal."""
+    assert await async_setup_component(hass, "config", {})
+
+    data = (
+        '{ "device":{"identifiers":["0AFFD2"]},'
+        '  "state_topic": "foobar/sensor",'
+        '  "unique_id": "unique" }'
+    )
+
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    await hass.async_block_till_done()
+
+    # Verify device entry is created
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
+    assert device_entry is not None
+
+    client = await hass_ws_client(hass)
+    mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": mqtt_config_entry.entry_id,
+            "device_id": device_entry.id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    # Verify device entry is cleared
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
+    assert device_entry is None
+
+
 async def test_mqtt_ws_get_device_debug_info(
     hass, device_reg, hass_ws_client, mqtt_mock
 ):
