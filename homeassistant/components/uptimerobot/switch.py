@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pyuptimerobot import UptimeRobotAuthenticationException
+from pyuptimerobot import UptimeRobotAuthenticationException, UptimeRobotException
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -61,13 +61,16 @@ class UptimeRobotSwitch(UptimeRobotEntity, SwitchEntity):
             if self.coordinator.config_entry:
                 self.coordinator.config_entry.async_start_reauth(self.hass)
             LOGGER.error("API exception: Authentication error with empty config entry")
-        except Exception as exception:  # pylint: disable=broad-except
+            return
+        except UptimeRobotException as exception:
             LOGGER.error("API exception: %s", exception)
-        else:
-            if response.status != API_ATTR_OK:
-                LOGGER.error("API exception: %s", response.error.message, exc_info=True)
-            else:
-                await self.coordinator.async_request_refresh()
+            return
+
+        if response.status != API_ATTR_OK:
+            LOGGER.error("API exception: %s", response.error.message, exc_info=True)
+            return
+
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn on switch."""
