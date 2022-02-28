@@ -5,6 +5,7 @@ from unittest.mock import Mock, call, patch
 import pytest
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
 from samsungtvws import SamsungTVWS
+from samsungtvws.async_rest import SamsungTVAsyncRest
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from websocket import WebSocketException, WebSocketProtocolException
 
@@ -465,6 +466,9 @@ async def test_ssdp_websocket_not_supported(hass: HomeAssistant) -> None:
         "homeassistant.components.samsungtv.bridge.SamsungTVWS",
     ) as remotews, patch.object(
         remotews, "open", side_effect=WebSocketProtocolException("Boom")
+    ), patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest.rest_device_info",
+        return_value=None,
     ):
         # device not supported
         result = await hass.config_entries.flow.async_init(
@@ -815,12 +819,17 @@ async def test_autodetect_websocket(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=OSError("Boom"),
-    ), patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remotews:
+    ), patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
+    ) as remotews, patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest"
+    ) as rest_api_class:
+        rest_api = Mock(SamsungTVAsyncRest)
         remote = Mock(SamsungTVWS)
         remote.__enter__ = Mock(return_value=remote)
         remote.__exit__ = Mock(return_value=False)
         remote.app_list.return_value = SAMPLE_APP_LIST
-        remote.rest_device_info.return_value = {
+        rest_api.rest_device_info.return_value = {
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
             "device": {
                 "modelName": "82GXARRS",
@@ -833,6 +842,7 @@ async def test_autodetect_websocket(hass: HomeAssistant) -> None:
             },
         }
         remote.token = "123456789"
+        rest_api_class.return_value = rest_api
         remotews.return_value = remote
 
         result = await hass.config_entries.flow.async_init(
@@ -862,12 +872,15 @@ async def test_websocket_no_mac(hass: HomeAssistant) -> None:
         "homeassistant.components.samsungtv.bridge.SamsungTVWS"
     ) as remotews, patch(
         "getmac.get_mac_address", return_value="gg:hh:ii:ll:mm:nn"
-    ):
+    ), patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest"
+    ) as rest_api_class:
+        rest_api = Mock(SamsungTVAsyncRest)
         remote = Mock(SamsungTVWS)
         remote.__enter__ = Mock(return_value=remote)
         remote.__exit__ = Mock(return_value=False)
         remote.app_list.return_value = SAMPLE_APP_LIST
-        remote.rest_device_info.return_value = {
+        rest_api.rest_device_info.return_value = {
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
             "device": {
                 "modelName": "82GXARRS",
@@ -878,6 +891,7 @@ async def test_websocket_no_mac(hass: HomeAssistant) -> None:
             },
         }
         remote.token = "123456789"
+        rest_api_class.return_value = rest_api
         remotews.return_value = remote
 
         result = await hass.config_entries.flow.async_init(
@@ -1175,7 +1189,7 @@ async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(
     )
     entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWS.rest_device_info",
+        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest.rest_device_info",
         side_effect=HttpApiError,
     ), patch(
         "homeassistant.components.samsungtv.bridge.Remote.__enter__",

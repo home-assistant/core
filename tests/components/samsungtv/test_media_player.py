@@ -7,6 +7,7 @@ from unittest.mock import DEFAULT as DEFAULT_MOCK, Mock, call, patch
 import pytest
 from samsungctl import exceptions
 from samsungtvws import SamsungTVWS
+from samsungtvws.async_rest import SamsungTVAsyncRest
 from samsungtvws.exceptions import ConnectionFailure
 from websocket import WebSocketException
 
@@ -159,12 +160,17 @@ async def test_setup_without_turnon(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("remotews")
 async def test_setup_websocket(hass: HomeAssistant) -> None:
     """Test setup of platform."""
-    with patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remote_class:
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
+    ) as remote_class, patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest"
+    ) as rest_api_class:
+        rest_api = Mock(SamsungTVAsyncRest)
         remote = Mock(SamsungTVWS)
         remote.__enter__ = Mock(return_value=remote)
         remote.__exit__ = Mock()
         remote.app_list.return_value = SAMPLE_APP_LIST
-        remote.rest_device_info.return_value = {
+        rest_api.rest_device_info.return_value = {
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
             "device": {
                 "modelName": "82GXARRS",
@@ -175,6 +181,7 @@ async def test_setup_websocket(hass: HomeAssistant) -> None:
             },
         }
         remote.token = "123456789"
+        rest_api_class.return_value = rest_api
         remote_class.return_value = remote
 
         await setup_samsungtv(hass, MOCK_CONFIGWS)
@@ -208,12 +215,17 @@ async def test_setup_websocket_2(hass: HomeAssistant, mock_now: datetime) -> Non
     assert len(config_entries) == 1
     assert entry is config_entries[0]
 
-    with patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remote_class:
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
+    ) as remote_class, patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest"
+    ) as rest_api_class:
+        rest_api = Mock(SamsungTVAsyncRest)
         remote = Mock(SamsungTVWS)
         remote.__enter__ = Mock(return_value=remote)
         remote.__exit__ = Mock()
         remote.app_list.return_value = SAMPLE_APP_LIST
-        remote.rest_device_info.return_value = {
+        rest_api.rest_device_info.return_value = {
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
             "device": {
                 "modelName": "82GXARRS",
@@ -224,6 +236,7 @@ async def test_setup_websocket_2(hass: HomeAssistant, mock_now: datetime) -> Non
             },
         }
         remote.token = "987654321"
+        rest_api_class.return_value = rest_api
         remote_class.return_value = remote
         assert await async_setup_component(hass, SAMSUNGTV_DOMAIN, {})
         await hass.async_block_till_done()
