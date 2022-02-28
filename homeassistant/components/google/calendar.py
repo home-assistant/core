@@ -154,7 +154,7 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
             _LOGGER.error("Unable to connect to Google: %s", err)
             return
 
-        # Pick the first visible evemt. Make a copy since calculate_offset mutates the event
+        # Pick the first visible event. Make a copy since calculate_offset mutates the event
         valid_items = filter(self._event_filter, items)
         self._event = copy.deepcopy(next(valid_items, None))
         if self._event:
