@@ -176,17 +176,22 @@ async def _async_create_bridge_with_updated_data(
 
     mac: str | None = entry.data.get(CONF_MAC)
     if not mac:
+        LOGGER.debug("Attempting to get mac for %s", host)
         if info:
             mac = mac_from_device_info(info)
         else:
             mac = await bridge.async_mac_from_device()
 
-    if not mac:
-        mac = await hass.async_add_executor_job(
-            partial(getmac.get_mac_address, ip=host)
-        )
-    if mac:
-        updated_data[CONF_MAC] = mac
+        if not mac:
+            mac = await hass.async_add_executor_job(
+                partial(getmac.get_mac_address, ip=host)
+            )
+
+        if mac:
+            LOGGER.debug("Updated mac to %s for %s", mac, host)
+            updated_data[CONF_MAC] = mac
+        else:
+            LOGGER.debug("Failed to get mac for %s", host)
 
     if updated_data:
         data = {**entry.data, **updated_data}
