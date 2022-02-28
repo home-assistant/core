@@ -32,7 +32,7 @@ async def validate_host_input(host: str) -> str:
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for IntelliFire."""
 
-    VERSION = 2
+    VERSION = 1
 
     def __init__(self):
         """Initialize the Config Flow Handler."""
