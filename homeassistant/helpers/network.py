@@ -13,9 +13,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.util.network import is_ip_address, is_loopback, normalize_url
 
-from .supervisor import has_supervisor
-
-TYPE_URL_HOSTNAME = "hostname_url"
 TYPE_URL_INTERNAL = "internal_url"
 TYPE_URL_EXTERNAL = "external_url"
 
@@ -48,6 +45,18 @@ def is_hass_url(hass: HomeAssistant, url: str) -> bool:
             )
         )
 
+    def addon_url() -> str | None:
+        if hass.config.api is None or not hass.components.hassio.is_hassio():
+            return None
+
+        return str(
+            yarl.URL.build(
+                scheme="http",
+                host=hass.components.hassio.get_host_info()["hostname"],
+                port=hass.config.api.port,
+            )
+        )
+
     def cloud_url() -> str | None:
         try:
             return _get_cloud_url(hass)
@@ -59,6 +68,7 @@ def is_hass_url(hass: HomeAssistant, url: str) -> bool:
         lambda: hass.config.external_url,
         cloud_url,
         host_ip,
+        addon_url,
     ):
         potential_base = potential_base_factory()
 
@@ -83,7 +93,6 @@ def get_url(
     require_current_request: bool = False,
     require_ssl: bool = False,
     require_standard_port: bool = False,
-    allow_hostname: bool = False,
     allow_internal: bool = True,
     allow_external: bool = True,
     allow_cloud: bool = True,
@@ -101,21 +110,12 @@ def get_url(
     if allow_ip is None:
         allow_ip = hass.config.api is None or not hass.config.api.use_ssl
 
-    order = [TYPE_URL_HOSTNAME, TYPE_URL_INTERNAL, TYPE_URL_EXTERNAL]
+    order = [TYPE_URL_INTERNAL, TYPE_URL_EXTERNAL]
     if prefer_external:
         order.reverse()
 
     # Try finding an URL in the order specified
     for url_type in order:
-
-        if allow_hostname and url_type == TYPE_URL_HOSTNAME:
-            with suppress(NoURLAvailableError):
-                return _get_hostname_url(
-                    hass,
-                    require_current_request=require_current_request,
-                    require_ssl=require_ssl,
-                    require_standard_port=require_standard_port,
-                )
 
         if allow_internal and url_type == TYPE_URL_INTERNAL:
             with suppress(NoURLAvailableError):
@@ -182,32 +182,6 @@ def _get_request_host() -> str | None:
     if (request := http.current_request.get()) is None:
         raise NoURLAvailableError
     return yarl.URL(request.url).host
-
-
-@bind_hass
-def _get_hostname_url(
-    hass: HomeAssistant,
-    *,
-    require_current_request: bool = False,
-    require_ssl: bool = False,
-    require_standard_port: bool = False,
-) -> str:
-    """Get hostname of this instance."""
-    if has_supervisor() and not (
-        require_ssl or hass.config.api is None or hass.config.api.use_ssl
-    ):
-        # SSL not an option since certificate won't be valid for hostname
-        hostname_url = yarl.URL.build(
-            scheme="http",
-            host=hass.components.hassio.get_host_info()["hostname"],
-            port=hass.config.api.port,
-        )
-        if (
-            not require_current_request or hostname_url.host == _get_request_host()
-        ) and (not require_standard_port or hostname_url.is_default_port()):
-            return normalize_url(str(hostname_url))
-
-    raise NoURLAvailableError
 
 
 @bind_hass

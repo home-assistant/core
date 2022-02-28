@@ -318,7 +318,7 @@ class VlcDevice(MediaPlayerEntity):
 
         # If media ID is a relative URL, we serve it from HA.
         media_id = async_process_play_media_url(
-            self.hass, media_id, allow_hostname=self._using_addon
+            self.hass, media_id, for_addon=self._using_addon
         )
 
         await self._vlc.add(media_id)

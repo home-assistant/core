@@ -16,7 +16,11 @@ from .const import CONTENT_AUTH_EXPIRY_TIME, MEDIA_CLASS_DIRECTORY
 
 @callback
 def async_process_play_media_url(
-    hass: HomeAssistant, media_content_id: str, *, allow_relative_url: bool = False
+    hass: HomeAssistant,
+    media_content_id: str,
+    *,
+    allow_relative_url: bool = False,
+    for_addon: bool = False,
 ) -> str:
     """Update a media URL with authentication if it points at Home Assistant."""
     if media_content_id[0] != "/" and not is_hass_url(hass, media_content_id):
@@ -38,7 +42,21 @@ def async_process_play_media_url(
 
     # convert relative URL to absolute URL
     if media_content_id[0] == "/" and not allow_relative_url:
-        media_content_id = f"{get_url(hass)}{media_content_id}"
+        if (
+            for_addon
+            and hass.config.api
+            and not hass.config.api.use_ssl
+            and hass.components.hassio.is_hassio()
+        ):
+            addon_url = yarl.URL.build(
+                scheme="http",
+                host=hass.components.hassio.get_host_info()["hostname"],
+                port=hass.config.api.port,
+            )
+            media_content_id = f"{str(addon_url)}{media_content_id}"
+
+        else:
+            media_content_id = f"{get_url(hass)}{media_content_id}"
 
     return media_content_id
 

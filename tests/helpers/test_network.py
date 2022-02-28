@@ -692,75 +692,19 @@ async def test_is_hass_url(hass):
         assert is_hass_url(hass, "http://example.nabu.casa") is False
 
 
-async def test_get_hostname_url(hass):
-    """Test getting an instance URL for use within network managed by supervisor."""
+async def test_is_hass_url_addon_url(hass):
+    """Test is_hass_url with an addon URL."""
+    assert is_hass_url(hass, "http://homeassistant:8123") is False
+
+    hass.config.api = Mock(use_ssl=False, port=8123, local_ip="192.168.123.123")
     await async_process_ha_core_config(
         hass,
-        {"external_url": "https://example.com"},
+        {"internal_url": "http://example.local:8123"},
     )
-    assert hass.config.external_url == "https://example.com"
+    assert is_hass_url(hass, "http://homeassistant:8123") is False
 
-    with patch("homeassistant.helpers.network.has_supervisor", return_value=False):
-        assert get_url(hass, allow_hostname=True) == "https://example.com"
-
-    with patch("homeassistant.helpers.network.has_supervisor", return_value=True):
-        # API didn't set up so neither did hassio integration, can't get hostname
-        assert get_url(hass, allow_hostname=True) == "https://example.com"
-
-        hass.config.api = Mock(use_ssl=False, port=8123, local_ip="192.168.123.123")
-        mock_component(hass, "hassio")
-        hass.components.hassio.get_host_info = Mock(
-            return_value={"hostname": "homeassistant"}
-        )
-        assert get_url(hass, allow_hostname=True) == "http://homeassistant:8123"
-        assert (
-            get_url(hass, allow_hostname=True, require_ssl=True)
-            == "https://example.com"
-        )
-        assert (
-            get_url(hass, allow_hostname=True, prefer_external=True)
-            == "https://example.com"
-        )
-
-        # Test require_current_request works with hostname option
-        with patch("homeassistant.components.http.current_request"):
-            with patch(
-                "homeassistant.helpers.network._get_request_host",
-                return_value="homeassistant",
-            ):
-                assert (
-                    get_url(hass, allow_hostname=True, require_current_request=True)
-                    == "http://homeassistant:8123"
-                )
-            with patch(
-                "homeassistant.helpers.network._get_request_host",
-                return_value="example.com",
-            ):
-                assert (
-                    get_url(hass, allow_hostname=True, require_current_request=True)
-                    == "https://example.com"
-                )
-
-        # Require standard port skips hostname unless port is 80
-        assert (
-            get_url(hass, allow_hostname=True, require_standard_port=True)
-            == "https://example.com"
-        )
-        hass.config.api = Mock(use_ssl=False, port=80, local_ip="192.168.123.123")
-        assert (
-            get_url(hass, allow_hostname=True, require_standard_port=True)
-            == "http://homeassistant"
-        )
-
-        # Hostname skipped if ssl is on
-        hass.config.api = Mock(use_ssl=True, port=8123, local_ip="192.168.123.123")
-        assert get_url(hass, allow_hostname=True) == "https://example.com"
-
-        # Prefer hostname over normal internal if allowed
-        hass.config.api = Mock(use_ssl=False, port=8123, local_ip="192.168.123.123")
-        await async_process_ha_core_config(
-            hass,
-            {"internal_url": "http://192.168.1.1:8123"},
-        )
-        assert hass.config.internal_url == "http://192.168.1.1:8123"
-        assert get_url(hass, allow_hostname=True) == "http://homeassistant:8123"
+    mock_component(hass, "hassio")
+    hass.components.hassio.get_host_info = Mock(
+        return_value={"hostname": "homeassistant"}
+    )
+    assert is_hass_url(hass, "http://homeassistant:8123")

@@ -62,20 +62,28 @@ async def test_process_play_media_url(hass, mock_sign_path):
     )
 
 
-async def test_process_play_media_url_allow_hostname(hass, mock_sign_path):
-    """Test it picks the hostname when available."""
+async def test_process_play_media_url_for_addon(hass, mock_sign_path):
+    """Test it uses the hostname for an addon if available."""
+    addon_url = "http://homeassistant:8123/path?authSig=bla"
     await async_process_ha_core_config(
         hass,
-        {"internal_url": "http://example.local:8123"},
+        {
+            "internal_url": "http://example.local:8123",
+            "external_url": "https://example.com",
+        },
     )
+
+    # Not hassio or hassio not loaded yet, don't use addon url
     hass.config.api = Mock(use_ssl=False, port=8123, local_ip="192.168.123.123")
+    assert async_process_play_media_url(hass, "/path", for_addon=True) != addon_url
+
+    # Is hassio and not SSL, use an addon url
     mock_component(hass, "hassio")
     hass.components.hassio.get_host_info = Mock(
         return_value={"hostname": "homeassistant"}
     )
+    assert async_process_play_media_url(hass, "/path", for_addon=True) == addon_url
 
-    with patch("homeassistant.helpers.network.has_supervisor", return_value=True):
-        assert (
-            async_process_play_media_url(hass, "/path", allow_hostname=True)
-            == "http://homeassistant:8123/path?authSig=bla"
-        )
+    # Hassio loaded but using SSL, don't use an addon URL
+    hass.config.api = Mock(use_ssl=True, port=8123, local_ip="192.168.123.123")
+    assert async_process_play_media_url(hass, "/path", for_addon=True) != addon_url
