@@ -424,7 +424,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
             # Different reasons, e.g. hostname not resolveable
             pass
 
-    def _get_remote(self, avoid_open: bool = False) -> SamsungTVWS:
+    def _get_remote(self) -> SamsungTVWS:
         """Create or return a remote control instance."""
         if self._remote is None:
             # We need to create a new instance to reconnect.
@@ -439,8 +439,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     timeout=TIMEOUT_WEBSOCKET,
                     name=VALUE_CONF_NAME,
                 )
-                if not avoid_open:
-                    self._remote.open()
+                self._remote.open()
             # This is only happening when the auth was switched to DENY
             # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
             except ConnectionFailure as err:
