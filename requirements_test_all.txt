@@ -1340,7 +1340,7 @@ screenlogicpy==0.5.4
 sense_energy==0.10.2
 
 # homeassistant.components.sentry
-sentry-sdk==1.5.5
+sentry-sdk==1.5.6
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
@@ -1560,7 +1560,7 @@ yeelight==0.7.9
 youless-api==0.16
 
 # homeassistant.components.zeroconf
-zeroconf==0.38.3
+zeroconf==0.38.4
 
 # homeassistant.components.zha
 zha-quirks==0.0.67
