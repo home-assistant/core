@@ -1118,7 +1118,7 @@ pyotgw==1.1b1
 pyotp==2.6.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.3.8
+pyoverkiz==1.3.9
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -1327,7 +1327,7 @@ rxv==0.7.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws==1.7.0
+samsungtvws[async]==2.0.0
 
 # homeassistant.components.dhcp
 scapy==2.4.5
