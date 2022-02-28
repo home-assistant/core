@@ -1,5 +1,6 @@
 """Sensor platform for FireServiceRota integration."""
 import logging
+from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -65,9 +66,9 @@ class IncidentsSensor(RestoreEntity, SensorEntity):
         return False
 
     @property
-    def extra_state_attributes(self) -> object:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return available attributes for sensor."""
-        attr = {}
+        attr: dict[str, Any] = {}
 
         if not (data := self._state_attributes):
             return attr

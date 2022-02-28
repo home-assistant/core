@@ -153,4 +153,9 @@ COORDINATORS: tuple[RenaultCoordinatorDescription, ...] = (
         key="lock_status",
         update_method=lambda x: x.get_lock_status,
     ),
+    RenaultCoordinatorDescription(
+        endpoint="res-state",
+        key="res_state",
+        update_method=lambda x: x.get_res_state,
+    ),
 )

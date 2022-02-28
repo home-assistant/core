@@ -1,12 +1,14 @@
 """Helpers to help coordinate updates."""
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
+from typing import Any
 
 from aiohttp import ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
-from pyoverkiz.enums import EventName, ExecutionState
+from pyoverkiz.enums import EventName, ExecutionState, Protocol
 from pyoverkiz.exceptions import (
     BadCredentialsException,
     InvalidEventListenerIdException,
@@ -25,7 +27,9 @@ from homeassistant.util.decorator import Registry
 
 from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
 
-EVENT_HANDLERS = Registry()
+EVENT_HANDLERS: Registry[
+    str, Callable[[OverkizDataUpdateCoordinator, Event], Coroutine[Any, Any, None]]
+] = Registry()
 
 
 class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
@@ -55,9 +59,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.client = client
         self.devices: dict[str, Device] = {d.device_url: d for d in devices}
         self.is_stateless = all(
-            device.device_url.startswith("rts://")
-            or device.device_url.startswith("internal://")
-            for device in devices
+            device.protocol in (Protocol.RTS, Protocol.INTERNAL) for device in devices
         )
         self.executions: dict[str, dict[str, str]] = {}
         self.areas = self._places_to_area(places)

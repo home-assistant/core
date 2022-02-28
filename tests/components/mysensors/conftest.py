@@ -6,6 +6,7 @@ import json
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+from mysensors import BaseSyncGateway
 from mysensors.persistence import MySensorsJSONDecoder
 from mysensors.sensor import Sensor
 import pytest
@@ -140,6 +141,12 @@ async def integration(
         await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         yield config_entry, receive_message
+
+
+@pytest.fixture(name="gateway")
+def gateway_fixture(transport, integration) -> BaseSyncGateway:
+    """Return a setup gateway."""
+    return transport.call_args[0][0]
 
 
 def load_nodes_state(fixture_path: str) -> dict:

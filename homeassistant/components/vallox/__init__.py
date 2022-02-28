@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import date
 import ipaddress
 import logging
 from typing import Any, NamedTuple
@@ -9,7 +10,10 @@ from uuid import UUID
 
 from vallox_websocket_api import PROFILE as VALLOX_PROFILE, Vallox
 from vallox_websocket_api.exceptions import ValloxApiException
-from vallox_websocket_api.vallox import get_uuid as calculate_uuid
+from vallox_websocket_api.vallox import (
+    get_next_filter_change_date as calculate_next_filter_change_date,
+    get_uuid as calculate_uuid,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -116,6 +120,15 @@ class ValloxState:
         if not isinstance(uuid, UUID):
             raise ValueError
         return uuid
+
+    def get_next_filter_change_date(self) -> date | None:
+        """Return the next filter change date."""
+        next_filter_change_date = calculate_next_filter_change_date(self.metric_cache)
+
+        if not isinstance(next_filter_change_date, date):
+            return None
+
+        return next_filter_change_date
 
 
 class ValloxDataUpdateCoordinator(DataUpdateCoordinator):

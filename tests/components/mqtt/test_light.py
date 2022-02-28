@@ -3617,7 +3617,7 @@ async def test_sending_mqtt_brightness_command_with_template(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     await common.async_turn_on(hass, "light.test", brightness=100)
 
@@ -3655,7 +3655,7 @@ async def test_sending_mqtt_effect_command_with_template(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     await common.async_turn_on(hass, "light.test", effect="colorloop")
 

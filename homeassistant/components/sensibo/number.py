@@ -9,6 +9,7 @@ from homeassistant.components.number import NumberEntity, NumberEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -96,6 +97,7 @@ class SensiboNumber(CoordinatorEntity, NumberEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data[device_id]["id"])},
             name=coordinator.data[device_id]["name"],
+            connections={(CONNECTION_NETWORK_MAC, coordinator.data[device_id]["mac"])},
             manufacturer="Sensibo",
             configuration_url="https://home.sensibo.com/",
             model=coordinator.data[device_id]["model"],

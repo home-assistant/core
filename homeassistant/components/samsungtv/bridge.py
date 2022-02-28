@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from asyncio.exceptions import TimeoutError as AsyncioTimeoutError
 import contextlib
 from typing import Any
 
-from requests.exceptions import Timeout as RequestsTimeout
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
 from samsungtvws import SamsungTVWS
+from samsungtvws.async_rest import SamsungTVAsyncRest
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from websocket import WebSocketException
 
@@ -19,9 +20,9 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_TIMEOUT,
-    CONF_TOKEN,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
@@ -56,25 +57,18 @@ async def async_get_device_info(
     host: str,
 ) -> tuple[int | None, str | None, dict[str, Any] | None]:
     """Fetch the port, method, and device info."""
-    return await hass.async_add_executor_job(_get_device_info, bridge, host)
-
-
-def _get_device_info(
-    bridge: SamsungTVWSBridge | SamsungTVLegacyBridge, host: str
-) -> tuple[int | None, str | None, dict[str, Any] | None]:
-    """Fetch the port, method, and device info."""
     if bridge and bridge.port:
-        return bridge.port, bridge.method, bridge.device_info()
+        return bridge.port, bridge.method, await bridge.async_device_info()
 
     for port in WEBSOCKET_PORTS:
-        bridge = SamsungTVBridge.get_bridge(METHOD_WEBSOCKET, host, port)
-        if info := bridge.device_info():
+        bridge = SamsungTVBridge.get_bridge(hass, METHOD_WEBSOCKET, host, port)
+        if info := await bridge.async_device_info():
             return port, METHOD_WEBSOCKET, info
 
-    bridge = SamsungTVBridge.get_bridge(METHOD_LEGACY, host, LEGACY_PORT)
-    result = bridge.try_connect()
+    bridge = SamsungTVBridge.get_bridge(hass, METHOD_LEGACY, host, LEGACY_PORT)
+    result = await bridge.async_try_connect()
     if result in (RESULT_SUCCESS, RESULT_AUTH_MISSING):
-        return LEGACY_PORT, METHOD_LEGACY, None
+        return LEGACY_PORT, METHOD_LEGACY, await bridge.async_device_info()
 
     return None, None, None
 
@@ -84,20 +78,26 @@ class SamsungTVBridge(ABC):
 
     @staticmethod
     def get_bridge(
-        method: str, host: str, port: int | None = None, token: str | None = None
+        hass: HomeAssistant,
+        method: str,
+        host: str,
+        port: int | None = None,
+        token: str | None = None,
     ) -> SamsungTVLegacyBridge | SamsungTVWSBridge:
         """Get Bridge instance."""
         if method == METHOD_LEGACY or port == LEGACY_PORT:
-            return SamsungTVLegacyBridge(method, host, port)
-        return SamsungTVWSBridge(method, host, port, token)
+            return SamsungTVLegacyBridge(hass, method, host, port)
+        return SamsungTVWSBridge(hass, method, host, port, token)
 
-    def __init__(self, method: str, host: str, port: int | None = None) -> None:
+    def __init__(
+        self, hass: HomeAssistant, method: str, host: str, port: int | None = None
+    ) -> None:
         """Initialize Bridge."""
+        self.hass = hass
         self.port = port
         self.method = method
         self.host = host
         self.token: str | None = None
-        self._remote: Remote | None = None
         self._reauth_callback: CALLBACK_TYPE | None = None
         self._new_token_callback: CALLBACK_TYPE | None = None
 
@@ -110,80 +110,32 @@ class SamsungTVBridge(ABC):
         self._new_token_callback = func
 
     @abstractmethod
-    def try_connect(self) -> str | None:
+    async def async_try_connect(self) -> str | None:
         """Try to connect to the TV."""
 
     @abstractmethod
-    def device_info(self) -> dict[str, Any] | None:
+    async def async_device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""
 
     @abstractmethod
-    def mac_from_device(self) -> str | None:
+    async def async_mac_from_device(self) -> str | None:
         """Try to fetch the mac address of the TV."""
 
     @abstractmethod
-    def get_app_list(self) -> dict[str, str] | None:
+    async def async_get_app_list(self) -> dict[str, str] | None:
         """Get installed app list."""
 
-    def is_on(self) -> bool:
+    @abstractmethod
+    async def async_is_on(self) -> bool:
         """Tells if the TV is on."""
-        if self._remote is not None:
-            self.close_remote()
 
-        try:
-            return self._get_remote() is not None
-        except (
-            UnhandledResponse,
-            AccessDenied,
-            ConnectionFailure,
-        ):
-            # We got a response so it's working.
-            return True
-        except OSError:
-            # Different reasons, e.g. hostname not resolveable
-            return False
-
-    def send_key(self, key: str, key_type: str | None = None) -> None:
+    @abstractmethod
+    async def async_send_key(self, key: str, key_type: str | None = None) -> None:
         """Send a key to the tv and handles exceptions."""
-        try:
-            # recreate connection if connection was dead
-            retry_count = 1
-            for _ in range(retry_count + 1):
-                try:
-                    self._send_key(key, key_type)
-                    break
-                except (
-                    ConnectionClosed,
-                    BrokenPipeError,
-                    WebSocketException,
-                ):
-                    # BrokenPipe can occur when the commands is sent to fast
-                    # WebSocketException can occur when timed out
-                    self._remote = None
-        except (UnhandledResponse, AccessDenied):
-            # We got a response so it's on.
-            LOGGER.debug("Failed sending command %s", key, exc_info=True)
-        except OSError:
-            # Different reasons, e.g. hostname not resolveable
-            pass
 
     @abstractmethod
-    def _send_key(self, key: str, key_type: str | None = None) -> None:
-        """Send the key."""
-
-    @abstractmethod
-    def _get_remote(self, avoid_open: bool = False) -> Remote:
-        """Get Remote object."""
-
-    def close_remote(self) -> None:
+    async def async_close_remote(self) -> None:
         """Close remote object."""
-        try:
-            if self._remote is not None:
-                # Close the current remote connection
-                self._remote.close()
-            self._remote = None
-        except OSError:
-            LOGGER.debug("Could not establish connection")
 
     def _notify_reauth_callback(self) -> None:
         """Notify access denied callback."""
@@ -199,9 +151,11 @@ class SamsungTVBridge(ABC):
 class SamsungTVLegacyBridge(SamsungTVBridge):
     """The Bridge for Legacy TVs."""
 
-    def __init__(self, method: str, host: str, port: int | None) -> None:
+    def __init__(
+        self, hass: HomeAssistant, method: str, host: str, port: int | None
+    ) -> None:
         """Initialize Bridge."""
-        super().__init__(method, host, LEGACY_PORT)
+        super().__init__(hass, method, host, LEGACY_PORT)
         self.config = {
             CONF_NAME: VALUE_CONF_NAME,
             CONF_DESCRIPTION: VALUE_CONF_NAME,
@@ -211,16 +165,36 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             CONF_PORT: None,
             CONF_TIMEOUT: 1,
         }
+        self._remote: Remote | None = None
 
-    def mac_from_device(self) -> None:
+    async def async_mac_from_device(self) -> None:
         """Try to fetch the mac address of the TV."""
         return None
 
-    def get_app_list(self) -> dict[str, str]:
+    async def async_get_app_list(self) -> dict[str, str]:
         """Get installed app list."""
         return {}
 
-    def try_connect(self) -> str:
+    async def async_is_on(self) -> bool:
+        """Tells if the TV is on."""
+        return await self.hass.async_add_executor_job(self._is_on)
+
+    def _is_on(self) -> bool:
+        """Tells if the TV is on."""
+        if self._remote is not None:
+            self._close_remote()
+
+        try:
+            return self._get_remote() is not None
+        except (UnhandledResponse, AccessDenied):
+            # We got a response so it's working.
+            return True
+
+    async def async_try_connect(self) -> str:
+        """Try to connect to the Legacy TV."""
+        return await self.hass.async_add_executor_job(self._try_connect)
+
+    def _try_connect(self) -> str:
         """Try to connect to the Legacy TV."""
         config = {
             CONF_NAME: VALUE_CONF_NAME,
@@ -247,11 +221,11 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             LOGGER.debug("Failing config: %s, error: %s", config, err)
             return RESULT_CANNOT_CONNECT
 
-    def device_info(self) -> None:
+    async def async_device_info(self) -> None:
         """Try to gather infos of this device."""
         return None
 
-    def _get_remote(self, avoid_open: bool = False) -> Remote:
+    def _get_remote(self) -> Remote:
         """Create or return a remote control instance."""
         if self._remote is None:
             # We need to create a new instance to reconnect.
@@ -269,34 +243,73 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
                 pass
         return self._remote
 
-    def _send_key(self, key: str, key_type: str | None = None) -> None:
+    async def async_send_key(self, key: str, key_type: str | None = None) -> None:
         """Send the key using legacy protocol."""
-        if remote := self._get_remote():
-            remote.control(key)
+        await self.hass.async_add_executor_job(self._send_key, key)
 
-    def stop(self) -> None:
-        """Stop Bridge."""
-        LOGGER.debug("Stopping SamsungTVLegacyBridge")
-        self.close_remote()
+    def _send_key(self, key: str) -> None:
+        """Send the key using legacy protocol."""
+        try:
+            # recreate connection if connection was dead
+            retry_count = 1
+            for _ in range(retry_count + 1):
+                try:
+                    if remote := self._get_remote():
+                        remote.control(key)
+                    break
+                except (ConnectionClosed, BrokenPipeError):
+                    # BrokenPipe can occur when the commands is sent to fast
+                    self._remote = None
+        except (UnhandledResponse, AccessDenied):
+            # We got a response so it's on.
+            LOGGER.debug("Failed sending command %s", key, exc_info=True)
+        except OSError:
+            # Different reasons, e.g. hostname not resolveable
+            pass
+
+    async def async_close_remote(self) -> None:
+        """Close remote object."""
+        await self.hass.async_add_executor_job(self._close_remote)
+
+    def _close_remote(self) -> None:
+        """Close remote object."""
+        try:
+            if self._remote is not None:
+                # Close the current remote connection
+                self._remote.close()
+            self._remote = None
+        except OSError:
+            LOGGER.debug("Could not establish connection")
 
 
 class SamsungTVWSBridge(SamsungTVBridge):
     """The Bridge for WebSocket TVs."""
 
     def __init__(
-        self, method: str, host: str, port: int | None = None, token: str | None = None
+        self,
+        hass: HomeAssistant,
+        method: str,
+        host: str,
+        port: int | None = None,
+        token: str | None = None,
     ) -> None:
         """Initialize Bridge."""
-        super().__init__(method, host, port)
+        super().__init__(hass, method, host, port)
         self.token = token
+        self._rest_api: SamsungTVAsyncRest | None = None
         self._app_list: dict[str, str] | None = None
+        self._remote: SamsungTVWS | None = None
 
-    def mac_from_device(self) -> str | None:
+    async def async_mac_from_device(self) -> str | None:
         """Try to fetch the mac address of the TV."""
-        info = self.device_info()
+        info = await self.async_device_info()
         return mac_from_device_info(info) if info else None
 
-    def get_app_list(self) -> dict[str, str] | None:
+    async def async_get_app_list(self) -> dict[str, str] | None:
+        """Get installed app list."""
+        return await self.hass.async_add_executor_job(self._get_app_list)
+
+    def _get_app_list(self) -> dict[str, str] | None:
         """Get installed app list."""
         if self._app_list is None:
             if remote := self._get_remote():
@@ -308,7 +321,22 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
         return self._app_list
 
-    def try_connect(self) -> str:
+    async def async_is_on(self) -> bool:
+        """Tells if the TV is on."""
+        return await self.hass.async_add_executor_job(self._is_on)
+
+    def _is_on(self) -> bool:
+        """Tells if the TV is on."""
+        if self._remote is not None:
+            self._close_remote()
+
+        return self._get_remote() is not None
+
+    async def async_try_connect(self) -> str:
+        """Try to connect to the Websocket TV."""
+        return await self.hass.async_add_executor_job(self._try_connect)
+
+    def _try_connect(self) -> str:
         """Try to connect to the Websocket TV."""
         for self.port in WEBSOCKET_PORTS:
             config = {
@@ -330,10 +358,8 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     timeout=config[CONF_TIMEOUT],
                     name=config[CONF_NAME],
                 ) as remote:
-                    remote.open("samsung.remote.control")
+                    remote.open()
                     self.token = remote.token
-                    if self.token is None:
-                        config[CONF_TOKEN] = "*****"
                     LOGGER.debug("Working config: %s", config)
                     return RESULT_SUCCESS
             except WebSocketException as err:
@@ -350,26 +376,57 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
         return RESULT_CANNOT_CONNECT
 
-    def device_info(self) -> dict[str, Any] | None:
+    async def async_device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""
-        if remote := self._get_remote(avoid_open=True):
-            with contextlib.suppress(HttpApiError, RequestsTimeout):
-                device_info: dict[str, Any] = remote.rest_device_info()
-                return device_info
+        if not self.port:
+            return None
+
+        if self._rest_api is None:
+            self._rest_api = SamsungTVAsyncRest(
+                host=self.host,
+                session=async_get_clientsession(self.hass),
+                port=self.port,
+                timeout=TIMEOUT_WEBSOCKET,
+            )
+
+        with contextlib.suppress(HttpApiError, AsyncioTimeoutError):
+            device_info: dict[str, Any] = await self._rest_api.rest_device_info()
+            LOGGER.debug("Device info on %s is: %s", self.host, device_info)
+            return device_info
 
         return None
+
+    async def async_send_key(self, key: str, key_type: str | None = None) -> None:
+        """Send the key using websocket protocol."""
+        await self.hass.async_add_executor_job(self._send_key, key, key_type)
 
     def _send_key(self, key: str, key_type: str | None = None) -> None:
         """Send the key using websocket protocol."""
         if key == "KEY_POWEROFF":
             key = "KEY_POWER"
-        if remote := self._get_remote():
-            if key_type == "run_app":
-                remote.run_app(key)
-            else:
-                remote.send_key(key)
+        try:
+            # recreate connection if connection was dead
+            retry_count = 1
+            for _ in range(retry_count + 1):
+                try:
+                    if remote := self._get_remote():
+                        if key_type == "run_app":
+                            remote.run_app(key)
+                        else:
+                            remote.send_key(key)
+                    break
+                except (
+                    BrokenPipeError,
+                    WebSocketException,
+                ):
+                    # BrokenPipe can occur when the commands is sent to fast
+                    # WebSocketException can occur when timed out
+                    self._remote = None
+        except OSError:
+            # Different reasons, e.g. hostname not resolveable
+            pass
 
-    def _get_remote(self, avoid_open: bool = False) -> Remote:
+    def _get_remote(self) -> SamsungTVWS:
         """Create or return a remote control instance."""
         if self._remote is None:
             # We need to create a new instance to reconnect.
@@ -384,15 +441,19 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     timeout=TIMEOUT_WEBSOCKET,
                     name=VALUE_CONF_NAME,
                 )
-                if not avoid_open:
-                    self._remote.open("samsung.remote.control")
+                self._remote.open()
             # This is only happening when the auth was switched to DENY
             # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
-            except ConnectionFailure:
+            except ConnectionFailure as err:
+                LOGGER.debug("ConnectionFailure %s", err.__repr__())
                 self._notify_reauth_callback()
-            except (WebSocketException, OSError):
+            except (WebSocketException, OSError) as err:
+                LOGGER.debug("WebSocketException, OSError %s", err.__repr__())
                 self._remote = None
             else:
+                LOGGER.debug(
+                    "Created SamsungTVWSBridge for %s (%s)", CONF_NAME, self.host
+                )
                 if self.token != self._remote.token:
                     LOGGER.debug(
                         "SamsungTVWSBridge has provided a new token %s",
@@ -402,7 +463,16 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     self._notify_new_token_callback()
         return self._remote
 
-    def stop(self) -> None:
-        """Stop Bridge."""
-        LOGGER.debug("Stopping SamsungTVWSBridge")
-        self.close_remote()
+    async def async_close_remote(self) -> None:
+        """Close remote object."""
+        await self.hass.async_add_executor_job(self._close_remote)
+
+    def _close_remote(self) -> None:
+        """Close remote object."""
+        try:
+            if self._remote is not None:
+                # Close the current remote connection
+                self._remote.close()
+            self._remote = None
+        except OSError:
+            LOGGER.debug("Could not establish connection")
