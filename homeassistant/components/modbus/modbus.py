@@ -130,6 +130,11 @@ async def async_modbus_setup(
 ) -> bool:
     """Set up Modbus component."""
 
+    if DOMAIN in hass.data:  # pragma: no cover
+        # This is a reload so release old resources.
+        for hub in hass.data[DOMAIN]:
+            await hub.async_close()
+
     platform_names = []
     for entry in PLATFORMS:
         platform_names.append(entry[1])
