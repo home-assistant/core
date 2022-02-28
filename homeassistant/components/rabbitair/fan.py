@@ -20,7 +20,8 @@ from homeassistant.util.percentage import (
     percentage_to_ordered_list_item,
 )
 
-from .const import DOMAIN, KEY_COORDINATOR, KEY_DEVICE
+from . import HomeAssistantRabbitAirData
+from .const import DOMAIN
 from .entity import RabbitAirBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -126,7 +127,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR]
-    device = hass.data[DOMAIN][entry.entry_id][KEY_DEVICE]
-
-    async_add_entities([RabbitAirFanEntity(coordinator, device, entry)])
+    hass_data: HomeAssistantRabbitAirData = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
+        [RabbitAirFanEntity(hass_data.coordinator, hass_data.device, entry)]
+    )

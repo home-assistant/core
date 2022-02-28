@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
+from typing import NamedTuple
 
 from rabbitair import Client, State, UdpClient
 
@@ -13,11 +14,18 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, KEY_COORDINATOR, KEY_DEVICE
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.FAN]
+
+
+class HomeAssistantRabbitAirData(NamedTuple):
+    """Rabbit Air data stored in the Home Assistant data object."""
+
+    coordinator: DataUpdateCoordinator[State]
+    device: Client
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -51,10 +59,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        KEY_COORDINATOR: coordinator,
-        KEY_DEVICE: device,
-    }
+    hass.data[DOMAIN][entry.entry_id] = HomeAssistantRabbitAirData(
+        coordinator=coordinator,
+        device=device,
+    )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
