@@ -16,10 +16,11 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import State
 
-from .conftest import TEST_ENTITY_NAME, ReadResult
+from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
 
 ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
 
@@ -222,3 +223,79 @@ async def test_restore_state_climate(hass, mock_test_state, mock_modbus):
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVAC_MODE_AUTO
     assert state.attributes[ATTR_TEMPERATURE] == 37
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                    CONF_LAZY_ERROR: 1,
+                }
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "register_words,do_exception,start_expect,end_expect",
+    [
+        (
+            [0x8000],
+            True,
+            "17",
+            STATE_UNAVAILABLE,
+        ),
+    ],
+)
+async def test_lazy_error_climate(hass, mock_do_cycle, start_expect, end_expect):
+    """Run test for sensor."""
+    hass.states.async_set(ENTITY_ID, 17)
+    await hass.async_block_till_done()
+    now = mock_do_cycle
+    assert hass.states.get(ENTITY_ID).state == start_expect
+    now = await do_next_cycle(hass, now, 11)
+    assert hass.states.get(ENTITY_ID).state == start_expect
+    now = await do_next_cycle(hass, now, 11)
+    assert hass.states.get(ENTITY_ID).state == end_expect
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                }
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "config_addon,register_words",
+    [
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT16,
+            },
+            [7, 9],
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT32,
+            },
+            [7],
+        ),
+    ],
+)
+async def test_wrong_unpack_climate(hass, mock_do_cycle):
+    """Run test for sensor."""
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
