@@ -13,7 +13,6 @@ from homeassistant.components.modbus.const import (
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_ADDRESS,
-    CONF_COUNT,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
@@ -46,7 +45,7 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                     CONF_ADDRESS: 117,
                     CONF_SLAVE: 10,
                     CONF_SCAN_INTERVAL: 20,
-                    CONF_COUNT: 2,
+                    CONF_DATA_TYPE: DataType.INT32,
                     CONF_LAZY_ERROR: 10,
                 }
             ],
@@ -68,7 +67,7 @@ async def test_config_climate(hass, mock_modbus):
                     CONF_SLAVE: 1,
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,
-                    CONF_COUNT: 2,
+                    CONF_DATA_TYPE: DataType.INT32,
                 },
             ],
         },
@@ -94,7 +93,6 @@ async def test_temperature_climate(hass, expected, mock_do_cycle):
         {
             CONF_CLIMATES: [
                 {
-                    CONF_COUNT: 2,
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,

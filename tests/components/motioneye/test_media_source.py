@@ -12,6 +12,7 @@ from homeassistant.components.media_source.models import PlayMedia
 from homeassistant.components.motioneye.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from . import (
     TEST_CAMERA_DEVICE_IDENTIFIER,
@@ -65,6 +66,12 @@ TEST_IMAGES = {
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@pytest.fixture(autouse=True)
+async def setup_media_source(hass) -> None:
+    """Set up media source."""
+    assert await async_setup_component(hass, "media_source", {})
 
 
 async def test_async_browse_media_success(hass: HomeAssistant) -> None:

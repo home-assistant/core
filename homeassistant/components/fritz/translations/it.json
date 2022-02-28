@@ -56,7 +56,8 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Secondi per considerare un dispositivo \"a casa\""
+                    "consider_home": "Secondi per considerare un dispositivo \"a casa\"",
+                    "old_discovery": "Abilita il vecchio metodo di rilevamento"
                 }
             }
         }

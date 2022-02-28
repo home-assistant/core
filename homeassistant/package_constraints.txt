@@ -4,7 +4,7 @@ aiodiscover==1.4.8
 aiohttp==3.8.1
 aiohttp_cors==0.7.0
 astral==2.2
-async-upnp-client==0.23.5
+async-upnp-client==0.25.0
 async_timeout==4.0.2
 atomicwrites==1.4.0
 attrs==21.2.0
@@ -13,8 +13,8 @@ bcrypt==3.1.7
 certifi>=2021.5.30
 ciso8601==2.2.0
 cryptography==35.0.0
-hass-nabucasa==0.53.1
-home-assistant-frontend==20220223.0
+hass-nabucasa==0.54.0
+home-assistant-frontend==20220226.0
 httpx==0.21.3
 ifaddr==0.1.7
 jinja2==3.0.3

@@ -136,13 +136,10 @@ jobs:
             sed -i "s|# beacontools|beacontools|g" ${requirement_file}
             sed -i "s|# RPi.GPIO|RPi.GPIO|g" ${requirement_file}
             sed -i "s|# raspihats|raspihats|g" ${requirement_file}
-            sed -i "s|# rpi-rf|rpi-rf|g" ${requirement_file}
-            sed -i "s|# blinkt|blinkt|g" ${requirement_file}
             sed -i "s|# fritzconnection|fritzconnection|g" ${requirement_file}
             sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
             sed -i "s|# evdev|evdev|g" ${requirement_file}
             sed -i "s|# smbus-cffi|smbus-cffi|g" ${requirement_file}
-            sed -i "s|# i2csense|i2csense|g" ${requirement_file}
             sed -i "s|# python-eq3bt|python-eq3bt|g" ${requirement_file}
             sed -i "s|# pycups|pycups|g" ${requirement_file}
             sed -i "s|# homekit|homekit|g" ${requirement_file}
@@ -152,7 +149,6 @@ jobs:
             sed -i "s|# PySwitchbot|PySwitchbot|g" ${requirement_file}
             sed -i "s|# pySwitchmate|pySwitchmate|g" ${requirement_file}
             sed -i "s|# face_recognition|face_recognition|g" ${requirement_file}
-            sed -i "s|# bme680|bme680|g" ${requirement_file}
             sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
             sed -i "s|# homeassistant-pyozw|homeassistant-pyozw|g" ${requirement_file}
           done

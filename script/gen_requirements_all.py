@@ -18,17 +18,12 @@ COMMENT_REQUIREMENTS = (
     "avion",
     "beacontools",
     "beewi_smartclim",  # depends on bluepy
-    "blinkt",
     "bluepy",
-    "bme280spi",
-    "bme680",
     "decora",
     "decora_wifi",
-    "envirophat",
     "evdev",
     "face_recognition",
     "homeassistant-pyozw",
-    "i2csense",
     "opencv-python-headless",
     "pybluez",
     "pycups",
@@ -39,12 +34,10 @@ COMMENT_REQUIREMENTS = (
     "python-lirc",
     "pyuserinput",
     "raspihats",
-    "rpi-rf",
     "RPi.GPIO",
     "smbus-cffi",
     "tensorflow",
     "tf-models-official",
-    "VL53L1X2",
 )
 
 COMMENT_REQUIREMENTS_NORMALIZED = {
