@@ -1,7 +1,7 @@
 """Test fixtures for the generic component."""
 
 from io import BytesIO
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from PIL import Image
 import pytest
@@ -43,11 +43,14 @@ def fakeimg_png(fakeimgbytes_png):
 
 
 @pytest.fixture(scope="package")
-def fakevidcontainer():
+def mock_av_open():
     """Fake container object with .streams.video[0] != None."""
     fake = Mock()
     fake.streams.video = ["fakevid"]
-    return fake
+    return patch(
+        "homeassistant.components.generic.config_flow.av.open",
+        return_value=fake,
+    )
 
 
 @pytest.fixture
