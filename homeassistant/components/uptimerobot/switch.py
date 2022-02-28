@@ -53,9 +53,8 @@ class UptimeRobotSwitch(UptimeRobotEntity, SwitchEntity):
         try:
             response = await self.api.async_edit_monitor(**kwargs)
         except UptimeRobotAuthenticationException:
-            if self.coordinator.config_entry:
-                self.coordinator.config_entry.async_start_reauth(self.hass)
-            LOGGER.error("API exception: Authentication error with empty config entry")
+            LOGGER.debug("API authentication error, calling reauth")
+            self.coordinator.config_entry.async_start_reauth(self.hass)
             return
         except UptimeRobotException as exception:
             LOGGER.error("API exception: %s", exception)

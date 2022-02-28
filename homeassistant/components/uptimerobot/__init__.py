@@ -59,6 +59,7 @@ class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator):
     """Data update coordinator for UptimeRobot."""
 
     data: list[UptimeRobotMonitor]
+    config_entry: ConfigEntry
 
     def __init__(
         self,

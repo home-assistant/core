@@ -15,6 +15,7 @@ class UptimeRobotEntity(CoordinatorEntity):
     """Base UptimeRobot entity."""
 
     _attr_attribution = ATTRIBUTION
+    coordinator: UptimeRobotDataUpdateCoordinator
 
     def __init__(
         self,
