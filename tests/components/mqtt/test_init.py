@@ -1076,21 +1076,16 @@ async def test_unsubscribe_race(hass, mqtt_client_mock, mqtt_mock):
     assert calls_b.called
 
     # We allow either calls [subscribe, unsubscribe, subscribe] or [subscribe, subscribe]
-    if mqtt_client_mock.unsubscribe.called:
-        assert len(mqtt_client_mock.mock_calls) == 3
-        expected_calls = [
-            call.subscribe("test/state", 0),
-            call.unsubscribe("test/state"),
-            call.subscribe("test/state", 0),
-        ]
-        mqtt_client_mock.assert_has_calls(expected_calls)
-    else:
-        assert len(mqtt_client_mock.mock_calls) == 2
-        expected_calls = [
-            call.subscribe("test/state", 0),
-            call.subscribe("test/state", 0),
-        ]
-        mqtt_client_mock.assert_has_calls(expected_calls)
+    expected_calls_1 = [
+        call.subscribe("test/state", 0),
+        call.unsubscribe("test/state"),
+        call.subscribe("test/state", 0),
+    ]
+    expected_calls_2 = [
+        call.subscribe("test/state", 0),
+        call.subscribe("test/state", 0),
+    ]
+    assert mqtt_client_mock.mock_calls in (expected_calls_1, expected_calls_2)
 
 
 @pytest.mark.parametrize(
