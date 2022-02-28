@@ -378,12 +378,13 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     async def async_device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""
-        if self._get_remote(avoid_open=True):
+        if self.port:
             if self._rest_api is None:
                 self._rest_api = SamsungTVAsyncRest(
-                    self.host,
+                    host=self.host,
                     session=async_get_clientsession(self.hass),
                     port=self.port,
+                    timeout=TIMEOUT_WEBSOCKET,
                 )
 
             with contextlib.suppress(HttpApiError, RequestsTimeout):

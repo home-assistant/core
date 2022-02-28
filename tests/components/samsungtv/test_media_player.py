@@ -171,11 +171,8 @@ async def test_setup_websocket(hass: HomeAssistant) -> None:
 
         await setup_samsungtv(hass, MOCK_CONFIGWS)
 
-        assert remote_class.call_count == 2
-        assert remote_class.call_args_list == [
-            call(**MOCK_CALLS_WS),
-            call(**MOCK_CALLS_WS),
-        ]
+        assert remote_class.call_count == 1
+        assert remote_class.call_args_list == [call(**MOCK_CALLS_WS)]
         assert hass.states.get(ENTITY_ID)
 
         await hass.async_block_till_done()
@@ -231,7 +228,7 @@ async def test_setup_websocket_2(
 
     state = hass.states.get(entity_id)
     assert state
-    assert remote_class.call_count == 3
+    assert remote_class.call_count == 2
     assert remote_class.call_args_list[0] == call(**MOCK_CALLS_WS)
 
 
