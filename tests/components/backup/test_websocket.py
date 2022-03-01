@@ -41,7 +41,7 @@ async def test_remove(
 
     with patch(
         "homeassistant.components.backup.websocket.BackupManager.remove_backup",
-    ), patch("pathlib.Path.unlink"), patch("pathlib.Path.exists", return_value=True):
+    ):
         await client.send_json({"id": 1, "type": "backup/remove", "slug": "abc123"})
         msg = await client.receive_json()
 
