@@ -580,7 +580,8 @@ class DmsDeviceSource:
             children=children,
         )
 
-        media_source.calculate_children_class()
+        if media_source.children:
+            media_source.calculate_children_class()
 
         return media_source
 
@@ -650,7 +651,8 @@ class DmsDeviceSource:
             thumbnail=self._didl_thumbnail_url(item),
         )
 
-        media_source.calculate_children_class()
+        if media_source.children:
+            media_source.calculate_children_class()
 
         return media_source
 
