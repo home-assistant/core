@@ -32,6 +32,10 @@ from . import AmbientStation, AmbientWeatherEntity
 from .const import ATTR_LAST_DATA, DOMAIN, TYPE_SOLARRADIATION, TYPE_SOLARRADIATION_LX
 
 TYPE_24HOURRAININ = "24hourrainin"
+TYPE_AQI_PM25 = "pm25"
+TYPE_AQI_PM25_24H = "pm25_24h"
+TYPE_AQI_PM25_IN = "pm25_in"
+TYPE_AQI_PM25_IN_24H = "pm25_in_24h"
 TYPE_BAROMABSIN = "baromabsin"
 TYPE_BAROMRELIN = "baromrelin"
 TYPE_CO2 = "co2"
@@ -57,10 +61,10 @@ TYPE_LIGHTNING_PER_DAY = "lightning_day"
 TYPE_LIGHTNING_PER_HOUR = "lightning_hour"
 TYPE_MAXDAILYGUST = "maxdailygust"
 TYPE_MONTHLYRAININ = "monthlyrainin"
-TYPE_PM25 = "aqi_pm25"
-TYPE_PM25_24H = "aqi_pm25_24h"
-TYPE_PM25_IN = "aqi_pm25_in"
-TYPE_PM25_IN_24H = "aqi_pm25_in_24h"
+TYPE_PM25 = "pm25"
+TYPE_PM25_24H = "pm25_24h"
+TYPE_PM25_IN = "pm25_in"
+TYPE_PM25_IN_24H = "pm25_in_24h"
 TYPE_SOILHUM1 = "soilhum1"
 TYPE_SOILHUM10 = "soilhum10"
 TYPE_SOILHUM2 = "soilhum2"
@@ -112,6 +116,30 @@ SENSOR_DESCRIPTIONS = (
         name="24 Hr Rain",
         icon="mdi:water",
         native_unit_of_measurement=PRECIPITATION_INCHES,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key=TYPE_AQI_PM25,
+        name="AQI PM2.5",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_AQI_PM25,
+        name="AQI PM2.5 24h Avg",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key=TYPE_AQI_PM25_IN,
+        name="AQI PM2.5 Indoor",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_AQI_PM25_IN_24H,
+        name="AQI PM2.5 Indoor 24h Avg",
+        device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
