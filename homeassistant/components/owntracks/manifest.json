@@ -1,6 +1,6 @@
 {
   "domain": "owntracks",
-  "name": "AIS Owntracks",
+  "name": "Owntracks",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/owntracks",
   "requirements": [],
