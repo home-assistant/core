@@ -104,6 +104,11 @@ async def handle_update(
             backup=msg.get("backup"),
         )
     except Exception as err:  # pylint: disable=broad-except
+        _LOGGER.exception(
+            "Update of %s to version %s failed",
+            msg["identifier"],
+            msg["version"],
+        )
         connection.send_error(
             msg["id"],
             "update_failed",
