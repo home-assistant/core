@@ -590,7 +590,7 @@ env_canada==0.5.20
 envoy_reader==0.20.1
 
 # homeassistant.components.season
-ephem==3.7.7.0
+ephem==4.1.2
 
 # homeassistant.components.epson
 epson-projector==0.4.2
@@ -719,7 +719,7 @@ google-api-python-client==2.38.0
 google-cloud-pubsub==2.9.0
 
 # homeassistant.components.google_cloud
-google-cloud-texttospeech==0.4.0
+google-cloud-texttospeech==2.10.0
 
 # homeassistant.components.nest
 google-nest-sdm==1.7.1
