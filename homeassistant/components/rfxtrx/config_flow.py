@@ -36,7 +36,13 @@ from homeassistant.helpers.entity_registry import (
     async_get_registry as async_get_entity_registry,
 )
 
-from . import DOMAIN, DeviceTuple, get_device_id, get_rfx_object
+from . import (
+    DOMAIN,
+    DeviceTuple,
+    get_device_id,
+    get_device_tuple_from_identifiers,
+    get_rfx_object,
+)
 from .binary_sensor import supported as binary_supported
 from .const import (
     CONF_AUTOMATIC_ADD,
@@ -401,7 +407,8 @@ class OptionsFlow(config_entries.OptionsFlow):
         event_code: str
         entry = self._device_registry.async_get(entry_id)
         assert entry
-        device_id = cast(DeviceTuple, next(iter(entry.identifiers))[1:])
+        device_id = get_device_tuple_from_identifiers(entry.identifiers)
+        assert device_id
         for packet_id, entity_info in self._config_entry.data[CONF_DEVICES].items():
             if tuple(entity_info.get(CONF_DEVICE_ID)) == device_id:
                 event_code = cast(str, packet_id)
