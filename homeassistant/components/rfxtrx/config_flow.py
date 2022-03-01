@@ -70,7 +70,7 @@ RECV_MODES = sorted(itertools.chain(*rfxtrxmod.lowlevel.Status.RECMODES))
 class DeviceData(TypedDict):
     """Dict data representing a device entry."""
 
-    event_code: str
+    event_code: str | None
     device_id: DeviceTuple
 
 
@@ -404,7 +404,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
     def _get_device_data(self, entry_id) -> DeviceData:
         """Get event code based on device identifier."""
-        event_code: str
+        event_code: str | None = None
         entry = self._device_registry.async_get(entry_id)
         assert entry
         device_id = get_device_tuple_from_identifiers(entry.identifiers)
@@ -413,7 +413,6 @@ class OptionsFlow(config_entries.OptionsFlow):
             if tuple(entity_info.get(CONF_DEVICE_ID)) == device_id:
                 event_code = cast(str, packet_id)
                 break
-        assert event_code
         return DeviceData(event_code=event_code, device_id=device_id)
 
     @callback
