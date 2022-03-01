@@ -286,7 +286,7 @@ async def test_track_new(
     mock_calendars_yaml: None,
     expect_tracked: bool,
 ) -> None:
-    """Test behavior for tracking new calendars found from the API with no existing config."""
+    """Test behavior of configuration.yaml settings for tracking new calendars not in the config."""
 
     mock_calendars_list({"items": [test_api_calendar]})
     assert await component_setup()
