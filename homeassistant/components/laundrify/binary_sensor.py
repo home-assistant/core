@@ -25,7 +25,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config.entry_id]["coordinator"]
 
     async_add_entities(
-        LaundrifyPowerPlug(coordinator, idx) for idx, ent in enumerate(coordinator.data)
+        LaundrifyPowerPlug(coordinator, device) for device in coordinator.data.values()
     )
 
 
@@ -35,12 +35,11 @@ class LaundrifyPowerPlug(CoordinatorEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.RUNNING
     _attr_icon = "mdi:washing-machine"
 
-    def __init__(self, coordinator, idx):
+    def __init__(self, coordinator, device):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
-        self.idx = idx
-        self._attr_unique_id = coordinator.data[idx]["_id"]
-        self._attr_name = coordinator.data[idx]["name"]
+        self._attr_unique_id = device["_id"]
+        self._attr_name = device["name"]
 
     @property
     def device_info(self):
@@ -53,15 +52,18 @@ class LaundrifyPowerPlug(CoordinatorEntity, BinarySensorEntity):
             "name": self.name,
             "manufacturer": MANUFACTURER,
             "model": MODEL,
-            "sw_version": self.coordinator.data[self.idx]["firmwareVersion"],
+            "sw_version": self.coordinator.data[self.unique_id]["firmwareVersion"],
         }
+
+    @property
+    def available(self) -> bool:
+        """Check if the device is available."""
+        return self.unique_id in self.coordinator.data
 
     @property
     def is_on(self):
         """Return entity state."""
-        try:
-            return self.coordinator.data[self.idx]["status"] == "ON"
-        except IndexError:
-            _LOGGER.warning("The backend didn't return any data for this device")
-            self._attr_available = False
-            return None
+        if self.available:
+            return self.coordinator.data[self.unique_id]["status"] == "ON"
+
+        return None

@@ -32,7 +32,7 @@ class LaundrifyUpdateCoordinator(DataUpdateCoordinator):
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with async_timeout.timeout(REQUEST_TIMEOUT):
-                return await self.laundrify_api.get_machines()
+                return {m["_id"]: m for m in await self.laundrify_api.get_machines()}
         except ApiUnauthorized as err:
             # Raising ConfigEntryAuthFailed will cancel future updates
             # and start a config flow with SOURCE_REAUTH (async_step_reauth)
