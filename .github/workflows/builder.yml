@@ -29,7 +29,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.3.2
+        uses: actions/setup-python@v3.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -70,7 +70,7 @@ jobs:
         uses: actions/checkout@v2.4.0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.3.2
+        uses: actions/setup-python@v3.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -104,7 +104,7 @@ jobs:
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         if: needs.init.outputs.channel == 'dev'
-        uses: actions/setup-python@v2.3.2
+        uses: actions/setup-python@v3.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -122,13 +122,13 @@ jobs:
           echo "${{ github.sha }};${{ github.ref }};${{ github.event_name }};${{ github.actor }}" > rootfs/OFFICIAL_IMAGE
 
       - name: Login to DockerHub
-        uses: docker/login-action@v1.13.0
+        uses: docker/login-action@v1.14.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1.13.0
+        uses: docker/login-action@v1.14.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -187,13 +187,13 @@ jobs:
           fi
 
       - name: Login to DockerHub
-        uses: docker/login-action@v1.13.0
+        uses: docker/login-action@v1.14.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1.13.0
+        uses: docker/login-action@v1.14.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -252,13 +252,13 @@ jobs:
         uses: actions/checkout@v2.4.0
 
       - name: Login to DockerHub
-        uses: docker/login-action@v1.13.0
+        uses: docker/login-action@v1.14.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1.13.0
+        uses: docker/login-action@v1.14.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}

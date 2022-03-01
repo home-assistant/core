@@ -4,7 +4,10 @@
             "already_configured": "Kontoen er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes"
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "no_devices": "Ingen enheter oppdaget",
+            "no_username": "Kunne ikke hente brukernavn"
         },
         "step": {
             "user": {

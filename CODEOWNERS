@@ -33,6 +33,8 @@ homeassistant/components/advantage_air/* @Bre77
 tests/components/advantage_air/* @Bre77
 homeassistant/components/agent_dvr/* @ispysoftware
 tests/components/agent_dvr/* @ispysoftware
+homeassistant/components/air_quality/* @home-assistant/core
+tests/components/air_quality/* @home-assistant/core
 homeassistant/components/airly/* @bieniu
 tests/components/airly/* @bieniu
 homeassistant/components/airnow/* @asymworks
@@ -43,6 +45,10 @@ homeassistant/components/airtouch4/* @LonePurpleWolf
 tests/components/airtouch4/* @LonePurpleWolf
 homeassistant/components/airvisual/* @bachya
 tests/components/airvisual/* @bachya
+homeassistant/components/alarm_control_panel/* @home-assistant/core
+tests/components/alarm_control_panel/* @home-assistant/core
+homeassistant/components/alert/* @home-assistant/core
+tests/components/alert/* @home-assistant/core
 homeassistant/components/alexa/* @home-assistant/cloud @ochlocracy
 tests/components/alexa/* @home-assistant/cloud @ochlocracy
 homeassistant/components/almond/* @gcampax @balloob
@@ -105,9 +111,13 @@ tests/components/azure_devops/* @timmo001
 homeassistant/components/azure_event_hub/* @eavanvalkenburg
 tests/components/azure_event_hub/* @eavanvalkenburg
 homeassistant/components/azure_service_bus/* @hfurubotten
+homeassistant/components/backup/* @home-assistant/core
+tests/components/backup/* @home-assistant/core
 homeassistant/components/balboa/* @garbled1
 tests/components/balboa/* @garbled1
 homeassistant/components/beewi_smartclim/* @alemuro
+homeassistant/components/binary_sensor/* @home-assistant/core
+tests/components/binary_sensor/* @home-assistant/core
 homeassistant/components/bitcoin/* @fabaff
 homeassistant/components/bizkaibus/* @UgaitzEtxebarria
 homeassistant/components/blebox/* @bbx-a @bbx-jp
@@ -117,7 +127,6 @@ tests/components/blink/* @fronzbot
 homeassistant/components/blueprint/* @home-assistant/core
 tests/components/blueprint/* @home-assistant/core
 homeassistant/components/bluesound/* @thrawnarn
-homeassistant/components/bmp280/* @belidzs
 homeassistant/components/bmw_connected_drive/* @gerard33 @rikroe
 tests/components/bmw_connected_drive/* @gerard33 @rikroe
 homeassistant/components/bond/* @bdraco @prystupa @joshs85
@@ -139,6 +148,10 @@ homeassistant/components/buienradar/* @mjj4791 @ties @Robbie1221
 tests/components/buienradar/* @mjj4791 @ties @Robbie1221
 homeassistant/components/button/* @home-assistant/core
 tests/components/button/* @home-assistant/core
+homeassistant/components/calendar/* @home-assistant/core
+tests/components/calendar/* @home-assistant/core
+homeassistant/components/camera/* @home-assistant/core
+tests/components/camera/* @home-assistant/core
 homeassistant/components/cast/* @emontnemery
 tests/components/cast/* @emontnemery
 homeassistant/components/cert_expiry/* @Cereal2nd @jjlawren
@@ -149,6 +162,8 @@ homeassistant/components/cisco_mobility_express/* @fbradyirl
 homeassistant/components/cisco_webex_teams/* @fbradyirl
 homeassistant/components/climacell/* @raman325
 tests/components/climacell/* @raman325
+homeassistant/components/climate/* @home-assistant/core
+tests/components/climate/* @home-assistant/core
 homeassistant/components/cloud/* @home-assistant/cloud
 tests/components/cloud/* @home-assistant/cloud
 homeassistant/components/cloudflare/* @ludeeus @ctalkington
@@ -190,6 +205,8 @@ homeassistant/components/debugpy/* @frenck
 tests/components/debugpy/* @frenck
 homeassistant/components/deconz/* @Kane610
 tests/components/deconz/* @Kane610
+homeassistant/components/default_config/* @home-assistant/core
+tests/components/default_config/* @home-assistant/core
 homeassistant/components/delijn/* @bollewolle @Emilv2
 homeassistant/components/demo/* @home-assistant/core
 tests/components/demo/* @home-assistant/core
@@ -199,6 +216,8 @@ homeassistant/components/derivative/* @afaucogney
 tests/components/derivative/* @afaucogney
 homeassistant/components/device_automation/* @home-assistant/core
 tests/components/device_automation/* @home-assistant/core
+homeassistant/components/device_tracker/* @home-assistant/core
+tests/components/device_tracker/* @home-assistant/core
 homeassistant/components/devolo_home_control/* @2Fake @Shutgun
 tests/components/devolo_home_control/* @2Fake @Shutgun
 homeassistant/components/devolo_home_network/* @2Fake @Shutgun
@@ -207,11 +226,12 @@ homeassistant/components/dexcom/* @gagebenne
 tests/components/dexcom/* @gagebenne
 homeassistant/components/dhcp/* @bdraco
 tests/components/dhcp/* @bdraco
-homeassistant/components/dht/* @thegardenmonkey
 homeassistant/components/diagnostics/* @home-assistant/core
 tests/components/diagnostics/* @home-assistant/core
 homeassistant/components/digital_ocean/* @fabaff
 homeassistant/components/discogs/* @thibmaek
+homeassistant/components/discovery/* @home-assistant/core
+tests/components/discovery/* @home-assistant/core
 homeassistant/components/dlna_dmr/* @StevenLooman @chishm
 tests/components/dlna_dmr/* @StevenLooman @chishm
 homeassistant/components/dlna_dms/* @chishm
@@ -279,6 +299,8 @@ homeassistant/components/ezviz/* @RenierM26 @baqs
 tests/components/ezviz/* @RenierM26 @baqs
 homeassistant/components/faa_delays/* @ntilley905
 tests/components/faa_delays/* @ntilley905
+homeassistant/components/fan/* @home-assistant/core
+tests/components/fan/* @home-assistant/core
 homeassistant/components/fastdotcom/* @rohankapoorcom
 homeassistant/components/file/* @fabaff
 tests/components/file/* @fabaff
@@ -334,6 +356,8 @@ tests/components/generic_hygrostat/* @Shulyaka
 homeassistant/components/geniushub/* @zxdavb
 homeassistant/components/geo_json_events/* @exxamalte
 tests/components/geo_json_events/* @exxamalte
+homeassistant/components/geo_location/* @home-assistant/core
+tests/components/geo_location/* @home-assistant/core
 homeassistant/components/geo_rss_events/* @exxamalte
 tests/components/geo_rss_events/* @exxamalte
 homeassistant/components/geonetnz_quakes/* @exxamalte
@@ -436,6 +460,8 @@ homeassistant/components/ign_sismologia/* @exxamalte
 tests/components/ign_sismologia/* @exxamalte
 homeassistant/components/image/* @home-assistant/core
 tests/components/image/* @home-assistant/core
+homeassistant/components/image_processing/* @home-assistant/core
+tests/components/image_processing/* @home-assistant/core
 homeassistant/components/incomfort/* @zxdavb
 homeassistant/components/influxdb/* @fabaff @mdegat01
 tests/components/influxdb/* @fabaff @mdegat01
@@ -513,6 +539,8 @@ homeassistant/components/lcn/* @alengwenus
 tests/components/lcn/* @alengwenus
 homeassistant/components/lg_netcast/* @Drafteed
 homeassistant/components/life360/* @pnbruckner
+homeassistant/components/light/* @home-assistant/core
+tests/components/light/* @home-assistant/core
 homeassistant/components/linux_battery/* @fabaff
 homeassistant/components/litejet/* @joncar
 tests/components/litejet/* @joncar
@@ -520,6 +548,10 @@ homeassistant/components/litterrobot/* @natekspencer
 tests/components/litterrobot/* @natekspencer
 homeassistant/components/local_ip/* @issacg
 tests/components/local_ip/* @issacg
+homeassistant/components/lock/* @home-assistant/core
+tests/components/lock/* @home-assistant/core
+homeassistant/components/logbook/* @home-assistant/core
+tests/components/logbook/* @home-assistant/core
 homeassistant/components/logger/* @home-assistant/core
 tests/components/logger/* @home-assistant/core
 homeassistant/components/logi_circle/* @evanjd
@@ -541,7 +573,8 @@ homeassistant/components/mastodon/* @fabaff
 homeassistant/components/matrix/* @tinloaf
 homeassistant/components/mazda/* @bdr99
 tests/components/mazda/* @bdr99
-homeassistant/components/mcp23017/* @jardiamj
+homeassistant/components/media_player/* @home-assistant/core
+tests/components/media_player/* @home-assistant/core
 homeassistant/components/media_source/* @hunterjm
 tests/components/media_source/* @hunterjm
 homeassistant/components/mediaroom/* @dgomes
@@ -620,6 +653,8 @@ tests/components/netatmo/* @cgtobi
 homeassistant/components/netdata/* @fabaff
 homeassistant/components/netgear/* @hacf-fr @Quentame @starkillerOG
 tests/components/netgear/* @hacf-fr @Quentame @starkillerOG
+homeassistant/components/network/* @home-assistant/core
+tests/components/network/* @home-assistant/core
 homeassistant/components/nexia/* @bdraco
 tests/components/nexia/* @bdraco
 homeassistant/components/nextbus/* @vividboarder
@@ -775,6 +810,8 @@ tests/components/recollect_waste/* @bachya
 homeassistant/components/recorder/* @home-assistant/core
 tests/components/recorder/* @home-assistant/core
 homeassistant/components/rejseplanen/* @DarkFox
+homeassistant/components/remote/* @home-assistant/core
+tests/components/remote/* @home-assistant/core
 homeassistant/components/renault/* @epenet
 tests/components/renault/* @epenet
 homeassistant/components/repetier/* @MTrab @ShadowBr0ther
@@ -800,6 +837,8 @@ homeassistant/components/roon/* @pavoni
 tests/components/roon/* @pavoni
 homeassistant/components/rpi_power/* @shenxn @swetoast
 tests/components/rpi_power/* @shenxn @swetoast
+homeassistant/components/rss_feed_template/* @home-assistant/core
+tests/components/rss_feed_template/* @home-assistant/core
 homeassistant/components/rtsp_to_webrtc/* @allenporter
 tests/components/rtsp_to_webrtc/* @allenporter
 homeassistant/components/ruckus_unleashed/* @gabe565
@@ -828,6 +867,8 @@ homeassistant/components/senseme/* @mikelawrence @bdraco
 tests/components/senseme/* @mikelawrence @bdraco
 homeassistant/components/sensibo/* @andrey-git @gjohansson-ST
 tests/components/sensibo/* @andrey-git @gjohansson-ST
+homeassistant/components/sensor/* @home-assistant/core
+tests/components/sensor/* @home-assistant/core
 homeassistant/components/sentry/* @dcramer @frenck
 tests/components/sentry/* @dcramer @frenck
 homeassistant/components/serial/* @fabaff
@@ -931,6 +972,8 @@ homeassistant/components/surepetcare/* @benleb @danielhiversen
 tests/components/surepetcare/* @benleb @danielhiversen
 homeassistant/components/swiss_hydrological_data/* @fabaff
 homeassistant/components/swiss_public_transport/* @fabaff
+homeassistant/components/switch/* @home-assistant/core
+tests/components/switch/* @home-assistant/core
 homeassistant/components/switchbot/* @danielhiversen @RenierM26
 tests/components/switchbot/* @danielhiversen @RenierM26
 homeassistant/components/switcher_kis/* @tomerfi @thecode
@@ -1022,6 +1065,8 @@ homeassistant/components/usgs_earthquakes_feed/* @exxamalte
 tests/components/usgs_earthquakes_feed/* @exxamalte
 homeassistant/components/utility_meter/* @dgomes
 tests/components/utility_meter/* @dgomes
+homeassistant/components/vacuum/* @home-assistant/core
+tests/components/vacuum/* @home-assistant/core
 homeassistant/components/vallox/* @andre-richter @slovdahl @viiru-
 tests/components/vallox/* @andre-richter @slovdahl @viiru-
 homeassistant/components/velbus/* @Cereal2nd @brefra
@@ -1056,6 +1101,8 @@ tests/components/wake_on_lan/* @ntilley905
 homeassistant/components/wallbox/* @hesselonline
 tests/components/wallbox/* @hesselonline
 homeassistant/components/waqi/* @andrey-git
+homeassistant/components/water_heater/* @home-assistant/core
+tests/components/water_heater/* @home-assistant/core
 homeassistant/components/watson_tts/* @rutkai
 homeassistant/components/watttime/* @bachya
 tests/components/watttime/* @bachya
@@ -1063,6 +1110,8 @@ homeassistant/components/waze_travel_time/* @eifinger
 tests/components/waze_travel_time/* @eifinger
 homeassistant/components/weather/* @fabaff
 tests/components/weather/* @fabaff
+homeassistant/components/webhook/* @home-assistant/core
+tests/components/webhook/* @home-assistant/core
 homeassistant/components/webostv/* @bendavid @thecode
 tests/components/webostv/* @bendavid @thecode
 homeassistant/components/websocket_api/* @home-assistant/core
