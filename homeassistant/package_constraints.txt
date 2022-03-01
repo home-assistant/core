@@ -32,7 +32,7 @@ typing-extensions>=3.10.0.2,<5.0
 voluptuous-serialize==2.5.0
 voluptuous==0.12.2
 yarl==1.7.2
-zeroconf==0.38.3
+zeroconf==0.38.4
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
