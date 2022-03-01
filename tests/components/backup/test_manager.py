@@ -52,6 +52,20 @@ async def test_load_backups_with_exception(
     assert backups == {}
 
 
+async def test_removing_backup(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test removing backup."""
+    manager = BackupManager(hass)
+    manager.backups = {TEST_BACKUP.slug: TEST_BACKUP}
+    manager.loaded = True
+
+    with patch("pathlib.Path.exists", return_value=True):
+        await manager.remove_backup(TEST_BACKUP.slug)
+    assert "Removed backup located at" in caplog.text
+
+
 async def test_removing_non_existing_backup(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -69,16 +83,10 @@ async def test_getting_backup_that_does_not_exist(
 ):
     """Test getting backup that does not exist."""
     manager = BackupManager(hass)
+    manager.backups = {TEST_BACKUP.slug: TEST_BACKUP}
+    manager.loaded = True
 
-    with patch(
-        "homeassistant.components.backup.websocket.BackupManager._backups",
-        {TEST_BACKUP.slug: TEST_BACKUP},
-    ), patch(
-        "homeassistant.components.backup.websocket.BackupManager._loaded",
-        True,
-    ), patch(
-        "pathlib.Path.exists", return_value=False
-    ):
+    with patch("pathlib.Path.exists", return_value=False):
         backup = await manager.get_backup(TEST_BACKUP.slug)
         assert backup is None
 
@@ -102,6 +110,7 @@ async def test_generate_backup(
 ) -> None:
     """Test generate backup."""
     manager = BackupManager(hass)
+    manager.loaded = True
 
     def _mock_iterdir(path: Path) -> list[Path]:
         if not path.name.endswith("testing_config"):
@@ -133,9 +142,6 @@ async def test_generate_backup(
     ) as mocked_json_util, patch(
         "homeassistant.components.backup.manager.HAVERSION",
         "2025.1.0",
-    ), patch(
-        "homeassistant.components.backup.websocket.BackupManager._loaded",
-        True,
     ):
         await manager.generate_backup()
 
