@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v2.4.0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.3.2
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -43,7 +43,7 @@ jobs:
         uses: actions/checkout@v2.4.0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.3.2
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
