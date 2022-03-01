@@ -20,12 +20,17 @@ async def test_info(
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
 
-    await client.send_json({"id": 1, "type": "backup/info"})
-    msg = await client.receive_json()
+    with patch(
+        "homeassistant.components.backup.websocket.BackupManager.get_backups",
+        return_value={TEST_BACKUP.slug: TEST_BACKUP},
+    ):
+
+        await client.send_json({"id": 1, "type": "backup/info"})
+        msg = await client.receive_json()
 
     assert msg["id"] == 1
     assert msg["success"]
-    assert msg["result"] == {"backing_up": False, "backups": []}
+    assert msg["result"] == {"backing_up": False, "backups": [TEST_BACKUP.as_dict()]}
 
 
 async def test_remove(
@@ -40,22 +45,13 @@ async def test_remove(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.backup.websocket.BackupManager._backups",
-        {TEST_BACKUP.slug: TEST_BACKUP},
-    ), patch(
-        "homeassistant.components.backup.websocket.BackupManager._loaded",
-        True,
-    ), patch(
-        "pathlib.Path.unlink"
-    ), patch(
-        "pathlib.Path.exists", return_value=True
+        "homeassistant.components.backup.websocket.BackupManager.remove_backup",
     ):
         await client.send_json({"id": 1, "type": "backup/remove", "slug": "abc123"})
         msg = await client.receive_json()
 
         assert msg["id"] == 1
         assert msg["success"]
-        assert f"Removed backup located at {TEST_BACKUP.path}" in caplog.text
 
 
 async def test_generate(
@@ -69,9 +65,6 @@ async def test_generate(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.backup.websocket.BackupManager._backups",
-        {TEST_BACKUP.slug: TEST_BACKUP},
-    ), patch(
         "homeassistant.components.backup.websocket.BackupManager.generate_backup",
         return_value=TEST_BACKUP,
     ):

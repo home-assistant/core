@@ -59,10 +59,12 @@ from .const import (
     FEATURE_SET_BUZZER,
     FEATURE_SET_CHILD_LOCK,
     FEATURE_SET_CLEAN,
+    FEATURE_SET_DISPLAY,
     FEATURE_SET_DRY,
     FEATURE_SET_IONIZER,
     FEATURE_SET_LEARN_MODE,
     FEATURE_SET_LED,
+    FEATURE_SET_PTC,
     KEY_COORDINATOR,
     KEY_DEVICE,
     MODEL_AIRFRESH_A1,
@@ -121,6 +123,7 @@ ATTR_AUTO_DETECT = "auto_detect"
 ATTR_BUZZER = "buzzer"
 ATTR_CHILD_LOCK = "child_lock"
 ATTR_CLEAN = "clean_mode"
+ATTR_DISPLAY = "display"
 ATTR_DRY = "dry"
 ATTR_LEARN_MODE = "learn_mode"
 ATTR_LED = "led"
@@ -131,6 +134,7 @@ ATTR_POWER = "power"
 ATTR_POWER_MODE = "power_mode"
 ATTR_POWER_PRICE = "power_price"
 ATTR_PRICE = "price"
+ATTR_PTC = "ptc"
 ATTR_WIFI_LED = "wifi_led"
 
 FEATURE_SET_POWER_MODE = 1
@@ -226,6 +230,15 @@ SWITCH_TYPES = (
         entity_category=EntityCategory.CONFIG,
     ),
     XiaomiMiioSwitchDescription(
+        key=ATTR_DISPLAY,
+        feature=FEATURE_SET_DISPLAY,
+        name="Display",
+        icon="mdi:led-outline",
+        method_on="async_set_display_on",
+        method_off="async_set_display_off",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    XiaomiMiioSwitchDescription(
         key=ATTR_DRY,
         feature=FEATURE_SET_DRY,
         name="Dry Mode",
@@ -277,6 +290,15 @@ SWITCH_TYPES = (
         icon="mdi:shimmer",
         method_on="async_set_ionizer_on",
         method_off="async_set_ionizer_off",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    XiaomiMiioSwitchDescription(
+        key=ATTR_PTC,
+        feature=FEATURE_SET_PTC,
+        name="Auxiliary Heat",
+        icon="mdi:radiator",
+        method_on="async_set_ptc_on",
+        method_off="async_set_ptc_off",
         entity_category=EntityCategory.CONFIG,
     ),
 )
@@ -533,6 +555,22 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
             False,
         )
 
+    async def async_set_display_on(self) -> bool:
+        """Turn the display on."""
+        return await self._try_command(
+            "Turning the display of the miio device on failed.",
+            self._device.set_display,
+            True,
+        )
+
+    async def async_set_display_off(self) -> bool:
+        """Turn the display off."""
+        return await self._try_command(
+            "Turning the display of the miio device off failed.",
+            self._device.set_display,
+            False,
+        )
+
     async def async_set_dry_on(self) -> bool:
         """Turn the dry mode on."""
         return await self._try_command(
@@ -626,6 +664,22 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         return await self._try_command(
             "Turning ionizer of the miio device off failed.",
             self._device.set_ionizer,
+            False,
+        )
+
+    async def async_set_ptc_on(self) -> bool:
+        """Turn ionizer on."""
+        return await self._try_command(
+            "Turning ionizer of the miio device on failed.",
+            self._device.set_ptc,
+            True,
+        )
+
+    async def async_set_ptc_off(self) -> bool:
+        """Turn ionizer off."""
+        return await self._try_command(
+            "Turning ionizer of the miio device off failed.",
+            self._device.set_ptc,
             False,
         )
 
