@@ -1,5 +1,12 @@
 """Helpers to check recorder."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from homeassistant.core import HomeAssistant, callback
+
+if TYPE_CHECKING:
+    from homeassistant.components.recorder import Recorder
 
 
 def has_recorder(hass: HomeAssistant) -> bool:
@@ -23,18 +30,12 @@ async def lock_database(hass: HomeAssistant) -> bool:
 
     raises TimeoutError if takes too long to lock the database.
     """
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components import recorder
-
-    instance: recorder.Recorder = hass.data[recorder.DATA_INSTANCE]
+    instance: Recorder = hass.data["recorder_instance"]
     return await instance.lock_database()
 
 
 @callback
 def unlock_database(hass: HomeAssistant) -> bool:
     """Unlock the database."""
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components import recorder
-
-    instance: recorder.Recorder = hass.data[recorder.DATA_INSTANCE]
+    instance: Recorder = hass.data["recorder_instance"]
     return instance.unlock_database()
