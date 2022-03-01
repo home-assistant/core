@@ -14,6 +14,7 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
+from homeassistant.helpers.device_registry import format_mac
 
 from tests.common import MockConfigEntry
 
@@ -45,7 +46,7 @@ async def test_full_user_flow_implementation(
     )
 
     assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
-    assert result2.get("title") == "00:80:41:19:69:90"
+    assert result2.get("title") == format_mac("00:80:41:19:69:90")
     assert result2.get("data") == {
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 80,
@@ -54,7 +55,7 @@ async def test_full_user_flow_implementation(
         CONF_PASSWORD: "admin1234",
     }
     assert "result" in result2
-    assert result2["result"].unique_id == "00:80:41:19:69:90"
+    assert result2["result"].unique_id == format_mac("00:80:41:19:69:90")
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_bsblan_config_flow.device.mock_calls) == 1

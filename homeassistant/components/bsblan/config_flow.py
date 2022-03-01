@@ -11,8 +11,9 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNA
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 
-from .const import CONF_PASSKEY, DOMAIN
+from .const import CONF_PASSKEY, DEFAULT_PORT, DOMAIN
 
 
 class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -22,10 +23,10 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
 
     host: str
     port: int
+    mac: str
     passkey: str | None = None
     username: str | None = None
     password: str | None = None
-    mac: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -55,7 +56,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST): str,
-                    vol.Optional(CONF_PORT, default=80): int,
+                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
                     vol.Optional(CONF_PASSKEY): str,
                     vol.Optional(CONF_USERNAME): str,
                     vol.Optional(CONF_PASSWORD): str,
@@ -67,7 +68,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_create_entry(self) -> FlowResult:
         return self.async_create_entry(
-            title=str(self.mac),
+            title=format_mac(self.mac),
             data={
                 CONF_HOST: self.host,
                 CONF_PORT: self.port,
@@ -91,13 +92,12 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         device = await bsblan.device()
         self.mac = device.MAC
 
-        await self.async_set_unique_id(self.mac, raise_on_progress=raise_on_progress)
+        await self.async_set_unique_id(
+            format_mac(self.mac), raise_on_progress=raise_on_progress
+        )
         self._abort_if_unique_id_configured(
             updates={
                 CONF_HOST: self.host,
                 CONF_PORT: self.port,
-                CONF_PASSKEY: self.passkey,
-                CONF_USERNAME: self.username,
-                CONF_PASSWORD: self.password,
             }
         )

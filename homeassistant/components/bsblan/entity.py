@@ -5,6 +5,7 @@ from bsblan import BSBLAN, Device, Info
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN
@@ -24,7 +25,7 @@ class BSBLANEntity(Entity):
         self.client = client
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.MAC)},
+            identifiers={(DOMAIN, format_mac(device.MAC))},
             manufacturer="BSBLAN Inc.",
             model=info.device_identification.value,
             name=device.name,

@@ -17,6 +17,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -78,7 +79,7 @@ class BSBLANClimate(BSBLANEntity, CoordinatorEntity, ClimateEntity):
         """Initialize BSBLAN climate device."""
         super().__init__(client, device, info, entry)
         CoordinatorEntity.__init__(self, coordinator)
-        self._attr_unique_id = f"{device.MAC}-climate"
+        self._attr_unique_id = f"{format_mac(device.MAC)}-climate"
         self._attr_name = device.name
 
         self._attr_supported_features = SUPPORT_FLAGS
