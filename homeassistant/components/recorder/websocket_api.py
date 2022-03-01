@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.recorder import lock_database, unlock_database
 
 from .const import DATA_INSTANCE, MAX_QUEUE_BACKLOG
 from .statistics import validate_statistics
@@ -122,9 +123,8 @@ async def ws_backup_start(
     """Backup start notification."""
 
     _LOGGER.info("Backup start notification, locking database for writes")
-    instance: Recorder = hass.data[DATA_INSTANCE]
     try:
-        await instance.lock_database()
+        await lock_database(hass)
     except TimeoutError as err:
         connection.send_error(msg["id"], "timeout_error", str(err))
         return
@@ -138,10 +138,8 @@ async def ws_backup_end(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Backup end notification."""
-
-    instance: Recorder = hass.data[DATA_INSTANCE]
     _LOGGER.info("Backup end notification, releasing write lock")
-    if not instance.unlock_database():
+    if not unlock_database(hass):
         connection.send_error(
             msg["id"], "database_unlock_failed", "Failed to unlock database."
         )
