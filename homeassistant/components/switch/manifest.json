@@ -2,6 +2,10 @@
   "domain": "switch",
   "name": "Switch",
   "documentation": "https://www.home-assistant.io/integrations/switch",
-  "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal"
+  "codeowners": [
+    "@home-assistant/core"
+  ],
+  "quality_scale": "internal",
+  "helper": true,
+  "config_flow": true
 }

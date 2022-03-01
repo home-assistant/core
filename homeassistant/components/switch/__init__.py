@@ -15,6 +15,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -26,7 +27,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-DOMAIN = "switch"
+from .const import DOMAIN
+
 SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -59,6 +61,8 @@ DEVICE_CLASSES = [cls.value for cls in SwitchDeviceClass]
 DEVICE_CLASS_OUTLET = SwitchDeviceClass.OUTLET.value
 DEVICE_CLASS_SWITCH = SwitchDeviceClass.SWITCH.value
 
+PLATFORMS: list[Platform] = [Platform.LIGHT]
+
 
 @bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
@@ -85,6 +89,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     component: EntityComponent = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
