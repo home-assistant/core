@@ -90,7 +90,7 @@ def calendars_config_entity(
 
 @pytest.fixture
 def calendars_config(calendars_config_entity: dict[str, Any]) -> list[dict[str, Any]]:
-    """Fixture that creates the yaml configuration."""
+    """Fixture that specifies the calendar yaml configuration."""
     return [
         {
             "cal_id": CALENDAR_ID,
@@ -104,7 +104,7 @@ async def mock_calendars_yaml(
     hass: HomeAssistant,
     calendars_config: list[dict[str, Any]],
 ) -> None:
-    """Fixture that prepares the calendars.yaml file."""
+    """Fixture that prepares the google_calendars.yaml mocks."""
     mocked_open_function = mock_open(read_data=yaml.dump(calendars_config))
     with patch("homeassistant.components.google.open", mocked_open_function):
         yield
