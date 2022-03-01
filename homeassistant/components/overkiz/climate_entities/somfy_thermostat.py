@@ -89,17 +89,6 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
         """Init method."""
         super().__init__(device_url, coordinator)
         self.temperature_device = self.executor.linked_device(2)
-        if self.hvac_mode == HVAC_MODE_AUTO:
-            if self.preset_mode == PRESET_NONE:
-                self._saved_target_temp = None
-            else:
-                self._saved_target_temp = self.executor.select_state(
-                    TARGET_TEMP_TO_OVERKIZ[self.preset_mode]
-                )
-        else:
-            self._saved_target_temp = self.executor.select_state(
-                CORE_DEROGATED_TARGET_TEMPERATURE_STATE
-            )
 
     @property
     def hvac_mode(self) -> str:
@@ -160,7 +149,6 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
         if hvac_mode == self.hvac_mode:
             return
         if hvac_mode == HVAC_MODE_AUTO:
-            self._saved_target_temp = self.target_temperature
             await self.executor.async_execute_command(COMMAND_EXIT_DEROGATION)
             await self.executor.async_execute_command(COMMAND_REFRESH_STATE)
         elif hvac_mode == HVAC_MODE_HEAT:
@@ -171,7 +159,6 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
         if self.preset_mode == preset_mode:
             return
         if preset_mode in [PRESET_FREEZE, PRESET_NIGHT, PRESET_AWAY, PRESET_HOME]:
-            self._saved_target_temp = self.target_temperature
             await self.executor.async_execute_command(
                 COMMAND_SET_DEROGATION,
                 PRESET_MODES_TO_OVERKIZ[preset_mode],
@@ -180,12 +167,12 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
         elif preset_mode == PRESET_NONE:
             await self.executor.async_execute_command(
                 COMMAND_SET_DEROGATION,
-                self._saved_target_temp,
+                self.target_temperature,
                 STATE_DEROGATION_FURTHER_NOTICE,
             )
             await self.executor.async_execute_command(
                 COMMAND_SET_MODE_TEMPERATURE,
                 STATE_PRESET_MANUAL,
-                self._saved_target_temp,
+                self.target_temperature,
             )
         await self.executor.async_execute_command(COMMAND_REFRESH_STATE)
