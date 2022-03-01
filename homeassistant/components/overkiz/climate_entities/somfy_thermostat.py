@@ -136,7 +136,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
+        temperature = kwargs[ATTR_TEMPERATURE]
 
         await self.executor.async_execute_command(
             COMMAND_SET_DEROGATION, temperature, STATE_DEROGATION_FURTHER_NOTICE
@@ -148,12 +148,10 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == self.hvac_mode:
-            return
         if hvac_mode == HVAC_MODE_AUTO:
             await self.executor.async_execute_command(COMMAND_EXIT_DEROGATION)
             await self.executor.async_execute_command(COMMAND_REFRESH_STATE)
-        elif hvac_mode == HVAC_MODE_HEAT:
+        else:
             await self.async_set_preset_mode(PRESET_NONE)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
