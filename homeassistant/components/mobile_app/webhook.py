@@ -7,6 +7,7 @@ import logging
 import secrets
 
 from aiohttp.web import HTTPBadRequest, Request, Response, json_response
+from nacl.exceptions import CryptoError
 from nacl.secret import SecretBox
 import voluptuous as vol
 
@@ -58,6 +59,7 @@ from .const import (
     ATTR_EVENT_TYPE,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_NO_LEGACY_ENCRYPTION,
     ATTR_OS_VERSION,
     ATTR_SENSOR_ATTRIBUTES,
     ATTR_SENSOR_DEVICE_CLASS,
@@ -97,6 +99,7 @@ from .const import (
 )
 from .helpers import (
     _decrypt_payload,
+    _decrypt_payload_legacy,
     empty_okay_response,
     error_response,
     registration_context,
@@ -191,7 +194,16 @@ async def handle_webhook(
 
     if req_data[ATTR_WEBHOOK_ENCRYPTED]:
         enc_data = req_data[ATTR_WEBHOOK_ENCRYPTED_DATA]
-        webhook_payload = _decrypt_payload(config_entry.data[CONF_SECRET], enc_data)
+        try:
+            webhook_payload = _decrypt_payload(config_entry.data[CONF_SECRET], enc_data)
+            if ATTR_NO_LEGACY_ENCRYPTION not in config_entry.data:
+                data = {**config_entry.data, ATTR_NO_LEGACY_ENCRYPTION: True}
+                hass.config_entries.async_update_entry(config_entry, data=data)
+        except CryptoError:
+            if ATTR_NO_LEGACY_ENCRYPTION not in config_entry.data:
+                webhook_payload = _decrypt_payload_legacy(
+                    config_entry.data[CONF_SECRET], enc_data
+                )
 
     if webhook_type not in WEBHOOK_COMMANDS:
         _LOGGER.error(
