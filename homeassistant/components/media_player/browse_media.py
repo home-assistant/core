@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 from urllib.parse import quote
 
 import yarl
@@ -74,11 +75,15 @@ class BrowseMedia:
 
     def as_dict(self, *, parent: bool = True) -> dict:
         """Convert Media class to browse media dictionary."""
-        response = {
+        if self.children_media_class is None and self.children:
+            self.calculate_children_class()
+
+        response: dict[str, Any] = {
             "title": self.title,
             "media_class": self.media_class,
             "media_content_type": self.media_content_type,
             "media_content_id": self.media_content_id,
+            "children_media_class": self.children_media_class,
             "can_play": self.can_play,
             "can_expand": self.can_expand,
             "thumbnail": self.thumbnail,
@@ -87,11 +92,7 @@ class BrowseMedia:
         if not parent:
             return response
 
-        if self.children_media_class is None:
-            self.calculate_children_class()
-
         response["not_shown"] = self.not_shown
-        response["children_media_class"] = self.children_media_class
 
         if self.children:
             response["children"] = [
@@ -104,11 +105,8 @@ class BrowseMedia:
 
     def calculate_children_class(self) -> None:
         """Count the children media classes and calculate the correct class."""
-        if self.children is None or len(self.children) == 0:
-            return
-
         self.children_media_class = MEDIA_CLASS_DIRECTORY
-
+        assert self.children is not None
         proposed_class = self.children[0].media_class
         if all(child.media_class == proposed_class for child in self.children):
             self.children_media_class = proposed_class
