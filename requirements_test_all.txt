@@ -1234,7 +1234,7 @@ python-picnic-api==1.1.0
 python-smarttub==0.0.29
 
 # homeassistant.components.songpal
-python-songpal==0.14
+python-songpal==0.14.1
 
 # homeassistant.components.tado
 python-tado==0.12.0
