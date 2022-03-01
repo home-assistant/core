@@ -1,11 +1,13 @@
 """Support for the Roku media player."""
 from __future__ import annotations
 
+from contextlib import suppress
 import datetime as dt
 import logging
 import mimetypes
 from typing import Any
 
+from rokuecp import RokuConnectionTimeoutError
 from rokuecp.helpers import guess_stream_format
 import voluptuous as vol
 import yarl
@@ -330,7 +332,8 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @roku_exception_handler
     async def async_turn_off(self) -> None:
         """Turn off the Roku."""
-        await self.coordinator.roku.remote("poweroff")
+        with suppress(RokuConnectionTimeoutError):
+            await self.coordinator.roku.remote("poweroff")
         await self.coordinator.async_request_refresh()
 
     @roku_exception_handler
