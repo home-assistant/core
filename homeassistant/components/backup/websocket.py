@@ -30,7 +30,7 @@ async def handle_info(
     connection.send_result(
         msg["id"],
         {
-            "backups": list(backups),
+            "backups": list(backups.values()),
             "backing_up": manager.backing_up,
         },
     )

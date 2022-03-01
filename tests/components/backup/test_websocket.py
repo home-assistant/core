@@ -20,12 +20,17 @@ async def test_info(
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
 
-    await client.send_json({"id": 1, "type": "backup/info"})
-    msg = await client.receive_json()
+    with patch(
+        "homeassistant.components.backup.websocket.BackupManager.get_backups",
+        return_value={TEST_BACKUP.slug: TEST_BACKUP},
+    ):
+
+        await client.send_json({"id": 1, "type": "backup/info"})
+        msg = await client.receive_json()
 
     assert msg["id"] == 1
     assert msg["success"]
-    assert msg["result"] == {"backing_up": False, "backups": []}
+    assert msg["result"] == {"backing_up": False, "backups": [TEST_BACKUP.as_dict()]}
 
 
 async def test_remove(

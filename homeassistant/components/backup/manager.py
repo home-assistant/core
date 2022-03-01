@@ -5,6 +5,7 @@ from dataclasses import asdict, dataclass
 import hashlib
 import json
 from pathlib import Path
+import tarfile
 from tarfile import TarError
 from tempfile import TemporaryDirectory
 
@@ -51,7 +52,7 @@ class BackupManager:
         def _read_backups() -> None:
             for backup_path in self.backup_dir.glob("*.tar"):
                 try:
-                    with SecureTarFile(backup_path, "r", gzip=False) as backup_file:
+                    with tarfile.open(backup_path, "r:") as backup_file:
                         if data_file := backup_file.extractfile("./backup.json"):
                             data = json.loads(data_file.read())
                             backup = Backup(
