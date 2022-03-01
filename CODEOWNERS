@@ -111,6 +111,8 @@ tests/components/azure_devops/* @timmo001
 homeassistant/components/azure_event_hub/* @eavanvalkenburg
 tests/components/azure_event_hub/* @eavanvalkenburg
 homeassistant/components/azure_service_bus/* @hfurubotten
+homeassistant/components/backup/* @home-assistant/core
+tests/components/backup/* @home-assistant/core
 homeassistant/components/balboa/* @garbled1
 tests/components/balboa/* @garbled1
 homeassistant/components/beewi_smartclim/* @alemuro

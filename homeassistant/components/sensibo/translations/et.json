@@ -4,7 +4,10 @@
             "already_configured": "Konto on juba h\u00e4\u00e4lestatud"
         },
         "error": {
-            "cannot_connect": "\u00dchendamine nurjus"
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "no_devices": "\u00dchtegi seadet ei leitud",
+            "no_username": "Kasutajanime ei \u00f5nnestunud hankida"
         },
         "step": {
             "user": {
