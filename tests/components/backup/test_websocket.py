@@ -40,22 +40,13 @@ async def test_remove(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.backup.websocket.BackupManager._backups",
-        {TEST_BACKUP.slug: TEST_BACKUP},
-    ), patch(
-        "homeassistant.components.backup.websocket.BackupManager._loaded",
-        True,
-    ), patch(
-        "pathlib.Path.unlink"
-    ), patch(
-        "pathlib.Path.exists", return_value=True
-    ):
+        "homeassistant.components.backup.websocket.BackupManager.remove_backup",
+    ), patch("pathlib.Path.unlink"), patch("pathlib.Path.exists", return_value=True):
         await client.send_json({"id": 1, "type": "backup/remove", "slug": "abc123"})
         msg = await client.receive_json()
 
         assert msg["id"] == 1
         assert msg["success"]
-        assert f"Removed backup located at {TEST_BACKUP.path}" in caplog.text
 
 
 async def test_generate(
@@ -69,9 +60,6 @@ async def test_generate(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.backup.websocket.BackupManager._backups",
-        {TEST_BACKUP.slug: TEST_BACKUP},
-    ), patch(
         "homeassistant.components.backup.websocket.BackupManager.generate_backup",
         return_value=TEST_BACKUP,
     ):
