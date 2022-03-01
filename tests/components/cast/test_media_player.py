@@ -857,6 +857,7 @@ async def test_entity_browse_media(hass: HomeAssistant, hass_ws_client):
         "can_play": True,
         "can_expand": False,
         "thumbnail": None,
+        "children_media_class": None,
     }
     assert expected_child_1 in response["result"]["children"]
 
@@ -868,6 +869,7 @@ async def test_entity_browse_media(hass: HomeAssistant, hass_ws_client):
         "can_play": True,
         "can_expand": False,
         "thumbnail": None,
+        "children_media_class": None,
     }
     assert expected_child_2 in response["result"]["children"]
 
@@ -911,6 +913,7 @@ async def test_entity_browse_media_audio_only(
         "can_play": True,
         "can_expand": False,
         "thumbnail": None,
+        "children_media_class": None,
     }
     assert expected_child_1 not in response["result"]["children"]
 
@@ -922,6 +925,7 @@ async def test_entity_browse_media_audio_only(
         "can_play": True,
         "can_expand": False,
         "thumbnail": None,
+        "children_media_class": None,
     }
     assert expected_child_2 in response["result"]["children"]
 
@@ -1858,6 +1862,7 @@ async def test_cast_platform_browse_media(hass: HomeAssistant, hass_ws_client):
         "can_play": False,
         "can_expand": True,
         "thumbnail": "https://brands.home-assistant.io/_/spotify/logo.png",
+        "children_media_class": None,
     }
     assert expected_child in response["result"]["children"]
 
