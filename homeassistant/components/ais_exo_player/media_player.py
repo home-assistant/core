@@ -270,12 +270,12 @@ class ExoPlayerDevice(MediaPlayerEntity):
         """Return the volume level of the Player"""
         return self._volume_level
 
-    @property
-    def media_duration(self):
-        """Return the duration of current playing media in seconds."""
-        if self._duration == 0:
-            return 100
-        return float(self._duration) // 1000
+    # @property
+    # def media_duration(self):
+    #     """Return the duration of current playing media in seconds."""
+    #     if self._duration == 0:
+    #         return 100
+    #     return int(self._duration) // 1000
 
     @property
     def shuffle(self):
