@@ -17,8 +17,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     CONF_MODEL,
     DOMAIN,
-    FEATURE_FLAGS_AIRFRESH_A1,
-    FEATURE_FLAGS_AIRFRESH_T2017,
     KEY_COORDINATOR,
     KEY_DEVICE,
     MODEL_AIRFRESH_A1,
@@ -31,17 +29,13 @@ DATA_KEY = "button.xiaomi_miio"
 ATTR_RESET_DUST_FILTER = "reset_dust_filter"
 ATTR_RESET_UPPER_FILTER = "reset_upper_filter"
 
-MODEL_TO_FEATURES_MAP = {
-    MODEL_AIRFRESH_A1: FEATURE_FLAGS_AIRFRESH_A1,
-    MODEL_AIRFRESH_T2017: FEATURE_FLAGS_AIRFRESH_T2017,
-}
-
 
 @dataclass
 class XiaomiMiioButtonDescription(ButtonEntityDescription):
     """A class that describes button entities."""
 
     method_press: str = ""
+    method_press_error_message: str = ""
     available_with_device_off: bool = True
 
 
@@ -50,14 +44,16 @@ BUTTON_TYPES = (
         key=ATTR_RESET_DUST_FILTER,
         name="Reset Dust Filter",
         icon="mdi:air-filter",
-        method_press="async_reset_dust_filter",
+        method_press="reset_dust_filter",
+        method_press_error_message="Resetting the dust filter lifetime of the miio device failed",
         entity_category=EntityCategory.CONFIG,
     ),
     XiaomiMiioButtonDescription(
         key=ATTR_RESET_UPPER_FILTER,
         name="Reset Upper Filter",
         icon="mdi:air-filter",
-        method_press="async_reset_upper_filter",
+        method_press="reset_upper_filter",
+        method_press_error_message="Resetting the dust filter lifetime of the miio device failed.",
         entity_category=EntityCategory.CONFIG,
     ),
 )
@@ -133,19 +129,8 @@ class XiaomiGenericCoordinatedButton(XiaomiCoordinatedMiioEntity, ButtonEntity):
 
     async def async_press(self, **kwargs: Any) -> None:
         """Press the button."""
-        method = getattr(self, self.entity_description.method_press)
-        await method()
-
-    async def async_reset_dust_filter(self) -> None:
-        """Reset the dust filter lifetime and usage."""
+        method = getattr(self._device, self.entity_description.method_press)
         await self._try_command(
-            "Resetting the dust filter lifetime of the miio device failed.",
-            self._device.reset_dust_filter,
-        )
-
-    async def async_reset_upper_filter(self) -> None:
-        """Reset the upper filter lifetime and usage."""
-        await self._try_command(
-            "Resetting the upper filter lifetime of the miio device failed.",
-            self._device.reset_upper_filter,
+            self.entity_description.method_press_error_message,
+            method,
         )
