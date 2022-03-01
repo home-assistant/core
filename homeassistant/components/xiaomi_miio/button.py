@@ -36,7 +36,6 @@ class XiaomiMiioButtonDescription(ButtonEntityDescription):
 
     method_press: str = ""
     method_press_error_message: str = ""
-    available_with_device_off: bool = True
 
 
 BUTTON_TYPES = (
@@ -45,7 +44,7 @@ BUTTON_TYPES = (
         name="Reset Dust Filter",
         icon="mdi:air-filter",
         method_press="reset_dust_filter",
-        method_press_error_message="Resetting the dust filter lifetime of the miio device failed",
+        method_press_error_message="Resetting the dust filter lifetime failed",
         entity_category=EntityCategory.CONFIG,
     ),
     XiaomiMiioButtonDescription(
@@ -53,20 +52,17 @@ BUTTON_TYPES = (
         name="Reset Upper Filter",
         icon="mdi:air-filter",
         method_press="reset_upper_filter",
-        method_press_error_message="Resetting the dust filter lifetime of the miio device failed.",
+        method_press_error_message="Resetting the dust filter lifetime failed.",
         entity_category=EntityCategory.CONFIG,
     ),
 )
 
-AIRFRESH_BUTTON_A1 = (ATTR_RESET_DUST_FILTER,)
-AIRFRESH_BUTTON_T2017 = (
-    ATTR_RESET_DUST_FILTER,
-    ATTR_RESET_UPPER_FILTER,
-)
-
 MODEL_TO_BUTTON_MAP = {
-    MODEL_AIRFRESH_A1: AIRFRESH_BUTTON_A1,
-    MODEL_AIRFRESH_T2017: AIRFRESH_BUTTON_T2017,
+    MODEL_AIRFRESH_A1: (ATTR_RESET_DUST_FILTER,),
+    MODEL_AIRFRESH_T2017: (
+        ATTR_RESET_DUST_FILTER,
+        ATTR_RESET_UPPER_FILTER,
+    ),
 }
 
 
@@ -81,16 +77,20 @@ async def async_setup_entry(
     unique_id = config_entry.unique_id
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
+
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
+
     buttons: tuple[str, ...] = ()
     if model in MODEL_TO_BUTTON_MAP:
         buttons = MODEL_TO_BUTTON_MAP[model]
     else:
         return
+
     for description in BUTTON_TYPES:
         if description.key not in buttons:
             continue
+
         entities.append(
             XiaomiGenericCoordinatedButton(
                 f"{config_entry.title} {description.name}",
@@ -101,6 +101,7 @@ async def async_setup_entry(
                 description,
             )
         )
+
     async_add_entities(entities)
 
 
@@ -115,17 +116,6 @@ class XiaomiGenericCoordinatedButton(XiaomiCoordinatedMiioEntity, ButtonEntity):
         """Initialize the plug switch."""
         super().__init__(name, device, entry, unique_id, coordinator)
         self.entity_description = description
-
-    @property
-    def available(self):
-        """Return true when state is known."""
-        if (
-            super().available
-            and not self.coordinator.data.is_on
-            and not self.entity_description.available_with_device_off
-        ):
-            return False
-        return super().available
 
     async def async_press(self, **kwargs: Any) -> None:
         """Press the button."""
