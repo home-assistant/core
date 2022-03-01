@@ -84,8 +84,8 @@
         },
         "trigger_type": {
             "device_dropped": "Dispositivo caduto",
-            "device_flipped": "Dispositivo capovolto \" {subtype} \"",
-            "device_knocked": "Dispositivo bussato \" {subtype} \"",
+            "device_flipped": "Dispositivo capovolto \"{subtype}\"",
+            "device_knocked": "Dispositivo bussato \"{subtype}\"",
             "device_offline": "Dispositivo offline",
             "device_rotated": "Dispositivo ruotato \" {subtype} \"",
             "device_shaken": "Dispositivo in vibrazione",

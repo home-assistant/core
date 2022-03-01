@@ -410,5 +410,6 @@
 			"version": 3,
 			"isSecure": false
 		}
-	]
+	],
+	"isControllerNode": false
 }

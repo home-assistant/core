@@ -82,7 +82,7 @@ async def async_setup_entry(
 class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     """Representation of a Philips TV exposing the JointSpace API."""
 
-    _coordinator: PhilipsTVDataUpdateCoordinator
+    coordinator: PhilipsTVDataUpdateCoordinator
     _attr_device_class = MediaPlayerDeviceClass.TV
 
     def __init__(
@@ -91,7 +91,6 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     ) -> None:
         """Initialize the Philips TV."""
         self._tv = coordinator.api
-        self._coordinator = coordinator
         self._sources = {}
         self._channels = {}
         self._supports = SUPPORT_PHILIPS_JS
@@ -125,7 +124,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     def supported_features(self):
         """Flag media player features that are supported."""
         supports = self._supports
-        if self._coordinator.turn_on or (
+        if self.coordinator.turn_on or (
             self._tv.on and self._tv.powerstate is not None
         ):
             supports |= SUPPORT_TURN_ON
@@ -170,7 +169,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             await self._tv.setPowerState("On")
             self._state = STATE_ON
         else:
-            await self._coordinator.turn_on.async_run(self.hass, self._context)
+            await self.coordinator.turn_on.async_run(self.hass, self._context)
         await self._async_update_soon()
 
     async def async_turn_off(self):

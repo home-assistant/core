@@ -79,10 +79,8 @@ async def async_setup_entry(
     hostname = entry.data[CONF_HOSTNAME]
     name = entry.data[CONF_NAME]
 
-    resolver_ipv4 = entry.options.get(CONF_RESOLVER, entry.data[CONF_RESOLVER])
-    resolver_ipv6 = entry.options.get(
-        CONF_RESOLVER_IPV6, entry.data[CONF_RESOLVER_IPV6]
-    )
+    resolver_ipv4 = entry.options[CONF_RESOLVER]
+    resolver_ipv6 = entry.options[CONF_RESOLVER_IPV6]
     entities = []
     if entry.data[CONF_IPV4]:
         entities.append(WanIpSensor(name, hostname, resolver_ipv4, False))

@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "discovery_confirm": {
+                "title": "Apstiprin\u0101t"
+            },
+            "user": {
+                "title": "Konfigur\u0113t ier\u012bci"
+            }
+        }
+    }
+}

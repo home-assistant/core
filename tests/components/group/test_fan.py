@@ -1,6 +1,7 @@
 """The tests for the group fan platform."""
 from unittest.mock import patch
 
+import async_timeout
 import pytest
 
 from homeassistant import config as hass_config
@@ -497,3 +498,58 @@ async def test_service_calls(hass, setup_comp):
     assert percentage_full_fan_state.attributes[ATTR_DIRECTION] == DIRECTION_REVERSE
     fan_group_state = hass.states.get(FAN_GROUP)
     assert fan_group_state.attributes[ATTR_DIRECTION] == DIRECTION_REVERSE
+
+
+async def test_nested_group(hass):
+    """Test nested fan group."""
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {"platform": "demo"},
+                {
+                    "platform": "group",
+                    "entities": ["fan.bedroom_group"],
+                    "name": "Nested Group",
+                },
+                {
+                    "platform": "group",
+                    CONF_ENTITIES: [
+                        LIVING_ROOM_FAN_ENTITY_ID,
+                        PERCENTAGE_FULL_FAN_ENTITY_ID,
+                    ],
+                    "name": "Bedroom Group",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("fan.bedroom_group")
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ENTITY_ID) == [
+        LIVING_ROOM_FAN_ENTITY_ID,
+        PERCENTAGE_FULL_FAN_ENTITY_ID,
+    ]
+
+    state = hass.states.get("fan.nested_group")
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ENTITY_ID) == ["fan.bedroom_group"]
+
+    # Test controlling the nested group
+    async with async_timeout.timeout(0.5):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "fan.nested_group"},
+            blocking=True,
+        )
+    assert hass.states.get(LIVING_ROOM_FAN_ENTITY_ID).state == STATE_ON
+    assert hass.states.get(PERCENTAGE_FULL_FAN_ENTITY_ID).state == STATE_ON
+    assert hass.states.get("fan.bedroom_group").state == STATE_ON
+    assert hass.states.get("fan.nested_group").state == STATE_ON

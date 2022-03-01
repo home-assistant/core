@@ -53,29 +53,29 @@ async def async_setup_entry(
         | FluxRemoteConfigSelect
         | FluxWhiteChannelSelect
     ] = []
-    name = entry.data[CONF_NAME]
-    unique_id = entry.unique_id
+    name = entry.data.get(CONF_NAME, entry.title)
+    base_unique_id = entry.unique_id or entry.entry_id
 
     if device.device_type == DeviceType.Switch:
         entities.append(FluxPowerStateSelect(coordinator.device, entry))
     if device.operating_modes:
         entities.append(
             FluxOperatingModesSelect(
-                coordinator, unique_id, f"{name} Operating Mode", "operating_mode"
+                coordinator, base_unique_id, f"{name} Operating Mode", "operating_mode"
             )
         )
-    if device.wirings:
+    if device.wirings and device.wiring is not None:
         entities.append(
-            FluxWiringsSelect(coordinator, unique_id, f"{name} Wiring", "wiring")
+            FluxWiringsSelect(coordinator, base_unique_id, f"{name} Wiring", "wiring")
         )
     if device.ic_types:
         entities.append(
-            FluxICTypeSelect(coordinator, unique_id, f"{name} IC Type", "ic_type")
+            FluxICTypeSelect(coordinator, base_unique_id, f"{name} IC Type", "ic_type")
         )
     if device.remote_config:
         entities.append(
             FluxRemoteConfigSelect(
-                coordinator, unique_id, f"{name} Remote Config", "remote_config"
+                coordinator, base_unique_id, f"{name} Remote Config", "remote_config"
             )
         )
     if FLUX_COLOR_MODE_RGBW in device.color_modes:
@@ -110,9 +110,9 @@ class FluxPowerStateSelect(FluxConfigAtStartSelect, SelectEntity):
     ) -> None:
         """Initialize the power state select."""
         super().__init__(device, entry)
-        self._attr_name = f"{entry.data[CONF_NAME]} Power Restored"
-        if entry.unique_id:
-            self._attr_unique_id = f"{entry.unique_id}_power_restored"
+        self._attr_name = f"{entry.data.get(CONF_NAME, entry.title)} Power Restored"
+        base_unique_id = entry.unique_id or entry.entry_id
+        self._attr_unique_id = f"{base_unique_id}_power_restored"
         self._async_set_current_option_from_device()
 
     @callback
@@ -201,12 +201,12 @@ class FluxRemoteConfigSelect(FluxConfigSelect):
     def __init__(
         self,
         coordinator: FluxLedUpdateCoordinator,
-        unique_id: str | None,
+        base_unique_id: str,
         name: str,
         key: str,
     ) -> None:
         """Initialize the remote config type select."""
-        super().__init__(coordinator, unique_id, name, key)
+        super().__init__(coordinator, base_unique_id, name, key)
         assert self._device.remote_config is not None
         self._name_to_state = {
             _human_readable_option(option.name): option for option in RemoteConfig
@@ -237,9 +237,9 @@ class FluxWhiteChannelSelect(FluxConfigAtStartSelect):
     ) -> None:
         """Initialize the white channel select."""
         super().__init__(device, entry)
-        self._attr_name = f"{entry.data[CONF_NAME]} White Channel"
-        if entry.unique_id:
-            self._attr_unique_id = f"{entry.unique_id}_white_channel"
+        self._attr_name = f"{entry.data.get(CONF_NAME, entry.title)} White Channel"
+        base_unique_id = entry.unique_id or entry.entry_id
+        self._attr_unique_id = f"{base_unique_id}_white_channel"
 
     @property
     def current_option(self) -> str | None:

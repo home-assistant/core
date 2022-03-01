@@ -52,6 +52,8 @@ SUPPORTED_FLAGS = {SUPPORT_SET_SPEED, SUPPORT_DIRECTION, SUPPORT_OSCILLATE}
 
 DEFAULT_NAME = "Fan Group"
 
+# No limit on parallel updates to enable a group calling another group
+PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

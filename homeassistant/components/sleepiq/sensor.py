@@ -1,62 +1,48 @@
-"""Support for SleepIQ sensors."""
+"""Support for SleepIQ Sensor."""
 from __future__ import annotations
 
+from asyncsleepiq import SleepIQBed, SleepIQSleeper
+
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import SleepIQSensor
-from .const import DOMAIN, SENSOR_TYPES, SIDES, SLEEP_NUMBER
+from .const import DOMAIN, SLEEP_NUMBER
+from .coordinator import SleepIQData
+from .entity import SleepIQSensor
 
-ICON = "mdi:bed"
 
-
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the SleepIQ sensors."""
-    if discovery_info is None:
-        return
-
-    data = hass.data[DOMAIN]
-    data.update()
-
-    dev = []
-    for bed_id, bed in data.beds.items():
-        for side in SIDES:
-            if getattr(bed, side) is not None:
-                dev.append(SleepNumberSensor(data, bed_id, side))
-    add_entities(dev)
+    """Set up the SleepIQ bed sensors."""
+    data: SleepIQData = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
+        SleepNumberSensorEntity(data.data_coordinator, bed, sleeper)
+        for bed in data.client.beds.values()
+        for sleeper in bed.sleepers
+    )
 
 
-class SleepNumberSensor(SleepIQSensor, SensorEntity):
-    """Implementation of a SleepIQ sensor."""
+class SleepNumberSensorEntity(SleepIQSensor, SensorEntity):
+    """Representation of an SleepIQ Entity with CoordinatorEntity."""
 
-    def __init__(self, sleepiq_data, bed_id, side):
+    _attr_icon = "mdi:bed"
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        bed: SleepIQBed,
+        sleeper: SleepIQSleeper,
+    ) -> None:
         """Initialize the sensor."""
-        SleepIQSensor.__init__(self, sleepiq_data, bed_id, side)
+        super().__init__(coordinator, bed, sleeper, SLEEP_NUMBER)
 
-        self._state = None
-        self.type = SLEEP_NUMBER
-        self._name = SENSOR_TYPES[self.type]
-
-        self.update()
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
-
-    def update(self):
-        """Get the latest data from SleepIQ and updates the states."""
-        SleepIQSensor.update(self)
-        self._state = self.side.sleep_number
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update sensor attributes."""
+        self._attr_native_value = self.sleeper.sleep_number

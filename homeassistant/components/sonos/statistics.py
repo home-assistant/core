@@ -9,13 +9,49 @@ from soco.events_base import Event as SonosEvent, parse_event_xml
 _LOGGER = logging.getLogger(__name__)
 
 
-class EventStatistics:
+class SonosStatistics:
+    """Base class of Sonos statistics."""
+
+    def __init__(self, zone_name: str, kind: str) -> None:
+        """Initialize SonosStatistics."""
+        self._stats = {}
+        self._stat_type = kind
+        self.zone_name = zone_name
+
+    def report(self) -> dict:
+        """Generate a report for use in diagnostics."""
+        return self._stats.copy()
+
+    def log_report(self) -> None:
+        """Log statistics for this speaker."""
+        _LOGGER.debug(
+            "%s statistics for %s: %s",
+            self._stat_type,
+            self.zone_name,
+            self.report(),
+        )
+
+
+class ActivityStatistics(SonosStatistics):
+    """Representation of Sonos activity statistics."""
+
+    def __init__(self, zone_name: str) -> None:
+        """Initialize ActivityStatistics."""
+        super().__init__(zone_name, "Activity")
+
+    def activity(self, source: str, timestamp: float) -> None:
+        """Track an activity occurrence."""
+        activity_entry = self._stats.setdefault(source, {"count": 0})
+        activity_entry["count"] += 1
+        activity_entry["last_seen"] = timestamp
+
+
+class EventStatistics(SonosStatistics):
     """Representation of Sonos event statistics."""
 
     def __init__(self, zone_name: str) -> None:
         """Initialize EventStatistics."""
-        self._stats = {}
-        self.zone_name = zone_name
+        super().__init__(zone_name, "Event")
 
     def receive(self, event: SonosEvent) -> None:
         """Mark a received event by subscription type."""
@@ -38,11 +74,3 @@ class EventStatistics:
         payload["soco:from_didl_string"] = from_didl_string.cache_info()
         payload["soco:parse_event_xml"] = parse_event_xml.cache_info()
         return payload
-
-    def log_report(self) -> None:
-        """Log event statistics for this speaker."""
-        _LOGGER.debug(
-            "Event statistics for %s: %s",
-            self.zone_name,
-            self.report(),
-        )

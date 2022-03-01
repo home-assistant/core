@@ -145,9 +145,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(uuid)
         self._abort_if_unique_id_configured()
 
-        self.context["title_placeholders"] = {
-            CONF_HOST: discovery_info.host,
-        }
+        self.context.update(
+            {
+                "title_placeholders": {CONF_HOST: discovery_info.host},
+                "configuration_url": (
+                    f"http://{discovery_info.host}:{discovery_info.port}"
+                    f"{discovery_info.properties[CONF_PATH]}"
+                ),
+            }
+        )
 
         self.discovery_schema = _schema_with_defaults(
             host=discovery_info.host,
@@ -166,9 +172,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         url = URL(discovery_info.upnp["presentationURL"])
-        self.context["title_placeholders"] = {
-            CONF_HOST: url.host,
-        }
+        self.context.update(
+            {
+                "title_placeholders": {CONF_HOST: url.host},
+                "configuration_url": discovery_info.upnp["presentationURL"],
+            }
+        )
 
         self.discovery_schema = _schema_with_defaults(
             host=url.host,

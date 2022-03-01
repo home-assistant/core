@@ -179,7 +179,6 @@ class AppleTVManager:
     def _handle_disconnect(self):
         """Handle that the device disconnected and restart connect loop."""
         if self.atv:
-            self.atv.listener = None
             self.atv.close()
             self.atv = None
         self._dispatch_send(SIGNAL_DISCONNECTED)
@@ -196,8 +195,6 @@ class AppleTVManager:
         self._is_on = False
         try:
             if self.atv:
-                self.atv.push_updater.listener = None
-                self.atv.push_updater.stop()
                 self.atv.close()
                 self.atv = None
             if self._task:
@@ -245,7 +242,7 @@ class AppleTVManager:
                 backoff = min(
                     max(
                         BACKOFF_TIME_LOWER_LIMIT,
-                        randrange(2 ** self._connection_attempts),
+                        randrange(2**self._connection_attempts),
                     ),
                     BACKOFF_TIME_UPPER_LIMIT,
                 )

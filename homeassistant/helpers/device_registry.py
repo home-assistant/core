@@ -11,7 +11,7 @@ import attr
 from homeassistant.backports.enum import StrEnum
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import RequiredParameterMissing
+from homeassistant.exceptions import HomeAssistantError, RequiredParameterMissing
 from homeassistant.loader import bind_hass
 import homeassistant.util.uuid as uuid_util
 
@@ -420,9 +420,13 @@ class DeviceRegistry:
         """Update device attributes."""
         old = self.devices[device_id]
 
-        changes: dict[str, Any] = {}
+        new_values: dict[str, Any] = {}  # Dict with new key/value pairs
+        old_values: dict[str, Any] = {}  # Dict with old key/value pairs
 
         config_entries = old.config_entries
+
+        if merge_identifiers is not UNDEFINED and new_identifiers is not UNDEFINED:
+            raise HomeAssistantError()
 
         if isinstance(disabled_by, str) and not isinstance(
             disabled_by, DeviceEntryDisabler
@@ -462,7 +466,8 @@ class DeviceRegistry:
             config_entries = config_entries - {remove_config_entry_id}
 
         if config_entries != old.config_entries:
-            changes["config_entries"] = config_entries
+            new_values["config_entries"] = config_entries
+            old_values["config_entries"] = old.config_entries
 
         for attr_name, setvalue in (
             ("connections", merge_connections),
@@ -471,10 +476,12 @@ class DeviceRegistry:
             old_value = getattr(old, attr_name)
             # If not undefined, check if `value` contains new items.
             if setvalue is not UNDEFINED and not setvalue.issubset(old_value):
-                changes[attr_name] = old_value | setvalue
+                new_values[attr_name] = old_value | setvalue
+                old_values[attr_name] = old_value
 
         if new_identifiers is not UNDEFINED:
-            changes["identifiers"] = new_identifiers
+            new_values["identifiers"] = new_identifiers
+            old_values["identifiers"] = old.identifiers
 
         for attr_name, value in (
             ("configuration_url", configuration_url),
@@ -491,25 +498,27 @@ class DeviceRegistry:
             ("via_device_id", via_device_id),
         ):
             if value is not UNDEFINED and value != getattr(old, attr_name):
-                changes[attr_name] = value
+                new_values[attr_name] = value
+                old_values[attr_name] = getattr(old, attr_name)
 
         if old.is_new:
-            changes["is_new"] = False
+            new_values["is_new"] = False
 
-        if not changes:
+        if not new_values:
             return old
 
-        new = attr.evolve(old, **changes)
+        new = attr.evolve(old, **new_values)
         self._update_device(old, new)
         self.async_schedule_save()
 
-        self.hass.bus.async_fire(
-            EVENT_DEVICE_REGISTRY_UPDATED,
-            {
-                "action": "create" if "is_new" in changes else "update",
-                "device_id": new.id,
-            },
-        )
+        data: dict[str, Any] = {
+            "action": "create" if old.is_new else "update",
+            "device_id": new.id,
+        }
+        if not old.is_new:
+            data["changes"] = old_values
+
+        self.hass.bus.async_fire(EVENT_DEVICE_REGISTRY_UPDATED, data)
 
         return new
 

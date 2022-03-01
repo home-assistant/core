@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Literal
+from typing import Any
 
 from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzstatus import FritzStatus
@@ -135,6 +135,15 @@ def _retrieve_link_attenuation_received_state(
 
 
 @dataclass
+class ConnectionInfo:
+    """Fritz sensor connection information class."""
+
+    connection: str
+    mesh_role: MeshRoles
+    wan_enabled: bool
+
+
+@dataclass
 class FritzRequireKeysMixin:
     """Fritz sensor data class."""
 
@@ -145,8 +154,7 @@ class FritzRequireKeysMixin:
 class FritzSensorEntityDescription(SensorEntityDescription, FritzRequireKeysMixin):
     """Describes Fritz sensor entity."""
 
-    connection_type: Literal["dsl"] | None = None
-    exclude_mesh_role: MeshRoles = MeshRoles.SLAVE
+    is_suitable: Callable[[ConnectionInfo], bool] = lambda info: info.wan_enabled
 
 
 SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
@@ -162,7 +170,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_device_uptime_state,
-        exclude_mesh_role=MeshRoles.NONE,
+        is_suitable=lambda info: True,
     ),
     FritzSensorEntityDescription(
         key="connection_uptime",
@@ -225,7 +233,6 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:upload",
         value_fn=_retrieve_link_kb_s_sent_state,
-        connection_type=DSL_CONNECTION,
     ),
     FritzSensorEntityDescription(
         key="link_kb_s_received",
@@ -233,7 +240,6 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:download",
         value_fn=_retrieve_link_kb_s_received_state,
-        connection_type=DSL_CONNECTION,
     ),
     FritzSensorEntityDescription(
         key="link_noise_margin_sent",
@@ -241,7 +247,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         icon="mdi:upload",
         value_fn=_retrieve_link_noise_margin_sent_state,
-        connection_type=DSL_CONNECTION,
+        is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
     ),
     FritzSensorEntityDescription(
         key="link_noise_margin_received",
@@ -249,7 +255,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         icon="mdi:download",
         value_fn=_retrieve_link_noise_margin_received_state,
-        connection_type=DSL_CONNECTION,
+        is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
     ),
     FritzSensorEntityDescription(
         key="link_attenuation_sent",
@@ -257,7 +263,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         icon="mdi:upload",
         value_fn=_retrieve_link_attenuation_sent_state,
-        connection_type=DSL_CONNECTION,
+        is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
     ),
     FritzSensorEntityDescription(
         key="link_attenuation_received",
@@ -265,7 +271,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         icon="mdi:download",
         value_fn=_retrieve_link_attenuation_received_state,
-        connection_type=DSL_CONNECTION,
+        is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
     ),
 )
 
@@ -277,16 +283,23 @@ async def async_setup_entry(
     _LOGGER.debug("Setting up FRITZ!Box sensors")
     avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
 
-    dsl: bool = False
-    dslinterface = await avm_wrapper.async_get_wan_dsl_interface_config()
-    if dslinterface:
-        dsl = dslinterface["NewEnable"]
+    link_properties = await avm_wrapper.async_get_wan_link_properties()
+    connection_info = ConnectionInfo(
+        connection=link_properties.get("NewWANAccessType", "").lower(),
+        mesh_role=avm_wrapper.mesh_role,
+        wan_enabled=avm_wrapper.device_is_router,
+    )
+
+    _LOGGER.debug(
+        "ConnectionInfo for FritzBox %s: %s",
+        avm_wrapper.host,
+        connection_info,
+    )
 
     entities = [
         FritzBoxSensor(avm_wrapper, entry.title, description)
         for description in SENSOR_TYPES
-        if (dsl or description.connection_type != DSL_CONNECTION)
-        and description.exclude_mesh_role != avm_wrapper.mesh_role
+        if description.is_suitable(connection_info)
     ]
 
     async_add_entities(entities, True)

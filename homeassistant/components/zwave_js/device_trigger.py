@@ -49,7 +49,11 @@ from .const import (
     ZWAVE_JS_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
 )
-from .device_automation_helpers import CONF_SUBTYPE, NODE_STATUSES
+from .device_automation_helpers import (
+    CONF_SUBTYPE,
+    NODE_STATUSES,
+    generate_config_parameter_subtype,
+)
 from .helpers import (
     async_get_node_from_device_id,
     async_get_node_status_sensor_entity_id,
@@ -217,7 +221,16 @@ async def async_validate_trigger_config(
 
     # We return early if the config entry for this device is not ready because we can't
     # validate the value without knowing the state of the device
-    if async_is_device_config_entry_not_loaded(hass, config[CONF_DEVICE_ID]):
+    try:
+        device_config_entry_not_loaded = async_is_device_config_entry_not_loaded(
+            hass, config[CONF_DEVICE_ID]
+        )
+    except ValueError as err:
+        raise InvalidDeviceAutomationConfig(
+            f"Device {config[CONF_DEVICE_ID]} not found"
+        ) from err
+
+    if device_config_entry_not_loaded:
         return config
 
     trigger_type = config[CONF_TYPE]
@@ -344,7 +357,7 @@ async def async_get_triggers(
                 ATTR_PROPERTY_KEY: config_value.property_key,
                 ATTR_ENDPOINT: config_value.endpoint,
                 ATTR_COMMAND_CLASS: config_value.command_class,
-                CONF_SUBTYPE: f"{config_value.value_id} ({config_value.property_name})",
+                CONF_SUBTYPE: generate_config_parameter_subtype(config_value),
             }
             for config_value in node.get_configuration_values().values()
         ]

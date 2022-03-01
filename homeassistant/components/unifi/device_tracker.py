@@ -198,7 +198,6 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
 
         elif (
             self.client.last_updated == SOURCE_DATA
-            and self._last_seen != self.client.last_seen
             and self.is_wired == self.client.is_wired
         ):
             self._last_seen = self.client.last_seen

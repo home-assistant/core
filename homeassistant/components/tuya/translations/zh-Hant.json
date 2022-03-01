@@ -3,7 +3,7 @@
         "abort": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
-            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
+            "single_instance_allowed": "\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3001\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
         },
         "error": {
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
@@ -70,7 +70,7 @@
             },
             "init": {
                 "data": {
-                    "discovery_interval": "\u63a2\u7d22\u88dd\u7f6e\u66f4\u65b0\u79d2\u9593\u8ddd",
+                    "discovery_interval": "\u641c\u7d22\u88dd\u7f6e\u66f4\u65b0\u79d2\u9593\u8ddd",
                     "list_devices": "\u9078\u64c7\u88dd\u7f6e\u4ee5\u8a2d\u5b9a\u3001\u6216\u4fdd\u6301\u7a7a\u767d\u4ee5\u5132\u5b58\u8a2d\u5b9a",
                     "query_device": "\u9078\u64c7\u88dd\u7f6e\u5c07\u4f7f\u7528\u67e5\u8a62\u65b9\u5f0f\u4ee5\u7372\u5f97\u66f4\u5feb\u7684\u72c0\u614b\u66f4\u65b0",
                     "query_interval": "\u67e5\u8a62\u88dd\u7f6e\u66f4\u65b0\u79d2\u9593\u8ddd"

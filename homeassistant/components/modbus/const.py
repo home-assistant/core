@@ -2,6 +2,7 @@
 from enum import Enum
 
 from homeassistant.const import (
+    CONF_ADDRESS,
     CONF_BINARY_SENSORS,
     CONF_COVERS,
     CONF_LIGHTS,
@@ -18,7 +19,6 @@ CONF_CLOSE_COMM_ON_ERROR = "close_comm_on_error"
 CONF_COILS = "coils"
 CONF_CURRENT_TEMP = "current_temp_register"
 CONF_CURRENT_TEMP_REGISTER_TYPE = "current_temp_register_type"
-CONF_DATA_COUNT = "data_count"
 CONF_DATA_TYPE = "data_type"
 CONF_FANS = "fans"
 CONF_HUB = "hub"
@@ -34,9 +34,9 @@ CONF_REGISTER_TYPE = "register_type"
 CONF_REGISTERS = "registers"
 CONF_RETRIES = "retries"
 CONF_RETRY_ON_EMPTY = "retry_on_empty"
-CONF_REVERSE_ORDER = "reverse_order"
 CONF_PRECISION = "precision"
 CONF_SCALE = "scale"
+CONF_SLAVE_COUNT = "slave_count"
 CONF_STATE_CLOSED = "state_closed"
 CONF_STATE_CLOSING = "state_closing"
 CONF_STATE_OFF = "state_off"
@@ -65,25 +65,23 @@ UDP = "udp"
 
 
 # service call attributes
-ATTR_ADDRESS = "address"
-ATTR_HUB = "hub"
+ATTR_ADDRESS = CONF_ADDRESS
+ATTR_HUB = CONF_HUB
 ATTR_UNIT = "unit"
+ATTR_SLAVE = "slave"
 ATTR_VALUE = "value"
-ATTR_STATE = "state"
-ATTR_TEMPERATURE = "temperature"
 
 
 class DataType(str, Enum):
     """Data types used by sensor etc."""
 
     CUSTOM = "custom"
-    FLOAT = "float"  # deprecated
-    INT = "int"  # deprecated
-    UINT = "uint"  # deprecated
     STRING = "string"
+    INT8 = "int8"
     INT16 = "int16"
     INT32 = "int32"
     INT64 = "int64"
+    UINT8 = "uint8"
     UINT16 = "uint16"
     UINT32 = "uint32"
     UINT64 = "uint64"

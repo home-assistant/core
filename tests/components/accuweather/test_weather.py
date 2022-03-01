@@ -46,7 +46,7 @@ async def test_weather_without_forecast(hass):
     assert state.attributes.get(ATTR_WEATHER_TEMPERATURE) == 22.6
     assert state.attributes.get(ATTR_WEATHER_VISIBILITY) == 16.1
     assert state.attributes.get(ATTR_WEATHER_WIND_BEARING) == 180
-    assert state.attributes.get(ATTR_WEATHER_WIND_SPEED) == 14.5
+    assert state.attributes.get(ATTR_WEATHER_WIND_SPEED) == 4.03
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
 
     entry = registry.async_get("weather.home")
@@ -68,7 +68,7 @@ async def test_weather_with_forecast(hass):
     assert state.attributes.get(ATTR_WEATHER_TEMPERATURE) == 22.6
     assert state.attributes.get(ATTR_WEATHER_VISIBILITY) == 16.1
     assert state.attributes.get(ATTR_WEATHER_WIND_BEARING) == 180
-    assert state.attributes.get(ATTR_WEATHER_WIND_SPEED) == 14.5
+    assert state.attributes.get(ATTR_WEATHER_WIND_SPEED) == 4.03
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     forecast = state.attributes.get(ATTR_FORECAST)[0]
     assert forecast.get(ATTR_FORECAST_CONDITION) == "lightning-rainy"
@@ -78,7 +78,7 @@ async def test_weather_with_forecast(hass):
     assert forecast.get(ATTR_FORECAST_TEMP_LOW) == 15.4
     assert forecast.get(ATTR_FORECAST_TIME) == "2020-07-26T05:00:00+00:00"
     assert forecast.get(ATTR_FORECAST_WIND_BEARING) == 166
-    assert forecast.get(ATTR_FORECAST_WIND_SPEED) == 13.0
+    assert forecast.get(ATTR_FORECAST_WIND_SPEED) == 3.61
 
     entry = registry.async_get("weather.home")
     assert entry

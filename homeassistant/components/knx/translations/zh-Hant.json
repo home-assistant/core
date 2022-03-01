@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "\u670d\u52d9\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
+            "single_instance_allowed": "\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3001\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557"
@@ -49,8 +49,8 @@
                     "connection_type": "KNX \u9023\u7dda\u985e\u578b",
                     "individual_address": "\u9810\u8a2d\u500b\u5225\u4f4d\u5740",
                     "local_ip": "Home Assistant \u672c\u5730\u7aef IP\uff08\u586b\u5165 0.0.0.0 \u555f\u7528\u81ea\u52d5\u5075\u6e2c\uff09",
-                    "multicast_group": "\u4f7f\u7528\u65bc\u8def\u7531\u8207\u63a2\u7d22\u7684 Multicast \u7fa4\u7d44",
-                    "multicast_port": "\u4f7f\u7528\u65bc\u8def\u7531\u8207\u63a2\u7d22\u7684 Multicast \u901a\u8a0a\u57e0",
+                    "multicast_group": "\u4f7f\u7528\u65bc\u8def\u7531\u8207\u641c\u7d22\u7684 Multicast \u7fa4\u7d44",
+                    "multicast_port": "\u4f7f\u7528\u65bc\u8def\u7531\u8207\u641c\u7d22\u7684 Multicast \u901a\u8a0a\u57e0",
                     "rate_limit": "\u6700\u5927\u6bcf\u79d2\u767c\u51fa Telegram",
                     "state_updater": "\u7531 KNX Bus \u8b80\u53d6\u72c0\u614b\u5168\u555f\u7528"
                 }

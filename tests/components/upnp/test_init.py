@@ -45,8 +45,13 @@ async def test_reinitialize_device(
 
     # Reinit.
     new_location = "http://192.168.1.1:12345/desc.xml"
-    headers = {
-        ssdp.ATTR_SSDP_LOCATION: new_location,
-    }
-    await device.async_ssdp_callback(headers, ...)
+    await device.async_ssdp_callback(
+        ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://192.168.1.1:12345/desc.xml",
+            upnp={},
+        ),
+        ...,
+    )
     assert device._igd_device.device.device_url == new_location

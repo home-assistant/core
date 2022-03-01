@@ -50,27 +50,29 @@ async def async_setup_entry(
         | FluxMusicPixelsPerSegmentNumber
         | FluxMusicSegmentsNumber
     ] = []
-    name = entry.data[CONF_NAME]
-    unique_id = entry.unique_id
+    name = entry.data.get(CONF_NAME, entry.title)
+    base_unique_id = entry.unique_id or entry.entry_id
 
     if device.pixels_per_segment is not None:
         entities.append(
             FluxPixelsPerSegmentNumber(
                 coordinator,
-                unique_id,
+                base_unique_id,
                 f"{name} Pixels Per Segment",
                 "pixels_per_segment",
             )
         )
     if device.segments is not None:
         entities.append(
-            FluxSegmentsNumber(coordinator, unique_id, f"{name} Segments", "segments")
+            FluxSegmentsNumber(
+                coordinator, base_unique_id, f"{name} Segments", "segments"
+            )
         )
     if device.music_pixels_per_segment is not None:
         entities.append(
             FluxMusicPixelsPerSegmentNumber(
                 coordinator,
-                unique_id,
+                base_unique_id,
                 f"{name} Music Pixels Per Segment",
                 "music_pixels_per_segment",
             )
@@ -78,12 +80,12 @@ async def async_setup_entry(
     if device.music_segments is not None:
         entities.append(
             FluxMusicSegmentsNumber(
-                coordinator, unique_id, f"{name} Music Segments", "music_segments"
+                coordinator, base_unique_id, f"{name} Music Segments", "music_segments"
             )
         )
     if device.effect_list and device.effect_list != [EFFECT_RANDOM]:
         entities.append(
-            FluxSpeedNumber(coordinator, unique_id, f"{name} Effect Speed", None)
+            FluxSpeedNumber(coordinator, base_unique_id, f"{name} Effect Speed", None)
         )
 
     if entities:
@@ -131,12 +133,12 @@ class FluxConfigNumber(FluxEntity, CoordinatorEntity, NumberEntity):
     def __init__(
         self,
         coordinator: FluxLedUpdateCoordinator,
-        unique_id: str | None,
+        base_unique_id: str,
         name: str,
         key: str | None,
     ) -> None:
         """Initialize the flux number."""
-        super().__init__(coordinator, unique_id, name, key)
+        super().__init__(coordinator, base_unique_id, name, key)
         self._debouncer: Debouncer | None = None
         self._pending_value: int | None = None
 

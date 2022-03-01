@@ -1,8 +1,8 @@
 {
     "state": {
         "_": {
-            "off": "Inativo",
-            "on": "Ativo"
+            "off": "Desligado",
+            "on": "Ligado"
         }
     },
     "title": "Calend\u00e1rio"

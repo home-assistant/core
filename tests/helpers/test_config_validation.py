@@ -410,9 +410,15 @@ def test_service_schema():
             "entity_id": "all",
             "alias": "turn on kitchen lights",
         },
+        {"service": "scene.turn_on", "metadata": {}},
     )
     for value in options:
         cv.SERVICE_SCHEMA(value)
+
+    # Check metadata is removed from the validated output
+    assert cv.SERVICE_SCHEMA({"service": "scene.turn_on", "metadata": {}}) == {
+        "service": "scene.turn_on"
+    }
 
 
 def test_entity_service_schema():

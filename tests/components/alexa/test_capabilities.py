@@ -4,7 +4,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.alexa import smart_home
-from homeassistant.components.alexa.errors import UnsupportedProperty
 from homeassistant.components.climate import const as climate
 from homeassistant.components.lock import STATE_JAMMED, STATE_LOCKING, STATE_UNLOCKING
 from homeassistant.components.media_player.const import (
@@ -39,8 +38,8 @@ from . import (
 from tests.common import async_mock_service
 
 
-@pytest.mark.parametrize("result,adjust", [(25, "-5"), (35, "5"), (0, "-80")])
-async def test_api_adjust_brightness(hass, result, adjust):
+@pytest.mark.parametrize("adjust", ["-5", "5", "-80"])
+async def test_api_adjust_brightness(hass, adjust):
     """Test api adjust brightness process."""
     request = get_new_request(
         "Alexa.BrightnessController", "AdjustBrightness", "light#test"
@@ -64,7 +63,7 @@ async def test_api_adjust_brightness(hass, result, adjust):
 
     assert len(call_light) == 1
     assert call_light[0].data["entity_id"] == "light.test"
-    assert call_light[0].data["brightness_pct"] == result
+    assert call_light[0].data["brightness_step_pct"] == int(adjust)
     assert msg["header"]["name"] == "Response"
 
 
@@ -183,7 +182,7 @@ async def test_api_increase_color_temp(hass, result, initial):
 @pytest.mark.parametrize(
     "domain,payload,source_list,idx",
     [
-        ("media_player", "GAME CONSOLE", ["tv", "game console"], 1),
+        ("media_player", "GAME CONSOLE", ["tv", "game console", 10000], 1),
         ("media_player", "SATELLITE TV", ["satellite-tv", "game console"], 0),
         ("media_player", "SATELLITE TV", ["satellite_tv", "game console"], 0),
         ("media_player", "BAD DEVICE", ["satellite_tv", "game console"], None),
@@ -677,16 +676,9 @@ async def test_report_climate_state(hass):
             ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         },
     )
-    with pytest.raises(UnsupportedProperty):
-        properties = await reported_properties(hass, "climate.unsupported")
-        properties.assert_not_has_property(
-            "Alexa.ThermostatController", "thermostatMode"
-        )
-        properties.assert_equal(
-            "Alexa.TemperatureSensor",
-            "temperature",
-            {"value": 34.0, "scale": "CELSIUS"},
-        )
+    msg = await reported_properties(hass, "climate.unsupported", True)
+    assert msg["event"]["header"]["name"] == "ErrorResponse"
+    assert msg["event"]["payload"]["type"] == "INTERNAL_ERROR"
 
 
 async def test_temperature_sensor_sensor(hass):

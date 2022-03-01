@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u670d\u52a1\u5df2\u88ab\u914d\u7f6e"
+        },
+        "error": {
+            "unexpected_response": "\u6765\u81ea Whois \u7684\u672a\u77e5\u9519\u8bef",
+            "unknown_date_format": "Whois \u670d\u52a1\u5668\u8fd4\u56de\u672a\u77e5\u7684\u65e5\u671f\u683c\u5f0f",
+            "whois_command_failed": "\u6267\u884c Whois \u547d\u4ee4\u5931\u8d25\uff0c\u65e0\u6cd5\u68c0\u7d22\u5230 Whois \u4fe1\u606f"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "domain": "\u57df\u540d\u540d\u79f0"
+                }
+            }
+        }
+    }
+}

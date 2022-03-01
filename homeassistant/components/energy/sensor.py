@@ -148,17 +148,17 @@ class SensorManager:
                     self._process_sensor_data(
                         adapter,
                         # Opting out of the type complexity because can't get it to work
-                        energy_source,  # type: ignore
+                        energy_source,  # type: ignore[arg-type]
                         to_add,
                         to_remove,
                     )
                     continue
 
-                for flow in energy_source[adapter.flow_type]:  # type: ignore
+                for flow in energy_source[adapter.flow_type]:  # type: ignore[typeddict-item]
                     self._process_sensor_data(
                         adapter,
                         # Opting out of the type complexity because can't get it to work
-                        flow,  # type: ignore
+                        flow,  # type: ignore[arg-type]
                         to_add,
                         to_remove,
                     )
