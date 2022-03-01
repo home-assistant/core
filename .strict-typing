@@ -68,6 +68,7 @@ homeassistant.components.device_automation.*
 homeassistant.components.device_tracker.*
 homeassistant.components.devolo_home_control.*
 homeassistant.components.devolo_home_network.*
+homeassistant.components.dhcp.*
 homeassistant.components.dlna_dmr.*
 homeassistant.components.dnsip.*
 homeassistant.components.dsmr.*
