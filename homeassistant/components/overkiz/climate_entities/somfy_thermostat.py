@@ -46,11 +46,11 @@ STATE_PRESET_MANUAL = "manualMode"
 STATE_PRESET_SLEEPING_MODE = "sleepingMode"
 STATE_PRESET_SUDDEN_DROP_MODE = "suddenDropMode"
 
-MAP_HVAC_MODES = {
+OVERKIZ_TO_HVAC_MODES = {
     STATE_DEROGATION_ACTIVE: HVAC_MODE_HEAT,
     STATE_DEROGATION_INACTIVE: HVAC_MODE_AUTO,
 }
-MAP_PRESET_MODES = {
+OVERKIZ_TO_PRESET_MODES = {
     STATE_PRESET_AT_HOME: PRESET_HOME,
     STATE_PRESET_AWAY: PRESET_AWAY,
     STATE_PRESET_FREEZE: PRESET_FREEZE,
@@ -58,8 +58,8 @@ MAP_PRESET_MODES = {
     STATE_PRESET_SLEEPING_MODE: PRESET_NIGHT,
     STATE_PRESET_SUDDEN_DROP_MODE: PRESET_NONE,
 }
-MAP_REVERSE_PRESET_MODES = {v: k for k, v in MAP_PRESET_MODES.items()}
-MAP_PRESET_TEMPERATURES = {
+PRESET_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_PRESET_MODES.items()}
+TARGET_TEMP_TO_OVERKIZ = {
     PRESET_HOME: "somfythermostat:AtHomeTargetTemperatureState",
     PRESET_AWAY: "somfythermostat:AwayModeTargetTemperatureState",
     PRESET_FREEZE: "somfythermostat:FreezeModeTargetTemperatureState",
@@ -94,7 +94,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
                 self._saved_target_temp = None
             else:
                 self._saved_target_temp = self.executor.select_state(
-                    MAP_PRESET_TEMPERATURES[self.preset_mode]
+                    TARGET_TEMP_TO_OVERKIZ[self.preset_mode]
                 )
         else:
             self._saved_target_temp = self.executor.select_state(
@@ -104,7 +104,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
-        return MAP_HVAC_MODES[
+        return OVERKIZ_TO_HVAC_MODES[
             self.executor.select_state(CORE_DEROGATION_ACTIVATION_STATE)
         ]
 
@@ -121,8 +121,8 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         if self.hvac_mode == HVAC_MODE_AUTO:
-            return MAP_PRESET_MODES[self.executor.select_state(ST_HEATING_MODE_STATE)]
-        return MAP_PRESET_MODES[
+            return OVERKIZ_TO_PRESET_MODES[self.executor.select_state(ST_HEATING_MODE_STATE)]
+        return OVERKIZ_TO_PRESET_MODES[
             self.executor.select_state(ST_DEROGATION_HEATING_MODE_STATE)
         ]
 
@@ -140,7 +140,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
         if self.hvac_mode == HVAC_MODE_AUTO:
             if self.preset_mode == PRESET_NONE:
                 return None
-            return self.executor.select_state(MAP_PRESET_TEMPERATURES[self.preset_mode])
+            return self.executor.select_state(TARGET_TEMP_TO_OVERKIZ[self.preset_mode])
         return self.executor.select_state(CORE_DEROGATED_TARGET_TEMPERATURE_STATE)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -174,7 +174,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
             self._saved_target_temp = self.target_temperature
             await self.executor.async_execute_command(
                 COMMAND_SET_DEROGATION,
-                MAP_REVERSE_PRESET_MODES[preset_mode],
+                PRESET_MODES_TO_OVERKIZ[preset_mode],
                 STATE_DEROGATION_FURTHER_NOTICE,
             )
         elif preset_mode == PRESET_NONE:
