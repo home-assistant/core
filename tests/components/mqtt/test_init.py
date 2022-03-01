@@ -1056,6 +1056,38 @@ async def test_not_calling_unsubscribe_with_active_subscribers(
     assert not mqtt_client_mock.unsubscribe.called
 
 
+async def test_unsubscribe_race(hass, mqtt_client_mock, mqtt_mock):
+    """Test not calling unsubscribe() when other subscribers are active."""
+    # Fake that the client is connected
+    mqtt_mock().connected = True
+
+    calls_a = MagicMock()
+    calls_b = MagicMock()
+
+    mqtt_client_mock.reset_mock()
+    unsub = await mqtt.async_subscribe(hass, "test/state", calls_a)
+    unsub()
+    await mqtt.async_subscribe(hass, "test/state", calls_b)
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "test/state", "online")
+    await hass.async_block_till_done()
+    assert not calls_a.called
+    assert calls_b.called
+
+    # We allow either calls [subscribe, unsubscribe, subscribe] or [subscribe, subscribe]
+    expected_calls_1 = [
+        call.subscribe("test/state", 0),
+        call.unsubscribe("test/state"),
+        call.subscribe("test/state", 0),
+    ]
+    expected_calls_2 = [
+        call.subscribe("test/state", 0),
+        call.subscribe("test/state", 0),
+    ]
+    assert mqtt_client_mock.mock_calls in (expected_calls_1, expected_calls_2)
+
+
 @pytest.mark.parametrize(
     "mqtt_config",
     [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_DISCOVERY: False}],

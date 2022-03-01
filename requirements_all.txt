@@ -1265,7 +1265,7 @@ pillow==9.0.1
 pizzapi==0.0.3
 
 # homeassistant.components.plex
-plexapi==4.9.2
+plexapi==4.10.0
 
 # homeassistant.components.plex
 plexauth==0.0.6
@@ -1756,7 +1756,7 @@ pyotgw==1.1b1
 pyotp==2.6.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.3.8
+pyoverkiz==1.3.9
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -2539,7 +2539,7 @@ youtube_dl>=2021.12.17
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.38.3
+zeroconf==0.38.4
 
 # homeassistant.components.zha
 zha-quirks==0.0.67

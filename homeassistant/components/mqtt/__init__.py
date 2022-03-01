@@ -967,10 +967,6 @@ class MQTT:
             self.subscriptions.remove(subscription)
             self._matching_subscriptions.cache_clear()
 
-            if any(other.topic == topic for other in self.subscriptions):
-                # Other subscriptions on topic remaining - don't unsubscribe.
-                return
-
             # Only unsubscribe if currently connected.
             if self.connected:
                 self.hass.async_create_task(self._async_unsubscribe(topic))
@@ -982,6 +978,10 @@ class MQTT:
 
         This method is a coroutine.
         """
+        if any(other.topic == topic for other in self.subscriptions):
+            # Other subscriptions on topic remaining - don't unsubscribe.
+            return
+
         async with self._paho_lock:
             result: int | None = None
             result, mid = await self.hass.async_add_executor_job(
