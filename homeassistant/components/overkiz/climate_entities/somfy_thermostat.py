@@ -30,8 +30,8 @@ COMMAND_SET_MODE_TEMPERATURE = "setModeTemperature"
 CORE_DEROGATED_TARGET_TEMPERATURE_STATE = "core:DerogatedTargetTemperatureState"
 CORE_DEROGATION_ACTIVATION_STATE = "core:DerogationActivationState"
 
-PRESET_FREEZE = "Freeze"
-PRESET_NIGHT = "Night"
+PRESET_FREEZE = "freeze"
+PRESET_NIGHT = "night"
 
 ST_HEATING_MODE_STATE = "somfythermostat:HeatingModeState"
 ST_DEROGATION_HEATING_MODE_STATE = "somfythermostat:DerogationHeatingModeState"
