@@ -50,6 +50,9 @@ from .const import (
     WEBSOCKET_PORTS,
 )
 
+ERROR_EVENT = "ms.error"
+INSTALLED_APP_EVENT = "ed.installedApp.get"
+
 
 def mac_from_device_info(info: dict[str, Any]) -> str | None:
     """Extract the mac address from the device info."""
@@ -326,20 +329,30 @@ class SamsungTVWSBridge(SamsungTVBridge):
         self._app_list_futures.add(app_list_future)
         await remote.send_command(ChannelEmitCommand.get_installed_app())
 
-        async with async_timeout.timeout(TIMEOUT_WEBSOCKET):
-            response = await app_list_future
-            if not response.get("data"):
-                return None
+        try:
+            async with async_timeout.timeout(TIMEOUT_WEBSOCKET):
+                response = await app_list_future
+                if response["event"] == ERROR_EVENT:
+                    self._app_list = {}
+                    return None
 
-            data = response["data"]
-            if not isinstance(data, dict) or not data.get("data"):
-                return None
+                if not response.get("data"):
+                    return None
 
-            self._app_list = {
-                app["name"]: app["appId"]
-                for app in sorted(data["data"], key=lambda app: cast(str, app["name"]))
-            }
-            LOGGER.debug("Generated app list: %s", self._app_list)
+                data = response["data"]
+                if not isinstance(data, dict) or not data.get("data"):
+                    return None
+
+                self._app_list = {
+                    app["name"]: app["appId"]
+                    for app in sorted(
+                        data["data"], key=lambda app: cast(str, app["name"])
+                    )
+                }
+                LOGGER.debug("Generated app list: %s", self._app_list)
+        except AsyncioTimeoutError:
+            self._app_list = {}
+            LOGGER.debug("Fetching app list timed out")
         return self._app_list
 
     async def async_is_on(self) -> bool:
@@ -485,7 +498,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
     async def _websocket_event(self, event: str, response: Any) -> None:
         """Handle websocket event."""
         LOGGER.debug("SamsungTVWS websocket event: %s", response)
-        if event == "ed.installedApp.get":
+        if event in (INSTALLED_APP_EVENT, ERROR_EVENT):
             while self._app_list_futures:
                 self._app_list_futures.pop().set_result(response)
 
@@ -552,5 +565,5 @@ class SamsungTVWSAsyncConnection(BaseSamsungTVWSAsyncConnection):  # type: ignor
     def is_alive(self) -> bool:
         """Confirm is the connection is available."""
         if connection := self.connection:
-            return connection.closed
+            return not connection.closed
         return False
