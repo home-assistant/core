@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account is already configured"
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "cannot_connect": "Failed to connect",
@@ -12,8 +13,12 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API Key",
-                    "name": "Name"
+                    "api_key": "API Key"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API Key"
                 }
             }
         }
