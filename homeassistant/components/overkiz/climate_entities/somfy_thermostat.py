@@ -27,9 +27,6 @@ COMMAND_REFRESH_STATE = "refreshState"
 COMMAND_SET_DEROGATION = "setDerogation"
 COMMAND_SET_MODE_TEMPERATURE = "setModeTemperature"
 
-CORE_DEROGATED_TARGET_TEMPERATURE_STATE = "core:DerogatedTargetTemperatureState"
-CORE_DEROGATION_ACTIVATION_STATE = "core:DerogationActivationState"
-
 PRESET_FREEZE = "freeze"
 PRESET_NIGHT = "night"
 
@@ -46,11 +43,11 @@ STATE_PRESET_MANUAL = "manualMode"
 STATE_PRESET_SLEEPING_MODE = "sleepingMode"
 STATE_PRESET_SUDDEN_DROP_MODE = "suddenDropMode"
 
-OVERKIZ_TO_HVAC_MODES = {
+OVERKIZ_TO_HVAC_MODES: dict[str, str] = {
     STATE_DEROGATION_ACTIVE: HVAC_MODE_HEAT,
     STATE_DEROGATION_INACTIVE: HVAC_MODE_AUTO,
 }
-OVERKIZ_TO_PRESET_MODES = {
+OVERKIZ_TO_PRESET_MODES: dict[str, str] = {
     STATE_PRESET_AT_HOME: PRESET_HOME,
     STATE_PRESET_AWAY: PRESET_AWAY,
     STATE_PRESET_FREEZE: PRESET_FREEZE,
@@ -73,13 +70,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
     _attr_temperature_unit = TEMP_CELSIUS
     _attr_supported_features = SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
     _attr_hvac_modes = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
-    _attr_preset_modes = [
-        PRESET_NONE,
-        PRESET_FREEZE,
-        PRESET_NIGHT,
-        PRESET_AWAY,
-        PRESET_HOME,
-    ]
+    _attr_preset_modes = [*PRESET_MODES_TO_OVERKIZ]
     _attr_min_temp = 15.0
     _attr_max_temp = 26.0
 
@@ -94,7 +85,9 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
         return OVERKIZ_TO_HVAC_MODES[
-            self.executor.select_state(CORE_DEROGATION_ACTIVATION_STATE)
+            cast(
+                str, self.executor.select_state(OverkizState.CORE_DEROGATION_ACTIVATION)
+            )
         ]
 
     @property
@@ -107,32 +100,37 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
         return CURRENT_HVAC_IDLE
 
     @property
-    def preset_mode(self) -> str | None:
+    def preset_mode(self) -> str:
         """Return the current preset mode, e.g., home, away, temp."""
         if self.hvac_mode == HVAC_MODE_AUTO:
             return OVERKIZ_TO_PRESET_MODES[
-                self.executor.select_state(ST_HEATING_MODE_STATE)
+                cast(str, self.executor.select_state(ST_HEATING_MODE_STATE))
             ]
         return OVERKIZ_TO_PRESET_MODES[
-            self.executor.select_state(ST_DEROGATION_HEATING_MODE_STATE)
+            cast(str, self.executor.select_state(ST_DEROGATION_HEATING_MODE_STATE))
         ]
 
     @property
-    def current_temperature(self) -> float:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return cast(
-            float,
-            self.temperature_device.states.get(OverkizState.CORE_TEMPERATURE).value,
-        )
+        if temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]:
+            return cast(float, temperature.value)
+        return None
 
     @property
-    def target_temperature(self) -> float:
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVAC_MODE_AUTO:
             if self.preset_mode == PRESET_NONE:
                 return None
-            return self.executor.select_state(TARGET_TEMP_TO_OVERKIZ[self.preset_mode])
-        return self.executor.select_state(CORE_DEROGATED_TARGET_TEMPERATURE_STATE)
+            return cast(
+                float,
+                self.executor.select_state(TARGET_TEMP_TO_OVERKIZ[self.preset_mode]),
+            )
+        return cast(
+            float,
+            self.executor.select_state(OverkizState.CORE_DEROGATED_TARGET_TEMPERATURE),
+        )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -156,8 +154,6 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if self.preset_mode == preset_mode:
-            return
         if preset_mode in [PRESET_FREEZE, PRESET_NIGHT, PRESET_AWAY, PRESET_HOME]:
             await self.executor.async_execute_command(
                 COMMAND_SET_DEROGATION,
