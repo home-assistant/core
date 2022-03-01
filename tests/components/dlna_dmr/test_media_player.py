@@ -961,6 +961,7 @@ async def test_browse_media(
         "can_play": True,
         "can_expand": False,
         "thumbnail": None,
+        "children_media_class": None,
     }
     assert expected_child_video in response["result"]["children"]
 
@@ -972,6 +973,7 @@ async def test_browse_media(
         "can_play": True,
         "can_expand": False,
         "thumbnail": None,
+        "children_media_class": None,
     }
     assert expected_child_audio in response["result"]["children"]
 
