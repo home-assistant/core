@@ -5,7 +5,7 @@
   "documentation": "https://www.ai-speaker.com",
   "issue_tracker": "https://github.com/sviete/AIS-home-assistant",
   "requirements": [
-    "spotipy==2.18.0"
+    "spotipy==2.19.0"
   ],
   "dependencies": [],
   "codeowners": []
