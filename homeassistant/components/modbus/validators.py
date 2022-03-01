@@ -196,7 +196,7 @@ def duplicate_entity_validator(config: dict) -> dict:
                     addr += "_" + str(entry[CONF_COMMAND_ON])
                 if CONF_COMMAND_OFF in entry:
                     addr += "_" + str(entry[CONF_COMMAND_OFF])
-                addr += "_" + str(entry[CONF_SLAVE])
+                addr += "_" + str(entry.get(CONF_SLAVE, 0))
                 if addr in addresses:
                     err = f"Modbus {component}/{name} address {addr} is duplicate, second entry not loaded!"
                     _LOGGER.warning(err)
