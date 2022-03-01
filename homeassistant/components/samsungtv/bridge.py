@@ -378,9 +378,6 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     async def async_device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""
-        if not self.port:
-            return None
-
         if self._rest_api is None:
             self._rest_api = SamsungTVAsyncRest(
                 host=self.host,
