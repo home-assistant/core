@@ -25,12 +25,13 @@ class UptimeConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         if user_input is not None:
-            return self.async_create_entry(title=DEFAULT_NAME, data={})
+            return self.async_create_entry(
+                title=user_input.get(CONF_NAME, DEFAULT_NAME),
+                data={},
+            )
 
         return self.async_show_form(step_id="user", data_schema=vol.Schema({}))
 
     async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle import from configuration.yaml."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-        return self.async_create_entry(title=user_input[CONF_NAME], data={})
+        return await self.async_step_user(user_input)
