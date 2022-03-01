@@ -590,7 +590,7 @@ env_canada==0.5.20
 envoy_reader==0.20.1
 
 # homeassistant.components.season
-ephem==3.7.7.0
+ephem==4.1.2
 
 # homeassistant.components.epson
 epson-projector==0.4.2
@@ -719,7 +719,7 @@ google-api-python-client==2.38.0
 google-cloud-pubsub==2.9.0
 
 # homeassistant.components.google_cloud
-google-cloud-texttospeech==0.4.0
+google-cloud-texttospeech==2.10.0
 
 # homeassistant.components.nest
 google-nest-sdm==1.7.1
@@ -2032,9 +2032,6 @@ radiotherm==2.1.0
 # homeassistant.components.raincloud
 raincloudy==0.0.7
 
-# homeassistant.components.raspihats
-# raspihats==2.2.3
-
 # homeassistant.components.raspyrfm
 raspyrfm-client==1.2.8
 
@@ -2113,6 +2110,9 @@ screenlogicpy==0.5.4
 # homeassistant.components.scsgate
 scsgate==0.1.0
 
+# homeassistant.components.backup
+securetar==2022.2.0
+
 # homeassistant.components.sendgrid
 sendgrid==6.8.2
 
@@ -2121,7 +2121,7 @@ sendgrid==6.8.2
 sense_energy==0.10.2
 
 # homeassistant.components.sentry
-sentry-sdk==1.5.5
+sentry-sdk==1.5.6
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
@@ -2130,7 +2130,7 @@ sharkiqpy==0.1.8
 sharp_aquos_rc==0.3.2
 
 # homeassistant.components.shodan
-shodan==1.26.1
+shodan==1.27.0
 
 # homeassistant.components.sighthound
 simplehound==0.3
@@ -2158,9 +2158,6 @@ smart-meter-texas==0.4.7
 
 # homeassistant.components.smarthab
 smarthab==0.21
-
-# homeassistant.components.raspihats
-# smbus-cffi==0.5.1
 
 # homeassistant.components.smhi
 smhi-pkg==1.0.15
@@ -2470,7 +2467,7 @@ youtube_dl==2021.12.17
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.38.3
+zeroconf==0.38.4
 
 # homeassistant.components.zha
 zha-quirks==0.0.67

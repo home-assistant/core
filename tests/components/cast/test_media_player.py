@@ -633,8 +633,10 @@ async def test_entity_availability(hass: HomeAssistant):
 
 
 @pytest.mark.parametrize("port,entry_type", ((8009, None), (12345, None)))
-async def test_device_registry(hass: HomeAssistant, port, entry_type):
+async def test_device_registry(hass: HomeAssistant, hass_ws_client, port, entry_type):
     """Test device registry integration."""
+    assert await async_setup_component(hass, "config", {})
+
     entity_id = "media_player.speaker"
     reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
@@ -657,18 +659,31 @@ async def test_device_registry(hass: HomeAssistant, port, entry_type):
     assert state.state == "off"
     assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
     entity_entry = reg.async_get(entity_id)
-    assert entity_entry.device_id is not None
     device_entry = dev_reg.async_get(entity_entry.device_id)
+    assert entity_entry.device_id == device_entry.id
     assert device_entry.entry_type == entry_type
 
     # Check that the chromecast object is torn down when the device is removed
     chromecast.disconnect.assert_not_called()
-    dev_reg.async_update_device(
-        device_entry.id, remove_config_entry_id=cast_entry.entry_id
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": cast_entry.entry_id,
+            "device_id": device_entry.id,
+        }
     )
+    response = await client.receive_json()
+    assert response["success"]
+
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     chromecast.disconnect.assert_called_once()
+
+    assert reg.async_get(entity_id) is None
+    assert dev_reg.async_get(entity_entry.device_id) is None
 
 
 async def test_entity_cast_status(hass: HomeAssistant):
