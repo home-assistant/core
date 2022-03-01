@@ -127,10 +127,11 @@ homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
 homeassistant.components.mailbox.*
 homeassistant.components.media_player.*
+homeassistant.components.media_source.*
 homeassistant.components.mjpeg.*
 homeassistant.components.modbus.*
 homeassistant.components.modem_callerid.*
-homeassistant.components.media_source.*
+homeassistant.components.moon.*
 homeassistant.components.mysensors.*
 homeassistant.components.nam.*
 homeassistant.components.nanoleaf.*
