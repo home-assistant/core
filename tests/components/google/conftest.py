@@ -20,7 +20,6 @@ from homeassistant.util.dt import utcnow
 
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 
-
 ApiResult = Callable[[dict[str, Any]], None]
 ComponentSetup = Callable[[], Awaitable[bool]]
 T = TypeVar("T")
@@ -49,7 +48,7 @@ TEST_API_CALENDAR = {
     "kind": "calendar#calendarListEntry",
     "backgroundColor": "#16a765",
     "description": "Test Calendar",
-    "summary": TEST_API_ENTITY_NAME,
+    "summary": "We are, we are, a... Test Calendar",
     "colorId": "8",
     "defaultReminders": [],
 }
