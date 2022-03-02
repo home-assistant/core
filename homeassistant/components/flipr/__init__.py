@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 
 from flipr_api import FliprAPIRestClient
+from flipr_api.exceptions import FliprError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
@@ -11,6 +12,7 @@ from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 
 from .const import ATTRIBUTION, CONF_FLIPR_ID, DOMAIN, MANUFACTURER, NAME
@@ -68,9 +70,15 @@ class FliprDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
-        return await self.hass.async_add_executor_job(
-            self.client.get_pool_measure_latest, self.flipr_id
-        )
+        try:
+            data = await self.hass.async_add_executor_job(
+                self.client.get_pool_measure_latest, self.flipr_id
+            )
+        except (FliprError) as error:
+            _LOGGER.error(error)
+            raise UpdateFailed from error
+
+        return data
 
 
 class FliprEntity(CoordinatorEntity):

@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/flipr",
   "requirements": [
-    "flipr-api==1.4.1"],
+    "flipr-api==1.4.2"],
   "codeowners": [
     "@cnico"
   ],
