@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from abc import ABC
 from datetime import timedelta
-from functools import partial
 import logging
 
 from homeassistant.components.select import SelectEntity
@@ -38,18 +37,13 @@ async def async_setup_entry(
     entities = []
     for select in SELECT_SETTINGS_DATA:
         if select.module_id in available_settings_data:
-            needed_data_ids = list(
-                filter(lambda data_id: data_id != "None", select.options)
-            )
-            available_data_ids = [
+            needed_data_ids = {
+                data_id for data_id in select.options if data_id != "None"
+            }
+            available_data_ids = {
                 setting.id for setting in available_settings_data[select.module_id]
-            ]
-            if all(
-                map(
-                    partial(lambda aid, data_id: data_id in aid, available_data_ids),
-                    needed_data_ids,
-                )
-            ):
+            }
+            if needed_data_ids <= available_data_ids:
                 entities.append(
                     PlenticoreDataSelect(
                         select_data_update_coordinator,
