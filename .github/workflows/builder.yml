@@ -339,7 +339,7 @@ jobs:
 
           # Create general tags
           if [[ "${{ needs.init.outputs.version }}" =~ d ]]; then
-            create_manifest"dev" "${{ needs.init.outputs.version }}"
+            create_manifest "dev" "${{ needs.init.outputs.version }}"
           elif [[ "${{ needs.init.outputs.version }}" =~ b ]]; then
             create_manifest "beta" "${{ needs.init.outputs.version }}"
             create_manifest "rc" "${{ needs.init.outputs.version }}"
