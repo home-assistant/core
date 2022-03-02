@@ -1767,7 +1767,7 @@ pysaj==0.0.16
 pysdcp==1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.7
+pysensibo==1.0.8
 
 # homeassistant.components.serial
 # homeassistant.components.zha
