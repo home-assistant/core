@@ -25,10 +25,54 @@ class NoURLAvailableError(HomeAssistantError):
 def is_internal_request(hass: HomeAssistant) -> bool:
     """Test if the current request is internal."""
     try:
-        _get_internal_url(hass, require_current_request=True)
+        get_url(
+            hass, allow_external=False, allow_cloud=False, require_current_request=True
+        )
         return True
     except NoURLAvailableError:
         return False
+
+
+def is_hass_url(hass: HomeAssistant, url: str) -> bool:
+    """Return if the URL points at this Home Assistant instance."""
+    parsed = yarl.URL(normalize_url(url))
+
+    def host_ip() -> str | None:
+        if hass.config.api is None or is_loopback(ip_address(hass.config.api.local_ip)):
+            return None
+
+        return str(
+            yarl.URL.build(
+                scheme="http", host=hass.config.api.local_ip, port=hass.config.api.port
+            )
+        )
+
+    def cloud_url() -> str | None:
+        try:
+            return _get_cloud_url(hass)
+        except NoURLAvailableError:
+            return None
+
+    for potential_base_factory in (
+        lambda: hass.config.internal_url,
+        lambda: hass.config.external_url,
+        cloud_url,
+        host_ip,
+    ):
+        potential_base = potential_base_factory()
+
+        if potential_base is None:
+            continue
+
+        potential_parsed = yarl.URL(normalize_url(potential_base))
+
+        if (
+            parsed.scheme == potential_parsed.scheme
+            and parsed.authority == potential_parsed.authority
+        ):
+            return True
+
+    return False
 
 
 @bind_hass
@@ -41,13 +85,19 @@ def get_url(
     allow_internal: bool = True,
     allow_external: bool = True,
     allow_cloud: bool = True,
-    allow_ip: bool = True,
-    prefer_external: bool = False,
+    allow_ip: bool | None = None,
+    prefer_external: bool | None = None,
     prefer_cloud: bool = False,
 ) -> str:
     """Get a URL to this instance."""
     if require_current_request and http.current_request.get() is None:
         raise NoURLAvailableError
+
+    if prefer_external is None:
+        prefer_external = hass.config.api is not None and hass.config.api.use_ssl
+
+    if allow_ip is None:
+        allow_ip = hass.config.api is None or not hass.config.api.use_ssl
 
     order = [TYPE_URL_INTERNAL, TYPE_URL_EXTERNAL]
     if prefer_external:

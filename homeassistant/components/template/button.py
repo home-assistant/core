@@ -63,7 +63,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template button."""
-    if "coordinator" in discovery_info:
+    if not discovery_info or "coordinator" in discovery_info:
         raise PlatformNotReady(
             "The template button platform doesn't support trigger entities"
         )
@@ -86,6 +86,7 @@ class TemplateButtonEntity(TemplateEntity, ButtonEntity):
     ) -> None:
         """Initialize the button."""
         super().__init__(hass, config=config, unique_id=unique_id)
+        assert self._attr_name is not None
         self._command_press = Script(hass, config[CONF_PRESS], self._attr_name, DOMAIN)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state = None

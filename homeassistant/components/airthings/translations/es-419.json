@@ -3,6 +3,8 @@
         "step": {
             "user": {
                 "data": {
+                    "description": "Inicie sesi\u00f3n en {url} para encontrar sus credenciales",
+                    "id": "ID",
                     "secret": "Secreto"
                 }
             }

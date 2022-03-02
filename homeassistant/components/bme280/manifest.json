@@ -8,5 +8,6 @@
     "bme280spi==0.2.0"
   ],
   "codeowners": [],
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "loggers": ["bme280spi", "i2csense", "smbus"]
 }

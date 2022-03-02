@@ -4,7 +4,7 @@
             "already_configured": "Device is already configured",
             "api_not_enabled": "The API is not enabled. Enable API in the HomeWizard Energy App under settings",
             "device_not_supported": "This device is not supported",
-            "invalid_discovery_parameters": "unsupported_api_version",
+            "invalid_discovery_parameters": "Detected unsupported API version",
             "unknown_error": "Unexpected error"
         },
         "step": {

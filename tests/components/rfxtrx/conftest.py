@@ -1,4 +1,6 @@
 """Common test tools."""
+from __future__ import annotations
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -22,6 +24,23 @@ def create_rfx_test_cfg(device="abcd", automatic_add=False, devices=None):
         "debug": False,
         "devices": devices,
     }
+
+
+async def setup_rfx_test_cfg(
+    hass, device="abcd", automatic_add=False, devices: dict[str, dict] | None = None
+):
+    """Construct a rfxtrx config entry."""
+    entry_data = create_rfx_test_cfg(
+        device=device, automatic_add=automatic_add, devices=devices
+    )
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry.supports_remove_device = True
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+    await hass.async_start()
+    return mock_entry
 
 
 @pytest.fixture(autouse=True, name="rfxtrx")
@@ -50,14 +69,7 @@ async def rfxtrx_fixture(hass):
 @pytest.fixture(name="rfxtrx_automatic")
 async def rfxtrx_automatic_fixture(hass, rfxtrx):
     """Fixture that starts up with automatic additions."""
-    entry_data = create_rfx_test_cfg(automatic_add=True, devices={})
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
-
-    mock_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_entry.entry_id)
-    await hass.async_block_till_done()
-    await hass.async_start()
+    await setup_rfx_test_cfg(hass, automatic_add=True, devices={})
     yield rfxtrx
 
 

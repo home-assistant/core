@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Default host: {host}\nDefault port: {port}\nDefault username: {username}",
+        "description": "Default host: {host}\nDefault username: {username}",
         "data": {
           "host": "[%key:common::config_flow::data::host%] (Optional)",
           "username": "[%key:common::config_flow::data::username%] (Optional)",

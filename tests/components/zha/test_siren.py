@@ -13,6 +13,7 @@ from homeassistant.components.siren.const import (
     ATTR_DURATION,
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
+    DOMAIN as SIREN_DOMAIN,
 )
 from homeassistant.components.zha.core.const import (
     WARNING_DEVICE_MODE_EMERGENCY_PANIC,
@@ -72,7 +73,7 @@ async def test_siren(hass, siren):
     ):
         # turn on via UI
         await hass.services.async_call(
-            Platform.SIREN, "turn_on", {"entity_id": entity_id}, blocking=True
+            SIREN_DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
         )
         assert len(cluster.request.mock_calls) == 1
         assert cluster.request.call_args[0][0] is False
@@ -92,7 +93,7 @@ async def test_siren(hass, siren):
     ):
         # turn off via UI
         await hass.services.async_call(
-            Platform.SIREN, "turn_off", {"entity_id": entity_id}, blocking=True
+            SIREN_DOMAIN, "turn_off", {"entity_id": entity_id}, blocking=True
         )
         assert len(cluster.request.mock_calls) == 1
         assert cluster.request.call_args[0][0] is False
@@ -112,7 +113,7 @@ async def test_siren(hass, siren):
     ):
         # turn on via UI
         await hass.services.async_call(
-            Platform.SIREN,
+            SIREN_DOMAIN,
             "turn_on",
             {
                 "entity_id": entity_id,

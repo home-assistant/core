@@ -1,8 +1,15 @@
 """Test Device Tracker config entry things."""
 from homeassistant.components.device_tracker import DOMAIN, config_entry as ce
+from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from tests.common import MockConfigEntry
+from tests.common import (
+    MockConfigEntry,
+    MockEntityPlatform,
+    MockPlatform,
+    mock_registry,
+)
 
 
 def test_tracker_entity():
@@ -128,3 +135,87 @@ async def test_register_mac(hass):
     entity_entry_1 = ent_reg.async_get(entity_entry_1.entity_id)
 
     assert entity_entry_1.disabled_by is None
+
+
+async def test_connected_device_registered(hass):
+    """Test dispatch on connected device being registered."""
+
+    registry = mock_registry(hass)
+    dispatches = []
+
+    @callback
+    def _save_dispatch(msg):
+        dispatches.append(msg)
+
+    unsub = async_dispatcher_connect(
+        hass, ce.CONNECTED_DEVICE_REGISTERED, _save_dispatch
+    )
+
+    class MockScannerEntity(ce.ScannerEntity):
+        """Mock a scanner entity."""
+
+        @property
+        def ip_address(self) -> str:
+            return "5.4.3.2"
+
+        @property
+        def unique_id(self) -> str:
+            return self.mac_address
+
+    class MockDisconnectedScannerEntity(MockScannerEntity):
+        """Mock a disconnected scanner entity."""
+
+        @property
+        def mac_address(self) -> str:
+            return "aa:bb:cc:dd:ee:ff"
+
+        @property
+        def is_connected(self) -> bool:
+            return True
+
+        @property
+        def hostname(self) -> str:
+            return "connected"
+
+    class MockConnectedScannerEntity(MockScannerEntity):
+        """Mock a disconnected scanner entity."""
+
+        @property
+        def mac_address(self) -> str:
+            return "aa:bb:cc:dd:ee:00"
+
+        @property
+        def is_connected(self) -> bool:
+            return False
+
+        @property
+        def hostname(self) -> str:
+            return "disconnected"
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities(
+            [MockConnectedScannerEntity(), MockDisconnectedScannerEntity()]
+        )
+        return True
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+    full_name = f"{entity_platform.domain}.{config_entry.domain}"
+    assert full_name in hass.config.components
+    assert len(hass.states.async_entity_ids()) == 0  # should be disabled
+    assert len(registry.entities) == 2
+    assert (
+        registry.entities["test_domain.test_aa_bb_cc_dd_ee_ff"].config_entry_id
+        == "super-mock-id"
+    )
+    unsub()
+    assert dispatches == [
+        {"ip": "5.4.3.2", "mac": "aa:bb:cc:dd:ee:ff", "host_name": "connected"}
+    ]

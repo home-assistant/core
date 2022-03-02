@@ -210,6 +210,12 @@ class IotaWattSensor(update_coordinator.CoordinatorEntity, SensorEntity):
             else:
                 self.hass.async_create_task(self.async_remove())
             return
+
+        if (begin := self._sensor_data.getBegin()) and (
+            last_reset := dt.parse_datetime(begin)
+        ):
+            self._attr_last_reset = last_reset
+
         super()._handle_coordinator_update()
 
     @property
@@ -219,6 +225,7 @@ class IotaWattSensor(update_coordinator.CoordinatorEntity, SensorEntity):
         attrs = {"type": data.getType()}
         if attrs["type"] == "Input":
             attrs["channel"] = data.getChannel()
+
         return attrs
 
     @property

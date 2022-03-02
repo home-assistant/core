@@ -10,9 +10,8 @@ from pyvizio.api.apps import find_app_name
 from pyvizio.const import APP_HOME, INPUT_APPS, NO_APP_RUNNING, UNKNOWN_APP
 
 from homeassistant.components.media_player import (
-    DEVICE_CLASS_SPEAKER,
-    DEVICE_CLASS_TV,
     SUPPORT_SELECT_SOUND_MODE,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -252,7 +251,7 @@ class VizioDevice(MediaPlayerEntity):
         self._available_inputs = [input_.name for input_ in inputs]
 
         # Return before setting app variables if INPUT_APPS isn't in available inputs
-        if self._attr_device_class == DEVICE_CLASS_SPEAKER or not any(
+        if self._attr_device_class == MediaPlayerDeviceClass.SPEAKER or not any(
             app for app in INPUT_APPS if app in self._available_inputs
         ):
             return
@@ -329,7 +328,7 @@ class VizioDevice(MediaPlayerEntity):
             self._all_apps = self._apps_coordinator.data
             self.async_write_ha_state()
 
-        if self._attr_device_class == DEVICE_CLASS_TV:
+        if self._attr_device_class == MediaPlayerDeviceClass.TV:
             self.async_on_remove(
                 self._apps_coordinator.async_add_listener(apps_list_update)
             )

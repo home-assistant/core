@@ -4,6 +4,7 @@
             "options_1": {
                 "data": {
                     "bool": "\u03a0\u03c1\u03bf\u03b1\u03b9\u03c1\u03b5\u03c4\u03b9\u03ba\u03cc boolean",
+                    "constant": "\u03a3\u03c4\u03b1\u03b8\u03b5\u03c1\u03ae",
                     "int": "\u0391\u03c1\u03b9\u03b8\u03bc\u03b7\u03c4\u03b9\u03ba\u03ae \u03b5\u03af\u03c3\u03bf\u03b4\u03bf\u03c2"
                 }
             },
@@ -15,5 +16,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Demo"
 }

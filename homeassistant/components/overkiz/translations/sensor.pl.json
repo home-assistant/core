@@ -1,29 +1,41 @@
 {
     "state": {
+        "overkiz__battery": {
+            "full": "pe\u0142na",
+            "low": "niski",
+            "normal": "normalny",
+            "verylow": "bardzo niski"
+        },
         "overkiz__discrete_rssi_level": {
-            "verylow": "Bardzo niskie"
+            "good": "dobry",
+            "low": "s\u0142aby",
+            "normal": "normalny",
+            "verylow": "bardzo s\u0142aby"
         },
         "overkiz__priority_lock_originator": {
-            "external_gateway": "Bramka zewn\u0119trzna",
-            "local_user": "U\u017cytkownik lokalny",
+            "external_gateway": "bramka zewn\u0119trzna",
+            "local_user": "u\u017cytkownik lokalny",
+            "lsc": "LSC",
             "myself": "Ja",
-            "rain": "Deszcz",
-            "security": "Bezpiecze\u0144stwo",
-            "temperature": "Temperatura",
-            "timer": "Minutnik",
+            "rain": "deszcz",
+            "saac": "SAAC",
+            "security": "bezpiecze\u0144stwo",
+            "sfc": "SFC",
+            "temperature": "temperatura",
+            "timer": "minutnik",
             "ups": "UPS",
-            "user": "U\u017cytkownik",
-            "wind": "Wiatr"
+            "user": "u\u017cytkownik",
+            "wind": "wiatr"
         },
         "overkiz__sensor_defect": {
-            "dead": "Martwe",
-            "low_battery": "Niski poziom baterii",
-            "maintenance_required": "Wymagany przegl\u0105d",
-            "no_defect": "Brak uszkodze\u0144"
+            "dead": "martwe",
+            "low_battery": "niski poziom baterii",
+            "maintenance_required": "wymagany przegl\u0105d",
+            "no_defect": "brak uszkodze\u0144"
         },
         "overkiz__sensor_room": {
-            "clean": "Czyste",
-            "dirty": "Brudne"
+            "clean": "czysto",
+            "dirty": "brudno"
         }
     }
 }

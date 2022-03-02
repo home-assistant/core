@@ -25,7 +25,9 @@
     },
     "options": {
         "error": {
+            "currency_unavailable": "Uno o pi\u00f9 dei saldi in valuta richiesti non sono forniti dalla tua API Coinbase.",
             "currency_unavaliable": "Uno o pi\u00f9 saldi in valuta richiesti non sono forniti dalla tua API Coinbase.",
+            "exchange_rate_unavailable": "Uno o pi\u00f9 dei tassi di cambio richiesti non sono forniti da Coinbase.",
             "exchange_rate_unavaliable": "Uno o pi\u00f9 dei tassi di cambio richiesti non sono forniti da Coinbase.",
             "unknown": "Errore imprevisto"
         },

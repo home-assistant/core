@@ -41,15 +41,15 @@ class IntegerTypeData:
     @property
     def step_scaled(self) -> float:
         """Return the step scaled."""
-        return self.step / (10 ** self.scale)
+        return self.step / (10**self.scale)
 
     def scale_value(self, value: float | int) -> float:
         """Scale a value."""
-        return value * self.step / (10 ** self.scale)
+        return value * self.step / (10**self.scale)
 
     def scale_value_back(self, value: float | int) -> int:
         """Return raw value for scaled."""
-        return int((value * (10 ** self.scale)) / self.step)
+        return int((value * (10**self.scale)) / self.step)
 
     def remap_value_to(
         self,

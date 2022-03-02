@@ -13,7 +13,9 @@
             "is_closed": "{entity_name} \u03b5\u03af\u03bd\u03b1\u03b9 \u03ba\u03bb\u03b5\u03b9\u03c3\u03c4\u03cc",
             "is_closing": "{entity_name} \u03ba\u03bb\u03b5\u03af\u03bd\u03b5\u03b9",
             "is_open": "{entity_name} \u03b5\u03af\u03bd\u03b1\u03b9 \u03b1\u03bd\u03bf\u03b9\u03c7\u03c4\u03cc",
-            "is_opening": "{entity_name} \u03b1\u03bd\u03bf\u03af\u03b3\u03b5\u03b9"
+            "is_opening": "{entity_name} \u03b1\u03bd\u03bf\u03af\u03b3\u03b5\u03b9",
+            "is_position": "\u0397 \u03c4\u03c1\u03ad\u03c7\u03bf\u03c5\u03c3\u03b1 \u03b8\u03ad\u03c3\u03b7 {entity_name} \u03b5\u03af\u03bd\u03b1\u03b9",
+            "is_tilt_position": "\u0397 \u03c4\u03c1\u03ad\u03c7\u03bf\u03c5\u03c3\u03b1 \u03b8\u03ad\u03c3\u03b7 \u03ba\u03bb\u03af\u03c3\u03b7\u03c2 {entity_name} \u03b5\u03af\u03bd\u03b1\u03b9"
         },
         "trigger_type": {
             "closed": "{entity_name} \u03ad\u03ba\u03bb\u03b5\u03b9\u03c3\u03b5",

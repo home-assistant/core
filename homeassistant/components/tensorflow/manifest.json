@@ -10,5 +10,6 @@
     "pillow==9.0.1"
   ],
   "codeowners": [],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["tensorflow"]
 }

@@ -210,7 +210,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="peak_hour",
-        name="Month peak hour consumption",
+        name="Monthly peak hour consumption",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     ),
@@ -253,17 +253,17 @@ async def async_setup_entry(
 
         if home.has_active_subscription:
             entities.append(TibberSensorElPrice(home))
+            if coordinator is None:
+                coordinator = TibberDataCoordinator(hass, tibber_connection)
+            for entity_description in SENSORS:
+                entities.append(TibberDataSensor(home, coordinator, entity_description))
+
         if home.has_real_time_consumption:
             await home.rt_subscribe(
                 TibberRtDataCoordinator(
                     async_add_entities, home, hass
                 ).async_set_updated_data
             )
-        if home.has_active_subscription and not home.has_real_time_consumption:
-            if coordinator is None:
-                coordinator = TibberDataCoordinator(hass, tibber_connection)
-            for entity_description in SENSORS:
-                entities.append(TibberDataSensor(home, coordinator, entity_description))
 
         # migrate
         old_id = home.info["viewer"]["home"]["meteringPointData"]["consumptionEan"]
@@ -464,7 +464,7 @@ class TibberSensorRT(TibberSensor, update_coordinator.CoordinatorEntity):
             ts_local = dt_util.parse_datetime(live_measurement["timestamp"])
             if ts_local is not None:
                 if self.last_reset is None or (
-                    state < 0.5 * self.native_value  # type: ignore # native_value is float
+                    state < 0.5 * self.native_value  # type: ignore[operator]  # native_value is float
                     and (
                         ts_local.hour == 0
                         or (ts_local - self.last_reset) > timedelta(hours=24)
@@ -547,7 +547,7 @@ class TibberDataCoordinator(update_coordinator.DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=f"Tibber {tibber_connection.name}",
-            update_interval=timedelta(hours=1),
+            update_interval=timedelta(minutes=20),
         )
         self._tibber_connection = tibber_connection
 

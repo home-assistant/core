@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 from zwave_js_server.const import (
+    InclusionState,
     InclusionStrategy,
     LogLevel,
     Protocols,
@@ -77,14 +78,16 @@ async def test_network_status(hass, integration, hass_ws_client):
     entry = integration
     ws_client = await hass_ws_client(hass)
 
-    await ws_client.send_json(
-        {ID: 2, TYPE: "zwave_js/network_status", ENTRY_ID: entry.entry_id}
-    )
-    msg = await ws_client.receive_json()
-    result = msg["result"]
+    with patch("zwave_js_server.model.controller.Controller.async_get_state"):
+        await ws_client.send_json(
+            {ID: 2, TYPE: "zwave_js/network_status", ENTRY_ID: entry.entry_id}
+        )
+        msg = await ws_client.receive_json()
+        result = msg["result"]
 
     assert result["client"]["ws_server_url"] == "ws://test:3000/zjs"
     assert result["client"]["server_version"] == "1.0.0"
+    assert result["controller"]["inclusion_state"] == InclusionState.IDLE
 
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
@@ -168,6 +171,7 @@ async def test_node_status(hass, multisensor_6, integration, hass_ws_client):
     assert result["status"] == 1
     assert result["zwave_plus_version"] == 1
     assert result["highest_security_class"] == SecurityClass.S0_LEGACY
+    assert not result["is_controller_node"]
 
     # Test getting non-existent node fails
     await ws_client.send_json(
@@ -474,7 +478,15 @@ async def test_add_node(
 
     event = Event(
         type="interview failed",
-        data={"source": "node", "event": "interview failed", "nodeId": 67},
+        data={
+            "source": "node",
+            "event": "interview failed",
+            "nodeId": 67,
+            "args": {
+                "errorMessage": "error",
+                "isFinal": True,
+            },
+        },
     )
     client.driver.receive_event(event)
 
@@ -1606,7 +1618,15 @@ async def test_replace_failed_node(
 
     event = Event(
         type="interview failed",
-        data={"source": "node", "event": "interview failed", "nodeId": 67},
+        data={
+            "source": "node",
+            "event": "interview failed",
+            "nodeId": 67,
+            "args": {
+                "errorMessage": "error",
+                "isFinal": True,
+            },
+        },
     )
     client.driver.receive_event(event)
 
@@ -2189,7 +2209,15 @@ async def test_refresh_node_info(
 
     event = Event(
         type="interview failed",
-        data={"source": "node", "event": "interview failed", "nodeId": 52},
+        data={
+            "source": "node",
+            "event": "interview failed",
+            "nodeId": 52,
+            "args": {
+                "errorMessage": "error",
+                "isFinal": True,
+            },
+        },
     )
     client.driver.receive_event(event)
 

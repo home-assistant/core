@@ -105,9 +105,6 @@ async def async_browse_media(
             hass, media_content_type, media_content_id, can_play_artist=False
         )
 
-    if media_content_type == "spotify":
-        return await spotify.async_browse_media(hass, None, None, can_play_artist=False)
-
     if media_content_type == "library":
         return await hass.async_add_executor_job(
             library_payload,
@@ -270,6 +267,7 @@ async def root_payload(
                 media_class=MEDIA_CLASS_DIRECTORY,
                 media_content_id="",
                 media_content_type="favorites",
+                thumbnail="https://brands.home-assistant.io/_/sonos/logo.png",
                 can_play=False,
                 can_expand=True,
             )
@@ -284,6 +282,7 @@ async def root_payload(
                 media_class=MEDIA_CLASS_DIRECTORY,
                 media_content_id="",
                 media_content_type="library",
+                thumbnail="https://brands.home-assistant.io/_/sonos/logo.png",
                 can_play=False,
                 can_expand=True,
             )
@@ -303,17 +302,8 @@ async def root_payload(
         )
 
     if "spotify" in hass.config.components:
-        children.append(
-            BrowseMedia(
-                title="Spotify",
-                media_class=MEDIA_CLASS_APP,
-                media_content_id="",
-                media_content_type="spotify",
-                thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
-                can_play=False,
-                can_expand=True,
-            )
-        )
+        result = await spotify.async_browse_media(hass, None, None)
+        children.extend(result.children)
 
     try:
         item = await media_source.async_browse_media(

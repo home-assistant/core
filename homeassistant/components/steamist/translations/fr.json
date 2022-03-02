@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours",
             "cannot_connect": "Impossible de se connecter",
             "no_devices_found": "Pas d'appareils trouv\u00e9 sur le r\u00e9seau",
             "not_steamist_device": "Pas un appareil \u00e0 vapeur"

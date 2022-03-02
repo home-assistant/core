@@ -80,6 +80,7 @@ BLOCK_PLATFORMS: Final = [
 BLOCK_SLEEPING_PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.NUMBER,
     Platform.SENSOR,
 ]
 RPC_PLATFORMS: Final = [
@@ -680,19 +681,17 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
                     ENTRY_RELOAD_COOLDOWN,
                 )
                 self.hass.async_create_task(self._debounced_reload.async_call())
-            elif event_type not in RPC_INPUTS_EVENTS_TYPES:
-                continue
-
-            self.hass.bus.async_fire(
-                EVENT_SHELLY_CLICK,
-                {
-                    ATTR_DEVICE_ID: self.device_id,
-                    ATTR_DEVICE: self.device.hostname,
-                    ATTR_CHANNEL: event["id"] + 1,
-                    ATTR_CLICK_TYPE: event["event"],
-                    ATTR_GENERATION: 2,
-                },
-            )
+            elif event_type in RPC_INPUTS_EVENTS_TYPES:
+                self.hass.bus.async_fire(
+                    EVENT_SHELLY_CLICK,
+                    {
+                        ATTR_DEVICE_ID: self.device_id,
+                        ATTR_DEVICE: self.device.hostname,
+                        ATTR_CHANNEL: event["id"] + 1,
+                        ATTR_CLICK_TYPE: event["event"],
+                        ATTR_GENERATION: 2,
+                    },
+                )
 
     async def _async_update_data(self) -> None:
         """Fetch data."""

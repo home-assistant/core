@@ -63,7 +63,7 @@ class FluxButton(FluxBaseEntity, ButtonEntity):
         """Initialize the button."""
         self.entity_description = description
         super().__init__(device, entry)
-        self._attr_name = f"{entry.data[CONF_NAME]} {description.name}"
+        self._attr_name = f"{entry.data.get(CONF_NAME, entry.title)} {description.name}"
         base_unique_id = entry.unique_id or entry.entry_id
         self._attr_unique_id = f"{base_unique_id}_{description.key}"
 

@@ -58,9 +58,11 @@ OLD_DATA_TYPES = {
 }
 ENTRY = namedtuple("ENTRY", ["struct_id", "register_count"])
 DEFAULT_STRUCT_FORMAT = {
+    DataType.INT8: ENTRY("b", 1),
     DataType.INT16: ENTRY("h", 1),
     DataType.INT32: ENTRY("i", 2),
     DataType.INT64: ENTRY("q", 4),
+    DataType.UINT8: ENTRY("c", 1),
     DataType.UINT16: ENTRY("H", 1),
     DataType.UINT32: ENTRY("I", 2),
     DataType.UINT64: ENTRY("Q", 4),
@@ -207,8 +209,7 @@ def duplicate_entity_validator(config: dict) -> dict:
                     addr += "_" + str(entry[CONF_COMMAND_ON])
                 if CONF_COMMAND_OFF in entry:
                     addr += "_" + str(entry[CONF_COMMAND_OFF])
-                if CONF_SLAVE in entry:
-                    addr += "_" + str(entry[CONF_SLAVE])
+                addr += "_" + str(entry.get(CONF_SLAVE, 0))
                 if addr in addresses:
                     err = f"Modbus {component}/{name} address {addr} is duplicate, second entry not loaded!"
                     _LOGGER.warning(err)

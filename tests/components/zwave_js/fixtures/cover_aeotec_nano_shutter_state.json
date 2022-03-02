@@ -494,5 +494,6 @@
     }
   ],
   "interviewStage": "Complete",
-  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0371:0x0003:0x008d:3.1"
+  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0371:0x0003:0x008d:3.1",
+  "isControllerNode": false
 }
