@@ -99,15 +99,12 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
             calibration_hum = dev["sensorsCalibration"].get("humidity", 0.0)
 
             # Sky plus supports functionality to use motion sensor as sensor for temp and humidity
-            if dev["mainMeasurementsSensor"]:
-                temperature = dev["mainMeasurementsSensor"]["measurements"].get(
-                    "temperature", 0.0
-                )
-                humidity = dev["mainMeasurementsSensor"]["measurements"].get(
-                    "humidity", 0
-                )
+            if main_sensor := dev["mainMeasurementsSensor"]:
+                measurements = main_sensor["measurements"]
+                temperature = measurements.get("temperature")
+                humidity = measurements.get("humidity")
 
-            motionsensors = []
+            motion_sensors = []
             if dev["motionSensors"]:
                 for motionsensor in dev["motionSensors"]:
                     sensor = {
@@ -123,7 +120,7 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                         "temperature": motionsensor["measurements"].get("temperature"),
                         "model": motionsensor.get("productModel"),
                     }
-                    motionsensors.append(sensor)
+                    motion_sensors.append(sensor)
 
             device_data[unique_id] = {
                 "id": unique_id,
@@ -153,6 +150,6 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 "calibration_temp": calibration_temp,
                 "calibration_hum": calibration_hum,
                 "full_capabilities": capabilities,
-                "motionsensors": motionsensors,
+                "motion_sensors": motion_sensors,
             }
         return device_data
