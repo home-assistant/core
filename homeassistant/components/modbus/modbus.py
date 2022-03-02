@@ -37,6 +37,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import bind_hass
 
 from .const import (
     ATTR_ADDRESS,
@@ -129,11 +130,6 @@ async def async_modbus_setup(
     config: ConfigType,
 ) -> bool:
     """Set up Modbus component."""
-
-    if DOMAIN in hass.data:  # pragma: no cover
-        # This is a reload so release old resources.
-        for hub in hass.data[DOMAIN]:
-            await hub.async_close()
 
     platform_names = []
     for entry in PLATFORMS:
@@ -248,6 +244,15 @@ async def async_modbus_setup(
             schema=vol.Schema({vol.Required(ATTR_HUB): cv.string}),
         )
     return True
+
+
+@bind_hass
+async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> None:
+    """Release modbus resources."""
+    _LOGGER.info("Modbus reloading")
+    for hub in hass.data[DOMAIN]:
+        await hub.async_close()
+    del hass.data[DOMAIN]
 
 
 class ModbusHub:
