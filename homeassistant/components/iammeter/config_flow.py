@@ -2,8 +2,8 @@
 import logging
 from urllib.parse import ParseResult, urlparse
 
-from requests.exceptions import HTTPError, Timeout
 from iammeter.client import IamMeter
+from requests.exceptions import HTTPError, Timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
