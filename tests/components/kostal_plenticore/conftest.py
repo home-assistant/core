@@ -14,8 +14,20 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return a mocked ConfigEntry for testing."""
+    return MockConfigEntry(
+        entry_id="2ab8dd92a62787ddfe213a67e09406bd",
+        title="scb",
+        domain="kostal_plenticore",
+        data={"host": "192.168.1.2", "password": "SecretPassword"},
+    )
+
+
+@pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> Generator[None, MockConfigEntry, None]:
     """Set up Kostal Plenticore integration for testing."""
     with patch(
@@ -80,13 +92,6 @@ async def init_integration(
                 )
             ]
         }
-
-        mock_config_entry = MockConfigEntry(
-            entry_id="2ab8dd92a62787ddfe213a67e09406bd",
-            title="scb",
-            domain="kostal_plenticore",
-            data={"host": "192.168.1.2", "password": "SecretPassword"},
-        )
 
         mock_config_entry.add_to_hass(hass)
 
