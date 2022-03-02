@@ -75,7 +75,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             LightSwitch(
-                config_entry.options[CONF_NAME],
+                config_entry.title,
                 entity_id,
                 config_entry.entry_id,
             )

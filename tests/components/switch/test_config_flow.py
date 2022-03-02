@@ -30,7 +30,7 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == ""
+    assert result["title"] == "ceiling"
     assert result["data"] == {}
     assert result["options"] == {"entity_id": "switch.ceiling"}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -72,7 +72,7 @@ async def test_options(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == ""
+    assert result["title"] == "ceiling"
     assert result["data"] == {}
     assert result["options"] == {"entity_id": "switch.ceiling"}
     assert len(mock_setup_entry.mock_calls) == 1

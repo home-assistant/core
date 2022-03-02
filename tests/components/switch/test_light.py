@@ -6,6 +6,7 @@ from homeassistant.components.light import (
     COLOR_MODE_ONOFF,
 )
 from homeassistant.components.switch.const import DOMAIN as SWITCH_DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -101,12 +102,12 @@ async def test_switch_service_calls(hass):
     assert hass.states.get("light.light_switch").state == "on"
 
 
-async def test_config_entry(hass):
+async def test_config_entry(hass: HomeAssistant):
     """Test light switch setup from config entry."""
     config_entry = MockConfigEntry(
         data={},
         domain=SWITCH_DOMAIN,
-        options={"entity_id": "switch.abc", "name": "ABC Light"},
+        options={"entity_id": "switch.abc"},
         title="ABC",
     )
 
@@ -117,9 +118,12 @@ async def test_config_entry(hass):
 
     assert SWITCH_DOMAIN in hass.config.components
 
-    assert hass.states.get("light.abc_light").state == "unavailable"
+    state = hass.states.get("light.abc")
+    assert state.state == "unavailable"
+    # Name copied from config entry title
+    assert state.name == "ABC"
 
     # Check the light is added to the entity registry
     registry = er.async_get(hass)
-    entity_entry = registry.async_get("light.abc_light")
+    entity_entry = registry.async_get("light.abc")
     assert entity_entry.unique_id == config_entry.entry_id
