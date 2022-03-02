@@ -1206,20 +1206,32 @@ async def websocket_subscribe(hass, connection, msg):
 
     async def forward_messages(mqttmsg: ReceiveMessage):
         """Forward events to websocket."""
+        try:
+
+            payload = (
+                mqttmsg.payload.decode(DEFAULT_ENCODING)
+                if isinstance(mqttmsg.payload, bytes)
+                else mqttmsg.payload
+            )
+        except (AttributeError, UnicodeDecodeError):
+            # Convert non UTF-8 payload to a string presentation
+            payload = str(mqttmsg.payload)
+
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
                 {
                     "topic": mqttmsg.topic,
-                    "payload": mqttmsg.payload,
+                    "payload": payload,
                     "qos": mqttmsg.qos,
                     "retain": mqttmsg.retain,
                 },
             )
         )
 
+    # Perform UTF-8 decoding directly in callback routine
     connection.subscriptions[msg["id"]] = await async_subscribe(
-        hass, msg["topic"], forward_messages
+        hass, msg["topic"], forward_messages, encoding=None
     )
 
     connection.send_message(websocket_api.result_message(msg["id"]))
