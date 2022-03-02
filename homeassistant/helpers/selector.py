@@ -74,46 +74,48 @@ class Selector:
         return {"selector": {self.selector_type: self.config}}
 
 
+SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA = vol.Schema(
+    {
+        # Integration that provided the entity
+        vol.Optional("integration"): str,
+        # Domain the entity belongs to
+        vol.Optional("domain"): str,
+        # Device class of the entity
+        vol.Optional("device_class"): str,
+    }
+)
+
+
 @SELECTORS.register("entity")
 class EntitySelector(Selector):
     """Selector of a single or list of entities."""
 
     selector_type = "entity"
 
-    CONFIG_SCHEMA = vol.Schema(
-        {
-            # Integration that provided the entity
-            vol.Optional("integration"): str,
-            # Domain the entity belongs to
-            vol.Optional("domain"): str,
-            # Device class of the entity
-            vol.Optional("device_class"): str,
-            vol.Optional("multiple"): cv.boolean,
-        }
+    CONFIG_SCHEMA = SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA.extend(
+        {vol.Optional("multiple", default=False): cv.boolean}
     )
 
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
-        result: str | list[str]
 
-        def validate(e_or_u: str) -> None:
-            if "domain" in self.config:
-                if valid_entity_id(e_or_u):
-                    domain = split_entity_id(e_or_u)[0]
-                    if domain != self.config["domain"]:
-                        raise vol.Invalid(
-                            f"Entity {e_or_u} belongs to domain {domain}, "
-                            f"expected {self.config['domain']}"
-                        )
+        def validate(e_or_u: str) -> str:
+            if not valid_entity_id(e_or_u):
+                return e_or_u
+            if allowed_domain := self.config.get("domain"):
+                domain = split_entity_id(e_or_u)[0]
+                if domain != allowed_domain:
+                    raise vol.Invalid(
+                        f"Entity {e_or_u} belongs to domain {domain}, "
+                        f"expected {allowed_domain}"
+                    )
+            return e_or_u
 
-        try:
-            result = cv.entity_id_or_uuid(cv.string(data))
-            validate(result)
-        except vol.Invalid:
-            result = cv.entity_ids_or_uuids(data)
-            for e_or_u in result:
-                validate(e_or_u)
-        return result
+        if not self.config["multiple"]:
+            return validate(cv.entity_id_or_uuid(cv.string(data)))
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [validate(cv.entity_id_or_uuid(cv.string(item))) for item in data]
 
 
 @SELECTORS.register("device")
@@ -131,18 +133,18 @@ class DeviceSelector(Selector):
             # Model of device
             vol.Optional("model"): str,
             # Device has to contain entities matching this selector
-            vol.Optional("entity"): EntitySelector.CONFIG_SCHEMA,
-            vol.Optional("multiple"): cv.boolean,
+            vol.Optional("entity"): SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA,
+            vol.Optional("multiple", default=False): cv.boolean,
         }
     )
 
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
-        if isinstance(data, list):
-            for val in data:
-                cv.string(val)
-            return data
-        return cv.string(data)
+        if not self.config["multiple"]:
+            return cv.string(data)
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [cv.string(val) for val in data]
 
 
 @SELECTORS.register("area")
@@ -153,19 +155,19 @@ class AreaSelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema(
         {
-            vol.Optional("entity"): EntitySelector.CONFIG_SCHEMA,
+            vol.Optional("entity"): SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA,
             vol.Optional("device"): DeviceSelector.CONFIG_SCHEMA,
-            vol.Optional("multiple"): cv.boolean,
+            vol.Optional("multiple", default=False): cv.boolean,
         }
     )
 
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
-        if isinstance(data, list):
-            for val in data:
-                cv.string(val)
-            return data
-        return cv.string(data)
+        if not self.config["multiple"]:
+            return cv.string(data)
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [cv.string(val) for val in data]
 
 
 @SELECTORS.register("number")
