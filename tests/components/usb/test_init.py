@@ -1,7 +1,7 @@
 """Tests for the USB Discovery integration."""
 import os
 import sys
-from unittest.mock import MagicMock, patch, sentinel
+from unittest.mock import MagicMock, call, patch, sentinel
 
 import pytest
 
@@ -56,6 +56,60 @@ def mock_venv():
     not sys.platform.startswith("linux"),
     reason="Only works on linux",
 )
+async def test_observer_discovery(hass, hass_ws_client, venv):
+    """Test that observer on WSL failure results in fallback to scanning without raising an exception."""
+    new_usb = [{"domain": "test1", "vid": "3039"}]
+
+    mock_comports = [
+        MagicMock(
+            device=slae_sh_device.device,
+            vid=12345,
+            pid=12345,
+            serial_number=slae_sh_device.serial_number,
+            manufacturer=slae_sh_device.manufacturer,
+            description=slae_sh_device.description,
+        )
+    ]
+    mock_observer = None
+
+    async def _mock_monitor_observer_callback(callback):
+        await hass.async_add_executor_job(
+            callback, MagicMock(action="create", device_path="/dev/new")
+        )
+
+    def _create_mock_monitor_observer(monitor, callback, name):
+        nonlocal mock_observer
+        hass.async_create_task(_mock_monitor_observer_callback(callback))
+        mock_observer = MagicMock()
+        return mock_observer
+
+    with patch("pyudev.Context"), patch(
+        "pyudev.MonitorObserver", new=_create_mock_monitor_observer
+    ), patch("pyudev.Monitor.filter_by"), patch(
+        "homeassistant.components.usb.async_get_usb", return_value=new_usb
+    ), patch(
+        "homeassistant.components.usb.comports", return_value=mock_comports
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow:
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert len(mock_config_flow.mock_calls) == 1
+    assert mock_config_flow.mock_calls[0][1][0] == "test1"
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    assert mock_observer.mock_calls == [call.start(), call.stop()]
+
+
+@pytest.mark.skipif(
+    not sys.platform.startswith("linux"),
+    reason="Only works on linux",
+)
 async def test_removal_by_observer_before_started(hass, operating_system):
     """Test a device is removed by the observer before started."""
 
@@ -64,13 +118,8 @@ async def test_removal_by_observer_before_started(hass, operating_system):
             callback, MagicMock(action="remove", device_path="/dev/new")
         )
 
-    monitor_mock = None
-
     def _create_mock_monitor_observer(monitor, callback, name):
-        nonlocal monitor_mock
         hass.async_create_task(_mock_monitor_observer_callback(callback))
-        monitor_mock = MagicMock()
-        return monitor_mock
 
     new_usb = [{"domain": "test1", "vid": "3039", "pid": "3039"}]
 
@@ -91,7 +140,7 @@ async def test_removal_by_observer_before_started(hass, operating_system):
         "homeassistant.components.usb.comports", return_value=mock_comports
     ), patch(
         "pyudev.MonitorObserver", new=_create_mock_monitor_observer
-    ) as monitor_mock, patch.object(
+    ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow:
         assert await async_setup_component(hass, "usb", {"usb": {}})
@@ -105,7 +154,6 @@ async def test_removal_by_observer_before_started(hass, operating_system):
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
-    assert monitor_mock.mock_calls == []
 
 
 async def test_discovered_by_websocket_scan(hass, hass_ws_client):
