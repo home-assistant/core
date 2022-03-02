@@ -25,7 +25,9 @@ class NoURLAvailableError(HomeAssistantError):
 def is_internal_request(hass: HomeAssistant) -> bool:
     """Test if the current request is internal."""
     try:
-        _get_internal_url(hass, require_current_request=True)
+        get_url(
+            hass, allow_external=False, allow_cloud=False, require_current_request=True
+        )
         return True
     except NoURLAvailableError:
         return False
