@@ -12,9 +12,10 @@ from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,8 +40,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     zeroconf_instance = await zeroconf.async_get_async_instance(hass)
     device: Client = UdpClient(host, token, zeroconf=zeroconf_instance)
 
-    update_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
-
     async def async_update_data() -> State:
         try:
             return await device.get_state()
@@ -54,7 +53,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER,
         name="rabbitair",
         update_method=async_update_data,
-        update_interval=update_interval,
+        update_interval=timedelta(seconds=10),
+        # We don't want an immediate refresh since the device needs some time
+        # to apply the changes and reflect the updated state. Two seconds
+        # should be sufficient, since the internal cycle of the device runs at
+        # one-second intervals.
+        request_refresh_debouncer=Debouncer(
+            hass, _LOGGER, cooldown=2.0, immediate=False
+        ),
     )
 
     await coordinator.async_config_entry_first_refresh()

@@ -1,7 +1,6 @@
 """A base class for Rabbit Air entities."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -60,12 +59,8 @@ class RabbitAirBaseEntity(CoordinatorEntity[State]):
         """Change the state of the device."""
         _LOGGER.debug("Set state %s", kwargs)
         await self._client.set_state(**kwargs)
-        # Wait for the changes to be applied and for the device status to be
-        # updated. Two seconds should be sufficient, since the internal cycle
-        # of the device runs at one-second intervals.
-        await asyncio.sleep(2)
         # Force polling of the device, because changing one parameter often
         # causes other parameters to change as well. By getting updated status
-        # immediately we provide a better user experience, especially if the
-        # default polling interval is set too long.
-        await self.coordinator.async_refresh()
+        # we provide a better user experience, especially if the default
+        # polling interval is set too long.
+        await self.coordinator.async_request_refresh()
