@@ -42,6 +42,7 @@ from .const import (
     CONF_PROTOCOLS,
     DATA_RFXOBJECT,
     DEVICE_PACKET_TYPE_LIGHTING4,
+    DEVICE_PACKET_TYPE_UNDECODED,
     EVENT_RFXTRX_EVENT,
     SERVICE_SEND,
 )
@@ -183,6 +184,10 @@ async def async_setup_internal(hass, entry: ConfigEntry):
         # Log RFXCOM event
         if not event.device.id_string:
             return
+
+        if event.device.packettype == DEVICE_PACKET_TYPE_UNDECODED:
+            hexstr = event.values["Payload"].hex()
+            event.values["Payload"] = hexstr
 
         event_data = {
             "packet_type": event.device.packettype,

@@ -367,3 +367,27 @@ async def test_rssi_sensor(hass, rfxtrx):
     state = hass.states.get("sensor.ac_213c7f2_48_rssi_numeric")
     assert state
     assert state.state == "-72"
+
+
+async def test_undecoded_sensor(hass, rfxtrx):
+    """Test with 1 sensor."""
+    entry_data = create_rfx_test_cfg(devices={"0903011e280ab7660474": {}})
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    state = hass.states.get("sensor.arc_undecoded_payload")
+    assert state
+    assert state.state == "unknown"
+    assert state.attributes.get("friendly_name") == "arc Undecoded Payload"
+
+    await rfxtrx.signal("0903011e280ab7660474")
+
+    state = hass.states.get("sensor.arc_undecoded_payload")
+    assert state
+    assert state.state == "280ab7660474"
+    assert state.attributes.get("friendly_name") == "arc Undecoded Payload"

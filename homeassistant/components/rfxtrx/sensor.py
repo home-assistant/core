@@ -204,6 +204,9 @@ SENSOR_TYPES = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UV_INDEX,
     ),
+    RfxtrxSensorEntityDescription(
+        key="Payload",
+    ),
 )
 
 SENSOR_TYPES_DICT = {desc.key: desc for desc in SENSOR_TYPES}
