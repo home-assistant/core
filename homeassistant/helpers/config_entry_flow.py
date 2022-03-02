@@ -2,13 +2,17 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+import copy
 import logging
+import types
 from typing import TYPE_CHECKING, Any, Generic, TypeVar, Union, cast
+
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, mqtt, ssdp, zeroconf
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, FlowResult
 
 from .typing import UNDEFINED, DiscoveryInfoType, UndefinedType
 
@@ -258,3 +262,126 @@ async def webhook_async_remove_entry(
         return
 
     await hass.components.cloud.async_delete_cloudhook(entry.data["webhook_id"])
+
+
+class HelperCommonFlowHandler:
+    """Handle a config or options flow for helper."""
+
+    def __init__(
+        self,
+        handler: HelperConfigFlowHandler | HelperOptionsFlowHandler,
+        config_entry: config_entries.ConfigEntry | None,
+    ) -> None:
+        """Initialize a common handler."""
+        self._handler = handler
+        self._options = dict(config_entry.options) if config_entry is not None else {}
+
+    async def async_step_user(
+        self, _user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the initial step."""
+        errors = None
+        if _user_input is not None:
+            errors = {}
+            try:
+                user_input = await self._handler.async_validate_input(
+                    self._handler.hass, _user_input
+                )
+            except vol.Invalid as exc:
+                errors["base"] = str(exc)
+            else:
+                title = self._handler.async_config_entry_title(user_input)
+                return self._handler.async_create_entry(title=title, data=user_input)
+
+        schema = copy.deepcopy(self._handler.schema.schema)
+        for key in schema:
+            if key in self._options:
+                key.description = {"suggested_value": self._options[key]}
+        return self._handler.async_show_form(
+            step_id="user", data_schema=vol.Schema(schema), errors=errors
+        )
+
+
+class HelperConfigFlowHandler(config_entries.ConfigFlow):
+    """Handle a config flow for helper integrations."""
+
+    schema: vol.Schema
+
+    VERSION = 1
+
+    # pylint: disable-next=arguments-differ
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Initialize a subclass, register if possible."""
+        super().__init_subclass__(**kwargs)
+
+        @callback
+        def _async_get_options_flow(
+            config_entry: config_entries.ConfigEntry,
+        ) -> config_entries.OptionsFlow:
+            """Get the options flow for this handler."""
+            return HelperOptionsFlowHandler(
+                config_entry,
+                cls.schema,
+                cls.async_validate_input,
+                cls.async_config_entry_title,
+            )
+
+        cls.async_get_options_flow = _async_get_options_flow  # type: ignore[assignment]
+
+    def __init__(self) -> None:
+        """Initialize config flow."""
+        self._common_handler = HelperCommonFlowHandler(self, None)
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the initial step."""
+        result = await self._common_handler.async_step_user(user_input)
+        if result["type"] == RESULT_TYPE_CREATE_ENTRY:
+            result["options"] = result["data"]
+            result["data"] = {}
+        return result
+
+    # pylint: disable-next=no-self-use
+    async def async_validate_input(
+        self, hass: HomeAssistant, user_input: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Validate user input."""
+        return user_input
+
+    # pylint: disable-next=no-self-use
+    def async_config_entry_title(self, user_input: dict[str, Any]) -> str:
+        """Return config entry title."""
+        return ""
+
+
+class HelperOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle an options flow for helper integrations."""
+
+    def __init__(
+        self,
+        config_entry: config_entries.ConfigEntry,
+        schema: vol.Schema,
+        validate: Callable[
+            [Any, HomeAssistant, dict[str, Any]], Awaitable[dict[str, Any]]
+        ],
+        title: Callable[[Any, dict[str, Any]], str],
+    ) -> None:
+        """Initialize options flow."""
+        self._common_handler = HelperCommonFlowHandler(self, config_entry)
+        self._config_entry = config_entry
+        self.async_validate_input = types.MethodType(validate, self)
+        self.async_config_entry_title = types.MethodType(title, self)
+        self.schema = schema
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the initial step."""
+        return await self._common_handler.async_step_user(user_input)
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the initial step."""
+        return await self._common_handler.async_step_user(user_input)

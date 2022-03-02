@@ -1,11 +1,11 @@
 """Config flow for Switch integration."""
 from __future__ import annotations
 
+from typing import Any, cast
+
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.core import callback
-from homeassistant.helpers import selector
+from homeassistant.helpers import config_entry_flow, selector
 
 from .const import DOMAIN
 
@@ -18,16 +18,12 @@ DATA_SCHEMA = vol.Schema(
 
 
 class SwitchLightConfigFlowHandler(
-    config_entries.HelperConfigFlowHandler, domain=DOMAIN
+    config_entry_flow.HelperConfigFlowHandler, domain=DOMAIN
 ):
     """Handle a config or options flow for Switch Light."""
 
-    _schema = DATA_SCHEMA
+    schema = DATA_SCHEMA
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
-        """Get the options flow for this handler."""
-        return config_entries.HelperOptionsFlowHandler(config_entry, DATA_SCHEMA)
+    def async_config_entry_title(self, user_input: dict[str, Any]) -> str:
+        """Return config entry title."""
+        return cast(str, user_input["name"])

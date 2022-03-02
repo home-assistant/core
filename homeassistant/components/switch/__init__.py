@@ -89,7 +89,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    if entry.domain == DOMAIN:
+        hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     component: EntityComponent = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 

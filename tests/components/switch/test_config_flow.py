@@ -30,12 +30,16 @@ async def test_form(hass: HomeAssistant) -> None:
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Ceiling"
-    assert result["data"] == {
+    assert result["data"] == {}
+    assert result["options"] == {
         "entity_id": "switch.ceiling",
         "name": "Ceiling",
     }
-    assert result["options"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert config_entry.data == {}
+    assert config_entry.options == {"name": "Ceiling", "entity_id": "switch.ceiling"}
 
 
 def get_suggested(schema, key):
@@ -72,14 +76,16 @@ async def test_options(hass: HomeAssistant) -> None:
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Ceiling"
-    assert result["data"] == {
+    assert result["data"] == {}
+    assert result["options"] == {
         "entity_id": "switch.ceiling",
         "name": "Ceiling",
     }
-    assert result["options"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert config_entry.data == {}
+    assert config_entry.options == {"name": "Ceiling", "entity_id": "switch.ceiling"}
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == RESULT_TYPE_FORM
@@ -95,8 +101,9 @@ async def test_options(hass: HomeAssistant) -> None:
         },
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] is None
-    assert config_entry.data == {"name": "Wall", "entity_id": "switch.wall"}
+    assert result["data"] == {"name": "Wall", "entity_id": "switch.wall"}
+    assert config_entry.data == {}
+    assert config_entry.options == {"name": "Wall", "entity_id": "switch.wall"}
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

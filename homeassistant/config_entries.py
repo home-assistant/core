@@ -5,7 +5,6 @@ import asyncio
 from collections import ChainMap
 from collections.abc import Awaitable, Callable, Iterable, Mapping
 from contextvars import ContextVar
-import copy
 import dataclasses
 from enum import Enum
 import functools
@@ -13,8 +12,6 @@ import logging
 from types import MappingProxyType, MethodType
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast
 import weakref
-
-import voluptuous as vol
 
 from . import data_entry_flow, loader
 from .backports.enum import StrEnum
@@ -1529,99 +1526,6 @@ class OptionsFlow(data_entry_flow.FlowHandler):
     """Base class for config option flows."""
 
     handler: str
-
-
-class HelperCommonFlowHandler:
-    """Handle a config or options flow for helper."""
-
-    def __init__(
-        self,
-        handler: HelperConfigFlowHandler | HelperOptionsFlowHandler,
-        config_entry: ConfigEntry | None,
-    ) -> None:
-        """Initialize a common handler."""
-        self._handler = handler
-        self._options = dict(config_entry.data) if config_entry is not None else {}
-
-    @staticmethod
-    async def validate_input(
-        hass: HomeAssistant, data: dict[str, Any]
-    ) -> dict[str, Any]:
-        """Validate the user input allows us to connect."""
-
-        # TODO: Some fancy validation of the selectors?
-        return {"title": data["name"]}
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
-        """Handle the initial step."""
-        errors = None
-        if user_input is not None:
-            errors = {}
-            try:
-                info = await self.validate_input(self._handler.hass, user_input)
-            except Exception:
-                # TODO: Error handling
-                errors["base"] = "blabla"
-            else:
-                return self._handler.async_create_entry(
-                    title=info["title"], data=user_input
-                )
-
-        schema = copy.deepcopy(self._handler.schema.schema)
-        for key in schema:
-            if key in self._options:
-                key.description = {"suggested_value": self._options[key]}
-        return self._handler.async_show_form(
-            step_id="user", data_schema=vol.Schema(schema), errors=errors
-        )
-
-
-class HelperConfigFlowHandler(ConfigFlow):
-    """Handle a config flow for helper integrations."""
-
-    schema: vol.Schema
-
-    VERSION = 1
-
-    def __init__(self) -> None:
-        """Initialize config flow."""
-        self._common_handler = HelperCommonFlowHandler(self, None)
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
-        """Handle the initial step."""
-        return await self._common_handler.async_step_user(user_input)
-
-
-class HelperOptionsFlowHandler(OptionsFlow):
-    """Handle an options flow for helper integrations."""
-
-    def __init__(self, config_entry: ConfigEntry, schema: vol.Schema) -> None:
-        """Initialize options flow."""
-        self._common_handler = HelperCommonFlowHandler(self, config_entry)
-        self._config_entry = config_entry
-        self.schema = schema
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
-        """Handle the initial step."""
-        return await self._common_handler.async_step_user(user_input)
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
-        """Handle the initial step."""
-        result = await self._common_handler.async_step_user(user_input)
-        if result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
-            self.hass.config_entries.async_update_entry(
-                self._config_entry, data=result["data"]
-            )
-            result["data"] = {}
-        return result
 
 
 class EntityRegistryDisabledHandler:
