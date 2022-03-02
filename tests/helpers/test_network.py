@@ -20,6 +20,17 @@ from homeassistant.helpers.network import (
 from tests.common import mock_component
 
 
+@pytest.fixture(name="mock_current_request")
+def mock_current_request_mock():
+    """Mock the current request."""
+    mock_current_request = Mock(name="mock_request")
+    with patch(
+        "homeassistant.helpers.network.http.current_request",
+        Mock(get=mock_current_request),
+    ):
+        yield mock_current_request
+
+
 async def test_get_url_internal(hass: HomeAssistant):
     """Test getting an instance URL when the user has set an internal URL."""
     assert hass.config.internal_url is None
@@ -611,7 +622,7 @@ async def test_get_current_request_url_with_known_host(
         get_url(hass, require_current_request=True)
 
 
-async def test_is_internal_request(hass: HomeAssistant):
+async def test_is_internal_request(hass: HomeAssistant, mock_current_request):
     """Test if accessing an instance on its internal URL."""
     # Test with internal URL: http://example.local:8123
     await async_process_ha_core_config(
@@ -620,18 +631,16 @@ async def test_is_internal_request(hass: HomeAssistant):
     )
 
     assert hass.config.internal_url == "http://example.local:8123"
+
+    # No request active
+    mock_current_request.return_value = None
     assert not is_internal_request(hass)
 
-    with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="example.local"
-    ):
-        assert is_internal_request(hass)
+    mock_current_request.return_value = Mock(url="http://example.local:8123")
+    assert is_internal_request(hass)
 
-    with patch(
-        "homeassistant.helpers.network._get_request_host",
-        return_value="no_match.example.local",
-    ):
-        assert not is_internal_request(hass)
+    mock_current_request.return_value = Mock(url="http://no_match.example.local:8123")
+    assert not is_internal_request(hass)
 
     # Test with internal URL: http://192.168.0.1:8123
     await async_process_ha_core_config(
@@ -642,10 +651,26 @@ async def test_is_internal_request(hass: HomeAssistant):
     assert hass.config.internal_url == "http://192.168.0.1:8123"
     assert not is_internal_request(hass)
 
-    with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="192.168.0.1"
+    mock_current_request.return_value = Mock(url="http://192.168.0.1:8123")
+    assert is_internal_request(hass)
+
+    # Test for matching against local IP
+    hass.config.api = Mock(use_ssl=False, local_ip="192.168.123.123", port=8123)
+    for allowed in ("127.0.0.1", "192.168.123.123"):
+        mock_current_request.return_value = Mock(url=f"http://{allowed}:8123")
+        assert is_internal_request(hass), mock_current_request.return_value.url
+
+    # Test for matching against HassOS hostname
+    with patch.object(
+        hass.components.hassio, "is_hassio", return_value=True
+    ), patch.object(
+        hass.components.hassio,
+        "get_host_info",
+        return_value={"hostname": "hellohost"},
     ):
-        assert is_internal_request(hass)
+        for allowed in ("hellohost", "hellohost.local"):
+            mock_current_request.return_value = Mock(url=f"http://{allowed}:8123")
+            assert is_internal_request(hass), mock_current_request.return_value.url
 
 
 async def test_is_hass_url(hass):
