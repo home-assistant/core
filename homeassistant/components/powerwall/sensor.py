@@ -114,7 +114,7 @@ class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
 class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall Direction Energy sensor."""
 
-    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_state_class = SensorStateClass.TOTAL
     _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_device_class = SensorDeviceClass.ENERGY
 
@@ -160,7 +160,7 @@ class PowerWallExportSensor(PowerWallEnergyDirectionSensor):
     @property
     def native_value(self) -> float:
         """Get the current value in kWh."""
-        return abs(self.meter.get_energy_exported())
+        return self.meter.get_energy_exported()
 
 
 class PowerWallImportSensor(PowerWallEnergyDirectionSensor):
@@ -177,4 +177,4 @@ class PowerWallImportSensor(PowerWallEnergyDirectionSensor):
     @property
     def native_value(self) -> float:
         """Get the current value in kWh."""
-        return abs(self.meter.get_energy_imported())
+        return self.meter.get_energy_imported()

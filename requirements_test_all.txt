@@ -431,7 +431,7 @@ fivem-api==0.1.2
 fjaraskupan==1.0.2
 
 # homeassistant.components.flipr
-flipr-api==1.4.1
+flipr-api==1.4.2
 
 # homeassistant.components.flux_led
 flux_led==0.28.27
@@ -1237,7 +1237,7 @@ python-picnic-api==1.1.0
 python-smarttub==0.0.29
 
 # homeassistant.components.songpal
-python-songpal==0.14
+python-songpal==0.14.1
 
 # homeassistant.components.tado
 python-tado==0.12.0
