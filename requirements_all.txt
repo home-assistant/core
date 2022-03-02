@@ -679,7 +679,7 @@ fixerio==1.0.0a0
 fjaraskupan==1.0.2
 
 # homeassistant.components.flipr
-flipr-api==1.4.1
+flipr-api==1.4.2
 
 # homeassistant.components.flux_led
 flux_led==0.28.27
