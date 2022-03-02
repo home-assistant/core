@@ -100,6 +100,7 @@ class EntitySelector(Selector):
         """Validate the passed selection."""
 
         def validate(e_or_u: str) -> str:
+            e_or_u = cv.entity_id_or_uuid(e_or_u)
             if not valid_entity_id(e_or_u):
                 return e_or_u
             if allowed_domain := self.config.get("domain"):
@@ -112,10 +113,10 @@ class EntitySelector(Selector):
             return e_or_u
 
         if not self.config["multiple"]:
-            return validate(cv.entity_id_or_uuid(cv.string(data)))
+            return validate(data)
         if not isinstance(data, list):
             raise vol.Invalid("Value should be a list")
-        return [validate(cv.entity_id_or_uuid(cv.string(item))) for item in data]
+        return [validate(item) for item in data]
 
 
 @SELECTORS.register("device")
