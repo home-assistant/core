@@ -8,9 +8,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import IammeterData
 from .const import (
-    DOMAIN,
     DEVICE_3080,
     DEVICE_3080T,
+    DOMAIN,
     SENSOR_TYPES_3080,
     SENSOR_TYPES_3080T,
     IammeterSensorEntityDescription,

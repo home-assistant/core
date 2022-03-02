@@ -2,8 +2,8 @@
 from datetime import timedelta
 import logging
 
-from requests.exceptions import HTTPError, Timeout
 from iammeter.client import IamMeter
+from requests.exceptions import HTTPError, Timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, Platform
