@@ -6,7 +6,7 @@ import fnmatch
 import logging
 import os
 import sys
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from serial.tools.list_ports import comports
 from serial.tools.list_ports_common import ListPortInfo
@@ -27,6 +27,9 @@ from homeassistant.loader import async_get_usb
 from .const import DOMAIN
 from .models import USBDevice
 from .utils import usb_device_from_port
+
+if TYPE_CHECKING:
+    from pyudev import Device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -136,7 +139,7 @@ class USBDiscovery:
         """Start monitoring hardware with pyudev."""
         if not sys.platform.startswith("linux"):
             return
-        info = await system_info.async_get_system_info(self.hass)
+        info = await system_info.async_get_system_info(self.hass)  # type: ignore[unreachable]
         if info.get("docker"):
             return
 
@@ -168,7 +171,7 @@ class USBDiscovery:
         )
         self.observer_active = True
 
-    def _device_discovered(self, device):
+    def _device_discovered(self, device: Device) -> None:
         """Call when the observer discovers a new usb tty device."""
         if device.action != "add":
             return
