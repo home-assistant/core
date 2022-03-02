@@ -1,1 +1,1 @@
-"""Tests for the IamMeter integration."""
+"""Tests for the iammeter integration."""
