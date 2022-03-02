@@ -33,7 +33,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except FRITZ_EXCEPTIONS as ex:
         raise ConfigEntryNotReady from ex
 
-    if not (await avm_wrapper.async_get_upnp_configuration())["NewEnable"]:
+    if (
+        "X_AVM-DE_UPnP1" in avm_wrapper.connection.services
+        and not (await avm_wrapper.async_get_upnp_configuration())["NewEnable"]
+    ):
         raise ConfigEntryAuthFailed("Missing UPnP configuration")
 
     hass.data.setdefault(DOMAIN, {})
