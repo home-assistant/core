@@ -4,10 +4,7 @@
             "already_configured": "El compte ja est\u00e0 configurat"
         },
         "error": {
-            "cannot_connect": "Ha fallat la connexi\u00f3",
-            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
-            "no_devices": "No s'ha descobert cap dispositiu",
-            "no_username": "No s'ha pogut obtenir el nom d'usuari"
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
             "user": {
