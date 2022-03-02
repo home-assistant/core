@@ -314,6 +314,7 @@ class HelperCommonFlowHandler:
 class HelperConfigFlowHandler(config_entries.ConfigFlow):
     """Handle a config flow for helper integrations."""
 
+    options_flow: bool = False
     steps: dict[str, vol.Schema]
 
     VERSION = 1
@@ -336,7 +337,8 @@ class HelperConfigFlowHandler(config_entries.ConfigFlow):
                 cls.async_validate_input,
             )
 
-        cls.async_get_options_flow = _async_get_options_flow  # type: ignore[assignment]
+        if cls.options_flow:
+            cls.async_get_options_flow = _async_get_options_flow  # type: ignore[assignment]
         for step in cls.steps:
             setattr(cls, f"async_step_{step}", cls.async_step)
 
