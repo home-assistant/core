@@ -304,7 +304,7 @@ class HelperCommonFlowHandler:
 
         schema = copy.deepcopy(self._handler.steps[step_id].schema)
         for key in schema:
-            if key in self._options:
+            if key in self._options and isinstance(key, vol.Marker):
                 key.description = {"suggested_value": self._options[key]}
         return self._handler.async_show_form(
             step_id=step_id, data_schema=vol.Schema(schema), errors=errors
