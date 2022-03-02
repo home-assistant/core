@@ -855,7 +855,7 @@ hydrawiser==0.2
 hyperion-py==0.7.5
 
 # homeassistant.components.iammeter
-iammeter==0.1.7
+iammeter==0.2.1
 
 # homeassistant.components.iaqualink
 iaqualink==0.4.1

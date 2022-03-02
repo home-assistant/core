@@ -7,12 +7,11 @@
             "already_configured": "Device is already configured",
             "cannot_connect": "Failed to connect"
         },
-        "flow_title": "IamMeter {sn}",
         "step": {
             "user": {
                 "data": {
                     "host": "Host",
-                    "port": "Port"
+                    "name": "The prefix to be used for your IamMeter sensors"
                 },
                 "title": "Define your IamMeter connection"
             }
