@@ -24,7 +24,6 @@ from .const import (
 )
 from .device import XiaomiCoordinatedMiioEntity
 
-
 ATTR_RESET_DUST_FILTER = "reset_dust_filter"
 ATTR_RESET_UPPER_FILTER = "reset_upper_filter"
 
@@ -71,16 +70,16 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the button from a config entry."""
-    entities = []
     model = config_entry.data[CONF_MODEL]
-    unique_id = config_entry.unique_id
-    device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
 
     if model not in MODEL_TO_BUTTON_MAP:
         return
 
+    entities = []
     buttons = MODEL_TO_BUTTON_MAP[model]
+    unique_id = config_entry.unique_id
+    device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
 
     for description in BUTTON_TYPES:
         if description.key not in buttons:
