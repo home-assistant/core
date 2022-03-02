@@ -577,9 +577,6 @@ class DmsDeviceSource:
             children=children,
         )
 
-        if media_source.children:
-            media_source.calculate_children_class()
-
         return media_source
 
     def _didl_to_play_media(self, item: didl_lite.DidlObject) -> DidlPlayMedia:
@@ -647,9 +644,6 @@ class DmsDeviceSource:
             children=children,
             thumbnail=self._didl_thumbnail_url(item),
         )
-
-        if media_source.children:
-            media_source.calculate_children_class()
 
         return media_source
 
