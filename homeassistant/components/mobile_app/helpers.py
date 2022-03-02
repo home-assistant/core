@@ -84,14 +84,10 @@ def _decrypt_payload_helper(
 
     key_bytes = get_key_bytes(key, keylen)
 
-    try:
-        msg_bytes = decrypt(ciphertext, key_bytes)
-        message = json.loads(msg_bytes.decode("utf-8"))
-        _LOGGER.debug("Successfully decrypted mobile_app payload")
-        return message
-    except ValueError:
-        _LOGGER.warning("Ignoring encrypted payload because unable to decrypt")
-        return None
+    msg_bytes = decrypt(ciphertext, key_bytes)
+    message = json.loads(msg_bytes.decode("utf-8"))
+    _LOGGER.debug("Successfully decrypted mobile_app payload")
+    return message
 
 
 def _decrypt_payload(key: str | None, ciphertext: str) -> dict[str, str] | None:

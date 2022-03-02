@@ -201,9 +201,20 @@ async def handle_webhook(
                 hass.config_entries.async_update_entry(config_entry, data=data)
         except CryptoError:
             if ATTR_NO_LEGACY_ENCRYPTION not in config_entry.data:
-                webhook_payload = _decrypt_payload_legacy(
-                    config_entry.data[CONF_SECRET], enc_data
-                )
+                try:
+                    webhook_payload = _decrypt_payload_legacy(
+                        config_entry.data[CONF_SECRET], enc_data
+                    )
+                except CryptoError:
+                    _LOGGER.warning(
+                        "Ignoring encrypted payload because unable to decrypt"
+                    )
+                except ValueError:
+                    _LOGGER.warning("Ignoring invalid encrypted payload")
+            else:
+                _LOGGER.warning("Ignoring encrypted payload because unable to decrypt")
+        except ValueError:
+            _LOGGER.warning("Ignoring invalid encrypted payload")
 
     if webhook_type not in WEBHOOK_COMMANDS:
         _LOGGER.error(
