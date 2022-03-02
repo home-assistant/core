@@ -923,9 +923,7 @@ async def async_migrate_entries(
             ent_reg.async_update_entity(entry.entity_id, **updates)
 
 
-def async_validate_entity_id(
-    registry: EntityRegistry, entity_id_or_uuid: str
-) -> str | None:
+def async_validate_entity_id(registry: EntityRegistry, entity_id_or_uuid: str) -> str:
     """Validate and resolve an entity id or UUID to an entity id.
 
     Raises vol.Invalid if the entity or UUID is invalid, or if the UUID is not
@@ -949,9 +947,4 @@ def async_validate_entity_ids(
     an entity registry item.
     """
 
-    tmp = [
-        resolved_item
-        for item in entity_ids_or_uuids
-        if (resolved_item := async_validate_entity_id(registry, item)) is not None
-    ]
-    return tmp
+    return [async_validate_entity_id(registry, item) for item in entity_ids_or_uuids]

@@ -71,8 +71,6 @@ async def async_setup_entry(
     entity_id = er.async_validate_entity_id(
         registry, config_entry.options[CONF_ENTITY_ID]
     )
-    if not entity_id:
-        return
 
     async_add_entities(
         [
