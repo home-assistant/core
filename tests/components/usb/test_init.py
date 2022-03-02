@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch, sentinel
 import pytest
 
 from homeassistant.components import usb
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.setup import async_setup_component
 
 from . import conbee_device, slae_sh_device
@@ -64,9 +64,13 @@ async def test_removal_by_observer_before_started(hass, operating_system):
             callback, MagicMock(action="remove", device_path="/dev/new")
         )
 
+    monitor_mock = None
+
     def _create_mock_monitor_observer(monitor, callback, name):
+        nonlocal monitor_mock
         hass.async_create_task(_mock_monitor_observer_callback(callback))
-        return MagicMock()
+        monitor_mock = MagicMock()
+        return monitor_mock
 
     new_usb = [{"domain": "test1", "vid": "3039", "pid": "3039"}]
 
@@ -87,7 +91,7 @@ async def test_removal_by_observer_before_started(hass, operating_system):
         "homeassistant.components.usb.comports", return_value=mock_comports
     ), patch(
         "pyudev.MonitorObserver", new=_create_mock_monitor_observer
-    ), patch.object(
+    ) as monitor_mock, patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow:
         assert await async_setup_component(hass, "usb", {"usb": {}})
@@ -98,6 +102,10 @@ async def test_removal_by_observer_before_started(hass, operating_system):
         await hass.async_block_till_done()
 
     assert len(mock_config_flow.mock_calls) == 0
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert monitor_mock.mock_calls == []
 
 
 async def test_discovered_by_websocket_scan(hass, hass_ws_client):
