@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import integration_platform, storage
 from homeassistant.helpers.typing import ConfigType
 
@@ -19,6 +20,10 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "update"
 INFO_CALLBACK_TIMEOUT = 5
 STORAGE_VERSION = 1
+
+
+class UpdateFailed(HomeAssistantError):
+    """Error to indicate an update has failed."""
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -103,6 +108,12 @@ async def handle_update(
             version=msg["version"],
             backup=msg.get("backup"),
         )
+    except UpdateFailed as err:
+        connection.send_error(
+            msg["id"],
+            "update_failed",
+            f"Update of {msg['domain']}/{msg['identifier']} to version {msg['version']} failed: {err}",
+        )
     except Exception as err:  # pylint: disable=broad-except
         _LOGGER.exception(
             "Update of %s to version %s failed",
@@ -112,10 +123,10 @@ async def handle_update(
         connection.send_error(
             msg["id"],
             "update_failed",
-            f"Update of {msg['identifier']} to version {msg['version']} failed: {err}",
+            f"Update of {msg['domain']}/{msg['identifier']} to version {msg['version']} failed: {err}",
         )
-
-    connection.send_result(msg["id"])
+    else:
+        connection.send_result(msg["id"])
 
 
 class UpdatePlatformProtocol(Protocol):

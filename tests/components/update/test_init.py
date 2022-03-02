@@ -243,5 +243,5 @@ async def test_update_update_failed(hass, hass_ws_client):
     assert resp["error"]["code"] == "update_failed"
     assert (
         resp["error"]["message"]
-        == "Update of lorem_ipsum to version 1.0.1 failed: Test update failed"
+        == f"Update of {update['domain']}/{update['identifier']} to version {update['available_version']} failed: Test update failed"
     )
