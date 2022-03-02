@@ -158,7 +158,6 @@ async def async_setup_entry(
     unique_id = config_entry.unique_id
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
-    model = config_entry.data[CONF_MODEL]
     attributes = MODEL_TO_ATTR_MAP[model]
 
     for description in SELECTOR_TYPES:
