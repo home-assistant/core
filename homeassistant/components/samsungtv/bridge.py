@@ -4,7 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from asyncio.exceptions import TimeoutError as AsyncioTimeoutError
 import contextlib
-from typing import Any
+from typing import Any, cast
 
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
@@ -313,10 +313,12 @@ class SamsungTVWSBridge(SamsungTVBridge):
         """Get installed app list."""
         if self._app_list is None:
             if remote := self._get_remote():
-                raw_app_list: list[dict[str, str]] = remote.app_list()
+                raw_app_list = remote.app_list()
                 self._app_list = {
                     app["name"]: app["appId"]
-                    for app in sorted(raw_app_list, key=lambda app: app["name"])
+                    for app in sorted(
+                        raw_app_list or [], key=lambda app: cast(str, app["name"])
+                    )
                 }
 
         return self._app_list
@@ -355,8 +357,8 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     host=self.host,
                     port=self.port,
                     token=self.token,
-                    timeout=config[CONF_TIMEOUT],
-                    name=config[CONF_NAME],
+                    timeout=TIMEOUT_REQUEST,
+                    name=VALUE_CONF_NAME,
                 ) as remote:
                     remote.open()
                     self.token = remote.token
@@ -379,6 +381,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
     async def async_device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""
         if self._rest_api is None:
+            assert self.port
             self._rest_api = SamsungTVAsyncRest(
                 host=self.host,
                 session=async_get_clientsession(self.hass),
@@ -423,7 +426,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
             # Different reasons, e.g. hostname not resolveable
             pass
 
-    def _get_remote(self) -> SamsungTVWS:
+    def _get_remote(self) -> SamsungTVWS | None:
         """Create or return a remote control instance."""
         if self._remote is None:
             # We need to create a new instance to reconnect.
@@ -431,6 +434,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 LOGGER.debug(
                     "Create SamsungTVWSBridge for %s (%s)", CONF_NAME, self.host
                 )
+                assert self.port
                 self._remote = SamsungTVWS(
                     host=self.host,
                     port=self.port,
