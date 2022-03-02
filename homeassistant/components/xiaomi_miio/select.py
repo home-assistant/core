@@ -127,6 +127,7 @@ async def async_setup_entry(
     """Set up the Selectors from a config entry."""
     if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         return
+
     model = config_entry.data[CONF_MODEL]
     if model in MODEL_TO_ATTR_MAP:
         await async_setup_generic_entry(hass, config_entry, async_add_entities)
@@ -137,11 +138,12 @@ async def async_setup_entry(
 async def async_setup_generic_entry(hass, config_entry, async_add_entities):
     """Set up the generic Selectors from a config entry."""
     entities = []
-    model = config_entry.data[CONF_MODEL]
     unique_id = config_entry.unique_id
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
+    model = config_entry.data[CONF_MODEL]
     attributes = MODEL_TO_ATTR_MAP[model]
+
     for description in SELECTOR_TYPES:
         for attribute in attributes:
             if description.key == attribute[0]:
