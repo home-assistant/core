@@ -2,10 +2,13 @@
 from __future__ import annotations
 
 from laundrify_aio import LaundrifyAPI
+from laundrify_aio.exceptions import ApiConnectionException, UnauthorizedException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL, DOMAIN
 from .coordinator import LaundrifyUpdateCoordinator
@@ -16,7 +19,16 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up laundrify from a config entry."""
 
-    api_client = LaundrifyAPI(entry.data[CONF_ACCESS_TOKEN])
+    session = async_create_clientsession(hass)
+    api_client = LaundrifyAPI(entry.data[CONF_ACCESS_TOKEN], session)
+
+    try:
+        await api_client.validate_token()
+    except UnauthorizedException as err:
+        raise ConfigEntryAuthFailed("Invalid authentication") from err
+    except ApiConnectionException as err:
+        raise ConfigEntryNotReady("Cannot reach laundrify API") from err
+
     poll_interval = entry.options.get(CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL)
     coordinator = LaundrifyUpdateCoordinator(hass, api_client, poll_interval)
 

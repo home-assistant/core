@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from laundrify_aio.errors import ApiConnectionError, ApiUnauthorized
+from laundrify_aio.exceptions import ApiConnectionException, UnauthorizedException
 
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -33,9 +33,9 @@ class LaundrifyUpdateCoordinator(DataUpdateCoordinator):
             # handled by the data update coordinator.
             async with async_timeout.timeout(REQUEST_TIMEOUT):
                 return {m["_id"]: m for m in await self.laundrify_api.get_machines()}
-        except ApiUnauthorized as err:
+        except UnauthorizedException as err:
             # Raising ConfigEntryAuthFailed will cancel future updates
             # and start a config flow with SOURCE_REAUTH (async_step_reauth)
             raise ConfigEntryAuthFailed from err
-        except ApiConnectionError as err:
+        except ApiConnectionException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err

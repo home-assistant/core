@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/laundrify",
   "requirements": [
-    "laundrify_aio==1.0.0"
+    "laundrify_aio==1.1.1"
   ],
   "codeowners": [
     "@xLarry"

@@ -4,13 +4,18 @@ from __future__ import annotations
 import logging
 
 from laundrify_aio import LaundrifyAPI
-from laundrify_aio.errors import ApiConnectionError, InvalidFormat, UnknownAuthCode
+from laundrify_aio.exceptions import (
+    ApiConnectionException,
+    InvalidFormat,
+    UnknownAuthCode,
+)
 from voluptuous import All, Optional, Range, Required, Schema
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CODE
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL, DOMAIN
 
@@ -37,12 +42,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             access_token = await LaundrifyAPI.exchange_auth_code(user_input[CONF_CODE])
+
+            session = async_create_clientsession(self.hass)
+            api_client = LaundrifyAPI(access_token, session)
+
+            account_id = await api_client.get_account_id()
         except InvalidFormat:
             errors[CONF_CODE] = "invalid_format"
         except UnknownAuthCode:
             errors[CONF_CODE] = "invalid_auth"
-        except ApiConnectionError as err:
-            _LOGGER.warning(str(err))
+        except ApiConnectionException:
             errors["base"] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
@@ -50,17 +59,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             entry_data = {CONF_ACCESS_TOKEN: access_token}
 
-            # The integration supports only a single config entry
-            existing_entry = await self.async_set_unique_id(DOMAIN)
-            if existing_entry:
-                _LOGGER.info(
-                    "%s entry already exists, going to update and reload it", DOMAIN
-                )
-                self.hass.config_entries.async_update_entry(
-                    existing_entry, data=entry_data
-                )
-                await self.hass.config_entries.async_reload(existing_entry.entry_id)
-                return self.async_abort(reason="single_instance_allowed")
+            await self.async_set_unique_id(account_id)
+            self._abort_if_unique_id_configured()
 
             # Create a new entry if it doesn't exist
             return self.async_create_entry(
