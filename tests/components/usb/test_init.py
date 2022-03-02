@@ -57,7 +57,7 @@ def mock_venv():
     reason="Only works on linux",
 )
 async def test_observer_discovery(hass, hass_ws_client, venv):
-    """Test that observer on WSL failure results in fallback to scanning without raising an exception."""
+    """Test that observer can discover a device without raising an exception."""
     new_usb = [{"domain": "test1", "vid": "3039"}]
 
     mock_comports = [
