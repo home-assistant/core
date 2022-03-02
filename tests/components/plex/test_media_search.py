@@ -241,7 +241,20 @@ async def test_media_lookups(hass, mock_plex_server, requests_mock, playqueue_cr
         )
         search.assert_called_with(**{"title": "Movie 1", "libtype": None})
 
-    # TV show searches
+    with pytest.raises(MediaNotFound) as excinfo:
+        payload = '{"title": "Movie 1"}'
+        assert await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: media_player_id,
+                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_VIDEO,
+                ATTR_MEDIA_CONTENT_ID: payload,
+            },
+            True,
+        )
+    assert "Must specify 'library_name' for this search" in str(excinfo.value)
+
     with pytest.raises(MediaNotFound) as excinfo:
         payload = '{"library_name": "Movies", "title": "Not a Movie"}'
         with patch("plexapi.library.LibrarySection.search", side_effect=BadRequest):
