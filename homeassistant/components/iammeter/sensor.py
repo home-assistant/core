@@ -61,7 +61,9 @@ class IammeterSensor(update_coordinator.CoordinatorEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the native sensor value."""
-        raw_attr = self.coordinator.data.measurement.get(self.entity_description.key, None)
+        raw_attr = self.coordinator.data.measurement.get(
+            self.entity_description.key, None
+        )
         if self.entity_description.value:
             return self.entity_description.value(raw_attr)
         return raw_attr

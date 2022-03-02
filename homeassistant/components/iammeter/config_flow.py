@@ -20,7 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 def iammeter_entries(hass: HomeAssistant):
     """Return the hosts already configured."""
     return {
-        entry.data[CONF_IP_ADDRESS] for entry in hass.config_entries.async_entries(DOMAIN)
+        entry.data[CONF_IP_ADDRESS]
+        for entry in hass.config_entries.async_entries(DOMAIN)
     }
 
 
@@ -81,7 +82,8 @@ class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
                     ): str,
                     vol.Required(
-                        CONF_IP_ADDRESS, default=user_input.get(CONF_IP_ADDRESS, DEFAULT_IP)
+                        CONF_IP_ADDRESS,
+                        default=user_input.get(CONF_IP_ADDRESS, DEFAULT_IP),
                     ): str,
                 }
             ),
