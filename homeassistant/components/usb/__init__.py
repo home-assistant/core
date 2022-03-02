@@ -139,7 +139,7 @@ class USBDiscovery:
         """Start monitoring hardware with pyudev."""
         if not sys.platform.startswith("linux"):
             return
-        info = await system_info.async_get_system_info(self.hass)  # type: ignore[unreachable]
+        info = await system_info.async_get_system_info(self.hass)
         if info.get("docker"):
             return
 
@@ -166,9 +166,11 @@ class USBDiscovery:
             monitor, callback=self._device_discovered, name="usb-observer"
         )
         observer.start()
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, lambda event: observer.stop()
-        )
+
+        def _stop_observer(event: Event) -> None:
+            observer.stop()
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_observer)
         self.observer_active = True
 
     def _device_discovered(self, device: Device) -> None:
