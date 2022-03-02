@@ -205,9 +205,6 @@ def catch_request_errors(
 class DmsDeviceSource:
     """DMS Device wrapper, providing media files as a media_source."""
 
-    hass: HomeAssistant
-    config_entry: ConfigEntry
-
     # Unique slug used for media-source URIs
     source_id: str
 

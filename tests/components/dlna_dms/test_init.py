@@ -1,5 +1,6 @@
 """Test the DLNA DMS component setup, cleanup, and module-level functions."""
 
+from typing import cast
 from unittest.mock import Mock
 
 from homeassistant.components.dlna_dms.const import DOMAIN
@@ -12,7 +13,7 @@ from tests.common import MockConfigEntry
 
 async def test_resource_lifecycle(
     hass: HomeAssistant,
-    domain_data_mock: DlnaDmsData,
+    aiohttp_session_requester_mock: Mock,
     config_entry_mock: MockConfigEntry,
     ssdp_scanner_mock: Mock,
     dms_device_mock: Mock,
@@ -23,10 +24,11 @@ async def test_resource_lifecycle(
     assert await async_setup_component(hass, DOMAIN, {}) is True
     await hass.async_block_till_done()
 
-    # Check the entity is created and working
-    assert len(domain_data_mock.devices) == 1
-    assert len(domain_data_mock.sources) == 1
-    entity = next(iter(domain_data_mock.devices.values()))
+    # Check the device source is created and working
+    domain_data = cast(DlnaDmsData, hass.data[DOMAIN])
+    assert len(domain_data.devices) == 1
+    assert len(domain_data.sources) == 1
+    entity = next(iter(domain_data.devices.values()))
     assert entity.available is True
 
     # Check update listeners are subscribed
@@ -54,6 +56,6 @@ async def test_resource_lifecycle(
     assert dms_device_mock.async_unsubscribe_services.await_count == 0
     assert dms_device_mock.on_event is None
 
-    # Check entity is gone
-    assert not domain_data_mock.devices
-    assert not domain_data_mock.sources
+    # Check device source is gone
+    assert not domain_data.devices
+    assert not domain_data.sources

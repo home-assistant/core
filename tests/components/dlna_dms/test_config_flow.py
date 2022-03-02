@@ -1,9 +1,10 @@
 """Test the DLNA DMS config flow."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 import dataclasses
 from typing import Final
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from async_upnp_client import UpnpError
 import pytest
@@ -25,12 +26,6 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry
-
-# Auto-use the domain_data_mock and dms_device_mock fixtures for every test in this module
-pytestmark = [
-    pytest.mark.usefixtures("domain_data_mock"),
-    pytest.mark.usefixtures("dms_device_mock"),
-]
 
 WRONG_DEVICE_TYPE: Final = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
 
@@ -68,6 +63,16 @@ MOCK_DISCOVERY: Final = ssdp.SsdpServiceInfo(
 )
 
 
+@pytest.fixture(autouse=True)
+def mock_setup_entry() -> Iterable[Mock]:
+    """Avoid setting up the entire integration."""
+    with patch(
+        "homeassistant.components.dlna_dms.async_setup_entry",
+        return_value=True,
+    ) as mock:
+        yield mock
+
+
 async def test_user_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None:
     """Test user-init'd flow, user selects discovered device."""
     ssdp_scanner_mock.async_get_discovery_info_by_st.side_effect = [
@@ -87,6 +92,7 @@ async def test_user_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: MOCK_DEVICE_HOST}
     )
+    await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
@@ -95,8 +101,6 @@ async def test_user_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None:
         CONF_DEVICE_ID: MOCK_DEVICE_USN,
     }
     assert result["options"] == {}
-
-    await hass.async_block_till_done()
 
 
 async def test_user_flow_no_devices(
@@ -142,7 +146,7 @@ async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
 
 
 async def test_ssdp_flow_unavailable(
-    hass: HomeAssistant, domain_data_mock: Mock
+    hass: HomeAssistant, upnp_factory_mock: Mock
 ) -> None:
     """Test that SSDP discovery with an unavailable device still succeeds.
 
@@ -157,7 +161,7 @@ async def test_ssdp_flow_unavailable(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "confirm"
 
-    domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpError
+    upnp_factory_mock.async_create_device.side_effect = UpnpError
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}

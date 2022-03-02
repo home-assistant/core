@@ -5,8 +5,9 @@ from async_upnp_client.exceptions import UpnpError
 from didl_lite import didl_lite
 import pytest
 
+from homeassistant.components import media_source
 from homeassistant.components.dlna_dms.const import DOMAIN
-from homeassistant.components.dlna_dms.dms import DlnaDmsData, DmsDeviceSource
+from homeassistant.components.dlna_dms.dms import DidlPlayMedia
 from homeassistant.components.dlna_dms.media_source import (
     DmsMediaSource,
     async_get_media_source,
@@ -24,30 +25,18 @@ from .conftest import (
     MOCK_DEVICE_BASE_URL,
     MOCK_DEVICE_NAME,
     MOCK_DEVICE_TYPE,
-    MOCK_DEVICE_USN,
     MOCK_SOURCE_ID,
 )
 
 from tests.common import MockConfigEntry
 
-
-@pytest.fixture
-async def entity(
-    hass: HomeAssistant,
-    config_entry_mock: MockConfigEntry,
-    dms_device_mock: Mock,
-    domain_data_mock: DlnaDmsData,
-) -> DmsDeviceSource:
-    """Fixture to set up a DmsDeviceSource in a connected state and cleanup at completion."""
-    await hass.config_entries.async_add(config_entry_mock)
-    await hass.async_block_till_done()
-    return domain_data_mock.devices[MOCK_DEVICE_USN]
-
-
-@pytest.fixture
-async def dms_source(hass: HomeAssistant, entity: DmsDeviceSource) -> DmsMediaSource:
-    """Fixture providing a pre-constructed DmsMediaSource with a single device."""
-    return DmsMediaSource(hass)
+# Auto-use a few fixtures from conftest
+pytestmark = [
+    # Block network access
+    pytest.mark.usefixtures("aiohttp_session_requester_mock"),
+    # Setup the media_source platform
+    pytest.mark.usefixtures("setup_media_source"),
+]
 
 
 async def test_get_media_source(hass: HomeAssistant) -> None:
@@ -66,41 +55,44 @@ async def test_resolve_media_unconfigured(hass: HomeAssistant) -> None:
 
 
 async def test_resolve_media_bad_identifier(
-    hass: HomeAssistant, dms_source: DmsMediaSource
+    hass: HomeAssistant, device_source_mock: None
 ) -> None:
     """Test trying to resolve an item that has an unresolvable identifier."""
     # Empty identifier
-    item = MediaSourceItem(hass, DOMAIN, "")
     with pytest.raises(Unresolvable, match="No source ID.*"):
-        await dms_source.async_resolve_media(item)
+        await media_source.async_resolve_media(hass, f"media-source://{DOMAIN}")
 
     # Identifier has media_id but no source_id
-    item = MediaSourceItem(hass, DOMAIN, "/media_id")
-    with pytest.raises(Unresolvable, match="No source ID.*"):
-        await dms_source.async_resolve_media(item)
+    # media_source.URI_SCHEME_REGEX won't let the ID through to dlna_dms
+    with pytest.raises(Unresolvable, match="Invalid media source URI"):
+        await media_source.async_resolve_media(
+            hass, f"media-source://{DOMAIN}//media_id"
+        )
 
     # Identifier has source_id but no media_id
-    item = MediaSourceItem(hass, DOMAIN, "source_id/")
     with pytest.raises(Unresolvable, match="No media ID.*"):
-        await dms_source.async_resolve_media(item)
+        await media_source.async_resolve_media(
+            hass, f"media-source://{DOMAIN}/source_id/"
+        )
 
     # Identifier is missing source_id/media_id separator
-    item = MediaSourceItem(hass, DOMAIN, "source_id")
     with pytest.raises(Unresolvable, match="No media ID.*"):
-        await dms_source.async_resolve_media(item)
+        await media_source.async_resolve_media(
+            hass, f"media-source://{DOMAIN}/source_id"
+        )
 
     # Identifier has an unknown source_id
-    item = MediaSourceItem(hass, DOMAIN, "unknown_source/media_id")
     with pytest.raises(Unresolvable, match="Unknown source ID: unknown_source"):
-        await dms_source.async_resolve_media(item)
+        await media_source.async_resolve_media(
+            hass, f"media-source://{DOMAIN}/unknown_source/media_id"
+        )
 
 
 async def test_resolve_media_success(
-    hass: HomeAssistant, dms_source: DmsMediaSource, dms_device_mock: Mock
+    hass: HomeAssistant, dms_device_mock: Mock, device_source_mock: None
 ) -> None:
     """Test resolving an item via a DmsDeviceSource."""
     object_id = "123"
-    item = MediaSourceItem(hass, DOMAIN, f"{MOCK_SOURCE_ID}/:{object_id}")
 
     res_url = "foo/bar"
     res_mime = "audio/mpeg"
@@ -112,7 +104,10 @@ async def test_resolve_media_success(
     )
     dms_device_mock.async_browse_metadata.return_value = didl_item
 
-    result = await dms_source.async_resolve_media(item)
+    result = await media_source.async_resolve_media(
+        hass, f"media-source://{DOMAIN}/{MOCK_SOURCE_ID}/:{object_id}"
+    )
+    assert isinstance(result, DidlPlayMedia)
     assert result.url == f"{MOCK_DEVICE_BASE_URL}/{res_url}"
     assert result.mime_type == res_mime
     assert result.didl_metadata is didl_item
@@ -131,43 +126,42 @@ async def test_browse_media_unconfigured(hass: HomeAssistant) -> None:
 
 
 async def test_browse_media_bad_identifier(
-    hass: HomeAssistant, dms_source: DmsMediaSource
+    hass: HomeAssistant, device_source_mock: None
 ) -> None:
     """Test browse_media with a bad source_id."""
-    item = MediaSourceItem(hass, DOMAIN, "bad-id/media_id")
     with pytest.raises(BrowseError, match="Unknown source ID: bad-id"):
-        await dms_source.async_browse_media(item)
+        await media_source.async_browse_media(
+            hass, f"media-source://{DOMAIN}/bad-id/media_id"
+        )
 
 
 async def test_browse_media_single_source_no_identifier(
-    hass: HomeAssistant, dms_source: DmsMediaSource, dms_device_mock: Mock
+    hass: HomeAssistant, dms_device_mock: Mock, device_source_mock: None
 ) -> None:
     """Test browse_media without a source_id, with a single device registered."""
     # Fast bail-out, mock will be checked after
     dms_device_mock.async_browse_metadata.side_effect = UpnpError
 
     # No source_id nor media_id
-    item = MediaSourceItem(hass, DOMAIN, "")
     with pytest.raises(BrowseError):
-        await dms_source.async_browse_media(item)
+        await media_source.async_browse_media(hass, f"media-source://{DOMAIN}")
     # Mock device should've been browsed for the root directory
     dms_device_mock.async_browse_metadata.assert_awaited_once_with(
         "0", metadata_filter=ANY
     )
 
     # No source_id but a media_id
-    item = MediaSourceItem(hass, DOMAIN, "/:media-item-id")
+    # media_source.URI_SCHEME_REGEX won't let the ID through to dlna_dms
     dms_device_mock.async_browse_metadata.reset_mock()
-    with pytest.raises(BrowseError):
-        await dms_source.async_browse_media(item)
-    # Mock device should've been browsed for the root directory
-    dms_device_mock.async_browse_metadata.assert_awaited_once_with(
-        "media-item-id", metadata_filter=ANY
-    )
+    with pytest.raises(BrowseError, match="Invalid media source URI"):
+        await media_source.async_browse_media(
+            hass, f"media-source://{DOMAIN}//:media-item-id"
+        )
+    assert dms_device_mock.async_browse_metadata.await_count == 0
 
 
 async def test_browse_media_multiple_sources(
-    hass: HomeAssistant, dms_source: DmsMediaSource, dms_device_mock: Mock
+    hass: HomeAssistant, dms_device_mock: Mock, device_source_mock: None
 ) -> None:
     """Test browse_media without a source_id, with multiple devices registered."""
     # Set up a second source
@@ -182,12 +176,12 @@ async def test_browse_media_multiple_sources(
         },
         title=other_source_title,
     )
-    await hass.config_entries.async_add(other_config_entry)
+    other_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(other_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # No source_id nor media_id
-    item = MediaSourceItem(hass, DOMAIN, "")
-    result = await dms_source.async_browse_media(item)
+    result = await media_source.async_browse_media(hass, f"media-source://{DOMAIN}")
     # Mock device should not have been browsed
     assert dms_device_mock.async_browse_metadata.await_count == 0
     # Result will be a list of available devices
@@ -200,27 +194,23 @@ async def test_browse_media_multiple_sources(
     assert result.children[1].identifier == f"{other_source_id}/:0"
     assert result.children[1].title == other_source_title
 
-    # No source_id but a media_id - will give the exact same list of all devices
-    item = MediaSourceItem(hass, DOMAIN, "/:media-item-id")
-    result = await dms_source.async_browse_media(item)
+    # No source_id but a media_id
+    # media_source.URI_SCHEME_REGEX won't let the ID through to dlna_dms
+    with pytest.raises(BrowseError, match="Invalid media source URI"):
+        result = await media_source.async_browse_media(
+            hass, f"media-source://{DOMAIN}//:media-item-id"
+        )
     # Mock device should not have been browsed
     assert dms_device_mock.async_browse_metadata.await_count == 0
-    # Result will be a list of available devices
-    assert result.title == "DLNA Servers"
-    assert result.children
-    assert isinstance(result.children[0], BrowseMediaSource)
-    assert result.children[0].identifier == f"{MOCK_SOURCE_ID}/:0"
-    assert result.children[0].title == MOCK_DEVICE_NAME
-    assert isinstance(result.children[1], BrowseMediaSource)
-    assert result.children[1].identifier == f"{other_source_id}/:0"
-    assert result.children[1].title == other_source_title
+
+    # Clean up, to fulfil ssdp_scanner post-condition of every callback being cleared
+    await hass.config_entries.async_remove(other_config_entry.entry_id)
 
 
 async def test_browse_media_source_id(
     hass: HomeAssistant,
     config_entry_mock: MockConfigEntry,
     dms_device_mock: Mock,
-    domain_data_mock: DlnaDmsData,
 ) -> None:
     """Test browse_media with an explicit source_id."""
     # Set up a second device first, then the primary mock device.
@@ -235,10 +225,13 @@ async def test_browse_media_source_id(
         },
         title=other_source_title,
     )
-    await hass.config_entries.async_add(other_config_entry)
-    await hass.async_block_till_done()
 
-    await hass.config_entries.async_add(config_entry_mock)
+    other_config_entry.add_to_hass(hass)
+    config_entry_mock.add_to_hass(hass)
+
+    # Setting up either config entry will result in the dlna_dms component being
+    # loaded, and both config entries will be setup
+    await hass.config_entries.async_setup(other_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Fast bail-out, mock will be checked after

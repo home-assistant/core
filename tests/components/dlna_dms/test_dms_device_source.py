@@ -1,5 +1,6 @@
-"""Test the interface methods of DmsDeviceSource, except availability."""
-from collections.abc import AsyncIterable
+"""Test the browse and resolve methods of DmsDeviceSource."""
+from __future__ import annotations
+
 from typing import Final, Union
 from unittest.mock import ANY, Mock, call
 
@@ -8,146 +9,64 @@ from async_upnp_client.profiles.dlna import ContentDirectoryErrorCode, DmsDevice
 from didl_lite import didl_lite
 import pytest
 
+from homeassistant.components import media_source
 from homeassistant.components.dlna_dms.const import DLNA_SORT_CRITERIA, DOMAIN
 from homeassistant.components.dlna_dms.dms import (
     ActionError,
     DeviceConnectionError,
-    DlnaDmsData,
+    DidlPlayMedia,
     DmsDeviceSource,
 )
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import BrowseMediaSource
-from homeassistant.const import CONF_DEVICE_ID, CONF_URL
 from homeassistant.core import HomeAssistant
 
-from .conftest import (
-    MOCK_DEVICE_BASE_URL,
-    MOCK_DEVICE_NAME,
-    MOCK_DEVICE_TYPE,
-    MOCK_DEVICE_USN,
-    MOCK_SOURCE_ID,
-)
+from .conftest import MOCK_DEVICE_BASE_URL, MOCK_DEVICE_NAME, MOCK_SOURCE_ID
 
-from tests.common import MockConfigEntry
+# Auto-use a few fixtures from conftest
+pytestmark = [
+    # Block network access
+    pytest.mark.usefixtures("aiohttp_session_requester_mock"),
+    # Setup the media_source platform
+    pytest.mark.usefixtures("setup_media_source"),
+    # Have a connected device so that test can successfully call browse and resolve
+    pytest.mark.usefixtures("device_source_mock"),
+]
+
 
 BrowseResultList = list[Union[didl_lite.DidlObject, didl_lite.Descriptor]]
 
 
-@pytest.fixture
-async def device_source_mock(
-    hass: HomeAssistant,
-    config_entry_mock: MockConfigEntry,
-    ssdp_scanner_mock: Mock,
-    dms_device_mock: Mock,
-    domain_data_mock: DlnaDmsData,
-) -> AsyncIterable[DmsDeviceSource]:
-    """Fixture to set up a DmsDeviceSource in a connected state and cleanup at completion."""
-    await hass.config_entries.async_add(config_entry_mock)
-    await hass.async_block_till_done()
-
-    mock_entity = domain_data_mock.devices[MOCK_DEVICE_USN]
-
-    # Check the DmsDeviceSource has registered all needed listeners
-    assert len(config_entry_mock.update_listeners) == 1
-    assert ssdp_scanner_mock.async_register_callback.await_count == 2
-    assert ssdp_scanner_mock.async_register_callback.return_value.call_count == 0
-
-    # Run the test
-    yield mock_entity
-
-    # Unload config entry to clean up
-    assert await hass.config_entries.async_remove(config_entry_mock.entry_id) == {
-        "require_restart": False
-    }
-
-    # Check DmsDeviceSource has cleaned up its resources
-    assert not config_entry_mock.update_listeners
-    assert (
-        ssdp_scanner_mock.async_register_callback.await_count
-        == ssdp_scanner_mock.async_register_callback.return_value.call_count
+async def async_resolve_media(
+    hass: HomeAssistant, media_content_id: str
+) -> DidlPlayMedia:
+    """Call media_source.async_resolve_media with the test source's ID."""
+    result = await media_source.async_resolve_media(
+        hass, f"media-source://{DOMAIN}/{MOCK_SOURCE_ID}/{media_content_id}"
     )
-    assert MOCK_DEVICE_USN not in domain_data_mock.devices
-    assert MOCK_SOURCE_ID not in domain_data_mock.sources
+    assert isinstance(result, DidlPlayMedia)
+    return result
 
 
-async def test_update_source_id(
+async def async_browse_media(
     hass: HomeAssistant,
-    config_entry_mock: MockConfigEntry,
-    device_source_mock: DmsDeviceSource,
-    domain_data_mock: DlnaDmsData,
-) -> None:
-    """Test the config listener updates the source_id and source list upon title change."""
-    new_title: Final = "New Name"
-    new_source_id: Final = "new_name"
-    assert domain_data_mock.sources.keys() == {MOCK_SOURCE_ID}
-    hass.config_entries.async_update_entry(config_entry_mock, title=new_title)
-    await hass.async_block_till_done()
-
-    assert device_source_mock.source_id == new_source_id
-    assert domain_data_mock.sources.keys() == {new_source_id}
-
-
-async def test_update_existing_source_id(
-    caplog: pytest.LogCaptureFixture,
-    hass: HomeAssistant,
-    config_entry_mock: MockConfigEntry,
-    device_source_mock: DmsDeviceSource,
-    domain_data_mock: DlnaDmsData,
-) -> None:
-    """Test the config listener gracefully handles colliding source_id."""
-    new_title: Final = "New Name"
-    new_source_id: Final = "new_name"
-    new_source_id_2: Final = "new_name_1"
-    # Set up another config entry to collide with the new source_id
-    colliding_entry = MockConfigEntry(
-        unique_id=f"different-udn::{MOCK_DEVICE_TYPE}",
-        domain=DOMAIN,
-        data={
-            CONF_URL: "http://192.88.99.22/dms_description.xml",
-            CONF_DEVICE_ID: f"different-udn::{MOCK_DEVICE_TYPE}",
-        },
-        title=new_title,
+    media_content_id: str | None,
+) -> BrowseMediaSource:
+    """Call media_source.async_browse_media with the test source's ID."""
+    return await media_source.async_browse_media(
+        hass, f"media-source://{DOMAIN}/{MOCK_SOURCE_ID}/{media_content_id}"
     )
-    await hass.config_entries.async_add(colliding_entry)
-    await hass.async_block_till_done()
-
-    assert device_source_mock.source_id == MOCK_SOURCE_ID
-    assert domain_data_mock.sources.keys() == {MOCK_SOURCE_ID, new_source_id}
-    assert domain_data_mock.sources[MOCK_SOURCE_ID] is device_source_mock
-
-    # Update the existing entry to match the other entry's name
-    hass.config_entries.async_update_entry(config_entry_mock, title=new_title)
-    await hass.async_block_till_done()
-
-    # The existing device's source ID should be a newly generated slug
-    assert device_source_mock.source_id == new_source_id_2
-    assert domain_data_mock.sources.keys() == {new_source_id, new_source_id_2}
-    assert domain_data_mock.sources[new_source_id_2] is device_source_mock
-
-    # Changing back to the old name should not cause issues
-    hass.config_entries.async_update_entry(config_entry_mock, title=MOCK_DEVICE_NAME)
-    await hass.async_block_till_done()
-
-    assert device_source_mock.source_id == MOCK_SOURCE_ID
-    assert domain_data_mock.sources.keys() == {MOCK_SOURCE_ID, new_source_id}
-    assert domain_data_mock.sources[MOCK_SOURCE_ID] is device_source_mock
-
-    # Remove the collision and try again
-    await hass.config_entries.async_remove(colliding_entry.entry_id)
-    assert domain_data_mock.sources.keys() == {MOCK_SOURCE_ID}
-
-    hass.config_entries.async_update_entry(config_entry_mock, title=new_title)
-    await hass.async_block_till_done()
-
-    assert device_source_mock.source_id == new_source_id
-    assert domain_data_mock.sources.keys() == {new_source_id}
 
 
 async def test_catch_request_error_unavailable(
     device_source_mock: DmsDeviceSource,
 ) -> None:
-    """Test the device is checked for availability before trying requests."""
+    """Test the device is checked for availability before trying requests.
+
+    Interacts with the DmsDeviceSource directly to bypass earlier availability
+    checks, and to clear _device connection.
+    """
     device_source_mock._device = None
 
     with pytest.raises(DeviceConnectionError):
@@ -163,32 +82,32 @@ async def test_catch_request_error_unavailable(
 
 
 async def test_catch_request_error(
-    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+    hass: HomeAssistant, device_source_mock: DmsDeviceSource, dms_device_mock: Mock
 ) -> None:
     """Test errors when making requests to the device are handled."""
     dms_device_mock.async_browse_metadata.side_effect = UpnpActionError(
         error_code=ContentDirectoryErrorCode.NO_SUCH_OBJECT
     )
     with pytest.raises(ActionError, match="No such object: bad_id"):
-        await device_source_mock.async_resolve_media(":bad_id")
+        await async_resolve_media(hass, ":bad_id")
 
     dms_device_mock.async_search_directory.side_effect = UpnpActionError(
         error_code=ContentDirectoryErrorCode.INVALID_SEARCH_CRITERIA
     )
     with pytest.raises(ActionError, match="Invalid query: bad query"):
-        await device_source_mock.async_resolve_media("?bad query")
+        await async_resolve_media(hass, "?bad query")
 
     dms_device_mock.async_browse_metadata.side_effect = UpnpActionError(
         error_code=ContentDirectoryErrorCode.CANNOT_PROCESS_REQUEST
     )
     with pytest.raises(DeviceConnectionError, match="Server failure: "):
-        await device_source_mock.async_resolve_media(":good_id")
+        await async_resolve_media(hass, ":good_id")
 
     dms_device_mock.async_browse_metadata.side_effect = UpnpError
     with pytest.raises(
         DeviceConnectionError, match="Server communication failure: UpnpError(.*)"
     ):
-        await device_source_mock.async_resolve_media(":bad_id")
+        await async_resolve_media(hass, ":bad_id")
 
     # UpnpConnectionErrors will cause the device_source_mock to disconnect from the device
     assert device_source_mock.available
@@ -196,7 +115,7 @@ async def test_catch_request_error(
     with pytest.raises(
         DeviceConnectionError, match="Server disconnected: UpnpConnectionError(.*)"
     ):
-        await device_source_mock.async_resolve_media(":bad_id")
+        await async_resolve_media(hass, ":bad_id")
     assert not device_source_mock.available
 
 
@@ -209,14 +128,15 @@ async def test_icon(device_source_mock: DmsDeviceSource, dms_device_mock: Mock) 
 
 
 async def test_resolve_media_invalid(device_source_mock: DmsDeviceSource) -> None:
-    """Test async_resolve_media will raise Unresolvable when an identifier isn't supplied."""
+    """Test async_resolve_media will raise Unresolvable when identifier isn't given.
+
+    Interacts with the DmsDeviceSource directly to bypass earlier checks.
+    """
     with pytest.raises(Unresolvable, match="Invalid identifier.*"):
         await device_source_mock.async_resolve_media("")
 
 
-async def test_resolve_media_object(
-    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
-) -> None:
+async def test_resolve_media_object(hass: HomeAssistant, dms_device_mock: Mock) -> None:
     """Test the async_resolve_object method via async_resolve_media."""
     object_id: Final = "123"
     res_url: Final = "foo/bar"
@@ -230,7 +150,7 @@ async def test_resolve_media_object(
         res=[didl_lite.Resource(uri=res_url, protocol_info=f"http-get:*:{res_mime}:")],
     )
     dms_device_mock.async_browse_metadata.return_value = didl_item
-    result = await device_source_mock.async_resolve_media(f":{object_id}")
+    result = await async_resolve_media(hass, f":{object_id}")
     dms_device_mock.async_browse_metadata.assert_awaited_once_with(
         object_id, metadata_filter="*"
     )
@@ -251,7 +171,7 @@ async def test_resolve_media_object(
         ],
     )
     dms_device_mock.async_browse_metadata.return_value = didl_item
-    result = await device_source_mock.async_resolve_media(f":{object_id}")
+    result = await async_resolve_media(hass, f":{object_id}")
     assert result.url == res_abs_url
     assert result.mime_type == res_mime
     assert result.didl_metadata is didl_item
@@ -268,7 +188,7 @@ async def test_resolve_media_object(
         ],
     )
     dms_device_mock.async_browse_metadata.return_value = didl_item
-    result = await device_source_mock.async_resolve_media(f":{object_id}")
+    result = await async_resolve_media(hass, f":{object_id}")
     assert result.url == res_abs_url
     assert result.mime_type == res_mime
     assert result.didl_metadata is didl_item
@@ -282,7 +202,7 @@ async def test_resolve_media_object(
     )
     dms_device_mock.async_browse_metadata.return_value = didl_item
     with pytest.raises(Unresolvable, match="Object has no resources"):
-        await device_source_mock.async_resolve_media(f":{object_id}")
+        await async_resolve_media(hass, f":{object_id}")
 
     # Failure case: resources are not playable
     didl_item = didl_lite.Item(
@@ -293,13 +213,13 @@ async def test_resolve_media_object(
     )
     dms_device_mock.async_browse_metadata.return_value = didl_item
     with pytest.raises(Unresolvable, match="Object has no playable resources"):
-        await device_source_mock.async_resolve_media(f":{object_id}")
+        await async_resolve_media(hass, f":{object_id}")
 
 
-async def test_resolve_media_path(
-    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
-) -> None:
+async def test_resolve_media_path(hass: HomeAssistant, dms_device_mock: Mock) -> None:
     """Test the async_resolve_path method via async_resolve_media."""
+    # Path resolution involves searching each component of the path, then
+    # browsing the metadata of the final object found.
     path: Final = "path/to/thing"
     object_ids: Final = ["path_id", "to_id", "thing_id"]
     res_url: Final = "foo/bar"
@@ -324,7 +244,7 @@ async def test_resolve_media_path(
         title="thing",
         res=[didl_lite.Resource(uri=res_url, protocol_info=f"http-get:*:{res_mime}:")],
     )
-    result = await device_source_mock.async_resolve_media(f"/{path}")
+    result = await async_resolve_media(hass, f"/{path}")
     assert dms_device_mock.async_search_directory.await_args_list == [
         call(
             parent_id,
@@ -340,7 +260,7 @@ async def test_resolve_media_path(
     # Test a path starting with a / (first / is path action, second / is root of path)
     dms_device_mock.async_search_directory.reset_mock()
     dms_device_mock.async_search_directory.side_effect = search_directory_result
-    result = await device_source_mock.async_resolve_media(f"//{path}")
+    result = await async_resolve_media(hass, f"//{path}")
     assert dms_device_mock.async_search_directory.await_args_list == [
         call(
             parent_id,
@@ -354,44 +274,14 @@ async def test_resolve_media_path(
     assert result.mime_type == res_mime
 
 
-async def test_resolve_path_simple(
-    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
-) -> None:
-    """Test async_resolve_path for simple success as for test_resolve_media_path."""
-    path: Final = "path/to/thing"
-    object_ids: Final = ["path_id", "to_id", "thing_id"]
-    search_directory_result = []
-    for ob_id, ob_title in zip(object_ids, path.split("/")):
-        didl_item = didl_lite.Item(
-            id=ob_id,
-            restricted="false",
-            title=ob_title,
-            res=[],
-        )
-        search_directory_result.append(DmsDevice.BrowseResult([didl_item], 1, 1, 0))
-
-    dms_device_mock.async_search_directory.side_effect = search_directory_result
-    result = await device_source_mock.async_resolve_path(path)
-    assert dms_device_mock.async_search_directory.call_args_list == [
-        call(
-            parent_id,
-            search_criteria=f'@parentID="{parent_id}" and dc:title="{title}"',
-            metadata_filter=["id", "upnp:class", "dc:title"],
-            requested_count=1,
-        )
-        for parent_id, title in zip(["0"] + object_ids[:-1], path.split("/"))
-    ]
-    assert result == object_ids[-1]
-    assert not dms_device_mock.async_browse_direct_children.await_count
-
-
-async def test_resolve_path_browsed(
-    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
-) -> None:
+async def test_resolve_path_browsed(hass: HomeAssistant, dms_device_mock: Mock) -> None:
     """Test async_resolve_path: action error results in browsing."""
     path: Final = "path/to/thing"
     object_ids: Final = ["path_id", "to_id", "thing_id"]
+    res_url: Final = "foo/bar"
+    res_mime: Final = "audio/mpeg"
 
+    # Setup expected calls
     search_directory_result = []
     for ob_id, ob_title in zip(object_ids, path.split("/")):
         didl_item = didl_lite.Item(
@@ -417,7 +307,15 @@ async def test_resolve_path_browsed(
         DmsDevice.BrowseResult(browse_children_result, 3, 3, 0)
     ]
 
-    result = await device_source_mock.async_resolve_path(path)
+    dms_device_mock.async_browse_metadata.return_value = didl_lite.Item(
+        id=object_ids[-1],
+        restricted="false",
+        title="thing",
+        res=[didl_lite.Resource(uri=res_url, protocol_info=f"http-get:*:{res_mime}:")],
+    )
+
+    # Perform the action to test
+    result = await async_resolve_media(hass, path)
     # All levels should have an attempted search
     assert dms_device_mock.async_search_directory.await_args_list == [
         call(
@@ -428,7 +326,7 @@ async def test_resolve_path_browsed(
         )
         for parent_id, title in zip(["0"] + object_ids[:-1], path.split("/"))
     ]
-    assert result == object_ids[-1]
+    assert result.didl_metadata.id == object_ids[-1]
     # 2nd level should also be browsed
     assert dms_device_mock.async_browse_direct_children.await_args_list == [
         call("path_id", metadata_filter=["id", "upnp:class", "dc:title"])
@@ -436,7 +334,7 @@ async def test_resolve_path_browsed(
 
 
 async def test_resolve_path_browsed_nothing(
-    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+    hass: HomeAssistant, dms_device_mock: Mock
 ) -> None:
     """Test async_resolve_path: action error results in browsing, but nothing found."""
     dms_device_mock.async_search_directory.side_effect = UpnpActionError()
@@ -445,7 +343,7 @@ async def test_resolve_path_browsed_nothing(
         DmsDevice.BrowseResult([], 0, 0, 0)
     ]
     with pytest.raises(Unresolvable, match="No contents for thing in thing/other"):
-        await device_source_mock.async_resolve_path(r"thing/other")
+        await async_resolve_media(hass, "thing/other")
 
     # There are children, but they don't match
     dms_device_mock.async_browse_direct_children.side_effect = [
@@ -461,12 +359,10 @@ async def test_resolve_path_browsed_nothing(
         )
     ]
     with pytest.raises(Unresolvable, match="Nothing found for thing in thing/other"):
-        await device_source_mock.async_resolve_path(r"thing/other")
+        await async_resolve_media(hass, "thing/other")
 
 
-async def test_resolve_path_quoted(
-    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
-) -> None:
+async def test_resolve_path_quoted(hass: HomeAssistant, dms_device_mock: Mock) -> None:
     """Test async_resolve_path: quotes and backslashes in the path get escaped correctly."""
     dms_device_mock.async_search_directory.side_effect = [
         DmsDevice.BrowseResult(
@@ -485,7 +381,7 @@ async def test_resolve_path_quoted(
         UpnpError("Quick abort"),
     ]
     with pytest.raises(DeviceConnectionError):
-        await device_source_mock.async_resolve_path(r'path/quote"back\slash')
+        await async_resolve_media(hass, r'path/quote"back\slash')
     assert dms_device_mock.async_search_directory.await_args_list == [
         call(
             "0",
@@ -503,7 +399,7 @@ async def test_resolve_path_quoted(
 
 
 async def test_resolve_path_ambiguous(
-    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+    hass: HomeAssistant, dms_device_mock: Mock
 ) -> None:
     """Test async_resolve_path: ambiguous results (too many matches) gives error."""
     dms_device_mock.async_search_directory.side_effect = [
@@ -530,23 +426,21 @@ async def test_resolve_path_ambiguous(
     with pytest.raises(
         Unresolvable, match="Too many items found for thing in thing/other"
     ):
-        await device_source_mock.async_resolve_path(r"thing/other")
+        await async_resolve_media(hass, "thing/other")
 
 
 async def test_resolve_path_no_such_container(
-    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+    hass: HomeAssistant, dms_device_mock: Mock
 ) -> None:
     """Test async_resolve_path: Explicit check for NO_SUCH_CONTAINER."""
     dms_device_mock.async_search_directory.side_effect = UpnpActionError(
         error_code=ContentDirectoryErrorCode.NO_SUCH_CONTAINER
     )
     with pytest.raises(Unresolvable, match="No such container: 0"):
-        await device_source_mock.async_resolve_path(r"thing/other")
+        await async_resolve_media(hass, "thing/other")
 
 
-async def test_resolve_media_search(
-    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
-) -> None:
+async def test_resolve_media_search(hass: HomeAssistant, dms_device_mock: Mock) -> None:
     """Test the async_resolve_search method via async_resolve_media."""
     res_url: Final = "foo/bar"
     res_abs_url: Final = f"{MOCK_DEVICE_BASE_URL}/{res_url}"
@@ -557,7 +451,7 @@ async def test_resolve_media_search(
         [], 0, 0, 0
     )
     with pytest.raises(Unresolvable, match='Nothing found for dc:title="thing"'):
-        await device_source_mock.async_resolve_media('?dc:title="thing"')
+        await async_resolve_media(hass, '?dc:title="thing"')
     assert dms_device_mock.async_search_directory.await_args_list == [
         call(
             container_id="0",
@@ -578,7 +472,7 @@ async def test_resolve_media_search(
     dms_device_mock.async_search_directory.return_value = DmsDevice.BrowseResult(
         [didl_item], 1, 1, 0
     )
-    result = await device_source_mock.async_resolve_media('?dc:title="thing"')
+    result = await async_resolve_media(hass, '?dc:title="thing"')
     assert result.url == res_abs_url
     assert result.mime_type == res_mime
     assert result.didl_metadata is didl_item
@@ -590,7 +484,7 @@ async def test_resolve_media_search(
     dms_device_mock.async_search_directory.return_value = DmsDevice.BrowseResult(
         [didl_item], 1, 2, 0
     )
-    result = await device_source_mock.async_resolve_media('?dc:title="thing"')
+    result = await async_resolve_media(hass, '?dc:title="thing"')
     assert result.url == res_abs_url
     assert result.mime_type == res_mime
     assert result.didl_metadata is didl_item
@@ -600,12 +494,10 @@ async def test_resolve_media_search(
         [didl_lite.Descriptor("id", "namespace")], 1, 1, 0
     )
     with pytest.raises(Unresolvable, match="Descriptor.* is not a DidlObject"):
-        await device_source_mock.async_resolve_media('?dc:title="thing"')
+        await async_resolve_media(hass, '?dc:title="thing"')
 
 
-async def test_browse_media_root(
-    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
-) -> None:
+async def test_browse_media_root(hass: HomeAssistant, dms_device_mock: Mock) -> None:
     """Test async_browse_media with no identifier will browse the root of the device."""
     dms_device_mock.async_browse_metadata.return_value = didl_lite.DidlObject(
         id="0", restricted="false", title="root"
@@ -613,8 +505,25 @@ async def test_browse_media_root(
     dms_device_mock.async_browse_direct_children.return_value = DmsDevice.BrowseResult(
         [], 0, 0, 0
     )
+
     # No identifier (first opened in media browser)
-    result = await device_source_mock.async_browse_media(None)
+    result = await media_source.async_browse_media(hass, f"media-source://{DOMAIN}")
+    assert result.identifier == f"{MOCK_SOURCE_ID}/:0"
+    assert result.title == MOCK_DEVICE_NAME
+    dms_device_mock.async_browse_metadata.assert_awaited_once_with(
+        "0", metadata_filter=ANY
+    )
+    dms_device_mock.async_browse_direct_children.assert_awaited_once_with(
+        "0", metadata_filter=ANY, sort_criteria=ANY
+    )
+
+    dms_device_mock.async_browse_metadata.reset_mock()
+    dms_device_mock.async_browse_direct_children.reset_mock()
+
+    # Only source ID, no object ID
+    result = await media_source.async_browse_media(
+        hass, f"media-source://{DOMAIN}/{MOCK_SOURCE_ID}"
+    )
     assert result.identifier == f"{MOCK_SOURCE_ID}/:0"
     assert result.title == MOCK_DEVICE_NAME
     dms_device_mock.async_browse_metadata.assert_awaited_once_with(
@@ -627,7 +536,9 @@ async def test_browse_media_root(
     dms_device_mock.async_browse_metadata.reset_mock()
     dms_device_mock.async_browse_direct_children.reset_mock()
     # Empty string identifier
-    result = await device_source_mock.async_browse_media("")
+    result = await media_source.async_browse_media(
+        hass, f"media-source://{DOMAIN}/{MOCK_SOURCE_ID}/"
+    )
     assert result.identifier == f"{MOCK_SOURCE_ID}/:0"
     assert result.title == MOCK_DEVICE_NAME
     dms_device_mock.async_browse_metadata.assert_awaited_once_with(
@@ -638,9 +549,7 @@ async def test_browse_media_root(
     )
 
 
-async def test_browse_media_object(
-    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
-) -> None:
+async def test_browse_media_object(hass: HomeAssistant, dms_device_mock: Mock) -> None:
     """Test async_browse_object via async_browse_media."""
     object_id = "1234"
     child_titles = ("Item 1", "Thing", "Item 2")
@@ -663,7 +572,7 @@ async def test_browse_media_object(
         )
     dms_device_mock.async_browse_direct_children.return_value = children_result
 
-    result = await device_source_mock.async_browse_media(f":{object_id}")
+    result = await async_browse_media(hass, f":{object_id}")
     dms_device_mock.async_browse_metadata.assert_awaited_once_with(
         object_id, metadata_filter=ANY
     )
@@ -687,7 +596,7 @@ async def test_browse_media_object(
 
 
 async def test_browse_object_sort_anything(
-    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+    hass: HomeAssistant, dms_device_mock: Mock
 ) -> None:
     """Test sort criteria for children where device allows anything."""
     dms_device_mock.sort_capabilities = ["*"]
@@ -699,7 +608,7 @@ async def test_browse_object_sort_anything(
     dms_device_mock.async_browse_direct_children.return_value = DmsDevice.BrowseResult(
         [], 0, 0, 0
     )
-    await device_source_mock.async_browse_object("0")
+    await async_browse_media(hass, ":0")
 
     # Sort criteria should be dlna_dms's default
     dms_device_mock.async_browse_direct_children.assert_awaited_once_with(
@@ -708,7 +617,7 @@ async def test_browse_object_sort_anything(
 
 
 async def test_browse_object_sort_superset(
-    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+    hass: HomeAssistant, dms_device_mock: Mock
 ) -> None:
     """Test sorting where device allows superset of integration's criteria."""
     dms_device_mock.sort_capabilities = [
@@ -727,7 +636,7 @@ async def test_browse_object_sort_superset(
     dms_device_mock.async_browse_direct_children.return_value = DmsDevice.BrowseResult(
         [], 0, 0, 0
     )
-    await device_source_mock.async_browse_object("0")
+    await async_browse_media(hass, ":0")
 
     # Sort criteria should be dlna_dms's default
     dms_device_mock.async_browse_direct_children.assert_awaited_once_with(
@@ -736,7 +645,7 @@ async def test_browse_object_sort_superset(
 
 
 async def test_browse_object_sort_subset(
-    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+    hass: HomeAssistant, dms_device_mock: Mock
 ) -> None:
     """Test sorting where device allows subset of integration's criteria."""
     dms_device_mock.sort_capabilities = [
@@ -751,7 +660,7 @@ async def test_browse_object_sort_subset(
     dms_device_mock.async_browse_direct_children.return_value = DmsDevice.BrowseResult(
         [], 0, 0, 0
     )
-    await device_source_mock.async_browse_object("0")
+    await async_browse_media(hass, ":0")
 
     # Sort criteria should be reduced to only those allowed,
     # and in the order specified by DLNA_SORT_CRITERIA
@@ -761,9 +670,7 @@ async def test_browse_object_sort_subset(
     )
 
 
-async def test_browse_media_path(
-    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
-) -> None:
+async def test_browse_media_path(hass: HomeAssistant, dms_device_mock: Mock) -> None:
     """Test async_browse_media with a path."""
     title = "folder"
     con_id = "123"
@@ -776,7 +683,7 @@ async def test_browse_media_path(
         [], 0, 0, 0
     )
 
-    result = await device_source_mock.async_browse_media(f"{title}")
+    result = await async_browse_media(hass, title)
     assert result.identifier == f"{MOCK_SOURCE_ID}/:{con_id}"
     assert result.title == title
 
@@ -794,9 +701,7 @@ async def test_browse_media_path(
     )
 
 
-async def test_browse_media_search(
-    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
-) -> None:
+async def test_browse_media_search(hass: HomeAssistant, dms_device_mock: Mock) -> None:
     """Test async_browse_media with a search query."""
     query = 'dc:title contains "FooBar"'
     object_details = (("111", "FooBar baz"), ("432", "Not FooBar"), ("99", "FooBar"))
@@ -814,7 +719,7 @@ async def test_browse_media_search(
         1, didl_lite.Descriptor("id", "name_space")
     )
 
-    result = await device_source_mock.async_browse_media(f"?{query}")
+    result = await async_browse_media(hass, f"?{query}")
     assert result.identifier == f"{MOCK_SOURCE_ID}/?{query}"
     assert result.title == "Search results"
     assert result.children
@@ -827,7 +732,7 @@ async def test_browse_media_search(
 
 
 async def test_browse_search_invalid(
-    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+    hass: HomeAssistant, dms_device_mock: Mock
 ) -> None:
     """Test searching with an invalid query gives a BrowseError."""
     query = "title == FooBar"
@@ -835,11 +740,11 @@ async def test_browse_search_invalid(
         error_code=ContentDirectoryErrorCode.INVALID_SEARCH_CRITERIA
     )
     with pytest.raises(BrowseError, match=f"Invalid query: {query}"):
-        await device_source_mock.async_browse_media(f"?{query}")
+        await async_browse_media(hass, f"?{query}")
 
 
 async def test_browse_search_no_results(
-    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+    hass: HomeAssistant, dms_device_mock: Mock
 ) -> None:
     """Test a search with no results does not give an error."""
     query = 'dc:title contains "FooBar"'
@@ -847,15 +752,13 @@ async def test_browse_search_no_results(
         [], 0, 0, 0
     )
 
-    result = await device_source_mock.async_browse_media(f"?{query}")
+    result = await async_browse_media(hass, f"?{query}")
     assert result.identifier == f"{MOCK_SOURCE_ID}/?{query}"
     assert result.title == "Search results"
     assert not result.children
 
 
-async def test_thumbnail(
-    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
-) -> None:
+async def test_thumbnail(hass: HomeAssistant, dms_device_mock: Mock) -> None:
     """Test getting thumbnails URLs for items."""
     # Use browse_search to get multiple items at once for least effort
     dms_device_mock.async_search_directory.return_value = DmsDevice.BrowseResult(
@@ -901,16 +804,14 @@ async def test_thumbnail(
         0,
     )
 
-    result = await device_source_mock.async_browse_media("?query")
+    result = await async_browse_media(hass, "?query")
     assert result.children
     assert result.children[0].thumbnail == f"{MOCK_DEVICE_BASE_URL}/a_thumb.jpg"
     assert result.children[1].thumbnail == f"{MOCK_DEVICE_BASE_URL}/b_thumb.png"
     assert result.children[2].thumbnail is None
 
 
-async def test_can_play(
-    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
-) -> None:
+async def test_can_play(hass: HomeAssistant, dms_device_mock: Mock) -> None:
     """Test determination of playability for items."""
     protocol_infos = [
         # No protocol info for resource
@@ -945,7 +846,7 @@ async def test_can_play(
         search_results, len(search_results), len(search_results), 0
     )
 
-    result = await device_source_mock.async_browse_media("?query")
+    result = await async_browse_media(hass, "?query")
     assert result.children
     assert not result.children[0].can_play
     for idx, info_can_play in enumerate(protocol_infos):
