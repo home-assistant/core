@@ -128,7 +128,10 @@ async def test_user_owserver_options_set_single(
         user_input={},
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["data"]["device_options"]["28.111111111111"]["precision"] == "Default"
+    assert (
+        result["data"]["device_options"]["28.111111111111"]["precision"]
+        == "temperature"
+    )
 
 
 async def test_user_owserver_options_set_multiple(
@@ -181,7 +184,7 @@ async def test_user_owserver_options_set_multiple(
     # Verify that next sensor is coming up for configuration after the first
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"precision": "Default"},
+        user_input={"precision": "temperature"},
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert (
@@ -192,11 +195,17 @@ async def test_user_owserver_options_set_multiple(
     # Verify that the setting for the device comes back as default when no input is given
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"precision": "9 Bits"},
+        user_input={"precision": "temperature9"},
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["data"]["device_options"]["28.222222222222"]["precision"] == "Default"
-    assert result["data"]["device_options"]["28.111111111111"]["precision"] == "9 Bits"
+    assert (
+        result["data"]["device_options"]["28.222222222222"]["precision"]
+        == "temperature"
+    )
+    assert (
+        result["data"]["device_options"]["28.111111111111"]["precision"]
+        == "temperature9"
+    )
 
 
 async def test_user_owserver_options_no_devices(

@@ -280,9 +280,9 @@ class OnewireOptionsFlowHandler(OptionsFlow):
                     vol.Required(
                         OPTION_ENTRY_SENSOR_PRECISION,
                         default=self._get_current_setting(
-                            description.id, OPTION_ENTRY_SENSOR_PRECISION, "Default"
+                            description.id, OPTION_ENTRY_SENSOR_PRECISION, "temperature"
                         ),
-                    ): vol.In(list(PRECISION_MAPPING_FAMILY_28)),
+                    ): vol.In(PRECISION_MAPPING_FAMILY_28),
                 }
             )
 

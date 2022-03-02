@@ -40,11 +40,11 @@ DEVICE_SUPPORT_SYSBUS = ["10", "22", "28", "3B", "42"]
 DEVICE_SUPPORT_OPTIONS = ["28"]
 
 PRECISION_MAPPING_FAMILY_28 = {
-    "Default": "temperature",
-    "9 Bits": "temperature9",
-    "10 Bits": "temperature10",
-    "11 Bits": "temperature11",
-    "12 Bits": "temperature12",
+    "temperature": "Default",
+    "temperature9": "9 Bits",
+    "temperature10": "10 Bits",
+    "temperature11": "11 Bits",
+    "temperature12": "12 Bits",
 }
 
 OPTION_ENTRY_DEVICE_OPTIONS = "device_options"

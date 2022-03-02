@@ -63,13 +63,13 @@ class OneWireSensorEntityDescription(OneWireEntityDescription, SensorEntityDescr
 
 def _get_sensor_precision_family_28(device_id: str, options: Mapping[str, Any]) -> str:
     """Get precision form config flow options."""
-    precision = (
+    precision: str = (
         options.get(OPTION_ENTRY_DEVICE_OPTIONS, {})
         .get(device_id, {})
-        .get(OPTION_ENTRY_SENSOR_PRECISION, "Default")
+        .get(OPTION_ENTRY_SENSOR_PRECISION, "temperature")
     )
-    if precision_key := PRECISION_MAPPING_FAMILY_28.get(precision):
-        return precision_key
+    if precision in PRECISION_MAPPING_FAMILY_28:
+        return precision
     _LOGGER.warning(
         "Invalid sensor precision `%s` for device `%s`: reverting to default",
         precision,
