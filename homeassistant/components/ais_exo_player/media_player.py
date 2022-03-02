@@ -678,9 +678,17 @@ class ExoPlayerDevice(MediaPlayerEntity):
                         pass
                 elif media_content_id.startswith("ais_spotify"):
                     media_content_id = media_content_id.replace("ais_spotify/", "")
+            elif media_content_id.startswith("media-source://media_source/dyski"):
+                # change to local file
+                media_content_id = media_content_id.replace(
+                    "media-source://media_source/dyski/",
+                    "/data/data/pl.sviete.dom/files/home/dom/",
+                )
+
             self._media_content_id = media_content_id
             self._media_position = 0
             self._media_status_received_time = dt_util.utcnow()
+            self._stream_image = "/static/icons/tile-win-310x150.png"
             _publish_command_to_frame(
                 self.hass, self._device_ip, "playAudio", media_content_id
             )
