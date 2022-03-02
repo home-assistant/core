@@ -55,16 +55,16 @@ class SensiboConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except NoUsernameError:
                 errors["base"] = "no_username"
             else:
-                if self.entry:
-                    self.hass.config_entries.async_update_entry(
-                        self.entry,
-                        data={
-                            **self.entry.data,
-                            CONF_API_KEY: api_key,
-                        },
-                    )
-                    await self.hass.config_entries.async_reload(self.entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
+                assert self.entry is not None
+                self.hass.config_entries.async_update_entry(
+                    self.entry,
+                    data={
+                        **self.entry.data,
+                        CONF_API_KEY: api_key,
+                    },
+                )
+                await self.hass.config_entries.async_reload(self.entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
