@@ -6,7 +6,11 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.core import split_entity_id
-from homeassistant.helpers import config_entry_flow, entity_registry as er, selector
+from homeassistant.helpers import (
+    entity_registry as er,
+    helper_config_entry_flow,
+    selector,
+)
 
 from .const import DOMAIN
 
@@ -22,7 +26,7 @@ STEPS = {
 
 
 class SwitchLightConfigFlowHandler(
-    config_entry_flow.HelperConfigFlowHandler, domain=DOMAIN
+    helper_config_entry_flow.HelperConfigFlowHandler, domain=DOMAIN
 ):
     """Handle a config or options flow for Switch Light."""
 
