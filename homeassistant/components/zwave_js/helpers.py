@@ -243,18 +243,18 @@ def async_get_nodes_from_targets(
     """
     nodes: set[ZwaveNode] = set()
     # Convert all entity IDs to nodes
-    for entity_id in expand_entity_ids(hass, val.pop(ATTR_ENTITY_ID, [])):
+    for entity_id in expand_entity_ids(hass, val.get(ATTR_ENTITY_ID, [])):
         try:
             nodes.add(async_get_node_from_entity_id(hass, entity_id, ent_reg, dev_reg))
         except ValueError as err:
             LOGGER.warning(err.args[0])
 
     # Convert all area IDs to nodes
-    for area_id in val.pop(ATTR_AREA_ID, []):
+    for area_id in val.get(ATTR_AREA_ID, []):
         nodes.update(async_get_nodes_from_area_id(hass, area_id, ent_reg, dev_reg))
 
     # Convert all device IDs to nodes
-    for device_id in val.pop(ATTR_DEVICE_ID, []):
+    for device_id in val.get(ATTR_DEVICE_ID, []):
         try:
             nodes.add(async_get_node_from_device_id(hass, device_id, dev_reg))
         except ValueError as err:
