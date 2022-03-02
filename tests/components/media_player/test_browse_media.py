@@ -11,8 +11,8 @@ from homeassistant.config import async_process_ha_core_config
 from tests.common import mock_component
 
 
-@pytest.fixture
-def mock_sign_path():
+@pytest.fixture(name="mock_sign_path")
+def fixture_mock_sign_path():
     """Mock sign path."""
     with patch(
         "homeassistant.components.media_player.browse_media.async_sign_path",
@@ -64,7 +64,6 @@ async def test_process_play_media_url(hass, mock_sign_path):
 
 async def test_process_play_media_url_for_addon(hass, mock_sign_path):
     """Test it uses the hostname for an addon if available."""
-    addon_url = "http://homeassistant:8123/path?authSig=bla"
     await async_process_ha_core_config(
         hass,
         {
@@ -73,17 +72,23 @@ async def test_process_play_media_url_for_addon(hass, mock_sign_path):
         },
     )
 
-    # Not hassio or hassio not loaded yet, don't use addon url
+    # Not hassio or hassio not loaded yet, don't use supervisor network url
     hass.config.api = Mock(use_ssl=False, port=8123, local_ip="192.168.123.123")
-    assert async_process_play_media_url(hass, "/path", for_addon=True) != addon_url
-
-    # Is hassio and not SSL, use an addon url
-    mock_component(hass, "hassio")
-    hass.components.hassio.get_host_info = Mock(
-        return_value={"hostname": "homeassistant"}
+    assert (
+        async_process_play_media_url(hass, "/path", for_supervisor_network=True)
+        != "http://homeassistant:8123/path?authSig=bla"
     )
-    assert async_process_play_media_url(hass, "/path", for_addon=True) == addon_url
 
-    # Hassio loaded but using SSL, don't use an addon URL
+    # Is hassio and not SSL, use an supervisor network url
+    mock_component(hass, "hassio")
+    assert (
+        async_process_play_media_url(hass, "/path", for_supervisor_network=True)
+        == "http://homeassistant:8123/path?authSig=bla"
+    )
+
+    # Hassio loaded but using SSL, don't use an supervisor network url
     hass.config.api = Mock(use_ssl=True, port=8123, local_ip="192.168.123.123")
-    assert async_process_play_media_url(hass, "/path", for_addon=True) != addon_url
+    assert (
+        async_process_play_media_url(hass, "/path", for_supervisor_network=True)
+        != "https://homeassistant:8123/path?authSig=bla"
+    )

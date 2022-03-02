@@ -1,6 +1,7 @@
 """Network helpers."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from contextlib import suppress
 from ipaddress import ip_address
 from typing import cast
@@ -15,6 +16,7 @@ from homeassistant.util.network import is_ip_address, is_loopback, normalize_url
 
 TYPE_URL_INTERNAL = "internal_url"
 TYPE_URL_EXTERNAL = "external_url"
+SUPERVISOR_NETWORK_HOST = "homeassistant"
 
 
 class NoURLAvailableError(HomeAssistantError):
@@ -31,6 +33,31 @@ def is_internal_request(hass: HomeAssistant) -> bool:
         return False
 
 
+@bind_hass
+def get_supervisor_network_url(
+    hass: HomeAssistant, *, allow_ssl: bool = False
+) -> str | None:
+    """Get URL for home assistant within supervisor network."""
+    if hass.config.api is None or not hass.components.hassio.is_hassio():
+        return None
+
+    scheme = "http"
+    if hass.config.api.use_ssl:
+        # Certificate won't be valid for hostname so this URL usually won't work
+        if not allow_ssl:
+            return None
+
+        scheme = "https"
+
+    return str(
+        yarl.URL.build(
+            scheme=scheme,
+            host=SUPERVISOR_NETWORK_HOST,
+            port=hass.config.api.port,
+        )
+    )
+
+
 def is_hass_url(hass: HomeAssistant, url: str) -> bool:
     """Return if the URL points at this Home Assistant instance."""
     parsed = yarl.URL(normalize_url(url))
@@ -45,30 +72,19 @@ def is_hass_url(hass: HomeAssistant, url: str) -> bool:
             )
         )
 
-    def addon_url() -> str | None:
-        if hass.config.api is None or not hass.components.hassio.is_hassio():
-            return None
-
-        return str(
-            yarl.URL.build(
-                scheme="http",
-                host=hass.components.hassio.get_host_info()["hostname"],
-                port=hass.config.api.port,
-            )
-        )
-
     def cloud_url() -> str | None:
         try:
             return _get_cloud_url(hass)
         except NoURLAvailableError:
             return None
 
+    potential_base_factory: Callable[[], str | None]
     for potential_base_factory in (
         lambda: hass.config.internal_url,
         lambda: hass.config.external_url,
         cloud_url,
         host_ip,
-        addon_url,
+        lambda: get_supervisor_network_url(hass, allow_ssl=True),
     ):
         potential_base = potential_base_factory()
 
