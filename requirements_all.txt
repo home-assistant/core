@@ -229,7 +229,7 @@ aioridwell==2021.12.2
 aiosenseme==0.6.1
 
 # homeassistant.components.shelly
-aioshelly==1.0.10
+aioshelly==1.0.11
 
 # homeassistant.components.steamist
 aiosteamist==0.3.1
