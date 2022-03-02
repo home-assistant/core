@@ -24,7 +24,6 @@ from .const import (
 )
 from .device import XiaomiCoordinatedMiioEntity
 
-DATA_KEY = "button.xiaomi_miio"
 
 ATTR_RESET_DUST_FILTER = "reset_dust_filter"
 ATTR_RESET_UPPER_FILTER = "reset_upper_filter"
@@ -52,12 +51,12 @@ BUTTON_TYPES = (
         name="Reset Upper Filter",
         icon="mdi:air-filter",
         method_press="reset_upper_filter",
-        method_press_error_message="Resetting the dust filter lifetime failed.",
+        method_press_error_message="Resetting the upper filter lifetime failed.",
         entity_category=EntityCategory.CONFIG,
     ),
 )
 
-MODEL_TO_BUTTON_MAP = {
+MODEL_TO_BUTTON_MAP: dict[str, tuple[str, ...]] = {
     MODEL_AIRFRESH_A1: (ATTR_RESET_DUST_FILTER,),
     MODEL_AIRFRESH_T2017: (
         ATTR_RESET_DUST_FILTER,
@@ -78,14 +77,10 @@ async def async_setup_entry(
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
 
-    if DATA_KEY not in hass.data:
-        hass.data[DATA_KEY] = {}
-
-    buttons: tuple[str, ...] = ()
-    if model in MODEL_TO_BUTTON_MAP:
-        buttons = MODEL_TO_BUTTON_MAP[model]
-    else:
+    if model not in MODEL_TO_BUTTON_MAP:
         return
+
+    buttons = MODEL_TO_BUTTON_MAP[model]
 
     for description in BUTTON_TYPES:
         if description.key not in buttons:
