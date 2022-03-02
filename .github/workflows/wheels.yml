@@ -22,7 +22,7 @@ jobs:
       architectures: ${{ steps.info.outputs.architectures }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
 
       - name: Get information
         id: info
@@ -74,7 +74,7 @@ jobs:
           - "3.9-alpine3.14"
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
 
       - name: Download env_file
         uses: actions/download-artifact@v2
@@ -115,7 +115,7 @@ jobs:
           - "3.9-alpine3.14"
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
 
       - name: Download env_file
         uses: actions/download-artifact@v2
