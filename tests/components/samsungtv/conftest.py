@@ -1,51 +1,14 @@
 """Fixtures for Samsung TV."""
-import asyncio
 from datetime import datetime
-import json
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from samsungctl import Remote
-from samsungtvws.async_connection import SamsungTVWSAsyncConnection
-from samsungtvws.command import SamsungTVCommand
-from samsungtvws.event import ED_INSTALLED_APP_EVENT
+from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 
 import homeassistant.util.dt as dt_util
 
-from tests.common import load_fixture
-
-
-class MockAsyncWebsocket:
-    """Class to mock a websockets."""
-
-    def __init__(self):
-        """Initialise MockAsyncWebsocket."""
-        self.app_list_return = json.loads(
-            load_fixture("samsungtv/ed_installedApp_get.json")
-        )
-        self.closed = True
-        self.callback = None
-
-    async def start_listening(self, callback):
-        """Mock successful start_listening."""
-        self.callback = callback
-        self.closed = False
-
-    async def close(self):
-        """Mock successful close."""
-        self.callback = None
-        self.closed = True
-
-    async def send_command(self, command: SamsungTVCommand):
-        """Mock status based on failure mode."""
-        if command.method == "ms.channel.emit":
-            if command.params == {
-                "event": "ed.installedApp.get",
-                "to": "host",
-            }:
-                asyncio.ensure_future(
-                    self.callback(ED_INSTALLED_APP_EVENT, self.app_list_return)
-                )
+from .const import SAMPLE_APP_LIST
 
 
 @pytest.fixture(autouse=True)
@@ -89,25 +52,16 @@ def rest_api_fixture() -> Mock:
         yield rest_api_class.return_value
 
 
-@pytest.fixture(name="ws_connection")
-def ws_connection_fixture() -> MockAsyncWebsocket:
-    """Patch the samsungtvws SamsungTVWS."""
-    ws_connection = MockAsyncWebsocket()
-    yield ws_connection
-
-
 @pytest.fixture(name="remotews")
-def remotews_fixture(ws_connection: MockAsyncWebsocket) -> Mock:
+def remotews_fixture() -> Mock:
     """Patch the samsungtvws SamsungTVWS."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncConnection",
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote",
     ) as remotews_class:
-        remotews = Mock(SamsungTVWSAsyncConnection)
+        remotews = Mock(SamsungTVWSAsyncRemote)
         remotews.__aenter__ = AsyncMock(return_value=remotews)
         remotews.__aexit__ = AsyncMock()
-        remotews.connection = ws_connection
-        remotews.start_listening.side_effect = ws_connection.start_listening
-        remotews.send_command.side_effect = ws_connection.send_command
+        remotews.app_list.return_value = SAMPLE_APP_LIST
         remotews.token = "FAKE_TOKEN"
         remotews_class.return_value = remotews
         yield remotews
