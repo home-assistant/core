@@ -1207,11 +1207,9 @@ async def websocket_subscribe(hass, connection, msg):
     async def forward_messages(mqttmsg: ReceiveMessage):
         """Forward events to websocket."""
         try:
-            payload = (
-                mqttmsg.payload.decode(DEFAULT_ENCODING)
-                if isinstance(mqttmsg.payload, bytes)
-                else mqttmsg.payload
-            )
+            payload = cast(bytes, mqttmsg.payload).decode(
+                DEFAULT_ENCODING
+            )  # not str because encoding is set to None
         except (AttributeError, UnicodeDecodeError):
             # Convert non UTF-8 payload to a string presentation
             payload = str(mqttmsg.payload)
