@@ -71,6 +71,7 @@ class XiaomiMiioSelectDescription(SelectEntityDescription):
     options_map: dict = field(default_factory=dict)
     reverse_map: dict = field(default_factory=dict)
     set_method: str = ""
+    set_method_error_message: str = ""
     options: tuple = ()
 
 
@@ -88,7 +89,8 @@ SELECTOR_TYPES = (
         name="Display Orientation",
         options_map=DISPLAY_ORIENTATION_MAP,
         reverse_map=DISPLAY_ORIENTATION_REVERSE_MAP,
-        set_method="async_set_display_orientation",
+        set_method="set_display_orientation",
+        set_method_error_message="Setting the display orientation failed.",
         icon="mdi:tablet",
         device_class="xiaomi_miio__display_orientation",
         options=("forward", "left", "right"),
@@ -99,7 +101,8 @@ SELECTOR_TYPES = (
         name="Led Brightness",
         options_map=LED_BRIGHTNESS_MAP,
         reverse_map=LED_BRIGHTNESS_REVERSE_MAP,
-        set_method="async_set_led_brightness",
+        set_method="set_led_brightness",
+        set_method_error_message="Setting the led brightness failed.",
         icon="mdi:brightness-6",
         device_class="xiaomi_miio__led_brightness",
         options=("bright", "dim", "off"),
@@ -110,7 +113,8 @@ SELECTOR_TYPES = (
         name="Auxiliary Heat Level",
         options_map=PTC_LEVEL_MAP,
         reverse_map=PTC_LEVEL_REVERSE_MAP,
-        set_method="async_set_ptc_level",
+        set_method="set_ptc_level",
+        set_method_error_message="Setting the ptc level failed.",
         icon="mdi:fire-circle",
         device_class="xiaomi_miio__ptc_level",
         options=("low", "medium", "high"),
@@ -259,34 +263,14 @@ class XiaomiGenericSelector(XiaomiSelector):
 
     async def async_set_attr(self, attr_value: str):
         """Set attr."""
-        method = getattr(self, self.entity_description.set_method)
-        if await method(attr_value):
+        method = getattr(self._device, self.entity_description.set_method)
+        if await self._try_command(
+            self.entity_description.set_method_error_message,
+            method,
+            self._enum_class(self.entity_description.options_map[attr_value]),
+        ):
             self._current_attr = self.entity_description.options_map[attr_value]
             self.async_write_ha_state()
-
-    async def async_set_ptc_level(self, ptc_level: str) -> bool:
-        """Set the ptc level."""
-        return await self._try_command(
-            "Setting the ptc level of the miio device failed.",
-            self._device.set_ptc_level,
-            self._enum_class(self.entity_description.options_map[ptc_level]),
-        )
-
-    async def async_set_display_orientation(self, display_orientation: str) -> bool:
-        """Set the display orientation."""
-        return await self._try_command(
-            "Setting the ptc level of the miio device failed.",
-            self._device.set_display_orientation,
-            self._enum_class(self.entity_description.options_map[display_orientation]),
-        )
-
-    async def async_set_led_brightness(self, brightness: str):
-        """Set the led brightness."""
-        return await self._try_command(
-            "Setting the led brightness of the miio device failed.",
-            self._device.set_led_brightness,
-            self._enum_class(self.entity_description.options_map[brightness]),
-        )
 
 
 class XiaomiAirHumidifierSelector(XiaomiSelector):
