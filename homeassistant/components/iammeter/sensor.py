@@ -1,142 +1,67 @@
-"""Support for iammeter via local API."""
-from __future__ import annotations
-
-import asyncio
-from datetime import timedelta
-import logging
-
-import async_timeout
-from iammeter import real_time_api
-from iammeter.power_meter import IamMeterError
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+"""Platform for iammeter sensors."""
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import debounce
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import update_coordinator
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
+
+from . import IammeterData
+from .const import (
+    DOMAIN,
+    DEVICE_3080,
+    DEVICE_3080T,
+    SENSOR_TYPES_3080,
+    SENSOR_TYPES_3080T,
+    IammeterSensorEntityDescription,
 )
-
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
-
-DEFAULT_PORT = 80
-DEFAULT_DEVICE_NAME = "IamMeter"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_DEVICE_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    }
-)
-
-SCAN_INTERVAL = timedelta(seconds=30)
-PLATFORM_TIMEOUT = 8
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Import the yaml config to a config flow."""
-    data = {
-        CONF_NAME: config[CONF_NAME],
-        CONF_HOST: config[CONF_HOST],
-        CONF_PORT: config[CONF_PORT],
-    }
-    # Create a config entry with the config data
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=data
-        )
-    )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
-    """Add an IamMeter entry."""
-    config = entry.data
-    config_host = config[CONF_HOST]
-    config_port = config[CONF_PORT]
-    config_name = config[CONF_NAME]
-    try:
-        async with async_timeout.timeout(PLATFORM_TIMEOUT):
-            api = await real_time_api(config_host, config_port)
-    except (IamMeterError, asyncio.TimeoutError) as err:
-        _LOGGER.error("Device is not ready")
-        raise PlatformNotReady from err
-
-    async def async_update_data():
-        try:
-            async with async_timeout.timeout(PLATFORM_TIMEOUT):
-                return await api.get_data()
-        except (IamMeterError, asyncio.TimeoutError) as err:
-            raise UpdateFailed from err
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=DEFAULT_DEVICE_NAME,
-        update_method=async_update_data,
-        update_interval=SCAN_INTERVAL,
-        request_refresh_debouncer=debounce.Debouncer(
-            hass, _LOGGER, cooldown=0.3, immediate=True
-        ),
-    )
-    await coordinator.async_refresh()
-    entities = []
-    for sensor_name, (row, idx, unit) in api.iammeter.sensor_map().items():
-        serial_number = api.iammeter.serial_number
-        uid = f"{serial_number}-{row}-{idx}"
-        entities.append(IamMeter(coordinator, uid, sensor_name, unit, config_name))
-    async_add_entities(entities)
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Add Iammeter entry."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    print("ok")
+    print(coordinator.data.model)
+    if coordinator.data.model == DEVICE_3080:
+        async_add_entities(
+            IammeterSensor(coordinator, description)
+            for description in SENSOR_TYPES_3080
+        )
+    if coordinator.data.model == DEVICE_3080T:
+        async_add_entities(
+            IammeterSensor(coordinator, description)
+            for description in SENSOR_TYPES_3080T
+        )
 
 
-class IamMeter(CoordinatorEntity, SensorEntity):
-    """Class for a sensor."""
+class IammeterSensor(update_coordinator.CoordinatorEntity, SensorEntity):
+    """Representation of a Sensor."""
 
-    def __init__(self, coordinator, uid, sensor_name, unit, dev_name):
-        """Initialize an iammeter sensor."""
+    entity_description: IammeterSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: IammeterData,
+        description: IammeterSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
         super().__init__(coordinator)
-        self.uid = uid
-        self.sensor_name = sensor_name
-        self.unit = unit
-        self.dev_name = dev_name
+        self.entity_description = description
+        self._attr_name = f"{coordinator.name} {description.name}"
+        self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.unique_id)},
+            manufacturer="IamMeter",
+            name=coordinator.name,
+        )
+        print(coordinator.data.measurement)
 
     @property
     def native_value(self):
-        """Return the state of the sensor."""
-        return self.coordinator.data.data[self.sensor_name]
-
-    @property
-    def unique_id(self):
-        """Return unique id."""
-        return self.uid
-
-    @property
-    def name(self):
-        """Name of this iammeter attribute."""
-        return f"{self.dev_name} {self.sensor_name}"
-
-    @property
-    def icon(self):
-        """Icon for each sensor."""
-        return "mdi:flash"
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self.unit
+        """Return the native sensor value."""
+        raw_attr = self.coordinator.data.measurement.get(self.entity_description.key, None)
+        if self.entity_description.value:
+            return self.entity_description.value(raw_attr)
+        return raw_attr

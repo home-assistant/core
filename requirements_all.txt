@@ -881,7 +881,7 @@ hyperion-py==0.7.4
 # i2csense==0.0.4
 
 # homeassistant.components.iammeter
-iammeter==0.1.7
+iammeter==0.2.1
 
 # homeassistant.components.iaqualink
 iaqualink==0.4.1
