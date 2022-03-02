@@ -40,11 +40,11 @@ def _friendly_name_from_discovery(discovery_info: ssdp.SsdpServiceInfo) -> str:
 
 def _is_complete_discovery(discovery_info: ssdp.SsdpServiceInfo) -> bool:
     """Test if discovery is complete and usable."""
-    return (
+    return bool(
         ssdp.ATTR_UPNP_UDN in discovery_info.upnp
-        and cast(bool, discovery_info.ssdp_st)
-        and cast(bool, discovery_info.ssdp_location)
-        and cast(bool, discovery_info.ssdp_usn)
+        and discovery_info.ssdp_st
+        and discovery_info.ssdp_location
+        and discovery_info.ssdp_usn
     )
 
 
