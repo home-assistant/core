@@ -248,6 +248,7 @@ jobs:
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         registry:
           - "ghcr.io/home-assistant"
