@@ -1,6 +1,8 @@
 """The tests for Z-Wave JS automation triggers."""
 from unittest.mock import AsyncMock, patch
 
+import pytest
+import voluptuous as vol
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
@@ -708,3 +710,28 @@ async def test_async_validate_trigger_config(hass):
         mock_platform.async_validate_trigger_config.return_value = {}
         await async_validate_trigger_config(hass, {})
         mock_platform.async_validate_trigger_config.assert_awaited()
+
+
+async def test_invalid_trigger_configs(hass):
+    """Test invalid trigger configs."""
+    with pytest.raises(vol.Invalid):
+        await async_validate_trigger_config(
+            hass,
+            {
+                "platform": f"{DOMAIN}.event",
+                "entity_id": "fake.entity",
+                "event_source": "node",
+                "event": "value updated",
+            },
+        )
+
+    with pytest.raises(vol.Invalid):
+        await async_validate_trigger_config(
+            hass,
+            {
+                "platform": f"{DOMAIN}.value_updated",
+                "entity_id": "fake.entity",
+                "command_class": CommandClass.DOOR_LOCK.value,
+                "property": "latchStatus",
+            },
+        )

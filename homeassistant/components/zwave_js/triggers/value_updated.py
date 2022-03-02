@@ -20,6 +20,7 @@ from homeassistant.components.zwave_js.const import (
     ATTR_CURRENT_VALUE_RAW,
     ATTR_ENDPOINT,
     ATTR_NODE_ID,
+    ATTR_NODES,
     ATTR_PREVIOUS_VALUE,
     ATTR_PREVIOUS_VALUE_RAW,
     ATTR_PROPERTY,
@@ -29,8 +30,7 @@ from homeassistant.components.zwave_js.const import (
     DOMAIN,
 )
 from homeassistant.components.zwave_js.helpers import (
-    async_get_node_from_device_id,
-    async_get_node_from_entity_id,
+    async_get_nodes_from_targets,
     get_device_id,
 )
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PLATFORM, MATCH_ALL
@@ -76,6 +76,20 @@ TRIGGER_SCHEMA = vol.All(
 )
 
 
+async def async_validate_trigger_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate config."""
+    config = TRIGGER_SCHEMA(config)
+
+    config[ATTR_NODES] = async_get_nodes_from_targets(hass, config)
+    if not config[ATTR_NODES]:
+        raise vol.Invalid(
+            f"No nodes found for given {ATTR_DEVICE_ID}s or {ATTR_ENTITY_ID}s."
+        )
+    return config
+
+
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
@@ -85,21 +99,7 @@ async def async_attach_trigger(
     platform_type: str = PLATFORM_TYPE,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    nodes: set[Node] = set()
-    if ATTR_DEVICE_ID in config:
-        nodes.update(
-            {
-                async_get_node_from_device_id(hass, device_id)
-                for device_id in config.get(ATTR_DEVICE_ID, [])
-            }
-        )
-    if ATTR_ENTITY_ID in config:
-        nodes.update(
-            {
-                async_get_node_from_entity_id(hass, entity_id)
-                for entity_id in config.get(ATTR_ENTITY_ID, [])
-            }
-        )
+    nodes: set[Node] = config[ATTR_NODES]
 
     from_value = config[ATTR_FROM]
     to_value = config[ATTR_TO]

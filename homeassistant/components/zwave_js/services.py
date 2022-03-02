@@ -25,11 +25,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import const
-from .helpers import (
-    async_get_node_from_device_id,
-    async_get_node_from_entity_id,
-    async_get_nodes_from_area_id,
-)
+from .helpers import async_get_nodes_from_targets
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,38 +76,16 @@ class ZWaveServices:
         @callback
         def get_nodes_from_service_data(val: dict[str, Any]) -> dict[str, Any]:
             """Get nodes set from service data."""
-            nodes: set[ZwaveNode] = set()
-            # Convert all entity IDs to nodes
-            for entity_id in expand_entity_ids(self._hass, val.pop(ATTR_ENTITY_ID, [])):
-                try:
-                    nodes.add(
-                        async_get_node_from_entity_id(
-                            self._hass, entity_id, self._ent_reg, self._dev_reg
-                        )
-                    )
-                except ValueError as err:
-                    const.LOGGER.warning(err.args[0])
+            val[const.ATTR_NODES] = async_get_nodes_from_targets(
+                self._hass, val, self._ent_reg, self._dev_reg
+            )
+            return val
 
-            # Convert all area IDs to nodes
-            for area_id in val.pop(ATTR_AREA_ID, []):
-                nodes.update(
-                    async_get_nodes_from_area_id(
-                        self._hass, area_id, self._ent_reg, self._dev_reg
-                    )
-                )
-
-            # Convert all device IDs to nodes
-            for device_id in val.pop(ATTR_DEVICE_ID, []):
-                try:
-                    nodes.add(
-                        async_get_node_from_device_id(
-                            self._hass, device_id, self._dev_reg
-                        )
-                    )
-                except ValueError as err:
-                    const.LOGGER.warning(err.args[0])
-
-            val[const.ATTR_NODES] = nodes
+        @callback
+        def has_at_least_one_node(val: dict[str, Any]) -> dict[str, Any]:
+            """Validate that at least one node is specified."""
+            if not val.get(const.ATTR_NODES):
+                raise vol.Invalid(f"No {const.DOMAIN} nodes found for given targets")
             return val
 
         @callback
@@ -119,6 +93,9 @@ class ZWaveServices:
             """Validate the input nodes for multicast."""
             nodes: set[ZwaveNode] = val[const.ATTR_NODES]
             broadcast: bool = val[const.ATTR_BROADCAST]
+
+            if not broadcast:
+                has_at_least_one_node(val)
 
             # User must specify a node if they are attempting a broadcast and have more
             # than one zwave-js network.
@@ -150,12 +127,20 @@ class ZWaveServices:
         def validate_entities(val: dict[str, Any]) -> dict[str, Any]:
             """Validate entities exist and are from the zwave_js platform."""
             val[ATTR_ENTITY_ID] = expand_entity_ids(self._hass, val[ATTR_ENTITY_ID])
+            invalid_entities = []
             for entity_id in val[ATTR_ENTITY_ID]:
                 entry = self._ent_reg.async_get(entity_id)
                 if entry is None or entry.platform != const.DOMAIN:
-                    raise vol.Invalid(
-                        f"Entity {entity_id} is not a valid {const.DOMAIN} entity."
+                    const.LOGGER.info(
+                        "Entity %s is not a valid %s entity.", entity_id, const.DOMAIN
                     )
+                    invalid_entities.append(entity_id)
+
+            # Remove invalid entities
+            val[ATTR_ENTITY_ID] = list(set(val[ATTR_ENTITY_ID]) - set(invalid_entities))
+
+            if not val[ATTR_ENTITY_ID]:
+                raise vol.Invalid(f"No {const.DOMAIN} entities found in service call")
 
             return val
 
@@ -188,6 +173,7 @@ class ZWaveServices:
                     ),
                     parameter_name_does_not_need_bitmask,
                     get_nodes_from_service_data,
+                    has_at_least_one_node,
                 ),
             ),
         )
@@ -222,6 +208,7 @@ class ZWaveServices:
                         ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
                     ),
                     get_nodes_from_service_data,
+                    has_at_least_one_node,
                 ),
             ),
         )
@@ -275,6 +262,7 @@ class ZWaveServices:
                         ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
                     ),
                     get_nodes_from_service_data,
+                    has_at_least_one_node,
                 ),
             ),
         )
@@ -338,6 +326,7 @@ class ZWaveServices:
                         ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
                     ),
                     get_nodes_from_service_data,
+                    has_at_least_one_node,
                 ),
             ),
         )
