@@ -124,9 +124,7 @@ async def test_abort_if_already_setup(hass, test_connect):
     assert result["data"][CONF_IP_ADDRESS] == "2.2.2.2"
 
     # SHOULD pass, diff HOST, same NAME
-    result = await flow.async_step_import(
-        {CONF_IP_ADDRESS: "2.2.2.2", CONF_NAME: NAME}
-    )
+    result = await flow.async_step_import({CONF_IP_ADDRESS: "2.2.2.2", CONF_NAME: NAME})
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "iammeter_test_1_2_3"
     assert result["data"][CONF_IP_ADDRESS] == "2.2.2.2"
