@@ -430,18 +430,16 @@ class SamsungTVWSBridge(SamsungTVBridge):
         """Create or return a remote control instance."""
         if self._remote is None or not self._remote.is_alive():
             # We need to create a new instance to reconnect.
+            LOGGER.debug("Create SamsungTVWSBridge for %s (%s)", CONF_NAME, self.host)
+            assert self.port
+            self._remote = SamsungTVWSAsyncRemote(
+                host=self.host,
+                port=self.port,
+                token=self.token,
+                timeout=TIMEOUT_WEBSOCKET,
+                name=VALUE_CONF_NAME,
+            )
             try:
-                LOGGER.debug(
-                    "Create SamsungTVWSBridge for %s (%s)", CONF_NAME, self.host
-                )
-                assert self.port
-                self._remote = SamsungTVWSAsyncRemote(
-                    host=self.host,
-                    port=self.port,
-                    token=self.token,
-                    timeout=TIMEOUT_WEBSOCKET,
-                    name=VALUE_CONF_NAME,
-                )
                 await self._remote.start_listening()
             # This is only happening when the auth was switched to DENY
             # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
