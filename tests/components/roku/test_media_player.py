@@ -1027,7 +1027,10 @@ async def test_tv_media_browse(
     assert msg["result"]["children"][3]["title"] == "Roku Channel Store"
     assert msg["result"]["children"][3]["media_content_type"] == MEDIA_TYPE_APP
     assert msg["result"]["children"][3]["media_content_id"] == "11"
-    assert "/browse_media/app/11" in msg["result"]["children"][3]["thumbnail"]
+    assert (
+        msg["result"]["children"][3]["thumbnail"]
+        == "http://192.168.1.160:8060/query/icon/11"
+    )
     assert msg["result"]["children"][3]["can_play"]
 
     # test channels
