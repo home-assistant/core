@@ -342,26 +342,27 @@ class SamsungTVWSBridge(SamsungTVBridge):
             }
 
             result = None
-            try:
-                LOGGER.debug("Try config: %s", config)
-                async with SamsungTVWSAsyncRemote(
-                    host=self.host,
-                    port=self.port,
-                    token=self.token,
-                    timeout=TIMEOUT_REQUEST,
-                    name=VALUE_CONF_NAME,
-                ) as remote:
+            LOGGER.debug("Try config: %s", config)
+            async with SamsungTVWSAsyncRemote(
+                host=self.host,
+                port=self.port,
+                token=self.token,
+                timeout=TIMEOUT_REQUEST,
+                name=VALUE_CONF_NAME,
+            ) as remote:
+                try:
                     await remote.open()
+                except WebSocketException as err:
+                    LOGGER.debug(
+                        "Working but unsupported config: %s, error: %s", config, err
+                    )
+                    result = RESULT_NOT_SUPPORTED
+                except (OSError, AsyncioTimeoutError, ConnectionFailure) as err:
+                    LOGGER.debug("Failing config: %s, error: %s", config, err)
+                else:
                     self.token = remote.token
                     LOGGER.debug("Working config: %s", config)
                     return RESULT_SUCCESS
-            except WebSocketException as err:
-                LOGGER.debug(
-                    "Working but unsupported config: %s, error: %s", config, err
-                )
-                result = RESULT_NOT_SUPPORTED
-            except (OSError, AsyncioTimeoutError, ConnectionFailure) as err:
-                LOGGER.debug("Failing config: %s, error: %s", config, err)
         # pylint: disable=useless-else-on-loop
         else:
             if result:
