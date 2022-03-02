@@ -1,19 +1,25 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account is already configured"
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "no_devices": "No devices discovered",
-            "no_username": "Could not get username"
+            "no_username": "Could not get username",
+            "incorrect_api_key": "Invalid API key for selected account"
         },
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API Key",
-                    "name": "Name"
+                    "api_key": "API Key"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API Key"
                 }
             }
         }
