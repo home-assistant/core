@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+import asyncio
 from asyncio.exceptions import TimeoutError as AsyncioTimeoutError
 import contextlib
 from typing import Any, cast
@@ -300,6 +301,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
         self._rest_api: SamsungTVAsyncRest | None = None
         self._app_list: dict[str, str] | None = None
         self._remote: SamsungTVWSAsyncRemote | None = None
+        self._remote_lock = asyncio.Lock()
 
     async def async_mac_from_device(self) -> str | None:
         """Try to fetch the mac address of the TV."""
@@ -414,6 +416,17 @@ class SamsungTVWSBridge(SamsungTVBridge):
             pass
 
     async def _async_get_remote(self) -> SamsungTVWSAsyncRemote | None:
+        """Create or return a remote control instance."""
+        if (remote := self._remote) and remote.is_alive():
+            # If we have one then try to use it
+            return remote
+
+        async with self._remote_lock:
+            # If we don't have one make sure we do it under the lock
+            # so we don't make two do due a race to get the remote
+            return await self._async_get_remote_under_lock()
+
+    async def _async_get_remote_under_lock(self) -> SamsungTVWSAsyncRemote | None:
         """Create or return a remote control instance."""
         if self._remote is None or not self._remote.is_alive():
             # We need to create a new instance to reconnect.

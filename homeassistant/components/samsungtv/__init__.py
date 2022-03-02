@@ -125,11 +125,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, data={**entry.data, CONF_TOKEN: bridge.token}
         )
 
-    def new_token_callback() -> None:
-        """Update config entry with the new token."""
-        hass.add_job(_update_token)
-
-    bridge.register_new_token_callback(new_token_callback)
+    bridge.register_new_token_callback(_update_token)
 
     async def stop_bridge(event: Event) -> None:
         """Stop SamsungTV bridge connection."""
