@@ -215,6 +215,15 @@ SENSORS: Final = {
         icon="mdi:gauge",
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    ("sensor", "temp"): BlockSensorDescription(
+        key="sensor|temp",
+        name="Temperature",
+        unit_fn=temperature_unit,
+        value=lambda value: round(value, 1),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     ("sensor", "extTemp"): BlockSensorDescription(
         key="sensor|extTemp",
         name="Temperature",
