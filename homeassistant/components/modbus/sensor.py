@@ -101,6 +101,9 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
                 return
             self._lazy_errors = self._lazy_error_count
             self._attr_available = False
+            self._attr_native_value = None
+            if self._coordinator:
+                self._coordinator.async_set_updated_data(None)
             self.async_write_ha_state()
             return
 
