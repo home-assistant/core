@@ -2,16 +2,14 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-import copy
 import logging
-import types
 from typing import TYPE_CHECKING, Any, Generic, TypeVar, Union, cast
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, mqtt, ssdp, zeroconf
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, FlowResult
 
 from .typing import UNDEFINED, DiscoveryInfoType, UndefinedType
@@ -269,7 +267,7 @@ class HelperCommonFlowHandler:
 
     def __init__(
         self,
-        handler: HelperConfigFlowHandler | HelperOptionsFlowHandler,
+        handler: HelperConfigFlowHandler,
         config_entry: config_entries.ConfigEntry | None,
     ) -> None:
         """Initialize a common handler."""
@@ -302,19 +300,14 @@ class HelperCommonFlowHandler:
                     step_id=next_step_id, data_schema=self._handler.steps[next_step_id]
                 )
 
-        schema = copy.deepcopy(self._handler.steps[step_id].schema)
-        for key in schema:
-            if key in self._options and isinstance(key, vol.Marker):
-                key.description = {"suggested_value": self._options[key]}
         return self._handler.async_show_form(
-            step_id=step_id, data_schema=vol.Schema(schema), errors=errors
+            step_id=step_id, data_schema=self._handler.steps[step_id], errors=errors
         )
 
 
 class HelperConfigFlowHandler(config_entries.ConfigFlow):
     """Handle a config flow for helper integrations."""
 
-    options_flow: bool = False
     steps: dict[str, vol.Schema]
 
     VERSION = 1
@@ -324,21 +317,6 @@ class HelperConfigFlowHandler(config_entries.ConfigFlow):
         """Initialize a subclass, register if possible."""
         super().__init_subclass__(**kwargs)
 
-        @callback
-        def _async_get_options_flow(
-            config_entry: config_entries.ConfigEntry,
-        ) -> config_entries.OptionsFlow:
-            """Get the options flow for this handler."""
-            return HelperOptionsFlowHandler(
-                config_entry,
-                cls.steps,
-                cls.async_config_entry_title,
-                cls.async_next_step,
-                cls.async_validate_input,
-            )
-
-        if cls.options_flow:
-            cls.async_get_options_flow = _async_get_options_flow  # type: ignore[assignment]
         for step in cls.steps:
             setattr(cls, f"async_step_{step}", cls.async_step)
 
@@ -376,37 +354,3 @@ class HelperConfigFlowHandler(config_entries.ConfigFlow):
     ) -> dict[str, Any]:
         """Validate user input."""
         return user_input
-
-
-class HelperOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle an options flow for helper integrations."""
-
-    def __init__(
-        self,
-        config_entry: config_entries.ConfigEntry,
-        steps: dict[str, vol.Schema],
-        title: Callable[[Any, dict[str, Any]], str],
-        next_step: Callable[[Any, str, dict[str, Any]], str | None],
-        validate: Callable[
-            [Any, HomeAssistant, str, dict[str, Any]], Awaitable[dict[str, Any]]
-        ],
-    ) -> None:
-        """Initialize options flow."""
-        self._common_handler = HelperCommonFlowHandler(self, config_entry)
-        self._config_entry = config_entry
-        self.async_config_entry_title = types.MethodType(title, self)
-        self.async_next_step = types.MethodType(next_step, self)
-        self.async_validate_input = types.MethodType(validate, self)
-        self.steps = steps
-        for step in self.steps:
-            setattr(self, f"async_step_{step}", self.async_step)
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle the initial step."""
-        return await self.async_step(user_input)
-
-    async def async_step(self, user_input: dict[str, Any] | None = None) -> FlowResult:
-        """Handle a step."""
-        return await self._common_handler.async_step(user_input)
