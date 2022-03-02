@@ -31,10 +31,11 @@ from .const import (
 
 def _friendly_name_from_discovery(discovery_info: ssdp.SsdpServiceInfo) -> str:
     """Extract user-friendly name from discovery."""
-    return (
-        cast(str, discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME))
-        or cast(str, discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME))
-        or discovery_info.ssdp_headers.get("_host", "")
+    return cast(
+        str,
+        discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
+        or discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME)
+        or discovery_info.ssdp_headers.get("_host", ""),
     )
 
 
