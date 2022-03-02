@@ -639,7 +639,7 @@ fixerio==1.0.0a0
 fjaraskupan==1.0.2
 
 # homeassistant.components.flipr
-flipr-api==1.4.1
+flipr-api==1.4.2
 
 # homeassistant.components.flux_led
 flux_led==0.28.27
@@ -776,7 +776,7 @@ hass-nabucasa==0.54.0
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.3.1
+hatasmota==0.4.0
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -803,7 +803,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220226.0
+home-assistant-frontend==20220301.0
 
 # homeassistant.components.zwave
 # homeassistant-pyozw==0.1.10
@@ -1675,7 +1675,7 @@ pynzbgetapi==0.2.0
 pyobihai==1.3.1
 
 # homeassistant.components.octoprint
-pyoctoprintapi==0.1.7
+pyoctoprintapi==0.1.8
 
 # homeassistant.components.ombi
 pyombi==0.1.10
@@ -1927,7 +1927,7 @@ python-smarttub==0.0.29
 python-sochain-api==0.0.2
 
 # homeassistant.components.songpal
-python-songpal==0.14
+python-songpal==0.14.1
 
 # homeassistant.components.tado
 python-tado==0.12.0

@@ -45,6 +45,7 @@ homeassistant.components.amcrest.*
 homeassistant.components.ampio.*
 homeassistant.components.aseko_pool_live.*
 homeassistant.components.automation.*
+homeassistant.components.backup.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bluetooth_tracker.*
 homeassistant.components.bmw_connected_drive.*

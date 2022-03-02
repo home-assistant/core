@@ -24,12 +24,12 @@ jobs:
       publish: ${{ steps.version.outputs.publish }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
         with:
           fetch-depth: 0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v3.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -67,10 +67,10 @@ jobs:
     if: github.repository_owner == 'home-assistant' && needs.init.outputs.publish == 'true'
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v3.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -100,11 +100,11 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         if: needs.init.outputs.channel == 'dev'
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v3.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -122,13 +122,13 @@ jobs:
           echo "${{ github.sha }};${{ github.ref }};${{ github.event_name }};${{ github.actor }}" > rootfs/OFFICIAL_IMAGE
 
       - name: Login to DockerHub
-        uses: docker/login-action@v1.13.0
+        uses: docker/login-action@v1.14.1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1.13.0
+        uses: docker/login-action@v1.14.1
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -173,7 +173,7 @@ jobs:
           - tinker
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
 
       - name: Set build additional args
         run: |
@@ -187,13 +187,13 @@ jobs:
           fi
 
       - name: Login to DockerHub
-        uses: docker/login-action@v1.13.0
+        uses: docker/login-action@v1.14.1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1.13.0
+        uses: docker/login-action@v1.14.1
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -216,7 +216,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
 
       - name: Initialize git
         uses: home-assistant/actions/helpers/git-init@master
@@ -249,16 +249,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
 
       - name: Login to DockerHub
-        uses: docker/login-action@v1.13.0
+        uses: docker/login-action@v1.14.1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1.13.0
+        uses: docker/login-action@v1.14.1
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}

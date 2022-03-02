@@ -156,6 +156,7 @@ async def _async_create_bridge_with_updated_data(
     info: dict[str, Any] | None = None
 
     if not port or not method:
+        LOGGER.debug("Attempting to get port or method for %s", host)
         if method == METHOD_LEGACY:
             port = LEGACY_PORT
         else:
@@ -167,6 +168,7 @@ async def _async_create_bridge_with_updated_data(
                     "Failed to determine connection method, make sure the device is on."
                 )
 
+        LOGGER.info("Updated port to %s and method to %s for %s", port, method, host)
         updated_data[CONF_PORT] = port
         updated_data[CONF_METHOD] = method
 
@@ -174,17 +176,22 @@ async def _async_create_bridge_with_updated_data(
 
     mac: str | None = entry.data.get(CONF_MAC)
     if not mac:
+        LOGGER.debug("Attempting to get mac for %s", host)
         if info:
             mac = mac_from_device_info(info)
         else:
             mac = await bridge.async_mac_from_device()
 
-    if not mac:
-        mac = await hass.async_add_executor_job(
-            partial(getmac.get_mac_address, ip=host)
-        )
-    if mac:
-        updated_data[CONF_MAC] = mac
+        if not mac:
+            mac = await hass.async_add_executor_job(
+                partial(getmac.get_mac_address, ip=host)
+            )
+
+        if mac:
+            LOGGER.info("Updated mac to %s for %s", mac, host)
+            updated_data[CONF_MAC] = mac
+        else:
+            LOGGER.info("Failed to get mac for %s", host)
 
     if updated_data:
         data = {**entry.data, **updated_data}

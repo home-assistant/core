@@ -23,14 +23,14 @@ async def handle_info(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict,
-):
+) -> None:
     """List all stored backups."""
     manager: BackupManager = hass.data[DOMAIN]
     backups = await manager.get_backups()
     connection.send_result(
         msg["id"],
         {
-            "backups": list(backups),
+            "backups": list(backups.values()),
             "backing_up": manager.backing_up,
         },
     )
@@ -48,7 +48,7 @@ async def handle_remove(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict,
-):
+) -> None:
     """Remove a backup."""
     manager: BackupManager = hass.data[DOMAIN]
     await manager.remove_backup(msg["slug"])
@@ -62,7 +62,7 @@ async def handle_create(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict,
-):
+) -> None:
     """Generate a backup."""
     manager: BackupManager = hass.data[DOMAIN]
     backup = await manager.generate_backup()

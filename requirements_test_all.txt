@@ -431,7 +431,7 @@ fivem-api==0.1.2
 fjaraskupan==1.0.2
 
 # homeassistant.components.flipr
-flipr-api==1.4.1
+flipr-api==1.4.2
 
 # homeassistant.components.flux_led
 flux_led==0.28.27
@@ -535,7 +535,7 @@ hangups==0.4.17
 hass-nabucasa==0.54.0
 
 # homeassistant.components.tasmota
-hatasmota==0.3.1
+hatasmota==0.4.0
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -553,7 +553,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220226.0
+home-assistant-frontend==20220301.0
 
 # homeassistant.components.zwave
 # homeassistant-pyozw==0.1.10
@@ -1101,7 +1101,7 @@ pynx584==0.5
 pynzbgetapi==0.2.0
 
 # homeassistant.components.octoprint
-pyoctoprintapi==0.1.7
+pyoctoprintapi==0.1.8
 
 # homeassistant.components.openuv
 pyopenuv==2021.11.0
@@ -1230,7 +1230,7 @@ python-picnic-api==1.1.0
 python-smarttub==0.0.29
 
 # homeassistant.components.songpal
-python-songpal==0.14
+python-songpal==0.14.1
 
 # homeassistant.components.tado
 python-tado==0.12.0
