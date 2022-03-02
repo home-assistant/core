@@ -13,6 +13,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as entity_reg
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
@@ -44,7 +45,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
     entry.add_to_hass(hass)
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = entity_reg.async_get(hass)
 
     with patch(
         "flipr_api.FliprAPIRestClient.get_pool_measure_latest",
@@ -102,7 +103,7 @@ async def test_error_flipr_api_sensors(hass: HomeAssistant) -> None:
 
     entry.add_to_hass(hass)
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = entity_reg.async_get(hass)
 
     with patch(
         "flipr_api.FliprAPIRestClient.get_pool_measure_latest",
