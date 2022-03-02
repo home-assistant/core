@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncIterable, Mapping
+from dataclasses import dataclass
 from datetime import timedelta
 from types import MappingProxyType
 from typing import Any
@@ -15,6 +16,7 @@ from async_upnp_client.exceptions import (
     UpnpResponseError,
 )
 from async_upnp_client.profiles.dlna import PlayMode, TransportState
+from didl_lite import didl_lite
 import pytest
 
 from homeassistant import const as ha_const
@@ -29,6 +31,8 @@ from homeassistant.components.dlna_dmr.const import (
 from homeassistant.components.dlna_dmr.data import EventListenAddr
 from homeassistant.components.media_player import ATTR_TO_PROPERTY, const as mp_const
 from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
+from homeassistant.components.media_source.const import DOMAIN as MS_DOMAIN
+from homeassistant.components.media_source.models import PlayMedia
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import async_get as async_get_dr
@@ -418,7 +422,7 @@ async def test_feature_flags(
         ("can_stop", mp_const.SUPPORT_STOP),
         ("can_previous", mp_const.SUPPORT_PREVIOUS_TRACK),
         ("can_next", mp_const.SUPPORT_NEXT_TRACK),
-        ("has_play_media", mp_const.SUPPORT_PLAY_MEDIA),
+        ("has_play_media", mp_const.SUPPORT_PLAY_MEDIA | mp_const.SUPPORT_BROWSE_MEDIA),
         ("can_seek_rel_time", mp_const.SUPPORT_SEEK),
         ("has_presets", mp_const.SUPPORT_SELECT_SOUND_MODE),
     ]
@@ -760,6 +764,90 @@ async def test_play_media_metadata(
     )
 
 
+async def test_play_media_local_source(
+    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+) -> None:
+    """Test play_media with a media_id from a local media_source."""
+    # Based on roku's test_services_play_media_local_source and cast's
+    # test_entity_browse_media
+    await async_setup_component(hass, MS_DOMAIN, {MS_DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        mp_const.SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: mock_entity_id,
+            mp_const.ATTR_MEDIA_CONTENT_TYPE: "video/mp4",
+            mp_const.ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+        },
+        blocking=True,
+    )
+
+    assert dmr_device_mock.construct_play_media_metadata.await_count == 1
+    assert (
+        "/media/local/Epic%20Sax%20Guy%2010%20Hours.mp4?authSig="
+        in dmr_device_mock.construct_play_media_metadata.call_args.kwargs["media_url"]
+    )
+    assert dmr_device_mock.async_set_transport_uri.await_count == 1
+    assert dmr_device_mock.async_play.await_count == 1
+    call_args = dmr_device_mock.async_set_transport_uri.call_args.args
+    assert "/media/local/Epic%20Sax%20Guy%2010%20Hours.mp4?authSig=" in call_args[0]
+
+
+async def test_play_media_didl_metadata(
+    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+) -> None:
+    """Test play_media passes available DIDL-Lite metadata to the DMR."""
+
+    @dataclass
+    class DidlPlayMedia(PlayMedia):
+        """Playable media with DIDL metadata."""
+
+        didl_metadata: didl_lite.DidlObject
+
+    didl_metadata = didl_lite.VideoItem(
+        id="120$22$33",
+        restricted="false",
+        title="Epic Sax Guy 10 Hours",
+        res=[
+            didl_lite.Resource(uri="unused-URI", protocol_info="http-get:*:video/mp4:")
+        ],
+    )
+
+    play_media = DidlPlayMedia(
+        url="/media/local/Epic Sax Guy 10 Hours.mp4",
+        mime_type="video/mp4",
+        didl_metadata=didl_metadata,
+    )
+
+    await async_setup_component(hass, MS_DOMAIN, {MS_DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.media_source.async_resolve_media",
+        return_value=play_media,
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            mp_const.SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: mock_entity_id,
+                mp_const.ATTR_MEDIA_CONTENT_TYPE: "video/mp4",
+                mp_const.ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+            },
+            blocking=True,
+        )
+
+    assert dmr_device_mock.construct_play_media_metadata.await_count == 0
+    assert dmr_device_mock.async_set_transport_uri.await_count == 1
+    assert dmr_device_mock.async_play.await_count == 1
+    call_args = dmr_device_mock.async_set_transport_uri.call_args.args
+    assert "/media/local/Epic%20Sax%20Guy%2010%20Hours.mp4?authSig=" in call_args[0]
+    assert call_args[1] == "Epic Sax Guy 10 Hours"
+    assert call_args[2] == didl_lite.to_xml_string(didl_metadata).decode()
+
+
 async def test_shuffle_repeat_modes(
     hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
 ) -> None:
@@ -842,6 +930,88 @@ async def test_shuffle_repeat_modes(
         blocking=True,
     )
     dmr_device_mock.async_set_play_mode.assert_not_awaited()
+
+
+async def test_browse_media(
+    hass: HomeAssistant, hass_ws_client, dmr_device_mock: Mock, mock_entity_id: str
+) -> None:
+    """Test the async_browse_media method."""
+    # Based on cast's test_entity_browse_media
+    await async_setup_component(hass, MS_DOMAIN, {MS_DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    # DMR can play all media types
+    dmr_device_mock.sink_protocol_info = ["*"]
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": mock_entity_id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    expected_child_video = {
+        "title": "Epic Sax Guy 10 Hours.mp4",
+        "media_class": "video",
+        "media_content_type": "video/mp4",
+        "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+        "can_play": True,
+        "can_expand": False,
+        "thumbnail": None,
+        "children_media_class": None,
+    }
+    assert expected_child_video in response["result"]["children"]
+
+    expected_child_audio = {
+        "title": "test.mp3",
+        "media_class": "music",
+        "media_content_type": "audio/mpeg",
+        "media_content_id": "media-source://media_source/local/test.mp3",
+        "can_play": True,
+        "can_expand": False,
+        "thumbnail": None,
+        "children_media_class": None,
+    }
+    assert expected_child_audio in response["result"]["children"]
+
+    # Device can only play MIME type audio/mpeg and audio/vorbis
+    dmr_device_mock.sink_protocol_info = [
+        "http-get:*:audio/mpeg:*",
+        "http-get:*:audio/vorbis:*",
+    ]
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": mock_entity_id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    # Video file should not be shown
+    assert expected_child_video not in response["result"]["children"]
+    # Audio file should appear
+    assert expected_child_audio in response["result"]["children"]
+
+    # Device does not specify what it can play
+    dmr_device_mock.sink_protocol_info = []
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": mock_entity_id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    # All files should be returned
+    assert expected_child_video in response["result"]["children"]
+    assert expected_child_audio in response["result"]["children"]
 
 
 async def test_playback_update_state(

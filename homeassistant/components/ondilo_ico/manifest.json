@@ -6,5 +6,6 @@
   "requirements": ["ondilo==0.2.0"],
   "dependencies": ["http"],
   "codeowners": ["@JeromeHXP"],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["ondilo"]
 }

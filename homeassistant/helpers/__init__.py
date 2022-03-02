@@ -42,5 +42,5 @@ def extract_domain_configs(config: ConfigType, domain: str) -> Sequence[str]:
 
     Async friendly.
     """
-    pattern = re.compile(fr"^{domain}(| .+)$")
+    pattern = re.compile(rf"^{domain}(| .+)$")
     return [key for key in config.keys() if pattern.match(key)]

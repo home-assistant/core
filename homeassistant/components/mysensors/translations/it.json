@@ -43,7 +43,7 @@
             "gw_mqtt": {
                 "data": {
                     "persistence_file": "file di persistenza (lascia vuoto per generare automaticamente)",
-                    "retain": "mqtt conserva",
+                    "retain": "Persistenza mqtt",
                     "topic_in_prefix": "prefisso per argomenti di input (topic_in_prefix)",
                     "topic_out_prefix": "prefisso per argomenti di output (topic_out_prefix)",
                     "version": "Versione MySensors"

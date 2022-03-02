@@ -9,5 +9,6 @@
   ],
   "zeroconf": ["_hwenergy._tcp.local."],
   "config_flow": true,
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["aiohwenergy"]
 }

@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable, Generator, Iterable
 import contextlib
+from datetime import timedelta
 import logging.handlers
 from timeit import default_timer as timer
 from types import ModuleType
@@ -65,10 +66,10 @@ async def async_setup_component(
     if domain in hass.config.components:
         return True
 
-    setup_tasks = hass.data.setdefault(DATA_SETUP, {})
+    setup_tasks: dict[str, asyncio.Task[bool]] = hass.data.setdefault(DATA_SETUP, {})
 
     if domain in setup_tasks:
-        return await setup_tasks[domain]  # type: ignore
+        return await setup_tasks[domain]
 
     task = setup_tasks[domain] = hass.async_create_task(
         _async_setup_component(hass, domain, config)
@@ -436,7 +437,7 @@ def async_start_setup(
     """Keep track of when setup starts and finishes."""
     setup_started = hass.data.setdefault(DATA_SETUP_STARTED, {})
     started = dt_util.utcnow()
-    unique_components = {}
+    unique_components: dict[str, str] = {}
     for domain in components:
         unique = ensure_unique_string(domain, setup_started)
         unique_components[unique] = domain
@@ -444,7 +445,7 @@ def async_start_setup(
 
     yield
 
-    setup_time = hass.data.setdefault(DATA_SETUP_TIME, {})
+    setup_time: dict[str, timedelta] = hass.data.setdefault(DATA_SETUP_TIME, {})
     time_taken = dt_util.utcnow() - started
     for unique, domain in unique_components.items():
         del setup_started[unique]

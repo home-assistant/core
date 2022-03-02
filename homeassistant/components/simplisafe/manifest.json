@@ -11,5 +11,6 @@
         "hostname": "simplisafe*",
         "macaddress": "30AEA4*"
       }
-  ]
+  ],
+  "loggers": ["simplipy"]
 }

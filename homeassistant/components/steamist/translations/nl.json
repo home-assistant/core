@@ -16,10 +16,16 @@
             "discovery_confirm": {
                 "description": "Wilt u {name} ({ipaddress}) instellen?"
             },
+            "pick_device": {
+                "data": {
+                    "device": "Apparaat"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "description": "Als u de host leeg laat, zal discovery worden gebruikt om apparaten te vinden."
             }
         }
     }

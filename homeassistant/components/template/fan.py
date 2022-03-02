@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -63,7 +64,6 @@ CONF_SET_DIRECTION_ACTION = "set_direction"
 CONF_SET_PRESET_MODE_ACTION = "set_preset_mode"
 
 _VALID_STATES = [STATE_ON, STATE_OFF]
-_VALID_OSC = [True, False]
 _VALID_DIRECTIONS = [DIRECTION_FORWARD, DIRECTION_REVERSE]
 
 FAN_SCHEMA = vol.All(
@@ -273,8 +273,7 @@ class TemplateFan(TemplateEntity, FanEntity):
         elif speed is not None:
             await self.async_set_speed(speed)
 
-    # pylint: disable=arguments-differ
-    async def async_turn_off(self) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         await self._off_script.async_run(context=self._context)
         self._state = STATE_OFF
@@ -316,17 +315,10 @@ class TemplateFan(TemplateEntity, FanEntity):
         if self._set_oscillating_script is None:
             return
 
-        if oscillating in _VALID_OSC:
-            self._oscillating = oscillating
-            await self._set_oscillating_script.async_run(
-                {ATTR_OSCILLATING: oscillating}, context=self._context
-            )
-        else:
-            _LOGGER.error(
-                "Received invalid oscillating value: %s. Expected: %s",
-                oscillating,
-                ", ".join(_VALID_OSC),
-            )
+        self._oscillating = oscillating
+        await self._set_oscillating_script.async_run(
+            {ATTR_OSCILLATING: oscillating}, context=self._context
+        )
 
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""

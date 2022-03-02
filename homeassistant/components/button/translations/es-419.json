@@ -1,0 +1,7 @@
+{
+    "device_automation": {
+        "action_type": {
+            "press": "Presiona el bot\u00f3n {entity_name}"
+        }
+    }
+}

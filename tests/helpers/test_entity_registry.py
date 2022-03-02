@@ -9,6 +9,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
 from homeassistant.core import CoreState, callback, valid_entity_id
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
 
 from tests.common import (
     MockConfigEntry,
@@ -77,7 +78,7 @@ def test_get_or_create_updates_data(registry):
         config_entry=orig_config_entry,
         device_id="mock-dev-id",
         disabled_by=er.RegistryEntryDisabler.HASS,
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
         original_device_class="mock-device-class",
         original_icon="initial-original_icon",
         original_name="initial-original_name",
@@ -95,7 +96,7 @@ def test_get_or_create_updates_data(registry):
         device_class=None,
         device_id="mock-dev-id",
         disabled_by=er.RegistryEntryDisabler.HASS,
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
         icon=None,
         id=orig_entry.id,
         name=None,
@@ -135,7 +136,7 @@ def test_get_or_create_updates_data(registry):
         device_class=None,
         device_id="new-mock-dev-id",
         disabled_by=er.RegistryEntryDisabler.HASS,  # Should not be updated
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
         icon=None,
         id=orig_entry.id,
         name=None,
@@ -189,7 +190,7 @@ async def test_loading_saving_data(hass, registry):
         config_entry=mock_config,
         device_id="mock-dev-id",
         disabled_by=er.RegistryEntryDisabler.HASS,
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
         original_device_class="mock-device-class",
         original_icon="hass:original-icon",
         original_name="Original Name",
@@ -809,6 +810,109 @@ async def test_remove_device_removes_entities(hass, registry):
     assert not registry.async_is_registered(entry.entity_id)
 
 
+async def test_remove_config_entry_from_device_removes_entities(hass, registry):
+    """Test that we remove entities tied to a device when config entry is removed."""
+    device_registry = mock_device_registry(hass)
+    config_entry_1 = MockConfigEntry(domain="hue")
+    config_entry_2 = MockConfigEntry(domain="device_tracker")
+
+    # Create device with two config entries
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry_1.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry_2.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    assert device_entry.config_entries == {
+        config_entry_1.entry_id,
+        config_entry_2.entry_id,
+    }
+
+    # Create one entity for each config entry
+    entry_1 = registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry_1,
+        device_id=device_entry.id,
+    )
+
+    entry_2 = registry.async_get_or_create(
+        "sensor",
+        "device_tracker",
+        "6789",
+        config_entry=config_entry_2,
+        device_id=device_entry.id,
+    )
+
+    assert registry.async_is_registered(entry_1.entity_id)
+    assert registry.async_is_registered(entry_2.entity_id)
+
+    # Remove the first config entry from the device, the entity associated with it
+    # should be removed
+    device_registry.async_update_device(
+        device_entry.id, remove_config_entry_id=config_entry_1.entry_id
+    )
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(device_entry.id)
+    assert not registry.async_is_registered(entry_1.entity_id)
+    assert registry.async_is_registered(entry_2.entity_id)
+
+    # Remove the second config entry from the device, the entity associated with it
+    # (and the device itself) should be removed
+    device_registry.async_update_device(
+        device_entry.id, remove_config_entry_id=config_entry_2.entry_id
+    )
+    await hass.async_block_till_done()
+
+    assert not device_registry.async_get(device_entry.id)
+    assert not registry.async_is_registered(entry_1.entity_id)
+    assert not registry.async_is_registered(entry_2.entity_id)
+
+
+async def test_remove_config_entry_from_device_removes_entities_2(hass, registry):
+    """Test that we don't remove entities with no config entry when device is modified."""
+    device_registry = mock_device_registry(hass)
+    config_entry_1 = MockConfigEntry(domain="hue")
+    config_entry_2 = MockConfigEntry(domain="device_tracker")
+
+    # Create device with two config entries
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry_1.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry_2.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    assert device_entry.config_entries == {
+        config_entry_1.entry_id,
+        config_entry_2.entry_id,
+    }
+
+    # Create one entity for each config entry
+    entry_1 = registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        device_id=device_entry.id,
+    )
+
+    assert registry.async_is_registered(entry_1.entity_id)
+
+    # Remove the first config entry from the device
+    device_registry.async_update_device(
+        device_entry.id, remove_config_entry_id=config_entry_1.entry_id
+    )
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(device_entry.id)
+    assert registry.async_is_registered(entry_1.entity_id)
+
+
 async def test_update_device_race(hass, registry):
     """Test race when a device is created, updated and removed."""
     device_registry = mock_device_registry(hass)
@@ -1116,9 +1220,9 @@ def test_entity_registry_items():
 async def test_deprecated_disabled_by_str(hass, registry, caplog):
     """Test deprecated str use of disabled_by converts to enum and logs a warning."""
     entry = registry.async_get_or_create(
-        "light",
-        "hue",
-        "5678",
+        domain="light.kitchen",
+        platform="hue",
+        unique_id="5678",
         disabled_by=er.RegistryEntryDisabler.USER.value,
     )
 
@@ -1126,12 +1230,25 @@ async def test_deprecated_disabled_by_str(hass, registry, caplog):
     assert " str for entity registry disabled_by. This is deprecated " in caplog.text
 
 
+async def test_deprecated_entity_category_str(hass, registry, caplog):
+    """Test deprecated str use of entity_category converts to enum and logs a warning."""
+    entry = er.RegistryEntry(
+        entity_id="light.kitchen",
+        unique_id="5678",
+        platform="hue",
+        entity_category="diagnostic",
+    )
+
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
+    assert " should be updated to use EntityCategory" in caplog.text
+
+
 async def test_invalid_entity_category_str(hass, registry, caplog):
     """Test use of invalid entity category."""
     entry = er.RegistryEntry(
-        "light",
-        "hue",
-        "5678",
+        entity_id="light.kitchen",
+        unique_id="5678",
+        platform="hue",
         entity_category="invalid",
     )
 

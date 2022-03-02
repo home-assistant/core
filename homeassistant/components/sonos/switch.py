@@ -5,7 +5,7 @@ import datetime
 import logging
 from typing import Any
 
-from soco.exceptions import SoCoException, SoCoSlaveException, SoCoUPnPException
+from soco.exceptions import SoCoSlaveException, SoCoUPnPException
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -23,8 +23,7 @@ from .const import (
     SONOS_CREATE_ALARM,
     SONOS_CREATE_SWITCHES,
 )
-from .entity import SonosEntity
-from .exception import SpeakerUnavailable
+from .entity import SonosEntity, SonosPollingEntity
 from .helpers import soco_error
 from .speaker import SonosSpeaker
 
@@ -144,7 +143,7 @@ async def async_setup_entry(
     )
 
 
-class SonosSwitchEntity(SonosEntity, SwitchEntity):
+class SonosSwitchEntity(SonosPollingEntity, SwitchEntity):
     """Representation of a Sonos feature switch."""
 
     def __init__(self, feature_type: str, speaker: SonosSpeaker) -> None:
@@ -164,17 +163,14 @@ class SonosSwitchEntity(SonosEntity, SwitchEntity):
             self._attr_entity_registry_enabled_default = False
             self._attr_should_poll = True
 
-    async def _async_poll(self) -> None:
+    async def _async_fallback_poll(self) -> None:
         """Handle polling for subscription-based switches when subscription fails."""
         if not self.should_poll:
-            await self.hass.async_add_executor_job(self.update)
+            await self.hass.async_add_executor_job(self.poll_state)
 
-    @soco_error(raise_on_err=False)
-    def update(self) -> None:
-        """Fetch switch state if necessary."""
-        if not self.available:
-            raise SpeakerUnavailable
-
+    @soco_error()
+    def poll_state(self) -> None:
+        """Poll the current state of the switch."""
         state = getattr(self.soco, self.feature_type)
         setattr(self.speaker, self.feature_type, state)
 
@@ -245,7 +241,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             str(self.alarm.start_time)[0:5],
         )
 
-    async def _async_poll(self) -> None:
+    async def _async_fallback_poll(self) -> None:
         """Call the central alarm polling method."""
         await self.hass.data[DATA_SONOS].alarms[self.household_id].async_poll()
 
@@ -268,7 +264,6 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         if not self.async_check_if_available():
             return
 
-        _LOGGER.debug("Updating alarm: %s", self.entity_id)
         if self.speaker.soco.uid != self.alarm.zone.uid:
             self.speaker = self.hass.data[DATA_SONOS].discovered.get(
                 self.alarm.zone.uid
@@ -351,14 +346,11 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         """Turn alarm switch off."""
         self._handle_switch_on_off(turn_on=False)
 
+    @soco_error()
     def _handle_switch_on_off(self, turn_on: bool) -> None:
         """Handle turn on/off of alarm switch."""
-        try:
-            _LOGGER.debug("Toggling the state of %s", self.entity_id)
-            self.alarm.enabled = turn_on
-            self.alarm.save()
-        except (OSError, SoCoException, SoCoUPnPException) as exc:
-            _LOGGER.error("Could not update %s: %s", self.entity_id, exc)
+        self.alarm.enabled = turn_on
+        self.alarm.save()
 
 
 @callback

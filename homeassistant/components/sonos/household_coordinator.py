@@ -6,12 +6,12 @@ from collections.abc import Callable, Coroutine
 import logging
 
 from soco import SoCo
-from soco.exceptions import SoCoException
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 
 from .const import DATA_SONOS
+from .exception import SonosUpdateError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,11 +56,10 @@ class SonosHouseholdCoordinator:
             _LOGGER.debug("Polling %s using %s", self.class_type, speaker.soco)
             try:
                 await self.async_update_entities(speaker.soco)
-            except (OSError, SoCoException) as err:
+            except SonosUpdateError as err:
                 _LOGGER.error(
-                    "Could not refresh %s using %s: %s",
+                    "Could not refresh %s: %s",
                     self.class_type,
-                    speaker.soco,
                     err,
                 )
             else:

@@ -108,6 +108,13 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_temp=(DPCode.TEMP_VALUE_V2, DPCode.TEMP_VALUE),
             color_data=(DPCode.COLOUR_DATA_V2, DPCode.COLOUR_DATA),
         ),
+        # Not documented
+        # Based on multiple reports: manufacturer customized Dimmer 2 switches
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED_1,
+            name="Light",
+            brightness=DPCode.BRIGHT_VALUE_1,
+        ),
     ),
     # Ceiling Fan Light
     # https://developer.tuya.com/en/docs/iot/fsd?id=Kaof8eiei4c2v
@@ -168,6 +175,28 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             key=DPCode.LIGHT,
             name="Backlight",
             entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Unknown light product
+    # Found as VECINO RGBW as provided by diagnostics
+    # Not documented
+    "mbd": (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            color_mode=DPCode.WORK_MODE,
+            brightness=DPCode.BRIGHT_VALUE,
+            color_data=DPCode.COLOUR_DATA,
+        ),
+    ),
+    # Unknown product with light capabilities
+    # Fond in some diffusers, plugs and PIR flood lights
+    # Not documented
+    "qjdcz": (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            color_mode=DPCode.WORK_MODE,
+            brightness=DPCode.BRIGHT_VALUE,
+            color_data=DPCode.COLOUR_DATA,
         ),
     ),
     # Heater

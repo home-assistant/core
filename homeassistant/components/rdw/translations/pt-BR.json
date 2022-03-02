@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "unknown_license_plate": "Placa desconhecida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "license_plate": "Placa de carro"
+                }
+            }
+        }
+    }
+}

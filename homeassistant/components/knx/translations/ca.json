@@ -14,7 +14,8 @@
                     "individual_address": "Adre\u00e7a individual de la connexi\u00f3",
                     "local_ip": "IP local de Home Assistant (deixa-ho en blanc si no n'est\u00e0s segur/a)",
                     "port": "Port",
-                    "route_back": "Encaminament de retorn / Mode NAT"
+                    "route_back": "Encaminament de retorn / Mode NAT",
+                    "tunneling_type": "Tipus de t\u00fanel KNX"
                 },
                 "description": "Introdueix la informaci\u00f3 de connexi\u00f3 del dispositiu de t\u00fanel."
             },
@@ -59,7 +60,8 @@
                     "host": "Amfitri\u00f3",
                     "local_ip": "IP local (deixa-ho en blanc si no n'est\u00e0s segur/a)",
                     "port": "Port",
-                    "route_back": "Encaminament de retorn / Mode NAT"
+                    "route_back": "Encaminament de retorn / Mode NAT",
+                    "tunneling_type": "Tipus de t\u00fanel KNX"
                 }
             }
         }

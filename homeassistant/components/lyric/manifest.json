@@ -21,5 +21,6 @@
       "macaddress": "00D02D*"
     }
   ],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["aiolyric"]
 }

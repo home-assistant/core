@@ -22,6 +22,9 @@ from homeassistant.util import dt as dt_util
 from tests.common import async_fire_time_changed, mock_registry
 from tests.mock.zwave import MockEntityValues, MockNetwork, MockNode, MockValue
 
+# Integration is disabled
+pytest.skip("Integration has been disabled in the manifest", allow_module_level=True)
+
 
 @pytest.fixture(autouse=True)
 def mock_storage(hass_storage):

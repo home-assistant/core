@@ -12,6 +12,7 @@ from homeassistant.components.media_source.models import PlayMedia
 from homeassistant.components.motioneye.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from . import (
     TEST_CAMERA_DEVICE_IDENTIFIER,
@@ -67,6 +68,12 @@ TEST_IMAGES = {
 _LOGGER = logging.getLogger(__name__)
 
 
+@pytest.fixture(autouse=True)
+async def setup_media_source(hass) -> None:
+    """Set up media source."""
+    assert await async_setup_component(hass, "media_source", {})
+
+
 async def test_async_browse_media_success(hass: HomeAssistant) -> None:
     """Test successful browse media."""
 
@@ -103,10 +110,11 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 ),
                 "can_play": False,
                 "can_expand": True,
-                "children_media_class": "directory",
                 "thumbnail": None,
+                "children_media_class": "directory",
             }
         ],
+        "not_shown": 0,
     }
 
     media = await media_source.async_browse_media(
@@ -135,10 +143,11 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 ),
                 "can_play": False,
                 "can_expand": True,
-                "children_media_class": "directory",
                 "thumbnail": None,
+                "children_media_class": "directory",
             }
         ],
+        "not_shown": 0,
     }
 
     media = await media_source.async_browse_media(
@@ -166,8 +175,8 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 ),
                 "can_play": False,
                 "can_expand": True,
-                "children_media_class": "video",
                 "thumbnail": None,
+                "children_media_class": "video",
             },
             {
                 "title": "Images",
@@ -179,10 +188,11 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 ),
                 "can_play": False,
                 "can_expand": True,
-                "children_media_class": "image",
                 "thumbnail": None,
+                "children_media_class": "image",
             },
         ],
+        "not_shown": 0,
     }
 
     client.async_get_movies = AsyncMock(return_value=TEST_MOVIES)
@@ -213,10 +223,11 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 ),
                 "can_play": False,
                 "can_expand": True,
-                "children_media_class": "directory",
                 "thumbnail": None,
+                "children_media_class": "directory",
             }
         ],
+        "not_shown": 0,
     }
 
     client.get_movie_url = Mock(return_value="http://movie")
@@ -248,8 +259,8 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 ),
                 "can_play": True,
                 "can_expand": False,
-                "children_media_class": None,
                 "thumbnail": "http://movie",
+                "children_media_class": None,
             },
             {
                 "title": "00-36-49.mp4",
@@ -262,8 +273,8 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 ),
                 "can_play": True,
                 "can_expand": False,
-                "children_media_class": None,
                 "thumbnail": "http://movie",
+                "children_media_class": None,
             },
             {
                 "title": "00-02-27.mp4",
@@ -276,10 +287,11 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 ),
                 "can_play": True,
                 "can_expand": False,
-                "children_media_class": None,
                 "thumbnail": "http://movie",
+                "children_media_class": None,
             },
         ],
+        "not_shown": 0,
     }
 
 
@@ -326,10 +338,11 @@ async def test_async_browse_media_images_success(hass: HomeAssistant) -> None:
                 ),
                 "can_play": False,
                 "can_expand": False,
-                "children_media_class": None,
                 "thumbnail": "http://image",
+                "children_media_class": None,
             }
         ],
+        "not_shown": 0,
     }
 
 
@@ -479,4 +492,5 @@ async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
         "children_media_class": "video",
         "thumbnail": None,
         "children": [],
+        "not_shown": 0,
     }
