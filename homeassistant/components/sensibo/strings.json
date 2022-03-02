@@ -8,7 +8,8 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "no_devices": "No devices discovered",
-      "no_username": "Could not get username"
+      "no_username": "Could not get username",
+      "incorrect_api_key": "Invalid API key for selected account"
     },
     "step": {
       "user": {

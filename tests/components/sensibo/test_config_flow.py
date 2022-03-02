@@ -362,6 +362,11 @@ async def test_reauth_flow_error(
             {"result": {"username": "username"}},
             "no_devices",
         ),
+        (
+            {"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]},
+            {"result": {"username": "username2"}},
+            "incorrect_api_key",
+        ),
     ],
 )
 async def test_flow_reauth_no_username_or_device(
