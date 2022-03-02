@@ -276,36 +276,45 @@ class HelperCommonFlowHandler:
         self._handler = handler
         self._options = dict(config_entry.options) if config_entry is not None else {}
 
-    async def async_step_user(
-        self, _user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle the initial step."""
+    async def async_step(self, _user_input: dict[str, Any] | None = None) -> FlowResult:
+        """Handle a step."""
         errors = None
+        step_id = (
+            self._handler.cur_step["step_id"] if self._handler.cur_step else "init"
+        )
         if _user_input is not None:
             errors = {}
             try:
                 user_input = await self._handler.async_validate_input(
-                    self._handler.hass, _user_input
+                    self._handler.hass, step_id, _user_input
                 )
             except vol.Invalid as exc:
                 errors["base"] = str(exc)
             else:
-                title = self._handler.async_config_entry_title(user_input)
-                return self._handler.async_create_entry(title=title, data=user_input)
+                if (
+                    next_step_id := self._handler.async_next_step(step_id, user_input)
+                ) is None:
+                    title = self._handler.async_config_entry_title(user_input)
+                    return self._handler.async_create_entry(
+                        title=title, data=user_input
+                    )
+                return self._handler.async_show_form(
+                    step_id=next_step_id, data_schema=self._handler.steps[next_step_id]
+                )
 
-        schema = copy.deepcopy(self._handler.schema.schema)
+        schema = copy.deepcopy(self._handler.steps[step_id].schema)
         for key in schema:
             if key in self._options:
                 key.description = {"suggested_value": self._options[key]}
         return self._handler.async_show_form(
-            step_id="user", data_schema=vol.Schema(schema), errors=errors
+            step_id=step_id, data_schema=vol.Schema(schema), errors=errors
         )
 
 
 class HelperConfigFlowHandler(config_entries.ConfigFlow):
     """Handle a config flow for helper integrations."""
 
-    schema: vol.Schema
+    steps: dict[str, vol.Schema]
 
     VERSION = 1
 
@@ -321,12 +330,15 @@ class HelperConfigFlowHandler(config_entries.ConfigFlow):
             """Get the options flow for this handler."""
             return HelperOptionsFlowHandler(
                 config_entry,
-                cls.schema,
-                cls.async_validate_input,
+                cls.steps,
                 cls.async_config_entry_title,
+                cls.async_next_step,
+                cls.async_validate_input,
             )
 
         cls.async_get_options_flow = _async_get_options_flow  # type: ignore[assignment]
+        for step in cls.steps:
+            setattr(cls, f"async_step_{step}", cls.async_step)
 
     def __init__(self) -> None:
         """Initialize config flow."""
@@ -336,23 +348,32 @@ class HelperConfigFlowHandler(config_entries.ConfigFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        result = await self._common_handler.async_step_user(user_input)
+        return await self.async_step()
+
+    async def async_step(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        """Handle a step."""
+        result = await self._common_handler.async_step(user_input)
         if result["type"] == RESULT_TYPE_CREATE_ENTRY:
             result["options"] = result["data"]
             result["data"] = {}
         return result
 
     # pylint: disable-next=no-self-use
-    async def async_validate_input(
-        self, hass: HomeAssistant, user_input: dict[str, Any]
-    ) -> dict[str, Any]:
-        """Validate user input."""
-        return user_input
-
-    # pylint: disable-next=no-self-use
     def async_config_entry_title(self, user_input: dict[str, Any]) -> str:
         """Return config entry title."""
         return ""
+
+    # pylint: disable-next=no-self-use
+    def async_next_step(self, step_id: str, user_input: dict[str, Any]) -> str | None:
+        """Return next step_id, or None to finish the flow."""
+        return None
+
+    # pylint: disable-next=no-self-use
+    async def async_validate_input(
+        self, hass: HomeAssistant, step_id: str, user_input: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Validate user input."""
+        return user_input
 
 
 class HelperOptionsFlowHandler(config_entries.OptionsFlow):
@@ -361,27 +382,29 @@ class HelperOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(
         self,
         config_entry: config_entries.ConfigEntry,
-        schema: vol.Schema,
-        validate: Callable[
-            [Any, HomeAssistant, dict[str, Any]], Awaitable[dict[str, Any]]
-        ],
+        steps: dict[str, vol.Schema],
         title: Callable[[Any, dict[str, Any]], str],
+        next_step: Callable[[Any, str, dict[str, Any]], str | None],
+        validate: Callable[
+            [Any, HomeAssistant, str, dict[str, Any]], Awaitable[dict[str, Any]]
+        ],
     ) -> None:
         """Initialize options flow."""
         self._common_handler = HelperCommonFlowHandler(self, config_entry)
         self._config_entry = config_entry
-        self.async_validate_input = types.MethodType(validate, self)
         self.async_config_entry_title = types.MethodType(title, self)
-        self.schema = schema
+        self.async_next_step = types.MethodType(next_step, self)
+        self.async_validate_input = types.MethodType(validate, self)
+        self.steps = steps
+        for step in self.steps:
+            setattr(self, f"async_step_{step}", self.async_step)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        return await self._common_handler.async_step_user(user_input)
+        return await self.async_step(user_input)
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle the initial step."""
-        return await self._common_handler.async_step_user(user_input)
+    async def async_step(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        """Handle a step."""
+        return await self._common_handler.async_step(user_input)

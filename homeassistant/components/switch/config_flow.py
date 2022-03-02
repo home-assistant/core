@@ -9,12 +9,16 @@ from homeassistant.helpers import config_entry_flow, selector
 
 from .const import DOMAIN
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required("entity_id"): selector.selector({"entity": {"domain": "switch"}}),
-        vol.Required("name"): selector.selector({"text": {}}),
-    }
-)
+STEPS = {
+    "init": vol.Schema(
+        {
+            vol.Required("entity_id"): selector.selector(
+                {"entity": {"domain": "switch"}}
+            ),
+            vol.Required("name"): selector.selector({"text": {}}),
+        }
+    )
+}
 
 
 class SwitchLightConfigFlowHandler(
@@ -22,7 +26,7 @@ class SwitchLightConfigFlowHandler(
 ):
     """Handle a config or options flow for Switch Light."""
 
-    schema = DATA_SCHEMA
+    steps = STEPS
 
     def async_config_entry_title(self, user_input: dict[str, Any]) -> str:
         """Return config entry title."""
