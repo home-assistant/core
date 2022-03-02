@@ -10,14 +10,22 @@ import yarl
 
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.network import get_url, is_hass_url
+from homeassistant.helpers.network import (
+    get_supervisor_network_url,
+    get_url,
+    is_hass_url,
+)
 
 from .const import CONTENT_AUTH_EXPIRY_TIME, MEDIA_CLASS_DIRECTORY
 
 
 @callback
 def async_process_play_media_url(
-    hass: HomeAssistant, media_content_id: str, *, allow_relative_url: bool = False
+    hass: HomeAssistant,
+    media_content_id: str,
+    *,
+    allow_relative_url: bool = False,
+    for_supervisor_network: bool = False,
 ) -> str:
     """Update a media URL with authentication if it points at Home Assistant."""
     if media_content_id[0] != "/" and not is_hass_url(hass, media_content_id):
@@ -39,7 +47,14 @@ def async_process_play_media_url(
 
     # convert relative URL to absolute URL
     if media_content_id[0] == "/" and not allow_relative_url:
-        media_content_id = f"{get_url(hass)}{media_content_id}"
+        base_url = None
+        if for_supervisor_network:
+            base_url = get_supervisor_network_url(hass)
+
+        if not base_url:
+            base_url = get_url(hass)
+
+        media_content_id = f"{base_url}{media_content_id}"
 
     return media_content_id
 
