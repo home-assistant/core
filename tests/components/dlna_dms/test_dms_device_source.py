@@ -8,7 +8,7 @@ from async_upnp_client.profiles.dlna import ContentDirectoryErrorCode, DmsDevice
 from didl_lite import didl_lite
 import pytest
 
-from homeassistant.components.dlna_dms.const import DOMAIN
+from homeassistant.components.dlna_dms.const import DLNA_SORT_CRITERIA, DOMAIN
 from homeassistant.components.dlna_dms.dms import (
     ActionError,
     DeviceConnectionError,
@@ -684,6 +684,81 @@ async def test_browse_media_object(
         assert child.can_play
         assert not child.can_expand
         assert not child.children
+
+
+async def test_browse_object_sort_anything(
+    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+) -> None:
+    """Test sort criteria for children where device allows anything."""
+    dms_device_mock.sort_capabilities = ["*"]
+
+    object_id = "0"
+    dms_device_mock.async_browse_metadata.return_value = didl_lite.Container(
+        id="0", restricted="false", title="root"
+    )
+    dms_device_mock.async_browse_direct_children.return_value = DmsDevice.BrowseResult(
+        [], 0, 0, 0
+    )
+    await device_source_mock.async_browse_object("0")
+
+    # Sort criteria should be dlna_dms's default
+    dms_device_mock.async_browse_direct_children.assert_awaited_once_with(
+        object_id, metadata_filter=ANY, sort_criteria=DLNA_SORT_CRITERIA
+    )
+
+
+async def test_browse_object_sort_superset(
+    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+) -> None:
+    """Test sorting where device allows superset of integration's criteria."""
+    dms_device_mock.sort_capabilities = [
+        "dc:title",
+        "upnp:originalTrackNumber",
+        "upnp:class",
+        "upnp:artist",
+        "dc:creator",
+        "upnp:genre",
+    ]
+
+    object_id = "0"
+    dms_device_mock.async_browse_metadata.return_value = didl_lite.Container(
+        id="0", restricted="false", title="root"
+    )
+    dms_device_mock.async_browse_direct_children.return_value = DmsDevice.BrowseResult(
+        [], 0, 0, 0
+    )
+    await device_source_mock.async_browse_object("0")
+
+    # Sort criteria should be dlna_dms's default
+    dms_device_mock.async_browse_direct_children.assert_awaited_once_with(
+        object_id, metadata_filter=ANY, sort_criteria=DLNA_SORT_CRITERIA
+    )
+
+
+async def test_browse_object_sort_subset(
+    device_source_mock: DmsDeviceSource, dms_device_mock: Mock
+) -> None:
+    """Test sorting where device allows subset of integration's criteria."""
+    dms_device_mock.sort_capabilities = [
+        "dc:title",
+        "upnp:class",
+    ]
+
+    object_id = "0"
+    dms_device_mock.async_browse_metadata.return_value = didl_lite.Container(
+        id="0", restricted="false", title="root"
+    )
+    dms_device_mock.async_browse_direct_children.return_value = DmsDevice.BrowseResult(
+        [], 0, 0, 0
+    )
+    await device_source_mock.async_browse_object("0")
+
+    # Sort criteria should be reduced to only those allowed,
+    # and in the order specified by DLNA_SORT_CRITERIA
+    expected_criteria = ["+upnp:class", "+dc:title"]
+    dms_device_mock.async_browse_direct_children.assert_awaited_once_with(
+        object_id, metadata_filter=ANY, sort_criteria=expected_criteria
+    )
 
 
 async def test_browse_media_path(
