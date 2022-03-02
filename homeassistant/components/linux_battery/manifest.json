@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/linux_battery",
   "requirements": ["batinfo==0.4.2"],
   "codeowners": ["@fabaff"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["batinfo"]
 }

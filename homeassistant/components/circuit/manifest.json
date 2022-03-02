@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/circuit",
   "codeowners": ["@braam"],
   "requirements": ["circuit-webhook==1.0.1"],
-  "iot_class": "cloud_push"
+  "iot_class": "cloud_push",
+  "loggers": ["circuit_webhook"]
 }

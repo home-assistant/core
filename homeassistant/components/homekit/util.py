@@ -424,8 +424,7 @@ def format_version(version):
     """Extract the version string in a format homekit can consume."""
     split_ver = str(version).replace("-", ".")
     num_only = NUMBERS_ONLY_RE.sub("", split_ver)
-    match = VERSION_RE.search(num_only)
-    if match:
+    if match := VERSION_RE.search(num_only):
         return match.group(0)
     return None
 

@@ -5,7 +5,7 @@ from datetime import timedelta
 from pydroid_ipcam import PyDroidIPCam
 import voluptuous as vol
 
-from homeassistant.components.mjpeg.camera import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL
+from homeassistant.components.mjpeg import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,

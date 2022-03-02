@@ -19,5 +19,6 @@
       "macaddress": "DCF505*"
     }    
   ],
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "loggers": ["paho_mqtt", "roombapy"]
 }

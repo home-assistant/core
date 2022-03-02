@@ -18,6 +18,7 @@ from fritzconnection.core.exceptions import (
 )
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
+from fritzconnection.lib.fritzwlan import DEFAULT_PASSWORD_LENGTH, FritzGuestWLAN
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.device_tracker.const import (
@@ -38,6 +39,8 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_OLD_DISCOVERY,
+    DEFAULT_CONF_OLD_DISCOVERY,
     DEFAULT_DEVICE_NAME,
     DEFAULT_HOST,
     DEFAULT_PORT,
@@ -47,6 +50,7 @@ from .const import (
     SERVICE_CLEANUP,
     SERVICE_REBOOT,
     SERVICE_RECONNECT,
+    SERVICE_SET_GUEST_WIFI_PW,
     MeshRoles,
 )
 
@@ -150,6 +154,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         self._options: MappingProxyType[str, Any] | None = None
         self._unique_id: str | None = None
         self.connection: FritzConnection = None
+        self.fritz_guest_wifi: FritzGuestWLAN = None
         self.fritz_hosts: FritzHosts = None
         self.fritz_status: FritzStatus = None
         self.hass = hass
@@ -194,6 +199,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         )
 
         self.fritz_hosts = FritzHosts(fc=self.connection)
+        self.fritz_guest_wifi = FritzGuestWLAN(fc=self.connection)
         self.fritz_status = FritzStatus(fc=self.connection)
         info = self.connection.call_action("DeviceInfo:1", "GetInfo")
 
@@ -321,25 +327,32 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         """Wrap up FritzboxTools class scan."""
         await self.hass.async_add_executor_job(self.scan_devices, now)
 
+    def manage_device_info(
+        self, dev_info: Device, dev_mac: str, consider_home: bool
+    ) -> bool:
+        """Update device lists."""
+        _LOGGER.debug("Client dev_info: %s", dev_info)
+
+        if dev_mac in self._devices:
+            self._devices[dev_mac].update(dev_info, consider_home)
+            return False
+
+        device = FritzDevice(dev_mac, dev_info.name)
+        device.update(dev_info, consider_home)
+        self._devices[dev_mac] = device
+        return True
+
+    def send_signal_device_update(self, new_device: bool) -> None:
+        """Signal device data updated."""
+        dispatcher_send(self.hass, self.signal_device_update)
+        if new_device:
+            dispatcher_send(self.hass, self.signal_device_new)
+
     def scan_devices(self, now: datetime | None = None) -> None:
         """Scan for new devices and return a list of found device ids."""
 
         _LOGGER.debug("Checking host info for FRITZ!Box device %s", self.host)
         self._update_available, self._latest_firmware = self._update_device_info()
-
-        if (
-            "Hosts1" not in self.connection.services
-            or "X_AVM-DE_GetMeshListPath"
-            not in self.connection.services["Hosts1"].actions
-        ):
-            self.mesh_role = MeshRoles.NONE
-        else:
-            try:
-                topology = self.fritz_hosts.get_mesh_topology()
-            except FritzActionError:
-                self.mesh_role = MeshRoles.SLAVE
-                # Avoid duplicating device trackers
-                return
 
         _LOGGER.debug("Checking devices for FRITZ!Box device %s", self.host)
         _default_consider_home = DEFAULT_CONSIDER_HOME.total_seconds()
@@ -366,9 +379,35 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                 wan_access=None,
             )
 
+        if (
+            "Hosts1" not in self.connection.services
+            or "X_AVM-DE_GetMeshListPath"
+            not in self.connection.services["Hosts1"].actions
+        ) or (
+            self._options
+            and self._options.get(CONF_OLD_DISCOVERY, DEFAULT_CONF_OLD_DISCOVERY)
+        ):
+            _LOGGER.debug(
+                "Using old hosts discovery method. (Mesh not supported or user option)"
+            )
+            self.mesh_role = MeshRoles.NONE
+            for mac, info in hosts.items():
+                if self.manage_device_info(info, mac, consider_home):
+                    new_device = True
+            self.send_signal_device_update(new_device)
+            return
+
+        try:
+            if not (topology := self.fritz_hosts.get_mesh_topology()):
+                raise Exception("Mesh supported but empty topology reported")
+        except FritzActionError:
+            self.mesh_role = MeshRoles.SLAVE
+            # Avoid duplicating device trackers
+            return
+
         mesh_intf = {}
         # first get all meshed devices
-        for node in topology["nodes"]:
+        for node in topology.get("nodes", []):
             if not node["is_meshed"]:
                 continue
 
@@ -385,7 +424,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                     self.mesh_role = MeshRoles(node["mesh_role"])
 
         # second get all client devices
-        for node in topology["nodes"]:
+        for node in topology.get("nodes", []):
             if node["is_meshed"]:
                 continue
 
@@ -409,19 +448,11 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                         dev_info.connected_to = intf["device"]
                         dev_info.connection_type = intf["type"]
                         dev_info.ssid = intf.get("ssid")
-                _LOGGER.debug("Client dev_info: %s", dev_info)
 
-                if dev_mac in self._devices:
-                    self._devices[dev_mac].update(dev_info, consider_home)
-                else:
-                    device = FritzDevice(dev_mac, dev_info.name)
-                    device.update(dev_info, consider_home)
-                    self._devices[dev_mac] = device
+                if self.manage_device_info(dev_info, dev_mac, consider_home):
                     new_device = True
 
-        dispatcher_send(self.hass, self.signal_device_update)
-        if new_device:
-            dispatcher_send(self.hass, self.signal_device_new)
+        self.send_signal_device_update(new_device)
 
     async def async_trigger_firmware_update(self) -> bool:
         """Trigger firmware update."""
@@ -437,6 +468,14 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
     async def async_trigger_reconnect(self) -> None:
         """Trigger device reconnect."""
         await self.hass.async_add_executor_job(self.connection.reconnect)
+
+    async def async_trigger_set_guest_password(
+        self, password: str | None, length: int
+    ) -> None:
+        """Trigger service to set a new guest wifi password."""
+        await self.hass.async_add_executor_job(
+            self.fritz_guest_wifi.set_password, password, length
+        )
 
     async def async_trigger_cleanup(
         self, config_entry: ConfigEntry | None = None
@@ -535,6 +574,13 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                     'Service "fritz.cleanup" is deprecated, please use the corresponding button entity instead'
                 )
                 await self.async_trigger_cleanup(config_entry)
+                return
+
+            if service_call.service == SERVICE_SET_GUEST_WIFI_PW:
+                await self.async_trigger_set_guest_password(
+                    service_call.data.get("password"),
+                    service_call.data.get("length", DEFAULT_PASSWORD_LENGTH),
+                )
                 return
 
         except (FritzServiceError, FritzActionError) as ex:

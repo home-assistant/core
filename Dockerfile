@@ -12,17 +12,18 @@ COPY requirements.txt homeassistant/
 COPY homeassistant/package_constraints.txt homeassistant/homeassistant/
 RUN \
     pip3 install --no-cache-dir --no-index --only-binary=:all: --find-links "${WHEELS_LINKS}" \
-    -r homeassistant/requirements.txt
+    -r homeassistant/requirements.txt --use-deprecated=legacy-resolver
 COPY requirements_all.txt homeassistant/
 RUN \
-    pip3 install --no-cache-dir --no-index --only-binary=:all: --find-links "${WHEELS_LINKS}" \
-    -r homeassistant/requirements_all.txt
+    sed -i "s|# homeassistant-pyozw|homeassistant-pyozw|g" homeassistant/requirements_all.txt \
+    && pip3 install --no-cache-dir --no-index --only-binary=:all: --find-links "${WHEELS_LINKS}" \
+    -r homeassistant/requirements_all.txt --use-deprecated=legacy-resolver
 
 ## Setup Home Assistant Core
 COPY . homeassistant/
 RUN \
     pip3 install --no-cache-dir --no-index --only-binary=:all: --find-links "${WHEELS_LINKS}" \
-    -e ./homeassistant \
+    -e ./homeassistant --use-deprecated=legacy-resolver \
     && python3 -m compileall homeassistant/homeassistant
 
 # Fix Bug with Alpine 3.14 and sqlite 3.35

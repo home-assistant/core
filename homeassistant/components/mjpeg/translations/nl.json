@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mjpeg_url": "MJPEG URL",
+                    "name": "Naam",
+                    "password": "Wachtwoord",
+                    "still_image_url": "Stilstaand beeld URL",
+                    "username": "Gebruikersnaam",
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "mjpeg_url": "MJPEG URL",
+                    "name": "Naam",
+                    "password": "Wachtwoord",
+                    "still_image_url": "Stilstaand beeld URL",
+                    "username": "Gebruikersnaam",
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren"
+                }
+            }
+        }
+    }
+}

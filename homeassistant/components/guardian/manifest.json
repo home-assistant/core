@@ -20,5 +20,6 @@
         "hostname": "guardian*",
         "macaddress": "30AEA4*"
       }
-  ]
+  ],
+  "loggers": ["aioguardian"]
 }

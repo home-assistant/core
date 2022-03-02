@@ -12,7 +12,8 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "Voulez-vous configurer Home Assistant pour qu'il se connecte au serveur RTSPtoWebRTC fourni par l'add-on\u00a0: {addon}\u00a0?"
+                "description": "Voulez-vous configurer Home Assistant pour qu'il se connecte au serveur RTSPtoWebRTC fourni par l'add-on\u00a0: {addon}\u00a0?",
+                "title": "RTSPtoWebRTC via le module compl\u00e9mentaire Home Assistant"
             },
             "user": {
                 "data": {

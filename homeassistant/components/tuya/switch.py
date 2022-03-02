@@ -138,6 +138,16 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
+            key=DPCode.SWITCH_7,
+            name="Switch 7",
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_8,
+            name="Switch 8",
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        SwitchEntityDescription(
             key=DPCode.SWITCH_USB1,
             name="USB 1",
         ),
@@ -196,6 +206,12 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.WET,
             name="Humidification",
             icon="mdi:water-percent",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.UV,
+            name="UV Sterilization",
+            icon="mdi:minus-circle-outline",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -282,6 +298,15 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.SWITCH,
             name="Socket",
             device_class=SwitchDeviceClass.OUTLET,
+        ),
+    ),
+    # Unknown product with switch capabilities
+    # Fond in some diffusers, plugs and PIR flood lights
+    # Not documented
+    "qjdcz": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            name="Switch",
         ),
     ),
     # Heater
@@ -443,6 +468,22 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Thermostatic Radiator Valve
+    # Not documented
+    "wkf": (
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            name="Child Lock",
+            icon="mdi:account-lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.WINDOW_CHECK,
+            name="Open Window Detection",
+            icon="mdi:window-open",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Ceiling Light
     # https://developer.tuya.com/en/docs/iot/ceiling-light?id=Kaiuz03xxfc4r
     "xdd": (
@@ -502,6 +543,12 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
+            key=DPCode.FAN_COOL,
+            name="Natural Wind",
+            icon="mdi:weather-windy",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
             key=DPCode.FAN_BEEP,
             name="Sound",
             icon="mdi:minus-circle",
@@ -511,6 +558,44 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.CHILD_LOCK,
             name="Child Lock",
             icon="mdi:account-lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Curtain
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46o5mtfyc
+    "cl": (
+        SwitchEntityDescription(
+            key=DPCode.CONTROL_BACK,
+            name="Reverse",
+            icon="mdi:swap-horizontal",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.OPPOSITE,
+            name="Reverse",
+            icon="mdi:swap-horizontal",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Humidifier
+    # https://developer.tuya.com/en/docs/iot/categoryjsq?id=Kaiuz1smr440b
+    "jsq": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_SOUND,
+            name="Voice",
+            icon="mdi:account-voice",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SLEEP,
+            name="Sleep",
+            icon="mdi:power-sleep",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.STERILIZATION,
+            name="Sterilization",
+            icon="mdi:minus-circle-outline",
             entity_category=EntityCategory.CONFIG,
         ),
     ),

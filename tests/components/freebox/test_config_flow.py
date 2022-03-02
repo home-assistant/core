@@ -20,6 +20,7 @@ from tests.common import MockConfigEntry
 
 MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
     host="192.168.0.254",
+    addresses=["192.168.0.254"],
     port=80,
     hostname="Freebox-Server.local.",
     type="_fbx-api._tcp.local.",

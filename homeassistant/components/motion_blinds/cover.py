@@ -51,6 +51,7 @@ TILT_DEVICE_MAP = {
     BlindType.ShangriLaBlind: CoverDeviceClass.BLIND,
     BlindType.DoubleRoller: CoverDeviceClass.SHADE,
     BlindType.VerticalBlind: CoverDeviceClass.BLIND,
+    BlindType.VerticalBlindLeft: CoverDeviceClass.BLIND,
 }
 
 TDBU_DEVICE_MAP = {

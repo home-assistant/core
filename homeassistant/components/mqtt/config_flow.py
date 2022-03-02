@@ -33,6 +33,8 @@ from .const import (
 )
 from .util import MQTT_WILL_BIRTH_SCHEMA
 
+MQTT_TIMEOUT = 5
+
 
 class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
@@ -83,17 +85,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="broker", data_schema=vol.Schema(fields), errors=errors
         )
-
-    async def async_step_import(self, user_input):
-        """Import a config entry.
-
-        Special type of import, we're not actually going to store any data.
-        Instead, we're going to rely on the values that are in config file.
-        """
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
-        return self.async_create_entry(title="configuration.yaml", data={})
 
     async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
         """Receive a Hass.io discovery."""
@@ -324,7 +315,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
 
 def try_connection(broker, port, username, password, protocol="3.1"):
     """Test if we can connect to an MQTT broker."""
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     import paho.mqtt.client as mqtt
 
     if protocol == "3.1":
@@ -348,7 +339,7 @@ def try_connection(broker, port, username, password, protocol="3.1"):
     client.loop_start()
 
     try:
-        return result.get(timeout=5)
+        return result.get(timeout=MQTT_TIMEOUT)
     except queue.Empty:
         return False
     finally:

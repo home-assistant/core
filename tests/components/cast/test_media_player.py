@@ -2,6 +2,7 @@
 # pylint: disable=protected-access
 from __future__ import annotations
 
+import asyncio
 import json
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 from uuid import UUID
@@ -10,6 +11,7 @@ import attr
 import pychromecast
 from pychromecast.const import CAST_TYPE_CHROMECAST, CAST_TYPE_GROUP
 import pytest
+import yarl
 
 from homeassistant.components import media_player, tts
 from homeassistant.components.cast import media_player as cast
@@ -37,7 +39,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er, network
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
@@ -468,10 +470,19 @@ async def test_discover_dynamic_group(
         hass
     )
 
+    tasks = []
+    real_create_task = asyncio.create_task
+
+    def create_task(*args, **kwargs):
+        tasks.append(real_create_task(*args, **kwargs))
+
     # Discover cast service
     with patch(
         "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
         return_value=zconf_1,
+    ), patch(
+        "homeassistant.components.cast.media_player.asyncio.create_task",
+        wraps=create_task,
     ):
         discover_cast(
             pychromecast.discovery.ServiceInfo(
@@ -481,6 +492,10 @@ async def test_discover_dynamic_group(
         )
         await hass.async_block_till_done()
         await hass.async_block_till_done()  # having tasks that add jobs
+
+    assert len(tasks) == 1
+    await asyncio.gather(*tasks)
+    tasks.clear()
     get_chromecast_mock.assert_called()
     get_chromecast_mock.reset_mock()
     assert add_dev1.call_count == 0
@@ -490,6 +505,9 @@ async def test_discover_dynamic_group(
     with patch(
         "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
         return_value=zconf_2,
+    ), patch(
+        "homeassistant.components.cast.media_player.asyncio.create_task",
+        wraps=create_task,
     ):
         discover_cast(
             pychromecast.discovery.ServiceInfo(
@@ -499,6 +517,10 @@ async def test_discover_dynamic_group(
         )
         await hass.async_block_till_done()
         await hass.async_block_till_done()  # having tasks that add jobs
+
+    assert len(tasks) == 1
+    await asyncio.gather(*tasks)
+    tasks.clear()
     get_chromecast_mock.assert_called()
     get_chromecast_mock.reset_mock()
     assert add_dev1.call_count == 0
@@ -508,6 +530,9 @@ async def test_discover_dynamic_group(
     with patch(
         "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
         return_value=zconf_1,
+    ), patch(
+        "homeassistant.components.cast.media_player.asyncio.create_task",
+        wraps=create_task,
     ):
         discover_cast(
             pychromecast.discovery.ServiceInfo(
@@ -517,6 +542,8 @@ async def test_discover_dynamic_group(
         )
         await hass.async_block_till_done()
         await hass.async_block_till_done()  # having tasks that add jobs
+
+    assert len(tasks) == 0
     get_chromecast_mock.assert_not_called()
     assert add_dev1.call_count == 0
     assert reg.async_get_entity_id("media_player", "cast", cast_1.uuid) is None
@@ -603,6 +630,45 @@ async def test_entity_availability(hass: HomeAssistant):
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == "unavailable"
+
+
+@pytest.mark.parametrize("port,entry_type", ((8009, None), (12345, None)))
+async def test_device_registry(hass: HomeAssistant, port, entry_type):
+    """Test device registry integration."""
+    entity_id = "media_player.speaker"
+    reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+
+    info = get_fake_chromecast_info(port=port)
+
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
+    chromecast.cast_type = pychromecast.const.CAST_TYPE_CHROMECAST
+    _, conn_status_cb, _ = get_status_callbacks(chromecast)
+    cast_entry = hass.config_entries.async_entries("cast")[0]
+
+    connection_status = MagicMock()
+    connection_status.status = "CONNECTED"
+    conn_status_cb(connection_status)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.name == "Speaker"
+    assert state.state == "off"
+    assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
+    entity_entry = reg.async_get(entity_id)
+    assert entity_entry.device_id is not None
+    device_entry = dev_reg.async_get(entity_entry.device_id)
+    assert device_entry.entry_type == entry_type
+
+    # Check that the chromecast object is torn down when the device is removed
+    chromecast.disconnect.assert_not_called()
+    dev_reg.async_update_device(
+        device_entry.id, remove_config_entry_id=cast_entry.entry_id
+    )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    chromecast.disconnect.assert_called_once()
 
 
 async def test_entity_cast_status(hass: HomeAssistant):
@@ -790,8 +856,8 @@ async def test_entity_browse_media(hass: HomeAssistant, hass_ws_client):
         "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
         "can_play": True,
         "can_expand": False,
-        "children_media_class": None,
         "thumbnail": None,
+        "children_media_class": None,
     }
     assert expected_child_1 in response["result"]["children"]
 
@@ -802,8 +868,8 @@ async def test_entity_browse_media(hass: HomeAssistant, hass_ws_client):
         "media_content_id": "media-source://media_source/local/test.mp3",
         "can_play": True,
         "can_expand": False,
-        "children_media_class": None,
         "thumbnail": None,
+        "children_media_class": None,
     }
     assert expected_child_2 in response["result"]["children"]
 
@@ -846,8 +912,8 @@ async def test_entity_browse_media_audio_only(
         "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
         "can_play": True,
         "can_expand": False,
-        "children_media_class": None,
         "thumbnail": None,
+        "children_media_class": None,
     }
     assert expected_child_1 not in response["result"]["children"]
 
@@ -858,8 +924,8 @@ async def test_entity_browse_media_audio_only(
         "media_content_id": "media-source://media_source/local/test.mp3",
         "can_play": True,
         "can_expand": False,
-        "children_media_class": None,
         "thumbnail": None,
+        "children_media_class": None,
     }
     assert expected_child_2 in response["result"]["children"]
 
@@ -1001,7 +1067,7 @@ async def test_entity_play_media_sign_URL(hass: HomeAssistant, quick_play_mock):
 
     await async_process_ha_core_config(
         hass,
-        {"external_url": "http://example.com:8123"},
+        {"internal_url": "http://example.com:8123"},
     )
 
     info = get_fake_chromecast_info()
@@ -1119,7 +1185,7 @@ async def test_entity_control(hass: HomeAssistant):
     # Turn on
     await common.async_turn_on(hass, entity_id)
     chromecast.play_media.assert_called_once_with(
-        "https://www.home-assistant.io/images/cast/splash.png", ANY
+        "https://www.home-assistant.io/images/cast/splash.png", "image/png"
     )
     chromecast.quit_app.reset_mock()
 
@@ -1795,8 +1861,8 @@ async def test_cast_platform_browse_media(hass: HomeAssistant, hass_ws_client):
         "media_content_id": "",
         "can_play": False,
         "can_expand": True,
-        "children_media_class": None,
         "thumbnail": "https://brands.home-assistant.io/_/spotify/logo.png",
+        "children_media_class": None,
     }
     assert expected_child in response["result"]["children"]
 
@@ -1822,5 +1888,72 @@ async def test_cast_platform_browse_media(hass: HomeAssistant, hass_ws_client):
         "children_media_class": None,
         "thumbnail": None,
         "children": [],
+        "not_shown": 0,
     }
     assert response["result"] == expected_response
+
+
+async def test_cast_platform_play_media_local_media(
+    hass: HomeAssistant, quick_play_mock, caplog
+):
+    """Test we process data when playing local media."""
+    entity_id = "media_player.speaker"
+    info = get_fake_chromecast_info()
+
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
+    _, conn_status_cb, _ = get_status_callbacks(chromecast)
+
+    # Bring Chromecast online
+    connection_status = MagicMock()
+    connection_status.status = "CONNECTED"
+    conn_status_cb(connection_status)
+    await hass.async_block_till_done()
+
+    # This will play using the cast platform
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        media_player.SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            media_player.ATTR_MEDIA_CONTENT_TYPE: "application/vnd.apple.mpegurl",
+            media_player.ATTR_MEDIA_CONTENT_ID: "/api/hls/bla/master_playlist.m3u8",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Assert we added extra play information
+    quick_play_mock.assert_called()
+    app_data = quick_play_mock.call_args[0][2]
+
+    assert not app_data["media_id"].startswith("/")
+    assert "authSig" in yarl.URL(app_data["media_id"]).query
+    assert app_data["media_type"] == "application/vnd.apple.mpegurl"
+    assert app_data["stream_type"] == "LIVE"
+    assert app_data["media_info"] == {
+        "hlsVideoSegmentFormat": "fmp4",
+    }
+
+    quick_play_mock.reset_mock()
+
+    # Test not appending if we have a signature
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        media_player.SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            media_player.ATTR_MEDIA_CONTENT_TYPE: "application/vnd.apple.mpegurl",
+            media_player.ATTR_MEDIA_CONTENT_ID: f"{network.get_url(hass)}/api/hls/bla/master_playlist.m3u8?token=bla",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Assert we added extra play information
+    quick_play_mock.assert_called()
+    app_data = quick_play_mock.call_args[0][2]
+    # No authSig appended
+    assert (
+        app_data["media_id"]
+        == f"{network.get_url(hass)}/api/hls/bla/master_playlist.m3u8?token=bla"
+    )

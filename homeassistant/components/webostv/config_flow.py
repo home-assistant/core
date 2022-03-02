@@ -20,7 +20,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from . import async_control_connect
 from .const import CONF_SOURCES, DEFAULT_NAME, DOMAIN, WEBOSTV_EXCEPTIONS
@@ -172,7 +171,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self.host = config_entry.data[CONF_HOST]
         self.key = config_entry.data[CONF_CLIENT_SECRET]
 
-    async def async_step_init(self, user_input: ConfigType | None = None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the options."""
         errors = {}
         if user_input is not None:

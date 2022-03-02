@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/adguard",
   "requirements": ["adguardhome==0.5.1"],
   "codeowners": ["@frenck"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["adguardhome"]
 }

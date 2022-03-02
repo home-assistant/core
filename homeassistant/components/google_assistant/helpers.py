@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from asyncio import gather
 from collections.abc import Mapping
+from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
 import pprint
@@ -26,6 +27,7 @@ from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.storage import Store
+from homeassistant.util.dt import utcnow
 
 from . import trait
 from .const import (
@@ -104,6 +106,7 @@ class AbstractConfig(ABC):
         self._store = None
         self._google_sync_unsub = {}
         self._local_sdk_active = False
+        self._local_last_active: datetime | None = None
 
     async def async_initialize(self):
         """Perform async initialization of config."""
@@ -148,6 +151,15 @@ class AbstractConfig(ABC):
     def should_report_state(self):
         """Return if states should be proactively reported."""
         return False
+
+    @property
+    def is_local_connected(self) -> bool:
+        """Return if local is connected."""
+        return (
+            self._local_last_active is not None
+            # We get a reachable devices intent every minute.
+            and self._local_last_active > utcnow() - timedelta(seconds=70)
+        )
 
     def get_local_agent_user_id(self, webhook_id):
         """Return the user ID to be used for actions received via the local SDK.
@@ -336,6 +348,7 @@ class AbstractConfig(ABC):
         # pylint: disable=import-outside-toplevel
         from . import smart_home
 
+        self._local_last_active = utcnow()
         payload = await request.json()
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
