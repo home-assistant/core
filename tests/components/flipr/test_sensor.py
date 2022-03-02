@@ -2,6 +2,8 @@
 from datetime import datetime
 from unittest.mock import patch
 
+from flipr_api.exceptions import FliprError
+
 from homeassistant.components.flipr.const import CONF_FLIPR_ID, DOMAIN
 from homeassistant.const import (
     ATTR_ICON,
@@ -84,3 +86,31 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_ICON) == "mdi:pool"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "mV"
     assert state.state == "0.23654886"
+
+
+async def test_error_flipr_api_sensors(hass: HomeAssistant) -> None:
+    """Test the Flipr sensors error."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="test_entry_unique_id",
+        data={
+            CONF_EMAIL: "toto@toto.com",
+            CONF_PASSWORD: "myPassword",
+            CONF_FLIPR_ID: "myfliprid",
+        },
+    )
+
+    entry.add_to_hass(hass)
+
+    registry = await hass.helpers.entity_registry.async_get_registry()
+
+    with patch(
+        "flipr_api.FliprAPIRestClient.get_pool_measure_latest",
+        side_effect=FliprError("Error during flipr data retrieval..."),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Check entity is not generated because of the FliprError raised.
+    entity = registry.async_get("sensor.flipr_myfliprid_red_ox")
+    assert entity is None
