@@ -12,6 +12,7 @@ from homeassistant.helpers.network import (
     _get_external_url,
     _get_internal_url,
     _get_request_host,
+    get_supervisor_network_url,
     get_url,
     is_hass_url,
     is_internal_request,
@@ -715,3 +716,41 @@ async def test_is_hass_url(hass):
         assert is_hass_url(hass, "https://example.nabu.casa") is True
         assert is_hass_url(hass, "http://example.nabu.casa:443") is False
         assert is_hass_url(hass, "http://example.nabu.casa") is False
+
+
+async def test_is_hass_url_addon_url(hass):
+    """Test is_hass_url with a supervisor network URL."""
+    assert is_hass_url(hass, "http://homeassistant:8123") is False
+
+    hass.config.api = Mock(use_ssl=False, port=8123, local_ip="192.168.123.123")
+    await async_process_ha_core_config(
+        hass,
+        {"internal_url": "http://example.local:8123"},
+    )
+    assert is_hass_url(hass, "http://homeassistant:8123") is False
+
+    mock_component(hass, "hassio")
+    assert is_hass_url(hass, "http://homeassistant:8123")
+    assert not is_hass_url(hass, "https://homeassistant:8123")
+
+    hass.config.api = Mock(use_ssl=True, port=8123, local_ip="192.168.123.123")
+    assert not is_hass_url(hass, "http://homeassistant:8123")
+    assert is_hass_url(hass, "https://homeassistant:8123")
+
+
+async def test_get_supervisor_network_url(hass):
+    """Test get_supervisor_network_url."""
+    assert get_supervisor_network_url(hass) is None
+
+    hass.config.api = Mock(use_ssl=False, port=8123, local_ip="192.168.123.123")
+    await async_process_ha_core_config(hass, {})
+    assert get_supervisor_network_url(hass) is None
+
+    mock_component(hass, "hassio")
+    assert get_supervisor_network_url(hass) == "http://homeassistant:8123"
+
+    hass.config.api = Mock(use_ssl=True, port=8123, local_ip="192.168.123.123")
+    assert get_supervisor_network_url(hass) is None
+    assert (
+        get_supervisor_network_url(hass, allow_ssl=True) == "https://homeassistant:8123"
+    )
