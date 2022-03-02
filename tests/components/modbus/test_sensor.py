@@ -33,6 +33,7 @@ from homeassistant.const import (
     CONF_SLAVE,
     CONF_STRUCTURE,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import State
 
@@ -565,13 +566,14 @@ async def test_all_sensor(hass, mock_do_cycle, expected):
     ],
 )
 @pytest.mark.parametrize(
-    "config_addon,register_words,expected",
+    "config_addon,register_words,do_exception,expected",
     [
         (
             {
                 CONF_SLAVE_COUNT: 0,
             },
             [0x0102, 0x0304],
+            False,
             ["16909060"],
         ),
         (
@@ -579,6 +581,7 @@ async def test_all_sensor(hass, mock_do_cycle, expected):
                 CONF_SLAVE_COUNT: 1,
             },
             [0x0102, 0x0304, 0x0403, 0x0201],
+            False,
             ["16909060", "67305985"],
         ),
         (
@@ -595,12 +598,29 @@ async def test_all_sensor(hass, mock_do_cycle, expected):
                 0x0D0E,
                 0x0F00,
             ],
+            False,
             [
                 "16909060",
                 "84281096",
                 "151653132",
                 "219025152",
             ],
+        ),
+        (
+            {
+                CONF_SLAVE_COUNT: 1,
+            },
+            [0x0102, 0x0304, 0x0403, 0x0201],
+            True,
+            [STATE_UNAVAILABLE, STATE_UNKNOWN],
+        ),
+        (
+            {
+                CONF_SLAVE_COUNT: 1,
+            },
+            [],
+            False,
+            [STATE_UNAVAILABLE, STATE_UNKNOWN],
         ),
     ],
 )

@@ -156,7 +156,7 @@ aioguardian==2021.11.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.7.14
+aiohomekit==0.7.15
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -229,7 +229,7 @@ aioridwell==2021.12.2
 aiosenseme==0.6.1
 
 # homeassistant.components.shelly
-aioshelly==1.0.10
+aioshelly==1.0.11
 
 # homeassistant.components.steamist
 aiosteamist==0.3.1
@@ -1675,7 +1675,7 @@ pynzbgetapi==0.2.0
 pyobihai==1.3.1
 
 # homeassistant.components.octoprint
-pyoctoprintapi==0.1.7
+pyoctoprintapi==0.1.8
 
 # homeassistant.components.ombi
 pyombi==0.1.10
@@ -2090,7 +2090,7 @@ rxv==0.7.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws[async]==2.0.0
+samsungtvws[async]==2.1.0
 
 # homeassistant.components.satel_integra
 satel_integra==0.3.4
