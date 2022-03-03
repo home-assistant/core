@@ -4,8 +4,6 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Any
 
-from rokuecp import RokuConnectionTimeoutError
-
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -55,8 +53,7 @@ class RokuRemote(RokuEntity, RemoteEntity):
     @roku_exception_handler(ignore_timeout=True)
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        with suppress(RokuConnectionTimeoutError):
-            await self.coordinator.roku.remote("poweroff")
+        await self.coordinator.roku.remote("poweroff")
         await self.coordinator.async_request_refresh()
 
     @roku_exception_handler
