@@ -635,7 +635,7 @@ async def test_integration_logs_is_custom(hass, caplog):
     ):
         result = await setup.async_setup_component(hass, "test_component1", {})
     assert not result
-    assert "Setup failed for custom component test_component1: Boom" in caplog.text
+    assert "Setup failed for custom integration test_component1: Boom" in caplog.text
 
 
 async def test_async_get_loaded_integrations(hass):

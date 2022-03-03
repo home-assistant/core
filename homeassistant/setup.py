@@ -157,7 +157,7 @@ async def _async_setup_component(
             custom = ""
             link = None
         else:
-            custom = "" if integration.is_built_in else "custom component "
+            custom = "" if integration.is_built_in else "custom integration "
             link = integration.documentation
         _LOGGER.error("Setup failed for %s%s: %s", custom, domain, msg)
         async_notify_setup_error(hass, domain, link)
