@@ -295,16 +295,6 @@ class HomeAccessory(Accessory):
             self.iid_manager.assign(char)
             char.broker = self
 
-        _LOGGER.debug(
-            "%s: sw_version=%s hw_version=%s model=%s manufacturer=%s serial_number=%s",
-            entity_id,
-            sw_version,
-            hw_version,
-            model,
-            manufacturer,
-            serial_number,
-        )
-
         self.category = category
         self.entity_id = entity_id
         self.hass = hass
