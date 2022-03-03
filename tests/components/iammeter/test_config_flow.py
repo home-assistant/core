@@ -1,11 +1,13 @@
 """Test the iammeter config flow."""
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
+from requests.exceptions import HTTPError, Timeout
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.iammeter import config_flow
 from homeassistant.components.iammeter.const import DEFAULT_IP, DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME
 
 from tests.common import MockConfigEntry
@@ -16,7 +18,6 @@ HOST = "1.1.1.1"
 
 async def test_form(hass):
     """Test we get the form."""
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -49,6 +50,19 @@ def mock_controller():
         return_value=True,
     ):
         yield
+
+
+@pytest.fixture(name="test_api")
+def mock_controller2():
+    """Mock a successful IamMeter API."""
+    api = Mock()
+    api.get_data.return_value = {
+        "SN": "MockSN",
+        "Model": "WEM3080",
+        "Data": [1, 2, 3, 4, 5],
+    }
+    with patch("iammeter.client.Client", return_value=api):
+        yield api
 
 
 def init_config_flow(hass):
@@ -107,8 +121,7 @@ async def test_abort_if_already_setup(hass, test_connect):
     result = await flow.async_step_import(
         {CONF_IP_ADDRESS: HOST, CONF_NAME: "iammeter_test_7_8_9"}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {CONF_IP_ADDRESS: "already_configured"}
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
     # Should fail, same HOST and NAME
     result = await flow.async_step_user({CONF_IP_ADDRESS: HOST, CONF_NAME: NAME})
@@ -128,3 +141,34 @@ async def test_abort_if_already_setup(hass, test_connect):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "iammeter_test_1_2_3"
     assert result["data"][CONF_IP_ADDRESS] == "2.2.2.2"
+
+
+async def test_connect_functions(hass, test_api):
+    """Test api connect funtions."""
+    # test API is ok
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_IP_ADDRESS: "3.3.3.3", CONF_NAME: "iammeter_test_10_11_12"},
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    # test with ConnectionTimeout
+    test_api.get_data.side_effect = Timeout
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_IP_ADDRESS: HOST, CONF_NAME: NAME},
+    )
+
+    assert result["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
+
+    # test with HTTPError
+    test_api.get_data.side_effect = HTTPError
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_IP_ADDRESS: HOST, CONF_NAME: NAME},
+    )
+
+    assert result["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
