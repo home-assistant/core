@@ -184,7 +184,7 @@ aioguardian==2021.11.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.7.14
+aiohomekit==0.7.15
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -257,7 +257,7 @@ aioridwell==2021.12.2
 aiosenseme==0.6.1
 
 # homeassistant.components.shelly
-aioshelly==1.0.10
+aioshelly==1.0.11
 
 # homeassistant.components.steamist
 aiosteamist==0.3.1
