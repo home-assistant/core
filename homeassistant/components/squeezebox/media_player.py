@@ -10,6 +10,9 @@ import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player.browse_media import (
+    async_process_play_media_url,
+)
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_MUSIC,
@@ -472,6 +475,8 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             media_id = play_item.url
 
         if media_type in MEDIA_TYPE_MUSIC:
+            media_id = async_process_play_media_url(self.hass, media_id)
+
             await self._player.async_load_url(media_id, cmd)
             return
 
