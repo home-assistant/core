@@ -91,7 +91,6 @@ class HelperConfigFlowHandler(config_entries.ConfigFlow):
     @abstractmethod
     def async_config_entry_title(self, user_input: dict[str, Any]) -> str:
         """Return config entry title."""
-        return ""
 
     # pylint: disable-next=no-self-use
     def async_next_step(self, step_id: str, user_input: dict[str, Any]) -> str | None:
