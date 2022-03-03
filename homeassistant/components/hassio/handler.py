@@ -175,6 +175,22 @@ class HassIO:
         """
         return self.send_command(f"/discovery/{uuid}", method="get")
 
+    @api_data
+    def get_available_updates(self):
+        """Return available updates.
+
+        This method return a coroutine.
+        """
+        return self.send_command("/available_updates", method="get")
+
+    @api_data
+    def refresh_updates(self):
+        """Refresh updates.
+
+        This method return a coroutine.
+        """
+        return self.send_command("/refresh_updates", method="post")
+
     @_api_bool
     async def update_hass_api(self, http_config, refresh_token):
         """Update Home Assistant API data on Hass.io."""
@@ -212,7 +228,14 @@ class HassIO:
             "/supervisor/options", payload={"diagnostics": diagnostics}
         )
 
-    async def send_command(self, command, method="post", payload=None, timeout=10):
+    async def send_command(
+        self,
+        command,
+        method="post",
+        payload=None,
+        timeout=10,
+        json_return=True,
+    ):
         """Send API command to Hass.io.
 
         This method is a coroutine.
@@ -230,8 +253,9 @@ class HassIO:
                 _LOGGER.error("%s return code %d", command, request.status)
                 raise HassioAPIError()
 
-            answer = await request.json()
-            return answer
+            if json_return:
+                return await request.json()
+            return await request.text()
 
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout on %s request", command)
