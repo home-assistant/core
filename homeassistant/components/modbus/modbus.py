@@ -246,7 +246,6 @@ async def async_modbus_setup(
     return True
 
 
-@bind_hass
 async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> None:
     """Release modbus resources."""
     _LOGGER.info("Modbus reloading")
