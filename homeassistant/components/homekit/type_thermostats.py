@@ -226,6 +226,9 @@ class Thermostat(HomeAccessory):
         self.char_target_heat_cool.override_properties(
             valid_values=self.hc_hass_to_homekit
         )
+        self.char_target_heat_cool.allow_invalid_client_values = True
+        # Current and target temperature characteristics
+
         self.char_current_temp = serv_thermostat.configure_char(
             CHAR_CURRENT_TEMPERATURE, value=21.0
         )
