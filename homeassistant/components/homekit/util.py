@@ -363,7 +363,7 @@ def convert_to_float(state):
         return None
 
 
-def cleanup_name_for_homekit(name: str | None) -> str | None:
+def cleanup_name_for_homekit(name: str | None) -> str:
     """Ensure the name of the device will not crash homekit."""
     #
     # This is not a security measure.
@@ -371,7 +371,7 @@ def cleanup_name_for_homekit(name: str | None) -> str | None:
     # UNICODE_EMOJI is also not allowed but that
     # likely isn't a problem
     if name is None:
-        return None
+        return "None"  # None crashes apple watches
     return name.translate(HOMEKIT_CHAR_TRANSLATIONS)[:MAX_NAME_LENGTH]
 
 
