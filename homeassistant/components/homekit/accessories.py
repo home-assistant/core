@@ -289,7 +289,9 @@ class HomeAccessory(Accessory):
             serv_info = self.get_service(SERV_ACCESSORY_INFO)
             char = self.driver.loader.get_char(CHAR_HARDWARE_REVISION)
             serv_info.add_characteristic(char)
-            serv_info.configure_char(CHAR_HARDWARE_REVISION, value=hw_version)
+            serv_info.configure_char(
+                CHAR_HARDWARE_REVISION, value=hw_version[:MAX_VERSION_LENGTH]
+            )
             self.iid_manager.assign(char)
             char.broker = self
 
