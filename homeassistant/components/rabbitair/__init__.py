@@ -12,10 +12,10 @@ from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
+from .coordinator import RabbitAirDataUpdateCoordinator, RabbitAirDebouncer
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except Exception as err:
             raise UpdateFailed from err
 
-    coordinator = DataUpdateCoordinator(
+    coordinator = RabbitAirDataUpdateCoordinator(
         hass,
         _LOGGER,
         name="rabbitair",
@@ -58,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # to apply the changes and reflect the updated state. Two seconds
         # should be sufficient, since the internal cycle of the device runs at
         # one-second intervals.
-        request_refresh_debouncer=Debouncer(
+        request_refresh_debouncer=RabbitAirDebouncer(
             hass, _LOGGER, cooldown=2.0, immediate=False
         ),
     )
