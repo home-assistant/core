@@ -1,6 +1,7 @@
 """Collection of useful functions for the HomeKit component."""
 from __future__ import annotations
 
+import contextlib
 import io
 import ipaddress
 import logging
@@ -424,9 +425,17 @@ def format_version(version):
     """Extract the version string in a format homekit can consume."""
     split_ver = str(version).replace("-", ".")
     num_only = NUMBERS_ONLY_RE.sub("", split_ver)
-    if match := VERSION_RE.search(num_only):
-        return match.group(0)
-    return None
+    if (match := VERSION_RE.search(num_only)) is None:
+        return None
+    value = match.group(0)
+    return None if _is_zero_but_true(value) else value
+
+
+def _is_zero_but_true(value):
+    """Zero but true values can crash apple watches."""
+    with contextlib.suppress(ValueError):
+        return float(value) == 0
+    return False
 
 
 def remove_state_files_for_entry_id(hass: HomeAssistant, entry_id: str):
