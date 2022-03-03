@@ -80,7 +80,7 @@ async def test_media_player_setup(
     assert state
     assert state.state == STATE_IDLE
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 5636
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 136708
     assert state.attributes[ATTR_MEDIA_CONTENT_TYPE] == "music"
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == expected_volume
 
@@ -166,7 +166,6 @@ async def test_media_player_play(
     camera: tuple[Camera, str],
 ):
     """Test media_player entity test play_media."""
-
     camera[0].__fields__["stop_audio"] = Mock()
     camera[0].__fields__["play_audio"] = Mock()
     camera[0].__fields__["wait_until_audio_completes"] = Mock()
@@ -179,13 +178,15 @@ async def test_media_player_play(
         "play_media",
         {
             ATTR_ENTITY_ID: camera[1],
-            "media_content_id": "/test.mp3",
+            "media_content_id": "http://example.com/test.mp3",
             "media_content_type": "music",
         },
         blocking=True,
     )
 
-    camera[0].play_audio.assert_called_once_with("/test.mp3", blocking=False)
+    camera[0].play_audio.assert_called_once_with(
+        "http://example.com/test.mp3", blocking=False
+    )
     camera[0].wait_until_audio_completes.assert_called_once()
 
 
