@@ -37,7 +37,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 
 from .const import (
     ATTR_ADDRESS,
