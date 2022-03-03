@@ -1,6 +1,7 @@
 """Helpers for data entry flows for helper config entries."""
 from __future__ import annotations
 
+from abc import abstractmethod
 from typing import Any
 
 import voluptuous as vol
@@ -87,6 +88,7 @@ class HelperConfigFlowHandler(config_entries.ConfigFlow):
         return result
 
     # pylint: disable-next=no-self-use
+    @abstractmethod
     def async_config_entry_title(self, user_input: dict[str, Any]) -> str:
         """Return config entry title."""
         return ""
