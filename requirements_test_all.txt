@@ -569,7 +569,7 @@ homepluscontrol==0.0.5
 
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk
-httplib2==0.19.0
+httplib2==0.20.4
 
 # homeassistant.components.huawei_lte
 huawei-lte-api==1.4.18
