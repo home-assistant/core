@@ -9,7 +9,12 @@ ICON_EMPTY = "mdi:bed-empty"
 ICON_OCCUPIED = "mdi:bed"
 IS_IN_BED = "is_in_bed"
 SLEEP_NUMBER = "sleep_number"
-SENSOR_TYPES = {SLEEP_NUMBER: "SleepNumber", IS_IN_BED: "Is In Bed"}
+PRESSURE = "pressure"
+SENSOR_TYPES = {
+    SLEEP_NUMBER: "SleepNumber",
+    IS_IN_BED: "Is In Bed",
+    PRESSURE: "Pressure",
+}
 
 LEFT = "left"
 RIGHT = "right"
