@@ -328,7 +328,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         await self.coordinator.roku.remote("poweron")
         await self.coordinator.async_request_refresh()
 
-    @roku_exception_handler(True)
+    @roku_exception_handler(ignore_timeout=True)
     async def async_turn_off(self) -> None:
         """Turn off the Roku."""
         with suppress(RokuConnectionTimeoutError):
