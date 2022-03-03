@@ -544,7 +544,7 @@ class HomeBridge(Bridge):
         """Initialize a Bridge object."""
         super().__init__(driver, name)
         self.set_info_service(
-            firmware_revision=__version__,
+            firmware_revision=format_version(__version__),
             manufacturer=MANUFACTURER,
             model=BRIDGE_MODEL,
             serial_number=BRIDGE_SERIAL_NUMBER,

@@ -42,7 +42,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    __version__,
     __version__ as hass_version,
 )
 from homeassistant.helpers.event import TRACK_STATE_CHANGE_CALLBACKS
@@ -693,7 +692,9 @@ def test_home_bridge(hk_driver):
     serv = bridge.services[0]  # SERV_ACCESSORY_INFO
     assert serv.display_name == SERV_ACCESSORY_INFO
     assert serv.get_characteristic(CHAR_NAME).value == BRIDGE_NAME
-    assert serv.get_characteristic(CHAR_FIRMWARE_REVISION).value == __version__
+    assert hass_version.startswith(
+        serv.get_characteristic(CHAR_FIRMWARE_REVISION).value
+    )
     assert serv.get_characteristic(CHAR_MANUFACTURER).value == MANUFACTURER
     assert serv.get_characteristic(CHAR_MODEL).value == BRIDGE_MODEL
     assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == BRIDGE_SERIAL_NUMBER
