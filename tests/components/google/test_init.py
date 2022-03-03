@@ -1,4 +1,6 @@
 """The tests for the Google Calendar component."""
+from __future__ import annotations
+
 from collections.abc import Awaitable, Callable
 import datetime
 from typing import Any
@@ -13,7 +15,7 @@ import pytest
 
 from homeassistant.components.google import DOMAIN, SERVICE_ADD_EVENT
 from homeassistant.const import STATE_OFF
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -91,6 +93,16 @@ async def test_setup_config_empty(
     mock_notification.assert_not_called()
 
     assert not hass.states.get(TEST_YAML_ENTITY)
+
+
+def assert_state(actual: State | None, expected: State | None) -> None:
+    """Assert that the two states are equal."""
+    if actual is None:
+        assert actual == expected
+        return
+    assert actual.entity_id == expected.entity_id
+    assert actual.state == expected.state
+    assert actual.attributes == expected.attributes
 
 
 async def test_init_success(
@@ -269,11 +281,33 @@ async def test_invalid_calendar_yaml(
 
 
 @pytest.mark.parametrize(
-    "google_config_track_new,calendars_config,expect_tracked",
+    "google_config_track_new,calendars_config,expected_state",
     [
-        (None, [], True),  # CONF_TRACK_NEW is unset
-        (True, [], True),
-        (False, [], False),
+        (
+            None,
+            [],
+            State(
+                TEST_API_ENTITY,
+                STATE_OFF,
+                attributes={
+                    "offset_reached": False,
+                    "friendly_name": TEST_API_ENTITY_NAME,
+                },
+            ),
+        ),
+        (
+            True,
+            [],
+            State(
+                TEST_API_ENTITY,
+                STATE_OFF,
+                attributes={
+                    "offset_reached": False,
+                    "friendly_name": TEST_API_ENTITY_NAME,
+                },
+            ),
+        ),
+        (False, [], None),
     ],
     ids=["default", "True", "False"],
 )
@@ -284,7 +318,7 @@ async def test_track_new(
     mock_calendars_list: ApiResult,
     test_api_calendar: dict[str, Any],
     mock_calendars_yaml: None,
-    expect_tracked: bool,
+    expected_state: State,
 ) -> None:
     """Test behavior of configuration.yaml settings for tracking new calendars not in the config."""
 
@@ -293,12 +327,7 @@ async def test_track_new(
 
     # The calendar does not
     state = hass.states.get(TEST_API_ENTITY)
-    if expect_tracked:
-        assert state
-        assert state.name == TEST_API_ENTITY_NAME
-        assert state.state == STATE_OFF
-    else:
-        assert not state
+    assert_state(state, expected_state)
 
 
 @pytest.mark.parametrize("calendars_config", [[]])
@@ -325,7 +354,23 @@ async def test_found_calendar_from_api(
     assert not hass.states.get(TEST_YAML_ENTITY)
 
 
-@pytest.mark.parametrize("calendars_config_track", [True, False])
+@pytest.mark.parametrize(
+    "calendars_config_track,expected_state",
+    [
+        (
+            True,
+            State(
+                TEST_YAML_ENTITY,
+                STATE_OFF,
+                attributes={
+                    "offset_reached": False,
+                    "friendly_name": TEST_YAML_ENTITY_NAME,
+                },
+            ),
+        ),
+        (False, None),
+    ],
+)
 async def test_calendar_config_track_new(
     hass: HomeAssistant,
     mock_token_read: None,
@@ -334,6 +379,7 @@ async def test_calendar_config_track_new(
     mock_calendars_list: ApiResult,
     test_api_calendar: dict[str, Any],
     calendars_config_track: bool,
+    expected_state: State,
 ) -> None:
     """Test calendar config that overrides whether or not a calendar is tracked."""
 
@@ -341,6 +387,7 @@ async def test_calendar_config_track_new(
     assert await component_setup()
 
     state = hass.states.get(TEST_YAML_ENTITY)
+    assert_state(state, expected_state)
     if calendars_config_track:
         assert state
         assert state.name == TEST_YAML_ENTITY_NAME
