@@ -1,16 +1,22 @@
 """Describe logbook events."""
+from collections.abc import Callable
+from typing import Any
+
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SERVICE
-from homeassistant.core import callback
+from homeassistant.core import Event, HomeAssistant, callback
 
 from .const import ATTR_DISPLAY_NAME, ATTR_VALUE, DOMAIN, EVENT_HOMEKIT_CHANGED
 
 
 @callback
-def async_describe_events(hass, async_describe_event):
+def async_describe_events(
+    hass: HomeAssistant,
+    async_describe_event: Callable[[str, str, Callable[[Event], dict[str, Any]]], None],
+) -> None:
     """Describe logbook events."""
 
     @callback
-    def async_describe_logbook_event(event):
+    def async_describe_logbook_event(event: Event) -> dict[str, Any]:
         """Describe a logbook event."""
         data = event.data
         entity_id = data.get(ATTR_ENTITY_ID)
