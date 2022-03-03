@@ -11,7 +11,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, SLEEP_NUMBER
 from .coordinator import SleepIQData
-from .entity import SleepIQSensor
+from .entity import SleepIQSleeperEntity
 
 
 async def async_setup_entry(
@@ -28,7 +28,7 @@ async def async_setup_entry(
     )
 
 
-class SleepNumberSensorEntity(SleepIQSensor, SensorEntity):
+class SleepNumberSensorEntity(SleepIQSleeperEntity, SensorEntity):
     """Representation of an SleepIQ Entity with CoordinatorEntity."""
 
     _attr_icon = "mdi:bed"
