@@ -3,7 +3,8 @@
   "name": "Home Assistant Supervisor",
   "documentation": "https://www.home-assistant.io/integrations/hassio",
   "dependencies": [
-    "http"
+    "http",
+    "update"
   ],
   "after_dependencies": [
     "panel_custom"
