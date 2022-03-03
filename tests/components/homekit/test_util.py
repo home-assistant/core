@@ -30,6 +30,7 @@ from homeassistant.components.homekit.util import (
     async_port_is_available,
     async_show_setup_message,
     cleanup_name_for_homekit,
+    coerce_int,
     convert_to_float,
     density_to_air_quality,
     format_version,
@@ -349,11 +350,19 @@ async def test_format_version():
     assert format_version("undefined-undefined-1.6.8") == "1.6.8"
     assert format_version("56.0-76060") == "56.0.76060"
     assert format_version(3.6) == "3.6"
-    assert format_version("AK001-ZJ100") == "001.100"
+    assert format_version("AK001-ZJ100") == "1.100"
     assert format_version("HF-LPB100-") == "100"
-    assert format_version("AK001-ZJ2149") == "001.2149"
+    assert format_version("AK001-ZJ2149") == "1.2149"
+    assert format_version("000132 16407885") == "132.16407885"
     assert format_version("0.1") == "0.1"
     assert format_version("unknown") is None
+
+
+async def test_coerce_int():
+    """Test coerce_int method."""
+    assert coerce_int("1") == 1
+    assert coerce_int("") == 0
+    assert coerce_int(0) == 0
 
 
 async def test_accessory_friendly_name():

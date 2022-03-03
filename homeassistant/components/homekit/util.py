@@ -1,7 +1,6 @@
 """Collection of useful functions for the HomeKit component."""
 from __future__ import annotations
 
-import contextlib
 import io
 import ipaddress
 import logging
@@ -364,6 +363,14 @@ def convert_to_float(state):
         return None
 
 
+def coerce_int(state: str) -> int:
+    """Return int."""
+    try:
+        return int(state)
+    except (ValueError, TypeError):
+        return 0
+
+
 def cleanup_name_for_homekit(name: str | None) -> str:
     """Ensure the name of the device will not crash homekit."""
     #
@@ -423,19 +430,17 @@ def get_aid_storage_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str):
 
 def format_version(version):
     """Extract the version string in a format homekit can consume."""
-    split_ver = str(version).replace("-", ".")
+    split_ver = str(version).replace("-", ".").replace(" ", ".")
     num_only = NUMBERS_ONLY_RE.sub("", split_ver)
     if (match := VERSION_RE.search(num_only)) is None:
         return None
-    value = match.group(0)
+    value = ".".join(map(str, map(coerce_int, match.group(0).split("."))))
     return None if _is_zero_but_true(value) else value
 
 
 def _is_zero_but_true(value):
     """Zero but true values can crash apple watches."""
-    with contextlib.suppress(ValueError):
-        return float(value) == 0
-    return False
+    return convert_to_float(value) == 0
 
 
 def remove_state_files_for_entry_id(hass: HomeAssistant, entry_id: str):
