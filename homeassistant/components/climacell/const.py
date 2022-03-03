@@ -45,7 +45,7 @@ from homeassistant.const import (
     PERCENTAGE,
     PRESSURE_HPA,
     PRESSURE_INHG,
-    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -237,7 +237,7 @@ CC_SENSOR_TYPES = (
         key=CC_ATTR_WIND_GUST,
         name="Wind Gust",
         unit_imperial=SPEED_MILES_PER_HOUR,
-        unit_metric=SPEED_KILOMETERS_PER_HOUR,
+        unit_metric=SPEED_METERS_PER_SECOND,
         metric_conversion=lambda val: distance_convert(val, LENGTH_MILES, LENGTH_METERS)
         / 3600,
         is_metric_check=True,
