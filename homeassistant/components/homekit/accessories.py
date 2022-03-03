@@ -17,7 +17,6 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
-    ATTR_HW_VERSION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SERVICE,
@@ -46,7 +45,6 @@ from .const import (
     BRIDGE_SERIAL_NUMBER,
     CHAR_BATTERY_LEVEL,
     CHAR_CHARGING_STATE,
-    CHAR_HARDWARE_REVISION,
     CHAR_STATUS_LOW_BATTERY,
     CONF_FEATURE_LIST,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
@@ -63,7 +61,6 @@ from .const import (
     MAX_MODEL_LENGTH,
     MAX_SERIAL_LENGTH,
     MAX_VERSION_LENGTH,
-    SERV_ACCESSORY_INFO,
     SERV_BATTERY_SERVICE,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
     TYPE_FAUCET,
@@ -275,23 +272,12 @@ class HomeAccessory(Accessory):
             sw_version = format_version(self.config[ATTR_SW_VERSION])
         if sw_version is None:
             sw_version = __version__
-        hw_version = None
-        if self.config.get(ATTR_HW_VERSION) is not None:
-            hw_version = format_version(self.config[ATTR_HW_VERSION])
-
         self.set_info_service(
             manufacturer=manufacturer[:MAX_MANUFACTURER_LENGTH],
             model=model[:MAX_MODEL_LENGTH],
             serial_number=serial_number[:MAX_SERIAL_LENGTH],
             firmware_revision=sw_version[:MAX_VERSION_LENGTH],
         )
-        if hw_version:
-            serv_info = self.get_service(SERV_ACCESSORY_INFO)
-            char = self.driver.loader.get_char(CHAR_HARDWARE_REVISION)
-            serv_info.add_characteristic(char)
-            serv_info.configure_char(CHAR_HARDWARE_REVISION, value=hw_version)
-            self.iid_manager.assign(char)
-            char.broker = self
 
         self.category = category
         self.entity_id = entity_id
