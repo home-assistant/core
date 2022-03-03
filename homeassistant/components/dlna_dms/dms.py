@@ -680,8 +680,7 @@ class DmsDeviceSource:
         """Make an identifier for BrowseMediaSource."""
         return f"{self.source_id}/{action}{object_id}"
 
-    @property  # type: ignore
-    @functools.cache
+    @functools.cached_property
     def _sort_criteria(self) -> list[str]:
         """Return criteria to be used for sorting results.
 
