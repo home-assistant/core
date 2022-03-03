@@ -8,6 +8,7 @@ import logging
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
 
+from homeassistant.components import media_source
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
@@ -53,7 +54,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.dt import utcnow
 
-from .browse_media import build_item_response, generate_playlist, library_payload
+from .browse_media import (
+    build_item_response,
+    generate_playlist,
+    library_payload,
+    media_source_content_filter,
+)
 from .const import DISCOVERY_TASK, DOMAIN, KNOWN_PLAYERS, PLAYER_DISCOVERY_UNSUB
 
 SERVICE_CALL_METHOD = "call_method"
@@ -460,7 +466,12 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         if kwargs.get(ATTR_MEDIA_ENQUEUE):
             cmd = "add"
 
-        if media_type == MEDIA_TYPE_MUSIC:
+        if media_source.is_media_source_id(media_id):
+            media_type = MEDIA_TYPE_MUSIC
+            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            media_id = play_item.url
+
+        if media_type in MEDIA_TYPE_MUSIC:
             await self._player.async_load_url(media_id, cmd)
             return
 
@@ -554,7 +565,12 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         )
 
         if media_content_type in [None, "library"]:
-            return await library_payload(self._player)
+            return await library_payload(self.hass, self._player)
+
+        if media_source.is_media_source_id(media_content_id):
+            return await media_source.async_browse_media(
+                self.hass, media_content_id, content_filter=media_source_content_filter
+            )
 
         payload = {
             "search_type": media_content_type,
