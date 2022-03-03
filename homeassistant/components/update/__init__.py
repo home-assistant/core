@@ -22,7 +22,7 @@ INFO_CALLBACK_TIMEOUT = 5
 STORAGE_VERSION = 1
 
 
-class UpdateFailed(HomeAssistantError):
+class IntegrationUpdateFailed(HomeAssistantError):
     """Error to indicate an update has failed."""
 
 
@@ -108,13 +108,13 @@ async def handle_update(
             version=msg["version"],
             backup=msg.get("backup"),
         )
-    except UpdateFailed as err:
+    except IntegrationUpdateFailed as err:
         connection.send_error(
             msg["id"],
             "update_failed",
             str(err),
         )
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception:  # pylint: disable=broad-except
         _LOGGER.exception(
             "Update of %s to version %s failed",
             msg["identifier"],

@@ -9,7 +9,11 @@ from unittest.mock import Mock, patch
 from aiohttp import ClientWebSocketResponse
 import pytest
 
-from homeassistant.components.update import DOMAIN, UpdateDescription, UpdateFailed
+from homeassistant.components.update import (
+    DOMAIN,
+    IntegrationUpdateFailed,
+    UpdateDescription,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -253,7 +257,7 @@ async def test_update_update_failed(
         version: str,
         **kwargs,
     ) -> bool:
-        raise UpdateFailed("Test update failed")
+        raise IntegrationUpdateFailed("Test update failed")
 
     await setup_mock_domain(hass, async_perform_update=mock_async_perform_update)
 
@@ -276,10 +280,7 @@ async def test_update_update_failed(
     resp = await client.receive_json()
     assert not resp["success"]
     assert resp["error"]["code"] == "update_failed"
-    assert (
-        resp["error"]["message"]
-        == f"Update of {update['domain']}/{update['identifier']} to version {update['available_version']} failed: Test update failed"
-    )
+    assert resp["error"]["message"] == "Test update failed"
 
 
 async def test_update_update_failed_generic(
@@ -318,14 +319,8 @@ async def test_update_update_failed_generic(
     resp = await client.receive_json()
     assert not resp["success"]
     assert resp["error"]["code"] == "update_failed"
-    assert (
-        resp["error"]["message"]
-        == f"Update of {update['domain']}/{update['identifier']} to version {update['available_version']} failed: Test update failed"
-    )
-    assert (
-        f"Update of {update['domain']}/{update['identifier']} to version {update['available_version']}"
-        in caplog.text
-    )
+    assert resp["error"]["message"] == "Unknown Error"
+    assert "Test update failed" in caplog.text
 
 
 async def test_update_before_info(
