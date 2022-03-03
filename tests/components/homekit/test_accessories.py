@@ -166,7 +166,9 @@ async def test_home_accessory(hass, hk_driver):
         serv.get_characteristic(CHAR_SERIAL_NUMBER).value
         == "light.accessory_that_exceeds_the_maximum_maximum_maximum_maximum"
     )
-    assert serv.get_characteristic(CHAR_FIRMWARE_REVISION).value == hass_version
+    assert hass_version.startswith(
+        serv.get_characteristic(CHAR_FIRMWARE_REVISION).value
+    )
 
     hass.states.async_set(entity_id, "on")
     await hass.async_block_till_done()
@@ -216,7 +218,9 @@ async def test_accessory_with_missing_basic_service_info(hass, hk_driver):
     assert serv.get_characteristic(CHAR_MANUFACTURER).value == "Home Assistant Sensor"
     assert serv.get_characteristic(CHAR_MODEL).value == "Sensor"
     assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == entity_id
-    assert serv.get_characteristic(CHAR_FIRMWARE_REVISION).value == hass_version
+    assert hass_version.startswith(
+        serv.get_characteristic(CHAR_FIRMWARE_REVISION).value
+    )
     assert isinstance(acc.to_HAP(), dict)
 
 
@@ -244,7 +248,9 @@ async def test_accessory_with_hardware_revision(hass, hk_driver):
     assert serv.get_characteristic(CHAR_MANUFACTURER).value == "Home Assistant Sensor"
     assert serv.get_characteristic(CHAR_MODEL).value == "Sensor"
     assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == entity_id
-    assert serv.get_characteristic(CHAR_FIRMWARE_REVISION).value == hass_version
+    assert hass_version.startswith(
+        serv.get_characteristic(CHAR_FIRMWARE_REVISION).value
+    )
     assert serv.get_characteristic(CHAR_HARDWARE_REVISION).value == "1.2.3"
     assert isinstance(acc.to_HAP(), dict)
 
