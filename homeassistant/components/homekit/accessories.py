@@ -274,7 +274,7 @@ class HomeAccessory(Accessory):
         if self.config.get(ATTR_SW_VERSION) is not None:
             sw_version = format_version(self.config[ATTR_SW_VERSION])
         if sw_version is None:
-            sw_version = __version__
+            sw_version = format_version(__version__)
         hw_version = None
         if self.config.get(ATTR_HW_VERSION) is not None:
             hw_version = format_version(self.config[ATTR_HW_VERSION])
