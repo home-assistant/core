@@ -221,12 +221,9 @@ class GrowattData:
                 # Create datetime from the latest entry
                 date_now = dt.now().date()
                 last_updated_time = dt.parse_time(str(sorted_keys[-1]))
-                combined_timestamp = datetime.datetime.combine(
+                mix_detail["lastdataupdate"] = datetime.datetime.combine(
                     date_now, last_updated_time
                 )
-                # Convert datetime to UTC
-                combined_timestamp_utc = dt.as_utc(combined_timestamp)
-                mix_detail["lastdataupdate"] = combined_timestamp_utc.isoformat()
 
                 # Dashboard data is largely inaccurate for mix system but it is the only call with the ability to return the combined
                 # imported from grid value that is the combination of charging AND load consumption
