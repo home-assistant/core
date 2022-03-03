@@ -144,7 +144,7 @@ async def test_abort_if_already_setup(hass, test_connect):
 
 
 async def test_connect_functions(hass, test_api):
-    """Test api connect funtions."""
+    """Test api connect functions."""
     # test API is ok
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
