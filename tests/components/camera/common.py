@@ -8,6 +8,7 @@ from unittest.mock import Mock
 from homeassistant.components.camera.const import DATA_CAMERA_PREFS, PREF_PRELOAD_STREAM
 
 EMPTY_8_6_JPEG = b"empty_8_6"
+WEBRTC_ANSWER = "a=sendonly"
 
 
 def mock_camera_prefs(hass, entity_id, prefs=None):

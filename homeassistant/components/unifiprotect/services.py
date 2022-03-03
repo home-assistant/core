@@ -2,19 +2,44 @@
 from __future__ import annotations
 
 import asyncio
+import functools
 from typing import Any
 
 from pydantic import ValidationError
 from pyunifiprotect.api import ProtectApiClient
 from pyunifiprotect.exceptions import BadRequest
+import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
 from .const import ATTR_MESSAGE, DOMAIN
 from .data import ProtectData
+from .utils import _async_unifi_mac_from_hass
+
+SERVICE_ADD_DOORBELL_TEXT = "add_doorbell_text"
+SERVICE_REMOVE_DOORBELL_TEXT = "remove_doorbell_text"
+SERVICE_SET_DEFAULT_DOORBELL_TEXT = "set_default_doorbell_text"
+
+ALL_GLOBAL_SERIVCES = [
+    SERVICE_ADD_DOORBELL_TEXT,
+    SERVICE_REMOVE_DOORBELL_TEXT,
+    SERVICE_SET_DEFAULT_DOORBELL_TEXT,
+]
+
+DOORBELL_TEXT_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            **cv.ENTITY_SERVICE_FIELDS,
+            vol.Required(ATTR_MESSAGE): cv.string,
+        },
+    ),
+    cv.has_at_least_one_key(ATTR_DEVICE_ID),
+)
 
 
 def _async_all_ufp_instances(hass: HomeAssistant) -> list[ProtectApiClient]:
@@ -22,12 +47,6 @@ def _async_all_ufp_instances(hass: HomeAssistant) -> list[ProtectApiClient]:
     return [
         data.api for data in hass.data[DOMAIN].values() if isinstance(data, ProtectData)
     ]
-
-
-@callback
-def _async_unifi_mac_from_hass(mac: str) -> str:
-    # MAC addresses in UFP are always caps
-    return mac.replace(":", "").upper()
 
 
 @callback
@@ -110,3 +129,40 @@ async def set_default_doorbell_text(hass: HomeAssistant, call: ServiceCall) -> N
     message: str = call.data[ATTR_MESSAGE]
     instances = _async_get_protect_from_call(hass, call)
     await _async_call_nvr(instances, "set_default_doorbell_message", message)
+
+
+def async_setup_services(hass: HomeAssistant) -> None:
+    """Set up the global UniFi Protect services."""
+    services = [
+        (
+            SERVICE_ADD_DOORBELL_TEXT,
+            functools.partial(add_doorbell_text, hass),
+            DOORBELL_TEXT_SCHEMA,
+        ),
+        (
+            SERVICE_REMOVE_DOORBELL_TEXT,
+            functools.partial(remove_doorbell_text, hass),
+            DOORBELL_TEXT_SCHEMA,
+        ),
+        (
+            SERVICE_SET_DEFAULT_DOORBELL_TEXT,
+            functools.partial(set_default_doorbell_text, hass),
+            DOORBELL_TEXT_SCHEMA,
+        ),
+    ]
+    for name, method, schema in services:
+        if hass.services.has_service(DOMAIN, name):
+            continue
+        hass.services.async_register(DOMAIN, name, method, schema=schema)
+
+
+def async_cleanup_services(hass: HomeAssistant) -> None:
+    """Cleanup global UniFi Protect services (if all config entries unloaded)."""
+    loaded_entries = [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.state == ConfigEntryState.LOADED
+    ]
+    if len(loaded_entries) == 1:
+        for name in ALL_GLOBAL_SERIVCES:
+            hass.services.async_remove(DOMAIN, name)

@@ -82,7 +82,9 @@ def async_generate_path(webhook_id: str) -> str:
 
 
 @bind_hass
-async def async_handle_webhook(hass, webhook_id, request):
+async def async_handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: Request
+) -> Response:
     """Handle a webhook."""
     handlers = hass.data.setdefault(DOMAIN, {})
 
@@ -93,7 +95,7 @@ async def async_handle_webhook(hass, webhook_id, request):
         else:
             received_from = request.remote
 
-        _LOGGER.warning(
+        _LOGGER.info(
             "Received message for unregistered webhook %s from %s",
             webhook_id,
             received_from,
@@ -141,7 +143,7 @@ class WebhookView(HomeAssistantView):
     requires_auth = False
     cors_allowed = True
 
-    async def _handle(self, request: Request, webhook_id):
+    async def _handle(self, request: Request, webhook_id: str) -> Response:
         """Handle webhook call."""
         # pylint: disable=no-self-use
         _LOGGER.debug("Handling webhook %s payload for %s", request.method, webhook_id)

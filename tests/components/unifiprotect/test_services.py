@@ -8,9 +8,8 @@ import pytest
 from pyunifiprotect.data import Light
 from pyunifiprotect.exceptions import BadRequest
 
-from homeassistant.components.unifiprotect.const import (
-    ATTR_MESSAGE,
-    DOMAIN,
+from homeassistant.components.unifiprotect.const import ATTR_MESSAGE, DOMAIN
+from homeassistant.components.unifiprotect.services import (
     SERVICE_ADD_DOORBELL_TEXT,
     SERVICE_REMOVE_DOORBELL_TEXT,
     SERVICE_SET_DEFAULT_DOORBELL_TEXT,

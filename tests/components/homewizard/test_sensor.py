@@ -1,6 +1,9 @@
 """Test the update coordinator for HomeWizard."""
 
-from unittest.mock import patch
+from datetime import timedelta
+from unittest.mock import AsyncMock, patch
+
+from aiohwenergy.errors import DisabledError
 
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -20,8 +23,11 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.helpers import entity_registry as er
+import homeassistant.util.dt as dt_util
 
 from .generator import get_mock_device
+
+from tests.common import async_fire_time_changed
 
 
 async def test_sensor_entity_smr_version(
@@ -637,3 +643,105 @@ async def test_sensor_entity_export_disabled_when_unused(
     )
     assert entry
     assert entry.disabled
+
+
+async def test_sensors_unreachable(hass, mock_config_entry_data, mock_config_entry):
+    """Test sensor handles api unreachable."""
+
+    api = get_mock_device()
+    api.data.available_datapoints = [
+        "total_power_import_t1_kwh",
+    ]
+    api.data.total_power_import_t1_kwh = 1234.123
+
+    with patch(
+        "aiohwenergy.HomeWizardEnergy",
+        return_value=api,
+    ):
+        api.update = AsyncMock(return_value=True)
+
+        entry = mock_config_entry
+        entry.data = mock_config_entry_data
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        utcnow = dt_util.utcnow()  # Time after the integration is setup
+
+        assert (
+            hass.states.get(
+                "sensor.product_name_aabbccddeeff_total_power_import_t1"
+            ).state
+            == "1234.123"
+        )
+
+        api.update = AsyncMock(return_value=False)
+        async_fire_time_changed(hass, utcnow + timedelta(seconds=5))
+        await hass.async_block_till_done()
+        assert (
+            hass.states.get(
+                "sensor.product_name_aabbccddeeff_total_power_import_t1"
+            ).state
+            == "unavailable"
+        )
+
+        api.update = AsyncMock(return_value=True)
+        async_fire_time_changed(hass, utcnow + timedelta(seconds=10))
+        await hass.async_block_till_done()
+        assert (
+            hass.states.get(
+                "sensor.product_name_aabbccddeeff_total_power_import_t1"
+            ).state
+            == "1234.123"
+        )
+
+
+async def test_api_disabled(hass, mock_config_entry_data, mock_config_entry):
+    """Test sensor handles api unreachable."""
+
+    api = get_mock_device()
+    api.data.available_datapoints = [
+        "total_power_import_t1_kwh",
+    ]
+    api.data.total_power_import_t1_kwh = 1234.123
+
+    with patch(
+        "aiohwenergy.HomeWizardEnergy",
+        return_value=api,
+    ):
+        api.update = AsyncMock(return_value=True)
+
+        entry = mock_config_entry
+        entry.data = mock_config_entry_data
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        utcnow = dt_util.utcnow()  # Time after the integration is setup
+
+        assert (
+            hass.states.get(
+                "sensor.product_name_aabbccddeeff_total_power_import_t1"
+            ).state
+            == "1234.123"
+        )
+
+        api.update = AsyncMock(side_effect=DisabledError)
+        async_fire_time_changed(hass, utcnow + timedelta(seconds=5))
+        await hass.async_block_till_done()
+        assert (
+            hass.states.get(
+                "sensor.product_name_aabbccddeeff_total_power_import_t1"
+            ).state
+            == "unavailable"
+        )
+
+        api.update = AsyncMock(return_value=True)
+        async_fire_time_changed(hass, utcnow + timedelta(seconds=10))
+        await hass.async_block_till_done()
+        assert (
+            hass.states.get(
+                "sensor.product_name_aabbccddeeff_total_power_import_t1"
+            ).state
+            == "1234.123"
+        )

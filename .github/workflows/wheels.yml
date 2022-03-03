@@ -16,12 +16,13 @@ on:
 jobs:
   init:
     name: Initialize wheels builder
+    if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
     outputs:
       architectures: ${{ steps.info.outputs.architectures }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
 
       - name: Get information
         id: info
@@ -43,7 +44,7 @@ jobs:
             echo "GRPC_PYTHON_BUILD_WITH_CYTHON=true"
             echo "GRPC_PYTHON_DISABLE_LIBC_COMPATIBILITY=true"
             # GRPC on armv7 needs -lexecinfo (issue #56669) since home assistant installs
-            # execinfo-dev when building wheels. The setup.py does not have an option for
+            # execinfo-dev when building wheels. The setuptools build setup does not have an option for
             # adding a single LDFLAG so copy all relevant linux flags here (as of 1.43.0)
             echo "GRPC_PYTHON_LDFLAGS=-lpthread -Wl,-wrap,memcpy -static-libgcc -lexecinfo"
           ) > .env_file
@@ -62,6 +63,7 @@ jobs:
 
   core:
     name: Build wheels with ${{ matrix.tag }} (${{ matrix.arch }}) for core
+    if: github.repository_owner == 'home-assistant'
     needs: init
     runs-on: ubuntu-latest
     strategy:
@@ -72,7 +74,7 @@ jobs:
           - "3.9-alpine3.14"
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
 
       - name: Download env_file
         uses: actions/download-artifact@v2
@@ -85,7 +87,7 @@ jobs:
           name: requirements_diff
 
       - name: Build wheels
-        uses: home-assistant/wheels@2022.01.0
+        uses: home-assistant/wheels@2022.01.2
         with:
           tag: ${{ matrix.tag }}
           arch: ${{ matrix.arch }}
@@ -102,6 +104,7 @@ jobs:
 
   integrations:
     name: Build wheels with ${{ matrix.tag }} (${{ matrix.arch }}) for integrations
+    if: github.repository_owner == 'home-assistant'
     needs: init
     runs-on: ubuntu-latest
     strategy:
@@ -112,7 +115,7 @@ jobs:
           - "3.9-alpine3.14"
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
 
       - name: Download env_file
         uses: actions/download-artifact@v2
@@ -132,14 +135,9 @@ jobs:
             sed -i "s|# bluepy|bluepy|g" ${requirement_file}
             sed -i "s|# beacontools|beacontools|g" ${requirement_file}
             sed -i "s|# RPi.GPIO|RPi.GPIO|g" ${requirement_file}
-            sed -i "s|# raspihats|raspihats|g" ${requirement_file}
-            sed -i "s|# rpi-rf|rpi-rf|g" ${requirement_file}
-            sed -i "s|# blinkt|blinkt|g" ${requirement_file}
             sed -i "s|# fritzconnection|fritzconnection|g" ${requirement_file}
             sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
             sed -i "s|# evdev|evdev|g" ${requirement_file}
-            sed -i "s|# smbus-cffi|smbus-cffi|g" ${requirement_file}
-            sed -i "s|# i2csense|i2csense|g" ${requirement_file}
             sed -i "s|# python-eq3bt|python-eq3bt|g" ${requirement_file}
             sed -i "s|# pycups|pycups|g" ${requirement_file}
             sed -i "s|# homekit|homekit|g" ${requirement_file}
@@ -149,12 +147,12 @@ jobs:
             sed -i "s|# PySwitchbot|PySwitchbot|g" ${requirement_file}
             sed -i "s|# pySwitchmate|pySwitchmate|g" ${requirement_file}
             sed -i "s|# face_recognition|face_recognition|g" ${requirement_file}
-            sed -i "s|# bme680|bme680|g" ${requirement_file}
             sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
+            sed -i "s|# homeassistant-pyozw|homeassistant-pyozw|g" ${requirement_file}
           done
 
       - name: Build wheels
-        uses: home-assistant/wheels@2022.01.0
+        uses: home-assistant/wheels@2022.01.2
         with:
           tag: ${{ matrix.tag }}
           arch: ${{ matrix.arch }}

@@ -304,9 +304,7 @@ class CameraStreamTrait(_Trait):
 
     async def execute(self, command, data, params, challenge):
         """Execute a get camera stream command."""
-        url = await self.hass.components.camera.async_request_stream(
-            self.state.entity_id, "hls"
-        )
+        url = await camera.async_request_stream(self.hass, self.state.entity_id, "hls")
         self.stream_info = {
             "cameraStreamAccessUrl": f"{get_url(self.hass)}{url}",
             "cameraStreamReceiverAppId": CAST_APP_ID_HOMEASSISTANT_MEDIA,
@@ -776,14 +774,10 @@ class StartStopTrait(_Trait):
         """Execute a StartStop command."""
         if command == COMMAND_STARTSTOP:
             if params["start"] is False:
-                if (
-                    self.state.state
-                    in (
-                        cover.STATE_CLOSING,
-                        cover.STATE_OPENING,
-                    )
-                    or self.state.attributes.get(ATTR_ASSUMED_STATE)
-                ):
+                if self.state.state in (
+                    cover.STATE_CLOSING,
+                    cover.STATE_OPENING,
+                ) or self.state.attributes.get(ATTR_ASSUMED_STATE):
                     await self.hass.services.async_call(
                         self.state.domain,
                         cover.SERVICE_STOP_COVER,

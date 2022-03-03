@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.rfxtrx import DOMAIN
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import State
 
 from tests.common import MockConfigEntry, mock_restore_cache
@@ -25,7 +26,7 @@ async def test_one_light(hass, rfxtrx):
 
     state = hass.states.get("light.ac_213c7f2_16")
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "AC 213c7f2:16"
 
     await hass.services.async_call(
@@ -132,17 +133,17 @@ async def test_several_lights(hass, rfxtrx):
 
     state = hass.states.get("light.ac_213c7f2_48")
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "AC 213c7f2:48"
 
     state = hass.states.get("light.ac_118cdea_2")
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "AC 118cdea:2"
 
     state = hass.states.get("light.ac_1118cdea_2")
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "AC 1118cdea:2"
 
     await rfxtrx.signal("0b1100cd0213c7f230010f71")

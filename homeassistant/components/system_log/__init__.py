@@ -8,7 +8,7 @@ import traceback
 import voluptuous as vol
 
 from homeassistant import __path__ as HOMEASSISTANT_PATH
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components import websocket_api
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
@@ -200,7 +200,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if (conf := config.get(DOMAIN)) is None:
         conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
 
-    simple_queue = queue.SimpleQueue()
+    simple_queue: queue.SimpleQueue = queue.SimpleQueue()
     queue_handler = LogErrorQueueHandler(simple_queue)
     queue_handler.setLevel(logging.WARN)
     logging.root.addHandler(queue_handler)
@@ -224,7 +224,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_queue_handler)
 
-    hass.http.register_view(AllErrorsView(handler))
+    websocket_api.async_register_command(hass, list_errors)
 
     async def async_service_handler(service: ServiceCall) -> None:
         """Handle logger services."""
@@ -255,16 +255,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class AllErrorsView(HomeAssistantView):
-    """Get all logged errors and warnings."""
-
-    url = "/api/error/all"
-    name = "api:error:all"
-
-    def __init__(self, handler):
-        """Initialize a new AllErrorsView."""
-        self.handler = handler
-
-    async def get(self, request):
-        """Get all errors and warnings."""
-        return self.json(self.handler.records.to_list())
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): "system_log/list"})
+@callback
+def list_errors(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+):
+    """List all possible diagnostic handlers."""
+    connection.send_result(
+        msg["id"],
+        hass.data[DOMAIN].records.to_list(),
+    )

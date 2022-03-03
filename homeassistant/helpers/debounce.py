@@ -97,7 +97,7 @@ class Debouncer:
         async with self._execute_lock:
             # Abort if timer got set while we're waiting for the lock.
             if self._timer_task:
-                return  # type: ignore
+                return  # type: ignore[unreachable]
 
             try:
                 task = self.hass.async_run_hass_job(self._job)

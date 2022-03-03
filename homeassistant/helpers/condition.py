@@ -3,20 +3,17 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
-from collections.abc import Container, Generator
+from collections.abc import Callable, Container, Generator
 from contextlib import contextmanager
 from datetime import datetime, time as dt_time, timedelta
 import functools as ft
 import logging
 import re
 import sys
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 from homeassistant.components import zone as zone_cmp
-from homeassistant.components.device_automation import (
-    DeviceAutomationType,
-    async_get_device_automation_platform,
-)
+from homeassistant.components.device_automation import condition as device_condition
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -30,7 +27,6 @@ from homeassistant.const import (
     CONF_BELOW,
     CONF_CONDITION,
     CONF_DEVICE_ID,
-    CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_ID,
     CONF_STATE,
@@ -69,8 +65,6 @@ from .trace import (
     trace_stack_top,
 )
 from .typing import ConfigType, TemplateVarsType
-
-# mypy: disallow-any-generics
 
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 FROM_CONFIG_FORMAT = "{}_from_config"
@@ -874,15 +868,8 @@ async def async_device_from_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConditionCheckerType:
     """Test a device condition."""
-    platform = await async_get_device_automation_platform(
-        hass, config[CONF_DOMAIN], DeviceAutomationType.CONDITION
-    )
-    return trace_condition_function(
-        cast(
-            ConditionCheckerType,
-            platform.async_condition_from_config(hass, config),
-        )
-    )
+    checker = await device_condition.async_condition_from_config(hass, config)
+    return trace_condition_function(checker)
 
 
 async def async_trigger_from_config(
@@ -938,21 +925,17 @@ async def async_validate_condition_config(
             sub_cond = await async_validate_condition_config(hass, sub_cond)
             conditions.append(sub_cond)
         config["conditions"] = conditions
+        return config
 
     if condition == "device":
-        config = cv.DEVICE_CONDITION_SCHEMA(config)
-        platform = await async_get_device_automation_platform(
-            hass, config[CONF_DOMAIN], DeviceAutomationType.CONDITION
-        )
-        if hasattr(platform, "async_validate_condition_config"):
-            return await platform.async_validate_condition_config(hass, config)  # type: ignore
-        return cast(ConfigType, platform.CONDITION_SCHEMA(config))
+        return await device_condition.async_validate_condition_config(hass, config)
 
     if condition in ("numeric_state", "state"):
-        validator = getattr(
-            sys.modules[__name__], VALIDATE_CONFIG_FORMAT.format(condition)
+        validator = cast(
+            Callable[[HomeAssistant, ConfigType], ConfigType],
+            getattr(sys.modules[__name__], VALIDATE_CONFIG_FORMAT.format(condition)),
         )
-        return validator(hass, config)  # type: ignore
+        return validator(hass, config)
 
     return config
 

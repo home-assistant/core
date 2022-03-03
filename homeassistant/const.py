@@ -6,13 +6,13 @@ from typing import Final
 from .backports.enum import StrEnum
 
 MAJOR_VERSION: Final = 2022
-MINOR_VERSION: Final = 2
+MINOR_VERSION: Final = 4
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 9, 0)
-# Truthy date string triggers showing related deprecation warning messages.
 REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 9, 0)
+# Truthy date string triggers showing related deprecation warning messages.
 REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 
 # Format for platform files
@@ -699,7 +699,6 @@ URL_ROOT: Final = "/"
 URL_API: Final = "/api/"
 URL_API_STREAM: Final = "/api/stream"
 URL_API_CONFIG: Final = "/api/config"
-URL_API_DISCOVERY_INFO: Final = "/api/discovery_info"
 URL_API_STATES: Final = "/api/states"
 URL_API_STATES_ENTITY: Final = "/api/states/{}"
 URL_API_EVENTS: Final = "/api/events"

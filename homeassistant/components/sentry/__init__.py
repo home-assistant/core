@@ -17,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.event import async_call_later
 from homeassistant.loader import Integration, async_get_custom_components
 
 from .const import (
@@ -101,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         system_info = await hass.helpers.system_info.async_get_system_info()
 
         # Update system info every hour
-        hass.helpers.event.async_call_later(3600, update_system_info)
+        async_call_later(hass, 3600, update_system_info)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, update_system_info)
 

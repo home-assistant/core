@@ -40,8 +40,6 @@ from . import (
     volume as volume_util,
 )
 
-# mypy: disallow-any-generics
-
 LENGTH_UNITS = distance_util.VALID_UNITS
 
 MASS_UNITS: tuple[str, ...] = (MASS_POUNDS, MASS_OUNCES, MASS_KILOGRAMS, MASS_GRAMS)
@@ -136,7 +134,7 @@ class UnitSystem:
             raise TypeError(f"{length!s} is not a numeric value.")
 
         # type ignore: https://github.com/python/mypy/issues/7207
-        return distance_util.convert(  # type: ignore
+        return distance_util.convert(  # type: ignore[unreachable]
             length, from_unit, self.length_unit
         )
 
@@ -146,7 +144,7 @@ class UnitSystem:
             raise TypeError(f"{precip!s} is not a numeric value.")
 
         # type ignore: https://github.com/python/mypy/issues/7207
-        return distance_util.convert(  # type: ignore
+        return distance_util.convert(  # type: ignore[unreachable]
             precip, from_unit, self.accumulated_precipitation_unit
         )
 
@@ -156,7 +154,7 @@ class UnitSystem:
             raise TypeError(f"{pressure!s} is not a numeric value.")
 
         # type ignore: https://github.com/python/mypy/issues/7207
-        return pressure_util.convert(  # type: ignore
+        return pressure_util.convert(  # type: ignore[unreachable]
             pressure, from_unit, self.pressure_unit
         )
 
@@ -166,7 +164,7 @@ class UnitSystem:
             raise TypeError(f"{wind_speed!s} is not a numeric value.")
 
         # type ignore: https://github.com/python/mypy/issues/7207
-        return speed_util.convert(wind_speed, from_unit, self.wind_speed_unit)  # type: ignore
+        return speed_util.convert(wind_speed, from_unit, self.wind_speed_unit)  # type: ignore[unreachable]
 
     def volume(self, volume: float | None, from_unit: str) -> float:
         """Convert the given volume to this unit system."""
@@ -174,7 +172,7 @@ class UnitSystem:
             raise TypeError(f"{volume!s} is not a numeric value.")
 
         # type ignore: https://github.com/python/mypy/issues/7207
-        return volume_util.convert(volume, from_unit, self.volume_unit)  # type: ignore
+        return volume_util.convert(volume, from_unit, self.volume_unit)  # type: ignore[unreachable]
 
     def as_dict(self) -> dict[str, str]:
         """Convert the unit system to a dictionary."""

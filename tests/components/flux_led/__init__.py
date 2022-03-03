@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from contextlib import contextmanager
 import datetime
-from typing import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from flux_led import DeviceType
@@ -12,6 +12,7 @@ from flux_led.aio import AIOWifiLedBulb
 from flux_led.const import (
     COLOR_MODE_CCT as FLUX_COLOR_MODE_CCT,
     COLOR_MODE_RGB as FLUX_COLOR_MODE_RGB,
+    WhiteChannelType,
 )
 from flux_led.models_db import MODEL_MAP
 from flux_led.protocol import (
@@ -105,9 +106,11 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.async_set_brightness = AsyncMock()
     bulb.async_set_device_config = AsyncMock()
     bulb.async_config_remotes = AsyncMock()
+    bulb.white_channel_channel_type = WhiteChannelType.WARM
     bulb.paired_remotes = 2
     bulb.pixels_per_segment = 300
     bulb.segments = 2
+    bulb.diagnostics = {"mock_diag": "mock_diag"}
     bulb.music_pixels_per_segment = 150
     bulb.music_segments = 4
     bulb.operating_mode = "RGB&W"

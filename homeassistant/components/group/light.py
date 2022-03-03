@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import Counter
 import itertools
 import logging
-from typing import Any, Set, cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -51,12 +51,15 @@ from homeassistant.core import Event, HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import GroupEntity
 from .util import find_state_attributes, mean_tuple, reduce_attribute
 
 DEFAULT_NAME = "Light Group"
+
+# No limit on parallel updates to enable a group calling another group
+PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -77,7 +80,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, Any] | None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Initialize light.group platform."""
     async_add_entities(
@@ -252,7 +255,7 @@ class LightGroup(GroupEntity, LightEntity):
         if all_supported_color_modes:
             # Merge all color modes.
             self._attr_supported_color_modes = cast(
-                Set[str], set().union(*all_supported_color_modes)
+                set[str], set().union(*all_supported_color_modes)
             )
 
         self._attr_supported_features = 0

@@ -7,7 +7,7 @@ from aiohttp import ClientResponseError
 from incomfortclient import Gateway as InComfortGateway
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -33,6 +33,13 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+PLATFORMS = (
+    Platform.WATER_HEATER,
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.CLIMATE,
+)
+
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Create an Intergas InComfort/Intouch system."""
@@ -54,7 +61,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     for heater in heaters:
         await heater.update()
 
-    for platform in ("water_heater", "binary_sensor", "sensor", "climate"):
+    for platform in PLATFORMS:
         hass.async_create_task(
             async_load_platform(hass, platform, DOMAIN, {}, hass_config)
         )
@@ -67,7 +74,8 @@ class IncomfortEntity(Entity):
 
     def __init__(self) -> None:
         """Initialize the class."""
-        self._unique_id = self._name = None
+        self._name: str | None = None
+        self._unique_id: str | None = None
 
     @property
     def unique_id(self) -> str | None:

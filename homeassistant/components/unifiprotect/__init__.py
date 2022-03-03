@@ -3,14 +3,13 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-import functools
 import logging
 
 from aiohttp import CookieJar
 from aiohttp.client_exceptions import ServerDisconnectedError
 from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -24,23 +23,18 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import (
-    ALL_GLOBAL_SERIVCES,
     CONF_ALL_UPDATES,
     CONF_OVERRIDE_CHOST,
     DEFAULT_SCAN_INTERVAL,
     DEVICES_FOR_SUBSCRIBE,
     DOMAIN,
-    DOORBELL_TEXT_SCHEMA,
     MIN_REQUIRED_PROTECT_V,
     OUTDATED_LOG_MESSAGE,
     PLATFORMS,
-    SERVICE_ADD_DOORBELL_TEXT,
-    SERVICE_REMOVE_DOORBELL_TEXT,
-    SERVICE_SET_DEFAULT_DOORBELL_TEXT,
 )
 from .data import ProtectData
-from .services import add_doorbell_text, remove_doorbell_text, set_default_doorbell_text
-from .views import ThumbnailProxyView
+from .discovery import async_start_discovery
+from .services import async_cleanup_services, async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +44,7 @@ SCAN_INTERVAL = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the UniFi Protect config entries."""
 
+    async_start_discovery(hass)
     session = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
     protect = ProtectApiClient(
         host=entry.data[CONF_HOST],
@@ -89,30 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data_service
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-
-    services = [
-        (
-            SERVICE_ADD_DOORBELL_TEXT,
-            functools.partial(add_doorbell_text, hass),
-            DOORBELL_TEXT_SCHEMA,
-        ),
-        (
-            SERVICE_REMOVE_DOORBELL_TEXT,
-            functools.partial(remove_doorbell_text, hass),
-            DOORBELL_TEXT_SCHEMA,
-        ),
-        (
-            SERVICE_SET_DEFAULT_DOORBELL_TEXT,
-            functools.partial(set_default_doorbell_text, hass),
-            DOORBELL_TEXT_SCHEMA,
-        ),
-    ]
-    for name, method, schema in services:
-        if hass.services.has_service(DOMAIN, name):
-            continue
-        hass.services.async_register(DOMAIN, name, method, schema=schema)
-
-    hass.http.register_view(ThumbnailProxyView(hass))
+    async_setup_services(hass)
 
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     entry.async_on_unload(
@@ -133,14 +105,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data: ProtectData = hass.data[DOMAIN][entry.entry_id]
         await data.async_stop()
         hass.data[DOMAIN].pop(entry.entry_id)
-
-    loaded_entries = [
-        entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.state == ConfigEntryState.LOADED
-    ]
-    if len(loaded_entries) == 1:
-        for name in ALL_GLOBAL_SERIVCES:
-            hass.services.async_remove(DOMAIN, name)
+        async_cleanup_services(hass)
 
     return bool(unload_ok)

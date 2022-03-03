@@ -154,14 +154,10 @@ class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        with self._wemo_exception_handler("turn on"):
+        with self._wemo_call_wrapper("turn on"):
             self.wemo.on()
-
-        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        with self._wemo_exception_handler("turn off"):
+        with self._wemo_call_wrapper("turn off"):
             self.wemo.off()
-
-        self.schedule_update_ha_state()

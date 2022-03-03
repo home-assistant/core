@@ -108,10 +108,10 @@ class YamahaConfigInfo:
         self.name = config.get(CONF_NAME)
         self.host = config.get(CONF_HOST)
         self.ctrl_url: str | None = f"http://{self.host}:80/YamahaRemoteControl/ctrl"
-        self.source_ignore = config[CONF_SOURCE_IGNORE]
-        self.source_names = config[CONF_SOURCE_NAMES]
-        self.zone_ignore = config[CONF_ZONE_IGNORE]
-        self.zone_names = config[CONF_ZONE_NAMES]
+        self.source_ignore = config.get(CONF_SOURCE_IGNORE)
+        self.source_names = config.get(CONF_SOURCE_NAMES)
+        self.zone_ignore = config.get(CONF_ZONE_IGNORE)
+        self.zone_names = config.get(CONF_ZONE_NAMES)
         self.from_discovery = False
         if discovery_info is not None:
             self.name = discovery_info.get("name")
@@ -161,7 +161,7 @@ async def async_setup_platform(
 
     entities = []
     for receiver in receivers:
-        if receiver.zone in config_info.zone_ignore:
+        if config_info.zone_ignore and receiver.zone in config_info.zone_ignore:
             continue
 
         entity = YamahaDevice(

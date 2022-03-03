@@ -8,7 +8,7 @@ from hass_nabucasa.google_report_state import ErrorResponse
 
 from homeassistant.components.google_assistant.const import DOMAIN as GOOGLE_DOMAIN
 from homeassistant.components.google_assistant.helpers import AbstractConfig
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, ENTITY_CATEGORIES
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import CoreState, split_entity_id
 from homeassistant.helpers import entity_registry as er, start
 from homeassistant.setup import async_setup_component
@@ -88,7 +88,7 @@ class CloudGoogleConfig(AbstractConfig):
 
         start.async_at_start(self.hass, hass_started)
 
-        # Remove old/wrong user agent ids
+        # Remove any stored user agent id that is not ours
         remove_agent_user_ids = []
         for agent_user_id in self._store.agent_user_ids:
             if agent_user_id != self.agent_user_id:
@@ -124,7 +124,7 @@ class CloudGoogleConfig(AbstractConfig):
 
         entity_registry = er.async_get(self.hass)
         if registry_entry := entity_registry.async_get(entity_id):
-            auxiliary_entity = registry_entry.entity_category in ENTITY_CATEGORIES
+            auxiliary_entity = registry_entry.entity_category is not None
         else:
             auxiliary_entity = False
 
@@ -181,7 +181,11 @@ class CloudGoogleConfig(AbstractConfig):
                 self.async_disable_local_sdk()
             return
 
-        if self.enabled and GOOGLE_DOMAIN not in self.hass.config.components:
+        if (
+            self.enabled
+            and GOOGLE_DOMAIN not in self.hass.config.components
+            and self.hass.is_running
+        ):
             await async_setup_component(self.hass, GOOGLE_DOMAIN, {})
 
         if self.should_report_state != self.is_reporting_state:

@@ -4,7 +4,6 @@ from __future__ import annotations
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -34,7 +33,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Daikin climate based on config_entry."""
     daikin_api = hass.data[DAIKIN_DOMAIN][entry.entry_id]
-    switches: list[ToggleEntity] = []
+    switches: list[DaikinZoneSwitch | DaikinStreamerSwitch] = []
     if zones := daikin_api.device.zones:
         switches.extend(
             [
@@ -52,7 +51,7 @@ async def async_setup_entry(
         async_add_entities(switches)
 
 
-class DaikinZoneSwitch(ToggleEntity):
+class DaikinZoneSwitch(SwitchEntity):
     """Representation of a zone."""
 
     def __init__(self, daikin_api, zone_id):

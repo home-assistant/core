@@ -2,8 +2,6 @@
 from lightwave.lightwave import LWLink
 import voluptuous as vol
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_LIGHTS,
@@ -65,6 +63,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+PLATFORMS = (Platform.CLIMATE, Platform.SENSOR)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Try to start embedded Lightwave broker."""
@@ -88,8 +88,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         proxy_port = trv[CONF_PROXY_PORT]
         lwlink.set_trv_proxy(proxy_ip, proxy_port)
 
-        platforms = [CLIMATE_DOMAIN, SENSOR_DOMAIN]
-        for platform in platforms:
+        for platform in PLATFORMS:
             hass.async_create_task(
                 async_load_platform(hass, platform, DOMAIN, trvs, config)
             )

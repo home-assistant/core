@@ -84,13 +84,14 @@ async def async_setup_entry(
 class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
     """Represent a Yale Smart Alarm."""
 
+    coordinator: YaleDataUpdateCoordinator
+
     _attr_code_arm_required = False
     _attr_supported_features = SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     def __init__(self, coordinator: YaleDataUpdateCoordinator) -> None:
         """Initialize the Yale Alarm Device."""
         super().__init__(coordinator)
-        self._coordinator = coordinator
         self._attr_name = coordinator.entry.data[CONF_NAME]
         self._attr_unique_id = coordinator.entry.entry_id
         self._attr_device_info = DeviceInfo(
@@ -103,11 +104,11 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
     async def async_alarm_disarm(self, code=None) -> None:
         """Send disarm command."""
         if TYPE_CHECKING:
-            assert self._coordinator.yale, "Connection to API is missing"
+            assert self.coordinator.yale, "Connection to API is missing"
 
         try:
             alarm_state = await self.hass.async_add_executor_job(
-                self._coordinator.yale.disarm
+                self.coordinator.yale.disarm
             )
         except (
             AuthenticationError,
@@ -129,11 +130,11 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
     async def async_alarm_arm_home(self, code=None) -> None:
         """Send arm home command."""
         if TYPE_CHECKING:
-            assert self._coordinator.yale, "Connection to API is missing"
+            assert self.coordinator.yale, "Connection to API is missing"
 
         try:
             alarm_state = await self.hass.async_add_executor_job(
-                self._coordinator.yale.arm_partial
+                self.coordinator.yale.arm_partial
             )
         except (
             AuthenticationError,
@@ -155,11 +156,11 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
     async def async_alarm_arm_away(self, code=None) -> None:
         """Send arm away command."""
         if TYPE_CHECKING:
-            assert self._coordinator.yale, "Connection to API is missing"
+            assert self.coordinator.yale, "Connection to API is missing"
 
         try:
             alarm_state = await self.hass.async_add_executor_job(
-                self._coordinator.yale.arm_full
+                self.coordinator.yale.arm_full
             )
         except (
             AuthenticationError,

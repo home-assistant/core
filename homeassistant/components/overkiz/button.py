@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
@@ -23,23 +23,34 @@ BUTTON_DESCRIPTIONS: list[ButtonEntityDescription] = [
         key="identify",  # startIdentify and identify are reversed... Swap this when fixed in API.
         name="Start Identify",
         icon="mdi:human-greeting-variant",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     ButtonEntityDescription(
         key="stopIdentify",
         name="Stop Identify",
         icon="mdi:human-greeting-variant",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     ButtonEntityDescription(
         key="startIdentify",  # startIdentify and identify are reversed... Swap this when fixed in API.
         name="Identify",
         icon="mdi:human-greeting-variant",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    # RTDIndoorSiren / RTDOutdoorSiren
+    ButtonEntityDescription(key="dingDong", name="Ding Dong", icon="mdi:bell-ring"),
+    ButtonEntityDescription(key="bip", name="Bip", icon="mdi:bell-ring"),
+    ButtonEntityDescription(
+        key="fastBipSequence", name="Fast Bip Sequence", icon="mdi:bell-ring"
+    ),
+    ButtonEntityDescription(key="ring", name="Ring", icon="mdi:bell-ring"),
 ]
+
+SUPPORTED_COMMANDS = {
+    description.key: description for description in BUTTON_DESCRIPTIONS
+}
 
 
 async def async_setup_entry(
@@ -51,10 +62,6 @@ async def async_setup_entry(
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
     entities: list[ButtonEntity] = []
 
-    supported_commands = {
-        description.key: description for description in BUTTON_DESCRIPTIONS
-    }
-
     for device in data.coordinator.data.values():
         if (
             device.widget in IGNORED_OVERKIZ_DEVICES
@@ -63,7 +70,7 @@ async def async_setup_entry(
             continue
 
         for command in device.definition.commands:
-            if description := supported_commands.get(command.command_name):
+            if description := SUPPORTED_COMMANDS.get(command.command_name):
                 entities.append(
                     OverkizButton(
                         device.device_url,

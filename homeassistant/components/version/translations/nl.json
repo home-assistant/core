@@ -18,6 +18,7 @@
                     "channel": "Welk kanaal moet worden bijgehouden",
                     "image": "Welke afbeelding moet worden bijgehouden"
                 },
+                "description": "Configureer {version_source} version tracking",
                 "title": "Configureer"
             }
         }

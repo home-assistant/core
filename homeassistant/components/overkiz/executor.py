@@ -1,16 +1,24 @@
 """Class for helpers and communication with the OverKiz API."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 from urllib.parse import urlparse
 
+from pyoverkiz.enums import OverkizCommand, Protocol
 from pyoverkiz.models import Command, Device
+from pyoverkiz.types import StateType as OverkizStateType
 
-from .const import OverkizStateType
 from .coordinator import OverkizDataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
+# Commands that don't support setting
+# the delay to another value
+COMMANDS_WITHOUT_DELAY = [
+    OverkizCommand.IDENTIFY,
+    OverkizCommand.OFF,
+    OverkizCommand.ON,
+    OverkizCommand.ON_WITH_TIMER,
+    OverkizCommand.TEST,
+]
 
 
 class OverkizExecutor:
@@ -60,15 +68,19 @@ class OverkizExecutor:
 
     async def async_execute_command(self, command_name: str, *args: Any) -> None:
         """Execute device command in async context."""
-        try:
-            exec_id = await self.coordinator.client.execute_command(
-                self.device.device_url,
-                Command(command_name, list(args)),
-                "Home Assistant",
-            )
-        except Exception as exception:  # pylint: disable=broad-except
-            _LOGGER.error(exception)
-            return
+        # Set the execution duration to 0 seconds for RTS devices on supported commands
+        # Default execution duration is 30 seconds and will block consecutive commands
+        if (
+            self.device.protocol == Protocol.RTS
+            and command_name not in COMMANDS_WITHOUT_DELAY
+        ):
+            args = args + (0,)
+
+        exec_id = await self.coordinator.client.execute_command(
+            self.device.device_url,
+            Command(command_name, list(args)),
+            "Home Assistant",
+        )
 
         # ExecutionRegisteredEvent doesn't contain the device_url, thus we need to register it here
         self.coordinator.executions[exec_id] = {
@@ -78,7 +90,9 @@ class OverkizExecutor:
 
         await self.coordinator.async_refresh()
 
-    async def async_cancel_command(self, commands_to_cancel: list[str]) -> bool:
+    async def async_cancel_command(
+        self, commands_to_cancel: list[OverkizCommand]
+    ) -> bool:
         """Cancel running execution by command."""
 
         # Cancel a running execution

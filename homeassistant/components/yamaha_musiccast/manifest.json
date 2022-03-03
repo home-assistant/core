@@ -18,5 +18,6 @@
   "codeowners": [
     "@vigonotion",
     "@micha91"
-  ]
+  ],
+  "loggers": ["aiomusiccast"]
 }

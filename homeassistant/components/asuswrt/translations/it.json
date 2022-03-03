@@ -36,7 +36,7 @@
                     "dnsmasq": "La posizione nel router dei file dnsmasq.leases",
                     "interface": "L'interfaccia da cui si desidera ottenere statistiche (ad esempio eth0, eth1, ecc.)",
                     "require_ip": "I dispositivi devono avere un IP (per la modalit\u00e0 punto di accesso)",
-                    "track_unknown": "Tieni traccia dei dispositivi sconosciuti / non denominati"
+                    "track_unknown": "Tieni traccia dei dispositivi sconosciuti / senza nome"
                 },
                 "title": "Opzioni AsusWRT"
             }

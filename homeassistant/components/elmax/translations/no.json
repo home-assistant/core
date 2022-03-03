@@ -5,9 +5,11 @@
         },
         "error": {
             "bad_auth": "Ugyldig godkjenning",
+            "invalid_auth": "Ugyldig godkjenning",
             "invalid_pin": "Den angitte PIN-koden er ugyldig",
             "network_error": "Det oppstod en nettverksfeil",
             "no_panel_online": "Ingen online Elmax kontrollpanel ble funnet.",
+            "unknown": "Uventet feil",
             "unknown_error": "Uventet feil"
         },
         "step": {

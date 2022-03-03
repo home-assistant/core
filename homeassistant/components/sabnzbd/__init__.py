@@ -8,6 +8,7 @@ import logging
 from pysabnzbd import SabnzbdApi, SabnzbdApiException
 import voluptuous as vol
 
+from homeassistant.components import configurator
 from homeassistant.components.discovery import SERVICE_SABNZBD
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import (
@@ -23,12 +24,13 @@ from homeassistant.const import (
     DATA_RATE_MEGABYTES_PER_SECOND,
     Platform,
 )
-from homeassistant.core import ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.json import load_json, save_json
 
 _LOGGER = logging.getLogger(__name__)
@@ -197,11 +199,13 @@ async def async_configure_sabnzbd(
         async_request_configuration(hass, config, base_url, web_root)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the SABnzbd component."""
 
-    async def sabnzbd_discovered(service, info):
+    async def sabnzbd_discovered(service: str, info: DiscoveryInfoType | None) -> None:
         """Handle service discovery."""
+        if not info:
+            return
         ssl = info.get("properties", {}).get("https", "0") == "1"
         await async_configure_sabnzbd(hass, info, ssl)
 
@@ -264,11 +268,10 @@ def async_setup_sabnzbd(hass, sab_api, config, name):
 def async_request_configuration(hass, config, host, web_root):
     """Request configuration steps from the user."""
 
-    configurator = hass.components.configurator
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
         configurator.async_notify_errors(
-            _CONFIGURING[host], "Failed to register, please try again."
+            hass, _CONFIGURING[host], "Failed to register, please try again."
         )
 
         return
@@ -288,12 +291,13 @@ def async_request_configuration(hass, config, host, web_root):
             conf[host] = {CONF_API_KEY: api_key}
             save_json(hass.config.path(CONFIG_FILE), conf)
             req_config = _CONFIGURING.pop(host)
-            configurator.request_done(req_config)
+            configurator.request_done(hass, req_config)
 
         hass.async_add_job(success)
         async_setup_sabnzbd(hass, sab_api, config, config.get(CONF_NAME, DEFAULT_NAME))
 
     _CONFIGURING[host] = configurator.async_request_config(
+        hass,
         DEFAULT_NAME,
         async_configuration_callback,
         description="Enter the API Key",

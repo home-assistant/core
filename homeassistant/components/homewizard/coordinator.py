@@ -8,6 +8,7 @@ import aiohwenergy
 import async_timeout
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, UPDATE_INTERVAL, DeviceResponseEntry
@@ -15,12 +16,10 @@ from .const import DOMAIN, UPDATE_INTERVAL, DeviceResponseEntry
 _LOGGER = logging.getLogger(__name__)
 
 
-class HWEnergyDeviceUpdateCoordinator(
-    DataUpdateCoordinator[aiohwenergy.HomeWizardEnergy]
-):
+class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]):
     """Gather data for the energy device."""
 
-    api: aiohwenergy
+    api: aiohwenergy.HomeWizardEnergy
 
     def __init__(
         self,
@@ -30,7 +29,9 @@ class HWEnergyDeviceUpdateCoordinator(
         """Initialize Update Coordinator."""
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
-        self.api = aiohwenergy.HomeWizardEnergy(host)
+
+        session = async_get_clientsession(hass)
+        self.api = aiohwenergy.HomeWizardEnergy(host, clientsession=session)
 
     async def _async_update_data(self) -> DeviceResponseEntry:
         """Fetch all device and sensor data from api."""
@@ -48,11 +49,6 @@ class HWEnergyDeviceUpdateCoordinator(
             except aiohwenergy.DisabledError as ex:
                 raise UpdateFailed(
                     "API disabled, API must be enabled in the app"
-                ) from ex
-
-            except Exception as ex:
-                raise UpdateFailed(
-                    f"Error connecting with Energy Device at {self.api.host}"
                 ) from ex
 
             data: DeviceResponseEntry = {

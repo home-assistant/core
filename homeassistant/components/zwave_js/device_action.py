@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -52,6 +53,7 @@ from .const import (
 from .device_automation_helpers import (
     CONF_SUBTYPE,
     VALUE_ID_REGEX,
+    generate_config_parameter_subtype,
     get_config_parameter_value_schema,
 )
 from .helpers import async_get_node_from_device_id
@@ -164,7 +166,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
                 CONF_TYPE: SERVICE_SET_CONFIG_PARAMETER,
                 ATTR_CONFIG_PARAMETER: config_value.property_,
                 ATTR_CONFIG_PARAMETER_BITMASK: config_value.property_key,
-                CONF_SUBTYPE: f"{config_value.value_id} ({config_value.property_name})",
+                CONF_SUBTYPE: generate_config_parameter_subtype(config_value),
             }
             for config_value in node.get_configuration_values().values()
         ]
@@ -172,7 +174,17 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
 
     meter_endpoints: dict[int, dict[str, Any]] = defaultdict(dict)
 
-    for entry in entity_registry.async_entries_for_device(registry, device_id):
+    for entry in entity_registry.async_entries_for_device(
+        registry, device_id, include_disabled_entities=False
+    ):
+        # If an entry is unavailable, it is possible that the underlying value
+        # is no longer valid. Additionally, if an entry is disabled, its
+        # underlying value is not being monitored by HA so we shouldn't allow
+        # actions against it.
+        if (
+            state := hass.states.get(entry.entity_id)
+        ) and state.state == STATE_UNAVAILABLE:
+            continue
         entity_action = {**base_action, CONF_ENTITY_ID: entry.entity_id}
         actions.append({**entity_action, CONF_TYPE: SERVICE_REFRESH_VALUE})
         if entry.domain == LOCK_DOMAIN:
@@ -187,10 +199,9 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
             value_id = entry.unique_id.split(".")[1]
             # If this unique ID doesn't have a value ID, we know it is the node status
             # sensor which doesn't have any relevant actions
-            if re.match(VALUE_ID_REGEX, value_id):
-                value = node.values[value_id]
-            else:
+            if not re.match(VALUE_ID_REGEX, value_id):
                 continue
+            value = node.values[value_id]
             # If the value has the meterType CC specific value, we can add a reset_meter
             # action for it
             if CC_SPECIFIC_METER_TYPE in value.metadata.cc_specific:

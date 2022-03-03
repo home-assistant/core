@@ -2,8 +2,6 @@
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
-from homeassistant import config_entries
-from homeassistant.components.homekit_controller import async_remove_entry
 from homeassistant.components.homekit_controller.const import ENTITY_MAP
 
 from tests.common import flush_store
@@ -79,26 +77,3 @@ async def test_storage_is_updated_on_add(hass, hass_storage, utcnow):
     # Is saved out to store?
     await flush_store(entity_map.store)
     assert hkid in hass_storage[ENTITY_MAP]["data"]["pairings"]
-
-
-async def test_storage_is_removed_on_config_entry_removal(hass, utcnow):
-    """Test entity map storage is cleaned up on config entry removal."""
-    await setup_test_component(hass, create_lightbulb_service)
-
-    hkid = "00:00:00:00:00:00"
-
-    pairing_data = {"AccessoryPairingID": hkid}
-
-    entry = config_entries.ConfigEntry(
-        1,
-        "homekit_controller",
-        "TestData",
-        pairing_data,
-        "test",
-    )
-
-    assert hkid in hass.data[ENTITY_MAP].storage_data
-
-    await async_remove_entry(hass, entry)
-
-    assert hkid not in hass.data[ENTITY_MAP].storage_data

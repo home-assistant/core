@@ -14,8 +14,6 @@ from homeassistant.util import slugify
 from . import device_registry as dr, entity_registry as er
 from .typing import UNDEFINED, UndefinedType
 
-# mypy: disallow-any-generics
-
 DATA_REGISTRY = "area_registry"
 EVENT_AREA_REGISTRY_UPDATED = "area_registry_updated"
 STORAGE_KEY = "core.area_registry"

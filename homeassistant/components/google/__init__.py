@@ -1,11 +1,12 @@
 """Support for Google - Calendar Event Devices."""
+from __future__ import annotations
+
+from collections.abc import Mapping
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 import logging
-import os
+from typing import Any
 
-from googleapiclient import discovery as google_discovery
-import httplib2
 from oauth2client.client import (
     FlowExchangeError,
     OAuth2DeviceCodeError,
@@ -26,13 +27,15 @@ from homeassistant.const import (
     CONF_OFFSET,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import convert
+
+from .api import GoogleCalendarService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,7 +76,8 @@ SERVICE_SCAN_CALENDARS = "scan_for_calendars"
 SERVICE_FOUND_CALENDARS = "found_calendar"
 SERVICE_ADD_EVENT = "add_event"
 
-DATA_INDEX = "google_calendars"
+DATA_CALENDARS = "calendars"
+DATA_SERVICE = "service"
 
 YAML_DEVICES = f"{DOMAIN}_calendars.yaml"
 
@@ -158,7 +162,12 @@ ADD_EVENT_SERVICE_SCHEMA = vol.Schema(
 )
 
 
-def do_authentication(hass, hass_config, config):
+def do_authentication(
+    hass: HomeAssistant,
+    hass_config: ConfigType,
+    config: ConfigType,
+    storage: Storage,
+) -> bool:
     """Notify user of actions and authenticate.
 
     Notify user of user_code and verification_url then poll
@@ -192,8 +201,11 @@ def do_authentication(hass, hass_config, config):
         notification_id=NOTIFICATION_ID,
     )
 
-    def step2_exchange(now):
+    listener: CALLBACK_TYPE | None = None
+
+    def step2_exchange(now: datetime) -> None:
         """Keep trying to validate the user_code until it expires."""
+        _LOGGER.debug("Attempting to validate user code")
 
         # For some reason, oauth.step1_get_device_and_user_codes() returns a datetime
         # object without tzinfo. For the comparison below to work, it needs one.
@@ -207,7 +219,9 @@ def do_authentication(hass, hass_config, config):
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID,
             )
+            assert listener
             listener()
+            return
 
         try:
             credentials = oauth.step2_exchange(device_flow_info=dev_flow)
@@ -215,9 +229,9 @@ def do_authentication(hass, hass_config, config):
             # not ready yet, call again
             return
 
-        storage = Storage(hass.config.path(TOKEN_FILE))
         storage.put(credentials)
         do_setup(hass, hass_config, config)
+        assert listener
         listener()
         persistent_notification.create(
             hass,
@@ -230,7 +244,7 @@ def do_authentication(hass, hass_config, config):
         )
 
     listener = track_utc_time_change(
-        hass, step2_exchange, second=range(0, 60, dev_flow.interval)
+        hass, step2_exchange, second=range(1, 60, dev_flow.interval)
     )
 
     return True
@@ -238,60 +252,51 @@ def do_authentication(hass, hass_config, config):
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Google platform."""
-    if DATA_INDEX not in hass.data:
-        hass.data[DATA_INDEX] = {}
 
     if not (conf := config.get(DOMAIN, {})):
         # component is set up by tts platform
         return True
 
-    token_file = hass.config.path(TOKEN_FILE)
-    if not os.path.isfile(token_file):
-        do_authentication(hass, config, conf)
+    storage = Storage(hass.config.path(TOKEN_FILE))
+    hass.data[DOMAIN] = {
+        DATA_CALENDARS: {},
+        DATA_SERVICE: GoogleCalendarService(hass, storage),
+    }
+    creds = storage.get()
+    if (
+        not creds
+        or not creds.scopes
+        or conf[CONF_CALENDAR_ACCESS].scope not in creds.scopes
+    ):
+        do_authentication(hass, config, conf, storage)
     else:
-        if not check_correct_scopes(token_file, conf):
-            do_authentication(hass, config, conf)
-        else:
-            do_setup(hass, config, conf)
+        do_setup(hass, config, conf)
 
-    return True
-
-
-def check_correct_scopes(token_file, config):
-    """Check for the correct scopes in file."""
-    with open(token_file, encoding="utf8") as tokenfile:
-        contents = tokenfile.read()
-
-        # Check for quoted scope as our scopes can be subsets of other scopes
-        target_scope = f'"{config.get(CONF_CALENDAR_ACCESS).scope}"'
-        if target_scope not in contents:
-            _LOGGER.warning("Please re-authenticate with Google")
-            return False
     return True
 
 
 def setup_services(
-    hass, hass_config, config, track_new_found_calendars, calendar_service
-):
+    hass: HomeAssistant,
+    hass_config: ConfigType,
+    config: ConfigType,
+    track_new_found_calendars: bool,
+    calendar_service: GoogleCalendarService,
+) -> None:
     """Set up the service listeners."""
 
     def _found_calendar(call: ServiceCall) -> None:
         """Check if we know about a calendar and generate PLATFORM_DISCOVER."""
         calendar = get_calendar_info(hass, call.data)
-        if hass.data[DATA_INDEX].get(calendar[CONF_CAL_ID]) is not None:
+        calendar_id = calendar[CONF_CAL_ID]
+        if calendar_id in hass.data[DOMAIN][DATA_CALENDARS]:
             return
-
-        hass.data[DATA_INDEX].update({calendar[CONF_CAL_ID]: calendar})
-
-        update_config(
-            hass.config.path(YAML_DEVICES), hass.data[DATA_INDEX][calendar[CONF_CAL_ID]]
-        )
-
+        hass.data[DOMAIN][DATA_CALENDARS][calendar_id] = calendar
+        update_config(hass.config.path(YAML_DEVICES), calendar)
         discovery.load_platform(
             hass,
             Platform.CALENDAR,
             DOMAIN,
-            hass.data[DATA_INDEX][calendar[CONF_CAL_ID]],
+            calendar,
             hass_config,
         )
 
@@ -299,9 +304,7 @@ def setup_services(
 
     def _scan_for_calendars(call: ServiceCall) -> None:
         """Scan for new calendars."""
-        service = calendar_service.get()
-        cal_list = service.calendarList()
-        calendars = cal_list.list().execute()["items"]
+        calendars = calendar_service.list_calendars()
         for calendar in calendars:
             calendar["track"] = track_new_found_calendars
             hass.services.call(DOMAIN, SERVICE_FOUND_CALENDARS, calendar)
@@ -310,7 +313,6 @@ def setup_services(
 
     def _add_event(call: ServiceCall) -> None:
         """Add a new event to calendar."""
-        service = calendar_service.get()
         start = {}
         end = {}
 
@@ -345,64 +347,50 @@ def setup_services(
             start = {"dateTime": start_dt, "timeZone": str(hass.config.time_zone)}
             end = {"dateTime": end_dt, "timeZone": str(hass.config.time_zone)}
 
-        event = {
-            "summary": call.data[EVENT_SUMMARY],
-            "description": call.data[EVENT_DESCRIPTION],
-            "start": start,
-            "end": end,
-        }
-        service_data = {"calendarId": call.data[EVENT_CALENDAR_ID], "body": event}
-        event = service.events().insert(**service_data).execute()
+        calendar_service.create_event(
+            call.data[EVENT_CALENDAR_ID],
+            {
+                "summary": call.data[EVENT_SUMMARY],
+                "description": call.data[EVENT_DESCRIPTION],
+                "start": start,
+                "end": end,
+            },
+        )
 
     # Only expose the add event service if we have the correct permissions
     if config.get(CONF_CALENDAR_ACCESS) is FeatureAccess.read_write:
         hass.services.register(
             DOMAIN, SERVICE_ADD_EVENT, _add_event, schema=ADD_EVENT_SERVICE_SCHEMA
         )
-    return True
 
 
-def do_setup(hass, hass_config, config):
+def do_setup(hass: HomeAssistant, hass_config: ConfigType, config: ConfigType) -> None:
     """Run the setup after we have everything configured."""
     # Load calendars the user has configured
-    hass.data[DATA_INDEX] = load_config(hass.config.path(YAML_DEVICES))
+    calendars = load_config(hass.config.path(YAML_DEVICES))
+    hass.data[DOMAIN][DATA_CALENDARS] = calendars
 
-    calendar_service = GoogleCalendarService(hass.config.path(TOKEN_FILE))
+    calendar_service = hass.data[DOMAIN][DATA_SERVICE]
     track_new_found_calendars = convert(
         config.get(CONF_TRACK_NEW), bool, DEFAULT_CONF_TRACK_NEW
     )
+    assert track_new_found_calendars is not None
     setup_services(
         hass, hass_config, config, track_new_found_calendars, calendar_service
     )
 
-    for calendar in hass.data[DATA_INDEX].values():
+    for calendar in calendars.values():
         discovery.load_platform(hass, Platform.CALENDAR, DOMAIN, calendar, hass_config)
 
     # Look for any new calendars
     hass.services.call(DOMAIN, SERVICE_SCAN_CALENDARS, None)
-    return True
 
 
-class GoogleCalendarService:
-    """Calendar service interface to Google."""
-
-    def __init__(self, token_file):
-        """Init the Google Calendar service."""
-        self.token_file = token_file
-
-    def get(self):
-        """Get the calendar service from the storage file token."""
-        credentials = Storage(self.token_file).get()
-        http = credentials.authorize(httplib2.Http())
-        service = google_discovery.build(
-            "calendar", "v3", http=http, cache_discovery=False
-        )
-        return service
-
-
-def get_calendar_info(hass, calendar):
+def get_calendar_info(
+    hass: HomeAssistant, calendar: Mapping[str, Any]
+) -> dict[str, Any]:
     """Convert data from Google into DEVICE_SCHEMA."""
-    calendar_info = DEVICE_SCHEMA(
+    calendar_info: dict[str, Any] = DEVICE_SCHEMA(
         {
             CONF_CAL_ID: calendar["id"],
             CONF_ENTITIES: [
@@ -419,7 +407,7 @@ def get_calendar_info(hass, calendar):
     return calendar_info
 
 
-def load_config(path):
+def load_config(path: str) -> dict[str, Any]:
     """Load the google_calendar_devices.yaml."""
     calendars = {}
     try:
@@ -438,7 +426,7 @@ def load_config(path):
     return calendars
 
 
-def update_config(path, calendar):
+def update_config(path: str, calendar: dict[str, Any]) -> None:
     """Write the google_calendar_devices.yaml."""
     with open(path, "a", encoding="utf8") as out:
         out.write("\n")

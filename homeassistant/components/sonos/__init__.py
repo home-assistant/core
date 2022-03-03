@@ -38,6 +38,7 @@ from .const import (
     SONOS_CHECK_ACTIVITY,
     SONOS_REBOOTED,
     SONOS_SPEAKER_ACTIVITY,
+    SONOS_VANISHED,
     UPNP_ST,
 )
 from .favorites import SonosFavorites
@@ -118,6 +119,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Sonos from a config entry."""
     soco_config.EVENTS_MODULE = events_asyncio
+    soco_config.REQUEST_TIMEOUT = 9.5
 
     if DATA_SONOS not in hass.data:
         hass.data[DATA_SONOS] = SonosData()
@@ -180,6 +182,9 @@ class SonosDiscoveryManager:
             soco = SoCo(ip_address)
             # Ensure that the player is available and UID is cached
             uid = soco.uid
+            # Abort early if the device is not visible
+            if not soco.is_visible:
+                return None
             _ = soco.volume
             return soco
         except NotSupportedException as exc:
@@ -192,6 +197,9 @@ class SonosDiscoveryManager:
         return None
 
     async def _async_stop_event_listener(self, event: Event | None = None) -> None:
+        for speaker in self.data.discovered.values():
+            speaker.activity_stats.log_report()
+            speaker.event_stats.log_report()
         await asyncio.gather(
             *(speaker.async_offline() for speaker in self.data.discovered.values())
         )
@@ -235,8 +243,7 @@ class SonosDiscoveryManager:
                 None,
             )
             if not known_uid:
-                soco = self._create_soco(ip_addr, SoCoCreationSource.CONFIGURED)
-                if soco and soco.is_visible:
+                if soco := self._create_soco(ip_addr, SoCoCreationSource.CONFIGURED):
                     self._discovered_player(soco)
 
         self.data.hosts_heartbeat = call_later(
@@ -244,8 +251,7 @@ class SonosDiscoveryManager:
         )
 
     def _discovered_ip(self, ip_address):
-        soco = self._create_soco(ip_address, SoCoCreationSource.DISCOVERED)
-        if soco and soco.is_visible:
+        if soco := self._create_soco(ip_address, SoCoCreationSource.DISCOVERED):
             self._discovered_player(soco)
 
     async def _async_create_discovered_player(self, uid, discovered_ip, boot_seqnum):
@@ -271,14 +277,19 @@ class SonosDiscoveryManager:
     async def _async_ssdp_discovered_player(
         self, info: ssdp.SsdpServiceInfo, change: ssdp.SsdpChange
     ) -> None:
-        if change == ssdp.SsdpChange.BYEBYE:
-            return
-
         uid = info.upnp[ssdp.ATTR_UPNP_UDN]
         if not uid.startswith("uuid:RINCON_"):
             return
-
         uid = uid[5:]
+
+        if change == ssdp.SsdpChange.BYEBYE:
+            _LOGGER.debug(
+                "ssdp:byebye received from %s", info.upnp.get("friendlyName", uid)
+            )
+            reason = info.ssdp_headers.get("X-RINCON-REASON", "ssdp:byebye")
+            async_dispatcher_send(self.hass, f"{SONOS_VANISHED}-{uid}", reason)
+            return
+
         discovered_ip = urlparse(info.ssdp_location).hostname
         boot_seqnum = info.ssdp_headers.get("X-RINCON-BOOTSEQ")
         self.async_discovered_player(
@@ -333,7 +344,6 @@ class SonosDiscoveryManager:
                 )
             )
             await self.hass.async_add_executor_job(self._manual_hosts)
-            return
 
         self.entry.async_on_unload(
             await ssdp.async_register_callback(

@@ -1,6 +1,7 @@
 """Support for ADS light sources."""
 from __future__ import annotations
 
+import pyads
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -63,12 +64,12 @@ class AdsLight(AdsEntity, LightEntity):
 
     async def async_added_to_hass(self):
         """Register device notification."""
-        await self.async_initialize_device(self._ads_var, self._ads_hub.PLCTYPE_BOOL)
+        await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_BOOL)
 
         if self._ads_var_brightness is not None:
             await self.async_initialize_device(
                 self._ads_var_brightness,
-                self._ads_hub.PLCTYPE_UINT,
+                pyads.PLCTYPE_UINT,
                 STATE_KEY_BRIGHTNESS,
             )
 
@@ -85,13 +86,13 @@ class AdsLight(AdsEntity, LightEntity):
     def turn_on(self, **kwargs):
         """Turn the light on or set a specific dimmer value."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
-        self._ads_hub.write_by_name(self._ads_var, True, self._ads_hub.PLCTYPE_BOOL)
+        self._ads_hub.write_by_name(self._ads_var, True, pyads.PLCTYPE_BOOL)
 
         if self._ads_var_brightness is not None and brightness is not None:
             self._ads_hub.write_by_name(
-                self._ads_var_brightness, brightness, self._ads_hub.PLCTYPE_UINT
+                self._ads_var_brightness, brightness, pyads.PLCTYPE_UINT
             )
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
-        self._ads_hub.write_by_name(self._ads_var, False, self._ads_hub.PLCTYPE_BOOL)
+        self._ads_hub.write_by_name(self._ads_var, False, pyads.PLCTYPE_BOOL)

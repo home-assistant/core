@@ -75,7 +75,16 @@ async def _mock_setup_august(
     return entry
 
 
-async def _create_august_with_devices(  # noqa: C901
+async def _create_august_with_devices(
+    hass, devices, api_call_side_effects=None, activities=None, pubnub=None
+):
+    entry, api_instance = await _create_august_api_with_devices(
+        hass, devices, api_call_side_effects, activities, pubnub
+    )
+    return entry
+
+
+async def _create_august_api_with_devices(  # noqa: C901
     hass, devices, api_call_side_effects=None, activities=None, pubnub=None
 ):
     if api_call_side_effects is None:
@@ -162,9 +171,16 @@ async def _create_august_with_devices(  # noqa: C901
             "unlock_return_activities"
         ] = unlock_return_activities_side_effect
 
-    return await _mock_setup_august_with_api_side_effects(
+    api_instance, entry = await _mock_setup_august_with_api_side_effects(
         hass, api_call_side_effects, pubnub
     )
+
+    if device_data["locks"]:
+        # Ensure we sync status when the integration is loaded if there
+        # are any locks
+        assert api_instance.async_status_async.mock_calls
+
+    return entry, api_instance
 
 
 async def _mock_setup_august_with_api_side_effects(hass, api_call_side_effects, pubnub):
@@ -207,9 +223,10 @@ async def _mock_setup_august_with_api_side_effects(hass, api_call_side_effects, 
 
     api_instance.async_unlock_async = AsyncMock()
     api_instance.async_lock_async = AsyncMock()
+    api_instance.async_status_async = AsyncMock()
     api_instance.async_get_user = AsyncMock(return_value={"UserID": "abc"})
 
-    return await _mock_setup_august(hass, api_instance, pubnub)
+    return api_instance, await _mock_setup_august(hass, api_instance, pubnub)
 
 
 def _mock_august_authentication(token_text, token_timestamp, state):

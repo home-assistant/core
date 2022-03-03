@@ -19,7 +19,6 @@ from homeassistant.const import (
     URL_API,
     URL_API_COMPONENTS,
     URL_API_CONFIG,
-    URL_API_DISCOVERY_INFO,
     URL_API_ERROR_LOG,
     URL_API_EVENTS,
     URL_API_SERVICES,
@@ -56,7 +55,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(APIStatusView)
     hass.http.register_view(APIEventStream)
     hass.http.register_view(APIConfigView)
-    hass.http.register_view(APIDiscoveryView)
     hass.http.register_view(APIStatesView)
     hass.http.register_view(APIEntityStateView)
     hass.http.register_view(APIEventListenersView)
@@ -165,33 +163,6 @@ class APIConfigView(HomeAssistantView):
     def get(self, request):
         """Get current configuration."""
         return self.json(request.app["hass"].config.as_dict())
-
-
-class APIDiscoveryView(HomeAssistantView):
-    """
-    View to provide Discovery information.
-
-    DEPRECATED: To be removed in 2022.1
-    """
-
-    requires_auth = False
-    url = URL_API_DISCOVERY_INFO
-    name = "api:discovery"
-
-    async def get(self, request):
-        """Get discovery information."""
-        return self.json(
-            {
-                ATTR_UUID: "",
-                ATTR_BASE_URL: "",
-                ATTR_EXTERNAL_URL: "",
-                ATTR_INTERNAL_URL: "",
-                ATTR_LOCATION_NAME: "",
-                ATTR_INSTALLATION_TYPE: "",
-                ATTR_REQUIRES_API_PASSWORD: True,
-                ATTR_VERSION: "",
-            }
-        )
 
 
 class APIStatesView(HomeAssistantView):

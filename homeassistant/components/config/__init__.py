@@ -6,6 +6,7 @@ import os
 
 import voluptuous as vol
 
+from homeassistant.components import frontend
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_ID, EVENT_COMPONENT_LOADED
 from homeassistant.core import HomeAssistant, callback
@@ -35,8 +36,8 @@ ACTION_DELETE = "delete"
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the config component."""
-    hass.components.frontend.async_register_built_in_panel(
-        "config", "config", "hass:cog", require_admin=True
+    frontend.async_register_built_in_panel(
+        hass, "config", "config", "hass:cog", require_admin=True
     )
 
     async def setup_panel(panel_name):

@@ -7,14 +7,14 @@ from typing import Any, Final, cast
 
 from flux_led import DeviceType
 from flux_led.aio import AIOWifiLedBulb
-from flux_led.const import ATTR_ID
+from flux_led.const import ATTR_ID, WhiteChannelType
 from flux_led.scanner import FluxLEDDiscovery
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import (
     async_track_time_change,
@@ -23,6 +23,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_WHITE_CHANNEL_TYPE,
     DISCOVER_SCAN_TIMEOUT,
     DOMAIN,
     FLUX_LED_DISCOVERY,
@@ -56,6 +57,9 @@ PLATFORMS_BY_TYPE: Final = {
 }
 DISCOVERY_INTERVAL: Final = timedelta(minutes=15)
 REQUEST_REFRESH_DELAY: Final = 1.5
+NAME_TO_WHITE_CHANNEL_TYPE: Final = {
+    option.name.lower(): option for option in WhiteChannelType
+}
 
 
 @callback
@@ -84,6 +88,30 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def _async_migrate_unique_ids(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Migrate entities when the mac address gets discovered."""
+    if not (unique_id := entry.unique_id):
+        return
+    entry_id = entry.entry_id
+
+    @callback
+    def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
+        # Old format {entry_id}.....
+        # New format {unique_id}....
+        entity_unique_id = entity_entry.unique_id
+        if not entity_unique_id.startswith(entry_id):
+            return None
+        new_unique_id = f"{unique_id}{entity_unique_id[len(entry_id):]}"
+        _LOGGER.info(
+            "Migrating unique_id from [%s] to [%s]",
+            entity_unique_id,
+            new_unique_id,
+        )
+        return {"new_unique_id": new_unique_id}
+
+    await er.async_migrate_entries(hass, entry.entry_id, _async_migrator)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flux LED/MagicLight from a config entry."""
     host = entry.data[CONF_HOST]
@@ -95,6 +123,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device: AIOWifiLedBulb = async_wifi_bulb_for_host(host, discovery=discovery)
     signal = SIGNAL_STATE_UPDATED.format(device.ipaddr)
     device.discovery = discovery
+    if white_channel_type := entry.data.get(CONF_WHITE_CHANNEL_TYPE):
+        device.white_channel_channel_type = NAME_TO_WHITE_CHANNEL_TYPE[
+            white_channel_type
+        ]
 
     @callback
     def _async_state_changed(*_: Any) -> None:
@@ -126,6 +158,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Only update the entry once we have verified the unique id
         # is either missing or we have verified it matches
         async_update_entry_from_discovery(hass, entry, discovery, device.model_num)
+
+    await _async_migrate_unique_ids(hass, entry)
 
     coordinator = FluxLedUpdateCoordinator(hass, device, entry)
     hass.data[DOMAIN][entry.entry_id] = coordinator

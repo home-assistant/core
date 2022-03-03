@@ -43,12 +43,12 @@
             "init": {
                 "data": {
                     "apps": "Konfigurer applikasjonsliste",
-                    "exclude_unnamed_apps": "Ekskluder app med ukjent navn",
-                    "get_sources": "Om de kj\u00f8rende appene skal hentes eller ikke som kildeliste",
-                    "screencap": "Avgj\u00f8r om albumgrafikk skal hentes fra det som vises p\u00e5 skjermen",
+                    "exclude_unnamed_apps": "Ekskluder apper med ukjent navn fra kildelisten",
+                    "get_sources": "Hent de kj\u00f8rende appene som listen over kilder",
+                    "screencap": "Bruk skjermbilde for albumgrafikk",
                     "state_detection_rules": "Konfigurere regler for tilstandsgjenkjenning",
-                    "turn_off_command": "ADB-skallkommando for \u00e5 overstyre standard turn_off-kommando",
-                    "turn_on_command": "ADB-skallkommando for \u00e5 overstyre standard turn_on-kommando"
+                    "turn_off_command": "ADB shell sl\u00e5 av kommando (la st\u00e5 tomt som standard)",
+                    "turn_on_command": "ADB-skall sl\u00e5 p\u00e5 kommando (la st\u00e5 tomt som standard)"
                 },
                 "title": "Android TV-alternativer"
             },

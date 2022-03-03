@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, Generic
 
 from pyunifiprotect.data import Camera, RecordingMode, VideoMode
 from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
@@ -17,26 +17,26 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .data import ProtectData
 from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import ProtectSetableKeysMixin
+from .models import ProtectSetableKeysMixin, T
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class ProtectSwitchEntityDescription(ProtectSetableKeysMixin, SwitchEntityDescription):
+class ProtectSwitchEntityDescription(
+    ProtectSetableKeysMixin, SwitchEntityDescription, Generic[T]
+):
     """Describes UniFi Protect Switch entity."""
 
 
 _KEY_PRIVACY_MODE = "privacy_mode"
 
 
-def _get_is_highfps(obj: Any) -> bool:
-    assert isinstance(obj, Camera)
+def _get_is_highfps(obj: Camera) -> bool:
     return bool(obj.video_mode == VideoMode.HIGH_FPS)
 
 
-async def _set_highfps(obj: Any, value: bool) -> None:
-    assert isinstance(obj, Camera)
+async def _set_highfps(obj: Camera, value: bool) -> None:
     if value:
         await obj.set_video_mode(VideoMode.HIGH_FPS)
     else:
@@ -74,7 +74,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_value="hdr_mode",
         ufp_set_method="set_hdr",
     ),
-    ProtectSwitchEntityDescription(
+    ProtectSwitchEntityDescription[Camera](
         key="high_fps",
         name="High FPS",
         icon="mdi:video-high-definition",
@@ -152,6 +152,56 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
     ),
 )
 
+SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
+    ProtectSwitchEntityDescription(
+        key="status_light",
+        name="Status Light On",
+        icon="mdi:led-on",
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="led_settings.is_enabled",
+        ufp_set_method="set_status_light",
+    ),
+    ProtectSwitchEntityDescription(
+        key="motion",
+        name="Motion Detection",
+        icon="mdi:walk",
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="motion_settings.is_enabled",
+        ufp_set_method="set_motion_status",
+    ),
+    ProtectSwitchEntityDescription(
+        key="temperature",
+        name="Temperature Sensor",
+        icon="mdi:thermometer",
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="temperature_settings.is_enabled",
+        ufp_set_method="set_temperature_status",
+    ),
+    ProtectSwitchEntityDescription(
+        key="humidity",
+        name="Humidity Sensor",
+        icon="mdi:water-percent",
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="humidity_settings.is_enabled",
+        ufp_set_method="set_humidity_status",
+    ),
+    ProtectSwitchEntityDescription(
+        key="light",
+        name="Light Sensor",
+        icon="mdi:brightness-5",
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="light_settings.is_enabled",
+        ufp_set_method="set_light_status",
+    ),
+    ProtectSwitchEntityDescription(
+        key="alarm",
+        name="Alarm Sound Detection",
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="alarm_settings.is_enabled",
+        ufp_set_method="set_alarm_status",
+    ),
+)
+
 
 LIGHT_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
     ProtectSwitchEntityDescription(
@@ -160,6 +210,17 @@ LIGHT_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         icon="mdi:led-on",
         entity_category=EntityCategory.CONFIG,
         ufp_value="light_device_settings.is_indicator_enabled",
+        ufp_set_method="set_status_light",
+    ),
+)
+
+DOORLOCK_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
+    ProtectSwitchEntityDescription(
+        key="status_light",
+        name="Status Light On",
+        icon="mdi:led-on",
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="led_settings.is_enabled",
         ufp_set_method="set_status_light",
     ),
 )
@@ -178,6 +239,8 @@ async def async_setup_entry(
         all_descs=ALL_DEVICES_SWITCHES,
         camera_descs=CAMERA_SWITCHES,
         light_descs=LIGHT_SWITCHES,
+        sense_descs=SENSE_SWITCHES,
+        lock_descs=DOORLOCK_SWITCHES,
     )
     async_add_entities(entities)
 

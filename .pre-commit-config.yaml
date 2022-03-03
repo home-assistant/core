@@ -3,9 +3,9 @@ repos:
     rev: v2.31.0
     hooks:
       - id: pyupgrade
-        args: [--py38-plus]
+        args: [--py39-plus]
   - repo: https://github.com/psf/black
-    rev: 21.12b0
+    rev: 22.1.0
     hooks:
       - id: black
         args:
@@ -13,11 +13,11 @@ repos:
           - --quiet
         files: ^((homeassistant|script|tests)/.+)?[^/]+\.py$
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.0.0
+    rev: v2.1.0
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=hass,alot,datas,dof,dur,ether,farenheit,hist,iff,iif,ines,ist,lightsensor,mut,nd,pres,referer,rime,ser,serie,te,technik,ue,uint,visability,wan,wanna,withing,iam,incomfort,ba,haa
+          - --ignore-words-list=hass,alot,datas,dof,dur,ether,farenheit,hist,iff,iif,ines,ist,lightsensor,mut,nd,pres,referer,rime,ser,serie,te,technik,ue,uint,visability,wan,wanna,withing,iam,incomfort,ba,haa,pullrequests
           - --skip="./.*,*.csv,*.json"
           - --quiet-level=2
         exclude_types: [csv, json]
@@ -78,7 +78,7 @@ repos:
       - id: python-typing-update
         stages: [manual]
         args:
-          - --py38-plus
+          - --py39-plus
           - --force
           - --keep-updates
         files: ^(homeassistant|tests|script)/.+\.py$
@@ -95,17 +95,37 @@ repos:
         types: [python]
         require_serial: true
         files: ^homeassistant/.+\.py$
+      - id: pylint
+        name: pylint
+        entry: script/run-in-env.sh pylint -j 0
+        language: script
+        types: [python]
+        files: ^homeassistant/.+\.py$
       - id: gen_requirements_all
         name: gen_requirements_all
         entry: script/run-in-env.sh python3 -m script.gen_requirements_all
         pass_filenames: false
         language: script
         types: [text]
-        files: ^(homeassistant/.+/manifest\.json|setup\.py|\.pre-commit-config\.yaml)$
+        files: ^(homeassistant/.+/manifest\.json|setup\.cfg|\.pre-commit-config\.yaml|script/gen_requirements_all\.py)$
       - id: hassfest
         name: hassfest
         entry: script/run-in-env.sh python3 -m script.hassfest
         pass_filenames: false
         language: script
         types: [text]
-        files: ^(homeassistant/.+/(manifest|strings)\.json|\.coveragerc|\.strict-typing|homeassistant/.+/services\.yaml)$
+        files: ^(homeassistant/.+/(manifest|strings)\.json|\.coveragerc|homeassistant/.+/services\.yaml|script/hassfest/(?!metadata|mypy_config).+\.py)$
+      - id: hassfest-metadata
+        name: hassfest-metadata
+        entry: script/run-in-env.sh python3 -m script.hassfest -p metadata
+        pass_filenames: false
+        language: script
+        types: [text]
+        files: ^(script/hassfest/metadata\.py|homeassistant/const\.py$|setup\.cfg)$
+      - id: hassfest-mypy-config
+        name: hassfest-mypy-config
+        entry: script/run-in-env.sh python3 -m script.hassfest -p mypy_config
+        pass_filenames: false
+        language: script
+        types: [text]
+        files: ^(script/hassfest/mypy_config\.py|\.strict-typing|mypy\.ini)$

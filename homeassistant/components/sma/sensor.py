@@ -1,6 +1,8 @@
 """SMA Solar Webconnect interface."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pysma
 
 from homeassistant.components.sensor import (
@@ -33,6 +35,9 @@ async def async_setup_entry(
     coordinator = sma_data[PYSMA_COORDINATOR]
     used_sensors = sma_data[PYSMA_SENSORS]
     device_info = sma_data[PYSMA_DEVICE_INFO]
+
+    if TYPE_CHECKING:
+        assert config_entry.unique_id
 
     entities = []
     for sensor in used_sensors:
@@ -79,7 +84,12 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        return self._sensor.name
+        if self._attr_device_info is None or not (
+            name_prefix := self._attr_device_info.get("name")
+        ):
+            name_prefix = "SMA"
+
+        return f"{name_prefix} {self._sensor.name}"
 
     @property
     def native_value(self) -> StateType:

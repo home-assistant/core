@@ -17,8 +17,6 @@ from . import config_per_platform
 from .entity_platform import EntityPlatform, async_get_platforms
 from .typing import ConfigType
 
-# mypy: disallow-any-generics
-
 _LOGGER = logging.getLogger(__name__)
 
 

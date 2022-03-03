@@ -875,7 +875,7 @@ async def test_serialize_input_boolean(hass):
     state = State("input_boolean.bla", "on")
     # pylint: disable=protected-access
     entity = sh.GoogleEntity(hass, BASIC_CONFIG, state)
-    result = await entity.sync_serialize(None)
+    result = entity.sync_serialize(None, "mock-uuid")
     assert result == {
         "id": "input_boolean.bla",
         "attributes": {},
@@ -1513,4 +1513,35 @@ async def test_query_recover(hass, caplog):
                 "light.good": {"on": True, "online": True, "brightness": 19},
             }
         },
+    }
+
+
+async def test_proxy_selected(hass, caplog):
+    """Test that we handle proxy selected."""
+
+    result = await sh.async_handle_message(
+        hass,
+        BASIC_CONFIG,
+        "test-agent",
+        {
+            "requestId": REQ_ID,
+            "inputs": [
+                {
+                    "intent": "action.devices.PROXY_SELECTED",
+                    "payload": {
+                        "device": {
+                            "id": "abcdefg",
+                            "customData": {},
+                        },
+                        "structureData": {},
+                    },
+                }
+            ],
+        },
+        const.SOURCE_LOCAL,
+    )
+
+    assert result == {
+        "requestId": REQ_ID,
+        "payload": {},
     }

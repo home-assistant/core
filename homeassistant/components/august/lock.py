@@ -39,8 +39,6 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
     def __init__(self, data, device):
         """Initialize the lock."""
         super().__init__(data, device)
-        self._data = data
-        self._device = device
         self._lock_status = None
         self._attr_name = device.device_name
         self._attr_unique_id = f"{self._device_id:s}_lock"
@@ -49,14 +47,14 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
     async def async_lock(self, **kwargs):
         """Lock the device."""
         if self._data.activity_stream.pubnub.connected:
-            await self._data.async_lock_async(self._device_id)
+            await self._data.async_lock_async(self._device_id, self._hyper_bridge)
             return
         await self._call_lock_operation(self._data.async_lock)
 
     async def async_unlock(self, **kwargs):
         """Unlock the device."""
         if self._data.activity_stream.pubnub.connected:
-            await self._data.async_unlock_async(self._device_id)
+            await self._data.async_unlock_async(self._device_id, self._hyper_bridge)
             return
         await self._call_lock_operation(self._data.async_unlock)
 

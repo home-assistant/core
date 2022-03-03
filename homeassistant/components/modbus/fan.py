@@ -48,7 +48,7 @@ class ModbusFan(BaseSwitch, FanEntity):
         await self.async_turn(self.command_on)
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if fan is on.
 
         This is needed due to the ongoing conversion of fan.

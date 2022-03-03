@@ -81,8 +81,8 @@
                     "alarm2_out2": "OUT2 / ALARM2",
                     "out1": "OUT1"
                 },
-                "description": "Selezionare di seguito la configurazione degli I/O rimanenti.  Potrete configurare opzioni dettagliate nei prossimi passi.",
-                "title": "Configurazione I/O Esteso"
+                "description": "Selezionare di seguito la configurazione degli I/O rimanenti. Potrai configurare opzioni dettagliate nei prossimi passi.",
+                "title": "Configurazione I/O esteso"
             },
             "options_misc": {
                 "data": {

@@ -1,5 +1,8 @@
 """Config flow to configure the Netgear integration."""
+from __future__ import annotations
+
 import logging
+from typing import cast
 from urllib.parse import urlparse
 
 from pynetgear import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_USER
@@ -23,7 +26,9 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     MODELS_PORT_80,
+    MODELS_PORT_5555,
     PORT_80,
+    PORT_5555,
 )
 from .errors import CannotLoginException
 from .router import get_api
@@ -36,11 +41,7 @@ def _discovery_schema_with_defaults(discovery_info):
 
 
 def _user_schema_with_defaults(user_input):
-    user_schema = {
-        vol.Optional(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
-        vol.Optional(CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)): int,
-        vol.Optional(CONF_SSL, default=user_input.get(CONF_SSL, False)): bool,
-    }
+    user_schema = {vol.Optional(CONF_HOST, default=user_input.get(CONF_HOST, "")): str}
     user_schema.update(_ordered_shared_schema(user_input))
 
     return vol.Schema(user_schema)
@@ -121,20 +122,22 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Initialize flow from ssdp."""
-        updated_data = {}
+        updated_data: dict[str, str | int | bool] = {}
 
         device_url = urlparse(discovery_info.ssdp_location)
-        if device_url.hostname:
-            updated_data[CONF_HOST] = device_url.hostname
-        if device_url.scheme == "https":
-            updated_data[CONF_SSL] = True
-        else:
-            updated_data[CONF_SSL] = False
+        if hostname := device_url.hostname:
+            hostname = cast(str, hostname)
+            updated_data[CONF_HOST] = hostname
 
         _LOGGER.debug("Netgear ssdp discovery info: %s", discovery_info)
 
         await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL])
         self._abort_if_unique_id_configured(updates=updated_data)
+
+        if device_url.scheme == "https":
+            updated_data[CONF_SSL] = True
+        else:
+            updated_data[CONF_SSL] = False
 
         updated_data[CONF_PORT] = DEFAULT_PORT
         for model in MODELS_PORT_80:
@@ -144,6 +147,14 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 model
             ):
                 updated_data[CONF_PORT] = PORT_80
+        for model in MODELS_PORT_5555:
+            if discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NUMBER, "").startswith(
+                model
+            ) or discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME, "").startswith(
+                model
+            ):
+                updated_data[CONF_PORT] = PORT_5555
+                updated_data[CONF_SSL] = True
 
         self.placeholders.update(updated_data)
         self.discovered = True
@@ -158,8 +169,8 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._show_setup_form()
 
         host = user_input.get(CONF_HOST, self.placeholders[CONF_HOST])
-        port = user_input.get(CONF_PORT, self.placeholders[CONF_PORT])
-        ssl = user_input.get(CONF_SSL, self.placeholders[CONF_SSL])
+        port = self.placeholders[CONF_PORT]
+        ssl = self.placeholders[CONF_SSL]
         username = user_input.get(CONF_USERNAME, self.placeholders[CONF_USERNAME])
         password = user_input[CONF_PASSWORD]
         if not username:
@@ -185,8 +196,8 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_USERNAME: username,
             CONF_PASSWORD: password,
             CONF_HOST: host,
-            CONF_PORT: port,
-            CONF_SSL: ssl,
+            CONF_PORT: api.port,
+            CONF_SSL: api.ssl,
         }
 
         if info.get("ModelName") is not None and info.get("DeviceName") is not None:

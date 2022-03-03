@@ -64,6 +64,7 @@
             "init": {
                 "data": {
                     "scan_interval": "Taramalar aras\u0131ndaki dakika",
+                    "snap_profile_type": "Kamera anl\u0131k g\u00f6r\u00fcnt\u00fclerinin kalite d\u00fczeyi (0:y\u00fcksek 1:orta 2:d\u00fc\u015f\u00fck)",
                     "timeout": "Zaman a\u015f\u0131m\u0131 (saniye)"
                 }
             }
