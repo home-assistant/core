@@ -634,7 +634,7 @@ class AvmWrapper(FritzBoxTools):
         """Call X_AVM-DE_UPnP service."""
 
         return await self.hass.async_add_executor_job(
-            partial(self.get_upnp_configuration)
+            self.get_upnp_configuration
         )
 
     async def async_get_wan_link_properties(self) -> dict[str, Any]:
