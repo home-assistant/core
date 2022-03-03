@@ -447,7 +447,7 @@ async def test_ssdp_websocket_success_populates_mac_address(
     assert result["title"] == "Living Room (82GXARRS)"
     assert result["data"][CONF_HOST] == "fake_host"
     assert result["data"][CONF_NAME] == "Living Room"
-    assert result["data"][CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert result["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     assert result["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
     assert result["data"][CONF_MODEL] == "82GXARRS"
     assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
@@ -722,7 +722,7 @@ async def test_dhcp(hass: HomeAssistant) -> None:
     assert result["title"] == "Living Room (82GXARRS)"
     assert result["data"][CONF_HOST] == "fake_host"
     assert result["data"][CONF_NAME] == "Living Room"
-    assert result["data"][CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert result["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "82GXARRS"
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
@@ -748,7 +748,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert result["title"] == "Living Room (82GXARRS)"
     assert result["data"][CONF_HOST] == "fake_host"
     assert result["data"][CONF_NAME] == "Living Room"
-    assert result["data"][CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert result["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "82GXARRS"
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
@@ -1103,7 +1103,7 @@ async def test_update_missing_mac_unique_id_added_from_ssdp(
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     assert entry.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 

@@ -102,7 +102,7 @@ async def test_setup_from_yaml_without_port_device_online(hass: HomeAssistant) -
 
     config_entries_domain = hass.config_entries.async_entries(SAMSUNGTV_DOMAIN)
     assert len(config_entries_domain) == 1
-    assert config_entries_domain[0].data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert config_entries_domain[0].data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
 
 
 @pytest.mark.usefixtures("remote")

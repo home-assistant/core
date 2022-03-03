@@ -177,7 +177,7 @@ async def test_setup_websocket(hass: HomeAssistant) -> None:
 
         config_entries = hass.config_entries.async_entries(SAMSUNGTV_DOMAIN)
         assert len(config_entries) == 1
-        assert config_entries[0].data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+        assert config_entries[0].data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
 
 
 async def test_setup_websocket_2(
