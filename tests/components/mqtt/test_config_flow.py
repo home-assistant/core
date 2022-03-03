@@ -151,7 +151,7 @@ async def test_manual_config_set(
         "discovery": True,
     }
     # Check we tried the connection, with precedence for config entry settings
-    mock_try_connection.assert_called_once_with("127.0.0.1", 1883, None, None)
+    mock_try_connection.assert_called_once_with(hass, "127.0.0.1", 1883, None, None)
     # Check config entry got setup
     assert len(mock_finish_setup.mock_calls) == 1
 
