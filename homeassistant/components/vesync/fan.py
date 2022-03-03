@@ -34,7 +34,12 @@ PRESET_MODES = {
     "Core300S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
     "Core400S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
 }
-SPEED_RANGE = (1, 3)  # off is not included
+SPEED_RANGE = { # off is not included
+    "LV-PUR131S": (1, 3),
+    "Core200S": (1, 3),
+    "Core300S": (1, 3),
+    "Core400S": (1, 4)
+}
 
 
 async def async_setup_entry(
@@ -92,13 +97,16 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
             self.smartfan.mode == "manual"
             and (current_level := self.smartfan.fan_level) is not None
         ):
-            return ranged_value_to_percentage(SPEED_RANGE, current_level)
+            return ranged_value_to_percentage(
+                SPEED_RANGE[self.device.device_type],
+                current_level
+            )
         return None
 
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-        return int_states_in_range(SPEED_RANGE)
+        return int_states_in_range(SPEED_RANGE[self.device.device_type])
 
     @property
     def preset_modes(self):
@@ -156,7 +164,12 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
 
         self.smartfan.manual_mode()
         self.smartfan.change_fan_speed(
-            math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
+            math.ceil(
+                percentage_to_ranged_value(
+                    SPEED_RANGE[self.device.device_type],
+                    percentage
+                )
+            )
         )
         self.schedule_update_ha_state()
 
