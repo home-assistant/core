@@ -1,6 +1,5 @@
 """Config flow for iammeter integration."""
 import logging
-from urllib.parse import ParseResult, urlparse
 
 from iammeter.client import IamMeter
 from requests.exceptions import HTTPError, Timeout
@@ -92,13 +91,7 @@ class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input=None):
         """Import a config entry."""
-        host_entry = user_input.get(CONF_IP_ADDRESS, DEFAULT_IP)
-
-        url = urlparse(host_entry, "http")
-        netloc = url.netloc or url.path
-        path = url.path if url.netloc else ""
-        url = ParseResult("http", netloc, path, *url[3:])
-        host = url.geturl()
+        host = user_input.get(CONF_IP_ADDRESS, DEFAULT_IP)
 
         if self._host_in_configuration_exists(host):
             return self.async_abort(reason="already_configured")
