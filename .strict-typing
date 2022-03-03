@@ -206,6 +206,7 @@ homeassistant.components.unifiprotect.*
 homeassistant.components.upcloud.*
 homeassistant.components.uptime.*
 homeassistant.components.uptimerobot.*
+homeassistant.components.usb.*
 homeassistant.components.vacuum.*
 homeassistant.components.vallox.*
 homeassistant.components.velbus.*
