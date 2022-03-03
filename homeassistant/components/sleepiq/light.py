@@ -46,10 +46,12 @@ class SleepIQLightEntity(SleepIQBedEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
         await self.light.turn_on()
+        self._handle_coordinator_update()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
         await self.light.turn_off()
+        self._handle_coordinator_update()
 
     @callback
     def _async_update_attrs(self) -> None:

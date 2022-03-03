@@ -42,12 +42,12 @@ class SleepNumberPrivateSwitch(SleepIQBedEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         await self.bed.set_pause_mode(True)
-        self._async_update_attrs()
+        self._handle_coordinator_update()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         await self.bed.set_pause_mode(False)
-        self._async_update_attrs()
+        self._handle_coordinator_update()
 
     @callback
     def _async_update_attrs(self) -> None:
