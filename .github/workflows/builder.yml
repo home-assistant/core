@@ -135,7 +135,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2022.01.0
+        uses: home-assistant/builder@2022.03.1
         with:
           args: |
             $BUILD_ARGS \
@@ -200,7 +200,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2022.01.0
+        uses: home-assistant/builder@2022.03.1
         with:
           args: |
             $BUILD_ARGS \
@@ -339,7 +339,7 @@ jobs:
 
           # Create general tags
           if [[ "${{ needs.init.outputs.version }}" =~ d ]]; then
-            create_manifest"dev" "${{ needs.init.outputs.version }}"
+            create_manifest "dev" "${{ needs.init.outputs.version }}"
           elif [[ "${{ needs.init.outputs.version }}" =~ b ]]; then
             create_manifest "beta" "${{ needs.init.outputs.version }}"
             create_manifest "rc" "${{ needs.init.outputs.version }}"

@@ -99,7 +99,7 @@ MOCK_SSDP_DATA_WRONGMODEL = ssdp.SsdpServiceInfo(
     },
 )
 MOCK_DHCP_DATA = dhcp.DhcpServiceInfo(
-    ip="fake_host", macaddress="aa:bb:cc:dd:ee:ff", hostname="fake_hostname"
+    ip="fake_host", macaddress="aa:bb:dd:hh:cc:pp", hostname="fake_hostname"
 )
 EXISTING_IP = "192.168.40.221"
 MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
@@ -109,7 +109,7 @@ MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
     name="mock_name",
     port=1234,
     properties={
-        "deviceid": "aa:bb:cc:dd:ee:ff",
+        "deviceid": "aa:bb:zz:ee:rr:oo",
         "manufacturer": "fake_manufacturer",
         "model": "fake_model",
         "serialNumber": "fake_serial",
@@ -316,10 +316,8 @@ async def test_user_not_successful_2(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("remote")
-async def test_ssdp(hass: HomeAssistant, no_mac_address: Mock) -> None:
+async def test_ssdp(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery."""
-
-    no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO,
@@ -345,10 +343,8 @@ async def test_ssdp(hass: HomeAssistant, no_mac_address: Mock) -> None:
 
 
 @pytest.mark.usefixtures("remote")
-async def test_ssdp_noprefix(hass: HomeAssistant, no_mac_address: Mock) -> None:
+async def test_ssdp_noprefix(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery without prefixes."""
-
-    no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO_2,
@@ -449,7 +445,7 @@ async def test_ssdp_websocket_success_populates_mac_address(
     assert result["title"] == "Living Room (82GXARRS)"
     assert result["data"][CONF_HOST] == "fake_host"
     assert result["data"][CONF_NAME] == "Living Room"
-    assert result["data"][CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert result["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     assert result["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
     assert result["data"][CONF_MODEL] == "82GXARRS"
     assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
@@ -490,7 +486,6 @@ async def test_ssdp_model_not_supported(hass: HomeAssistant) -> None:
     assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
-@pytest.mark.usefixtures("no_mac_address")
 async def test_ssdp_not_successful(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery but no device found."""
     with patch(
@@ -519,7 +514,6 @@ async def test_ssdp_not_successful(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_CANNOT_CONNECT
 
 
-@pytest.mark.usefixtures("no_mac_address")
 async def test_ssdp_not_successful_2(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery but no device found."""
     with patch(
@@ -549,12 +543,8 @@ async def test_ssdp_not_successful_2(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("remote")
-async def test_ssdp_already_in_progress(
-    hass: HomeAssistant, no_mac_address: Mock
-) -> None:
+async def test_ssdp_already_in_progress(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery twice."""
-
-    no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO,
@@ -576,12 +566,8 @@ async def test_ssdp_already_in_progress(
 
 
 @pytest.mark.usefixtures("remote")
-async def test_ssdp_already_configured(
-    hass: HomeAssistant, no_mac_address: Mock
-) -> None:
+async def test_ssdp_already_configured(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery when already configured."""
-
-    no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO,
@@ -609,10 +595,8 @@ async def test_ssdp_already_configured(
 
 
 @pytest.mark.usefixtures("remote")
-async def test_import_legacy(hass: HomeAssistant, no_mac_address: Mock) -> None:
+async def test_import_legacy(hass: HomeAssistant) -> None:
     """Test importing from yaml with hostname."""
-
-    no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
@@ -632,7 +616,7 @@ async def test_import_legacy(hass: HomeAssistant, no_mac_address: Mock) -> None:
     assert entries[0].data[CONF_PORT] == LEGACY_PORT
 
 
-@pytest.mark.usefixtures("remote", "remotews", "no_mac_address")
+@pytest.mark.usefixtures("remote", "remotews")
 async def test_import_legacy_without_name(hass: HomeAssistant, rest_api: Mock) -> None:
     """Test importing from yaml without a name."""
     rest_api.rest_device_info.return_value = None
@@ -733,7 +717,7 @@ async def test_dhcp(hass: HomeAssistant) -> None:
     assert result["title"] == "Living Room (82GXARRS)"
     assert result["data"][CONF_HOST] == "fake_host"
     assert result["data"][CONF_NAME] == "Living Room"
-    assert result["data"][CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert result["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "82GXARRS"
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
@@ -759,7 +743,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert result["title"] == "Living Room (82GXARRS)"
     assert result["data"][CONF_HOST] == "fake_host"
     assert result["data"][CONF_NAME] == "Living Room"
-    assert result["data"][CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert result["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "82GXARRS"
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
@@ -870,8 +854,9 @@ async def test_autodetect_websocket(hass: HomeAssistant) -> None:
     assert entries[0].data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
 
 
-async def test_websocket_no_mac(hass: HomeAssistant) -> None:
+async def test_websocket_no_mac(hass: HomeAssistant, mac_address: Mock) -> None:
     """Test for send key with autodetection of protocol."""
+    mac_address.return_value = "gg:ee:tt:mm:aa:cc"
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=OSError("Boom"),
@@ -879,9 +864,7 @@ async def test_websocket_no_mac(hass: HomeAssistant) -> None:
         "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote"
     ) as remotews, patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
-    ) as rest_api_class, patch(
-        "getmac.get_mac_address", return_value="gg:hh:ii:ll:mm:nn"
-    ):
+    ) as rest_api_class:
         remote = Mock(SamsungTVWSAsyncRemote)
         remote.__aenter__ = AsyncMock(return_value=remote)
         remote.__aexit__ = AsyncMock(return_value=False)
@@ -908,14 +891,14 @@ async def test_websocket_no_mac(hass: HomeAssistant) -> None:
         assert result["type"] == "create_entry"
         assert result["data"][CONF_METHOD] == "websocket"
         assert result["data"][CONF_TOKEN] == "123456789"
-        assert result["data"][CONF_MAC] == "gg:hh:ii:ll:mm:nn"
+        assert result["data"][CONF_MAC] == "gg:ee:tt:mm:aa:cc"
         remotews.assert_called_once_with(**AUTODETECT_WEBSOCKET_SSL)
         rest_api_class.assert_called_once_with(**DEVICEINFO_WEBSOCKET_SSL)
         await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].data[CONF_MAC] == "gg:hh:ii:ll:mm:nn"
+    assert entries[0].data[CONF_MAC] == "gg:ee:tt:mm:aa:cc"
 
 
 async def test_autodetect_auth_missing(hass: HomeAssistant) -> None:
@@ -1058,7 +1041,7 @@ async def test_update_missing_mac_unique_id_added_from_dhcp(
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert entry.data[CONF_MAC] == "aa:bb:dd:hh:cc:pp"
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
@@ -1086,7 +1069,7 @@ async def test_update_missing_mac_unique_id_added_from_zeroconf(
         assert len(mock_setup_entry.mock_calls) == 1
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert entry.data[CONF_MAC] == "aa:bb:zz:ee:rr:oo"
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
@@ -1115,7 +1098,7 @@ async def test_update_missing_mac_unique_id_added_from_ssdp(
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     assert entry.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
@@ -1147,7 +1130,7 @@ async def test_update_missing_mac_added_unique_id_preserved_from_zeroconf(
         assert len(mock_setup_entry.mock_calls) == 1
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert entry.data[CONF_MAC] == "aa:bb:zz:ee:rr:oo"
     assert entry.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 

@@ -22,3 +22,14 @@ SAMPLE_APP_LIST = [
         "name": "Spotify - Music and Podcasts",
     },
 ]
+
+SAMPLE_DEVICE_INFO_WIFI = {
+    "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
+    "device": {
+        "modelName": "82GXARRS",
+        "wifiMac": "aa:bb:ww:ii:ff:ii",
+        "name": "[TV] Living Room",
+        "type": "Samsung SmartTV",
+        "networkType": "wireless",
+    },
+}
