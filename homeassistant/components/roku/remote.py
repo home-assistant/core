@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from contextlib import suppress
 from typing import Any
 
 from rokuecp import RokuConnectionTimeoutError
@@ -53,7 +52,7 @@ class RokuRemote(RokuEntity, RemoteEntity):
         await self.coordinator.roku.remote("poweron")
         await self.coordinator.async_request_refresh()
 
-    @roku_exception_handler
+    @roku_exception_handler(ignore_timeout=True)
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         with suppress(RokuConnectionTimeoutError):
