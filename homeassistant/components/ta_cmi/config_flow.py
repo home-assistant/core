@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 from typing import Any
 
 from ta_cmi import CMI, ApiError, InvalidCredentialsError, RateLimitError
@@ -51,14 +52,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Technische Alternative C.M.I.."""
 
     VERSION = 1
-    overrideData: dict[str, Any] = {}
-    overrideConfig: dict[str, Any] = {}
+    override_data: dict[str, Any] = {}
+    override_config: dict[str, Any] = {}
+    init_start_time: float = 0
 
     def __init__(self) -> None:
         """Initialize."""
         super().__init__()
-        self.data: dict[str, Any] = ConfigFlow.overrideData
-        self.config: dict[str, Any] = ConfigFlow.overrideConfig
+        self.data: dict[str, Any] = ConfigFlow.override_data
+        self.config: dict[str, Any] = ConfigFlow.override_config
+
+        self.start_time: float = ConfigFlow.init_start_time
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -143,6 +147,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except RateLimitError:
             errors["base"] = "rate_limit"
 
+        self.start_time = time.time()
         return self.async_show_form(
             step_id="devices",
             data_schema=vol.Schema(
@@ -208,8 +213,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_finish(self) -> FlowResult:
         """Step for save the config."""
-        # Wait one minute to prevent rate limiting from being triggered.
-        await asyncio.sleep(60)
+        # Wait to prevent rate limiting from being triggered.
+        end_time = time.time()
+        time_lapsed = end_time - self.start_time
+        if time_lapsed <= 60:
+            await asyncio.sleep(60 - time_lapsed)
         return self.async_create_entry(title="C.M.I", data=self.config)
 
 

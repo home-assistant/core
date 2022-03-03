@@ -1,6 +1,7 @@
 """Test the Technische Alternative C.M.I. config flow."""
 from __future__ import annotations
 
+import time
 from typing import Any
 from unittest.mock import patch
 
@@ -248,7 +249,7 @@ async def test_step_devices_with_multiple_devices(hass: HomeAssistant) -> None:
 
     DATA_OVERRIDE = {"allDevices": [dummy_device, dummy_Device2]}
 
-    with patch.object(ConfigFlow, "overrideData", DATA_OVERRIDE), patch(
+    with patch.object(ConfigFlow, "override_data", DATA_OVERRIDE), patch(
         "ta_cmi.baseApi.BaseAPI._makeRequest",
         return_value=DUMMY_DEVICE_API_DATA_UNKOWN_DEVICE,
     ), patch("asyncio.sleep", wraps=sleep_mock):
@@ -274,6 +275,25 @@ async def test_step_devices_with_edit(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "channel"
     assert result["errors"] == {}
+
+
+async def test_step_finish_dynamic_wait(hass: HomeAssistant) -> None:
+    """Test the finish step with dynamic waiting."""
+
+    with patch("asyncio.sleep", wraps=sleep_mock) as mock, patch.object(
+        ConfigFlow, "init_start_time", time.time()
+    ):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "devices"},
+            data=DUMMY_DEVICE_DATA_NO_CHANNEL_FETCH_DEFINED,
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == "C.M.I"
+
+        assert mock.call_count == 2
 
 
 async def test_step_device_unkown_error(hass: HomeAssistant) -> None:
@@ -323,8 +343,8 @@ async def test_step_channels_edit_only_one(hass: HomeAssistant) -> None:
         ]
     }
 
-    with patch.object(ConfigFlow, "overrideData", DATA_OVERRIDE), patch.object(
-        ConfigFlow, "overrideConfig", CONFIG_OVERRIDE
+    with patch.object(ConfigFlow, "override_data", DATA_OVERRIDE), patch.object(
+        ConfigFlow, "override_config", CONFIG_OVERRIDE
     ), patch("asyncio.sleep", wraps=sleep_mock):
 
         result = await hass.config_entries.flow.async_init(
@@ -350,8 +370,8 @@ async def test_step_channels_edit_more(hass: HomeAssistant) -> None:
         ]
     }
 
-    with patch.object(ConfigFlow, "overrideData", DATA_OVERRIDE), patch.object(
-        ConfigFlow, "overrideConfig", CONFIG_OVERRIDE
+    with patch.object(ConfigFlow, "override_data", DATA_OVERRIDE), patch.object(
+        ConfigFlow, "override_config", CONFIG_OVERRIDE
     ), patch("asyncio.sleep", wraps=sleep_mock):
 
         result = await hass.config_entries.flow.async_init(
