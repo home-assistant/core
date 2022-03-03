@@ -1,3 +1,6 @@
+reload:
+  name: Reload
+  description: Reload all modbus entities.
 write_coil:
   name: Write coil
   description: Write to a modbus coil.
