@@ -38,7 +38,7 @@ class SwitchLightConfigFlowHandler(
         object_id = split_entity_id(user_input["entity_id"])[1]
         entry = registry.async_get(user_input["entity_id"])
         if entry:
-            return entry.name or object_id
+            return entry.name or entry.original_name or object_id
         state = self.hass.states.get(user_input["entity_id"])
         if state:
             return state.name or object_id
