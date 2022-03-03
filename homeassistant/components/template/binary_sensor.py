@@ -326,6 +326,9 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
             and (extra_data := await self.async_get_last_binary_sensor_data())
             is not None
             and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            # The trigger might have fired already while we waited for stored data,
+            # then we should not restore state
+            and self._state is None
         ):
             self._state = last_state.state == STATE_ON
 
@@ -335,7 +338,7 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
             if (
                 auto_off_time := extra_data.auto_off_time
             ) is not None and auto_off_time <= dt_util.utcnow():
-                # It's already paste the saved auto off time
+                # It's already past the saved auto off time
                 self._state = False
 
             if self._state and auto_off_time is not None:
