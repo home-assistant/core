@@ -180,9 +180,7 @@ async def test_setup_websocket(hass: HomeAssistant) -> None:
         assert config_entries[0].data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
 
 
-async def test_setup_websocket_2(
-    hass: HomeAssistant, mock_now: datetime, rest_api: Mock
-) -> None:
+async def test_setup_websocket_2(hass: HomeAssistant, mock_now: datetime) -> None:
     """Test setup of platform from config entry."""
     entity_id = f"{DOMAIN}.fake"
 
@@ -197,16 +195,6 @@ async def test_setup_websocket_2(
     assert len(config_entries) == 1
     assert entry is config_entries[0]
 
-    rest_api.rest_device_info.return_value = {
-        "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
-        "device": {
-            "modelName": "82GXARRS",
-            "wifiMac": "aa:bb:cc:dd:ee:ff",
-            "name": "[TV] Living Room",
-            "type": "Samsung SmartTV",
-            "networkType": "wireless",
-        },
-    }
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote"
     ) as remote_class:
@@ -219,7 +207,7 @@ async def test_setup_websocket_2(
         assert await async_setup_component(hass, SAMSUNGTV_DOMAIN, {})
         await hass.async_block_till_done()
 
-        assert config_entries[0].data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+        assert config_entries[0].data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
 
         next_update = mock_now + timedelta(minutes=5)
         with patch("homeassistant.util.dt.utcnow", return_value=next_update):
