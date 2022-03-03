@@ -100,7 +100,7 @@ _LOGGER = logging.getLogger(__name__)
 
 NUMBERS_ONLY_RE = re.compile(r"[^\d.]+")
 VERSION_RE = re.compile(r"([0-9]+)(\.[0-9]+)?(\.[0-9]+)?")
-MAX_VERSION_PART = 2**32 - 1
+MAX_VERSION_PART = 2**16 - 1
 
 
 MAX_PORT = 65535
