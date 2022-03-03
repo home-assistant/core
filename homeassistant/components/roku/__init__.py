@@ -6,7 +6,7 @@ from functools import wraps
 import logging
 from typing import Any, TypeVar
 
-from rokuecp import RokuConnectionError, RokuError
+from rokuecp import RokuConnectionError, RokuConnectionTimeoutError, RokuError
 from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.config_entries import ConfigEntry
@@ -56,7 +56,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 def roku_exception_handler(
-    func: Callable[Concatenate[_T, _P], Awaitable[None]]  # type: ignore[misc]
+    func: Callable[Concatenate[_T, _P], Awaitable[None]],  # type: ignore[misc]
+    ignore_timeout: bool = False,
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:  # type: ignore[misc]
     """Decorate Roku calls to handle Roku exceptions."""
 
@@ -64,6 +65,9 @@ def roku_exception_handler(
     async def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
         try:
             await func(self, *args, **kwargs)
+        except RokuConnectionTimeoutError as error:
+            if not ignore_timeout and self.available:
+                _LOGGER.error("Error communicating with API: %s", error)
         except RokuConnectionError as error:
             if self.available:
                 _LOGGER.error("Error communicating with API: %s", error)
