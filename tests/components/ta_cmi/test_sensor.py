@@ -1,5 +1,5 @@
 """Test the Technische Alternative C.M.I. sensor."""
-from typing import Any, Dict
+from typing import Any
 from unittest.mock import patch
 
 from ta_cmi import InvalidCredentialsError
@@ -11,9 +11,11 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from . import sleep_mock
+
 from tests.common import MockConfigEntry
 
-DUMMY_DEVICE_API_DATA: Dict[str, Any] = {
+DUMMY_DEVICE_API_DATA: dict[str, Any] = {
     "Header": {"Version": 5, "Device": "87", "Timestamp": 1630764000},
     "Data": {
         "Inputs": [
@@ -31,7 +33,7 @@ DUMMY_DEVICE_API_DATA: Dict[str, Any] = {
     "Status code": 0,
 }
 
-ENTRY_DATA: Dict[str, Any] = {
+ENTRY_DATA: dict[str, Any] = {
     "host": "http://192.168.2.101",
     "username": "admin",
     "password": "admin",
@@ -67,7 +69,9 @@ async def test_sensors(hass: HomeAssistant) -> None:
     """Test the creation and values of the sensors."""
     with patch("ta_cmi.baseApi.BaseAPI._makeRequestNoJson", return_value="2;",), patch(
         "ta_cmi.baseApi.BaseAPI._makeRequest", return_value=DUMMY_DEVICE_API_DATA
-    ), patch("homeassistant.components.ta_cmi.const.DEVICE_DELAY", 1):
+    ), patch("homeassistant.components.ta_cmi.const.DEVICE_DELAY", 1), patch(
+        "asyncio.sleep", wraps=sleep_mock
+    ):
 
         conf_entry: MockConfigEntry = MockConfigEntry(
             domain=DOMAIN, title="NINA", data=ENTRY_DATA
@@ -141,7 +145,7 @@ async def test_sensors_invalid_credentials(hass: HomeAssistant) -> None:
     with patch(
         "ta_cmi.baseApi.BaseAPI._makeRequestNoJson",
         side_effect=InvalidCredentialsError("Invalid API key"),
-    ):
+    ), patch("asyncio.sleep", wraps=sleep_mock):
 
         conf_entry: MockConfigEntry = MockConfigEntry(
             domain=DOMAIN, title="NINA", data=ENTRY_DATA
