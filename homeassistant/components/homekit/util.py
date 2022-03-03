@@ -1,6 +1,4 @@
 """Collection of useful functions for the HomeKit component."""
-from __future__ import annotations
-
 import io
 import ipaddress
 import logging
@@ -12,17 +10,12 @@ import socket
 import pyqrcode
 import voluptuous as vol
 
-from homeassistant.components import (
-    binary_sensor,
-    media_player,
-    persistent_notification,
-    sensor,
-)
+from homeassistant.components import binary_sensor, media_player, sensor
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.media_player import (
+    DEVICE_CLASS_TV,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    MediaPlayerDeviceClass,
 )
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, SUPPORT_ACTIVITY
 from homeassistant.const import (
@@ -83,7 +76,6 @@ from .const import (
     FEATURE_TOGGLE_MUTE,
     HOMEKIT_PAIRING_QR,
     HOMEKIT_PAIRING_QR_SECRET,
-    MAX_NAME_LENGTH,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -96,11 +88,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-NUMBERS_ONLY_RE = re.compile(r"[^\d.]+")
-VERSION_RE = re.compile(r"([0-9]+)(\.[0-9]+)?(\.[0-9]+)?")
-
 
 MAX_PORT = 65535
 VALID_VIDEO_CODECS = [VIDEO_CODEC_LIBX264, VIDEO_CODEC_H264_OMX, AUDIO_CODEC_COPY]
@@ -347,12 +334,14 @@ def async_show_setup_message(hass, entry_id, bridge_name, pincode, uri):
         f"### {pin}\n"
         f"![image](/api/homekit/pairingqr?{entry_id}-{pairing_secret})"
     )
-    persistent_notification.async_create(hass, message, "HomeKit Pairing", entry_id)
+    hass.components.persistent_notification.async_create(
+        message, "HomeKit Pairing", entry_id
+    )
 
 
 def async_dismiss_setup_message(hass, entry_id):
     """Dismiss persistent notification and remove QR code."""
-    persistent_notification.async_dismiss(hass, entry_id)
+    hass.components.persistent_notification.async_dismiss(entry_id)
 
 
 def convert_to_float(state):
@@ -363,16 +352,14 @@ def convert_to_float(state):
         return None
 
 
-def cleanup_name_for_homekit(name: str | None) -> str | None:
+def cleanup_name_for_homekit(name):
     """Ensure the name of the device will not crash homekit."""
     #
     # This is not a security measure.
     #
     # UNICODE_EMOJI is also not allowed but that
     # likely isn't a problem
-    if name is None:
-        return None
-    return name.translate(HOMEKIT_CHAR_TRANSLATIONS)[:MAX_NAME_LENGTH]
+    return name.translate(HOMEKIT_CHAR_TRANSLATIONS)
 
 
 def temperature_to_homekit(temperature, unit):
@@ -420,11 +407,10 @@ def get_aid_storage_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str):
     )
 
 
-def format_version(version):
+def format_sw_version(version):
     """Extract the version string in a format homekit can consume."""
-    split_ver = str(version).replace("-", ".")
-    num_only = NUMBERS_ONLY_RE.sub("", split_ver)
-    if match := VERSION_RE.search(num_only):
+    match = re.search(r"([0-9]+)(\.[0-9]+)?(\.[0-9]+)?", str(version).replace("-", "."))
+    if match:
         return match.group(0)
     return None
 
@@ -516,7 +502,7 @@ def state_needs_accessory_mode(state):
 
     return (
         state.domain == MEDIA_PLAYER_DOMAIN
-        and state.attributes.get(ATTR_DEVICE_CLASS) == MediaPlayerDeviceClass.TV
+        and state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TV
         or state.domain == REMOTE_DOMAIN
         and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & SUPPORT_ACTIVITY
     )
