@@ -33,6 +33,7 @@ from .bridge import (
     mac_from_device_info,
 )
 from .const import (
+    CONF_MODEL,
     CONF_ON_ACTION,
     DEFAULT_NAME,
     DOMAIN,
@@ -149,6 +150,7 @@ async def _async_create_bridge_with_updated_data(
     host: str = entry.data[CONF_HOST]
     port: int | None = entry.data.get(CONF_PORT)
     method: str | None = entry.data.get(CONF_METHOD)
+    load_info_attempted = False
     info: dict[str, Any] | None = None
 
     if not port or not method:
@@ -159,6 +161,7 @@ async def _async_create_bridge_with_updated_data(
             # When we imported from yaml we didn't setup the method
             # because we didn't know it
             port, method, info = await async_get_device_info(hass, None, host)
+            load_info_attempted = True
             if not port or not method:
                 raise ConfigEntryNotReady(
                     "Failed to determine connection method, make sure the device is on."
@@ -171,12 +174,14 @@ async def _async_create_bridge_with_updated_data(
     bridge = _async_get_device_bridge(hass, {**entry.data, **updated_data})
 
     mac: str | None = entry.data.get(CONF_MAC)
+    model: str | None = entry.data.get(CONF_MODEL)
+    if (not mac or not model) and not load_info_attempted:
+        info = await bridge.async_device_info()
+
     if not mac:
         LOGGER.debug("Attempting to get mac for %s", host)
         if info:
             mac = mac_from_device_info(info)
-        else:
-            mac = await bridge.async_mac_from_device()
 
         if not mac:
             mac = await hass.async_add_executor_job(
@@ -188,6 +193,22 @@ async def _async_create_bridge_with_updated_data(
             updated_data[CONF_MAC] = mac
         else:
             LOGGER.info("Failed to get mac for %s", host)
+
+    if not model:
+        LOGGER.debug("Attempting to get model for %s", host)
+        if info:
+            model = info.get("device", {}).get("modelName")
+            if model:
+                LOGGER.info("Updated model to %s for %s", model, host)
+                updated_data[CONF_MODEL] = model
+
+    if model and len(model) > 4 and model[4] in ("H", "J"):
+        LOGGER.info(
+            "Detected model %s for %s. Some televisions from H and J series use "
+            "an encrypted protocol that may not be supported in this integration",
+            model,
+            host,
+        )
 
     if updated_data:
         data = {**entry.data, **updated_data}
