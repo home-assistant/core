@@ -1,5 +1,6 @@
 """Tests for samsungtv component."""
 import asyncio
+from copy import deepcopy
 from datetime import datetime, timedelta
 import logging
 from unittest.mock import DEFAULT as DEFAULT_MOCK, AsyncMock, Mock, call, patch
@@ -7,7 +8,7 @@ from unittest.mock import DEFAULT as DEFAULT_MOCK, AsyncMock, Mock, call, patch
 import pytest
 from samsungctl import exceptions
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
-from samsungtvws.exceptions import ConnectionFailure
+from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
 from websockets.exceptions import WebSocketException
 
@@ -267,11 +268,14 @@ async def test_update_off(hass: HomeAssistant, mock_now: datetime) -> None:
         assert state.state == STATE_OFF
 
 
-async def test_update_off_ws(
-    hass: HomeAssistant, remotews: Mock, mock_now: datetime
+async def test_update_off_ws_no_power_state(
+    hass: HomeAssistant, remotews: Mock, rest_api: Mock, mock_now: datetime
 ) -> None:
     """Testing update tv off."""
     await setup_samsungtv(hass, MOCK_CONFIGWS)
+    # device_info should only get called once, as part of the setup
+    rest_api.rest_device_info.assert_called_once()
+    rest_api.rest_device_info.reset_mock()
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
@@ -286,6 +290,71 @@ async def test_update_off_ws(
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
+    rest_api.rest_device_info.assert_not_called()
+
+
+@pytest.mark.usefixtures("remotews")
+async def test_update_off_ws_with_power_state(
+    hass: HomeAssistant, remotews: Mock, rest_api: Mock, mock_now: datetime
+) -> None:
+    """Testing update tv off."""
+    with patch.object(
+        rest_api, "rest_device_info", side_effect=HttpApiError
+    ) as mock_device_info, patch.object(
+        remotews, "start_listening", side_effect=WebSocketException("Boom")
+    ) as mock_start_listening:
+        await setup_samsungtv(hass, MOCK_CONFIGWS)
+
+        mock_device_info.assert_called_once()
+        mock_start_listening.assert_called_once()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_OFF
+
+    # First update uses start_listening once, and initialises device_info
+    device_info = deepcopy(rest_api.rest_device_info.return_value)
+    device_info["device"]["PowerState"] = "on"
+    rest_api.rest_device_info.return_value = device_info
+    next_update = mock_now + timedelta(minutes=1)
+    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
+
+    remotews.start_listening.assert_called_once()
+    rest_api.rest_device_info.assert_called_once()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
+
+    # After initial update, start_listening shouldn't be called
+    remotews.start_listening.reset_mock()
+
+    # Second update uses device_info(ON)
+    rest_api.rest_device_info.reset_mock()
+    next_update = mock_now + timedelta(minutes=2)
+    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
+
+    rest_api.rest_device_info.assert_called_once()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
+
+    # Third update uses device_info (OFF)
+    rest_api.rest_device_info.reset_mock()
+    device_info["device"]["PowerState"] = "off"
+    next_update = mock_now + timedelta(minutes=3)
+    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
+
+    rest_api.rest_device_info.assert_called_once()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_OFF
+
+    remotews.start_listening.assert_not_called()
 
 
 @pytest.mark.usefixtures("remote")
