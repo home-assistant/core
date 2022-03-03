@@ -316,9 +316,8 @@ async def test_user_not_successful_2(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("remote")
-async def test_ssdp(hass: HomeAssistant, mac_address: Mock) -> None:
+async def test_ssdp(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery."""
-    mac_address.return_value = "gg:ee:tt:mm:aa:cc"
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO,
@@ -344,9 +343,8 @@ async def test_ssdp(hass: HomeAssistant, mac_address: Mock) -> None:
 
 
 @pytest.mark.usefixtures("remote")
-async def test_ssdp_noprefix(hass: HomeAssistant, mac_address: Mock) -> None:
+async def test_ssdp_noprefix(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery without prefixes."""
-    mac_address.return_value = "gg:ee:tt:mm:aa:cc"
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO_2,
@@ -545,9 +543,8 @@ async def test_ssdp_not_successful_2(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("remote")
-async def test_ssdp_already_in_progress(hass: HomeAssistant, mac_address: Mock) -> None:
+async def test_ssdp_already_in_progress(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery twice."""
-    mac_address.return_value = "gg:ee:tt:mm:aa:cc"
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO,
@@ -569,9 +566,8 @@ async def test_ssdp_already_in_progress(hass: HomeAssistant, mac_address: Mock) 
 
 
 @pytest.mark.usefixtures("remote")
-async def test_ssdp_already_configured(hass: HomeAssistant, mac_address: Mock) -> None:
+async def test_ssdp_already_configured(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery when already configured."""
-    mac_address.return_value = "gg:ee:tt:mm:aa:cc"
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO,
@@ -599,9 +595,8 @@ async def test_ssdp_already_configured(hass: HomeAssistant, mac_address: Mock) -
 
 
 @pytest.mark.usefixtures("remote")
-async def test_import_legacy(hass: HomeAssistant, mac_address: Mock) -> None:
+async def test_import_legacy(hass: HomeAssistant) -> None:
     """Test importing from yaml with hostname."""
-    mac_address.return_value = "gg:ee:tt:mm:aa:cc"
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
