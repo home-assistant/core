@@ -112,7 +112,7 @@ async def handle_update(
         connection.send_error(
             msg["id"],
             "update_failed",
-            f"Update of {msg['domain']}/{msg['identifier']} to version {msg['version']} failed: {err}",
+            str(err),
         )
     except Exception as err:  # pylint: disable=broad-except
         _LOGGER.exception(
@@ -123,7 +123,7 @@ async def handle_update(
         connection.send_error(
             msg["id"],
             "update_failed",
-            f"Update of {msg['domain']}/{msg['identifier']} to version {msg['version']} failed: {err}",
+            "Unknown Error",
         )
     else:
         connection.send_result(msg["id"])
