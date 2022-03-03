@@ -6,20 +6,21 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
+            "incorrect_api_key": "Invalid API key for selected account",
             "invalid_auth": "Invalid authentication",
             "no_devices": "No devices discovered",
-            "no_username": "Could not get username",
-            "incorrect_api_key": "Invalid API key for selected account"
+            "no_username": "Could not get username"
         },
         "step": {
-            "user": {
+            "reauth_confirm": {
                 "data": {
                     "api_key": "API Key"
                 }
             },
-            "reauth_confirm": {
+            "user": {
                 "data": {
-                    "api_key": "API Key"
+                    "api_key": "API Key",
+                    "name": "Name"
                 }
             }
         }
