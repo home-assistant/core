@@ -31,6 +31,7 @@
     "tag",
     "timer",
     "usb",
+    "update",
     "webhook",
     "zeroconf",
     "zone"
