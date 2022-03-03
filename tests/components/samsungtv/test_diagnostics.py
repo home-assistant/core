@@ -41,6 +41,7 @@ async def test_entry_diagnostics(
                 "ip_address": "test",
                 "mac": "aa:bb:cc:dd:ee:ff",
                 "method": "websocket",
+                "model": "82GXARRS",
                 "name": "fake",
                 "port": 8002,
                 "token": REDACTED,
