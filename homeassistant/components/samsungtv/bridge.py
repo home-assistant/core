@@ -300,6 +300,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
         self.token = token
         self._rest_api: SamsungTVAsyncRest | None = None
         self._app_list: dict[str, str] | None = None
+        self._device_info: dict[str, Any] | None = None
         self._remote: SamsungTVWSAsyncRemote | None = None
         self._remote_lock = asyncio.Lock()
 
@@ -323,8 +324,18 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 LOGGER.debug("Generated app list: %s", self._app_list)
         return self._app_list
 
+    def _get_device_spec(self, key: str) -> Any | None:
+        """Check if a flag exists in latest device info."""
+        if not ((info := self._device_info) and (device := info.get("device"))):
+            return None
+        return device.get(key)
+
     async def async_is_on(self) -> bool:
         """Tells if the TV is on."""
+        if self._get_device_spec("PowerState") is not None:
+            # Ensure we get an updated value
+            info = await self.async_device_info()
+            return info is not None and info["device"]["PowerState"] == "on"
         if remote := await self._async_get_remote():
             return remote.is_alive()
         return False
@@ -383,6 +394,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
         with contextlib.suppress(HttpApiError, AsyncioTimeoutError):
             device_info: dict[str, Any] = await self._rest_api.rest_device_info()
             LOGGER.debug("Device info on %s is: %s", self.host, device_info)
+            self._device_info = device_info
             return device_info
 
         return None
@@ -453,6 +465,9 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 LOGGER.debug(
                     "Created SamsungTVWSBridge for %s (%s)", CONF_NAME, self.host
                 )
+                if self._device_info is None:
+                    # Initialise device info on first connect
+                    await self.async_device_info()
                 if self.token != self._remote.token:
                     LOGGER.debug(
                         "SamsungTVWSBridge has provided a new token %s",
