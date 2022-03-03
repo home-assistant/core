@@ -7,6 +7,7 @@ from operator import ior
 
 from pyheos import HeosError, const as heos_const
 
+from homeassistant.components import media_source
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
@@ -14,6 +15,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_URL,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_GROUPING,
     SUPPORT_NEXT_TRACK,
@@ -57,6 +59,7 @@ BASE_SUPPORTED_FEATURES = (
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_PLAY_MEDIA
     | SUPPORT_GROUPING
+    | SUPPORT_BROWSE_MEDIA
 )
 
 PLAY_STATE_TO_STATE = {
@@ -186,6 +189,11 @@ class HeosMediaPlayer(MediaPlayerEntity):
     @log_command_error("play media")
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
+        if media_source.is_media_source_id(media_id):
+            media_type = MEDIA_TYPE_URL
+            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            media_id = play_item.url
+
         if media_type in (MEDIA_TYPE_URL, MEDIA_TYPE_MUSIC):
             await self._player.play_url(media_id)
             return
@@ -420,3 +428,11 @@ class HeosMediaPlayer(MediaPlayerEntity):
     def volume_level(self) -> float:
         """Volume level of the media player (0..1)."""
         return self._player.volume / 100
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        return await media_source.async_browse_media(
+            self.hass,
+            media_content_id,
+            content_filter=lambda item: item.media_content_type.startswith("audio/"),
+        )
