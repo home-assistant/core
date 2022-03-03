@@ -100,6 +100,7 @@ _LOGGER = logging.getLogger(__name__)
 
 NUMBERS_ONLY_RE = re.compile(r"[^\d.]+")
 VERSION_RE = re.compile(r"([0-9]+)(\.[0-9]+)?(\.[0-9]+)?")
+MAX_VERSION_PART = 2**32 - 1
 
 
 MAX_PORT = 65535
@@ -428,13 +429,17 @@ def get_aid_storage_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str):
     )
 
 
+def _format_version_part(version_part: str) -> str:
+    return str(max(0, min(MAX_VERSION_PART, coerce_int(version_part))))
+
+
 def format_version(version):
     """Extract the version string in a format homekit can consume."""
     split_ver = str(version).replace("-", ".").replace(" ", ".")
     num_only = NUMBERS_ONLY_RE.sub("", split_ver)
     if (match := VERSION_RE.search(num_only)) is None:
         return None
-    value = ".".join(map(str, map(coerce_int, match.group(0).split("."))))
+    value = ".".join(map(_format_version_part, match.group(0).split(".")))
     return None if _is_zero_but_true(value) else value
 
 
