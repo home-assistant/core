@@ -116,7 +116,7 @@ class EntitySelector(Selector):
             return validate(data)
         if not isinstance(data, list):
             raise vol.Invalid("Value should be a list")
-        return [validate(item) for item in data]
+        return cast(list, vol.Schema([validate])(data))  # Output is a list
 
 
 @SELECTORS.register("device")
