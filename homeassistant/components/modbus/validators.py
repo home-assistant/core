@@ -26,6 +26,7 @@ from homeassistant.const import (
 from .const import (
     CONF_DATA_TYPE,
     CONF_INPUT_TYPE,
+    CONF_SLAVE_COUNT,
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_NONE,
@@ -63,6 +64,7 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     count = config.get(CONF_COUNT, 1)
     name = config[CONF_NAME]
     structure = config.get(CONF_STRUCTURE)
+    slave_count = config.get(CONF_SLAVE_COUNT, 0) + 1
     swap_type = config.get(CONF_SWAP)
     if config[CONF_DATA_TYPE] != DataType.CUSTOM:
         if structure:
@@ -75,7 +77,14 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
         structure = f">{DEFAULT_STRUCT_FORMAT[data_type].struct_id}"
         if CONF_COUNT not in config:
             config[CONF_COUNT] = DEFAULT_STRUCT_FORMAT[data_type].register_count
+        if slave_count > 1:
+            structure = f">{slave_count}{DEFAULT_STRUCT_FORMAT[data_type].struct_id}"
+        else:
+            structure = f">{DEFAULT_STRUCT_FORMAT[data_type].struct_id}"
     else:
+        if slave_count > 1:
+            error = f"{name}  structure: cannot be mixed with {CONF_SLAVE_COUNT}"
+            raise vol.Invalid(error)
         if not structure:
             error = (
                 f"Error in sensor {name}. The `{CONF_STRUCTURE}` field can not be empty"
@@ -187,7 +196,7 @@ def duplicate_entity_validator(config: dict) -> dict:
                     addr += "_" + str(entry[CONF_COMMAND_ON])
                 if CONF_COMMAND_OFF in entry:
                     addr += "_" + str(entry[CONF_COMMAND_OFF])
-                addr += "_" + str(entry[CONF_SLAVE])
+                addr += "_" + str(entry.get(CONF_SLAVE, 0))
                 if addr in addresses:
                     err = f"Modbus {component}/{name} address {addr} is duplicate, second entry not loaded!"
                     _LOGGER.warning(err)

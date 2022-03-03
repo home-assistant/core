@@ -5,6 +5,6 @@
   "dependencies": ["http"],
   "requirements": ["PyTurboJPEG==1.6.5"],
   "after_dependencies": ["media_player"],
-  "codeowners": [],
+  "codeowners": ["@home-assistant/core"],
   "quality_scale": "internal"
 }
