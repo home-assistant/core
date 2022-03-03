@@ -75,8 +75,7 @@ class FliprDataUpdateCoordinator(DataUpdateCoordinator):
                 self.client.get_pool_measure_latest, self.flipr_id
             )
         except (FliprError) as error:
-            _LOGGER.error(error)
-            raise UpdateFailed from error
+            raise UpdateFailed(error) from error
 
         return data
 
