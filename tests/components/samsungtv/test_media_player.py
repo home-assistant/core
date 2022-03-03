@@ -124,9 +124,6 @@ MOCK_CONFIG_NOTURNON = {
     ]
 }
 
-# Fake mac address in all mediaplayer tests.
-pytestmark = pytest.mark.usefixtures("no_mac_address")
-
 
 @pytest.fixture(name="delay")
 def delay_fixture():

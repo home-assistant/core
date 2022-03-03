@@ -82,7 +82,7 @@ def mock_now() -> datetime:
     return dt_util.utcnow()
 
 
-@pytest.fixture(name="no_mac_address")
+@pytest.fixture(name="mac_address", autouse=True)
 def mac_address_fixture() -> Mock:
     """Patch getmac.get_mac_address."""
     with patch("getmac.get_mac_address", return_value=None) as mac:

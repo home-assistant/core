@@ -55,7 +55,7 @@ REMOTE_CALL = {
 }
 
 
-@pytest.mark.usefixtures("remotews", "no_mac_address")
+@pytest.mark.usefixtures("remotews")
 async def test_setup(hass: HomeAssistant) -> None:
     """Test Samsung TV integration is setup."""
     await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
@@ -123,7 +123,7 @@ async def test_setup_duplicate_config(
     assert "duplicate host entries found" in caplog.text
 
 
-@pytest.mark.usefixtures("remote", "remotews", "no_mac_address")
+@pytest.mark.usefixtures("remote", "remotews")
 async def test_setup_duplicate_entries(hass: HomeAssistant) -> None:
     """Test duplicate setup of platform."""
     await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)

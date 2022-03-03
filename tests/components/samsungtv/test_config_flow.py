@@ -316,10 +316,9 @@ async def test_user_not_successful_2(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("remote")
-async def test_ssdp(hass: HomeAssistant, no_mac_address: Mock) -> None:
+async def test_ssdp(hass: HomeAssistant, mac_address: Mock) -> None:
     """Test starting a flow from discovery."""
-
-    no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
+    mac_address.return_value = "aa:bb:cc:dd:ee:ff"
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO,
@@ -345,10 +344,9 @@ async def test_ssdp(hass: HomeAssistant, no_mac_address: Mock) -> None:
 
 
 @pytest.mark.usefixtures("remote")
-async def test_ssdp_noprefix(hass: HomeAssistant, no_mac_address: Mock) -> None:
+async def test_ssdp_noprefix(hass: HomeAssistant, mac_address: Mock) -> None:
     """Test starting a flow from discovery without prefixes."""
-
-    no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
+    mac_address.return_value = "aa:bb:cc:dd:ee:ff"
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO_2,
@@ -490,7 +488,6 @@ async def test_ssdp_model_not_supported(hass: HomeAssistant) -> None:
     assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
-@pytest.mark.usefixtures("no_mac_address")
 async def test_ssdp_not_successful(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery but no device found."""
     with patch(
@@ -519,7 +516,6 @@ async def test_ssdp_not_successful(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_CANNOT_CONNECT
 
 
-@pytest.mark.usefixtures("no_mac_address")
 async def test_ssdp_not_successful_2(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery but no device found."""
     with patch(
@@ -549,12 +545,9 @@ async def test_ssdp_not_successful_2(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("remote")
-async def test_ssdp_already_in_progress(
-    hass: HomeAssistant, no_mac_address: Mock
-) -> None:
+async def test_ssdp_already_in_progress(hass: HomeAssistant, mac_address: Mock) -> None:
     """Test starting a flow from discovery twice."""
-
-    no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
+    mac_address.return_value = "aa:bb:cc:dd:ee:ff"
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO,
@@ -576,12 +569,9 @@ async def test_ssdp_already_in_progress(
 
 
 @pytest.mark.usefixtures("remote")
-async def test_ssdp_already_configured(
-    hass: HomeAssistant, no_mac_address: Mock
-) -> None:
+async def test_ssdp_already_configured(hass: HomeAssistant, mac_address: Mock) -> None:
     """Test starting a flow from discovery when already configured."""
-
-    no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
+    mac_address.return_value = "aa:bb:cc:dd:ee:ff"
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO,
@@ -609,10 +599,9 @@ async def test_ssdp_already_configured(
 
 
 @pytest.mark.usefixtures("remote")
-async def test_import_legacy(hass: HomeAssistant, no_mac_address: Mock) -> None:
+async def test_import_legacy(hass: HomeAssistant, mac_address: Mock) -> None:
     """Test importing from yaml with hostname."""
-
-    no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
+    mac_address.return_value = "aa:bb:cc:dd:ee:ff"
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
@@ -632,7 +621,7 @@ async def test_import_legacy(hass: HomeAssistant, no_mac_address: Mock) -> None:
     assert entries[0].data[CONF_PORT] == LEGACY_PORT
 
 
-@pytest.mark.usefixtures("remote", "remotews", "no_mac_address")
+@pytest.mark.usefixtures("remote", "remotews")
 async def test_import_legacy_without_name(hass: HomeAssistant, rest_api: Mock) -> None:
     """Test importing from yaml without a name."""
     rest_api.rest_device_info.return_value = None
@@ -870,8 +859,9 @@ async def test_autodetect_websocket(hass: HomeAssistant) -> None:
     assert entries[0].data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
 
 
-async def test_websocket_no_mac(hass: HomeAssistant) -> None:
+async def test_websocket_no_mac(hass: HomeAssistant, mac_address: Mock) -> None:
     """Test for send key with autodetection of protocol."""
+    mac_address.return_value = "gg:hh:ii:ll:mm:nn"
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=OSError("Boom"),
@@ -879,9 +869,7 @@ async def test_websocket_no_mac(hass: HomeAssistant) -> None:
         "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote"
     ) as remotews, patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
-    ) as rest_api_class, patch(
-        "getmac.get_mac_address", return_value="gg:hh:ii:ll:mm:nn"
-    ):
+    ) as rest_api_class:
         remote = Mock(SamsungTVWSAsyncRemote)
         remote.__aenter__ = AsyncMock(return_value=remote)
         remote.__aexit__ = AsyncMock(return_value=False)
