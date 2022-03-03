@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import datetime
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import Mock
@@ -59,15 +60,15 @@ def upcoming() -> dict[str, Any]:
     now = dt_util.now()
     return {
         "start": {"dateTime": now.isoformat()},
-        "end": {"dateTime": (now + dt_util.dt.timedelta(minutes=5)).isoformat()},
+        "end": {"dateTime": (now + datetime.timedelta(minutes=5)).isoformat()},
     }
 
 
 def upcoming_event_url() -> str:
     """Return a calendar API to return events created by upcoming()."""
     now = dt_util.now()
-    start = (now - dt_util.dt.timedelta(minutes=60)).isoformat()
-    end = (now + dt_util.dt.timedelta(minutes=60)).isoformat()
+    start = (now - datetime.timedelta(minutes=60)).isoformat()
+    end = (now + datetime.timedelta(minutes=60)).isoformat()
     return f"/api/calendars/{TEST_ENTITY}?start={start}&end={end}"
 
 
@@ -75,8 +76,8 @@ async def test_all_day_event(
     hass, mock_events_list_items, mock_token_read, component_setup
 ):
     """Test that we can create an event trigger on device."""
-    week_from_today = dt_util.dt.date.today() + dt_util.dt.timedelta(days=7)
-    end_event = week_from_today + dt_util.dt.timedelta(days=1)
+    week_from_today = dt_util.now().date() + datetime.timedelta(days=7)
+    end_event = week_from_today + datetime.timedelta(days=1)
     event = {
         **TEST_EVENT,
         "start": {"date": week_from_today.isoformat()},
@@ -103,8 +104,8 @@ async def test_all_day_event(
 
 async def test_future_event(hass, mock_events_list_items, component_setup):
     """Test that we can create an event trigger on device."""
-    one_hour_from_now = dt_util.now() + dt_util.dt.timedelta(minutes=30)
-    end_event = one_hour_from_now + dt_util.dt.timedelta(minutes=60)
+    one_hour_from_now = dt_util.now() + datetime.timedelta(minutes=30)
+    end_event = one_hour_from_now + datetime.timedelta(minutes=60)
     event = {
         **TEST_EVENT,
         "start": {"dateTime": one_hour_from_now.isoformat()},
@@ -131,8 +132,8 @@ async def test_future_event(hass, mock_events_list_items, component_setup):
 
 async def test_in_progress_event(hass, mock_events_list_items, component_setup):
     """Test that we can create an event trigger on device."""
-    middle_of_event = dt_util.now() - dt_util.dt.timedelta(minutes=30)
-    end_event = middle_of_event + dt_util.dt.timedelta(minutes=60)
+    middle_of_event = dt_util.now() - datetime.timedelta(minutes=30)
+    end_event = middle_of_event + datetime.timedelta(minutes=60)
     event = {
         **TEST_EVENT,
         "start": {"dateTime": middle_of_event.isoformat()},
@@ -159,8 +160,8 @@ async def test_in_progress_event(hass, mock_events_list_items, component_setup):
 
 async def test_offset_in_progress_event(hass, mock_events_list_items, component_setup):
     """Test that we can create an event trigger on device."""
-    middle_of_event = dt_util.now() + dt_util.dt.timedelta(minutes=14)
-    end_event = middle_of_event + dt_util.dt.timedelta(minutes=60)
+    middle_of_event = dt_util.now() + datetime.timedelta(minutes=14)
+    end_event = middle_of_event + datetime.timedelta(minutes=60)
     event_summary = "Test Event in Progress"
     event = {
         **TEST_EVENT,
@@ -187,15 +188,48 @@ async def test_offset_in_progress_event(hass, mock_events_list_items, component_
     }
 
 
-async def test_all_day_offset_event(hass, mock_events_list_items, component_setup):
+async def test_all_day_offset_in_progress_event(
+    hass, mock_events_list_items, component_setup
+):
     """Test that we can create an event trigger on device."""
-    tomorrow = dt_util.dt.date.today() + dt_util.dt.timedelta(days=2)
-    end_event = tomorrow + dt_util.dt.timedelta(days=1)
-    offset_hours = 1 + dt_util.now().hour
-    event_summary = "Test All Day Event Offset"
+    tomorrow = dt_util.now().date() + datetime.timedelta(days=1)
+    end_event = tomorrow + datetime.timedelta(days=1)
+    event_summary = "Test All Day Event Offset In Progress"
     event = {
         **TEST_EVENT,
         "start": {"date": tomorrow.isoformat()},
+        "end": {"date": end_event.isoformat()},
+        "summary": f"{event_summary} !!-25:0",
+    }
+    mock_events_list_items([event])
+
+    assert await component_setup()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {
+        "friendly_name": TEST_ENTITY_NAME,
+        "message": event_summary,
+        "all_day": True,
+        "offset_reached": True,
+        "start_time": tomorrow.strftime(DATE_STR_FORMAT),
+        "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "location": event["location"],
+        "description": event["description"],
+    }
+
+
+async def test_all_day_offset_event(hass, mock_events_list_items, component_setup):
+    """Test that we can create an event trigger on device."""
+    now = dt_util.now()
+    day_after_tomorrow = now.date() + datetime.timedelta(days=2)
+    end_event = day_after_tomorrow + datetime.timedelta(days=1)
+    offset_hours = 1 + now.hour
+    event_summary = "Test All Day Event Offset"
+    event = {
+        **TEST_EVENT,
+        "start": {"date": day_after_tomorrow.isoformat()},
         "end": {"date": end_event.isoformat()},
         "summary": f"{event_summary} !!-{offset_hours}:0",
     }
@@ -211,7 +245,7 @@ async def test_all_day_offset_event(hass, mock_events_list_items, component_setu
         "message": event_summary,
         "all_day": True,
         "offset_reached": False,
-        "start_time": tomorrow.strftime(DATE_STR_FORMAT),
+        "start_time": day_after_tomorrow.strftime(DATE_STR_FORMAT),
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
