@@ -16,6 +16,7 @@ from homeassistant.components.google import DOMAIN, SERVICE_ADD_EVENT
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import utcnow
 
 from .conftest import CALENDAR_ID, ApiResult, YieldFixture
@@ -378,23 +379,12 @@ async def test_add_event(
             datetime.timedelta(days=7),
             datetime.timedelta(days=8),
         ),
-        (
-            {
-                "start_date": datetime.date.today().isoformat(),
-                "end_date": (
-                    datetime.date.today() + datetime.timedelta(days=2)
-                ).isoformat(),
-            },
-            datetime.timedelta(days=0),
-            datetime.timedelta(days=2),
-        ),
     ],
-    ids=["in_days", "in_weeks", "explit_date"],
+    ids=["in_days", "in_weeks"],
 )
-async def test_add_event_date_ranges(
+async def test_add_event_date_in_x(
     hass: HomeAssistant,
     mock_token_read: None,
-    calendars_config: list[dict[str, Any]],
     component_setup: ComponentSetup,
     mock_calendars_list: ApiResult,
     test_calendar: dict[str, Any],
@@ -431,5 +421,46 @@ async def test_add_event_date_ranges(
             "description": "Description",
             "start": {"date": start_date.date().isoformat()},
             "end": {"date": end_date.date().isoformat()},
+        },
+    )
+
+
+async def test_add_event_date_range(
+    hass: HomeAssistant,
+    mock_token_read: None,
+    component_setup: ComponentSetup,
+    mock_calendars_list: ApiResult,
+    test_calendar: dict[str, Any],
+    mock_insert_event: Mock,
+) -> None:
+    """Test service call that sets a date range."""
+
+    assert await component_setup()
+
+    now = dt_util.utcnow()
+    today = now.date()
+    end_date = today + datetime.timedelta(days=2)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ADD_EVENT,
+        {
+            "calendar_id": CALENDAR_ID,
+            "summary": "Summary",
+            "description": "Description",
+            "start_date": today.isoformat(),
+            "end_date": end_date.isoformat(),
+        },
+        blocking=True,
+    )
+    mock_insert_event.assert_called()
+
+    assert mock_insert_event.mock_calls[0] == call(
+        calendarId=CALENDAR_ID,
+        body={
+            "summary": "Summary",
+            "description": "Description",
+            "start": {"date": today.isoformat()},
+            "end": {"date": end_date.isoformat()},
         },
     )
