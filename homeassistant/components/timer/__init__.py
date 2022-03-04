@@ -55,8 +55,7 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 CREATE_FIELDS = {
-    vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Optional(CONF_NAME): cv.string,
+    vol.Required(CONF_NAME): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_DURATION, default=DEFAULT_DURATION): cv.time_period,
 }
