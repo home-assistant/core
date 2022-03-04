@@ -46,6 +46,7 @@ DEFAULT_USERNAME = ""
 
 ERROR_AUTH_INVALID = "invalid_auth"
 ERROR_CANNOT_CONNECT = "cannot_connect"
+ERROR_UPNP_NOT_CONFIGURED = "upnp_not_configured"
 ERROR_UNKNOWN = "unknown_error"
 
 FRITZ_SERVICES = "fritz_services"

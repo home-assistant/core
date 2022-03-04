@@ -203,6 +203,7 @@ FLOWS = [
     "modern_forms",
     "moehlenhoff_alpha2",
     "monoprice",
+    "moon",
     "motion_blinds",
     "motioneye",
     "mqtt",
