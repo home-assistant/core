@@ -404,7 +404,9 @@ class BayesianBinarySensor(BinarySensorEntity):
                 {
                     obs.get("entity_id")
                     for obs in self.current_observations.values()
-                    if obs is not None and obs.get("entity_id") is not None
+                    if obs is not None
+                    and obs.get("entity_id") is not None
+                    and obs.get("observation") is not None
                 }
             ),
             ATTR_PROBABILITY: round(self.probability, 2),
