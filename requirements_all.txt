@@ -106,6 +106,9 @@ aio_geojson_nsw_rfs_incidents==0.4
 # homeassistant.components.gdacs
 aio_georss_gdacs==0.5
 
+# homeassistant.components.airzone
+aioairzone==0.0.1
+
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
 
