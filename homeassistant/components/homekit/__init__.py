@@ -675,9 +675,8 @@ class HomeKit:
         """Try adding accessory to bridge if configured beforehand."""
         assert self.bridge is not None
         if acc := self.bridge.accessories.pop(aid, None):
-            assert isinstance(acc, HomeAccessory)
             await acc.stop()
-            return acc
+            return cast(HomeAccessory, acc)
         return None
 
     async def async_configure_accessories(self) -> list[State]:
@@ -718,7 +717,6 @@ class HomeKit:
 
     async def async_start(self, *args: Any) -> None:
         """Load storage and start."""
-        assert self.driver is not None
         if self.status != STATUS_READY:
             return
         self.status = STATUS_WAIT
@@ -731,6 +729,7 @@ class HomeKit:
             return
         self._async_register_bridge()
         _LOGGER.debug("Driver start for %s", self._name)
+        assert self.driver is not None
         await self.driver.async_start()
         async with self.hass.data[DOMAIN][PERSIST_LOCK]:
             await self.hass.async_add_executor_job(self.driver.persist)
