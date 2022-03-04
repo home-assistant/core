@@ -3,7 +3,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
-from rokuecp import RokuConnectionError, RokuError
+from rokuecp import RokuConnectionError, RokuConnectionTimeoutError, RokuError
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.media_player.const import (
@@ -166,7 +166,7 @@ async def test_tv_setup(
 
 @pytest.mark.parametrize(
     "error",
-    [RokuConnectionError, RokuError],
+    [RokuConnectionTimeoutError, RokuConnectionError, RokuError],
 )
 async def test_availability(
     hass: HomeAssistant,
