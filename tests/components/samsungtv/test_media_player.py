@@ -1,5 +1,4 @@
 """Tests for samsungtv component."""
-import asyncio
 from copy import deepcopy
 from datetime import datetime, timedelta
 import logging
@@ -650,7 +649,7 @@ async def test_turn_off_websocket(
     assert await hass.services.async_call(
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
-    assert "TV is powering off, not sending key: KEY_VOLUP" in caplog.text
+    assert "TV is powering off, not sending keys: ['KEY_VOLUP']" in caplog.text
     assert await hass.services.async_call(
         DOMAIN,
         SERVICE_SELECT_SOURCE,
@@ -853,15 +852,8 @@ async def test_turn_on_without_turnon(hass: HomeAssistant, remote: Mock) -> None
 
 async def test_play_media(hass: HomeAssistant, remote: Mock) -> None:
     """Test for play_media."""
-    asyncio_sleep = asyncio.sleep
-    sleeps = []
-
-    async def sleep(duration):
-        sleeps.append(duration)
-        await asyncio_sleep(0)
-
     await setup_samsungtv(hass, MOCK_CONFIG)
-    with patch("asyncio.sleep", new=sleep):
+    with patch("homeassistant.components.samsungtv.bridge.time.sleep") as sleep:
         assert await hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -872,17 +864,17 @@ async def test_play_media(hass: HomeAssistant, remote: Mock) -> None:
             },
             True,
         )
-        # keys and update called
-        assert remote.control.call_count == 4
-        assert remote.control.call_args_list == [
-            call("KEY_5"),
-            call("KEY_7"),
-            call("KEY_6"),
-            call("KEY_ENTER"),
-        ]
-        assert remote.close.call_count == 1
-        assert remote.close.call_args_list == [call()]
-        assert len(sleeps) == 3
+    # keys and update called
+    assert remote.control.call_count == 4
+    assert remote.control.call_args_list == [
+        call("KEY_5"),
+        call("KEY_7"),
+        call("KEY_6"),
+        call("KEY_ENTER"),
+    ]
+    assert remote.close.call_count == 1
+    assert remote.close.call_args_list == [call()]
+    assert sleep.call_count == 3
 
 
 async def test_play_media_invalid_type(hass: HomeAssistant) -> None:
