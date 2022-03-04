@@ -1,25 +1,44 @@
 """Test configuration and mocks for the google integration."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 import datetime
 from typing import Any, Generator, TypeVar
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, mock_open, patch
 
 from googleapiclient import discovery as google_discovery
 from oauth2client.client import Credentials, OAuth2Credentials
 import pytest
+import yaml
 
+from homeassistant.components.google import CONF_TRACK_NEW, DOMAIN
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 from homeassistant.util.dt import utcnow
 
+ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
+
 ApiResult = Callable[[dict[str, Any]], None]
+ComponentSetup = Callable[[], Awaitable[bool]]
 T = TypeVar("T")
 YieldFixture = Generator[T, None, None]
 
 
 CALENDAR_ID = "qwertyuiopasdfghjklzxcvbnm@import.calendar.google.com"
-TEST_CALENDAR = {
+
+# Entities can either be created based on data directly from the API, or from
+# the yaml config that overrides the entity name and other settings. A test
+# can use a fixture to exercise either case.
+TEST_API_ENTITY = "calendar.we_are_we_are_a_test_calendar"
+TEST_API_ENTITY_NAME = "We are, we are, a... Test Calendar"
+# Name of the entity when using yaml configuration overrides
+TEST_YAML_ENTITY = "calendar.backyard_light"
+TEST_YAML_ENTITY_NAME = "Backyard Light"
+
+# A calendar object returned from the API
+TEST_API_CALENDAR = {
     "id": CALENDAR_ID,
     "etag": '"3584134138943410"',
     "timeZone": "UTC",
@@ -32,14 +51,63 @@ TEST_CALENDAR = {
     "summary": "We are, we are, a... Test Calendar",
     "colorId": "8",
     "defaultReminders": [],
-    "track": True,
 }
 
 
 @pytest.fixture
-def test_calendar():
-    """Return a test calendar."""
-    return TEST_CALENDAR
+def test_api_calendar():
+    """Return a test calendar object used in API responses."""
+    return TEST_API_CALENDAR
+
+
+@pytest.fixture
+def calendars_config_track() -> bool:
+    """Fixture that determines the 'track' setting in yaml config."""
+    return True
+
+
+@pytest.fixture
+def calendars_config_ignore_availability() -> bool:
+    """Fixture that determines the 'ignore_availability' setting in yaml config."""
+    return None
+
+
+@pytest.fixture
+def calendars_config_entity(
+    calendars_config_track: bool, calendars_config_ignore_availability: bool | None
+) -> dict[str, Any]:
+    """Fixture that creates an entity within the yaml configuration."""
+    entity = {
+        "device_id": "backyard_light",
+        "name": "Backyard Light",
+        "search": "#Backyard",
+        "track": calendars_config_track,
+    }
+    if calendars_config_ignore_availability is not None:
+        entity["ignore_availability"] = calendars_config_ignore_availability
+    return entity
+
+
+@pytest.fixture
+def calendars_config(calendars_config_entity: dict[str, Any]) -> list[dict[str, Any]]:
+    """Fixture that specifies the calendar yaml configuration."""
+    return [
+        {
+            "cal_id": CALENDAR_ID,
+            "entities": [calendars_config_entity],
+        }
+    ]
+
+
+@pytest.fixture
+async def mock_calendars_yaml(
+    hass: HomeAssistant,
+    calendars_config: list[dict[str, Any]],
+) -> None:
+    """Fixture that prepares the google_calendars.yaml mocks."""
+    mocked_open_function = mock_open(read_data=yaml.dump(calendars_config))
+    with patch("homeassistant.components.google.open", mocked_open_function):
+        yield
 
 
 class FakeStorage:
@@ -156,3 +224,49 @@ def mock_insert_event(
     insert_mock = Mock()
     calendar_resource.return_value.events.return_value.insert = insert_mock
     return insert_mock
+
+
+@pytest.fixture(autouse=True)
+def set_time_zone(hass):
+    """Set the time zone for the tests."""
+    # Set our timezone to CST/Regina so we can check calculations
+    # This keeps UTC-6 all year round
+    hass.config.time_zone = "CST"
+    dt_util.set_default_time_zone(dt_util.get_time_zone("America/Regina"))
+    yield
+    dt_util.set_default_time_zone(ORIG_TIMEZONE)
+
+
+@pytest.fixture
+def google_config_track_new() -> None:
+    """Fixture for tests to set the 'track_new' configuration.yaml setting."""
+    return None
+
+
+@pytest.fixture
+def google_config(google_config_track_new: bool | None) -> dict[str, Any]:
+    """Fixture for overriding component config."""
+    google_config = {CONF_CLIENT_ID: "client-id", CONF_CLIENT_SECRET: "client-secret"}
+    if google_config_track_new is not None:
+        google_config[CONF_TRACK_NEW] = google_config_track_new
+    return google_config
+
+
+@pytest.fixture
+async def config(google_config: dict[str, Any]) -> dict[str, Any]:
+    """Fixture for overriding component config."""
+    return {DOMAIN: google_config}
+
+
+@pytest.fixture
+async def component_setup(
+    hass: HomeAssistant, config: dict[str, Any]
+) -> ComponentSetup:
+    """Fixture for setting up the integration."""
+
+    async def _setup_func() -> bool:
+        result = await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+        return result
+
+    return _setup_func

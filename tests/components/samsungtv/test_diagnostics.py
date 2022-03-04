@@ -7,6 +7,7 @@ from homeassistant.components.samsungtv import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
+from .const import SAMPLE_DEVICE_INFO_WIFI
 from .test_media_player import MOCK_ENTRY_WS_WITH_MAC
 
 from tests.common import MockConfigEntry
@@ -56,14 +57,5 @@ async def test_entry_diagnostics(
             "unique_id": "any",
             "version": 2,
         },
-        "device_info": {
-            "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
-            "device": {
-                "modelName": "82GXARRS",
-                "name": "[TV] Living Room",
-                "networkType": "wireless",
-                "type": "Samsung SmartTV",
-                "wifiMac": "aa:bb:cc:dd:ee:ff",
-            },
-        },
+        "device_info": SAMPLE_DEVICE_INFO_WIFI,
     }

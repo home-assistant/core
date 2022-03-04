@@ -24,12 +24,12 @@ jobs:
       publish: ${{ steps.version.outputs.publish }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
         with:
           fetch-depth: 0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v3.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -67,10 +67,10 @@ jobs:
     if: github.repository_owner == 'home-assistant' && needs.init.outputs.publish == 'true'
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v3.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -100,11 +100,11 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         if: needs.init.outputs.channel == 'dev'
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v3.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -122,20 +122,20 @@ jobs:
           echo "${{ github.sha }};${{ github.ref }};${{ github.event_name }};${{ github.actor }}" > rootfs/OFFICIAL_IMAGE
 
       - name: Login to DockerHub
-        uses: docker/login-action@v1.13.0
+        uses: docker/login-action@v1.14.1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1.13.0
+        uses: docker/login-action@v1.14.1
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2022.01.0
+        uses: home-assistant/builder@2022.03.1
         with:
           args: |
             $BUILD_ARGS \
@@ -173,7 +173,7 @@ jobs:
           - tinker
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
 
       - name: Set build additional args
         run: |
@@ -187,20 +187,20 @@ jobs:
           fi
 
       - name: Login to DockerHub
-        uses: docker/login-action@v1.13.0
+        uses: docker/login-action@v1.14.1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1.13.0
+        uses: docker/login-action@v1.14.1
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2022.01.0
+        uses: home-assistant/builder@2022.03.1
         with:
           args: |
             $BUILD_ARGS \
@@ -216,7 +216,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
 
       - name: Initialize git
         uses: home-assistant/actions/helpers/git-init@master
@@ -243,22 +243,30 @@ jobs:
           channel: beta
 
   publish_container:
-    name: Publish meta container
+    name: Publish meta container for ${{ matrix.registry }}
     if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        registry:
+          - "ghcr.io/home-assistant"
+          - "homeassistant"
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.0
 
       - name: Login to DockerHub
-        uses: docker/login-action@v1.13.0
+        if: matrix.registry == 'homeassistant'
+        uses: docker/login-action@v1.14.1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1.13.0
+        if: matrix.registry == 'ghcr.io/home-assistant'
+        uses: docker/login-action@v1.14.1
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -273,38 +281,37 @@ jobs:
           export DOCKER_CLI_EXPERIMENTAL=enabled
 
           function create_manifest() {
-            local docker_reg=${1}
-            local tag_l=${2}
-            local tag_r=${3}
+            local tag_l=${1}
+            local tag_r=${2}
 
-            docker manifest create "${docker_reg}/home-assistant:${tag_l}" \
-              "${docker_reg}/amd64-homeassistant:${tag_r}" \
-              "${docker_reg}/i386-homeassistant:${tag_r}" \
-              "${docker_reg}/armhf-homeassistant:${tag_r}" \
-              "${docker_reg}/armv7-homeassistant:${tag_r}" \
-              "${docker_reg}/aarch64-homeassistant:${tag_r}"
+            docker manifest create "${{ matrix.registry }}/home-assistant:${tag_l}" \
+              "${{ matrix.registry }}/amd64-homeassistant:${tag_r}" \
+              "${{ matrix.registry }}/i386-homeassistant:${tag_r}" \
+              "${{ matrix.registry }}/armhf-homeassistant:${tag_r}" \
+              "${{ matrix.registry }}/armv7-homeassistant:${tag_r}" \
+              "${{ matrix.registry }}/aarch64-homeassistant:${tag_r}"
 
-            docker manifest annotate "${docker_reg}/home-assistant:${tag_l}" \
-              "${docker_reg}/amd64-homeassistant:${tag_r}" \
+            docker manifest annotate "${{ matrix.registry }}/home-assistant:${tag_l}" \
+              "${{ matrix.registry }}/amd64-homeassistant:${tag_r}" \
               --os linux --arch amd64
 
-            docker manifest annotate "${docker_reg}/home-assistant:${tag_l}" \
-              "${docker_reg}/i386-homeassistant:${tag_r}" \
+            docker manifest annotate "${{ matrix.registry }}/home-assistant:${tag_l}" \
+              "${{ matrix.registry }}/i386-homeassistant:${tag_r}" \
               --os linux --arch 386
 
-            docker manifest annotate "${docker_reg}/home-assistant:${tag_l}" \
-              "${docker_reg}/armhf-homeassistant:${tag_r}" \
+            docker manifest annotate "${{ matrix.registry }}/home-assistant:${tag_l}" \
+              "${{ matrix.registry }}/armhf-homeassistant:${tag_r}" \
               --os linux --arch arm --variant=v6
 
-            docker manifest annotate "${docker_reg}/home-assistant:${tag_l}" \
-              "${docker_reg}/armv7-homeassistant:${tag_r}" \
+            docker manifest annotate "${{ matrix.registry }}/home-assistant:${tag_l}" \
+              "${{ matrix.registry }}/armv7-homeassistant:${tag_r}" \
               --os linux --arch arm --variant=v7
 
-            docker manifest annotate "${docker_reg}/home-assistant:${tag_l}" \
-              "${docker_reg}/aarch64-homeassistant:${tag_r}" \
+            docker manifest annotate "${{ matrix.registry }}/home-assistant:${tag_l}" \
+              "${{ matrix.registry }}/aarch64-homeassistant:${tag_r}" \
               --os linux --arch arm64 --variant=v8
 
-            docker manifest push --purge "${docker_reg}/home-assistant:${tag_l}"
+            docker manifest push --purge "${{ matrix.registry }}/home-assistant:${tag_l}"
           }
 
           function validate_image() {
@@ -315,36 +322,34 @@ jobs:
             fi
           }
 
-          for docker_reg in "homeassistant" "ghcr.io/home-assistant"; do
-            docker pull "${docker_reg}/amd64-homeassistant:${{ needs.init.outputs.version }}"
-            docker pull "${docker_reg}/i386-homeassistant:${{ needs.init.outputs.version }}"
-            docker pull "${docker_reg}/armhf-homeassistant:${{ needs.init.outputs.version }}"
-            docker pull "${docker_reg}/armv7-homeassistant:${{ needs.init.outputs.version }}"
-            docker pull "${docker_reg}/aarch64-homeassistant:${{ needs.init.outputs.version }}"
+          docker pull "${{ matrix.registry }}/amd64-homeassistant:${{ needs.init.outputs.version }}"
+          docker pull "${{ matrix.registry }}/i386-homeassistant:${{ needs.init.outputs.version }}"
+          docker pull "${{ matrix.registry }}/armhf-homeassistant:${{ needs.init.outputs.version }}"
+          docker pull "${{ matrix.registry }}/armv7-homeassistant:${{ needs.init.outputs.version }}"
+          docker pull "${{ matrix.registry }}/aarch64-homeassistant:${{ needs.init.outputs.version }}"
 
-            validate_image "${docker_reg}/amd64-homeassistant:${{ needs.init.outputs.version }}"
-            validate_image "${docker_reg}/i386-homeassistant:${{ needs.init.outputs.version }}"
-            validate_image "${docker_reg}/armhf-homeassistant:${{ needs.init.outputs.version }}"
-            validate_image "${docker_reg}/armv7-homeassistant:${{ needs.init.outputs.version }}"
-            validate_image "${docker_reg}/aarch64-homeassistant:${{ needs.init.outputs.version }}"
+          validate_image "${{ matrix.registry }}/amd64-homeassistant:${{ needs.init.outputs.version }}"
+          validate_image "${{ matrix.registry }}/i386-homeassistant:${{ needs.init.outputs.version }}"
+          validate_image "${{ matrix.registry }}/armhf-homeassistant:${{ needs.init.outputs.version }}"
+          validate_image "${{ matrix.registry }}/armv7-homeassistant:${{ needs.init.outputs.version }}"
+          validate_image "${{ matrix.registry }}/aarch64-homeassistant:${{ needs.init.outputs.version }}"
 
-            # Create version tag
-            create_manifest "${docker_reg}" "${{ needs.init.outputs.version }}" "${{ needs.init.outputs.version }}"
+          # Create version tag
+          create_manifest "${{ needs.init.outputs.version }}" "${{ needs.init.outputs.version }}"
 
-            # Create general tags
-            if [[ "${{ needs.init.outputs.version }}" =~ d ]]; then
-              create_manifest "${docker_reg}" "dev" "${{ needs.init.outputs.version }}"
-            elif [[ "${{ needs.init.outputs.version }}" =~ b ]]; then
-              create_manifest "${docker_reg}" "beta" "${{ needs.init.outputs.version }}"
-              create_manifest "${docker_reg}" "rc" "${{ needs.init.outputs.version }}"
-            else
-              create_manifest "${docker_reg}" "stable" "${{ needs.init.outputs.version }}"
-              create_manifest "${docker_reg}" "latest" "${{ needs.init.outputs.version }}"
-              create_manifest "${docker_reg}" "beta" "${{ needs.init.outputs.version }}"
-              create_manifest "${docker_reg}" "rc" "${{ needs.init.outputs.version }}"
+          # Create general tags
+          if [[ "${{ needs.init.outputs.version }}" =~ d ]]; then
+            create_manifest "dev" "${{ needs.init.outputs.version }}"
+          elif [[ "${{ needs.init.outputs.version }}" =~ b ]]; then
+            create_manifest "beta" "${{ needs.init.outputs.version }}"
+            create_manifest "rc" "${{ needs.init.outputs.version }}"
+          else
+            create_manifest "stable" "${{ needs.init.outputs.version }}"
+            create_manifest "latest" "${{ needs.init.outputs.version }}"
+            create_manifest "beta" "${{ needs.init.outputs.version }}"
+            create_manifest "rc" "${{ needs.init.outputs.version }}"
 
-              # Create series version tag (e.g. 2021.6)
-              v="${{ needs.init.outputs.version }}"
-              create_manifest "${docker_reg}" "${v%.*}" "${{ needs.init.outputs.version }}"
-            fi
-          done
+            # Create series version tag (e.g. 2021.6)
+            v="${{ needs.init.outputs.version }}"
+            create_manifest "${v%.*}" "${{ needs.init.outputs.version }}"
+          fi

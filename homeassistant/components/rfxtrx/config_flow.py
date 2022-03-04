@@ -36,7 +36,13 @@ from homeassistant.helpers.entity_registry import (
     async_get_registry as async_get_entity_registry,
 )
 
-from . import DOMAIN, DeviceTuple, get_device_id, get_rfx_object
+from . import (
+    DOMAIN,
+    DeviceTuple,
+    get_device_id,
+    get_device_tuple_from_identifiers,
+    get_rfx_object,
+)
 from .binary_sensor import supported as binary_supported
 from .const import (
     CONF_AUTOMATIC_ADD,
@@ -64,7 +70,7 @@ RECV_MODES = sorted(itertools.chain(*rfxtrxmod.lowlevel.Status.RECMODES))
 class DeviceData(TypedDict):
     """Dict data representing a device entry."""
 
-    event_code: str
+    event_code: str | None
     device_id: DeviceTuple
 
 
@@ -398,15 +404,15 @@ class OptionsFlow(config_entries.OptionsFlow):
 
     def _get_device_data(self, entry_id) -> DeviceData:
         """Get event code based on device identifier."""
-        event_code: str
+        event_code: str | None = None
         entry = self._device_registry.async_get(entry_id)
         assert entry
-        device_id = cast(DeviceTuple, next(iter(entry.identifiers))[1:])
+        device_id = get_device_tuple_from_identifiers(entry.identifiers)
+        assert device_id
         for packet_id, entity_info in self._config_entry.data[CONF_DEVICES].items():
             if tuple(entity_info.get(CONF_DEVICE_ID)) == device_id:
                 event_code = cast(str, packet_id)
                 break
-        assert event_code
         return DeviceData(event_code=event_code, device_id=device_id)
 
     @callback

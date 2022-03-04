@@ -616,8 +616,8 @@ homeassistant/components/moehlenhoff_alpha2/* @j-a-n
 tests/components/moehlenhoff_alpha2/* @j-a-n
 homeassistant/components/monoprice/* @etsinko @OnFreund
 tests/components/monoprice/* @etsinko @OnFreund
-homeassistant/components/moon/* @fabaff
-tests/components/moon/* @fabaff
+homeassistant/components/moon/* @fabaff @frenck
+tests/components/moon/* @fabaff @frenck
 homeassistant/components/motion_blinds/* @starkillerOG
 tests/components/motion_blinds/* @starkillerOG
 homeassistant/components/motioneye/* @dermotduffy
@@ -1053,6 +1053,8 @@ tests/components/upb/* @gwww
 homeassistant/components/upc_connect/* @pvizeli @fabaff
 homeassistant/components/upcloud/* @scop
 tests/components/upcloud/* @scop
+homeassistant/components/update/* @home-assistant/core
+tests/components/update/* @home-assistant/core
 homeassistant/components/updater/* @home-assistant/core
 tests/components/updater/* @home-assistant/core
 homeassistant/components/upnp/* @StevenLooman @ehendrix23

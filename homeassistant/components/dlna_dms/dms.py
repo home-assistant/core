@@ -547,7 +547,7 @@ class DmsDeviceSource:
         children = await self._device.async_browse_direct_children(
             object_id,
             metadata_filter=DLNA_BROWSE_FILTER,
-            sort_criteria=DLNA_SORT_CRITERIA,
+            sort_criteria=self._sort_criteria,
         )
 
         return self._didl_to_media_source(base_object, children)
@@ -580,7 +580,8 @@ class DmsDeviceSource:
             children=children,
         )
 
-        media_source.calculate_children_class()
+        if media_source.children:
+            media_source.calculate_children_class()
 
         return media_source
 
@@ -650,7 +651,8 @@ class DmsDeviceSource:
             thumbnail=self._didl_thumbnail_url(item),
         )
 
-        media_source.calculate_children_class()
+        if media_source.children:
+            media_source.calculate_children_class()
 
         return media_source
 
@@ -677,6 +679,26 @@ class DmsDeviceSource:
     def _make_identifier(self, action: Action, object_id: str) -> str:
         """Make an identifier for BrowseMediaSource."""
         return f"{self.source_id}/{action}{object_id}"
+
+    @functools.cached_property
+    def _sort_criteria(self) -> list[str]:
+        """Return criteria to be used for sorting results.
+
+        The device must be connected before reading this property.
+        """
+        assert self._device
+
+        if self._device.sort_capabilities == ["*"]:
+            return DLNA_SORT_CRITERIA
+
+        # Filter criteria based on what the device supports. Strings in
+        # DLNA_SORT_CRITERIA are prefixed with a sign, while those in
+        # the device's sort_capabilities are not.
+        return [
+            criterion
+            for criterion in DLNA_SORT_CRITERIA
+            if criterion[1:] in self._device.sort_capabilities
+        ]
 
 
 class Action(StrEnum):

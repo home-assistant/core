@@ -1,14 +1,14 @@
 """Fixtures for Samsung TV."""
 from datetime import datetime
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from samsungctl import Remote
-from samsungtvws import SamsungTVWS
+from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 
 import homeassistant.util.dt as dt_util
 
-from .const import SAMPLE_APP_LIST
+from .const import SAMPLE_APP_LIST, SAMPLE_DEVICE_INFO_WIFI
 
 
 @pytest.fixture(autouse=True)
@@ -39,16 +39,9 @@ def rest_api_fixture() -> Mock:
         "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
         autospec=True,
     ) as rest_api_class:
-        rest_api_class.return_value.rest_device_info.return_value = {
-            "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
-            "device": {
-                "modelName": "82GXARRS",
-                "wifiMac": "aa:bb:cc:dd:ee:ff",
-                "name": "[TV] Living Room",
-                "type": "Samsung SmartTV",
-                "networkType": "wireless",
-            },
-        }
+        rest_api_class.return_value.rest_device_info.return_value = (
+            SAMPLE_DEVICE_INFO_WIFI
+        )
         yield rest_api_class.return_value
 
 
@@ -56,11 +49,11 @@ def rest_api_fixture() -> Mock:
 def remotews_fixture() -> Mock:
     """Patch the samsungtvws SamsungTVWS."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote",
     ) as remotews_class:
-        remotews = Mock(SamsungTVWS)
-        remotews.__enter__ = Mock(return_value=remotews)
-        remotews.__exit__ = Mock()
+        remotews = Mock(SamsungTVWSAsyncRemote)
+        remotews.__aenter__ = AsyncMock(return_value=remotews)
+        remotews.__aexit__ = AsyncMock()
         remotews.app_list.return_value = SAMPLE_APP_LIST
         remotews.token = "FAKE_TOKEN"
         remotews_class.return_value = remotews
@@ -82,7 +75,7 @@ def mock_now() -> datetime:
     return dt_util.utcnow()
 
 
-@pytest.fixture(name="no_mac_address")
+@pytest.fixture(name="mac_address", autouse=True)
 def mac_address_fixture() -> Mock:
     """Patch getmac.get_mac_address."""
     with patch("getmac.get_mac_address", return_value=None) as mac:

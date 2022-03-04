@@ -70,11 +70,16 @@ from .const import (
     ATTR_TOPIC,
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
+    CONF_CERTIFICATE,
+    CONF_CLIENT_CERT,
+    CONF_CLIENT_KEY,
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
+    CONF_TLS_INSECURE,
+    CONF_TLS_VERSION,
     CONF_TOPIC,
     CONF_WILL_MESSAGE,
     DATA_MQTT_CONFIG,
@@ -89,6 +94,7 @@ from .const import (
     DOMAIN,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
+    PROTOCOL_31,
     PROTOCOL_311,
 )
 from .discovery import LAST_DISCOVERY
@@ -113,13 +119,6 @@ SERVICE_DUMP = "dump"
 
 CONF_DISCOVERY_PREFIX = "discovery_prefix"
 CONF_KEEPALIVE = "keepalive"
-CONF_CERTIFICATE = "certificate"
-CONF_CLIENT_KEY = "client_key"
-CONF_CLIENT_CERT = "client_cert"
-CONF_TLS_INSECURE = "tls_insecure"
-CONF_TLS_VERSION = "tls_version"
-
-PROTOCOL_31 = "3.1"
 
 DEFAULT_PORT = 1883
 DEFAULT_KEEPALIVE = 60
@@ -616,9 +615,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         override = {k: entry.data[k] for k in shared_keys}
         if CONF_PASSWORD in override:
             override[CONF_PASSWORD] = "********"
-        _LOGGER.info(
-            "Data in your configuration entry is going to override your "
-            "configuration.yaml: %s",
+        _LOGGER.warning(
+            "Deprecated configuration settings found in configuration.yaml. "
+            "These settings from your configuration entry will override: %s",
             override,
         )
 
@@ -751,6 +750,58 @@ class Subscription:
     encoding: str | None = attr.ib(default="utf-8")
 
 
+class MqttClientSetup:
+    """Helper class to setup the paho mqtt client from config."""
+
+    # We don't import on the top because some integrations
+    # should be able to optionally rely on MQTT.
+    import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
+
+    def __init__(self, config: ConfigType) -> None:
+        """Initialize the MQTT client setup helper."""
+
+        if config[CONF_PROTOCOL] == PROTOCOL_31:
+            proto = self.mqtt.MQTTv31
+        else:
+            proto = self.mqtt.MQTTv311
+
+        if (client_id := config.get(CONF_CLIENT_ID)) is None:
+            # PAHO MQTT relies on the MQTT server to generate random client IDs.
+            # However, that feature is not mandatory so we generate our own.
+            client_id = self.mqtt.base62(uuid.uuid4().int, padding=22)
+        self._client = self.mqtt.Client(client_id, protocol=proto)
+
+        # Enable logging
+        self._client.enable_logger()
+
+        username = config.get(CONF_USERNAME)
+        password = config.get(CONF_PASSWORD)
+        if username is not None:
+            self._client.username_pw_set(username, password)
+
+        if (certificate := config.get(CONF_CERTIFICATE)) == "auto":
+            certificate = certifi.where()
+
+        client_key = config.get(CONF_CLIENT_KEY)
+        client_cert = config.get(CONF_CLIENT_CERT)
+        tls_insecure = config.get(CONF_TLS_INSECURE)
+        if certificate is not None:
+            self._client.tls_set(
+                certificate,
+                certfile=client_cert,
+                keyfile=client_key,
+                tls_version=ssl.PROTOCOL_TLS,
+            )
+
+            if tls_insecure is not None:
+                self._client.tls_insecure_set(tls_insecure)
+
+    @property
+    def client(self) -> mqtt.Client:
+        """Return the paho MQTT client."""
+        return self._client
+
+
 class MQTT:
     """Home Assistant MQTT client."""
 
@@ -815,46 +866,7 @@ class MQTT:
 
     def init_client(self):
         """Initialize paho client."""
-        # We don't import on the top because some integrations
-        # should be able to optionally rely on MQTT.
-        import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
-
-        if self.conf[CONF_PROTOCOL] == PROTOCOL_31:
-            proto: int = mqtt.MQTTv31
-        else:
-            proto = mqtt.MQTTv311
-
-        if (client_id := self.conf.get(CONF_CLIENT_ID)) is None:
-            # PAHO MQTT relies on the MQTT server to generate random client IDs.
-            # However, that feature is not mandatory so we generate our own.
-            client_id = mqtt.base62(uuid.uuid4().int, padding=22)
-        self._mqttc = mqtt.Client(client_id, protocol=proto)
-
-        # Enable logging
-        self._mqttc.enable_logger()
-
-        username = self.conf.get(CONF_USERNAME)
-        password = self.conf.get(CONF_PASSWORD)
-        if username is not None:
-            self._mqttc.username_pw_set(username, password)
-
-        if (certificate := self.conf.get(CONF_CERTIFICATE)) == "auto":
-            certificate = certifi.where()
-
-        client_key = self.conf.get(CONF_CLIENT_KEY)
-        client_cert = self.conf.get(CONF_CLIENT_CERT)
-        tls_insecure = self.conf.get(CONF_TLS_INSECURE)
-        if certificate is not None:
-            self._mqttc.tls_set(
-                certificate,
-                certfile=client_cert,
-                keyfile=client_key,
-                tls_version=ssl.PROTOCOL_TLS,
-            )
-
-            if tls_insecure is not None:
-                self._mqttc.tls_insecure_set(tls_insecure)
-
+        self._mqttc = MqttClientSetup(self.conf).client
         self._mqttc.on_connect = self._mqtt_on_connect
         self._mqttc.on_disconnect = self._mqtt_on_disconnect
         self._mqttc.on_message = self._mqtt_on_message
@@ -1206,20 +1218,29 @@ async def websocket_subscribe(hass, connection, msg):
 
     async def forward_messages(mqttmsg: ReceiveMessage):
         """Forward events to websocket."""
+        try:
+            payload = cast(bytes, mqttmsg.payload).decode(
+                DEFAULT_ENCODING
+            )  # not str because encoding is set to None
+        except (AttributeError, UnicodeDecodeError):
+            # Convert non UTF-8 payload to a string presentation
+            payload = str(mqttmsg.payload)
+
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
                 {
                     "topic": mqttmsg.topic,
-                    "payload": mqttmsg.payload,
+                    "payload": payload,
                     "qos": mqttmsg.qos,
                     "retain": mqttmsg.retain,
                 },
             )
         )
 
+    # Perform UTF-8 decoding directly in callback routine
     connection.subscriptions[msg["id"]] = await async_subscribe(
-        hass, msg["topic"], forward_messages
+        hass, msg["topic"], forward_messages, encoding=None
     )
 
     connection.send_message(websocket_api.result_message(msg["id"]))

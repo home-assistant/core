@@ -5,6 +5,7 @@ from dataclasses import asdict, dataclass
 import hashlib
 import json
 from pathlib import Path
+import tarfile
 from tarfile import TarError
 from tempfile import TemporaryDirectory
 from typing import Any
@@ -37,28 +38,27 @@ class Backup:
 class BackupManager:
     """Backup manager for the Backup integration."""
 
-    _backups: dict[str, Backup] = {}
-    _loaded = False
-
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the backup manager."""
         self.hass = hass
         self.backup_dir = Path(hass.config.path("backups"))
         self.backing_up = False
+        self.backups: dict[str, Backup] = {}
+        self.loaded = False
 
     async def load_backups(self) -> None:
         """Load data of stored backup files."""
         backups = await self.hass.async_add_executor_job(self._read_backups)
         LOGGER.debug("Loaded %s backups", len(backups))
-        self._backups = backups
-        self._loaded = True
+        self.backups = backups
+        self.loaded = True
 
     def _read_backups(self) -> dict[str, Backup]:
         """Read backups from disk."""
         backups: dict[str, Backup] = {}
         for backup_path in self.backup_dir.glob("*.tar"):
             try:
-                with SecureTarFile(backup_path, "r", gzip=False) as backup_file:
+                with tarfile.open(backup_path, "r:") as backup_file:
                     if data_file := backup_file.extractfile("./backup.json"):
                         data = json.loads(data_file.read())
                         backup = Backup(
@@ -75,17 +75,17 @@ class BackupManager:
 
     async def get_backups(self) -> dict[str, Backup]:
         """Return backups."""
-        if not self._loaded:
+        if not self.loaded:
             await self.load_backups()
 
-        return self._backups
+        return self.backups
 
     async def get_backup(self, slug: str) -> Backup | None:
         """Return a backup."""
-        if not self._loaded:
+        if not self.loaded:
             await self.load_backups()
 
-        if not (backup := self._backups.get(slug)):
+        if not (backup := self.backups.get(slug)):
             return None
 
         if not backup.path.exists():
@@ -94,7 +94,7 @@ class BackupManager:
                 backup.slug,
                 backup.path,
             )
-            self._backups.pop(slug)
+            self.backups.pop(slug)
             return None
 
         return backup
@@ -106,7 +106,7 @@ class BackupManager:
 
         await self.hass.async_add_executor_job(backup.path.unlink, True)
         LOGGER.debug("Removed backup located at %s", backup.path)
-        self._backups.pop(slug)
+        self.backups.pop(slug)
 
     async def generate_backup(self) -> Backup:
         """Generate a backup."""
@@ -146,8 +146,8 @@ class BackupManager:
                 path=tar_file_path,
                 size=round(tar_file_path.stat().st_size / 1_048_576, 2),
             )
-            if self._loaded:
-                self._backups[slug] = backup
+            if self.loaded:
+                self.backups[slug] = backup
             LOGGER.debug("Generated new backup with slug %s", slug)
             return backup
         finally:

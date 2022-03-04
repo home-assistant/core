@@ -1248,7 +1248,8 @@ async def test_setup_override_configuration(hass, caplog, tmp_path):
             await hass.async_block_till_done()
 
             assert (
-                "Data in your configuration entry is going to override your configuration.yaml:"
+                "Deprecated configuration settings found in configuration.yaml. "
+                "These settings from your configuration entry will override:"
                 in caplog.text
             )
 
@@ -1647,6 +1648,7 @@ async def test_mqtt_ws_subscription(hass, hass_ws_client, mqtt_mock):
 
     async_fire_mqtt_message(hass, "test-topic", "test1")
     async_fire_mqtt_message(hass, "test-topic", "test2")
+    async_fire_mqtt_message(hass, "test-topic", b"\xDE\xAD\xBE\xEF")
 
     response = await client.receive_json()
     assert response["event"]["topic"] == "test-topic"
@@ -1655,6 +1657,10 @@ async def test_mqtt_ws_subscription(hass, hass_ws_client, mqtt_mock):
     response = await client.receive_json()
     assert response["event"]["topic"] == "test-topic"
     assert response["event"]["payload"] == "test2"
+
+    response = await client.receive_json()
+    assert response["event"]["topic"] == "test-topic"
+    assert response["event"]["payload"] == "b'\\xde\\xad\\xbe\\xef'"
 
     # Unsubscribe
     await client.send_json({"id": 8, "type": "unsubscribe_events", "subscription": 5})
