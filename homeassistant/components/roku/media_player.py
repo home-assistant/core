@@ -51,7 +51,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import roku_exception_handler
 from .browse_media import async_browse_media
 from .const import (
     ATTR_ARTIST_NAME,
@@ -65,7 +64,11 @@ from .const import (
 )
 from .coordinator import RokuDataUpdateCoordinator
 from .entity import RokuEntity
-from .helpers import format_channel_name
+from .helpers import (
+    format_channel_name,
+    roku_exception_handler,
+    roku_exception_handler_no_timeout,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -327,7 +330,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         await self.coordinator.roku.remote("poweron")
         await self.coordinator.async_request_refresh()
 
-    @roku_exception_handler(ignore_timeout=True)
+    @roku_exception_handler_no_timeout
     async def async_turn_off(self) -> None:
         """Turn off the Roku."""
         await self.coordinator.roku.remote("poweroff")

@@ -9,10 +9,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import roku_exception_handler
 from .const import DOMAIN
 from .coordinator import RokuDataUpdateCoordinator
 from .entity import RokuEntity
+from .helpers import roku_exception_handler, roku_exception_handler_no_timeout
 
 
 async def async_setup_entry(
@@ -50,7 +50,7 @@ class RokuRemote(RokuEntity, RemoteEntity):
         await self.coordinator.roku.remote("poweron")
         await self.coordinator.async_request_refresh()
 
-    @roku_exception_handler(ignore_timeout=True)
+    @roku_exception_handler_no_timeout
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.coordinator.roku.remote("poweroff")
