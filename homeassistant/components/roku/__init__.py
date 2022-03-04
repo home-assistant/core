@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
-from functools import wraps
+from functools import partial, wraps
 import logging
 from typing import Any, TypeVar
 
@@ -56,10 +56,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 def roku_exception_handler(
-    func: Callable[Concatenate[_T, _P], Awaitable[None]],  # type: ignore[misc]
+    func: Callable[Concatenate[_T, _P], Awaitable[None]] | None = None,  # type: ignore[misc]
+    *,
     ignore_timeout: bool = False,
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:  # type: ignore[misc]
     """Decorate Roku calls to handle Roku exceptions."""
+
+    if func is None:
+        return partial(roku_exception_handler, ignore_timeout=ignore_timeout)
 
     @wraps(func)
     async def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
