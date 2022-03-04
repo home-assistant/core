@@ -1,4 +1,6 @@
 """Support for Android IP Webcam."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 
@@ -10,7 +12,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
-    CONF_PLATFORM,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
@@ -194,9 +195,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def async_setup_ipcamera(cam_config):
         """Set up an IP camera."""
         host = cam_config[CONF_HOST]
-        username = cam_config.get(CONF_USERNAME)
-        password = cam_config.get(CONF_PASSWORD)
-        name = cam_config[CONF_NAME]
+        username: str | None = cam_config.get(CONF_USERNAME)
+        password: str | None = cam_config.get(CONF_PASSWORD)
+        name: str = cam_config[CONF_NAME]
         interval = cam_config[CONF_SCAN_INTERVAL]
         switches = cam_config.get(CONF_SWITCHES)
         sensors = cam_config.get(CONF_SENSORS)
@@ -238,7 +239,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         webcams[host] = cam
 
         mjpeg_camera = {
-            CONF_PLATFORM: "mjpeg",
             CONF_MJPEG_URL: cam.mjpeg_url,
             CONF_STILL_IMAGE_URL: cam.image_url,
             CONF_NAME: name,
@@ -248,7 +248,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         hass.async_create_task(
             discovery.async_load_platform(
-                hass, Platform.CAMERA, "mjpeg", mjpeg_camera, config
+                hass, Platform.CAMERA, DOMAIN, mjpeg_camera, config
             )
         )
 
