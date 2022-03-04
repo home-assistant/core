@@ -199,6 +199,9 @@ class Timer(RestoreEntity):
         self._end: datetime | None = None
         self._listener: Callable[[], None] | None = None
 
+        self._attr_should_poll = False
+        self._attr_force_update = True
+
     @classmethod
     def from_yaml(cls, config: dict) -> Timer:
         """Return entity instance initialized from yaml storage."""
@@ -206,16 +209,6 @@ class Timer(RestoreEntity):
         timer.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])
         timer.editable = False
         return timer
-
-    @property
-    def should_poll(self):
-        """If entity should be polled."""
-        return False
-
-    @property
-    def force_update(self) -> bool:
-        """Return True to fix restart issues."""
-        return True
 
     @property
     def name(self):
