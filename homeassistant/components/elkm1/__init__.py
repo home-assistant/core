@@ -224,8 +224,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elk-M1 Control from a config entry."""
     conf: MappingProxyType[str, Any] = entry.data
 
-    url = entry.data[CONF_HOST]
-    host = urlparse(url).hostname
+    host = urlparse(entry.data[CONF_HOST]).hostname
 
     _LOGGER.debug("Setting up elkm1 %s", conf["host"])
 
