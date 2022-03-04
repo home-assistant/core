@@ -40,6 +40,9 @@ DATA = {
         "docs": "https://developers.home-assistant.io/docs/en/significant_change_index.html",
         "extra": "You will now need to update the code to make sure that entities with different device classes are correctly considered.",
     },
+    "update": {
+        "title": "Update",
+    },
 }
 
 
