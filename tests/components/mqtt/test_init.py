@@ -1249,7 +1249,7 @@ async def test_setup_override_configuration(hass, caplog, tmp_path):
 
             assert (
                 "Deprecated configuration settings found in configuration.yaml. "
-                "The settings from your configuration entry will override:"
+                "These settings from your configuration entry will override:"
                 in caplog.text
             )
 
