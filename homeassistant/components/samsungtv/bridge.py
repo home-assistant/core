@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 import asyncio
 from asyncio.exceptions import TimeoutError as AsyncioTimeoutError
 import contextlib
+import time
 from typing import Any, cast
 
 from samsungctl import Remote
@@ -44,6 +45,8 @@ from .const import (
     VALUE_CONF_NAME,
     WEBSOCKET_PORTS,
 )
+
+KEY_PRESS_TIMEOUT = 1.2
 
 
 def mac_from_device_info(info: dict[str, Any]) -> str | None:
@@ -129,7 +132,7 @@ class SamsungTVBridge(ABC):
         """Tells if the TV is on."""
 
     @abstractmethod
-    async def async_send_key(self, key: str) -> None:
+    async def async_send_keys(self, keys: list[str]) -> None:
         """Send a key to the tv and handles exceptions."""
 
     @abstractmethod
@@ -238,19 +241,25 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
                 pass
         return self._remote
 
-    async def async_send_key(self, key: str) -> None:
+    async def async_send_keys(self, keys: list[str]) -> None:
         """Send the key using legacy protocol."""
-        await self.hass.async_add_executor_job(self._send_key, key)
+        await self.hass.async_add_executor_job(self._send_keys, keys)
 
-    def _send_key(self, key: str) -> None:
-        """Send the key using legacy protocol."""
-        try:
+    def _send_keys(self, keys: list[str]) -> None:
+        """Send the keys using legacy protocol."""
+        try:  # pylint: disable=[too-many-nested-blocks]
             # recreate connection if connection was dead
             retry_count = 1
             for _ in range(retry_count + 1):
                 try:
                     if remote := self._get_remote():
-                        remote.control(key)
+                        first_key = True
+                        for key in keys:
+                            if first_key:
+                                first_key = False
+                            else:
+                                time.sleep(KEY_PRESS_TIMEOUT)
+                            remote.control(key)
                     break
                 except (ConnectionClosed, BrokenPipeError):
                     # BrokenPipe can occur when the commands is sent to fast
@@ -391,23 +400,32 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     async def async_launch_app(self, app_id: str) -> None:
         """Send the launch_app command using websocket protocol."""
-        await self._async_send_command(ChannelEmitCommand.launch_app(app_id))
+        await self._async_send_commands([ChannelEmitCommand.launch_app(app_id)])
 
-    async def async_send_key(self, key: str) -> None:
+    async def async_send_keys(self, keys: list[str]) -> None:
         """Send the key using websocket protocol."""
-        if key == "KEY_POWEROFF":
-            key = "KEY_POWER"
-        await self._async_send_command(SendRemoteKey.click(key))
+        commands: list[SamsungTVCommand] = []
+        for key in keys:
+            if key == "KEY_POWEROFF":
+                key = "KEY_POWER"
+            commands.append(SendRemoteKey.click(key))
+        await self._async_send_commands(commands)
 
-    async def _async_send_command(self, command: SamsungTVCommand) -> None:
+    async def _async_send_commands(self, commands: list[SamsungTVCommand]) -> None:
         """Send the commands using websocket protocol."""
-        try:
+        try:  # pylint: disable=[too-many-nested-blocks]
             # recreate connection if connection was dead
             retry_count = 1
             for _ in range(retry_count + 1):
                 try:
                     if remote := await self._async_get_remote():
-                        await remote.send_command(command)
+                        first_key = True
+                        for command in commands:
+                            if first_key:
+                                first_key = False
+                            else:
+                                await asyncio.sleep(KEY_PRESS_TIMEOUT)
+                            await remote.send_command(command)
                     break
                 except (
                     BrokenPipeError,
