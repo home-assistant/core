@@ -277,6 +277,7 @@ class Timer(RestoreEntity):
         self._state = STATUS_ACTIVE
         start = dt_util.utcnow().replace(microsecond=0)
 
+        # Set remaining to new value if needed
         if newduration:
             self._remaining = self._duration = newduration
         elif not self._remaining:
