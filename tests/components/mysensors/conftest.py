@@ -278,3 +278,17 @@ def temperature_sensor(
     nodes = update_gateway_nodes(gateway_nodes, temperature_sensor_state)
     node = nodes[1]
     return node
+
+
+@pytest.fixture(name="text_node_state", scope="session")
+def text_node_state_fixture() -> dict:
+    """Load the text node state."""
+    return load_nodes_state("mysensors/text_node_state.json")
+
+
+@pytest.fixture
+def text_node(gateway_nodes: dict[int, Sensor], text_node_state: dict) -> Sensor:
+    """Load the text child node."""
+    nodes = update_gateway_nodes(gateway_nodes, text_node_state)
+    node = nodes[1]
+    return node
