@@ -924,13 +924,22 @@ async def async_migrate_entries(
 
 
 @callback
-def async_resolve_entity_ids(
+def async_validate_entity_ids(
     registry: EntityRegistry, entity_ids_or_uuids: list[str]
 ) -> list[str]:
-    """Resolve a list of entity ids or UUIDs to a list of entity ids."""
+    """Validate and resolve a list of entity ids or UUIDs to a list of entity ids.
 
-    def resolve_entity(entity_id_or_uuid: str) -> str | None:
-        """Resolve an entity id or UUID to an entity id or None."""
+    Returns a list with UUID resolved to entity_ids.
+    Raises vol.Invalid if any item is invalid, or if any a UUID is not associated with
+    an entity registry item.
+    """
+
+    def async_validate_entity_id(entity_id_or_uuid: str) -> str | None:
+        """Resolve an entity id or UUID to an entity id.
+
+        Raises vol.Invalid if the entity or UUID is invalid, or if the UUID is not
+        associated with an entity registry item.
+        """
         if valid_entity_id(entity_id_or_uuid):
             return entity_id_or_uuid
         if (entry := registry.entities.get_entry(entity_id_or_uuid)) is None:
@@ -940,6 +949,6 @@ def async_resolve_entity_ids(
     tmp = [
         resolved_item
         for item in entity_ids_or_uuids
-        if (resolved_item := resolve_entity(item)) is not None
+        if (resolved_item := async_validate_entity_id(item)) is not None
     ]
     return tmp
