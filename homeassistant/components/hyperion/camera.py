@@ -254,7 +254,7 @@ class HyperionCamera(Camera):
             manufacturer=HYPERION_MANUFACTURER_NAME,
             model=HYPERION_MODEL_NAME,
             name=self._instance_name,
-            configuration_url=f"http://{self._client._host}:8090/#remote",
+            configuration_url=self._client.remote_url,
         )
 
 

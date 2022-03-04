@@ -834,7 +834,7 @@ huisbaasje-client==0.1.0
 hydrawiser==0.2
 
 # homeassistant.components.hyperion
-hyperion-py==0.7.4
+hyperion-py==0.7.5
 
 # homeassistant.components.iammeter
 iammeter==0.1.7
