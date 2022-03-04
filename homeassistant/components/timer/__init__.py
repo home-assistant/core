@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_EDITABLE,
+    ATTR_ENTITY_ID,
     CONF_ICON,
     CONF_ID,
     CONF_NAME,
@@ -39,6 +40,7 @@ ATTR_REMAINING = "remaining"
 ATTR_FINISHES_AT = "finishes_at"
 ATTR_RESTORE = "restore"
 ATTR_RESTORE_GRACE_PERIOD = "restore_grace_period"
+ATTR_FINISHED_AT = "finished_at"
 
 CONF_DURATION = "duration"
 CONF_RESTORE = "restore"
@@ -327,10 +329,11 @@ class Timer(RestoreEntity):
             self._remaining = None
             self.hass.bus.async_fire(
                 EVENT_TIMER_FINISHED_WHILE_HOMEASSISTANT_STOPPED,
-                {"entity_id": self.entity_id},
+                {"entity_id": self.entity_id, ATTR_FINISHED_AT: end.isoformat()},
             )
         # If the timer ended before now but within the grace period, finish the timer
         else:
+            self._end = end
             self.async_finish()
 
     @callback
@@ -362,7 +365,7 @@ class Timer(RestoreEntity):
             self._remaining = self._duration
             self._end = start + self._duration
 
-        self.hass.bus.async_fire(event, {"entity_id": self.entity_id})
+        self.hass.bus.async_fire(event, {ATTR_ENTITY_ID: self.entity_id})
 
         self._listener = async_track_point_in_utc_time(
             self.hass, self._async_finished, self._end
@@ -380,7 +383,7 @@ class Timer(RestoreEntity):
         self._remaining = self._end - dt_util.utcnow().replace(microsecond=0)
         self._state = STATUS_PAUSED
         self._end = None
-        self.hass.bus.async_fire(EVENT_TIMER_PAUSED, {"entity_id": self.entity_id})
+        self.hass.bus.async_fire(EVENT_TIMER_PAUSED, {ATTR_ENTITY_ID: self.entity_id})
         self.async_write_ha_state()
 
     @callback
@@ -392,7 +395,9 @@ class Timer(RestoreEntity):
         self._state = STATUS_IDLE
         self._end = None
         self._remaining = None
-        self.hass.bus.async_fire(EVENT_TIMER_CANCELLED, {"entity_id": self.entity_id})
+        self.hass.bus.async_fire(
+            EVENT_TIMER_CANCELLED, {ATTR_ENTITY_ID: self.entity_id}
+        )
         self.async_write_ha_state()
 
     @callback
@@ -404,10 +409,14 @@ class Timer(RestoreEntity):
         if self._listener:
             self._listener()
             self._listener = None
+        end = self._end
         self._state = STATUS_IDLE
         self._end = None
         self._remaining = None
-        self.hass.bus.async_fire(EVENT_TIMER_FINISHED, {"entity_id": self.entity_id})
+        self.hass.bus.async_fire(
+            EVENT_TIMER_FINISHED,
+            {ATTR_ENTITY_ID: self.entity_id, ATTR_FINISHED_AT: end.isoformat()},
+        )
         self.async_write_ha_state()
 
     @callback
@@ -418,9 +427,13 @@ class Timer(RestoreEntity):
 
         self._listener = None
         self._state = STATUS_IDLE
+        end = self._end
         self._end = None
         self._remaining = None
-        self.hass.bus.async_fire(EVENT_TIMER_FINISHED, {"entity_id": self.entity_id})
+        self.hass.bus.async_fire(
+            EVENT_TIMER_FINISHED,
+            {ATTR_ENTITY_ID: self.entity_id, ATTR_FINISHED_AT: end.isoformat()},
+        )
         self.async_write_ha_state()
 
     async def async_update_config(self, config: dict) -> None:
