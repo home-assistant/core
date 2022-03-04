@@ -32,10 +32,10 @@ from . import AmbientStation, AmbientWeatherEntity
 from .const import ATTR_LAST_DATA, DOMAIN, TYPE_SOLARRADIATION, TYPE_SOLARRADIATION_LX
 
 TYPE_24HOURRAININ = "24hourrainin"
-TYPE_AQI_PM25 = "pm25"
-TYPE_AQI_PM25_24H = "pm25_24h"
-TYPE_AQI_PM25_IN = "pm25_in"
-TYPE_AQI_PM25_IN_24H = "pm25_in_24h"
+TYPE_AQI_PM25 = "aqi_pm25"
+TYPE_AQI_PM25_24H = "aqi_pm25_24h"
+TYPE_AQI_PM25_IN = "aqi_pm25_in"
+TYPE_AQI_PM25_IN_24H = "aqi_pm25_in_24h"
 TYPE_BAROMABSIN = "baromabsin"
 TYPE_BAROMRELIN = "baromrelin"
 TYPE_CO2 = "co2"
