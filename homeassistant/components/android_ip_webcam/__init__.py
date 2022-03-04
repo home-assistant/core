@@ -204,13 +204,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         # Init ip webcam
         cam = PyDroidIPCam(
-            hass.loop,
             websession,
             host,
             cam_config[CONF_PORT],
             username=username,
             password=password,
             timeout=cam_config[CONF_TIMEOUT],
+            ssl=False,
         )
 
         if switches is None:
