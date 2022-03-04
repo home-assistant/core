@@ -96,7 +96,12 @@ homeassistant.components.group.*
 homeassistant.components.guardian.*
 homeassistant.components.history.*
 homeassistant.components.homeassistant.triggers.event
-homeassistant.components.homekit.*
+homeassistant.components.homekit
+homeassistant.components.homekit.accessories
+homeassistant.components.homekit.aidmanager
+homeassistant.components.homekit.config_flow
+homeassistant.components.homekit.type_triggers
+homeassistant.components.homekit.util
 homeassistant.components.homekit_controller
 homeassistant.components.homekit_controller.alarm_control_panel
 homeassistant.components.homekit_controller.button
