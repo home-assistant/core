@@ -120,10 +120,6 @@ class SamsungTVBridge(ABC):
         """Try to gather infos of this TV."""
 
     @abstractmethod
-    async def async_mac_from_device(self) -> str | None:
-        """Try to fetch the mac address of the TV."""
-
-    @abstractmethod
     async def async_get_app_list(self) -> dict[str, str] | None:
         """Get installed app list."""
 
@@ -168,10 +164,6 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             CONF_TIMEOUT: 1,
         }
         self._remote: Remote | None = None
-
-    async def async_mac_from_device(self) -> None:
-        """Try to fetch the mac address of the TV."""
-        return None
 
     async def async_get_app_list(self) -> dict[str, str]:
         """Get installed app list."""
@@ -303,11 +295,6 @@ class SamsungTVWSBridge(SamsungTVBridge):
         self._device_info: dict[str, Any] | None = None
         self._remote: SamsungTVWSAsyncRemote | None = None
         self._remote_lock = asyncio.Lock()
-
-    async def async_mac_from_device(self) -> str | None:
-        """Try to fetch the mac address of the TV."""
-        info = await self.async_device_info()
-        return mac_from_device_info(info) if info else None
 
     async def async_get_app_list(self) -> dict[str, str] | None:
         """Get installed app list."""
