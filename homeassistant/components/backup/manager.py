@@ -159,24 +159,25 @@ class BackupManager:
         backup_data: dict[str, Any],
     ) -> None:
         """Generate backup contents."""
-        with TemporaryDirectory() as tmp_dir:
+        with TemporaryDirectory() as tmp_dir, SecureTarFile(
+            tar_file_path, "w", gzip=False
+        ) as tar_file:
             tmp_dir_path = Path(tmp_dir)
             json_util.save_json(
                 tmp_dir_path.joinpath("./backup.json").as_posix(),
                 backup_data,
             )
-            with SecureTarFile(tar_file_path, "w", gzip=False) as tar_file:
-                with SecureTarFile(
-                    tmp_dir_path.joinpath("./homeassistant.tar.gz").as_posix(),
-                    "w",
-                ) as core_tar:
-                    atomic_contents_add(
-                        tar_file=core_tar,
-                        origin_path=Path(self.hass.config.path()),
-                        excludes=EXCLUDE_FROM_BACKUP,
-                        arcname="data",
-                    )
-                tar_file.add(tmp_dir_path, arcname=".")
+            with SecureTarFile(
+                tmp_dir_path.joinpath("./homeassistant.tar.gz").as_posix(),
+                "w",
+            ) as core_tar:
+                atomic_contents_add(
+                    tar_file=core_tar,
+                    origin_path=Path(self.hass.config.path()),
+                    excludes=EXCLUDE_FROM_BACKUP,
+                    arcname="data",
+                )
+            tar_file.add(tmp_dir_path, arcname=".")
 
 
 def _generate_slug(date: str, name: str) -> str:
