@@ -1,4 +1,5 @@
 """YoLink Special Device Implement."""
+
 from homeassistant.components.yolink.device import YoLinkDevice
 from homeassistant.components.yolink.entities import (
     YoLinkBatteryEntity,
@@ -27,6 +28,7 @@ class YoLinkOutlet(YoLinkDevice):
         resp = await self.call_device_http_api(
             "setState", {"state": ("open" if state else "close")}
         )
+        self.logger.info("call outlet state change api")
         await self.parse_state(resp.data)
         return resp
 
@@ -42,7 +44,7 @@ class YoLinkOutlet(YoLinkDevice):
 
 
 class YoLinkSiren(YoLinkDevice):
-    """Representation of a YoLink Outlet."""
+    """Representation of a YoLink Siren."""
 
     def __init__(self, device: dict, hass, config_entry):
         """Initialize the YoLink Sensor."""
@@ -52,9 +54,7 @@ class YoLinkSiren(YoLinkDevice):
 
     async def async_turn_on_off(self, state: bool):
         """Call *.getState with device to fetch realtime state data."""
-        resp = await self.call_device_http_api(
-            "setState", {"state": ("open" if state else "close")}
-        )
+        resp = await self.call_device_http_api("setState", {"state": {"alarm": state}})
         await self.parse_state(resp.data)
         return resp
 
@@ -132,5 +132,5 @@ class YoLinkDoorSensor(YoLinkDevice):
 
     async def parse_state(self, state):
         """Parse Door Sensor state from data."""
-        await self.door_entity.udpate_entity_state(state["state"] == "alert")
+        await self.door_entity.udpate_entity_state(state["state"] == "open")
         await self.battery_entity.udpate_entity_state(state["battery"])

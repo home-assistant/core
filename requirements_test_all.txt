@@ -636,6 +636,9 @@ ovoenergy==1.1.12
 # homeassistant.components.shiftr
 paho-mqtt==1.5.1
 
+# homeassistant.components.yolink
+paho-mqtt==1.6.1
+
 # homeassistant.components.panasonic_viera
 panasonic_viera==0.3.6
 
@@ -787,6 +790,9 @@ pycoolmasternet-async==0.1.2
 
 # homeassistant.components.daikin
 pydaikin==2.4.4
+
+# homeassistant.components.yolink
+pydantic==1.9.0
 
 # homeassistant.components.deconz
 pydeconz==82

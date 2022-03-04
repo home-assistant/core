@@ -80,6 +80,11 @@ class YoLinkDoorEntity(YoLinkBinarySensorEntity):
         self._attr_is_on = concat
         await self.async_update_ha_state()
 
+    @property
+    def is_on(self):
+        """Ueturn Door State."""
+        return self._attr_is_on
+
 
 class YoLinkLeakEntity(YoLinkBinarySensorEntity):
     """YoLink Leak Sensor Instance."""
@@ -95,6 +100,11 @@ class YoLinkLeakEntity(YoLinkBinarySensorEntity):
         self._attr_is_on = water_detected
         await self.async_update_ha_state()
 
+    @property
+    def is_on(self):
+        """Return WaterLeak State."""
+        return self._attr_is_on
+
 
 class YoLinkMotionEntity(YoLinkBinarySensorEntity):
     """YoLink Motion Sensor Instance."""
@@ -109,6 +119,11 @@ class YoLinkMotionEntity(YoLinkBinarySensorEntity):
             return
         self._attr_is_on = motion_detected
         await self.async_update_ha_state()
+
+    @property
+    def is_on(self):
+        """Return the state of the sensor."""
+        return self._attr_is_on
 
 
 class YoLinkTemperatureEntity(YoLinkSensorEntity):
@@ -215,8 +230,8 @@ class YoLinkSirenEntity(YoLinkDeviceEntity, SirenEntity):
     async def async_turn_on_off(self, state: bool):
         """Response for async_turn_on/async_turn_off."""
         if hasattr(self._yl_device, "async_turn_on_off"):
-            async_turn_on_off = getattr(self._yl_device, "async_turn_on_off")
-            async_turn_on_off(self, state)
+            async_sire_turn_on_off = getattr(self._yl_device, "async_turn_on_off")
+            await async_sire_turn_on_off(state)
         else:
             raise NotImplementedError()
 

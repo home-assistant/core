@@ -20,9 +20,12 @@ from homeassistant.helpers.typing import ConfigType
 from . import api, config_flow
 from .client import HomeEventMQTTSubscription, YoLinkHttpClient, YoLinkMQTTClient
 from .const import DOMAIN, HOME_ID, HOME_SUBSCRIPTION, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .services import async_setup_services
 
 SCAN_INTERVAL = timedelta(minutes=5)
+
 _LOGGER = logging.getLogger(__name__)
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -115,12 +118,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.warning("Call yolink api failed: %s", err)
         return False
 
+    await async_setup_services(hass, entry)
+
     # If using an aiohttp-based API lib
     # hass.data[DOMAIN][entry.entry_id] = api.AsyncConfigEntryAuth(
     #     aiohttp_client.async_get_clientsession(hass), session
     # )
-
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    # services register
 
     return True
 

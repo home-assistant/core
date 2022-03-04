@@ -194,7 +194,6 @@ class YoLinkMQTTClient:
 
         # Enable logging
         self._mqttc.enable_logger()
-
         self._mqttc.on_connect = self._mqtt_on_connect
         # self._mqttc.on_disconnect = self._mqtt_on_disconnect
         self._mqttc.on_message = self._mqtt_on_message
@@ -244,9 +243,11 @@ class YoLinkMQTTClient:
         Resubscribe to all topics we were subscribed to and publish birth
         message.
         """
+
         # pylint: disable=import-outside-toplevel
         import paho.mqtt.client as mqtt
 
+        _LOGGER.info(self._auth_mgr.accessToken)
         if result_code != mqtt.CONNACK_ACCEPTED:
             _LOGGER.error(
                 "Unable to connect to the MQTT broker: %s",

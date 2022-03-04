@@ -1,5 +1,4 @@
 """Support for Yolink Devices."""
-import logging
 
 from homeassistant.components.yolink.device_impl import (
     YoLinkDoorSensor,
@@ -13,14 +12,11 @@ from homeassistant.components.yolink.device_impl import (
 from .const import DOMAIN, HOME_SUBSCRIPTION
 from .device import YoLinkDevice
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Perform the setup for YoLink devices."""
     devices = []
     entities: list[YoLinkDevice] = []
-
     for device in hass.data[DOMAIN][config_entry.entry_id]["devices"]:
         if device["type"] == "DoorSensor":
             devices.append(YoLinkDoorSensor(device, hass, config_entry))
