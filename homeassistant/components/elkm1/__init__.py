@@ -351,7 +351,7 @@ async def async_wait_for_elk_to_sync(
             login_event.set()
             sync_event.set()
 
-    def first_response():
+    def first_response(*args, **kwargs):
         _LOGGER.debug("ElkM1 received first response (VN)")
         login_event.set()
 
