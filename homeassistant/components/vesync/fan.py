@@ -34,11 +34,11 @@ PRESET_MODES = {
     "Core300S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
     "Core400S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
 }
-SPEED_RANGE = { # off is not included
+SPEED_RANGE = {  # off is not included
     "LV-PUR131S": (1, 3),
     "Core200S": (1, 3),
     "Core300S": (1, 3),
-    "Core400S": (1, 4)
+    "Core400S": (1, 4),
 }
 
 
@@ -70,7 +70,7 @@ def _setup_entities(devices, async_add_entities):
             entities.append(VeSyncFanHA(dev))
         else:
             _LOGGER.warning(
-                "%s - Unknown device type - %s", dev.device_name, dev.device_type
+                f"{dev.device_name} - Unknown device type - {dev.device_type}"
             )
             continue
 
@@ -98,8 +98,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
             and (current_level := self.smartfan.fan_level) is not None
         ):
             return ranged_value_to_percentage(
-                SPEED_RANGE[self.device.device_type],
-                current_level
+                SPEED_RANGE[self.device.device_type], current_level
             )
         return None
 
@@ -166,8 +165,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         self.smartfan.change_fan_speed(
             math.ceil(
                 percentage_to_ranged_value(
-                    SPEED_RANGE[self.device.device_type],
-                    percentage
+                    SPEED_RANGE[self.device.device_type], percentage
                 )
             )
         )
@@ -177,7 +175,10 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         """Set the preset mode of device."""
         if preset_mode not in self.preset_modes:
             raise ValueError(
-                "{preset_mode} is not one of the valid preset modes: {self.preset_modes}"
+                (
+                    "{preset_mode} is not one of the valid preset modes: "
+                    "{self.preset_modes}"
+                )
             )
 
         if not self.smartfan.is_on:
