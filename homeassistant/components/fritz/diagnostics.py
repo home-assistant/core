@@ -23,7 +23,7 @@ async def async_get_config_entry_diagnostics(
         "device_info": {
             "model": avm_wrapper.model,
             "unique_id": avm_wrapper.unique_id.replace(
-                avm_wrapper.unique_id[6:10], "xxxx"
+                avm_wrapper.unique_id[6:11], "XX:XX"
             ),
             "current_firmware": avm_wrapper.current_firmware,
             "latest_firmware": avm_wrapper.latest_firmware,

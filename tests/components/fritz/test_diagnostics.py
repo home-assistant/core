@@ -69,7 +69,7 @@ async def test_entry_diagnostics(
             "latest_firmware": None,
             "mesh_role": "master",
             "model": "FRITZ!Box 7530 AX",
-            "unique_id": MOCK_MESH_MASTER_MAC,
+            "unique_id": MOCK_MESH_MASTER_MAC.replace("6F:12", "XX:XX"),
             "update_available": False,
             "wan_link_properties": {
                 "NewLayer1DownstreamMaxBitRate": 318557000,
