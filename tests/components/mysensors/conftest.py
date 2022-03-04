@@ -282,7 +282,7 @@ def temperature_sensor(
 
 @pytest.fixture(name="text_node_state", scope="session")
 def text_node_state_fixture() -> dict:
-    """Load the energy node state."""
+    """Load the text node state."""
     return load_nodes_state("mysensors/text_node_state.json")
 
 
