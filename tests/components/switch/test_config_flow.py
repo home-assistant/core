@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.switch import async_setup_entry
 from homeassistant.components.switch.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
@@ -20,7 +21,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.switch.async_setup_entry",
-        return_value=True,
+        wraps=async_setup_entry,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -39,6 +40,8 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert config_entry.data == {}
     assert config_entry.options == {"entity_id": "switch.ceiling"}
+
+    assert hass.states.get("light.ceiling")
 
 
 async def test_name(hass: HomeAssistant) -> None:
