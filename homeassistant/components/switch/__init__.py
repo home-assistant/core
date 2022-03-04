@@ -93,8 +93,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     if entry.domain == DOMAIN:
         registry = er.async_get(hass)
-        # Will raise vol.Invalid to abort config entry setup
-        er.async_validate_entity_id(registry, entry.options[CONF_ENTITY_ID])
+        try:
+            er.async_validate_entity_id(registry, entry.options[CONF_ENTITY_ID])
+        except vol.Invalid:
+            # The entity is identified by an unknown entity registry ID
+            return False
 
         hass.config_entries.async_setup_platforms(entry, PLATFORMS)
         return True
