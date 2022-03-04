@@ -20,7 +20,7 @@ from homeassistant.components.homekit import (
     STATUS_WAIT,
     HomeKit,
 )
-from homeassistant.components.homekit.accessories import HomeAccessory, HomeBridge
+from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
     BRIDGE_NAME,
     BRIDGE_SERIAL_NUMBER,
@@ -376,7 +376,7 @@ async def test_homekit_remove_accessory(hass, mock_async_zeroconf):
 
     homekit.driver = "driver"
     homekit.bridge = _mock_pyhap_bridge()
-    acc_mock = HomeAccessory()
+    acc_mock = MagicMock()
     acc_mock.stop = AsyncMock()
     homekit.bridge.accessories = {6: acc_mock}
 
