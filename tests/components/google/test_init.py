@@ -529,7 +529,7 @@ async def test_add_event_date(
     )
 
 
-async def test_add_event_date_time(
+async def test_add_event_date(
     hass: HomeAssistant,
     mock_token_read: None,
     component_setup: ComponentSetup,
