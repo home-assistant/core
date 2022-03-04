@@ -11,14 +11,19 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 
+SENSOR_VAR1 = "sensor.sensor_var1"
+SENSOR_SETPOINT1 = "sensor.sensor_setpoint1"
+SENSOR_LED6 = "sensor.sensor_led6"
+SENSOR_LOGICOP1 = "sensor.sensor_logicop1"
+
 
 async def test_setup_lcn_sensor(hass, entry, lcn_connection):
     """Test the setup of sensor."""
     for entity_id in (
-        "sensor.sensor_var1",
-        "sensor.sensor_setpoint1",
-        "sensor.sensor_led6",
-        "sensor.sensor_logicop1",
+        SENSOR_VAR1,
+        SENSOR_SETPOINT1,
+        SENSOR_LED6,
+        SENSOR_LOGICOP1,
     ):
         state = hass.states.get(entity_id)
         assert state is not None
@@ -27,18 +32,18 @@ async def test_setup_lcn_sensor(hass, entry, lcn_connection):
 
 async def test_entity_state(hass, lcn_connection):
     """Test state of entity."""
-    state = hass.states.get("sensor.sensor_var1")
+    state = hass.states.get(SENSOR_VAR1)
     assert state
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
 
-    state = hass.states.get("sensor.sensor_setpoint1")
+    state = hass.states.get(SENSOR_SETPOINT1)
     assert state
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
 
-    state = hass.states.get("sensor.sensor_led6")
+    state = hass.states.get(SENSOR_LED6)
     assert state
 
-    state = hass.states.get("sensor.sensor_logicop1")
+    state = hass.states.get(SENSOR_LOGICOP1)
     assert state
 
 
@@ -46,22 +51,22 @@ async def test_entity_attributes(hass, entry, lcn_connection):
     """Test the attributes of an entity."""
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
-    entity_var1 = entity_registry.async_get("sensor.sensor_var1")
+    entity_var1 = entity_registry.async_get(SENSOR_VAR1)
     assert entity_var1
     assert entity_var1.unique_id == f"{entry.entry_id}-m000007-var1"
     assert entity_var1.original_name == "Sensor_Var1"
 
-    entity_r1varsetpoint = entity_registry.async_get("sensor.sensor_setpoint1")
+    entity_r1varsetpoint = entity_registry.async_get(SENSOR_SETPOINT1)
     assert entity_r1varsetpoint
     assert entity_r1varsetpoint.unique_id == f"{entry.entry_id}-m000007-r1varsetpoint"
     assert entity_r1varsetpoint.original_name == "Sensor_Setpoint1"
 
-    entity_led6 = entity_registry.async_get("sensor.sensor_led6")
+    entity_led6 = entity_registry.async_get(SENSOR_LED6)
     assert entity_led6
     assert entity_led6.unique_id == f"{entry.entry_id}-m000007-led6"
     assert entity_led6.original_name == "Sensor_Led6"
 
-    entity_logicop1 = entity_registry.async_get("sensor.sensor_logicop1")
+    entity_logicop1 = entity_registry.async_get(SENSOR_LOGICOP1)
     assert entity_logicop1
     assert entity_logicop1.unique_id == f"{entry.entry_id}-m000007-logicop1"
     assert entity_logicop1.original_name == "Sensor_LogicOp1"
@@ -77,7 +82,7 @@ async def test_pushed_variable_status_change(hass, entry, lcn_connection):
     await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.sensor_var1")
+    state = hass.states.get(SENSOR_VAR1)
     assert state is not None
     assert float(state.state) == 42.0
 
@@ -86,7 +91,7 @@ async def test_pushed_variable_status_change(hass, entry, lcn_connection):
     await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.sensor_setpoint1")
+    state = hass.states.get(SENSOR_SETPOINT1)
     assert state is not None
     assert float(state.state) == 42.0
 
@@ -107,11 +112,11 @@ async def test_pushed_ledlogicop_status_change(hass, entry, lcn_connection):
     await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.sensor_led6")
+    state = hass.states.get(SENSOR_LED6)
     assert state is not None
     assert state.state == "on"
 
-    state = hass.states.get("sensor.sensor_logicop1")
+    state = hass.states.get(SENSOR_LOGICOP1)
     assert state is not None
     assert state.state == "all"
 
@@ -119,7 +124,7 @@ async def test_pushed_ledlogicop_status_change(hass, entry, lcn_connection):
 async def test_unload_config_entry(hass, entry, lcn_connection):
     """Test the sensor is removed when the config entry is unloaded."""
     await hass.config_entries.async_unload(entry.entry_id)
-    assert hass.states.get("sensor.sensor_var1").state == STATE_UNAVAILABLE
-    assert hass.states.get("sensor.sensor_setpoint1").state == STATE_UNAVAILABLE
-    assert hass.states.get("sensor.sensor_led6").state == STATE_UNAVAILABLE
-    assert hass.states.get("sensor.sensor_logicop1").state == STATE_UNAVAILABLE
+    assert hass.states.get(SENSOR_VAR1).state == STATE_UNAVAILABLE
+    assert hass.states.get(SENSOR_SETPOINT1).state == STATE_UNAVAILABLE
+    assert hass.states.get(SENSOR_LED6).state == STATE_UNAVAILABLE
+    assert hass.states.get(SENSOR_LOGICOP1).state == STATE_UNAVAILABLE

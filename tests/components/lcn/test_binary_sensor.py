@@ -6,13 +6,17 @@ from pypck.lcn_defs import Var, VarValue
 from homeassistant.components.lcn.helpers import get_device_connection
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 
+BINARY_SENSOR_LOCKREGULATOR1 = "binary_sensor.sensor_lockregulator1"
+BINARY_SENSOR_SENSOR1 = "binary_sensor.binary_sensor1"
+BINARY_SENSOR_KEYLOCK = "binary_sensor.sensor_keylock"
+
 
 async def test_setup_lcn_binary_sensor(hass, lcn_connection):
     """Test the setup of binary sensor."""
     for entity_id in (
-        "binary_sensor.sensor_lockregulator1",
-        "binary_sensor.binary_sensor1",
-        "binary_sensor.sensor_keylock",
+        BINARY_SENSOR_LOCKREGULATOR1,
+        BINARY_SENSOR_SENSOR1,
+        BINARY_SENSOR_KEYLOCK,
     ):
         state = hass.states.get(entity_id)
         assert state is not None
@@ -21,13 +25,13 @@ async def test_setup_lcn_binary_sensor(hass, lcn_connection):
 
 async def test_entity_state(hass, lcn_connection):
     """Test state of entity."""
-    state = hass.states.get("binary_sensor.sensor_lockregulator1")
+    state = hass.states.get(BINARY_SENSOR_LOCKREGULATOR1)
     assert state
 
-    state = hass.states.get("binary_sensor.binary_sensor1")
+    state = hass.states.get(BINARY_SENSOR_SENSOR1)
     assert state
 
-    state = hass.states.get("binary_sensor.sensor_keylock")
+    state = hass.states.get(BINARY_SENSOR_KEYLOCK)
     assert state
 
 
@@ -35,17 +39,17 @@ async def test_entity_attributes(hass, entry, lcn_connection):
     """Test the attributes of an entity."""
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
-    entity_setpoint1 = entity_registry.async_get("binary_sensor.sensor_lockregulator1")
+    entity_setpoint1 = entity_registry.async_get(BINARY_SENSOR_LOCKREGULATOR1)
     assert entity_setpoint1
     assert entity_setpoint1.unique_id == f"{entry.entry_id}-m000007-r1varsetpoint"
     assert entity_setpoint1.original_name == "Sensor_LockRegulator1"
 
-    entity_binsensor1 = entity_registry.async_get("binary_sensor.binary_sensor1")
+    entity_binsensor1 = entity_registry.async_get(BINARY_SENSOR_SENSOR1)
     assert entity_binsensor1
     assert entity_binsensor1.unique_id == f"{entry.entry_id}-m000007-binsensor1"
     assert entity_binsensor1.original_name == "Binary_Sensor1"
 
-    entity_keylock = entity_registry.async_get("binary_sensor.sensor_keylock")
+    entity_keylock = entity_registry.async_get(BINARY_SENSOR_KEYLOCK)
     assert entity_keylock
     assert entity_keylock.unique_id == f"{entry.entry_id}-m000007-a5"
     assert entity_keylock.original_name == "Sensor_KeyLock"
@@ -61,7 +65,7 @@ async def test_pushed_lock_setpoint_status_change(hass, entry, lcn_connection):
     await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.sensor_lockregulator1")
+    state = hass.states.get(BINARY_SENSOR_LOCKREGULATOR1)
     assert state is not None
     assert state.state == STATE_ON
 
@@ -70,7 +74,7 @@ async def test_pushed_lock_setpoint_status_change(hass, entry, lcn_connection):
     await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.sensor_lockregulator1")
+    state = hass.states.get(BINARY_SENSOR_LOCKREGULATOR1)
     assert state is not None
     assert state.state == STATE_OFF
 
@@ -86,7 +90,7 @@ async def test_pushed_binsensor_status_change(hass, entry, lcn_connection):
     await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.binary_sensor1")
+    state = hass.states.get(BINARY_SENSOR_SENSOR1)
     assert state is not None
     assert state.state == STATE_OFF
 
@@ -96,7 +100,7 @@ async def test_pushed_binsensor_status_change(hass, entry, lcn_connection):
     await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.binary_sensor1")
+    state = hass.states.get(BINARY_SENSOR_SENSOR1)
     assert state is not None
     assert state.state == STATE_ON
 
@@ -112,7 +116,7 @@ async def test_pushed_keylock_status_change(hass, entry, lcn_connection):
     await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.sensor_keylock")
+    state = hass.states.get(BINARY_SENSOR_KEYLOCK)
     assert state is not None
     assert state.state == STATE_OFF
 
@@ -122,7 +126,7 @@ async def test_pushed_keylock_status_change(hass, entry, lcn_connection):
     await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.sensor_keylock")
+    state = hass.states.get(BINARY_SENSOR_KEYLOCK)
     assert state is not None
     assert state.state == STATE_ON
 
@@ -130,9 +134,6 @@ async def test_pushed_keylock_status_change(hass, entry, lcn_connection):
 async def test_unload_config_entry(hass, entry, lcn_connection):
     """Test the binary sensor is removed when the config entry is unloaded."""
     await hass.config_entries.async_unload(entry.entry_id)
-    assert (
-        hass.states.get("binary_sensor.sensor_lockregulator1").state
-        == STATE_UNAVAILABLE
-    )
-    assert hass.states.get("binary_sensor.binary_sensor1").state == STATE_UNAVAILABLE
-    assert hass.states.get("binary_sensor.sensor_keylock").state == STATE_UNAVAILABLE
+    assert hass.states.get(BINARY_SENSOR_LOCKREGULATOR1).state == STATE_UNAVAILABLE
+    assert hass.states.get(BINARY_SENSOR_SENSOR1).state == STATE_UNAVAILABLE
+    assert hass.states.get(BINARY_SENSOR_KEYLOCK).state == STATE_UNAVAILABLE
