@@ -249,7 +249,6 @@ MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("disabled"): str,
         vol.Optional("iot_class"): vol.In(SUPPORTED_IOT_CLASSES),
         vol.Optional("supported_brands"): vol.Schema({str: str}),
-        vol.Optional("helper"): bool,
     }
 )
 

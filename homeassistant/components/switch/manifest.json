@@ -6,6 +6,5 @@
     "@home-assistant/core"
   ],
   "quality_scale": "internal",
-  "helper": true,
   "config_flow": true
 }
