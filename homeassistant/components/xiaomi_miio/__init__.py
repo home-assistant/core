@@ -14,7 +14,6 @@ from miio import (
     AirHumidifierMiot,
     AirHumidifierMjjsq,
     AirPurifier,
-    AirPurifierMB4,
     AirPurifierMiot,
     CleaningDetails,
     CleaningSummary,
@@ -23,10 +22,8 @@ from miio import (
     DNDStatus,
     Fan,
     Fan1C,
+    FanMiot,
     FanP5,
-    FanP9,
-    FanP10,
-    FanP11,
     FanZA5,
     RoborockVacuum,
     Timer,
@@ -52,7 +49,6 @@ from .const import (
     KEY_DEVICE,
     MODEL_AIRFRESH_A1,
     MODEL_AIRFRESH_T2017,
-    MODEL_AIRPURIFIER_3C,
     MODEL_FAN_1C,
     MODEL_FAN_P5,
     MODEL_FAN_P9,
@@ -112,10 +108,10 @@ AIR_MONITOR_PLATFORMS = [Platform.AIR_QUALITY, Platform.SENSOR]
 
 MODEL_TO_CLASS_MAP = {
     MODEL_FAN_1C: Fan1C,
-    MODEL_FAN_P10: FanP10,
-    MODEL_FAN_P11: FanP11,
+    MODEL_FAN_P9: FanMiot,
+    MODEL_FAN_P10: FanMiot,
+    MODEL_FAN_P11: FanMiot,
     MODEL_FAN_P5: FanP5,
-    MODEL_FAN_P9: FanP9,
     MODEL_FAN_ZA5: FanZA5,
 }
 
@@ -315,8 +311,6 @@ async def async_create_miio_device_and_coordinator(
         device = AirHumidifier(host, token, model=model)
         migrate = True
     # Airpurifiers and Airfresh
-    elif model == MODEL_AIRPURIFIER_3C:
-        device = AirPurifierMB4(host, token)
     elif model in MODELS_PURIFIER_MIOT:
         device = AirPurifierMiot(host, token)
     elif model.startswith("zhimi.airpurifier."):
