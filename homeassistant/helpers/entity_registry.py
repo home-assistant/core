@@ -923,6 +923,7 @@ async def async_migrate_entries(
             ent_reg.async_update_entity(entry.entity_id, **updates)
 
 
+@callback
 def async_validate_entity_id(registry: EntityRegistry, entity_id_or_uuid: str) -> str:
     """Validate and resolve an entity id or UUID to an entity id.
 
