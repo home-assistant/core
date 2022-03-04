@@ -1313,7 +1313,7 @@ rflink==0.0.62
 ring_doorbell==0.7.2
 
 # homeassistant.components.roku
-rokuecp==0.14.1
+rokuecp==0.15.0
 
 # homeassistant.components.roomba
 roombapy==1.6.5
