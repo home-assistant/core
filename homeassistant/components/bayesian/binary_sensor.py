@@ -226,10 +226,7 @@ class BayesianBinarySensor(BinarySensorEntity):
                 observation = result_as_boolean(result)
 
             for obs in self.observations_by_template[template]:
-                if observation is not None:
-                    obs_entry = {"entity_id": entity, "observation": observation, **obs}
-                else:
-                    obs_entry = None
+                obs_entry = {"entity_id": entity, "observation": observation, **obs}
                 self.current_observations[obs["id"]] = obs_entry
 
             if event:
@@ -271,15 +268,11 @@ class BayesianBinarySensor(BinarySensorEntity):
 
             observation = self.observation_handlers[platform](entity_obs)
 
-            if observation is not None:
-                obs_entry = {
-                    "entity_id": entity,
-                    "observation": observation,
-                    **entity_obs,
-                }
-            else:
-                obs_entry = None
-
+            obs_entry = {
+                "entity_id": entity,
+                "observation": observation,
+                **entity_obs,
+            }
             local_observations[entity_obs["id"]] = obs_entry
 
         return local_observations
@@ -301,8 +294,16 @@ class BayesianBinarySensor(BinarySensorEntity):
                         1 - obs["prob_given_true"],
                         1 - obs.get("prob_given_false", 1 - obs["prob_given_true"]),
                     )
-                else:  # observation is None
-                    continue
+                elif obs["observation"] is None:  # observation is None
+                    if obs["entity_id"] is not None:
+                        _LOGGER.info(
+                            "Observation for entity '%s' returned None, it will not be used for Bayesian updating",
+                            obs["entity_id"],
+                        )
+                    else:
+                        _LOGGER.info(
+                            "Observation for template entity returned None rather than a valid boolean, it will not be used for Bayesian updating",
+                        )
 
         return prior
 
