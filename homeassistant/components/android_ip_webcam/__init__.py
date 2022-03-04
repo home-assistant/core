@@ -241,10 +241,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         mjpeg_camera = {
             CONF_MJPEG_URL: cam.mjpeg_url,
             CONF_STILL_IMAGE_URL: cam.image_url,
-            CONF_NAME: name,
         }
         if username and password:
             mjpeg_camera.update({CONF_USERNAME: username, CONF_PASSWORD: password})
+
+        # Remove incorrect config entry setup via mjpeg platform discovery.
+        mjpeg_config_entry = next(
+            (
+                config_entry
+                for config_entry in hass.config_entries.async_entries("mjpeg")
+                if all(
+                    config_entry.options.get(key) == val
+                    for key, val in mjpeg_camera.items()
+                )
+            ),
+            None,
+        )
+        if mjpeg_config_entry:
+            await hass.config_entries.async_remove(mjpeg_config_entry.entry_id)
+
+        mjpeg_camera[CONF_NAME] = name
 
         hass.async_create_task(
             discovery.async_load_platform(
