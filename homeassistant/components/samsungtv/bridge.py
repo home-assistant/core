@@ -248,17 +248,18 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
 
     async def async_send_key(self, key: str, key_type: str | None = None) -> None:
         """Send the key using legacy protocol."""
-        await self.hass.async_add_executor_job(self._send_key, key)
+        await self.hass.async_add_executor_job(self._send_keys, [key])
 
-    def _send_key(self, key: str) -> None:
-        """Send the key using legacy protocol."""
+    def _send_keys(self, keys: list[str]) -> None:
+        """Send the keys using legacy protocol."""
         try:
             # recreate connection if connection was dead
             retry_count = 1
             for _ in range(retry_count + 1):
                 try:
                     if remote := self._get_remote():
-                        remote.control(key)
+                        for key in keys:
+                            remote.control(key)
                     break
                 except (ConnectionClosed, BrokenPipeError):
                     # BrokenPipe can occur when the commands is sent to fast
