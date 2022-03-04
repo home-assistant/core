@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 from copy import deepcopy
 import random
 import re
 import string
-from typing import Any, Final
+from typing import Any
 
 import voluptuous as vol
 
@@ -27,6 +28,7 @@ from homeassistant.const import (
     CONF_PORT,
 )
 from homeassistant.core import HomeAssistant, callback, split_entity_id
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
@@ -119,7 +121,7 @@ DEFAULT_DOMAINS = [
     "water_heater",
 ]
 
-_EMPTY_ENTITY_FILTER: Final = {
+_EMPTY_ENTITY_FILTER: dict[str, list[str]] = {
     CONF_INCLUDE_DOMAINS: [],
     CONF_EXCLUDE_DOMAINS: [],
     CONF_INCLUDE_ENTITIES: [],
@@ -151,9 +153,9 @@ def _async_build_entites_filter(
     return entity_filter
 
 
-def _async_cameras_from_entities(entities: list[str]) -> set[str]:
+def _async_cameras_from_entities(entities: list[str]) -> dict[str, str]:
     return {
-        entity_id
+        entity_id: entity_id
         for entity_id in entities
         if entity_id.startswith(CAMERA_ENTITY_PREFIX)
     }
@@ -181,9 +183,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize config flow."""
-        self.hk_data = {}
+        self.hk_data: dict[str, Any] = {}
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Choose specific domains in bridge mode."""
         if user_input is not None:
             entity_filter = deepcopy(_EMPTY_ENTITY_FILTER)
@@ -205,7 +209,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_pairing(self, user_input=None):
+    async def async_step_pairing(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Pairing instructions."""
         if user_input is not None:
             port = async_find_next_available_port(self.hass, DEFAULT_CONFIG_FLOW_PORT)
@@ -227,7 +233,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={CONF_NAME: self.hk_data[CONF_NAME]},
         )
 
-    async def _async_add_entries_for_accessory_mode_entities(self, last_assigned_port):
+    async def _async_add_entries_for_accessory_mode_entities(
+        self, last_assigned_port: int
+    ) -> None:
         """Generate new flows for entities that need their own instances."""
         accessory_mode_entity_ids = _async_get_entity_ids_for_accessory_mode(
             self.hass, self.hk_data[CONF_FILTER][CONF_INCLUDE_DOMAINS]
@@ -249,12 +257,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             )
 
-    async def async_step_accessory(self, accessory_input):
+    async def async_step_accessory(self, accessory_input: dict) -> FlowResult:
         """Handle creation a single accessory in accessory mode."""
         entity_id = accessory_input[CONF_ENTITY_ID]
         port = accessory_input[CONF_PORT]
 
         state = self.hass.states.get(entity_id)
+        assert state is not None
         name = state.attributes.get(ATTR_FRIENDLY_NAME) or state.entity_id
         entity_filter = _EMPTY_ENTITY_FILTER.copy()
         entity_filter[CONF_INCLUDE_ENTITIES] = [entity_id]
@@ -274,7 +283,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=f"{name}:{entry_data[CONF_PORT]}", data=entry_data
         )
 
-    async def async_step_import(self, user_input=None):
+    async def async_step_import(self, user_input: dict) -> FlowResult:
         """Handle import from yaml."""
         if not self._async_is_unique_name_port(user_input):
             return self.async_abort(reason="port_name_in_use")
@@ -283,7 +292,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _async_current_names(self):
+    def _async_current_names(self) -> set[str]:
         """Return a set of bridge names."""
         return {
             entry.data[CONF_NAME]
@@ -292,7 +301,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
     @callback
-    def _async_available_name(self, requested_name):
+    def _async_available_name(self, requested_name: str) -> str:
         """Return an available for the bridge."""
         current_names = self._async_current_names()
         valid_mdns_name = re.sub("[^A-Za-z0-9 ]+", " ", requested_name)
@@ -301,7 +310,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return valid_mdns_name
 
         acceptable_mdns_chars = string.ascii_uppercase + string.digits
-        suggested_name = None
+        suggested_name: str | None = None
         while not suggested_name or suggested_name in current_names:
             trailer = "".join(random.choices(acceptable_mdns_chars, k=2))
             suggested_name = f"{valid_mdns_name} {trailer}"
@@ -309,7 +318,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return suggested_name
 
     @callback
-    def _async_is_unique_name_port(self, user_input):
+    def _async_is_unique_name_port(self, user_input: dict[str, str]) -> bool:
         """Determine is a name or port is already used."""
         name = user_input[CONF_NAME]
         port = user_input[CONF_PORT]
@@ -320,7 +329,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
@@ -331,10 +342,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
-        self.hk_options = {}
-        self.included_cameras = set()
+        self.hk_options: dict[str, Any] = {}
+        self.included_cameras: dict[str, str] = {}
 
-    async def async_step_yaml(self, user_input=None):
+    async def async_step_yaml(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """No options for yaml managed entries."""
         if user_input is not None:
             # Apparently not possible to abort an options flow
@@ -343,7 +356,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(step_id="yaml")
 
-    async def async_step_advanced(self, user_input=None):
+    async def async_step_advanced(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Choose advanced options."""
         if (
             not self.show_advanced_options
@@ -352,16 +367,15 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         ):
             if user_input:
                 self.hk_options.update(user_input)
+                if (
+                    self.show_advanced_options
+                    and self.hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_BRIDGE
+                ):
+                    self.hk_options[CONF_DEVICES] = user_input[CONF_DEVICES]
 
             for key in (CONF_DOMAINS, CONF_ENTITIES):
                 if key in self.hk_options:
                     del self.hk_options[key]
-
-            if (
-                self.show_advanced_options
-                and self.hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_BRIDGE
-            ):
-                self.hk_options[CONF_DEVICES] = user_input[CONF_DEVICES]
 
             if CONF_INCLUDE_EXCLUDE_MODE in self.hk_options:
                 del self.hk_options[CONF_INCLUDE_EXCLUDE_MODE]
@@ -386,7 +400,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             ),
         )
 
-    async def async_step_cameras(self, user_input=None):
+    async def async_step_cameras(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Choose camera config."""
         if user_input is not None:
             entity_config = self.hk_options[CONF_ENTITY_CONFIG]
@@ -433,7 +449,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
         return self.async_show_form(step_id="cameras", data_schema=data_schema)
 
-    async def async_step_accessory(self, user_input=None):
+    async def async_step_accessory(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Choose entity for the accessory."""
         domains = self.hk_options[CONF_DOMAINS]
 
@@ -470,7 +488,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             ),
         )
 
-    async def async_step_include(self, user_input=None):
+    async def async_step_include(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Choose entities to include from the domain on the bridge."""
         domains = self.hk_options[CONF_DOMAINS]
         if user_input is not None:
@@ -507,7 +527,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             ),
         )
 
-    async def async_step_exclude(self, user_input=None):
+    async def async_step_exclude(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Choose entities to exclude from the domain on the bridge."""
         domains = self.hk_options[CONF_DOMAINS]
 
@@ -516,13 +538,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
             entity_filter[CONF_INCLUDE_DOMAINS] = domains
             entity_filter[CONF_EXCLUDE_ENTITIES] = entities
-            self.included_cameras = set()
+            self.included_cameras = {}
             if CAMERA_DOMAIN in entity_filter[CONF_INCLUDE_DOMAINS]:
                 camera_entities = _async_get_matching_entities(
                     self.hass, [CAMERA_DOMAIN]
                 )
                 self.included_cameras = {
-                    entity_id
+                    entity_id: entity_id
                     for entity_id in camera_entities
                     if entity_id not in entities
                 }
@@ -568,7 +590,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             ),
         )
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle options flow."""
         if self.config_entry.source == SOURCE_IMPORT:
             return await self.async_step_yaml(user_input)
@@ -612,16 +636,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-async def _async_get_supported_devices(hass):
+async def _async_get_supported_devices(hass: HomeAssistant) -> dict[str, str]:
     """Return all supported devices."""
     results = await device_automation.async_get_device_automations(
         hass, device_automation.DeviceAutomationType.TRIGGER
     )
     dev_reg = device_registry.async_get(hass)
-    unsorted = {
-        device_id: dev_reg.async_get(device_id).name or device_id
-        for device_id in results
-    }
+    unsorted: dict[str, str] = {}
+    for device_id in results:
+        entry = dev_reg.async_get(device_id)
+        unsorted[device_id] = entry.name or device_id if entry else device_id
     return dict(sorted(unsorted.items(), key=lambda item: item[1]))
 
 
@@ -638,13 +662,15 @@ def _async_get_matching_entities(
     }
 
 
-def _domains_set_from_entities(entity_ids):
+def _domains_set_from_entities(entity_ids: Iterable[str]) -> set[str]:
     """Build a set of domains for the given entity ids."""
     return {split_entity_id(entity_id)[0] for entity_id in entity_ids}
 
 
 @callback
-def _async_get_entity_ids_for_accessory_mode(hass, include_domains):
+def _async_get_entity_ids_for_accessory_mode(
+    hass: HomeAssistant, include_domains: Iterable[str]
+) -> list[str]:
     """Build a list of entities that should be paired in accessory mode."""
     accessory_mode_domains = {
         domain for domain in include_domains if domain in DOMAINS_NEED_ACCESSORY_MODE
@@ -661,7 +687,7 @@ def _async_get_entity_ids_for_accessory_mode(hass, include_domains):
 
 
 @callback
-def _async_entity_ids_with_accessory_mode(hass):
+def _async_entity_ids_with_accessory_mode(hass: HomeAssistant) -> set[str]:
     """Return a set of entity ids that have config entries in accessory mode."""
 
     entity_ids = set()
