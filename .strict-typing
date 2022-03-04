@@ -205,7 +205,6 @@ homeassistant.components.tts.*
 homeassistant.components.twentemilieu.*
 homeassistant.components.unifiprotect.*
 homeassistant.components.upcloud.*
-homeassistant.components.update.*
 homeassistant.components.uptime.*
 homeassistant.components.uptimerobot.*
 homeassistant.components.usb.*
