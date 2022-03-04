@@ -251,7 +251,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         await self.hass.async_add_executor_job(self._send_key, key)
 
     def _send_key(self, key: str) -> None:
-        """Send the keys using legacy protocol."""
+        """Send the key using legacy protocol."""
         try:
             # recreate connection if connection was dead
             retry_count = 1
