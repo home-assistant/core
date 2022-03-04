@@ -274,7 +274,7 @@ class HomeAccessory(Accessory):
         if self.config.get(ATTR_SW_VERSION) is not None:
             sw_version = format_version(self.config[ATTR_SW_VERSION])
         if sw_version is None:
-            sw_version = __version__
+            sw_version = format_version(__version__)
         hw_version = None
         if self.config.get(ATTR_HW_VERSION) is not None:
             hw_version = format_version(self.config[ATTR_HW_VERSION])
@@ -289,7 +289,9 @@ class HomeAccessory(Accessory):
             serv_info = self.get_service(SERV_ACCESSORY_INFO)
             char = self.driver.loader.get_char(CHAR_HARDWARE_REVISION)
             serv_info.add_characteristic(char)
-            serv_info.configure_char(CHAR_HARDWARE_REVISION, value=hw_version)
+            serv_info.configure_char(
+                CHAR_HARDWARE_REVISION, value=hw_version[:MAX_VERSION_LENGTH]
+            )
             self.iid_manager.assign(char)
             char.broker = self
 
@@ -532,7 +534,7 @@ class HomeBridge(Bridge):
         """Initialize a Bridge object."""
         super().__init__(driver, name)
         self.set_info_service(
-            firmware_revision=__version__,
+            firmware_revision=format_version(__version__),
             manufacturer=MANUFACTURER,
             model=BRIDGE_MODEL,
             serial_number=BRIDGE_SERIAL_NUMBER,
