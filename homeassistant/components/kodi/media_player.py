@@ -278,7 +278,10 @@ def cmd(func):
         """Wrap all command methods."""
         try:
             await func(obj, *args, **kwargs)
-        except (jsonrpc_base.jsonrpc.TransportError,jsonrpc_base.jsonrpc.ProtocolError) as exc:
+        except (
+            jsonrpc_base.jsonrpc.TransportError,
+            jsonrpc_base.jsonrpc.ProtocolError,
+        ) as exc:
             # If Kodi is off, we expect calls to fail.
             if obj.state == STATE_OFF:
                 log_function = _LOGGER.debug
