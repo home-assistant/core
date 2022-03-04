@@ -11,6 +11,7 @@ from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.async_rest import SamsungTVAsyncRest
+from samsungtvws.command import SamsungTVCommand
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
 from websockets.exceptions import WebSocketException
@@ -403,20 +404,23 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     async def async_send_key(self, key: str, key_type: str | None = None) -> None:
         """Send the key using websocket protocol."""
-        if key == "KEY_POWEROFF":
-            key = "KEY_POWER"
+        if key_type == "run_app":
+            await self._async_send_commands([ChannelEmitCommand.launch_app(key)])
+        else:
+            if key == "KEY_POWEROFF":
+                key = "KEY_POWER"
+            await self._async_send_commands([SendRemoteKey.click(key)])
+
+    async def _async_send_commands(self, commands: list[SamsungTVCommand]) -> None:
+        """Send the commands using websocket protocol."""
         try:
             # recreate connection if connection was dead
             retry_count = 1
             for _ in range(retry_count + 1):
                 try:
                     if remote := await self._async_get_remote():
-                        if key_type == "run_app":
-                            await remote.send_command(
-                                ChannelEmitCommand.launch_app(key)
-                            )
-                        else:
-                            await remote.send_command(SendRemoteKey.click(key))
+                        for command in commands:
+                            await remote.send_command(command)
                     break
                 except (
                     BrokenPipeError,
