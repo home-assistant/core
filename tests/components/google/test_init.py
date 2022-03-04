@@ -16,7 +16,6 @@ import pytest
 from homeassistant.components.google import DOMAIN, SERVICE_ADD_EVENT
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant, State
-from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from .conftest import (
@@ -529,7 +528,7 @@ async def test_add_event_date(
     )
 
 
-async def test_add_event_date(
+async def test_add_event_date_time(
     hass: HomeAssistant,
     mock_token_read: None,
     component_setup: ComponentSetup,
@@ -537,7 +536,7 @@ async def test_add_event_date(
     test_api_calendar: dict[str, Any],
     mock_insert_event: Mock,
 ) -> None:
-    """Test service call that adds an event with various time ranges."""
+    """Test service call that adds an event with a date time range."""
 
     assert await component_setup()
 
