@@ -121,7 +121,7 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
         )
 
     @property
-    def supported_remote_keys(self) -> set[str]:
+    def supported_remote_keys(self) -> set[int]:
         """Remote key buttons that are supported."""
         if not self.service.has(CharacteristicsTypes.REMOTE_KEY):
             return set()

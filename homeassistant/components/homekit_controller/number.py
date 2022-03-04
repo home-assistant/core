@@ -9,6 +9,11 @@ from __future__ import annotations
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number.const import (
+    DEFAULT_MAX_VALUE,
+    DEFAULT_MIN_VALUE,
+    DEFAULT_STEP,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
@@ -41,42 +46,6 @@ NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
         key=CharacteristicsTypes.VENDOR_AQARA_E1_GATEWAY_VOLUME,
         name="Volume",
         icon="mdi:volume-high",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_COOL: NumberEntityDescription(
-        key=CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_COOL,
-        name="Home Cool Target",
-        icon="mdi:thermometer-minus",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_HEAT: NumberEntityDescription(
-        key=CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_HEAT,
-        name="Home Heat Target",
-        icon="mdi:thermometer-plus",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_COOL: NumberEntityDescription(
-        key=CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_COOL,
-        name="Sleep Cool Target",
-        icon="mdi:thermometer-minus",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_HEAT: NumberEntityDescription(
-        key=CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_HEAT,
-        name="Sleep Heat Target",
-        icon="mdi:thermometer-plus",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_COOL: NumberEntityDescription(
-        key=CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_COOL,
-        name="Away Cool Target",
-        icon="mdi:thermometer-minus",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_HEAT: NumberEntityDescription(
-        key=CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_HEAT,
-        name="Away Heat Target",
-        icon="mdi:thermometer-plus",
         entity_category=EntityCategory.CONFIG,
     ),
 }
@@ -137,17 +106,17 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
     @property
     def min_value(self) -> float:
         """Return the minimum value."""
-        return self._char.minValue
+        return self._char.minValue or DEFAULT_MIN_VALUE
 
     @property
     def max_value(self) -> float:
         """Return the maximum value."""
-        return self._char.maxValue
+        return self._char.maxValue or DEFAULT_MAX_VALUE
 
     @property
     def step(self) -> float:
         """Return the increment/decrement step."""
-        return self._char.minStep
+        return self._char.minStep or DEFAULT_STEP
 
     @property
     def value(self) -> float:
@@ -181,17 +150,17 @@ class HomeKitEcobeeFanModeNumber(CharacteristicEntity, NumberEntity):
     @property
     def min_value(self) -> float:
         """Return the minimum value."""
-        return self._char.minValue
+        return self._char.minValue or DEFAULT_MIN_VALUE
 
     @property
     def max_value(self) -> float:
         """Return the maximum value."""
-        return self._char.maxValue
+        return self._char.maxValue or DEFAULT_MAX_VALUE
 
     @property
     def step(self) -> float:
         """Return the increment/decrement step."""
-        return self._char.minStep
+        return self._char.minStep or DEFAULT_STEP
 
     @property
     def value(self) -> float:

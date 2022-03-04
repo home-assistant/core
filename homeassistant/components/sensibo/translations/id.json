@@ -4,7 +4,10 @@
             "already_configured": "Akun sudah dikonfigurasi"
         },
         "error": {
-            "cannot_connect": "Gagal terhubung"
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "no_devices": "Tidak ada perangkat yang ditemukan",
+            "no_username": "Tidak bisa mendapatkan nama pengguna"
         },
         "step": {
             "user": {

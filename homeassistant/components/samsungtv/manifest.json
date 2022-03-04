@@ -5,7 +5,7 @@
   "requirements": [
     "getmac==0.8.2",
     "samsungctl[websocket]==0.7.1",
-    "samsungtvws==1.6.0",
+    "samsungtvws[async]==2.1.0",
     "wakeonlan==2.0.1"
   ],
   "ssdp": [
@@ -17,17 +17,20 @@
     {"type":"_airplay._tcp.local.","properties":{"manufacturer":"samsung*"}}
   ],
   "dhcp": [
+    {"registered_devices": true},
     {
       "hostname": "tizen*"
     },
     {"macaddress": "8CC8CD*"},
     {"macaddress": "606BBD*"},
     {"macaddress": "F47B5E*"},
-    {"macaddress": "4844F7*"}
+    {"macaddress": "4844F7*"},
+    {"macaddress": "8CEA48*"}
   ],
   "codeowners": [
     "@escoand",
-    "@chemelli74"
+    "@chemelli74",
+    "@epenet"
   ],
   "config_flow": true,
   "iot_class": "local_polling",

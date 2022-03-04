@@ -70,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await openuv.async_update()
-    except OpenUvError as err:
+    except HomeAssistantError as err:
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 

@@ -79,9 +79,7 @@ async def async_attach_trigger(
     automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE | None:
     """Attach a trigger."""
-    trigger_type = config[CONF_TYPE]
-
-    if trigger_type == TURN_ON_PLATFORM_TYPE:
+    if (trigger_type := config[CONF_TYPE]) == TURN_ON_PLATFORM_TYPE:
         trigger_config = {
             CONF_PLATFORM: trigger_type,
             CONF_DEVICE_ID: config[CONF_DEVICE_ID],

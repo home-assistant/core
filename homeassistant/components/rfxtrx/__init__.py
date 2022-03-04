@@ -5,15 +5,13 @@ import asyncio
 import binascii
 from collections.abc import Callable
 import copy
-import functools
 import logging
-from typing import NamedTuple
+from typing import NamedTuple, cast
 
 import RFXtrx as rfxtrxmod
 import async_timeout
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -25,9 +23,13 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers.device_registry import (
+    EVENT_DEVICE_REGISTRY_UPDATED,
+    DeviceEntry,
+    DeviceRegistry,
+)
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -37,7 +39,7 @@ from .const import (
     COMMAND_GROUP_LIST,
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
-    CONF_REMOVE_DEVICE,
+    CONF_PROTOCOLS,
     DATA_RFXOBJECT,
     DEVICE_PACKET_TYPE_LIGHTING4,
     EVENT_RFXTRX_EVENT,
@@ -47,6 +49,7 @@ from .const import (
 DOMAIN = "rfxtrx"
 
 DEFAULT_SIGNAL_REPETITIONS = 1
+DEFAULT_OFF_DELAY = 2.0
 
 SIGNAL_EVENT = f"{DOMAIN}_event"
 
@@ -79,6 +82,7 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.BINARY_SENSOR,
     Platform.COVER,
+    Platform.SIREN,
 ]
 
 
@@ -117,15 +121,28 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 def _create_rfx(config):
     """Construct a rfx object based on config."""
+
+    modes = config.get(CONF_PROTOCOLS)
+
+    if modes:
+        _LOGGER.debug("Using modes: %s", ",".join(modes))
+    else:
+        _LOGGER.debug("No modes defined, using device configuration")
+
     if config[CONF_PORT] is not None:
         # If port is set then we create a TCP connection
         rfx = rfxtrxmod.Connect(
             (config[CONF_HOST], config[CONF_PORT]),
             None,
             transport_protocol=rfxtrxmod.PyNetworkTransport,
+            modes=modes,
         )
     else:
-        rfx = rfxtrxmod.Connect(config[CONF_DEVICE], None)
+        rfx = rfxtrxmod.Connect(
+            config[CONF_DEVICE],
+            None,
+            modes=modes,
+        )
 
     return rfx
 
@@ -143,7 +160,7 @@ def _get_device_lookup(devices):
     return lookup
 
 
-async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
+async def async_setup_internal(hass, entry: ConfigEntry):
     """Set up the RFXtrx component."""
     config = entry.data
 
@@ -224,6 +241,34 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
         hass.config_entries.async_update_entry(entry=entry, data=data)
         devices[device_id] = config
 
+    @callback
+    def _remove_device(device_id: DeviceTuple):
+        data = {
+            **entry.data,
+            CONF_DEVICES: {
+                packet_id: entity_info
+                for packet_id, entity_info in entry.data[CONF_DEVICES].items()
+                if tuple(entity_info.get(CONF_DEVICE_ID)) != device_id
+            },
+        }
+        hass.config_entries.async_update_entry(entry=entry, data=data)
+        devices.pop(device_id)
+
+    @callback
+    def _updated_device(event: Event):
+        if event.data["action"] != "remove":
+            return
+        device_entry = device_registry.deleted_devices[event.data["device_id"]]
+        if entry.entry_id not in device_entry.config_entries:
+            return
+        device_id = get_device_tuple_from_identifiers(device_entry.identifiers)
+        if device_id:
+            _remove_device(device_id)
+
+    entry.async_on_unload(
+        hass.bus.async_listen(EVENT_DEVICE_REGISTRY_UPDATED, _updated_device)
+    )
+
     def _shutdown_rfxtrx(event):
         """Close connection with RFXtrx."""
         rfx_object.close_connection()
@@ -244,7 +289,7 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
 
 async def async_setup_platform_entry(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
     supported: Callable[[rfxtrxmod.RFXtrxEvent], bool],
     constructor: Callable[
@@ -388,6 +433,28 @@ def get_device_id(
     return DeviceTuple(f"{device.packettype:x}", f"{device.subtype:x}", id_string)
 
 
+def get_device_tuple_from_identifiers(
+    identifiers: set[tuple[str, str]]
+) -> DeviceTuple | None:
+    """Calculate the device tuple from a device entry."""
+    identifier = next((x for x in identifiers if x[0] == DOMAIN), None)
+    if not identifier:
+        return None
+    # work around legacy identifier, being a multi tuple value
+    identifier2 = cast(tuple[str, str, str, str], identifier)
+    return DeviceTuple(identifier2[1], identifier2[2], identifier2[3])
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove config entry from a device.
+
+    The actual cleanup is done in the device registry event
+    """
+    return True
+
+
 class RfxtrxEntity(RestoreEntity):
     """Represents a Rfxtrx device.
 
@@ -421,13 +488,6 @@ class RfxtrxEntity(RestoreEntity):
         self.async_on_remove(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
                 SIGNAL_EVENT, self._handle_event
-            )
-        )
-
-        self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                f"{DOMAIN}_{CONF_REMOVE_DEVICE}_{self._device_id}",
-                functools.partial(self.async_remove, force_remove=True),
             )
         )
 

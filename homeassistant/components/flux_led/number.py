@@ -50,7 +50,7 @@ async def async_setup_entry(
         | FluxMusicPixelsPerSegmentNumber
         | FluxMusicSegmentsNumber
     ] = []
-    name = entry.data[CONF_NAME]
+    name = entry.data.get(CONF_NAME, entry.title)
     base_unique_id = entry.unique_id or entry.entry_id
 
     if device.pixels_per_segment is not None:

@@ -30,14 +30,18 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
@@ -186,7 +190,7 @@ async def async_setup_platform(
     )
 
 
-class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
+class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
     """A virtual binary sensor that triggers from another sensor."""
 
     def __init__(
@@ -212,7 +216,14 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
         self._delay_off_raw = config.get(CONF_DELAY_OFF)
 
     async def async_added_to_hass(self):
-        """Register callbacks."""
+        """Restore state and register callbacks."""
+        if (
+            (self._delay_on_raw is not None or self._delay_off_raw is not None)
+            and (last_state := await self.async_get_last_state()) is not None
+            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+        ):
+            self._state = last_state.state == STATE_ON
+
         self.add_template_attribute("_state", self._template, None, self._update_state)
 
         if self._delay_on_raw is not None:
@@ -300,12 +311,12 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity):
                 self._to_render_simple.append(key)
                 self._parse_result.add(key)
 
-        self._delay_cancel = None
+        self._delay_cancel: CALLBACK_TYPE | None = None
         self._auto_off_cancel = None
-        self._state = None
+        self._state: bool | None = None
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return state of the sensor."""
         return self._state
 

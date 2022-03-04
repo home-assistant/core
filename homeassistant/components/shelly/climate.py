@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 import logging
-from types import MappingProxyType
 from typing import Any, Final, cast
 
 from aioshelly.block_device import Block
@@ -140,7 +140,7 @@ class BlockSleepingClimate(
         self.control_result: dict[str, Any] | None = None
         self.device_block: Block | None = device_block
         self.last_state: State | None = None
-        self.last_state_attributes: MappingProxyType[str, Any]
+        self.last_state_attributes: Mapping[str, Any]
         self._preset_modes: list[str] = []
 
         if self.block is not None and self.device_block is not None:

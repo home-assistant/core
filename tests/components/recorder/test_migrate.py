@@ -5,7 +5,7 @@ import importlib
 import sqlite3
 import sys
 import threading
-from unittest.mock import ANY, Mock, PropertyMock, call, patch
+from unittest.mock import Mock, PropertyMock, call, patch
 
 import pytest
 from sqlalchemy import create_engine, text
@@ -57,7 +57,7 @@ async def test_schema_update_calls(hass):
     assert recorder.util.async_migration_in_progress(hass) is False
     update.assert_has_calls(
         [
-            call(hass.data[DATA_INSTANCE], ANY, version + 1, 0)
+            call(hass.data[DATA_INSTANCE], version + 1, 0)
             for version in range(0, models.SCHEMA_VERSION)
         ]
     )
@@ -309,7 +309,7 @@ async def test_schema_migrate(hass, start_version):
 def test_invalid_update():
     """Test that an invalid new version raises an exception."""
     with pytest.raises(ValueError):
-        migration._apply_update(Mock(), Mock(), -1, 0)
+        migration._apply_update(Mock(), -1, 0)
 
 
 @pytest.mark.parametrize(
@@ -324,9 +324,13 @@ def test_invalid_update():
 def test_modify_column(engine_type, substr):
     """Test that modify column generates the expected query."""
     connection = Mock()
+    session = Mock()
+    session.connection = Mock(return_value=connection)
+    instance = Mock()
+    instance.get_session = Mock(return_value=session)
     engine = Mock()
     engine.dialect.name = engine_type
-    migration._modify_columns(connection, engine, "events", ["event_type VARCHAR(64)"])
+    migration._modify_columns(instance, engine, "events", ["event_type VARCHAR(64)"])
     if substr:
         assert substr in connection.execute.call_args[0][0].text
     else:
@@ -338,8 +342,10 @@ def test_forgiving_add_column():
     engine = create_engine("sqlite://", poolclass=StaticPool)
     with Session(engine) as session:
         session.execute(text("CREATE TABLE hello (id int)"))
-        migration._add_columns(session, "hello", ["context_id CHARACTER(36)"])
-        migration._add_columns(session, "hello", ["context_id CHARACTER(36)"])
+        instance = Mock()
+        instance.get_session = Mock(return_value=session)
+        migration._add_columns(instance, "hello", ["context_id CHARACTER(36)"])
+        migration._add_columns(instance, "hello", ["context_id CHARACTER(36)"])
 
 
 def test_forgiving_add_index():
@@ -347,7 +353,9 @@ def test_forgiving_add_index():
     engine = create_engine("sqlite://", poolclass=StaticPool)
     models.Base.metadata.create_all(engine)
     with Session(engine) as session:
-        migration._create_index(session, "states", "ix_states_context_id")
+        instance = Mock()
+        instance.get_session = Mock(return_value=session)
+        migration._create_index(instance, "states", "ix_states_context_id")
 
 
 @pytest.mark.parametrize(

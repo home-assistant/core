@@ -2,8 +2,8 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from aiopyarr import ArrException
 import pytest
-from sonarr import SonarrError
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.sonarr.const import DOMAIN
@@ -68,30 +68,39 @@ async def test_sensors(
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:harddisk"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == DATA_GIGABYTES
+    assert state.attributes.get("C:\\") == "263.10/465.42GB (56.53%)"
     assert state.state == "263.10"
 
     state = hass.states.get("sensor.sonarr_queue")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:download"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Episodes"
+    assert state.attributes.get("The Andy Griffith Show S01E01") == "100.00%"
     assert state.state == "1"
 
     state = hass.states.get("sensor.sonarr_shows")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:television"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Series"
+    assert state.attributes.get("The Andy Griffith Show") == "0/0 Episodes"
     assert state.state == "1"
 
     state = hass.states.get("sensor.sonarr_upcoming")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:television"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Episodes"
+    assert state.attributes.get("Bob's Burgers") == "S04E11"
     assert state.state == "1"
 
     state = hass.states.get("sensor.sonarr_wanted")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:television"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Episodes"
+    assert state.attributes.get("Bob's Burgers S04E11") == "2014-01-27T01:30:00+00:00"
+    assert (
+        state.attributes.get("The Andy Griffith Show S01E01")
+        == "1960-10-03T01:00:00+00:00"
+    )
     assert state.state == "2"
 
 
@@ -135,44 +144,49 @@ async def test_availability(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
+    assert hass.states.get(UPCOMING_ENTITY_ID)
     assert hass.states.get(UPCOMING_ENTITY_ID).state == "1"
 
     # state to unavailable
-    mock_sonarr.calendar.side_effect = SonarrError
+    mock_sonarr.async_get_calendar.side_effect = ArrException
 
     future = now + timedelta(minutes=1)
     with patch("homeassistant.util.dt.utcnow", return_value=future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
+    assert hass.states.get(UPCOMING_ENTITY_ID)
     assert hass.states.get(UPCOMING_ENTITY_ID).state == STATE_UNAVAILABLE
 
     # state to available
-    mock_sonarr.calendar.side_effect = None
+    mock_sonarr.async_get_calendar.side_effect = None
 
     future += timedelta(minutes=1)
     with patch("homeassistant.util.dt.utcnow", return_value=future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
+    assert hass.states.get(UPCOMING_ENTITY_ID)
     assert hass.states.get(UPCOMING_ENTITY_ID).state == "1"
 
     # state to unavailable
-    mock_sonarr.calendar.side_effect = SonarrError
+    mock_sonarr.async_get_calendar.side_effect = ArrException
 
     future += timedelta(minutes=1)
     with patch("homeassistant.util.dt.utcnow", return_value=future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
+    assert hass.states.get(UPCOMING_ENTITY_ID)
     assert hass.states.get(UPCOMING_ENTITY_ID).state == STATE_UNAVAILABLE
 
     # state to available
-    mock_sonarr.calendar.side_effect = None
+    mock_sonarr.async_get_calendar.side_effect = None
 
     future += timedelta(minutes=1)
     with patch("homeassistant.util.dt.utcnow", return_value=future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
+    assert hass.states.get(UPCOMING_ENTITY_ID)
     assert hass.states.get(UPCOMING_ENTITY_ID).state == "1"

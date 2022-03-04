@@ -1,4 +1,6 @@
 """Extend the basic Accessory and Bridge functions."""
+from __future__ import annotations
+
 import logging
 
 from pyhap.accessory import Accessory, Bridge
@@ -90,7 +92,7 @@ SWITCH_TYPES = {
     TYPE_SWITCH: "Switch",
     TYPE_VALVE: "Valve",
 }
-TYPES = Registry()
+TYPES: Registry[str, type[HomeAccessory]] = Registry()
 
 
 def get_accessory(hass, driver, state, aid, config):  # noqa: C901
@@ -119,14 +121,10 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
     elif state.domain == "cover":
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
-        if (
-            device_class
-            in (
-                cover.CoverDeviceClass.GARAGE,
-                cover.CoverDeviceClass.GATE,
-            )
-            and features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE)
-        ):
+        if device_class in (
+            cover.CoverDeviceClass.GARAGE,
+            cover.CoverDeviceClass.GATE,
+        ) and features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE):
             a_type = "GarageDoorOpener"
         elif (
             device_class == cover.CoverDeviceClass.WINDOW
@@ -276,7 +274,7 @@ class HomeAccessory(Accessory):
         if self.config.get(ATTR_SW_VERSION) is not None:
             sw_version = format_version(self.config[ATTR_SW_VERSION])
         if sw_version is None:
-            sw_version = __version__
+            sw_version = format_version(__version__)
         hw_version = None
         if self.config.get(ATTR_HW_VERSION) is not None:
             hw_version = format_version(self.config[ATTR_HW_VERSION])
@@ -291,7 +289,9 @@ class HomeAccessory(Accessory):
             serv_info = self.get_service(SERV_ACCESSORY_INFO)
             char = self.driver.loader.get_char(CHAR_HARDWARE_REVISION)
             serv_info.add_characteristic(char)
-            serv_info.configure_char(CHAR_HARDWARE_REVISION, value=hw_version)
+            serv_info.configure_char(
+                CHAR_HARDWARE_REVISION, value=hw_version[:MAX_VERSION_LENGTH]
+            )
             self.iid_manager.assign(char)
             char.broker = self
 
@@ -534,7 +534,7 @@ class HomeBridge(Bridge):
         """Initialize a Bridge object."""
         super().__init__(driver, name)
         self.set_info_service(
-            firmware_revision=__version__,
+            firmware_revision=format_version(__version__),
             manufacturer=MANUFACTURER,
             model=BRIDGE_MODEL,
             serial_number=BRIDGE_SERIAL_NUMBER,

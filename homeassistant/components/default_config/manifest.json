@@ -7,7 +7,6 @@
     "cloud",
     "counter",
     "dhcp",
-    "diagnostics",
     "energy",
     "frontend",
     "history",
@@ -32,11 +31,11 @@
     "tag",
     "timer",
     "usb",
-    "updater",
+    "update",
     "webhook",
     "zeroconf",
     "zone"
   ],
-  "codeowners": [],
+  "codeowners": ["@home-assistant/core"],
   "quality_scale": "internal"
 }
