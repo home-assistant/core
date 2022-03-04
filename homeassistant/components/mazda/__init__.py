@@ -37,7 +37,7 @@ from .const import DATA_CLIENT, DATA_COORDINATOR, DATA_VEHICLES, DOMAIN, SERVICE
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.DEVICE_TRACKER, Platform.LOCK, Platform.SENSOR]
+PLATFORMS = [Platform.BUTTON, Platform.DEVICE_TRACKER, Platform.LOCK, Platform.SENSOR]
 
 
 async def with_timeout(task, timeout_seconds=10):
