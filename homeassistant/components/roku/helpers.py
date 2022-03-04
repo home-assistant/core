@@ -25,41 +25,25 @@ def format_channel_name(channel_number: str, channel_name: str | None = None) ->
     return channel_number
 
 
-def roku_exception_handler(
-    func: Callable[Concatenate[_T, _P], Awaitable[None]],  # type: ignore[misc]
-) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:  # type: ignore[misc]
+def roku_exception_handler(ignore_timeout: bool = False) -> Callable[..., Callable]:
     """Decorate Roku calls to handle Roku exceptions."""
 
-    @wraps(func)
-    async def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
-        try:
-            await func(self, *args, **kwargs)
-        except RokuConnectionError as error:
-            if self.available:
-                _LOGGER.error("Error communicating with API: %s", error)
-        except RokuError as error:
-            if self.available:
-                _LOGGER.error("Invalid response from API: %s", error)
+    def decorator(
+        func: Callable[Concatenate[_T, _P], Awaitable[None]],  # type: ignore[misc]
+    ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:  # type: ignore[misc]
+        @wraps(func)
+        async def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
+            try:
+                await func(self, *args, **kwargs)
+            except RokuConnectionTimeoutError:
+                return
+            except RokuConnectionError as error:
+                if self.available:
+                    _LOGGER.error("Error communicating with API: %s", error)
+            except RokuError as error:
+                if self.available:
+                    _LOGGER.error("Invalid response from API: %s", error)
 
-    return wrapper
+        return wrapper
 
-
-def roku_exception_handler_no_timeout(
-    func: Callable[Concatenate[_T, _P], Awaitable[None]],  # type: ignore[misc]
-) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:  # type: ignore[misc]
-    """Decorate Roku calls to handle Roku exceptions."""
-
-    @wraps(func)
-    async def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
-        try:
-            await func(self, *args, **kwargs)
-        except RokuConnectionTimeoutError:
-            return
-        except RokuConnectionError as error:
-            if self.available:
-                _LOGGER.error("Error communicating with API: %s", error)
-        except RokuError as error:
-            if self.available:
-                _LOGGER.error("Invalid response from API: %s", error)
-
-    return wrapper
+    return decorator

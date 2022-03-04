@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import RokuDataUpdateCoordinator
 from .entity import RokuEntity
-from .helpers import roku_exception_handler, roku_exception_handler_no_timeout
+from .helpers import roku_exception_handler
 
 
 async def async_setup_entry(
@@ -44,19 +44,19 @@ class RokuRemote(RokuEntity, RemoteEntity):
         """Return true if device is on."""
         return not self.coordinator.data.state.standby
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.coordinator.roku.remote("poweron")
         await self.coordinator.async_request_refresh()
 
-    @roku_exception_handler_no_timeout
+    @roku_exception_handler(ignore_timeout=True)
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.coordinator.roku.remote("poweroff")
         await self.coordinator.async_request_refresh()
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
         num_repeats = kwargs[ATTR_NUM_REPEATS]

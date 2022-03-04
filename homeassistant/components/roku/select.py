@@ -162,7 +162,7 @@ class RokuSelectEntity(RokuEntity, SelectEntity):
         """Return a set of selectable options."""
         return self.entity_description.options_fn(self.coordinator.data)
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
         await self.entity_description.set_fn(
