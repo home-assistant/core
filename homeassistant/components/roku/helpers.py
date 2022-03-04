@@ -35,7 +35,7 @@ def roku_exception_handler(ignore_timeout: bool = False) -> Callable[..., Callab
         async def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
             try:
                 await func(self, *args, **kwargs)
-            except RokuConnectionTimeoutError:
+            except RokuConnectionTimeoutError as error:
                 if not ignore_timeout and self.available:
                     _LOGGER.error("Error communicating with API: %s", error)
             except RokuConnectionError as error:
