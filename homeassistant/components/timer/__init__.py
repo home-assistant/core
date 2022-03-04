@@ -310,8 +310,8 @@ class Timer(RestoreEntity):
         if self._state == STATUS_PAUSED:
             self._remaining = cv.time_period(state.attributes[ATTR_REMAINING])
             return
-        # The timer must have been active so we need to decide what to do based on
-        # end time and the current time
+        # If we get here, the timer must have been active so we need to decide what
+        # to do based on end time and the current time
         end = cv.datetime(state.attributes[ATTR_FINISHES_AT])
         utc_now = dt_util.utcnow().replace(microsecond=0)
         # If there is time remaining in the timer, restore the remaining time then
@@ -320,9 +320,8 @@ class Timer(RestoreEntity):
             self._remaining = remaining
             self._state = STATUS_PAUSED
             self.async_start(timedelta(0))
-        # If the timer ended before now and outside of the grace period, cancel the
-        # timer. This will signal to the user that the timer had finished
-        # unsuccessfully.
+        # If the timer ended before now and outside of the grace period, send an
+        # event that indicates that the timer finished while HA was stopped
         elif end + self._restore_grace_period <= utc_now:
             self._state = STATUS_IDLE
             self._end = None
