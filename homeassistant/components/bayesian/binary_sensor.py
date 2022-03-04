@@ -294,7 +294,7 @@ class BayesianBinarySensor(BinarySensorEntity):
                         1 - obs["prob_given_true"],
                         1 - obs.get("prob_given_false", 1 - obs["prob_given_true"]),
                     )
-                elif obs["observation"] is None:  # observation is None
+                elif obs["observation"] is None:
                     if obs["entity_id"] is not None:
                         _LOGGER.info(
                             "Observation for entity '%s' returned None, it will not be used for Bayesian updating",
