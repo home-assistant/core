@@ -181,12 +181,12 @@ class SamsungTVDevice(MediaPlayerEntity):
         assert isinstance(self._bridge, SamsungTVWSBridge)
         await self._bridge.async_launch_app(app_id)
 
-    async def _async_send_key(self, key: str, key_type: str | None = None) -> None:
+    async def _async_send_key(self, key: str) -> None:
         """Send a key to the tv and handles exceptions."""
         if self._power_off_in_progress() and key != "KEY_POWEROFF":
             LOGGER.info("TV is powering off, not sending command: %s", key)
             return
-        await self._bridge.async_send_key(key, key_type)
+        await self._bridge.async_send_key(key)
 
     def _power_off_in_progress(self) -> bool:
         return (

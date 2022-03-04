@@ -133,7 +133,7 @@ class SamsungTVBridge(ABC):
         """Tells if the TV is on."""
 
     @abstractmethod
-    async def async_send_key(self, key: str, key_type: str | None = None) -> None:
+    async def async_send_key(self, key: str) -> None:
         """Send a key to the tv and handles exceptions."""
 
     @abstractmethod
@@ -246,7 +246,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
                 pass
         return self._remote
 
-    async def async_send_key(self, key: str, key_type: str | None = None) -> None:
+    async def async_send_key(self, key: str) -> None:
         """Send the key using legacy protocol."""
         await self.hass.async_add_executor_job(self._send_key, key)
 
@@ -406,7 +406,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
         """Send the launch_app command using websocket protocol."""
         await self._async_send_command(ChannelEmitCommand.launch_app(app_id))
 
-    async def async_send_key(self, key: str, key_type: str | None = None) -> None:
+    async def async_send_key(self, key: str) -> None:
         """Send the key using websocket protocol."""
         if key == "KEY_POWEROFF":
             key = "KEY_POWER"
