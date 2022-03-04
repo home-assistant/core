@@ -98,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except vol.Invalid:
             # The entity is identified by an unknown entity registry ID
             _LOGGER.error(
-                "Failed to setup light switch for unknown entity registry id %s",
+                "Failed to setup light switch for unknown entity %s",
                 entry.options[CONF_ENTITY_ID],
             )
             return False
