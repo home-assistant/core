@@ -125,7 +125,7 @@ SENSOR_DESCRIPTIONS = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        key=TYPE_AQI_PM25,
+        key=TYPE_AQI_PM25_24H,
         name="AQI PM2.5 24h Avg",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.TOTAL_INCREASING,
