@@ -68,7 +68,7 @@ async def async_setup_entry(
         _LOGGER.error("Filepath %s is not valid or allowed", path)
         return
 
-    async_add_entities([FilesizeEntity(fullpath)], True)
+    async_add_entities([FilesizeEntity(fullpath, entry.entry_id)], True)
 
 
 class FilesizeEntity(SensorEntity):
@@ -77,10 +77,11 @@ class FilesizeEntity(SensorEntity):
     _attr_native_unit_of_measurement = DATA_MEGABYTES
     _attr_icon = ICON
 
-    def __init__(self, path: str) -> None:
+    def __init__(self, path: str, entry_id: str) -> None:
         """Initialize the data object."""
         self._path = path  # Need to check its a valid path
         self._attr_name = path.split("/")[-1]
+        self._attr_unique_id = entry_id
 
     def update(self) -> None:
         """Update the sensor."""
