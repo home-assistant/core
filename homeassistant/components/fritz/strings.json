@@ -36,6 +36,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "upnp_not_configured":  "Missing UPnP settings on device.",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
