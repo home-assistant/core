@@ -23,7 +23,7 @@ async def async_setup_platform(
 
 
 class IPWebcamCamera(MjpegCamera):
-    """Representation of a Axis camera."""
+    """Representation of a IP Webcam camera."""
 
     def __init__(
         self,
