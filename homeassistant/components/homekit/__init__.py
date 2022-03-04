@@ -644,7 +644,7 @@ class HomeKit:
         return False
 
     def add_bridge_triggers_accessory(
-        self, device: device_registry.DeviceEntry, device_triggers: Any
+        self, device: device_registry.DeviceEntry, device_triggers: list[dict[str, Any]]
     ) -> None:
         """Add device automation triggers to the bridge."""
         if self._would_exceed_max_devices(device.name):
