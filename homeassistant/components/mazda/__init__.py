@@ -102,6 +102,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if vehicle_id == 0 or api_client is None:
             raise HomeAssistantError("Vehicle ID not found")
 
+        if service_call.service != "send_poi":
+            _LOGGER.warning(
+                "The mazda.%s service is deprecated and has been replaced by a button entity; "
+                "Please use the button entity instead",
+                service_call.service,
+            )
+
         api_method = getattr(api_client, service_call.service)
         try:
             if service_call.service == "send_poi":
