@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import logging
+from typing import Any, cast
+from uuid import UUID
 
 from pyhap.accessory import Accessory, Bridge
 from pyhap.accessory_driver import AccessoryDriver
@@ -34,7 +36,15 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     __version__,
 )
-from homeassistant.core import Context, callback as ha_callback, split_entity_id
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Context,
+    Event,
+    HomeAssistant,
+    State,
+    callback as ha_callback,
+    split_entity_id,
+)
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.decorator import Registry
 
@@ -95,7 +105,9 @@ SWITCH_TYPES = {
 TYPES: Registry[str, type[HomeAccessory]] = Registry()
 
 
-def get_accessory(hass, driver, state, aid, config):  # noqa: C901
+def get_accessory(  # noqa: C901
+    hass: HomeAssistant, driver: HomeDriver, state: State, aid: int | None, config: dict
+) -> HomeAccessory | None:
     """Take state and return an accessory object if supported."""
     if not aid:
         _LOGGER.warning(
@@ -222,22 +234,22 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
     return TYPES[a_type](hass, driver, name, state.entity_id, aid, config)
 
 
-class HomeAccessory(Accessory):
+class HomeAccessory(Accessory):  # type: ignore[misc]
     """Adapter class for Accessory."""
 
     def __init__(
         self,
-        hass,
-        driver,
-        name,
-        entity_id,
-        aid,
-        config,
-        *args,
-        category=CATEGORY_OTHER,
-        device_id=None,
-        **kwargs,
-    ):
+        hass: HomeAssistant,
+        driver: HomeDriver,
+        name: str,
+        entity_id: str,
+        aid: int,
+        config: dict,
+        *args: Any,
+        category: str = CATEGORY_OTHER,
+        device_id: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Initialize a Accessory object."""
         super().__init__(
             driver=driver,
@@ -248,7 +260,7 @@ class HomeAccessory(Accessory):
         )
         self.config = config or {}
         if device_id:
-            self.device_id = device_id
+            self.device_id: str | None = device_id
             serial_number = device_id
             domain = None
         else:
@@ -275,6 +287,7 @@ class HomeAccessory(Accessory):
             sw_version = format_version(self.config[ATTR_SW_VERSION])
         if sw_version is None:
             sw_version = format_version(__version__)
+            assert sw_version is not None
         hw_version = None
         if self.config.get(ATTR_HW_VERSION) is not None:
             hw_version = format_version(self.config[ATTR_HW_VERSION])
@@ -298,7 +311,7 @@ class HomeAccessory(Accessory):
         self.category = category
         self.entity_id = entity_id
         self.hass = hass
-        self._subscriptions = []
+        self._subscriptions: list[CALLBACK_TYPE] = []
 
         if device_id:
             return
@@ -315,7 +328,9 @@ class HomeAccessory(Accessory):
         )
 
         """Add battery service if available"""
-        entity_attributes = self.hass.states.get(self.entity_id).attributes
+        state = self.hass.states.get(self.entity_id)
+        assert state is not None
+        entity_attributes = state.attributes
         battery_found = entity_attributes.get(ATTR_BATTERY_LEVEL)
 
         if self.linked_battery_sensor:
@@ -357,15 +372,15 @@ class HomeAccessory(Accessory):
         )
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if accessory is available."""
         state = self.hass.states.get(self.entity_id)
         return state is not None and state.state != STATE_UNAVAILABLE
 
-    async def run(self):
+    async def run(self) -> None:
         """Handle accessory driver started event."""
-        state = self.hass.states.get(self.entity_id)
-        self.async_update_state_callback(state)
+        if state := self.hass.states.get(self.entity_id):
+            self.async_update_state_callback(state)
         self._subscriptions.append(
             async_track_state_change_event(
                 self.hass, [self.entity_id], self.async_update_event_state_callback
@@ -374,10 +389,11 @@ class HomeAccessory(Accessory):
 
         battery_charging_state = None
         battery_state = None
-        if self.linked_battery_sensor:
-            linked_battery_sensor_state = self.hass.states.get(
+        if self.linked_battery_sensor and (
+            linked_battery_sensor_state := self.hass.states.get(
                 self.linked_battery_sensor
             )
+        ):
             battery_state = linked_battery_sensor_state.state
             battery_charging_state = linked_battery_sensor_state.attributes.get(
                 ATTR_BATTERY_CHARGING
@@ -408,12 +424,12 @@ class HomeAccessory(Accessory):
             self.async_update_battery(battery_state, battery_charging_state)
 
     @ha_callback
-    def async_update_event_state_callback(self, event):
+    def async_update_event_state_callback(self, event: Event) -> None:
         """Handle state change event listener callback."""
         self.async_update_state_callback(event.data.get("new_state"))
 
     @ha_callback
-    def async_update_state_callback(self, new_state):
+    def async_update_state_callback(self, new_state: State | None) -> None:
         """Handle state change listener callback."""
         _LOGGER.debug("New_state: %s", new_state)
         if new_state is None:
@@ -435,7 +451,7 @@ class HomeAccessory(Accessory):
         self.async_update_state(new_state)
 
     @ha_callback
-    def async_update_linked_battery_callback(self, event):
+    def async_update_linked_battery_callback(self, event: Event) -> None:
         """Handle linked battery sensor state change listener callback."""
         if (new_state := event.data.get("new_state")) is None:
             return
@@ -446,19 +462,19 @@ class HomeAccessory(Accessory):
         self.async_update_battery(new_state.state, battery_charging_state)
 
     @ha_callback
-    def async_update_linked_battery_charging_callback(self, event):
+    def async_update_linked_battery_charging_callback(self, event: Event) -> None:
         """Handle linked battery charging sensor state change listener callback."""
         if (new_state := event.data.get("new_state")) is None:
             return
         self.async_update_battery(None, new_state.state == STATE_ON)
 
     @ha_callback
-    def async_update_battery(self, battery_level, battery_charging):
+    def async_update_battery(self, battery_level: Any, battery_charging: Any) -> None:
         """Update battery service if available.
 
         Only call this function if self._support_battery_level is True.
         """
-        if not self._char_battery:
+        if not self._char_battery or not self._char_low_battery:
             # Battery appeared after homekit was started
             return
 
@@ -485,7 +501,7 @@ class HomeAccessory(Accessory):
             )
 
     @ha_callback
-    def async_update_state(self, new_state):
+    def async_update_state(self, new_state: State) -> None:
         """Handle state change to update HomeKit value.
 
         Overridden by accessory types.
@@ -493,7 +509,13 @@ class HomeAccessory(Accessory):
         raise NotImplementedError()
 
     @ha_callback
-    def async_call_service(self, domain, service, service_data, value=None):
+    def async_call_service(
+        self,
+        domain: str,
+        service: str,
+        service_data: dict[str, Any] | None,
+        value: Any | None = None,
+    ) -> None:
         """Fire event and call service for changes from HomeKit."""
         event_data = {
             ATTR_ENTITY_ID: self.entity_id,
@@ -511,7 +533,7 @@ class HomeAccessory(Accessory):
         )
 
     @ha_callback
-    def async_reset(self):
+    def async_reset(self) -> None:
         """Reset and recreate an accessory."""
         self.hass.async_create_task(
             self.hass.services.async_call(
@@ -521,16 +543,16 @@ class HomeAccessory(Accessory):
             )
         )
 
-    async def stop(self):
+    async def stop(self) -> None:
         """Cancel any subscriptions when the bridge is stopped."""
         while self._subscriptions:
             self._subscriptions.pop(0)()
 
 
-class HomeBridge(Bridge):
+class HomeBridge(Bridge):  # type: ignore[misc]
     """Adapter class for Bridge."""
 
-    def __init__(self, hass, driver, name):
+    def __init__(self, hass: HomeAssistant, driver: HomeDriver, name: str) -> None:
         """Initialize a Bridge object."""
         super().__init__(driver, name)
         self.set_info_service(
@@ -541,10 +563,10 @@ class HomeBridge(Bridge):
         )
         self.hass = hass
 
-    def setup_message(self):
+    def setup_message(self) -> None:
         """Prevent print of pyhap setup message to terminal."""
 
-    async def async_get_snapshot(self, info):
+    async def async_get_snapshot(self, info: dict) -> bytes:
         """Get snapshot from accessory if supported."""
         if (acc := self.accessories.get(info["aid"])) is None:
             raise ValueError("Requested snapshot for missing accessory")
@@ -553,13 +575,20 @@ class HomeBridge(Bridge):
                 "Got a request for snapshot, but the Accessory "
                 'does not define a "async_get_snapshot" method'
             )
-        return await acc.async_get_snapshot(info)
+        return cast(bytes, await acc.async_get_snapshot(info))
 
 
-class HomeDriver(AccessoryDriver):
+class HomeDriver(AccessoryDriver):  # type: ignore[misc]
     """Adapter class for AccessoryDriver."""
 
-    def __init__(self, hass, entry_id, bridge_name, entry_title, **kwargs):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry_id: str,
+        bridge_name: str,
+        entry_title: str,
+        **kwargs: Any,
+    ) -> None:
         """Initialize a AccessoryDriver object."""
         super().__init__(**kwargs)
         self.hass = hass
@@ -567,16 +596,18 @@ class HomeDriver(AccessoryDriver):
         self._bridge_name = bridge_name
         self._entry_title = entry_title
 
-    @pyhap_callback
-    def pair(self, client_uuid, client_public, client_permissions):
+    @pyhap_callback  # type: ignore[misc]
+    def pair(
+        self, client_uuid: UUID, client_public: str, client_permissions: int
+    ) -> bool:
         """Override super function to dismiss setup message if paired."""
         success = super().pair(client_uuid, client_public, client_permissions)
         if success:
             async_dismiss_setup_message(self.hass, self._entry_id)
-        return success
+        return cast(bool, success)
 
-    @pyhap_callback
-    def unpair(self, client_uuid):
+    @pyhap_callback  # type: ignore[misc]
+    def unpair(self, client_uuid: UUID) -> None:
         """Override super function to show setup message if unpaired."""
         super().unpair(client_uuid)
 
