@@ -248,9 +248,9 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
 
     async def async_send_key(self, key: str, key_type: str | None = None) -> None:
         """Send the key using legacy protocol."""
-        await self.hass.async_add_executor_job(self._send_keys, [key])
+        await self.hass.async_add_executor_job(self._send_key, key)
 
-    def _send_keys(self, keys: list[str]) -> None:
+    def _send_key(self, key: str) -> None:
         """Send the keys using legacy protocol."""
         try:
             # recreate connection if connection was dead
@@ -258,8 +258,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             for _ in range(retry_count + 1):
                 try:
                     if remote := self._get_remote():
-                        for key in keys:
-                            remote.control(key)
+                        remote.control(key)
                     break
                 except (ConnectionClosed, BrokenPipeError):
                     # BrokenPipe can occur when the commands is sent to fast
@@ -405,15 +404,15 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     async def async_launch_app(self, app_id: str) -> None:
         """Send the launch_app command using websocket protocol."""
-        await self._async_send_commands([ChannelEmitCommand.launch_app(app_id)])
+        await self._async_send_command(ChannelEmitCommand.launch_app(app_id))
 
     async def async_send_key(self, key: str, key_type: str | None = None) -> None:
         """Send the key using websocket protocol."""
         if key == "KEY_POWEROFF":
             key = "KEY_POWER"
-        await self._async_send_commands([SendRemoteKey.click(key)])
+        await self._async_send_command(SendRemoteKey.click(key))
 
-    async def _async_send_commands(self, commands: list[SamsungTVCommand]) -> None:
+    async def _async_send_command(self, command: SamsungTVCommand) -> None:
         """Send the commands using websocket protocol."""
         try:
             # recreate connection if connection was dead
@@ -421,8 +420,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
             for _ in range(retry_count + 1):
                 try:
                     if remote := await self._async_get_remote():
-                        for command in commands:
-                            await remote.send_command(command)
+                        await remote.send_command(command)
                     break
                 except (
                     BrokenPipeError,
