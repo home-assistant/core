@@ -51,7 +51,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import roku_exception_handler
 from .browse_media import async_browse_media
 from .const import (
     ATTR_ARTIST_NAME,
@@ -65,7 +64,7 @@ from .const import (
 )
 from .coordinator import RokuDataUpdateCoordinator
 from .entity import RokuEntity
-from .helpers import format_channel_name
+from .helpers import format_channel_name, roku_exception_handler
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -289,7 +288,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             app.name for app in self.coordinator.data.apps if app.name is not None
         )
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def search(self, keyword: str) -> None:
         """Emulate opening the search screen and entering the search keyword."""
         await self.coordinator.roku.search(keyword)
@@ -321,68 +320,68 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             media_content_type,
         )
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_turn_on(self) -> None:
         """Turn on the Roku."""
         await self.coordinator.roku.remote("poweron")
         await self.coordinator.async_request_refresh()
 
-    @roku_exception_handler
+    @roku_exception_handler(ignore_timeout=True)
     async def async_turn_off(self) -> None:
         """Turn off the Roku."""
         await self.coordinator.roku.remote("poweroff")
         await self.coordinator.async_request_refresh()
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_media_pause(self) -> None:
         """Send pause command."""
         if self.state not in (STATE_STANDBY, STATE_PAUSED):
             await self.coordinator.roku.remote("play")
             await self.coordinator.async_request_refresh()
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_media_play(self) -> None:
         """Send play command."""
         if self.state not in (STATE_STANDBY, STATE_PLAYING):
             await self.coordinator.roku.remote("play")
             await self.coordinator.async_request_refresh()
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_media_play_pause(self) -> None:
         """Send play/pause command."""
         if self.state != STATE_STANDBY:
             await self.coordinator.roku.remote("play")
             await self.coordinator.async_request_refresh()
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self.coordinator.roku.remote("reverse")
         await self.coordinator.async_request_refresh()
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self.coordinator.roku.remote("forward")
         await self.coordinator.async_request_refresh()
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         await self.coordinator.roku.remote("volume_mute")
         await self.coordinator.async_request_refresh()
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_volume_up(self) -> None:
         """Volume up media player."""
         await self.coordinator.roku.remote("volume_up")
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_volume_down(self) -> None:
         """Volume down media player."""
         await self.coordinator.roku.remote("volume_down")
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_play_media(
         self, media_type: str, media_id: str, **kwargs: Any
     ) -> None:
@@ -487,7 +486,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
         await self.coordinator.async_request_refresh()
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if source == "Home":
