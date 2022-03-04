@@ -19,7 +19,7 @@ async def async_setup_platform(
         return
 
     filter_urllib3_logging()
-    async_add_entities([IPWebcamCamera(**discovery_info)], True)
+    async_add_entities([IPWebcamCamera(**discovery_info)])
 
 
 class IPWebcamCamera(MjpegCamera):
