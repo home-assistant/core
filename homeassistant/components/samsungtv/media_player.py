@@ -184,7 +184,7 @@ class SamsungTVDevice(MediaPlayerEntity):
     async def _async_send_key(self, key: str) -> None:
         """Send a key to the tv and handles exceptions."""
         if self._power_off_in_progress() and key != "KEY_POWEROFF":
-            LOGGER.info("TV is powering off, not sending command: %s", key)
+            LOGGER.info("TV is powering off, not sending key: %s", key)
             return
         await self._bridge.async_send_key(key)
 

@@ -650,7 +650,7 @@ async def test_turn_off_websocket(
     assert await hass.services.async_call(
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
-    assert "TV is powering off, not sending command: KEY_VOLUP" in caplog.text
+    assert "TV is powering off, not sending key: KEY_VOLUP" in caplog.text
     assert await hass.services.async_call(
         DOMAIN,
         SERVICE_SELECT_SOURCE,
