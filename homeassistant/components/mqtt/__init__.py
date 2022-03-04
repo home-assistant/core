@@ -616,7 +616,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if CONF_PASSWORD in override:
             override[CONF_PASSWORD] = "********"
         _LOGGER.info(
-            "Deprecated configuration settings found configuration.yaml. "
+            "Deprecated configuration settings found in configuration.yaml. "
             "The settings from your configuration entry will override: %s",
             override,
         )
