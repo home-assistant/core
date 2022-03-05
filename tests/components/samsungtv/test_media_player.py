@@ -624,29 +624,41 @@ async def test_device_class(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_DEVICE_CLASS] is MediaPlayerDeviceClass.TV.value
 
 
-async def test_turn_off_websocket(hass: HomeAssistant, remotews: Mock) -> None:
+async def test_turn_off_websocket(
+    hass: HomeAssistant, remotews: Mock, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test for turn_off."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=[OSError("Boom"), DEFAULT_MOCK],
     ):
         await setup_samsungtv(hass, MOCK_CONFIGWS)
-        remotews.send_command.reset_mock()
 
-        assert await hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
-        )
-        # key called
-        assert remotews.send_command.call_count == 1
-        command = remotews.send_command.call_args_list[0].args[0]
-        assert isinstance(command, SendRemoteKey)
-        assert command.params["DataOfCmd"] == "KEY_POWER"
+    remotews.send_command.reset_mock()
 
-        assert await hass.services.async_call(
-            DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
-        )
-        # key not called
-        assert remotews.send_command.call_count == 1
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    # key called
+    assert remotews.send_command.call_count == 1
+    command = remotews.send_command.call_args_list[0].args[0]
+    assert isinstance(command, SendRemoteKey)
+    assert command.params["DataOfCmd"] == "KEY_POWER"
+
+    # commands not sent : power off in progress
+    remotews.send_command.reset_mock()
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    assert "TV is powering off, not sending key: KEY_VOLUP" in caplog.text
+    assert await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "Deezer"},
+        True,
+    )
+    assert "TV is powering off, not sending launch_app command" in caplog.text
+    remotews.send_command.assert_not_called()
 
 
 async def test_turn_off_legacy(hass: HomeAssistant, remote: Mock) -> None:
