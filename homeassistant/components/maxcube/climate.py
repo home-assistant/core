@@ -71,12 +71,21 @@ def setup_platform(
         add_entities(devices)
 
 
-async def async_setup_platform(hass: HomeAssistant, config: ConfigType, add_devices: AddEntitiesCallback, discovery_info: DiscoveryInfoType | None = None) -> None:
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_devices: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up a climate for maxcube."""
     setup_platform(hass, config, add_devices)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, async_add_devices: AddEntitiesCallback) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_devices: AddEntitiesCallback,
+) -> bool:
     """Set up a climate for maxcube."""
     setup_platform(hass, config_entry.data, async_add_devices)
     return True
