@@ -167,6 +167,10 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                         rssi=measurement.get("rssi"),
                     )
 
+            # Add information for pure devices
+            pure_sensitivity = dev["pureBoostConfig"].get("sensitivity")
+            pure_boost_enabled = dev["pureBoostConfig"].get("enabled")
+
             device_data[unique_id] = {
                 "id": unique_id,
                 "mac": mac,
@@ -200,6 +204,8 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 "calibration_hum": calibration_hum,
                 "full_capabilities": capabilities,
                 "motion_sensors": motion_sensors,
+                "pure_sensitivity": pure_sensitivity,
+                "pure_boost_enabled": pure_boost_enabled,
             }
 
         return SensiboData(raw=data, parsed=device_data)

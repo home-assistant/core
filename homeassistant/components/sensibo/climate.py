@@ -104,7 +104,7 @@ async def async_setup_entry(
         SensiboClimate(coordinator, device_id)
         for device_id, device_data in coordinator.data.parsed.items()
         # Remove none climate devices
-        if device_data["hvac_modes"] and device_data["temp"]
+        if device_data["hvac_modes"]
     ]
 
     async_add_entities(entities)
