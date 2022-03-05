@@ -6,15 +6,9 @@ from homeassistant.const import CONF_FILE_PATH, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 
-from . import TEST_DIR, TEST_FILE, TEST_FILE_NAME
+from . import TEST_FILE, TEST_FILE_NAME, create_file
 
 from tests.common import MockConfigEntry
-
-
-def create_file(path) -> None:
-    """Create a test file."""
-    with open(path, "w", encoding="utf-8") as test_file:
-        test_file.write("test")
 
 
 async def test_invalid_path(
@@ -50,20 +44,26 @@ async def test_cannot_access_file(
 
 
 async def test_valid_path(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, tmpdir: str, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test for a valid path."""
-    create_file(TEST_FILE)
-    hass.config.allowlist_external_dirs = {TEST_DIR}
+    testfile = f"{tmpdir}/file.txt"
+    create_file(testfile)
+    hass.config.allowlist_external_dirs = {tmpdir}
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, unique_id=testfile, data={CONF_FILE_PATH: testfile}
+    )
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.mock_file_test_filesize_txt")
+    state = hass.states.get("sensor.file_txt")
     assert state
     assert state.state == "0.0"
     assert state.attributes.get("bytes") == 4
+
+    await hass.async_add_executor_job(os.remove, testfile)
 
 
 async def test_state_unknown(
