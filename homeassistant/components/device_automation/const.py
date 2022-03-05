@@ -1,5 +1,5 @@
 """Constants for device automations."""
-CONF_CHANGED_STATES = "toggled"
+CONF_CHANGED_STATES = "changed_states"
 CONF_IS_OFF = "is_off"
 CONF_IS_ON = "is_on"
 CONF_TOGGLE = "toggle"

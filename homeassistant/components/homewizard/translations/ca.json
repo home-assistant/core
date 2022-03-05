@@ -4,7 +4,7 @@
             "already_configured": "El dispositiu ja est\u00e0 configurat",
             "api_not_enabled": "L'API no est\u00e0 activada. Activa-la a la configuraci\u00f3 de l'aplicaci\u00f3 HomeWizard Energy",
             "device_not_supported": "Aquest dispositiu no \u00e9s compatible",
-            "invalid_discovery_parameters": "unsupported_api_version",
+            "invalid_discovery_parameters": "Versi\u00f3 d'API no compatible detectada",
             "unknown_error": "Error inesperat"
         },
         "step": {

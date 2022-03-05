@@ -17,7 +17,7 @@ from homeassistant.components.alexa import (
     errors as alexa_errors,
     state_report as alexa_state_report,
 )
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, ENTITY_CATEGORIES
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import entity_registry as er, start
 from homeassistant.helpers.event import async_call_later
@@ -75,7 +75,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
     @property
     def should_report_state(self):
         """Return if states should be proactively reported."""
-        return self._prefs.alexa_report_state
+        return self._prefs.alexa_report_state and self.authorized
 
     @property
     def endpoint(self):
@@ -133,7 +133,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
 
         entity_registry = er.async_get(self.hass)
         if registry_entry := entity_registry.async_get(entity_id):
-            auxiliary_entity = registry_entry.entity_category in ENTITY_CATEGORIES
+            auxiliary_entity = registry_entry.entity_category is not None
         else:
             auxiliary_entity = False
 
@@ -159,7 +159,6 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         if resp.status == HTTPStatus.BAD_REQUEST:
             if body["reason"] in ("RefreshTokenNotFound", "UnknownRegion"):
                 if self.should_report_state:
-                    await self._prefs.async_update(alexa_report_state=False)
                     persistent_notification.async_create(
                         self.hass,
                         f"There was an error reporting state to Alexa ({body['reason']}). "
@@ -188,12 +187,19 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
                 self._alexa_sync_unsub = None
             return
 
-        if ALEXA_DOMAIN not in self.hass.config.components and self.enabled:
+        if (
+            ALEXA_DOMAIN not in self.hass.config.components
+            and self.enabled
+            and self.hass.is_running
+        ):
             await async_setup_component(self.hass, ALEXA_DOMAIN, {})
 
         if self.should_report_state != self.is_reporting_states:
             if self.should_report_state:
-                await self.async_enable_proactive_mode()
+                try:
+                    await self.async_enable_proactive_mode()
+                except (alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink):
+                    await self.set_authorized(False)
             else:
                 await self.async_disable_proactive_mode()
 

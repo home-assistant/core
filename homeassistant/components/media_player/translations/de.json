@@ -8,6 +8,7 @@
             "is_playing": "{entity_name} spielt"
         },
         "trigger_type": {
+            "changed_states": "{entity_name} hat den Status ge\u00e4ndert",
             "idle": "{entity_name} wird inaktiv",
             "paused": "{entity_name} ist angehalten",
             "playing": "{entity_name} beginnt zu spielen",

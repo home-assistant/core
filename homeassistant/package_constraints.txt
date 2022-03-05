@@ -1,28 +1,26 @@
 PyJWT==2.1.0
 PyNaCl==1.4.0
-aiodiscover==1.4.5
+aiodiscover==1.4.8
 aiohttp==3.8.1
 aiohttp_cors==0.7.0
 astral==2.2
-async-upnp-client==0.23.3
+async-upnp-client==0.25.0
 async_timeout==4.0.2
 atomicwrites==1.4.0
 attrs==21.2.0
-awesomeversion==22.1.0
-backports.zoneinfo;python_version<"3.9"
+awesomeversion==22.2.0
 bcrypt==3.1.7
 certifi>=2021.5.30
 ciso8601==2.2.0
 cryptography==35.0.0
-emoji==1.5.0
-hass-nabucasa==0.51.0
-home-assistant-frontend==20211229.1
-httpx==0.21.0
+hass-nabucasa==0.54.0
+home-assistant-frontend==20220301.0
+httpx==0.22.0
 ifaddr==0.1.7
 jinja2==3.0.3
 paho-mqtt==1.6.1
-pillow==9.0.0
-pip>=8.0.3,<20.3
+pillow==9.0.1
+pip>=21.0,<22.1
 pyserial==3.5
 python-slugify==4.0.1
 pyudev==0.22.0
@@ -34,7 +32,7 @@ typing-extensions>=3.10.0.2,<5.0
 voluptuous-serialize==2.5.0
 voluptuous==0.12.2
 yarl==1.7.2
-zeroconf==0.38.1
+zeroconf==0.38.4
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
@@ -43,9 +41,6 @@ pycryptodome>=3.6.6
 # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
 urllib3>=1.26.5
 
-# Constrain H11 to ensure we get a new enough version to support non-rfc line endings
-h11>=0.12.0
-
 # Constrain httplib2 to protect against GHSA-93xj-8mrv-444m
 # https://github.com/advisories/GHSA-93xj-8mrv-444m
 httplib2>=0.19.0
@@ -53,7 +48,7 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.43.0
+grpcio==1.44.0
 
 # libcst >=0.4.0 requires a newer Rust than we currently have available,
 # thus our wheels builds fail. This pins it to the last working version,
@@ -71,18 +66,22 @@ enum34==1000000000.0.0
 typing==1000000000.0.0
 uuid==1000000000.0.0
 
-# Temporary constraint on pandas, to unblock 2021.7 releases
-# until we have fixed the wheels builds for newer versions.
-pandas==1.3.0
-
 # regex causes segfault with version 2021.8.27
 # https://bitbucket.org/mrabarnett/mrab-regex/issues/421/2021827-results-in-fatal-python-error
 # This is fixed in 2021.8.28
 regex==2021.8.28
 
-# anyio has a bug that was fixed in 3.3.1
-# can remove after httpx/httpcore updates its anyio version pin
-anyio>=3.3.1
+# httpx requires httpcore, and httpcore requires anyio and h11, but the version constraints on
+# these requirements are quite loose. As the entire stack has some outstanding issues, and
+# even newer versions seem to introduce new issues, it's useful for us to pin all these
+# requirements so we can directly link HA versions to these library versions.
+anyio==3.5.0
+h11==0.12.0
+httpcore==0.14.7
+
+# Ensure we have a hyperframe version that works in Python 3.10
+# 5.2.0 fixed a collections abc deprecation
+hyperframe>=5.2.0
 
 # pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
 pytest_asyncio==1000000000.0.0
@@ -92,3 +91,7 @@ pytest_asyncio==1000000000.0.0
 # https://github.com/jkeljo/sisyphus-control/issues/6
 python-engineio>=3.13.1,<4.0
 python-socketio>=4.6.0,<5.0
+
+# Constrain multidict to avoid typing issues
+# https://github.com/home-assistant/core/pull/67046
+multidict>=6.0.2

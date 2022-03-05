@@ -392,7 +392,7 @@ async def test_controlling_state_via_mqtt_inverted(hass, mqtt_mock, setup_tasmot
 async def call_service(hass, entity_id, service, **kwargs):
     """Call a fan service."""
     await hass.services.async_call(
-        Platform.COVER,
+        cover.DOMAIN,
         service,
         {"entity_id": entity_id, **kwargs},
         blocking=True,

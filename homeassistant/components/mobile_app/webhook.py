@@ -7,10 +7,11 @@ import logging
 import secrets
 
 from aiohttp.web import HTTPBadRequest, Request, Response, json_response
+from nacl.exceptions import CryptoError
 from nacl.secret import SecretBox
 import voluptuous as vol
 
-from homeassistant.components import cloud, notify as hass_notify, tag
+from homeassistant.components import camera, cloud, notify as hass_notify, tag
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES as BINARY_SENSOR_CLASSES,
 )
@@ -44,7 +45,7 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
+from homeassistant.helpers.entity import validate_entity_category
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -58,6 +59,7 @@ from .const import (
     ATTR_EVENT_TYPE,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_NO_LEGACY_ENCRYPTION,
     ATTR_OS_VERSION,
     ATTR_SENSOR_ATTRIBUTES,
     ATTR_SENSOR_DEVICE_CLASS,
@@ -97,6 +99,7 @@ from .const import (
 )
 from .helpers import (
     _decrypt_payload,
+    _decrypt_payload_legacy,
     empty_okay_response,
     error_response,
     registration_context,
@@ -109,7 +112,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DELAY_SAVE = 10
 
-WEBHOOK_COMMANDS = Registry()
+WEBHOOK_COMMANDS = Registry()  # type: ignore[var-annotated]
 
 COMBINED_CLASSES = set(BINARY_SENSOR_CLASSES + SENSOR_CLASSES)
 SENSOR_TYPES = [ATTR_SENSOR_TYPE_BINARY_SENSOR, ATTR_SENSOR_TYPE_SENSOR]
@@ -191,7 +194,27 @@ async def handle_webhook(
 
     if req_data[ATTR_WEBHOOK_ENCRYPTED]:
         enc_data = req_data[ATTR_WEBHOOK_ENCRYPTED_DATA]
-        webhook_payload = _decrypt_payload(config_entry.data[CONF_SECRET], enc_data)
+        try:
+            webhook_payload = _decrypt_payload(config_entry.data[CONF_SECRET], enc_data)
+            if ATTR_NO_LEGACY_ENCRYPTION not in config_entry.data:
+                data = {**config_entry.data, ATTR_NO_LEGACY_ENCRYPTION: True}
+                hass.config_entries.async_update_entry(config_entry, data=data)
+        except CryptoError:
+            if ATTR_NO_LEGACY_ENCRYPTION not in config_entry.data:
+                try:
+                    webhook_payload = _decrypt_payload_legacy(
+                        config_entry.data[CONF_SECRET], enc_data
+                    )
+                except CryptoError:
+                    _LOGGER.warning(
+                        "Ignoring encrypted payload because unable to decrypt"
+                    )
+                except ValueError:
+                    _LOGGER.warning("Ignoring invalid encrypted payload")
+            else:
+                _LOGGER.warning("Ignoring encrypted payload because unable to decrypt")
+        except ValueError:
+            _LOGGER.warning("Ignoring invalid encrypted payload")
 
     if webhook_type not in WEBHOOK_COMMANDS:
         _LOGGER.error(
@@ -265,19 +288,19 @@ async def webhook_fire_event(hass, config_entry, data):
 @validate_schema({vol.Required(ATTR_CAMERA_ENTITY_ID): cv.string})
 async def webhook_stream_camera(hass, config_entry, data):
     """Handle a request to HLS-stream a camera."""
-    if (camera := hass.states.get(data[ATTR_CAMERA_ENTITY_ID])) is None:
+    if (camera_state := hass.states.get(data[ATTR_CAMERA_ENTITY_ID])) is None:
         return webhook_response(
             {"success": False},
             registration=config_entry.data,
             status=HTTPStatus.BAD_REQUEST,
         )
 
-    resp = {"mjpeg_path": f"/api/camera_proxy_stream/{camera.entity_id}"}
+    resp = {"mjpeg_path": f"/api/camera_proxy_stream/{camera_state.entity_id}"}
 
-    if camera.attributes[ATTR_SUPPORTED_FEATURES] & CAMERA_SUPPORT_STREAM:
+    if camera_state.attributes[ATTR_SUPPORTED_FEATURES] & CAMERA_SUPPORT_STREAM:
         try:
-            resp["hls_path"] = await hass.components.camera.async_request_stream(
-                camera.entity_id, "hls"
+            resp["hls_path"] = await camera.async_request_stream(
+                hass, camera_state.entity_id, "hls"
             )
         except HomeAssistantError:
             resp["hls_path"] = None
@@ -423,7 +446,7 @@ def _validate_state_class_sensor(value: dict):
             vol.Optional(ATTR_SENSOR_STATE, default=None): vol.Any(
                 None, bool, str, int, float
             ),
-            vol.Optional(ATTR_SENSOR_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+            vol.Optional(ATTR_SENSOR_ENTITY_CATEGORY): validate_entity_category,
             vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): cv.icon,
             vol.Optional(ATTR_SENSOR_STATE_CLASS): vol.In(SENSOSR_STATE_CLASSES),
         },

@@ -94,7 +94,7 @@ def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: Confi
         hass.config_entries.async_update_entry(entry, options=options)
 
 
-async def _update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     async_dispatcher_send(
         hass, f"{HARMONY_OPTIONS_UPDATE}-{entry.unique_id}", entry.options

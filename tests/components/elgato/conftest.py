@@ -6,7 +6,7 @@ from elgato import Info, Settings, State
 import pytest
 
 from homeassistant.components.elgato.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
@@ -19,7 +19,11 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         title="CN11A1A00001",
         domain=DOMAIN,
-        data={CONF_HOST: "127.0.0.1", CONF_PORT: 9123},
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_PORT: 9123,
+        },
         unique_id="CN11A1A00001",
     )
 

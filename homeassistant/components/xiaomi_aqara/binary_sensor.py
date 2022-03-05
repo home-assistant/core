@@ -9,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import XiaomiDevice
 from .const import DOMAIN, GATEWAYS_KEY
@@ -181,6 +182,11 @@ class XiaomiNatgasSensor(XiaomiBinarySensor):
         attrs.update(super().extra_state_attributes)
         return attrs
 
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._state = False
+
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         if DENSITY in data:
@@ -231,6 +237,11 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         self._unsub_set_no_motion = None
         self._state = False
         self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._state = False
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway.
@@ -293,7 +304,7 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
             return True
 
 
-class XiaomiDoorSensor(XiaomiBinarySensor):
+class XiaomiDoorSensor(XiaomiBinarySensor, RestoreEntity):
     """Representation of a XiaomiDoorSensor."""
 
     def __init__(self, device, xiaomi_hub, config_entry):
@@ -318,6 +329,14 @@ class XiaomiDoorSensor(XiaomiBinarySensor):
         attrs = {ATTR_OPEN_SINCE: self._open_since}
         attrs.update(super().extra_state_attributes)
         return attrs
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        if (state := await self.async_get_last_state()) is None:
+            return
+
+        self._state = state.state == "on"
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
@@ -362,6 +381,11 @@ class XiaomiWaterLeakSensor(XiaomiBinarySensor):
             config_entry,
         )
 
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._state = False
+
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         self._should_poll = False
@@ -399,6 +423,11 @@ class XiaomiSmokeSensor(XiaomiBinarySensor):
         attrs = {ATTR_DENSITY: self._density}
         attrs.update(super().extra_state_attributes)
         return attrs
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._state = False
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""

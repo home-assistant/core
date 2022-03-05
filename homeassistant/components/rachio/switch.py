@@ -291,6 +291,7 @@ class RachioRainDelay(RachioSwitch):
             endtime = parse_datetime(args[0][0][KEY_RAIN_DELAY_END])
             _LOGGER.debug("Rain delay expires at %s", endtime)
             self._state = True
+            assert endtime is not None
             self._cancel_update = async_track_point_in_utc_time(
                 self.hass, self._delay_expiration, endtime
             )

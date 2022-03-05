@@ -69,6 +69,20 @@ def mock_controller_service():
         "homeassistant.components.netgear.async_setup_entry", return_value=True
     ), patch("homeassistant.components.netgear.router.Netgear") as service_mock:
         service_mock.return_value.get_info = Mock(return_value=ROUTER_INFOS)
+        service_mock.return_value.port = 80
+        service_mock.return_value.ssl = False
+        yield service_mock
+
+
+@pytest.fixture(name="service_5555")
+def mock_controller_service_5555():
+    """Mock a successful service."""
+    with patch(
+        "homeassistant.components.netgear.async_setup_entry", return_value=True
+    ), patch("homeassistant.components.netgear.router.Netgear") as service_mock:
+        service_mock.return_value.get_info = Mock(return_value=ROUTER_INFOS)
+        service_mock.return_value.port = 5555
+        service_mock.return_value.ssl = True
         yield service_mock
 
 
@@ -81,6 +95,8 @@ def mock_controller_service_incomplete():
         "homeassistant.components.netgear.async_setup_entry", return_value=True
     ), patch("homeassistant.components.netgear.router.Netgear") as service_mock:
         service_mock.return_value.get_info = Mock(return_value=router_infos)
+        service_mock.return_value.port = 80
+        service_mock.return_value.ssl = False
         yield service_mock
 
 
@@ -88,7 +104,7 @@ def mock_controller_service_incomplete():
 def mock_controller_service_failed():
     """Mock a failed service."""
     with patch("homeassistant.components.netgear.router.Netgear") as service_mock:
-        service_mock.return_value.login = Mock(return_value=None)
+        service_mock.return_value.login_try_port = Mock(return_value=None)
         service_mock.return_value.get_info = Mock(return_value=None)
         yield service_mock
 
@@ -106,8 +122,6 @@ async def test_user(hass, service):
         result["flow_id"],
         {
             CONF_HOST: HOST,
-            CONF_PORT: PORT,
-            CONF_SSL: SSL,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
         },
@@ -135,8 +149,6 @@ async def test_user_connect_error(hass, service_failed):
         result["flow_id"],
         {
             CONF_HOST: HOST,
-            CONF_PORT: PORT,
-            CONF_SSL: SSL,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
         },
@@ -159,8 +171,6 @@ async def test_user_incomplete_info(hass, service_incomplete):
         result["flow_id"],
         {
             CONF_HOST: HOST,
-            CONF_PORT: PORT,
-            CONF_SSL: SSL,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
         },
@@ -256,7 +266,7 @@ async def test_ssdp(hass, service):
     assert result["data"][CONF_PASSWORD] == PASSWORD
 
 
-async def test_ssdp_port_5555(hass, service):
+async def test_ssdp_port_5555(hass, service_5555):
     """Test ssdp step with port 5555."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

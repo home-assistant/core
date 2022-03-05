@@ -5,8 +5,8 @@ import logging
 import voluptuous as vol
 from xiaomi_gateway import XiaomiGateway, XiaomiGatewayDiscovery
 
-from homeassistant import config_entries, core
 from homeassistant.components import persistent_notification
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_ID,
@@ -140,9 +140,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
-):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the xiaomi aqara components from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(GATEWAYS_KEY, {})
@@ -202,9 +200,7 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
-):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if entry.data[CONF_KEY] is not None:
         platforms = GATEWAY_PLATFORMS

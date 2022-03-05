@@ -1,4 +1,4 @@
-"""Support for AVM FRITZ!SmartHome thermostate devices."""
+"""Support for AVM FRITZ!SmartHome thermostat devices."""
 from __future__ import annotations
 
 from typing import Any
@@ -66,7 +66,7 @@ async def async_setup_entry(
 
 
 class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
-    """The thermostat class for FRITZ!SmartHome thermostates."""
+    """The thermostat class for FRITZ!SmartHome thermostats."""
 
     @property
     def supported_features(self) -> int:

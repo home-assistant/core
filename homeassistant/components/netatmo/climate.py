@@ -124,9 +124,6 @@ async def async_setup_entry(
     """Set up the Netatmo energy platform."""
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
-    await data_handler.register_data_class(
-        CLIMATE_TOPOLOGY_CLASS_NAME, CLIMATE_TOPOLOGY_CLASS_NAME, None
-    )
     climate_topology = data_handler.data.get(CLIMATE_TOPOLOGY_CLASS_NAME)
 
     if not climate_topology or climate_topology.raw_data == {}:

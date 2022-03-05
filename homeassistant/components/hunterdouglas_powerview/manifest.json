@@ -9,11 +9,13 @@
     "models": ["PowerView"]
   },
   "dhcp": [
+    {"registered_devices": true},
     {
       "hostname": "hunter*",
       "macaddress": "002674*"
     }
   ],
   "zeroconf": ["_powerview._tcp.local."],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["aiopvapi"]
 }

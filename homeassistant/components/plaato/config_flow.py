@@ -85,7 +85,10 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         use_webhook = self._init_info[CONF_USE_WEBHOOK]
 
         if use_webhook and user_input is None:
-            webhook_id, webhook_url, cloudhook = await self._get_webhook_id()
+            try:
+                webhook_id, webhook_url, cloudhook = await self._get_webhook_id()
+            except cloud.CloudNotConnected:
+                return self.async_abort(reason="cloud_not_connected")
             self._init_info[CONF_WEBHOOK_ID] = webhook_id
             self._init_info[CONF_CLOUDHOOK] = cloudhook
 

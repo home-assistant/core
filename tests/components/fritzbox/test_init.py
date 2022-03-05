@@ -163,10 +163,11 @@ async def test_coordinator_update_after_reboot(hass: HomeAssistant, fritz: Mock)
         unique_id="any",
     )
     entry.add_to_hass(hass)
-    fritz().get_devices.side_effect = [HTTPError(), ""]
+    fritz().update_devices.side_effect = [HTTPError(), ""]
 
     assert await hass.config_entries.async_setup(entry.entry_id)
-    assert fritz().get_devices.call_count == 2
+    assert fritz().update_devices.call_count == 2
+    assert fritz().get_devices.call_count == 1
     assert fritz().login.call_count == 2
 
 
@@ -180,11 +181,12 @@ async def test_coordinator_update_after_password_change(
         unique_id="any",
     )
     entry.add_to_hass(hass)
-    fritz().get_devices.side_effect = HTTPError()
+    fritz().update_devices.side_effect = HTTPError()
     fritz().login.side_effect = ["", LoginError("some_user")]
 
     assert not await hass.config_entries.async_setup(entry.entry_id)
-    assert fritz().get_devices.call_count == 1
+    assert fritz().update_devices.call_count == 1
+    assert fritz().get_devices.call_count == 0
     assert fritz().login.call_count == 2
 
 

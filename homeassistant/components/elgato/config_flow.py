@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -24,6 +24,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
     host: str
     port: int
     serial_number: str
+    mac: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -47,6 +48,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle zeroconf discovery."""
         self.host = discovery_info.host
+        self.mac = discovery_info.properties.get("id")
         self.port = discovery_info.port or 9123
 
         try:
@@ -89,6 +91,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_HOST: self.host,
                 CONF_PORT: self.port,
+                CONF_MAC: self.mac,
             },
         )
 
@@ -107,7 +110,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
             info.serial_number, raise_on_progress=raise_on_progress
         )
         self._abort_if_unique_id_configured(
-            updates={CONF_HOST: self.host, CONF_PORT: self.port}
+            updates={CONF_HOST: self.host, CONF_PORT: self.port, CONF_MAC: self.mac}
         )
 
         self.serial_number = info.serial_number

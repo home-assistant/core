@@ -1,1 +1,1 @@
-"""The season component."""
+"""The season integration."""

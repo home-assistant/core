@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
     from . import Stream
 
-PROVIDERS = Registry()
+PROVIDERS: Registry[str, type[StreamOutput]] = Registry()
 
 
 @attr.s(slots=True)

@@ -16,7 +16,7 @@ import voluptuous as vol
 
 from homeassistant.components import notify as hass_notify
 from homeassistant.components.automation import AutomationActionType
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_ENTITY_ID,
@@ -29,7 +29,14 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Context, HassJob, HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    Context,
+    Event,
+    HassJob,
+    HomeAssistant,
+    ServiceCall,
+    callback,
+)
 from homeassistant.helpers import config_validation as cv, discovery, entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
@@ -102,7 +109,7 @@ SERVICE_TO_METHOD = {
 _LOGGER = logging.getLogger(__name__)
 
 
-def read_client_keys(config_file):
+def read_client_keys(config_file: str) -> dict[str, str]:
     """Read legacy client keys from file."""
     if not os.path.isfile(config_file):
         return {}
@@ -111,7 +118,9 @@ def read_client_keys(config_file):
     with open(config_file, encoding="utf8") as json_file:
         try:
             client_keys = json.load(json_file)
-            return client_keys
+            if isinstance(client_keys, dict):
+                return client_keys
+            return {}
         except (json.JSONDecodeError, UnicodeDecodeError):
             pass
 
@@ -119,8 +128,8 @@ def read_client_keys(config_file):
     engine = db.create_engine(f"sqlite:///{config_file}")
     table = db.Table("unnamed", db.MetaData(), autoload=True, autoload_with=engine)
     results = engine.connect().execute(db.select([table])).fetchall()
-    client_keys = {k: loads(v) for k, v in results}
-    return client_keys
+    db_client_keys = {k: loads(v) for k, v in results}
+    return db_client_keys
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -139,7 +148,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.debug("No pairing keys, Not importing webOS Smart TV YAML config")
         return True
 
-    async def async_migrate_task(entity_id, conf, key):
+    async def async_migrate_task(
+        entity_id: str, conf: dict[str, str], key: str
+    ) -> None:
         _LOGGER.debug("Migrating webOS Smart TV entity %s unique_id", entity_id)
         client = WebOsClient(conf[CONF_HOST], key)
         tries = 0
@@ -147,16 +158,32 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             try:
                 await client.connect()
             except WEBOSTV_EXCEPTIONS:
+                if tries == 0:
+                    _LOGGER.warning(
+                        "Please make sure webOS TV %s is turned on to complete "
+                        "the migration of configuration.yaml to the UI",
+                        entity_id,
+                    )
                 wait_time = 2 ** min(tries, 4) * 5
                 tries += 1
                 await asyncio.sleep(wait_time)
             except WebOsTvPairError:
                 return
-            else:
-                break
+
+        ent_reg = entity_registry.async_get(hass)
+        if not (
+            new_entity_id := ent_reg.async_get_entity_id(
+                Platform.MEDIA_PLAYER, DOMAIN, key
+            )
+        ):
+            _LOGGER.debug(
+                "Not updating webOSTV Smart TV entity %s unique_id, entity missing",
+                entity_id,
+            )
+            return
 
         uuid = client.hello_info["deviceUUID"]
-        ent_reg.async_update_entity(entity_id, new_unique_id=uuid)
+        ent_reg.async_update_entity(new_entity_id, new_unique_id=uuid)
         await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -181,7 +208,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if entity_id := ent_reg.async_get_entity_id(Platform.MEDIA_PLAYER, DOMAIN, key):
             tasks.append(asyncio.create_task(async_migrate_task(entity_id, conf, key)))
 
-    async def async_tasks_cancel(_event):
+    async def async_tasks_cancel(_event: Event) -> None:
         """Cancel config flow import tasks."""
         for task in tasks:
             if not task.done():
@@ -192,29 +219,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def _async_migrate_options_from_data(hass, config_entry):
-    """Migrate options from data."""
-    if config_entry.options:
-        return
-
-    config = config_entry.data
-    options = {}
-
-    # Get Preferred Sources
-    if sources := config.get(CONF_CUSTOMIZE, {}).get(CONF_SOURCES):
-        options[CONF_SOURCES] = sources
-        if not isinstance(sources, list):
-            options[CONF_SOURCES] = sources.split(",")
-
-    hass.config_entries.async_update_entry(config_entry, options=options)
-
-
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set the config entry up."""
-    _async_migrate_options_from_data(hass, config_entry)
-
-    host = config_entry.data[CONF_HOST]
-    key = config_entry.data[CONF_CLIENT_SECRET]
+    host = entry.data[CONF_HOST]
+    key = entry.data[CONF_CLIENT_SECRET]
 
     wrapper = WebOsClientWrapper(host, client_key=key)
     await wrapper.connect()
@@ -231,8 +239,8 @@ async def async_setup_entry(hass, config_entry):
             DOMAIN, service, async_service_handler, schema=schema
         )
 
-    hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id] = wrapper
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id] = wrapper
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     # set up notify platform, no entry support for notify component yet,
     # have to use discovery to load platform.
@@ -242,31 +250,29 @@ async def async_setup_entry(hass, config_entry):
             "notify",
             DOMAIN,
             {
-                CONF_NAME: config_entry.title,
-                ATTR_CONFIG_ENTRY_ID: config_entry.entry_id,
+                CONF_NAME: entry.title,
+                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
             },
             hass.data[DOMAIN][DATA_HASS_CONFIG],
         )
     )
 
-    if not config_entry.update_listeners:
-        config_entry.async_on_unload(
-            config_entry.add_update_listener(async_update_options)
-        )
+    if not entry.update_listeners:
+        entry.async_on_unload(entry.add_update_listener(async_update_options))
 
-    async def async_on_stop(_event):
+    async def async_on_stop(_event: Event) -> None:
         """Unregister callbacks and disconnect."""
         await wrapper.shutdown()
 
-    config_entry.async_on_unload(
+    entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_on_stop)
     )
     return True
 
 
-async def async_update_options(hass, config_entry):
+async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update options."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_control_connect(host: str, key: str | None) -> WebOsClient:
@@ -281,7 +287,7 @@ async def async_control_connect(host: str, key: str | None) -> WebOsClient:
     return client
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -305,7 +311,7 @@ class PluggableAction:
         """Initialize."""
         self._actions: dict[Callable[[], None], tuple[HassJob, dict[str, Any]]] = {}
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         """Return if we have something attached."""
         return bool(self._actions)
 

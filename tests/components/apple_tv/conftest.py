@@ -15,7 +15,9 @@ def mock_scan_fixture():
     """Mock pyatv.scan."""
     with patch("homeassistant.components.apple_tv.config_flow.scan") as mock_scan:
 
-        async def _scan(loop, timeout=5, identifier=None, protocol=None, hosts=None):
+        async def _scan(
+            loop, timeout=5, identifier=None, protocol=None, hosts=None, aiozc=None
+        ):
             if not mock_scan.hosts:
                 mock_scan.hosts = hosts
             return mock_scan.result

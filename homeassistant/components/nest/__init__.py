@@ -42,7 +42,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     Unauthorized,
 )
-from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import ConfigType
 
@@ -54,9 +54,6 @@ from .const import (
     DATA_SDM,
     DATA_SUBSCRIBER,
     DOMAIN,
-    OAUTH2_AUTHORIZE,
-    OAUTH2_TOKEN,
-    OOB_REDIRECT_URI,
 )
 from .events import EVENT_NAME_MAP, NEST_EVENT
 from .legacy import async_setup_legacy, async_setup_legacy_entry
@@ -97,8 +94,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 # Platforms for SDM API
 PLATFORMS = [Platform.SENSOR, Platform.CAMERA, Platform.CLIMATE]
-WEB_AUTH_DOMAIN = DOMAIN
-INSTALLED_AUTH_DOMAIN = f"{DOMAIN}.installed"
 
 # Fetch media events with a disk backed cache, with a limit for each camera
 # device. The largest media items are mp4 clips at ~120kb each, and we target
@@ -107,49 +102,6 @@ INSTALLED_AUTH_DOMAIN = f"{DOMAIN}.installed"
 EVENT_MEDIA_CACHE_SIZE = 1024  # number of events
 
 THUMBNAIL_SIZE_PX = 175
-
-
-class WebAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
-    """OAuth implementation using OAuth for web applications."""
-
-    name = "OAuth for Web"
-
-    def __init__(
-        self, hass: HomeAssistant, client_id: str, client_secret: str, project_id: str
-    ) -> None:
-        """Initialize WebAuth."""
-        super().__init__(
-            hass,
-            WEB_AUTH_DOMAIN,
-            client_id,
-            client_secret,
-            OAUTH2_AUTHORIZE.format(project_id=project_id),
-            OAUTH2_TOKEN,
-        )
-
-
-class InstalledAppAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
-    """OAuth implementation using OAuth for installed applications."""
-
-    name = "OAuth for Apps"
-
-    def __init__(
-        self, hass: HomeAssistant, client_id: str, client_secret: str, project_id: str
-    ) -> None:
-        """Initialize InstalledAppAuth."""
-        super().__init__(
-            hass,
-            INSTALLED_AUTH_DOMAIN,
-            client_id,
-            client_secret,
-            OAUTH2_AUTHORIZE.format(project_id=project_id),
-            OAUTH2_TOKEN,
-        )
-
-    @property
-    def redirect_uri(self) -> str:
-        """Return the redirect uri."""
-        return OOB_REDIRECT_URI
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -164,25 +116,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if config_mode == config_flow.ConfigMode.LEGACY:
         return await async_setup_legacy(hass, config)
 
-    project_id = config[DOMAIN][CONF_PROJECT_ID]
-    config_flow.NestFlowHandler.async_register_implementation(
-        hass,
-        InstalledAppAuth(
-            hass,
-            config[DOMAIN][CONF_CLIENT_ID],
-            config[DOMAIN][CONF_CLIENT_SECRET],
-            project_id,
-        ),
-    )
-    config_flow.NestFlowHandler.async_register_implementation(
-        hass,
-        WebAuth(
-            hass,
-            config[DOMAIN][CONF_CLIENT_ID],
-            config[DOMAIN][CONF_CLIENT_SECRET],
-            project_id,
-        ),
-    )
+    config_flow.register_flow_implementation_from_config(hass, config)
 
     hass.http.register_view(NestEventMediaView(hass))
     hass.http.register_view(NestEventMediaThumbnailView(hass))
@@ -224,6 +158,8 @@ class SignalUpdateCallback:
                 "timestamp": event_message.timestamp,
                 "nest_event_id": image_event.event_token,
             }
+            if image_event.zones:
+                message["zones"] = image_event.zones
             self._hass.bus.async_fire(NEST_EVENT, message)
 
 
@@ -420,8 +356,7 @@ class NestEventMediaThumbnailView(NestEventViewBase):
     async def handle_media(self, media: Media) -> web.StreamResponse:
         """Start a GET request."""
         contents = media.contents
-        content_type = media.content_type
-        if content_type == "image/jpeg":
+        if (content_type := media.content_type) == "image/jpeg":
             image = Image(media.event_image_type.content_type, contents)
             contents = img_util.scale_jpeg_camera_image(
                 image, THUMBNAIL_SIZE_PX, THUMBNAIL_SIZE_PX

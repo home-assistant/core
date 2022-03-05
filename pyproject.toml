@@ -1,5 +1,9 @@
+[build-system]
+requires = ["setuptools~=60.5", "wheel~=0.37.1"]
+build-backend = "setuptools.build_meta"
+
 [tool.black]
-target-version = ["py38"]
+target-version = ["py39", "py310"]
 exclude = 'generated'
 
 [tool.isort]
@@ -24,12 +28,22 @@ ignore = [
 # Use a conservative default here; 2 should speed up most setups and not hurt
 # any too bad. Override on command line as appropriate.
 jobs = 2
-init-hook='from pylint.config.find_default_config_files import find_default_config_files; from pathlib import Path; import sys; sys.path.append(str(Path(Path(list(find_default_config_files())[0]).parent, "pylint/plugins")))'
+init-hook = """\
+    from pathlib import Path; \
+    import sys; \
+
+    from pylint.config import find_default_config_files; \
+
+    sys.path.append( \
+        str(Path(next(find_default_config_files())).parent.joinpath('pylint/plugins'))
+    ) \
+    """
 load-plugins = [
     "pylint.extensions.code_style",
     "pylint.extensions.typing",
     "pylint_strict_informational",
     "hass_constructor",
+    "hass_enforce_type_hints",
     "hass_imports",
     "hass_logger",
 ]

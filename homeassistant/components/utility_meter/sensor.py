@@ -1,4 +1,6 @@
 """Utility meter from sensors providing raw data."""
+from __future__ import annotations
+
 from datetime import datetime
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
@@ -21,14 +23,17 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.template import is_number
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -88,14 +93,19 @@ PAUSED = "paused"
 COLLECTING = "collecting"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the utility meter sensor."""
     if discovery_info is None:
         _LOGGER.error("This platform is only available through discovery")
         return
 
     meters = []
-    for conf in discovery_info:
+    for conf in discovery_info.values():
         meter = conf[CONF_METER]
         conf_meter_source = hass.data[DATA_UTILITY][meter][CONF_SOURCE_SENSOR]
         conf_meter_type = hass.data[DATA_UTILITY][meter].get(CONF_METER_TYPE)
@@ -157,13 +167,10 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         self._parent_meter = parent_meter
         self._sensor_source_id = source_entity
         self._state = None
-        self._last_period = 0
+        self._last_period = Decimal(0)
         self._last_reset = dt_util.utcnow()
         self._collecting = None
-        if name:
-            self._name = name
-        else:
-            self._name = f"{source_entity} meter"
+        self._name = name
         self._unit_of_measurement = None
         self._period = meter_type
         if meter_type is not None:
@@ -222,8 +229,6 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                 return
             self._state += adjustment
 
-        except ValueError as err:
-            _LOGGER.warning("While processing state changes: %s", err)
         except DecimalException as err:
             _LOGGER.warning(
                 "Invalid state (%s > %s): %s", old_state.state, new_state.state, err
@@ -273,7 +278,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
             return
         _LOGGER.debug("Reset utility meter <%s>", self.entity_id)
         self._last_reset = dt_util.utcnow()
-        self._last_period = str(self._state)
+        self._last_period = Decimal(self._state) if self._state else Decimal(0)
         self._state = 0
         self.async_write_ha_state()
 
@@ -310,9 +315,10 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                     ATTR_UNIT_OF_MEASUREMENT
                 )
                 self._last_period = (
-                    float(state.attributes.get(ATTR_LAST_PERIOD))
+                    Decimal(state.attributes[ATTR_LAST_PERIOD])
                     if state.attributes.get(ATTR_LAST_PERIOD)
-                    else 0
+                    and is_number(state.attributes[ATTR_LAST_PERIOD])
+                    else Decimal(0)
                 )
                 self._last_reset = dt_util.as_utc(
                     dt_util.parse_datetime(state.attributes.get(ATTR_LAST_RESET))
@@ -390,7 +396,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         state_attr = {
             ATTR_SOURCE_ID: self._sensor_source_id,
             ATTR_STATUS: PAUSED if self._collecting is None else COLLECTING,
-            ATTR_LAST_PERIOD: self._last_period,
+            ATTR_LAST_PERIOD: str(self._last_period),
         }
         if self._period is not None:
             state_attr[ATTR_PERIOD] = self._period

@@ -12,13 +12,12 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import FritzBoxTools
+from .common import AvmWrapper
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,29 +40,29 @@ BUTTONS: Final = [
         key="firmware_update",
         name="Firmware Update",
         device_class=ButtonDeviceClass.UPDATE,
-        entity_category=ENTITY_CATEGORY_CONFIG,
-        press_action=lambda avm_device: avm_device.async_trigger_firmware_update(),
+        entity_category=EntityCategory.CONFIG,
+        press_action=lambda avm_wrapper: avm_wrapper.async_trigger_firmware_update(),
     ),
     FritzButtonDescription(
         key="reboot",
         name="Reboot",
         device_class=ButtonDeviceClass.RESTART,
-        entity_category=ENTITY_CATEGORY_CONFIG,
-        press_action=lambda avm_device: avm_device.async_trigger_reboot(),
+        entity_category=EntityCategory.CONFIG,
+        press_action=lambda avm_wrapper: avm_wrapper.async_trigger_reboot(),
     ),
     FritzButtonDescription(
         key="reconnect",
         name="Reconnect",
         device_class=ButtonDeviceClass.RESTART,
-        entity_category=ENTITY_CATEGORY_CONFIG,
-        press_action=lambda avm_device: avm_device.async_trigger_reconnect(),
+        entity_category=EntityCategory.CONFIG,
+        press_action=lambda avm_wrapper: avm_wrapper.async_trigger_reconnect(),
     ),
     FritzButtonDescription(
         key="cleanup",
         name="Cleanup",
         icon="mdi:broom",
-        entity_category=ENTITY_CATEGORY_CONFIG,
-        press_action=lambda avm_device: avm_device.async_trigger_cleanup(),
+        entity_category=EntityCategory.CONFIG,
+        press_action=lambda avm_wrapper: avm_wrapper.async_trigger_cleanup(),
     ),
 ]
 
@@ -75,10 +74,10 @@ async def async_setup_entry(
 ) -> None:
     """Set buttons for device."""
     _LOGGER.debug("Setting up buttons")
-    avm_device: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
+    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [FritzButton(avm_device, entry.title, button) for button in BUTTONS]
+        [FritzButton(avm_wrapper, entry.title, button) for button in BUTTONS]
     )
 
 
@@ -89,21 +88,21 @@ class FritzButton(ButtonEntity):
 
     def __init__(
         self,
-        avm_device: FritzBoxTools,
+        avm_wrapper: AvmWrapper,
         device_friendly_name: str,
         description: FritzButtonDescription,
     ) -> None:
         """Initialize Fritz!Box button."""
         self.entity_description = description
-        self.avm_device = avm_device
+        self.avm_wrapper = avm_wrapper
 
         self._attr_name = f"{device_friendly_name} {description.name}"
-        self._attr_unique_id = f"{self.avm_device.unique_id}-{description.key}"
+        self._attr_unique_id = f"{self.avm_wrapper.unique_id}-{description.key}"
 
         self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, avm_device.mac)}
+            connections={(CONNECTION_NETWORK_MAC, avm_wrapper.mac)}
         )
 
     async def async_press(self) -> None:
         """Triggers Fritz!Box service."""
-        await self.entity_description.press_action(self.avm_device)
+        await self.entity_description.press_action(self.avm_wrapper)

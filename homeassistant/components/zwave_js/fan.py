@@ -100,7 +100,7 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
         await self.info.node.async_set_value(self._target_value, 0)
 
     @property
-    def is_on(self) -> bool | None:  # type: ignore
+    def is_on(self) -> bool | None:
         """Return true if device is on (speed above 0)."""
         if self.info.primary_value.value is None:
             # guard missing value

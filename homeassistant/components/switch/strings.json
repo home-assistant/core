@@ -1,5 +1,15 @@
 {
   "title": "Switch",
+  "config": {
+    "step": {
+      "init": {
+        "description": "Select the switch for the light switch.",
+        "data": {
+          "entity_id": "Switch entity"
+        }
+      }
+    }
+  },
   "device_automation": {
     "action_type": {
       "toggle": "Toggle {entity_name}",
@@ -11,7 +21,7 @@
       "is_off": "{entity_name} is off"
     },
     "trigger_type": {
-      "toggled": "{entity_name} turned on or off",
+      "changed_states": "{entity_name} turned on or off",
       "turned_on": "{entity_name} turned on",
       "turned_off": "{entity_name} turned off"
     }

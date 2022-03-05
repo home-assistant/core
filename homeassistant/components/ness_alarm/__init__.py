@@ -33,7 +33,6 @@ CONF_ZONE_NAME = "name"
 CONF_ZONE_TYPE = "type"
 CONF_ZONE_ID = "id"
 ATTR_OUTPUT_ID = "output_id"
-DEFAULT_ZONES = []
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(minutes=1)
 DEFAULT_INFER_ARMING_STATE = False
 
@@ -62,7 +61,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.positive_time_period,
-                vol.Optional(CONF_ZONES, default=DEFAULT_ZONES): vol.All(
+                vol.Optional(CONF_ZONES, default=[]): vol.All(
                     cv.ensure_list, [ZONE_SCHEMA]
                 ),
                 vol.Optional(

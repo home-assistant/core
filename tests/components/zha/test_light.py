@@ -9,7 +9,11 @@ import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.lighting as lighting
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.light import FLASH_LONG, FLASH_SHORT
+from homeassistant.components.light import (
+    DOMAIN as LIGHT_DOMAIN,
+    FLASH_LONG,
+    FLASH_SHORT,
+)
 from homeassistant.components.zha.core.group import GroupMember
 from homeassistant.components.zha.light import FLASH_EFFECTS
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
@@ -327,7 +331,7 @@ async def async_test_on_off_from_hass(hass, cluster, entity_id):
     # turn on via UI
     cluster.request.reset_mock()
     await hass.services.async_call(
-        Platform.LIGHT, "turn_on", {"entity_id": entity_id}, blocking=True
+        LIGHT_DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
     )
     assert cluster.request.call_count == 1
     assert cluster.request.await_count == 1
@@ -344,7 +348,7 @@ async def async_test_off_from_hass(hass, cluster, entity_id):
     # turn off via UI
     cluster.request.reset_mock()
     await hass.services.async_call(
-        Platform.LIGHT, "turn_off", {"entity_id": entity_id}, blocking=True
+        LIGHT_DOMAIN, "turn_off", {"entity_id": entity_id}, blocking=True
     )
     assert cluster.request.call_count == 1
     assert cluster.request.await_count == 1
@@ -362,7 +366,7 @@ async def async_test_level_on_off_from_hass(
     level_cluster.request.reset_mock()
     # turn on via UI
     await hass.services.async_call(
-        Platform.LIGHT, "turn_on", {"entity_id": entity_id}, blocking=True
+        LIGHT_DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
     )
     assert on_off_cluster.request.call_count == 1
     assert on_off_cluster.request.await_count == 1
@@ -375,7 +379,7 @@ async def async_test_level_on_off_from_hass(
     level_cluster.request.reset_mock()
 
     await hass.services.async_call(
-        Platform.LIGHT,
+        LIGHT_DOMAIN,
         "turn_on",
         {"entity_id": entity_id, "transition": 10},
         blocking=True,
@@ -402,7 +406,7 @@ async def async_test_level_on_off_from_hass(
     level_cluster.request.reset_mock()
 
     await hass.services.async_call(
-        Platform.LIGHT,
+        LIGHT_DOMAIN,
         "turn_on",
         {"entity_id": entity_id, "brightness": 10},
         blocking=True,
@@ -448,7 +452,7 @@ async def async_test_flash_from_hass(hass, cluster, entity_id, flash):
     # turn on via UI
     cluster.request.reset_mock()
     await hass.services.async_call(
-        Platform.LIGHT,
+        LIGHT_DOMAIN,
         "turn_on",
         {"entity_id": entity_id, "flash": flash},
         blocking=True,

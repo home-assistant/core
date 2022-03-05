@@ -25,7 +25,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -36,6 +36,7 @@ async def test_light_state_temperature(
     mock_elgato: MagicMock,
 ) -> None:
     """Test the creation and values of the Elgato Lights in temperature mode."""
+    device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 
     # First segment of the strip
@@ -53,6 +54,21 @@ async def test_light_state_temperature(
     entry = entity_registry.async_get("light.frenck")
     assert entry
     assert entry.unique_id == "CN11A1A00001"
+
+    assert entry.device_id
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry
+    assert device_entry.configuration_url is None
+    assert device_entry.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")
+    }
+    assert device_entry.entry_type is None
+    assert device_entry.identifiers == {(DOMAIN, "CN11A1A00001")}
+    assert device_entry.manufacturer == "Elgato"
+    assert device_entry.model == "Elgato Key Light"
+    assert device_entry.name == "Frenck"
+    assert device_entry.sw_version == "1.0.3 (192)"
+    assert device_entry.hw_version == "53"
 
 
 @pytest.mark.parametrize(
