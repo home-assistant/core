@@ -129,7 +129,7 @@ class MaxCubeHandle:
 async def _setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up using flow."""
 
-    config: Config = entry.data
+    config = entry.data
 
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}

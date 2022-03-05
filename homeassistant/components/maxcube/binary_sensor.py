@@ -35,10 +35,9 @@ def setup_platform(
 async def async_setup_platform(hass, config, add_devices, discovery_info=None) -> None:
     """Set up a binary sensor for maxcube."""
     setup_platform(hass, config, add_devices)
-    return True
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_devices) -> bool:
     """Set up a binary sensor for maxcube."""
     setup_platform(hass, config_entry.data, async_add_devices)
     return True
