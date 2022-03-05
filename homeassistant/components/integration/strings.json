@@ -1,0 +1,13 @@
+{
+  "title": "Integration - Riemann sum integral",
+  "config": {
+    "step": {
+      "init": {
+        "description": "Select the sensor to integrate.",
+        "data": {
+          "source": "Sensor entity"
+        }
+      }
+    }
+  }
+}

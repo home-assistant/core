@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -22,6 +23,7 @@ from homeassistant.const import (
     TIME_HOURS,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -89,6 +91,34 @@ async def async_setup_platform(
     async_add_entities([integral])
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize Light Switch config entry."""
+
+    config = config_entry.options
+
+    registry = er.async_get(hass)
+    source_sensor = er.async_validate_entity_id(
+        registry, config_entry.options[CONF_SOURCE_SENSOR]
+    )
+
+    integral = IntegrationSensor(
+        source_sensor,
+        config_entry.title,
+        config[CONF_ROUND_DIGITS],
+        config[CONF_UNIT_PREFIX],
+        config[CONF_UNIT_TIME],
+        config.get(CONF_UNIT_OF_MEASUREMENT),
+        config[CONF_METHOD],
+        config_entry.unique_id,
+    )
+
+    async_add_entities([integral])
+
+
 class IntegrationSensor(RestoreEntity, SensorEntity):
     """Representation of an integration sensor."""
 
@@ -101,6 +131,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         unit_time: str,
         unit_of_measurement: str | None,
         integration_method: str,
+        unique_id: str | None = None,
     ) -> None:
         """Initialize the integration sensor."""
         self._sensor_source_id = source_entity
@@ -116,6 +147,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
         self._attr_state_class = SensorStateClass.TOTAL
+        self._attr_unique_id = unique_id
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
