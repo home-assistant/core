@@ -1,5 +1,6 @@
 """Adds config flow for maxcube."""
 import voluptuous as vol
+
 from homeassistant import config_entries
 
 from . import DOMAIN
