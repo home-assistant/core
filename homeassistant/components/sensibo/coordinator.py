@@ -4,6 +4,8 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
+from dataclasses import dataclass
+
 from pysensibo import SensiboClient
 from pysensibo.exceptions import AuthenticationError, SensiboError
 
@@ -15,6 +17,21 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, TIMEOUT
+
+
+@dataclass
+class MotionSensor:
+    """Dataclass for motionsensors."""
+
+    id: str
+    alive: bool | None = None
+    fw_ver: str | None = None
+    fw_type: str | None = None
+    is_main_sensor: bool | None = None
+    battery_voltage: int | None = None
+    humidity: int | None = None
+    temperature: float | None = None
+    model: str | None = None
 
 
 class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
@@ -107,19 +124,19 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
             motion_sensors = []
             if dev["motionSensors"]:
                 for motionsensor in dev["motionSensors"]:
-                    sensor = {
-                        "alive": motionsensor["connectionStatus"].get("isAlive"),
-                        "fw_ver": motionsensor.get("firmwareVersion"),
-                        "fw_type": motionsensor.get("firmwareType"),
-                        "id": motionsensor["id"],
-                        "ismainsensor": motionsensor.get("isMainSensor"),
-                        "batteryvoltage": motionsensor["measurements"].get(
+                    sensor = MotionSensor(
+                        id=motionsensor["id"],
+                        alive=motionsensor["connectionStatus"].get("isAlive"),
+                        fw_ver=motionsensor.get("firmwareVersion"),
+                        fw_type=motionsensor.get("firmwareType"),
+                        is_main_sensor=motionsensor.get("isMainSensor"),
+                        battery_voltage=motionsensor["measurements"].get(
                             "batteryVoltage"
                         ),
-                        "humidity": motionsensor["measurements"].get("humidity"),
-                        "temperature": motionsensor["measurements"].get("temperature"),
-                        "model": motionsensor.get("productModel"),
-                    }
+                        humidity=motionsensor["measurements"].get("humidity"),
+                        temperature=motionsensor["measurements"].get("temperature"),
+                        model=motionsensor.get("productModel"),
+                    )
                     motion_sensors.append(sensor)
 
             device_data[unique_id] = {
