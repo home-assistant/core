@@ -29,6 +29,7 @@ from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
+from .config_validation import VALUE_SCHEMA
 from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_CONFIG_PARAMETER,
@@ -48,7 +49,6 @@ from .const import (
     SERVICE_SET_CONFIG_PARAMETER,
     SERVICE_SET_LOCK_USERCODE,
     SERVICE_SET_VALUE,
-    VALUE_SCHEMA,
 )
 from .device_automation_helpers import (
     CONF_SUBTYPE,
