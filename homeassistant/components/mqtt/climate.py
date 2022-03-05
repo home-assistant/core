@@ -433,7 +433,8 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
         # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.9
         self._send_if_off = True
-        # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
+        # AWAY and HOLD mode topics and templates are deprecated,
+        # support will be removed with release 2022.9
         self._hold_list = []
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
@@ -508,7 +509,8 @@ class MqttClimate(MqttEntity, ClimateEntity):
         if CONF_SEND_IF_OFF in config:
             self._send_if_off = config[CONF_SEND_IF_OFF]
 
-        # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
+        # AWAY and HOLD mode topics and templates are deprecated,
+        # support will be removed with release 2022.9
         if CONF_HOLD_LIST in config:
             self._hold_list = config[CONF_HOLD_LIST]
 
@@ -819,7 +821,8 @@ class MqttClimate(MqttEntity, ClimateEntity):
         ):
             presets.append(PRESET_AWAY)
 
-        # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
+        # AWAY and HOLD mode topics and templates are deprecated,
+        # support will be removed with release 2022.9
         presets.extend(self._hold_list)
 
         if presets:
