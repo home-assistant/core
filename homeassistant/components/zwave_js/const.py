@@ -1,5 +1,6 @@
 """Constants for the Z-Wave JS integration."""
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -132,8 +133,22 @@ BITMASK_SCHEMA = vol.All(
     lambda value: int(value, 16),
 )
 
+
+def boolean(value: Any) -> bool:
+    """Validate and coerce a boolean value."""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        value = value.lower().strip()
+        if value in ("true", "yes", "on", "enable"):
+            return True
+        if value in ("false", "no", "off", "disable"):
+            return False
+    raise vol.Invalid(f"invalid boolean value {value}")
+
+
 VALUE_SCHEMA = vol.Any(
-    bool,
+    boolean,
     vol.Coerce(int),
     vol.Coerce(float),
     BITMASK_SCHEMA,
