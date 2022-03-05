@@ -52,8 +52,8 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
             unique_id = dev["id"]
             mac = dev["macAddress"]
             name = dev["room"]["name"]
-            temperature = dev["measurements"].get("temperature", 0.0)
-            humidity = dev["measurements"].get("humidity", 0)
+            temperature = dev["measurements"].get("temperature")
+            humidity = dev["measurements"].get("humidity")
             ac_states = dev["acState"]
             target_temperature = ac_states.get("targetTemperature")
             hvac_mode = ac_states.get("mode")
@@ -95,8 +95,8 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
             fw_type = dev["firmwareType"]
             model = dev["productModel"]
 
-            calibration_temp = dev["sensorsCalibration"].get("temperature", 0.0)
-            calibration_hum = dev["sensorsCalibration"].get("humidity", 0.0)
+            calibration_temp = dev["sensorsCalibration"].get("temperature")
+            calibration_hum = dev["sensorsCalibration"].get("humidity")
 
             device_data[unique_id] = {
                 "id": unique_id,
